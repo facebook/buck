@@ -126,7 +126,8 @@ public class PartialGraph {
         includes,
         eventBus,
         console,
-        environment);
+        environment,
+        /* enableProfiling */ false);
 
     return new PartialGraph(graph, targets);
   }

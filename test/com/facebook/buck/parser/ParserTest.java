@@ -233,7 +233,8 @@ public class ParserTest extends EasyMockSupport {
         defaultIncludes,
         eventBus,
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        /* enableProfiling */ false);
     ActionGraph actionGraph = targetGraph.getActionGraph(eventBus);
     BuildRule fooRule = actionGraph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
@@ -265,7 +266,8 @@ public class ParserTest extends EasyMockSupport {
           defaultIncludes,
           BuckEventBusFactory.newInstance(),
           new TestConsole(),
-          ImmutableMap.<String, String>of());
+          ImmutableMap.<String, String>of(),
+          /* enableProfiling */ false);
       fail("HumanReadableException should be thrown");
     } catch (HumanReadableException e) {
       assertEquals("No rule found when resolving target //java/com/facebook:raz in build file " +
@@ -286,7 +288,8 @@ public class ParserTest extends EasyMockSupport {
           ImmutableList.<String>of(),
           BuckEventBusFactory.newInstance(),
           new TestConsole(),
-          ImmutableMap.<String, String>of());
+          ImmutableMap.<String, String>of(),
+          /* enableProfiling */ false);
     } catch (HumanReadableException e) {
       assertEquals(
           "Unrecognized flavor in target //java/com/facebook:foo#doesNotExist while parsing " +
@@ -328,7 +331,8 @@ public class ParserTest extends EasyMockSupport {
       defaultIncludes,
       BuckEventBusFactory.newInstance(),
       new TestConsole(),
-      ImmutableMap.<String, String>of());
+      ImmutableMap.<String, String>of(),
+      /* enableProfiling */ false);
   }
 
   @Test
@@ -982,7 +986,8 @@ public class ParserTest extends EasyMockSupport {
         defaultIncludes,
         eventBus,
         new TestConsole(),
-        ImmutableMap.<String, String>of()).getActionGraph(eventBus);
+        ImmutableMap.<String, String>of(),
+        /* enableProfiling */ false).getActionGraph(eventBus);
 
     BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
@@ -1040,7 +1045,8 @@ public class ParserTest extends EasyMockSupport {
         Lists.<String>newArrayList(),
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        /* enableProfiling */ false);
 
     assertEquals("Should have cached build rules.", 1, buildFileParserFactory.calls);
   }
@@ -1058,7 +1064,8 @@ public class ParserTest extends EasyMockSupport {
         Lists.<String>newArrayList(),
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        /* enableProfiling */ false);
     parser.filterAllTargetsInProject(
         filesystem,
         Lists.<String>newArrayList(),
@@ -1175,7 +1182,8 @@ public class ParserTest extends EasyMockSupport {
         defaultIncludes,
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        /* enableProfiling */ false);
 
     // Rewrite //bar:bar so it doesn't depend on //foo:foo any more.
     // Delete foo/BUCK and invalidate the cache, which should invalidate
@@ -1199,7 +1207,8 @@ public class ParserTest extends EasyMockSupport {
         defaultIncludes,
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.<String, String>of(),
+        /* enableProfiling */ false);
   }
 
   @Test
@@ -1231,7 +1240,8 @@ public class ParserTest extends EasyMockSupport {
           defaultIncludes,
           eventBus,
           new TestConsole(),
-          ImmutableMap.<String, String>of())
+          ImmutableMap.<String, String>of(),
+          /* enableProfiling */ false)
           .getActionGraph(eventBus);
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
@@ -1253,7 +1263,8 @@ public class ParserTest extends EasyMockSupport {
           defaultIncludes,
           eventBus,
           new TestConsole(),
-          ImmutableMap.<String, String>of())
+          ImmutableMap.<String, String>of(),
+          /* enableProfiling */ false)
              .getActionGraph(eventBus);
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(ImmutableList.of(Paths.get("foo/Bar.java")), libRule.getInputs());
@@ -1268,7 +1279,8 @@ public class ParserTest extends EasyMockSupport {
           defaultIncludes,
           eventBus,
           new TestConsole(),
-          ImmutableMap.<String, String>of())
+          ImmutableMap.<String, String>of(),
+          /* enableProfiling */ false)
             .getActionGraph(eventBus);
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
@@ -1307,8 +1319,8 @@ public class ParserTest extends EasyMockSupport {
           defaultIncludes,
           eventBus,
           new TestConsole(),
-          ImmutableMap.<String, String>of())
-             .getActionGraph(eventBus);
+          ImmutableMap.<String, String>of(),
+          /* enableProfiling */ false).getActionGraph(eventBus);
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
@@ -1331,7 +1343,8 @@ public class ParserTest extends EasyMockSupport {
           defaultIncludes,
           eventBus,
           new TestConsole(),
-          ImmutableMap.<String, String>of())
+          ImmutableMap.<String, String>of(),
+          /* enableProfiling */ false)
               .getActionGraph(eventBus);
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
@@ -1348,7 +1361,8 @@ public class ParserTest extends EasyMockSupport {
           defaultIncludes,
           eventBus,
           new TestConsole(),
-          ImmutableMap.<String, String>of())
+          ImmutableMap.<String, String>of(),
+          /* enableProfiling */ false)
               .getActionGraph(eventBus);
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(

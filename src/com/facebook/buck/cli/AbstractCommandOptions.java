@@ -61,6 +61,11 @@ public abstract class AbstractCommandOptions {
   private String eventsOutputPath = null;
 
   @Option(
+      name = "--profile",
+      usage = "Enable profiling of buck.py in debug log")
+  private boolean enableProfiling = false;
+
+  @Option(
       name = HELP_LONG_ARG,
       usage = "Prints the available options and exits.")
   private boolean help = false;
@@ -116,4 +121,9 @@ public abstract class AbstractCommandOptions {
         eventBus,
         buckConfig);
   }
+
+  public boolean getEnableProfiling() {
+    return enableProfiling;
+  }
+
 }

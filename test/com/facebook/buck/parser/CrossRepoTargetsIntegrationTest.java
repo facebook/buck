@@ -84,7 +84,8 @@ public class CrossRepoTargetsIntegrationTest {
         ImmutableList.<String>of(),
         eventBus,
         new TestConsole(),
-        ImmutableMap.<String, String>of())
+        ImmutableMap.<String, String>of(),
+        /* enableProfiling */ false)
         .getActionGraph(eventBus);
 
     BuildRule mainRule = graph.findBuildRuleByTarget(mainTarget);

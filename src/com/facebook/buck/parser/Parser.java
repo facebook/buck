@@ -393,7 +393,8 @@ public class Parser {
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
       Console console,
-      ImmutableMap<String, String> environment)
+      ImmutableMap<String, String> environment,
+      boolean enableProfiling)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     return buildTargetGraphForTargetNodeSpecs(
         Iterables.transform(buildTargets, BuildTargetSpec.TO_BUILD_TARGET_SPEC),
@@ -401,7 +402,7 @@ public class Parser {
         eventBus,
         console,
         environment,
-        /* enableProfiling */ false);
+        enableProfiling);
   }
 
   @Nullable
