@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
-import com.facebook.buck.rules.Builder;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
@@ -44,15 +43,17 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -74,7 +75,7 @@ public class Build implements Closeable {
 
   private final Clock clock;
 
-  /** Not set until {@link #executeBuild(Set)} is invoked. */
+  /** Not set until {@link #executeBuild(Iterable, boolean)} is invoked. */
   @Nullable
   private BuildContext buildContext;
 
@@ -139,7 +140,7 @@ public class Build implements Closeable {
     return executionContext;
   }
 
-  /** Returns null until {@link #executeBuild(Set)} is invoked. */
+  /** Returns null until {@link #executeBuild(Iterable, boolean)} is invoked. */
   @Nullable
   public BuildContext getBuildContext() {
     return buildContext;
@@ -219,8 +220,17 @@ public class Build implements Closeable {
     return traversal.getResult();
   }
 
+  /**
+   * If {@code isKeepGoing}, then this returns a future that succeeds only if all of
+   * {@code rulesToBuild} build successfully. Otherwise, this returns a future that should always
+   * succeed, even if individual rules fail to build. In that case, a failed build rule is indicated
+   * by a {@code null} value in the corresponding position in the iteration order of
+   * {@code rulesToBuild}.
+   * @param rulesToBuild The rules to build. All build rules in this iterable must be unique.
+   */
   public ListenableFuture<List<BuildRuleSuccess>> executeBuild(
-      Set<BuildRule> rulesToBuild)
+      Iterable<BuildRule> rulesToBuild,
+      boolean isKeepGoing)
       throws IOException, StepFailedException {
     buildContext = BuildContext.builder()
         .setActionGraph(actionGraph)
@@ -237,7 +247,19 @@ public class Build implements Closeable {
         .setEnvironment(executionContext.getEnvironment())
         .build();
 
-    return Builder.getInstance().buildRules(buildEngine, rulesToBuild, buildContext);
+    Iterable<ListenableFuture<BuildRuleSuccess>> futures = Iterables.transform(
+        rulesToBuild,
+        new Function<BuildRule, ListenableFuture<BuildRuleSuccess>>() {
+          @Override
+          public ListenableFuture<BuildRuleSuccess> apply(BuildRule rule) {
+            return buildEngine.build(buildContext, rule);
+          }
+        });
+    if (isKeepGoing) {
+      return Futures.successfulAsList(futures);
+    } else {
+      return Futures.allAsList(futures);
+    }
   }
 
   @Override

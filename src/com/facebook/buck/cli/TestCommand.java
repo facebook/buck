@@ -330,7 +330,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
       // Build all of the test rules.
       int exitCode = BuildCommand.executeBuildAndPrintAnyFailuresToConsole(
-          testRules, build, console);
+          testRules, build, options, console);
       getBuckEventBus().post(BuildEvent.finished(emptyTargetsList, exitCode));
       if (exitCode != 0) {
         return exitCode;

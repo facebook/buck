@@ -29,22 +29,27 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -141,7 +146,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         getCommandRunnerParams().getClock());
     int exitCode = 0;
     try {
-      exitCode = executeBuildAndPrintAnyFailuresToConsole(buildTargets, build, console);
+      exitCode = executeBuildAndPrintAnyFailuresToConsole(buildTargets, build, options, console);
     } finally {
       build.close(); // Can't use try-with-resources as build is returned by getBuild.
     }
@@ -191,12 +196,13 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   static int executeBuildAndPrintAnyFailuresToConsole(
       Iterable<? extends HasBuildTarget> buildTargetsToBuild,
       Build build,
+      BuildCommandOptions options,
       Console console) throws InterruptedException {
     final ActionGraph actionGraph = build.getActionGraph();
     // It is important to use this logic to determine the set of rules to build rather than
     // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
     // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
-    Set<BuildRule> rulesToBuild = FluentIterable
+    ImmutableSet<BuildRule> rulesToBuild = FluentIterable
         .from(buildTargetsToBuild)
         .transform(new Function<HasBuildTarget, BuildRule>() {
           @Override
@@ -208,11 +214,15 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         .toSet();
 
     int exitCode;
+    boolean isKeepGoing = options.isKeepGoing();
     try {
       // Get the Future representing the build and then block until everything is built.
-      ListenableFuture<List<BuildRuleSuccess>> buildFuture = build.executeBuild(rulesToBuild);
+      ListenableFuture<List<BuildRuleSuccess>> buildFuture = build.executeBuild(
+          rulesToBuild,
+          isKeepGoing);
+      List<BuildRuleSuccess> results;
       try {
-        buildFuture.get();
+        results = buildFuture.get();
       } catch (InterruptedException e) {
         try {
           buildFuture.cancel(true);
@@ -222,7 +232,20 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         Thread.currentThread().interrupt();
         throw e;
       }
-      exitCode = 0;
+
+      if (isKeepGoing) {
+        String buildReport = generateBuildReport(
+            ImmutableList.copyOf(rulesToBuild),
+            results,
+            console.getAnsi());
+        console.getStdErr().print(buildReport);
+        exitCode = Iterables.any(results, Predicates.isNull()) ? 1 : 0;
+        if (exitCode != 0) {
+          console.printBuildFailure("Not all rules succeeded.");
+        }
+      } else {
+        exitCode = 0;
+      }
     } catch (IOException e) {
       console.printBuildFailureWithoutStacktrace(e);
       exitCode = 1;
@@ -247,6 +270,41 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     }
 
     return exitCode;
+  }
+
+  @VisibleForTesting
+  static String generateBuildReport(
+      List<BuildRule> rulesToBuild,
+      List<BuildRuleSuccess> results,
+      Ansi ansi) {
+    Preconditions.checkArgument(rulesToBuild.size() == results.size());
+    StringBuilder report = new StringBuilder();
+    for (int i = 0, len = rulesToBuild.size(); i < len; i++) {
+      BuildRule rule = rulesToBuild.get(i);
+      BuildRuleSuccess success = results.get(i);
+
+      String successIndicator;
+      String successType;
+      Path outputFile;
+      if (success != null) {
+        successIndicator = ansi.asHighlightedSuccessText("OK  ");
+        successType = success.getType().name();
+        outputFile = rule.getPathToOutputFile();
+      } else {
+        successIndicator = ansi.asHighlightedFailureText("FAIL");
+        successType = null;
+        outputFile = null;
+      }
+
+      report.append(String.format(
+          "%s %s%s%s\n",
+          successIndicator,
+          rule.getBuildTarget(),
+          successType != null ? " " + successType : "",
+          outputFile != null ? " " + outputFile : ""));
+    }
+
+    return report.toString();
   }
 
   Build getBuild() {

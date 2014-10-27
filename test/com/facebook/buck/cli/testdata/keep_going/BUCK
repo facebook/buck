@@ -1,0 +1,33 @@
+genrule(
+  name = 'rule_with_output',
+  out = 'rule_with_output.txt',
+  bash = 'touch $OUT',
+  deps = [
+    ':common_dependency',
+  ],
+)
+
+python_library(
+  name = 'rule_without_output',
+  srcs = ['main.py'],
+  deps = [
+    ':common_dependency',
+  ],
+)
+
+genrule(
+  name = 'failing_rule',
+  out = 'failing_rule.txt',
+  bash = 'touch $OUT && exit 2',
+  deps = [
+    ':common_dependency',
+  ],
+)
+
+genrule(
+  name = 'common_dependency',
+  srcs = ['main.py'],
+  out = 'common_dependency.txt',
+  bash = 'cp $SRCS $OUT',
+)
+

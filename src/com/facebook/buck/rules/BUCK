@@ -136,7 +136,6 @@ java_library(
     'AbstractBuildRule.java',
     'ArtifactCacheConnectEvent.java',
     'ArtifactCacheEvent.java',
-    'Builder.java',
     'BuildEvent.java',
     'BuildOutputInitializer.java',
     'BuildResult.java',

@@ -50,6 +50,11 @@ public class BuildCommandOptions extends AbstractCommandOptions {
   @Option(name = "--num-threads", aliases = "-j", usage = "Default is 1.25 * num processors.")
   private int numThreads = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
 
+  @Option(
+      name = "--keep-going",
+      usage = "Keep going when some targets can't be made.")
+  private boolean keepGoing = false;
+
   @Option(name = "--build-dependencies",
       aliases = "-b",
       usage = "How to handle including dependencies")
@@ -116,6 +121,10 @@ public class BuildCommandOptions extends AbstractCommandOptions {
 
   int getNumThreads() {
     return numThreads;
+  }
+
+  public boolean isKeepGoing() {
+    return keepGoing;
   }
 
   public BuildDependencies getBuildDependencies() {
