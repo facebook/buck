@@ -20,7 +20,6 @@ import com.facebook.buck.log.ConsoleHandler;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.io.OutputStream;
 
@@ -52,10 +51,10 @@ public class ConsoleHandlerRedirector implements AutoCloseable {
       OutputStream redirectedOutputStream,
       Optional<OutputStream> originalOutputStream,
       Optional<ConsoleHandler> consoleHandler) {
-    this.commandId = Preconditions.checkNotNull(commandId);
-    this.redirectedOutputStream = Preconditions.checkNotNull(redirectedOutputStream);
-    this.originalOutputStream = Preconditions.checkNotNull(originalOutputStream);
-    this.consoleHandler = Preconditions.checkNotNull(consoleHandler);
+    this.commandId = commandId;
+    this.redirectedOutputStream = redirectedOutputStream;
+    this.originalOutputStream = originalOutputStream;
+    this.consoleHandler = consoleHandler;
 
     if (this.consoleHandler.isPresent()) {
       this.consoleHandler.get().registerOutputStream(this.commandId, this.redirectedOutputStream);

@@ -53,10 +53,8 @@ public class CmdLineParserAdditionalOptions extends CmdLineParser {
    */
   public CmdLineParserAdditionalOptions(Object bean) {
     super(bean);
-    if (bean != null) {
-      Set<Class<?>> visited = Sets.newHashSet();
-      parseAdditionalOptions(new ClassParser(), bean, visited);
-    }
+    Set<Class<?>> visited = Sets.newHashSet();
+    parseAdditionalOptions(new ClassParser(), bean, visited);
   }
 
   @SuppressWarnings("unchecked")

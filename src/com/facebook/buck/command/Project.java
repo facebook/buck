@@ -158,9 +158,9 @@ public class Project {
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter,
       ObjectMapper objectMapper) {
-    this.resolver = Preconditions.checkNotNull(resolver);
-    this.rules = Preconditions.checkNotNull(rules);
-    this.actionGraph = Preconditions.checkNotNull(actionGraph);
+    this.resolver = resolver;
+    this.rules = rules;
+    this.actionGraph = actionGraph;
     this.buildFileTree = new InMemoryBuildFileTree(
         Iterables.transform(
             actionGraph.getNodes(),
@@ -172,14 +172,14 @@ public class Project {
             }
         ));
     this.basePathToAliasMap = ImmutableMap.copyOf(basePathToAliasMap);
-    this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
-    this.executionContext = Preconditions.checkNotNull(executionContext);
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.pathToDefaultAndroidManifest = Preconditions.checkNotNull(pathToDefaultAndroidManifest);
-    this.pathToPostProcessScript = Preconditions.checkNotNull(pathToPostProcessScript);
+    this.javaPackageFinder = javaPackageFinder;
+    this.executionContext = executionContext;
+    this.projectFilesystem = projectFilesystem;
+    this.pathToDefaultAndroidManifest = pathToDefaultAndroidManifest;
+    this.pathToPostProcessScript = pathToPostProcessScript;
     this.libraryJars = Sets.newHashSet();
-    this.pythonInterpreter = Preconditions.checkNotNull(pythonInterpreter);
-    this.objectMapper = Preconditions.checkNotNull(objectMapper);
+    this.pythonInterpreter = pythonInterpreter;
+    this.objectMapper = objectMapper;
   }
 
   public int createIntellijProject(
@@ -1041,8 +1041,8 @@ public class Project {
     private final String stdErr;
     ExitCodeAndOutput(int exitCode, String stdOut, String stdErr) {
       this.exitCode = exitCode;
-      this.stdOut = Preconditions.checkNotNull(stdOut);
-      this.stdErr = Preconditions.checkNotNull(stdErr);
+      this.stdOut = stdOut;
+      this.stdErr = stdErr;
     }
   }
 
@@ -1118,8 +1118,8 @@ public class Project {
         String binaryJar,
         @Nullable String sourceJar,
         @Nullable String javadocUrl) {
-      this.name = Preconditions.checkNotNull(name);
-      this.binaryJar = Preconditions.checkNotNull(binaryJar);
+      this.name = name;
+      this.binaryJar = binaryJar;
       this.sourceJar = sourceJar;
       this.javadocUrl = javadocUrl;
     }

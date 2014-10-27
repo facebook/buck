@@ -156,10 +156,9 @@ public class BuckConfig {
       Platform platform,
       ImmutableMap<String, String> environment,
       ImmutableMap<String, Path> repoNamesToPaths) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
+    this.projectFilesystem = projectFilesystem;
+    this.buildTargetParser = buildTargetParser;
 
-    Preconditions.checkNotNull(sectionsToEntries);
     ImmutableMap.Builder<String, ImmutableMap<String, String>> sectionsToEntriesBuilder =
         ImmutableMap.builder();
     for (Map.Entry<String, Map<String, String>> entry : sectionsToEntries.entrySet()) {
@@ -173,10 +172,10 @@ public class BuckConfig {
         this.getEntriesForSection(ALIAS_SECTION_HEADER),
         buildTargetParser);
 
-    this.repoNamesToPaths = Preconditions.checkNotNull(repoNamesToPaths);
+    this.repoNamesToPaths = repoNamesToPaths;
 
-    this.platform = Preconditions.checkNotNull(platform);
-    this.environment = Preconditions.checkNotNull(environment);
+    this.platform = platform;
+    this.environment = environment;
   }
 
   /**
@@ -191,8 +190,6 @@ public class BuckConfig {
       Platform platform,
       ImmutableMap<String, String> environment)
       throws IOException {
-    Preconditions.checkNotNull(projectFilesystem);
-    Preconditions.checkNotNull(files);
     BuildTargetParser buildTargetParser = new BuildTargetParser();
 
     if (Iterables.isEmpty(files)) {
@@ -223,7 +220,7 @@ public class BuckConfig {
    *     indicate whether it is an alias that maps to a build target in a BuckConfig.
    */
   private static boolean isValidAliasName(String aliasName) {
-    return aliasName != null && ALIAS_PATTERN.matcher(aliasName).matches();
+    return ALIAS_PATTERN.matcher(aliasName).matches();
   }
 
   public static void validateAliasName(String aliasName) throws HumanReadableException {
@@ -237,10 +234,6 @@ public class BuckConfig {
   private static void validateAgainstAlias(String aliasName, String fieldName) {
     if (isValidAliasName(aliasName)) {
       return;
-    }
-
-    if (aliasName == null) {
-      throw new HumanReadableException("%s cannot be null.", fieldName);
     }
 
     if (aliasName.isEmpty()) {
@@ -269,7 +262,6 @@ public class BuckConfig {
   @VisibleForTesting
   static Map<String, Map<String, String>> createFromReaders(Iterable<Reader> readers)
       throws IOException {
-    Preconditions.checkNotNull(readers);
 
     Ini ini = new Ini();
     for (Reader reader : readers) {
@@ -335,7 +327,6 @@ public class BuckConfig {
   }
 
   public ImmutableMap<String, String> getEntriesForSection(String section) {
-    Preconditions.checkNotNull(section);
     ImmutableMap<String, String> entries = sectionsToEntries.get(section);
     if (entries != null) {
       return entries;
@@ -430,7 +421,6 @@ public class BuckConfig {
 
   @Nullable
   public String getBuildTargetForAlias(String alias) {
-    Preconditions.checkNotNull(alias);
     BuildTarget buildTarget = aliasToBuildTargetMap.get(alias);
     if (buildTarget != null) {
       return buildTarget.getFullyQualifiedName();

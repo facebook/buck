@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,9 +58,9 @@ public class DependencyQuery {
   }
 
   private DependencyQuery(Optional<Integer> depth, String target, Optional<String> source) {
-    this.depth = Preconditions.checkNotNull(depth);
-    this.target = Preconditions.checkNotNull(target);
-    this.source = Preconditions.checkNotNull(source);
+    this.depth = depth;
+    this.target = target;
+    this.source = source;
   }
 
   String getTarget() {

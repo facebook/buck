@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -49,8 +48,8 @@ public class MissingSymbolsHandler {
   private MissingSymbolsHandler(
       Console console,
       JavaSymbolFinder javaSymbolFinder) {
-    this.console = Preconditions.checkNotNull(console);
-    this.javaSymbolFinder = Preconditions.checkNotNull(javaSymbolFinder);
+    this.console = console;
+    this.javaSymbolFinder = javaSymbolFinder;
   }
 
   public static MissingSymbolsHandler create(

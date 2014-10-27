@@ -110,9 +110,9 @@ public class ExopackageInstaller {
     final String nativeLibPath;
     final String versionCode;
     private PackageInfo(String apkPath, String nativeLibPath, String versionCode) {
-      this.nativeLibPath = Preconditions.checkNotNull(nativeLibPath);
-      this.apkPath = Preconditions.checkNotNull(apkPath);
-      this.versionCode = Preconditions.checkNotNull(versionCode);
+      this.nativeLibPath = nativeLibPath;
+      this.apkPath = apkPath;
+      this.versionCode = versionCode;
     }
   }
 
@@ -120,10 +120,10 @@ public class ExopackageInstaller {
       ExecutionContext context,
       AdbHelper adbHelper,
       InstallableApk apkRule) {
-    this.adbHelper = Preconditions.checkNotNull(adbHelper);
+    this.adbHelper = adbHelper;
     this.projectFilesystem = context.getProjectFilesystem();
     this.eventBus = context.getBuckEventBus();
-    this.apkRule = Preconditions.checkNotNull(apkRule);
+    this.apkRule = apkRule;
     this.packageName = AdbHelper.tryToExtractPackageNameFromManifest(apkRule, context);
     this.dataRoot = Paths.get("/data/local/tmp/exopackage/").resolve(packageName);
 

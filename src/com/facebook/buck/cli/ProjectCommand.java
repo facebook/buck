@@ -109,9 +109,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         ActionGraph mainGraph,
         Optional<ActionGraph> testGraph,
         ActionGraph projectGraph) {
-      this.mainGraph = Preconditions.checkNotNull(mainGraph);
-      this.testGraph = Preconditions.checkNotNull(testGraph);
-      this.projectGraph = Preconditions.checkNotNull(projectGraph);
+      this.mainGraph = mainGraph;
+      this.testGraph = testGraph;
+      this.projectGraph = projectGraph;
     }
 
     public ActionGraph getMainGraph() {

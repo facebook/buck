@@ -73,7 +73,7 @@ class DependentModule {
   private String jdkType;
 
   private DependentModule(String type, @Nullable BuildTarget target) {
-    this.type = Preconditions.checkNotNull(type);
+    this.type = type;
     this.target = target;
   }
 

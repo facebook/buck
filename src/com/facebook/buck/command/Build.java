@@ -45,7 +45,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -103,7 +102,7 @@ public class Build implements Closeable {
       BuckConfig buckConfig,
       ObjectMapper objectMapper,
       Clock clock) {
-    this.actionGraph = Preconditions.checkNotNull(actionGraph);
+    this.actionGraph = actionGraph;
 
     Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
         actionGraph,
@@ -124,12 +123,12 @@ public class Build implements Closeable {
         .setJavaPackageFinder(javaPackageFinder)
         .setObjectMapper(objectMapper)
         .build();
-    this.artifactCache = Preconditions.checkNotNull(artifactCache);
-    this.buildEngine = Preconditions.checkNotNull(buildEngine);
+    this.artifactCache = artifactCache;
+    this.buildEngine = buildEngine;
     this.stepRunner = new DefaultStepRunner(executionContext, numThreads);
-    this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
-    this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
-    this.clock = Preconditions.checkNotNull(clock);
+    this.javaPackageFinder = javaPackageFinder;
+    this.buildDependencies = buildDependencies;
+    this.clock = clock;
   }
 
   public ActionGraph getActionGraph() {

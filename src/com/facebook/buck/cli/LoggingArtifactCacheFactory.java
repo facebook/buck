@@ -24,7 +24,6 @@ import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;
@@ -48,10 +47,10 @@ public class LoggingArtifactCacheFactory implements ArtifactCacheFactory {
       ExecutionEnvironment executionEnvironment,
       BuckEventBus buckEventBus,
       FileHashCache fileHashCache) {
-    this.executionEnvironment = Preconditions.checkNotNull(executionEnvironment);
-    this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
+    this.executionEnvironment = executionEnvironment;
+    this.buckEventBus = buckEventBus;
     this.createdArtifactCaches = Lists.newArrayList();
-    this.fileHashCache = Preconditions.checkNotNull(fileHashCache);
+    this.fileHashCache = fileHashCache;
   }
 
   @Override

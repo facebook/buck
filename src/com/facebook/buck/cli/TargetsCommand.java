@@ -381,10 +381,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         ImmutableSet<BuildTarget> matchingBuildRules,
         BuckEventBus eventBus) {
       this.graph = partialGraph.getTargetGraph().getActionGraph(eventBus);
-      this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
-      this.matchingBuildRules = Preconditions.checkNotNull(matchingBuildRules);
+      this.buildRuleTypes = buildRuleTypes;
+      this.matchingBuildRules = matchingBuildRules;
 
-      Preconditions.checkNotNull(referencedInputs);
       if (!referencedInputs.isEmpty()) {
         this.referencedInputs = referencedInputs;
         BuildFileTree tree = new InMemoryBuildFileTree(partialGraph.getTargets());

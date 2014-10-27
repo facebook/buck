@@ -105,7 +105,7 @@ final class Module {
 
   Module(BuildRule srcRule, BuildTarget target) {
     this.srcRule = srcRule;
-    this.target = Preconditions.checkNotNull(target);
+    this.target = target;
   }
 
   String getModuleDirectoryPathWithSlash() {

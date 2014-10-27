@@ -22,7 +22,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -35,7 +34,6 @@ public class CleanCommand implements CommandRunner {
   private final ProjectFilesystem filesystem;
 
   public CleanCommand(CommandRunnerParams params) {
-    Preconditions.checkNotNull(params);
     console = params.getConsole();
     filesystem = params.getRepository().getFilesystem();
   }

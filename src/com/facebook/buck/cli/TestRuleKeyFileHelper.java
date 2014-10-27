@@ -23,7 +23,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -39,8 +38,8 @@ public class TestRuleKeyFileHelper {
   private final BuildEngine buildEngine;
 
   public TestRuleKeyFileHelper(ProjectFilesystem projectFilesystem, BuildEngine buildEngine) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.buildEngine = Preconditions.checkNotNull(buildEngine);
+    this.projectFilesystem = projectFilesystem;
+    this.buildEngine = buildEngine;
   }
 
   /**
@@ -48,8 +47,8 @@ public class TestRuleKeyFileHelper {
    * @return A {@link Step} that writes the rule key for the test to it's output directory
    */
   public Step createRuleKeyInDirStep(TestRule testRule) throws IOException {
-    RuleKey ruleKey = Preconditions.checkNotNull(buildEngine.getRuleKey(testRule.getBuildTarget()));
-    Path outputDir = Preconditions.checkNotNull(testRule.getPathToTestOutputDirectory());
+    RuleKey ruleKey = buildEngine.getRuleKey(testRule.getBuildTarget());
+    Path outputDir = testRule.getPathToTestOutputDirectory();
     return new WriteFileStep(ruleKey.toString(), getRuleKeyFilePath(outputDir));
   }
 
@@ -58,8 +57,8 @@ public class TestRuleKeyFileHelper {
    * @return true if a rule key is written in the specified directory.
    */
   public boolean isRuleKeyInDir(TestRule testRule) throws IOException {
-    RuleKey ruleKey = Preconditions.checkNotNull(buildEngine.getRuleKey(testRule.getBuildTarget()));
-    Path outputDir = Preconditions.checkNotNull(testRule.getPathToTestOutputDirectory());
+    RuleKey ruleKey = buildEngine.getRuleKey(testRule.getBuildTarget());
+    Path outputDir = testRule.getPathToTestOutputDirectory();
     Optional<String> ruleKeyOnDisk = projectFilesystem.readFirstLine(getRuleKeyFilePath(outputDir));
     return ruleKeyOnDisk.isPresent() && ruleKeyOnDisk.get().equals(ruleKey.toString());
   }

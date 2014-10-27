@@ -41,7 +41,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -125,20 +124,20 @@ class CommandRunnerParams {
       FileHashCache fileHashCache,
       Clock clock,
       Optional<ProcessManager> processManager) {
-    this.console = Preconditions.checkNotNull(console);
-    this.repository = Preconditions.checkNotNull(repository);
-    this.buildEngine = Preconditions.checkNotNull(buildEngine);
-    this.artifactCacheFactory = Preconditions.checkNotNull(artifactCacheFactory);
-    this.eventBus = Preconditions.checkNotNull(eventBus);
-    this.parser = Preconditions.checkNotNull(parser);
-    this.platform = Preconditions.checkNotNull(platform);
-    this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
-    this.environment = Preconditions.checkNotNull(environment);
+    this.console = console;
+    this.repository = repository;
+    this.buildEngine = buildEngine;
+    this.artifactCacheFactory = artifactCacheFactory;
+    this.eventBus = eventBus;
+    this.parser = parser;
+    this.platform = platform;
+    this.androidDirectoryResolver = androidDirectoryResolver;
+    this.environment = environment;
     this.javaPackageFinder = javaPackageFinder;
-    this.objectMapper = Preconditions.checkNotNull(objectMapper);
-    this.fileHashCache = Preconditions.checkNotNull(fileHashCache);
-    this.clock = Preconditions.checkNotNull(clock);
-    this.processManager = Preconditions.checkNotNull(processManager);
+    this.objectMapper = objectMapper;
+    this.fileHashCache = fileHashCache;
+    this.clock = clock;
+    this.processManager = processManager;
   }
 
   public Ansi getAnsi() {

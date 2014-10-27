@@ -31,7 +31,6 @@ public class LabelSelector {
       Splitter.on(TestLabelOptions.LABEL_SEPERATOR).trimResults().omitEmptyStrings();
 
   static LabelSelector fromString(String raw) {
-    Preconditions.checkNotNull(raw);
     Preconditions.checkState(!raw.isEmpty());
 
     boolean isInclusive = true;

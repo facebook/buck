@@ -21,7 +21,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 
 /**
  * Events for timing the starting of android events.
@@ -32,8 +31,8 @@ public abstract class StartActivityEvent extends AbstractBuckEvent implements Le
   private final String activityName;
 
   protected StartActivityEvent(BuildTarget buildTarget, String activityName) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
-    this.activityName = Preconditions.checkNotNull(activityName);
+    this.buildTarget = buildTarget;
+    this.activityName = activityName;
   }
 
   public BuildTarget getBuildTarget() {

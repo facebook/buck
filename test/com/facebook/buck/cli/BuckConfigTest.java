@@ -228,13 +228,6 @@ public class BuckConfigTest {
     BuckConfig.validateAliasName("FB4_");
 
     try {
-      BuckConfig.validateAliasName(null);
-      fail("Should have thrown HumanReadableException");
-    } catch (HumanReadableException e) {
-      assertEquals("Alias cannot be null.", e.getHumanReadableErrorMessage());
-    }
-
-    try {
       BuckConfig.validateAliasName("");
       fail("Should have thrown HumanReadableException");
     } catch (HumanReadableException e) {

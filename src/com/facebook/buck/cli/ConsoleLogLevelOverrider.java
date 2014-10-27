@@ -20,7 +20,6 @@ import com.facebook.buck.log.ConsoleHandler;
 import com.facebook.buck.util.Verbosity;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.util.logging.Level;
 
@@ -35,7 +34,7 @@ public class ConsoleLogLevelOverrider implements AutoCloseable {
   private final boolean shouldUnregister;
 
   public ConsoleLogLevelOverrider(String commandId, Verbosity verbosity) {
-    this.commandId = Preconditions.checkNotNull(commandId);
+    this.commandId = commandId;
     consoleHandler = JavaUtilLogHandlers.getConsoleHandler();
     if (consoleHandler.isPresent() &&
         verbosity == Verbosity.ALL) {

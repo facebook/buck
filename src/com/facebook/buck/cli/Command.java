@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 import java.io.IOException;
@@ -137,8 +136,8 @@ public enum Command {
     }
 
     public ParseResult(Optional<Command> command, Optional<String> errorText) {
-      this.command = Preconditions.checkNotNull(command);
-      this.errorText = Preconditions.checkNotNull(errorText);
+      this.command = command;
+      this.errorText = errorText;
     }
   }
 
@@ -150,7 +149,6 @@ public enum Command {
    *     to run something like {@code buck --help}.
    */
   public static ParseResult parseCommandName(String name) {
-    Preconditions.checkNotNull(name);
 
     Command command = null;
     String errorText = null;
@@ -171,7 +169,6 @@ public enum Command {
   }
 
   private static Optional<Command> fuzzyMatch(String name) {
-    Preconditions.checkNotNull(name);
     name = name.toUpperCase();
 
     int minDist = Integer.MAX_VALUE;

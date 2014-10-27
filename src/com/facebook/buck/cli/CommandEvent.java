@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -37,8 +36,8 @@ public abstract class CommandEvent extends AbstractBuckEvent {
    * @param isDaemon Whether the daemon was in use.
    */
   private CommandEvent(String commandName, ImmutableList<String> args, boolean isDaemon) {
-    this.commandName = Preconditions.checkNotNull(commandName);
-    this.args = Preconditions.checkNotNull(args);
+    this.commandName = commandName;
+    this.args = args;
     this.isDaemon = isDaemon;
   }
 

@@ -171,8 +171,8 @@ public final class Main {
         ObjectMapper objectMapper)
         throws IOException, InterruptedException  {
       this.repository = repositoryFactory.getRootRepository();
-      this.clock = Preconditions.checkNotNull(clock);
-      this.objectMapper = Preconditions.checkNotNull(objectMapper);
+      this.clock = clock;
+      this.objectMapper = objectMapper;
       this.hashCache = new DefaultFileHashCache(repository.getFilesystem());
       this.parser = Parser.createParser(
           repositoryFactory,
@@ -395,8 +395,8 @@ public final class Main {
       PrintStream stdOut,
       PrintStream stdErr,
       Optional<BuckEventListener> externalEventsListener) {
-    this.stdOut = Preconditions.checkNotNull(stdOut);
-    this.stdErr = Preconditions.checkNotNull(stdErr);
+    this.stdOut = stdOut;
+    this.stdErr = stdErr;
     this.platform = Platform.detect();
     this.objectMapper = new ObjectMapper();
     this.externalEventsListener = externalEventsListener;
@@ -1026,7 +1026,7 @@ public final class Main {
     }
 
     private DaemonSlayer(NGContext context) {
-      this.context = Preconditions.checkNotNull(context);
+      this.context = context;
       this.runCount = 0;
       this.lastRunCount = 0;
       this.executingCommand = false;

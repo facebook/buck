@@ -20,14 +20,13 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEvent {
   private final String packageName;
 
   public UninstallEvent(String packageName) {
-    this.packageName = Preconditions.checkNotNull(packageName);
+    this.packageName = packageName;
   }
 
   public String getPackageName() {

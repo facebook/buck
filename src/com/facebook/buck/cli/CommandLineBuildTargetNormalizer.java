@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -62,7 +61,6 @@ class CommandLineBuildTargetNormalizer {
   private final Function<String, String> normalizer;
 
   CommandLineBuildTargetNormalizer(final BuckConfig buckConfig) {
-    Preconditions.checkNotNull(buckConfig);
     this.normalizer = new Function<String, String>() {
       @Override
       public String apply(String arg) {
@@ -88,7 +86,6 @@ class CommandLineBuildTargetNormalizer {
 
   @VisibleForTesting
   static String normalizeBuildTargetIdentifier(final String buildTargetFromCommandLine) {
-    Preconditions.checkNotNull(buildTargetFromCommandLine);
 
     // Build rules in the root are weird, but they do happen. Special-case them.
     if (buildTargetFromCommandLine.startsWith("//:")) {
