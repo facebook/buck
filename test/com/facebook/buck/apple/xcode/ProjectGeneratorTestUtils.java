@@ -178,7 +178,8 @@ public final class ProjectGeneratorTestUtils {
         default:
           String serialized = "$" + sourceTree + "/" + file.getFileRef().getPath();
           assertTrue(
-              "Framework should be listed in list of expected entries: " + serialized,
+              "Source tree prefixed file references should exist in list of expected entries: " +
+                  serialized,
               entries.contains(serialized));
           break;
       }

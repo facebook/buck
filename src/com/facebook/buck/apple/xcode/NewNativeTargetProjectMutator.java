@@ -19,10 +19,12 @@ package com.facebook.buck.apple.xcode;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.HeaderVisibility;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
@@ -30,8 +32,10 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -81,6 +85,7 @@ public class NewNativeTargetProjectMutator {
   private boolean shouldGenerateCopyHeadersPhase = true;
   private ImmutableSet<String> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
+  private ImmutableSet<AppleResource> resources = ImmutableSet.of();
 
   public NewNativeTargetProjectMutator(
       PathRelativizer pathRelativizer,
@@ -142,6 +147,11 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
+  public NewNativeTargetProjectMutator setResources(ImmutableSet<AppleResource> resources) {
+    this.resources = resources;
+    return this;
+  }
+
   public Result buildTargetAndAddToProject(PBXProject project) {
     PBXNativeTarget target = new PBXNativeTarget(targetName, productType);
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(targetName);
@@ -153,6 +163,7 @@ public class NewNativeTargetProjectMutator {
     // Phases
     addPhasesAndGroupsForSources(target, targetGroup);
     addFrameworksBuildPhase(project, target);
+    addResourcesBuildPhase(target, targetGroup);
 
     // Product
 
@@ -352,5 +363,50 @@ public class NewNativeTargetProjectMutator {
     for (PBXFileReference archive : archives) {
       frameworksBuildPhase.getFiles().add(new PBXBuildFile(archive));
     }
+  }
+
+  private void addResourcesBuildPhase(PBXNativeTarget target, PBXGroup targetGroup) {
+    if (resources.isEmpty()) {
+      return;
+    }
+
+    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
+    PBXBuildPhase phase = new PBXResourcesBuildPhase();
+    target.getBuildPhases().add(phase);
+    for (AppleResource resource : resources) {
+      Iterable<Path> paths = Iterables.concat(
+          sourcePathResolver.getAllPaths(resource.getFiles()),
+          resource.getDirs());
+      for (Path path : paths) {
+        PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+            new SourceTreePath(
+                PBXReference.SourceTree.SOURCE_ROOT,
+                pathRelativizer.outputDirToRootRelative(path)));
+        PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+        phase.getFiles().add(buildFile);
+      }
+
+      for (String virtualOutputPath : resource.getVariants().keySet()) {
+        ImmutableMap<String, SourcePath> contents = resource.getVariants().get(virtualOutputPath);
+
+        String variantName = Paths.get(virtualOutputPath).getFileName().toString();
+        PBXVariantGroup variantGroup =
+            resourcesGroup.getOrCreateChildVariantGroupByName(variantName);
+
+        PBXBuildFile buildFile = new PBXBuildFile(variantGroup);
+        phase.getFiles().add(buildFile);
+
+        for (String childVirtualName : contents.keySet()) {
+          SourceTreePath sourceTreePath = new SourceTreePath(
+              PBXReference.SourceTree.SOURCE_ROOT,
+              pathRelativizer.outputPathToSourcePath(contents.get(childVirtualName)));
+
+          variantGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
+              childVirtualName,
+              sourceTreePath);
+        }
+      }
+    }
+    LOG.debug("Added resources build phase %s", phase);
   }
 }

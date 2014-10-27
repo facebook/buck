@@ -17,7 +17,9 @@
 package com.facebook.buck.apple.xcode;
 
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasSingletonPhaseWithEntries;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.hamcrest.core.IsNot.not;
@@ -30,6 +32,8 @@ import static org.junit.Assert.assertTrue;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.AppleResource;
+import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
@@ -38,9 +42,11 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -56,13 +62,14 @@ import org.junit.Test;
 import java.nio.file.Paths;
 
 public class NewNativeTargetProjectMutatorTest {
+  private BuildRuleResolver buildRuleResolver;
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
   private SourcePathResolver sourcePathResolver;
 
   @Before
   public void setUp() {
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    buildRuleResolver = new BuildRuleResolver();
     generatedProject = new PBXProject("TestProject");
     sourcePathResolver = new SourcePathResolver(buildRuleResolver);
     pathRelativizer = new PathRelativizer(
@@ -252,6 +259,31 @@ public class NewNativeTargetProjectMutatorTest {
         ImmutableList.of(
             "$SDKROOT/Foo.framework",
             "$BUILT_PRODUCTS_DIR/libdep.a"));
+  }
+
+  @Test
+  public void testResourcesBuildPhase() {
+    BuildTarget testBuildTarget = BuildTarget.builder("//foo", "binary").build();
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+
+    AppleResourceDescription appleResourceDescription = new AppleResourceDescription();
+    AppleResourceDescription.Arg arg = createDescriptionArgWithDefaults(appleResourceDescription);
+    arg.files = ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png"));
+    AppleResource resource = appleResourceDescription.createBuildRule(
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "resources").build())
+            .setType(AppleResourceDescription.TYPE)
+            .build(),
+        buildRuleResolver,
+        arg);
+
+    mutator.setResources(ImmutableSet.of(resource));
+    NewNativeTargetProjectMutator.Result result =
+        mutator.buildTargetAndAddToProject(generatedProject);
+
+    assertHasSingletonPhaseWithEntries(
+        result.target,
+        PBXResourcesBuildPhase.class,
+        ImmutableList.of("$SOURCE_ROOT/../foo.png"));
   }
 
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults(BuildTarget target) {

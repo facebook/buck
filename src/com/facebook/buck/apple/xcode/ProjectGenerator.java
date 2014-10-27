@@ -46,17 +46,14 @@ import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcconfig.XcconfigStack;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
@@ -476,7 +473,7 @@ public class ProjectGenerator {
         "%s",
         Optional.<Path>absent(),
         /* includeFrameworks */ true,
-        ImmutableList.<AppleResource>of(),
+        ImmutableSet.<AppleResource>of(),
         ImmutableList.<AppleAssetCatalog>of());
     LOG.debug("Generated Apple binary target %s", target);
     return target;
@@ -496,7 +493,7 @@ public class ProjectGenerator {
         AppleLibrary.getOutputFileNameFormat(appleLibrary.getLinkedDynamically()),
         Optional.<Path>absent(),
         /* includeFrameworks */ appleLibrary.getLinkedDynamically(),
-        ImmutableList.<AppleResource>of(),
+        ImmutableSet.<AppleResource>of(),
         ImmutableList.<AppleAssetCatalog>of());
     LOG.debug("Generated iOS library target %s", target);
     return target;
@@ -533,7 +530,7 @@ public class ProjectGenerator {
       String productOutputFormat,
       Optional<Path> infoPlistOptional,
       boolean includeFrameworks,
-      Iterable<AppleResource> resources,
+      ImmutableSet<AppleResource> resources,
       Iterable<AppleAssetCatalog> assetCatalogs)
       throws IOException {
     BuildTarget buildTarget = bundle.isPresent()
@@ -554,7 +551,8 @@ public class ProjectGenerator {
             Paths.get(String.format(productOutputFormat, productName)))
         .setGid(appleBuildRule.getGid())
         .setShouldGenerateCopyHeadersPhase(!appleBuildRule.getUseBuckHeaderMaps())
-        .setSources(appleBuildRule.getSrcs(), appleBuildRule.getPerFileFlags());
+        .setSources(appleBuildRule.getSrcs(), appleBuildRule.getPerFileFlags())
+        .setResources(resources);
 
     if (includeFrameworks) {
       ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
@@ -643,9 +641,6 @@ public class ProjectGenerator {
           appleBuildRule.getPerFileFlags());
     }
 
-    if (!Iterables.isEmpty(resources)) {
-      addResourcesBuildPhase(target, targetGroup, resources);
-    }
     if (!Iterables.isEmpty(assetCatalogs)) {
       addAssetCatalogBuildPhase(target, targetGroup, assetCatalogs);
     }
@@ -954,50 +949,6 @@ public class ProjectGenerator {
           "Please declare '" + fileName + "' as public, " +
           "or use the default visibility (i.e. by target) instead.");
     }
-  }
-
-  private void addResourcesBuildPhase(
-      PBXNativeTarget target,
-      PBXGroup targetGroup,
-      Iterable<AppleResource> resources) {
-    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
-    PBXBuildPhase phase = new PBXResourcesBuildPhase();
-    target.getBuildPhases().add(phase);
-    for (AppleResource resource : resources) {
-      Iterable<Path> paths = Iterables.concat(
-          resolver.getAllPaths(resource.getFiles()),
-          resource.getDirs());
-      for (Path path : paths) {
-        PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputDirToRootRelative(path)));
-        PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-        phase.getFiles().add(buildFile);
-      }
-
-      for (String virtualOutputPath : resource.getVariants().keySet()) {
-        ImmutableMap<String, SourcePath> contents = resource.getVariants().get(virtualOutputPath);
-
-        String variantName = Paths.get(virtualOutputPath).getFileName().toString();
-        PBXVariantGroup variantGroup =
-            resourcesGroup.getOrCreateChildVariantGroupByName(variantName);
-
-        PBXBuildFile buildFile = new PBXBuildFile(variantGroup);
-        phase.getFiles().add(buildFile);
-
-        for (String childVirtualName : contents.keySet()) {
-          SourceTreePath sourceTreePath = new SourceTreePath(
-              PBXReference.SourceTree.SOURCE_ROOT,
-              pathRelativizer.outputPathToSourcePath(contents.get(childVirtualName)));
-
-          variantGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
-              childVirtualName,
-              sourceTreePath);
-        }
-      }
-    }
-    LOG.debug("Added resources build phase %s", phase);
   }
 
   private void addAssetCatalogBuildPhase(
@@ -1641,18 +1592,12 @@ public class ProjectGenerator {
    * @param rule  Build rule at the tip of the traversal.
    * @return The recursive resource buildables.
    */
-  private static Iterable<AppleResource> collectRecursiveResources(BuildRule rule) {
+  private static ImmutableSet<AppleResource> collectRecursiveResources(BuildRule rule) {
     Iterable<BuildRule> resourceRules = AppleBuildRules.getRecursiveRuleDependenciesOfType(
         AppleBuildRules.RecursiveRuleDependenciesMode.COPYING,
         rule,
         AppleResourceDescription.TYPE);
-    ImmutableSet.Builder<AppleResource> resources = ImmutableSet.builder();
-    for (BuildRule resourceRule : resourceRules) {
-      AppleResource resource =
-          (AppleResource) Preconditions.checkNotNull(resourceRule);
-      resources.add(resource);
-    }
-    return resources.build();
+    return ImmutableSet.copyOf(Iterables.filter(resourceRules, AppleResource.class));
   }
 
   /**
