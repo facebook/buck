@@ -161,6 +161,14 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
     return getBuckConfig().getBooleanValue("project", "read_only", DEFAULT_READ_ONLY_VALUE);
   }
 
+  /**
+   * Returns true if Buck should prompt to kill a running IDE before changing its files,
+   * false otherwise.
+   */
+  public boolean getIdePrompt() {
+    return getBuckConfig().getBooleanValue("project", "ide_prompt", true);
+  }
+
   public Ide getIde() {
     if (ide != null) {
       return ide;

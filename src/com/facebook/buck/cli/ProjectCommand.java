@@ -292,7 +292,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    */
   int runXcodeProjectGenerator(ProjectCommandOptions options)
       throws IOException, InterruptedException {
-    checkForAndKillXcodeIfRunning();
+    checkForAndKillXcodeIfRunning(options.getIdePrompt());
 
     ActionGraphs actionGraphs;
     SourcePathResolver resolver;
@@ -402,23 +402,39 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return 0;
   }
 
-  private void checkForAndKillXcodeIfRunning() throws InterruptedException, IOException {
+  private void checkForAndKillXcodeIfRunning(boolean enablePrompt)
+      throws InterruptedException, IOException {
     Optional<ProcessManager> processManager = getProcessManager();
-    if (processManager.isPresent() &&
-        processManager.get().isProcessRunning(XCODE_PROCESS_NAME)) {
-      if (canPrompt() &&
-          prompt(
-              "Xcode is currently running. Buck might need to modify files Xcode currently has " +
-              "open, which can cause it to become unstable.\n\nKill Xcode and continue?")) {
+    if (!processManager.isPresent()) {
+      LOG.warn("Could not check if Xcode is running (no process manager)");
+      return;
+    }
+
+    if (!processManager.get().isProcessRunning(XCODE_PROCESS_NAME)) {
+      LOG.debug("Xcode is not running.");
+      return;
+    }
+
+    if (enablePrompt && canPrompt()) {
+      if (prompt(
+              "Xcode is currently running. Buck will modify files Xcode currently has " +
+              "open, which can cause it to become unstable.\n\n" +
+              "Kill Xcode and continue?")) {
         processManager.get().killProcess(XCODE_PROCESS_NAME);
       } else {
         console.getStdOut().println(
             console.getAnsi().asWarningText(
-                "Xcode is still running. Generated projects might be lost or corrupted if Xcode " +
+                "Xcode is running. Generated projects might be lost or corrupted if Xcode " +
                 "currently has them open."));
       }
+      console.getStdOut().print(
+          "To disable this prompt in the future, add the following to .buckconfig.local: \n\n" +
+          "[project]\n" +
+          "  ide_prompt = false\n\n");
     } else {
-      LOG.warn("Could not check if Xcode is running (no process manager)");
+      LOG.debug(
+          "Xcode is running, but cannot prompt to kill it (enabled %s, can prompt %s)",
+          enablePrompt, canPrompt());
     }
   }
 
