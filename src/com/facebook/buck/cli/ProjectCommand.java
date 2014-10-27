@@ -650,7 +650,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       boolean enableProfiling)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
 
-    TargetGraph fullGraph = parser.buildTargetGraph(
+    TargetGraph fullGraph = parser.buildTargetGraphForTargetNodeSpecs(
         ImmutableList.of(
             new TargetNodePredicateSpec(
                 Predicates.<TargetNode<?>>alwaysTrue(),

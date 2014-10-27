@@ -340,7 +340,7 @@ public class Parser {
    * @param eventBus used to log events while parsing.
    * @return the target graph containing the build targets and their related targets.
    */
-  public synchronized TargetGraph buildTargetGraph(
+  public synchronized TargetGraph buildTargetGraphForTargetNodeSpecs(
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
@@ -388,14 +388,14 @@ public class Parser {
    * @param eventBus used to log events while parsing.
    * @return the target graph containing the build targets and their related targets.
    */
-  public TargetGraph buildTargetGraph(
+  public TargetGraph buildTargetGraphForBuildTargets(
       Iterable<BuildTarget> buildTargets,
       Iterable<String> defaultIncludes,
       BuckEventBus eventBus,
       Console console,
       ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    return buildTargetGraph(
+    return buildTargetGraphForTargetNodeSpecs(
         Iterables.transform(buildTargets, BuildTargetSpec.TO_BUILD_TARGET_SPEC),
         defaultIncludes,
         eventBus,
@@ -685,7 +685,7 @@ public class Parser {
     }
     return FluentIterable
         .from(
-            buildTargetGraph(
+            buildTargetGraphForTargetNodeSpecs(
                 ImmutableList.of(new TargetNodePredicateSpec(filter, filesystem.getIgnorePaths())),
                 includes,
                 buckEventBus,

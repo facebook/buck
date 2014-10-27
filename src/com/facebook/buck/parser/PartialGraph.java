@@ -67,7 +67,7 @@ public class PartialGraph {
       boolean enableProfiling)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
 
-    TargetGraph graph = parser.buildTargetGraph(
+    TargetGraph graph = parser.buildTargetGraphForTargetNodeSpecs(
         ImmutableList.of(
             new TargetNodePredicateSpec(
                 Predicates.<TargetNode<?>>alwaysTrue(),
@@ -121,7 +121,7 @@ public class PartialGraph {
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     Preconditions.checkNotNull(parser);
 
-    TargetGraph graph = parser.buildTargetGraph(
+    TargetGraph graph = parser.buildTargetGraphForBuildTargets(
         targets,
         includes,
         eventBus,

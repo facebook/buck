@@ -79,7 +79,7 @@ public class CrossRepoTargetsIntegrationTest {
         BuildTarget.builder("//", "external").setRepository("external").build();
 
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    ActionGraph graph = parser.buildTargetGraph(
+    ActionGraph graph = parser.buildTargetGraphForBuildTargets(
         ImmutableList.of(mainTarget),
         ImmutableList.<String>of(),
         eventBus,

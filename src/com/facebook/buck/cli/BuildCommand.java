@@ -108,7 +108,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     // Parse the build files to create a ActionGraph.
     ActionGraph actionGraph;
     try {
-      actionGraph = getParser().buildTargetGraph(
+      actionGraph = getParser().buildTargetGraphForBuildTargets(
           buildTargets,
           options.getDefaultIncludes(),
           getBuckEventBus(),
