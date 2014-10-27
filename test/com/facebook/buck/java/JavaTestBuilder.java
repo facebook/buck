@@ -32,7 +32,7 @@ public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg
     super(new JavaTestDescription(JavaCompilerEnvironment.DEFAULT), target);
   }
 
-  public static JavaTestBuilder newJavaTestBuilder(BuildTarget target) {
+  public static JavaTestBuilder createBuilder(BuildTarget target) {
     return new JavaTestBuilder(target);
   }
 

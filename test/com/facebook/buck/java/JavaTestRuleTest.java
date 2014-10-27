@@ -81,7 +81,7 @@ public class JavaTestRuleTest {
 
   private JavaTest newRule(ImmutableList<String> vmArgs) {
     return (JavaTest) JavaTestBuilder
-        .newJavaTestBuilder(BuildTargetFactory.newInstance("//example:test"))
+        .createBuilder(BuildTargetFactory.newInstance("//example:test"))
         .setVmArgs(vmArgs)
         .addSrc(Paths.get("ExampleTest.java"))
         .build(new BuildRuleResolver());

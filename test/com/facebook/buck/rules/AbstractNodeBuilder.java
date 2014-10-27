@@ -72,7 +72,7 @@ public abstract class AbstractNodeBuilder<A> {
           description,
           arg,
           factoryParams,
-          /* declaredDeps */ ImmutableSet.<BuildTarget>of(),
+          getDepsFromArg(),
           ImmutableSet.<BuildTargetPattern>of());
     } catch (NoSuchBuildTargetException e) {
       throw Throwables.propagate(e);
@@ -102,6 +102,25 @@ public abstract class AbstractNodeBuilder<A> {
     } catch (ReflectiveOperationException ignored) {
       // Field doesn't exist: no deps.
       return builder.build();
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private ImmutableSortedSet<BuildTarget> getDepsFromArg() {
+    // Not all rules have deps, but all rules call them deps. When they do, they're always optional.
+    // Grab them in the unsafest way I know.
+    try {
+      Field depsField = arg.getClass().getField("deps");
+      Object optional = depsField.get(arg);
+
+      if (optional == null) {
+        return ImmutableSortedSet.of();
+      }
+      // Here's a whole series of assumptions in one lump of a Bad Idea.
+      return (ImmutableSortedSet<BuildTarget>) ((Optional<?>) optional).get();
+    } catch (ReflectiveOperationException ignored) {
+      // Field doesn't exist: no deps.
+      return ImmutableSortedSet.of();
     }
   }
 

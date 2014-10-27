@@ -90,7 +90,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
     }
 
     if (options.shouldGenerateDotOutput()) {
-      return printDotOutput(partialGraph.getActionGraph());
+      return printDotOutput(partialGraph.getTargetGraph().getActionGraph(getBuckEventBus()));
     } else if (options.shouldGenerateJsonOutput()) {
       return printJsonClasspath(partialGraph);
     } else {
@@ -121,7 +121,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   @VisibleForTesting
   int printClasspath(PartialGraph partialGraph) {
     ImmutableSet<BuildTarget> targets = partialGraph.getTargets();
-    ActionGraph graph = partialGraph.getActionGraph();
+    ActionGraph graph = partialGraph.getTargetGraph().getActionGraph(getBuckEventBus());
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
     for (BuildTarget target : targets) {
@@ -144,7 +144,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
 
   @VisibleForTesting
   int printJsonClasspath(PartialGraph partialGraph) throws IOException {
-    ActionGraph graph = partialGraph.getActionGraph();
+    ActionGraph graph = partialGraph.getTargetGraph().getActionGraph(getBuckEventBus());
     ImmutableSet<BuildTarget> targets = partialGraph.getTargets();
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 

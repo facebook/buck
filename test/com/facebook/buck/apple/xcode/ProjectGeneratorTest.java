@@ -2535,7 +2535,8 @@ public class ProjectGeneratorTest {
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
-      BuildRuleResolver resolver, ImmutableSet<BuildTarget> initialBuildTargets) {
+      BuildRuleResolver resolver,
+      ImmutableSet<BuildTarget> initialBuildTargets) {
     return createProjectGeneratorForCombinedProject(
         resolver.getBuildRules(),
         initialBuildTargets);

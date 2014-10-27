@@ -295,7 +295,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         environment,
         false /* enableProfiling */);
 
-    final ActionGraph graph = partialGraph.getActionGraph();
+    final ActionGraph graph = partialGraph.getTargetGraph().getActionGraph(getBuckEventBus());
 
     // Look up all of the test rules in the action graph.
     Iterable<TestRule> testRules = Iterables.transform(

@@ -63,10 +63,11 @@ public class BuckEventBus implements Closeable {
   }
 
   @VisibleForTesting
-  BuckEventBus(Clock clock,
-               ExecutorService executorService,
-               BuildId buildId,
-               int shutdownTimeoutMillis) {
+  BuckEventBus(
+      Clock clock,
+      ExecutorService executorService,
+      BuildId buildId,
+      int shutdownTimeoutMillis) {
     this.clock = Preconditions.checkNotNull(clock);
     this.executorService = Preconditions.checkNotNull(executorService);
     this.eventBus = new AsyncEventBus("buck-build-events", executorService);

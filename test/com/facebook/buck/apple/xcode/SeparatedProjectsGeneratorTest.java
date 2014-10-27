@@ -21,7 +21,6 @@ import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasS
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createAppleBundleBuildRule;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
-import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createPartialGraphFromBuildRules;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -43,7 +42,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
@@ -53,6 +51,7 @@ import com.facebook.buck.rules.coercer.XcodeRuleConfigurationLayer;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
@@ -95,13 +94,12 @@ public class SeparatedProjectsGeneratorTest {
         ImmutableSortedSet.<BuildRule>of(),
         appleLibraryDescription,
         resolver);
-    PartialGraph partialGraph = createPartialGraphFromBuildRules(
-        ImmutableSet.of(rule));
+    resolver.addToIndex(rule);
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         new SourcePathResolver(resolver),
         projectFilesystem,
-        partialGraph.getActionGraph(),
+        RuleMap.createGraphFromBuildRules(resolver),
         executionContext,
         ImmutableSet.of(rule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -120,12 +118,10 @@ public class SeparatedProjectsGeneratorTest {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("target not found");
 
-    PartialGraph partialGraph = createPartialGraphFromBuildRules(ImmutableSet.<BuildRule>of());
-
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         new SourcePathResolver(resolver),
         projectFilesystem,
-        partialGraph.getActionGraph(),
+        RuleMap.createGraphFromBuildRules(resolver),
         executionContext,
         ImmutableSet.of(rule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -150,12 +146,10 @@ public class SeparatedProjectsGeneratorTest {
         ImmutableSortedSet.of(rule.getBuildTarget()));
     resolver.addToIndex(configRule);
 
-    PartialGraph partialGraph = createPartialGraphFromBuildRules(
-        ImmutableSet.of(rule, configRule));
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         new SourcePathResolver(resolver),
         projectFilesystem,
-        partialGraph.getActionGraph(),
+        RuleMap.createGraphFromBuildRules(resolver),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -201,12 +195,10 @@ public class SeparatedProjectsGeneratorTest {
         ImmutableSortedSet.of(rule.getBuildTarget()));
     resolver.addToIndex(configRule);
 
-    PartialGraph partialGraph = createPartialGraphFromBuildRules(
-        ImmutableSet.of(rule, configRule));
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         new SourcePathResolver(resolver),
         projectFilesystem,
-        partialGraph.getActionGraph(),
+        RuleMap.createGraphFromBuildRules(resolver),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -253,12 +245,12 @@ public class SeparatedProjectsGeneratorTest {
         "fooproject",
         resolver,
         ImmutableSortedSet.of(rule.getBuildTarget()));
-    PartialGraph partialGraph = createPartialGraphFromBuildRules(
-        ImmutableSet.of(rule, configRule));
+    resolver.addToIndex(configRule);
+
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         new SourcePathResolver(resolver),
         projectFilesystem,
-        partialGraph.getActionGraph(),
+        RuleMap.createGraphFromBuildRules(resolver),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -307,7 +299,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         new SourcePathResolver(resolver),
         projectFilesystem,
-        createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule)).getActionGraph(),
+        RuleMap.createGraphFromBuildRules(resolver),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -412,8 +404,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         new SourcePathResolver(resolver),
         projectFilesystem,
-        createPartialGraphFromBuildRules(
-            ImmutableSet.of(configRule, rule1, rule2)).getActionGraph(),
+        RuleMap.createGraphFromBuildRules(resolver),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -493,7 +484,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         new SourcePathResolver(resolver),
         projectFilesystem,
-        createPartialGraphFromBuildRules(ImmutableSet.of(configRule, rule)).getActionGraph(),
+        RuleMap.createGraphFromBuildRules(resolver),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -547,8 +538,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         new SourcePathResolver(resolver),
         projectFilesystem,
-        createPartialGraphFromBuildRules(
-            ImmutableSet.of(configRule, libraryRule, binaryRule, nativeRule)).getActionGraph(),
+        RuleMap.createGraphFromBuildRules(resolver),
         executionContext,
         ImmutableSet.of(configRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -595,8 +585,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         new SourcePathResolver(resolver),
         projectFilesystem,
-        createPartialGraphFromBuildRules(
-            ImmutableSet.of(fooRule1, barRule2, fooConfigRule, barConfigRule)).getActionGraph(),
+        RuleMap.createGraphFromBuildRules(resolver),
         executionContext,
         ImmutableSet.of(fooConfigRule.getBuildTarget(), barConfigRule.getBuildTarget()),
         ImmutableSet.<ProjectGenerator.Option>of());

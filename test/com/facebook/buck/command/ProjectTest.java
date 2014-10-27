@@ -494,7 +494,7 @@ public class ProjectTest {
         .build(ruleResolver);
 
     BuildRule testBuildRule = JavaTestBuilder
-        .newJavaTestBuilder(BuildTargetFactory.newInstance("//java/com/example/base:tests"))
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:tests"))
         .addDep(guava.getBuildTarget())
         .build(ruleResolver);
 
@@ -810,7 +810,7 @@ public class ProjectTest {
         .build(ruleResolver);
 
     BuildRule tests = JavaTestBuilder
-        .newJavaTestBuilder(BuildTargetFactory.newInstance("//example/child:tests"))
+        .createBuilder(BuildTargetFactory.newInstance("//example/child:tests"))
         .addSrc(Paths.get("SomeTestFile.java"))
         .addDep(ex2.getBuildTarget())
         .build(ruleResolver);

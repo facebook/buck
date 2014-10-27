@@ -584,9 +584,16 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           environment,
           options.getEnableProfiling());
       return new ActionGraphs(
-          partialGraphs.get(0).getActionGraph(),
-          Optional.of(partialGraphs.get(1).getActionGraph()),
-          partialGraphs.get(2).getActionGraph());
+          partialGraphs
+              .get(0)
+              .getTargetGraph()
+              .getActionGraph(getBuckEventBus()),
+          Optional.of(
+              partialGraphs
+                  .get(1)
+                  .getTargetGraph()
+                  .getActionGraph(getBuckEventBus())),
+          partialGraphs.get(2).getTargetGraph().getActionGraph(getBuckEventBus()));
     } else {
       ImmutableList<PartialGraph> partialGraphs = createPartialGraphs(
           buildTargets,
@@ -603,9 +610,12 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           environment,
           options.getEnableProfiling());
       return new ActionGraphs(
-          partialGraphs.get(0).getActionGraph(),
+          partialGraphs
+              .get(0)
+              .getTargetGraph()
+              .getActionGraph(getBuckEventBus()),
           Optional.<ActionGraph>absent(),
-          partialGraphs.get(1).getActionGraph());
+          partialGraphs.get(1).getTargetGraph().getActionGraph(getBuckEventBus()));
     }
   }
 
@@ -694,12 +704,16 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       ImmutableSet.Builder<BuildTarget> allTargetsBuilder = ImmutableSet.builder();
       allTargetsBuilder.addAll(partialGraph.getTargets());
 
+      ActionGraph actionGraph = partialGraph
+          .getTargetGraph()
+          .getActionGraph(eventBus);
+      ActionGraph associatedActionGraph = associatedPartialGraph
+          .getTargetGraph()
+          .getActionGraph(eventBus);
       for (BuildTarget buildTarget : associatedPartialGraph.getTargets()) {
-        BuildRule buildRule = associatedPartialGraph
-            .getActionGraph()
-            .findBuildRuleByTarget(buildTarget);
+        BuildRule buildRule = associatedActionGraph.findBuildRuleByTarget(buildTarget);
         if (buildRule != null &&
-            associatedRulePredicate.isMatch(buildRule, partialGraph.getActionGraph())) {
+            associatedRulePredicate.isMatch(buildRule, actionGraph)) {
           allTargetsBuilder.add(buildRule.getBuildTarget());
         }
       }

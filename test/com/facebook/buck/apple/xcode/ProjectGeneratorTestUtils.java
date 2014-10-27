@@ -31,9 +31,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.parser.PartialGraphFactory;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -45,7 +42,6 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.util.Types;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -53,7 +49,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -136,19 +131,6 @@ public final class ProjectGeneratorTestUtils {
       }
     }
     return arg;
-  }
-
-  public static PartialGraph createPartialGraphFromBuildRuleResolver(BuildRuleResolver resolver) {
-    ActionGraph graph = RuleMap.createGraphFromBuildRules(resolver);
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    for (BuildRule rule : graph.getNodes()) {
-      targets.add(rule.getBuildTarget());
-    }
-    return PartialGraphFactory.newInstance(graph, targets.build());
-  }
-
-  public static PartialGraph createPartialGraphFromBuildRules(ImmutableSet<BuildRule> rules) {
-    return createPartialGraphFromBuildRuleResolver(new BuildRuleResolver(rules));
   }
 
   static PBXTarget assertTargetExistsAndReturnTarget(

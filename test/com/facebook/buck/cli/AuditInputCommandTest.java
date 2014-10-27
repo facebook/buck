@@ -26,27 +26,23 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.PartialGraph;
 import com.facebook.buck.parser.PartialGraphFactory;
-import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.parser.TargetGraph;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.testutil.RuleMap;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -96,34 +92,24 @@ public class AuditInputCommandTest {
 
   @Test
   public void testJsonClassPathOutput() throws IOException {
-    // Build a DependencyGraph of build rules manually.
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    ImmutableList<String> targets = ImmutableList.of(
-        "//:test-android-library",
-        "//:test-java-library");
-
-    BuildRule rootRule = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//:test-java-library"))
+    BuildTarget rootTarget = BuildTargetFactory.newInstance("//:test-java-library");
+    TargetNode<?> rootNode = JavaLibraryBuilder
+        .createBuilder(rootTarget)
         .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
-        .build(ruleResolver);
+        .build();
 
-    JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:test-android-library"))
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:test-android-library");
+    TargetNode<?> libraryNode = JavaLibraryBuilder
+        .createBuilder(libraryTarget)
         .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
         .addSrc(Paths.get("src/com/facebook/AndroidLibraryTwo.java"))
-        .addDep(rootRule.getBuildTarget())
-        .build(ruleResolver);
+        .addDep(rootTarget)
+        .build();
 
-    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.copyOf(
-        Iterables.transform(
-            targets,
-            new Function<String, BuildTarget>() {
-              @Override
-              public BuildTarget apply(String target) {
-                return BuildTargetFactory.newInstance(target);
-              }
-            }));
-    ActionGraph actionGraph = RuleMap.createGraphFromBuildRules(ruleResolver);
-    PartialGraph partialGraph = PartialGraphFactory.newInstance(actionGraph, buildTargets);
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(rootTarget, libraryTarget);
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(rootNode, libraryNode);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
+    PartialGraph partialGraph = PartialGraphFactory.newInstance(targetGraph, targets);
 
     auditInputCommand.printJsonInputs(partialGraph);
     assertEquals(EXPECTED_JSON, console.getTextWrittenToStdOut());
