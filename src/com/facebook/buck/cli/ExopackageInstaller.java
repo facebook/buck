@@ -428,7 +428,7 @@ public class ExopackageInstaller {
       final int overhead = commandPrefix.length() + 100;
       for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
         String command = commandPrefix + Joiner.on(' ').join(rmArgs);
-        logFine("Running: %s", command);
+        logFine("Executing %s", command);
         AdbHelper.executeCommandWithErrorChecking(device, command);
       }
 
