@@ -566,22 +566,15 @@ public class ProjectGenerator {
     extraSettingsBuilder
         .put("TARGET_NAME", getProductName(buildTarget))
         .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString());
-    if (!options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
-      // HACK: GCC_PREFIX_HEADER needs to be modified because the path is referenced relative to
-      // project root, so if the project is generated in a different place from the BUCK file, it
-      // would break. This forces it to be based off of SRCROOT, which is overriden to point to the
-      // BUCK file location.
-      // However, when using REFERENCE_EXISTING_XCCONFIGS, this setting is not put into another
-      // layer, and therefore may override an existing setting in the target-inline-config level.
-      // Fortunately, this option is only set when we are generating separated projects, which are
-      // placed next to the BUCK files, so avoiding this is OK.
-      // In the long run, setting should be written relative to SRCROOT everywhere, and this entire
-      // hack can be deleted.
-      extraSettingsBuilder.put("GCC_PREFIX_HEADER", "$(SRCROOT)/$(inherited)");
-    }
     if (infoPlistOptional.isPresent()) {
       Path infoPlistPath = pathRelativizer.outputDirToRootRelative(infoPlistOptional.get());
       extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());
+    }
+    Optional<SourcePath> prefixHeaderOptional = appleBuildRule.getPrefixHeader();
+    if (prefixHeaderOptional.isPresent()) {
+        Path prefixHeaderRelative = resolver.getPath(prefixHeaderOptional.get());
+        Path prefixHeaderPath = pathRelativizer.outputDirToRootRelative(prefixHeaderRelative);
+        extraSettingsBuilder.put("GCC_PREFIX_HEADER", prefixHeaderPath.toString());
     }
     if (appleBuildRule.getUseBuckHeaderMaps()) {
       extraSettingsBuilder.put("USE_HEADERMAP", "NO");

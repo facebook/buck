@@ -560,6 +560,7 @@ public class ProjectGeneratorTest {
                     new XcodeRuleConfigurationLayer(xcconfigFile),
                     new XcodeRuleConfigurationLayer(xcconfigFile)))));
     arg.headerPathPrefix = Optional.of("MyHeaderPathPrefix");
+    arg.prefixHeader = Optional.<SourcePath>of(new TestSourcePath("Foo/Foo-Prefix.pch"));
     arg.useBuckHeaderMaps = Optional.of(false);
     BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
 
@@ -580,6 +581,9 @@ public class ProjectGeneratorTest {
     XCBuildConfiguration configuration = target
         .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
     NSDictionary settings = configuration.getBuildSettings();
+    assertEquals(
+        new NSString("../Foo/Foo-Prefix.pch"),
+        settings.get("GCC_PREFIX_HEADER"));
     assertEquals(
         new NSString("$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
         settings.get("CONFIGURATION_BUILD_DIR"));
