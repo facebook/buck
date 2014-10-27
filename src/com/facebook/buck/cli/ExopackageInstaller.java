@@ -22,6 +22,7 @@ import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.TraceEventLogger;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.NamedTemporaryFile;
@@ -55,6 +56,8 @@ import javax.annotation.Nullable;
  * ExopackageInstaller manages the installation of apps with the "exopackage" flag set to true.
  */
 public class ExopackageInstaller {
+
+  private static final Logger LOG = Logger.get(ExopackageInstaller.class);
 
   /**
    * Prefix of the path to the agent apk on the device.
@@ -325,10 +328,10 @@ public class ExopackageInstaller {
   private Optional<PackageInfo> installAgentIfNecessary() throws Exception {
     Optional<PackageInfo> agentInfo = getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
     if (!agentInfo.isPresent()) {
-      logFine("Agent not installed.  Installing.");
+      LOG.debug("Agent not installed.  Installing.");
       return installAgentApk();
     }
-    logFine("Agent version: %s", agentInfo.get().versionCode);
+    LOG.debug("Agent version: %s", agentInfo.get().versionCode);
     if (!agentInfo.get().versionCode.equals(AgentUtil.AGENT_VERSION_CODE)) {
       return installAgentApk();
     }
@@ -358,25 +361,25 @@ public class ExopackageInstaller {
       return true;
     }
 
-    logFine("App path: %s", appPackageInfo.get().apkPath);
+    LOG.debug("App path: %s", appPackageInfo.get().apkPath);
     String installedAppSignature = getInstalledAppSignature(appPackageInfo.get().apkPath);
     String localAppSignature = AgentUtil.getJarSignature(apkRule.getApkPath().toString());
-    logFine("Local app signature: %s", localAppSignature);
-    logFine("Remote app signature: %s", installedAppSignature);
+    LOG.debug("Local app signature: %s", localAppSignature);
+    LOG.debug("Remote app signature: %s", installedAppSignature);
 
     if (!installedAppSignature.equals(localAppSignature)) {
-      logFine("App signatures do not match.  Must re-install.");
+      LOG.debug("App signatures do not match.  Must re-install.");
       return true;
     }
 
-    logFine("App signatures match.  No need to install.");
+    LOG.debug("App signatures match.  No need to install.");
     return false;
   }
 
   private String getInstalledAppSignature(final String packagePath) throws Exception {
     try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "get_app_signature")) {
       String command = getAgentCommand() + "get-signature " + packagePath;
-      logFine("Executing %s", command);
+      LOG.debug("Executing %s", command);
       Preconditions.checkNotNull(device);
       String output = AdbHelper.executeCommandWithErrorChecking(device, command);
 
@@ -428,7 +431,7 @@ public class ExopackageInstaller {
       final int overhead = commandPrefix.length() + 100;
       for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
         String command = commandPrefix + Joiner.on(' ').join(rmArgs);
-        logFine("Executing %s", command);
+        LOG.debug("Executing %s", command);
         AdbHelper.executeCommandWithErrorChecking(device, command);
       }
 
@@ -545,19 +548,19 @@ public class ExopackageInstaller {
       public void addOutput(byte[] data, int offset, int length) {
         super.addOutput(data, offset, length);
         if (!sentPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
-          logFiner("Got key: %s", getOutput());
+          LOG.verbose("Got key: %s", getOutput());
 
           sentPayload = true;
           try (Socket clientSocket = new Socket("localhost", port)) {
-            logFiner("Connected");
+            LOG.verbose("Connected");
             OutputStream outToDevice = clientSocket.getOutputStream();
             outToDevice.write(
                 getOutput().substring(
                     0,
                     AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
-            logFiner("Wrote key");
+            LOG.verbose("Wrote key");
             com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
-            logFiner("Wrote file");
+            LOG.verbose("Wrote file");
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
@@ -572,7 +575,7 @@ public class ExopackageInstaller {
             "receive-file " + port + " " + Files.size(source) + " " +
             targetFileName +
             " ; echo -n :$?";
-    logFine("Executing %s", command);
+    LOG.debug("Executing %s", command);
 
     // If we fail to execute the command, stash the exception.  My experience during development
     // has been that the exception from checkReceiverOutput is more actionable.
@@ -602,14 +605,6 @@ public class ExopackageInstaller {
     // there's no easy way to do this in Java.  We can drop this if we drop support for the
     // Java agent.
     AdbHelper.executeCommandWithErrorChecking(device, "chmod 644 " + targetFileName);
-  }
-
-  private void logFine(String message, Object... args) {
-    eventBus.post(ConsoleEvent.fine(message, args));
-  }
-
-  private void logFiner(String message, Object... args) {
-    eventBus.post(ConsoleEvent.finer(message, args));
   }
 
   /**
