@@ -1,7 +1,7 @@
 prebuilt_jar(
   name = 'javacc',
-  binary_jar = 'javacc-6.0.jar',
-  source_jar = 'javacc-6.0-sources.jar',
+  binary_jar = 'javacc.jar',
+  source_jar = 'javacc-sources.jar',
   visibility = [ 'PUBLIC' ],
 )
 
