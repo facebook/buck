@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.IndividualTestEvent;
@@ -59,6 +60,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
    */
   private static final long ERROR_THRESHOLD_MS = 30000;
 
+  private static final Logger LOG = Logger.get(SuperConsoleEventBusListener.class);
+
   private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent>> threadsToRunningEvent;
   private final ConcurrentMap<Long, Optional<? extends LeafEvent>> threadsToRunningStep;
   private final AtomicInteger numRulesCompleted = new AtomicInteger();
@@ -92,6 +95,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
    * Schedules a runnable that updates the console output at a fixed interval.
    */
   public void startRenderScheduler(long renderInterval, TimeUnit timeUnit) {
+    LOG.debug("Starting render scheduler (interval %d ms)", timeUnit.toMillis(renderInterval));
     renderScheduler.scheduleAtFixedRate(new Runnable() {
       @Override
       public void run() {
@@ -104,6 +108,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
    * Shuts down the thread pool and cancels the fixed interval runnable.
    */
   private synchronized void stopRenderScheduler() {
+    LOG.debug("Stopping render scheduler");
     renderScheduler.shutdownNow();
   }
 
@@ -118,7 +123,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       synchronized (console.getStdErr()) {
         // If another source has written to stderr or stdout, stop rendering with the SuperConsole.
         // We need to do this to keep our updates consistent.
-        if (console.getStdOut().isDirty() || console.getStdErr().isDirty()) {
+        boolean stdoutDirty = console.getStdOut().isDirty();
+        boolean stderrDirty = console.getStdErr().isDirty();
+        if (stdoutDirty || stderrDirty) {
+          LOG.debug(
+              "Stopping console output (stdout dirty %s, stderr dirty %s).",
+              stdoutDirty, stderrDirty);
           stopRenderScheduler();
         } else if (!nextFrame.isEmpty()) {
           nextFrame = ansi.asNoWrap(nextFrame);
