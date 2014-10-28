@@ -224,13 +224,16 @@
     <attribute name="classpathref" default="classpath-no-src" />
     <attribute name="destdir" default="${classes.dir}" />
     <!--
-      patterns should be a list of include and possibly exclude elements.
+      javac-params can contain any extra parameters to the javac ant command.
+
+      include and exclude elements are automatically relative to ${src.dir}.
+
       According to http://ant.apache.org/manual/Tasks/javac.html, the only way
       to enumerate the .java inputs to javac in Ant is to set the sourcepath
       to the empty string, set the srcdir to something, and use include/exclude
       elements to filter things under the srcdir.
     -->
-    <element name="patterns" />
+    <element name="javac-params" />
     <sequential>
       <javac srcdir="@{srcdir}"
              sourcepath=""
@@ -241,7 +244,7 @@
              includeAntRuntime="no"
              compiler="org.eclipse.jdt.core.JDTCompilerAdapter"
              >
-        <patterns />
+        <javac-params />
         <!--
           ecj does not appear to support -Werror. As suggested by
           http://stackoverflow.com/a/14927725/396304, we specify an Eclipse preferences
@@ -276,11 +279,11 @@
 
       Admittedly, it is annoying to keep this list in sync with src/com/facebook/buck/util/BUCK,
       but there does not seem to be an easier way to do this right now. (Though moving
-      these build rules into their own subpackages of util would make the patterns easier
+      these build rules into their own subpackages of util would make the javac-params easier
       to maintain.)
     -->
     <ecj>
-      <patterns>
+      <javac-params>
         <!-- //src/com/facebook/buck/log:log -->
         <include name="com/facebook/buck/log/CommandThreadAssociation.java" />
         <include name="com/facebook/buck/log/CommandThreadFactory.java" />
@@ -339,7 +342,7 @@
 
         <!-- //src/com/facebook/buck/timing:timing -->
         <include name="com/facebook/buck/timing/*.java" />
-      </patterns>
+      </javac-params>
     </ecj>
 
     <!--
@@ -372,7 +375,7 @@
       <ecj> task. It's too much work to exclude them here.
     -->
     <ecj>
-      <patterns>
+      <javac-params>
         <!--
           These patterns are excluded because they are compiled elsewhere
           and are deliberately isolated from Buck's core.
@@ -394,7 +397,8 @@
         <exclude name="com/facebook/buck/java/abi/RenderableTypes.java" />
         <exclude name="com/facebook/buck/java/abi/TypeSummary.java" />
         <exclude name="com/facebook/buck/junit/**" />
-      </patterns>
+        <src path="${immutables.gensrc.dir}" />
+      </javac-params>
     </ecj>
   </target>
 
@@ -523,9 +527,9 @@
          destdir="${testclasses.dir}"
          classpathref="tests.classpath"
          >
-      <patterns>
+      <javac-params>
         <exclude name="**/testdata/**" />
-      </patterns>
+      </javac-params>
     </ecj>
   </target>
 
