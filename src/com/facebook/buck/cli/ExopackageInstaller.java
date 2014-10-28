@@ -72,7 +72,8 @@ public class ExopackageInstaller {
    */
   private static final String JAVA_AGENT_COMMAND =
       "dalvikvm -classpath " +
-      AGENT_DEVICE_PATH + "-1.apk:" + AGENT_DEVICE_PATH + "-2.apk " +
+      AGENT_DEVICE_PATH + "-1.apk:" + AGENT_DEVICE_PATH + "-2.apk:" +
+      AGENT_DEVICE_PATH + "-1/base.apk:" + AGENT_DEVICE_PATH + "-2/base.apk " +
       "com.facebook.buck.android.agent.AgentMain ";
 
   /**
@@ -596,6 +597,12 @@ public class ExopackageInstaller {
         case "nativeLibraryPath":
           nativeLibPath = parts.get(1);
           break;
+        // Lollipop uses this name.  Not sure what's "legacy" about it yet.
+        // Maybe something to do with 64-bit?
+        // Might need to update if people report failures.
+        case "legacyNativeLibraryDir":
+          nativeLibPath = parts.get(1);
+          break;
         case "versionCode":
           // Extra split to get rid of the SDK thing.
           versionCode = parts.get(1).split(" ", 2)[0];
@@ -615,6 +622,11 @@ public class ExopackageInstaller {
     Preconditions.checkNotNull(versionCode, "Could not find versionCode");
     if (!codePath.equals(resourcePath)) {
       throw new IllegalStateException("Code and resource path do not match");
+    }
+
+    // Lollipop doesn't give the full path to the apk anymore.  Not sure why it's "base.apk".
+    if (!codePath.endsWith(".apk")) {
+      codePath += "/base.apk";
     }
 
     return Optional.of(new PackageInfo(codePath, nativeLibPath, versionCode));

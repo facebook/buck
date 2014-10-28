@@ -89,6 +89,32 @@ public class ExopackageInstallerTest {
   }
 
   @Test
+  public void testParsePackageInfoOnLollipop() {
+    String lines =
+        "  Package [com.facebook.buck.android.agent] (3f784d07):\r\n" +
+        "    userId=10062 gids=[]\r\n" +
+        "    pkg=Package{81b1e34 com.facebook.buck.android.agent}\r\n" +
+        "    codePath=/data/app/com.facebook.buck.android.agent-1\r\n" +
+        "    resourcePath=/data/app/com.facebook.buck.android.agent-1\r\n" +
+        "    legacyNativeLibraryDir=/data/app/com.facebook.buck.android.agent-1/lib\r\n" +
+        "    primaryCpuAbi=armeabi-v7a\r\n" +
+        "    secondaryCpuAbi=null\r\n" +
+        "    versionCode=3 targetSdk=19\r\n" +
+        "    versionName=3\r\n" +
+        "";
+    Optional<ExopackageInstaller.PackageInfo> optionalInfo = ExopackageInstaller.parsePackageInfo(
+        "com.facebook.buck.android.agent",
+        lines);
+
+    assertTrue(optionalInfo.isPresent());
+    ExopackageInstaller.PackageInfo info = optionalInfo.get();
+
+    assertEquals("/data/app/com.facebook.buck.android.agent-1/base.apk", info.apkPath);
+    assertEquals("/data/app/com.facebook.buck.android.agent-1/lib", info.nativeLibPath);
+    assertEquals("3", info.versionCode);
+  }
+
+  @Test
   public void testChunkArgs() {
     assertEquals(
         ImmutableList.of(),
