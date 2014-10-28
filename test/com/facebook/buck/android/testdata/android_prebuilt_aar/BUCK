@@ -28,7 +28,7 @@ keystore(
 android_binary(
   name = 'app',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:16',
+  target = 'Google Inc.:Google APIs:19',
   keystore = ':debug',
   package_type = 'DEBUG',
   deps = [

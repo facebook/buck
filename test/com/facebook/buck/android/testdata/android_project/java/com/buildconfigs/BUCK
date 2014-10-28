@@ -20,7 +20,7 @@ android_library(
 android_binary(
   name = 'app',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:16',
+  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   deps = [
     ':config-consumer',
