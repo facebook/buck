@@ -21,6 +21,8 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
@@ -38,6 +40,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -249,4 +252,33 @@ public final class MoreFiles {
     }
   }
 
+  /**
+   * Looks for {@code executableToFind} under each entry of {@code pathsToSearch} and returns
+   * the full path ({@code pathToSearch/executableToFind)}) to the first one which
+   * exists on disk as an executable file.
+   *
+   * This is similar to the {@code which} command in Unix.
+   *
+   * {@code executableToFind} must be a relative path.
+   *
+   * If none are found, returns {@link Optional#absent()}.
+   */
+  public static Optional<Path> searchPathsForExecutable(
+      Path executableToFind, Collection<Path> pathsToSearch) {
+    Preconditions.checkNotNull(executableToFind);
+    Preconditions.checkNotNull(pathsToSearch);
+    Preconditions.checkArgument(
+        !executableToFind.isAbsolute(),
+        "Path %s must be relative",
+        executableToFind);
+
+    for (Path pathToSearch : pathsToSearch) {
+      Path resolved = pathToSearch.resolve(executableToFind);
+      if (java.nio.file.Files.isRegularFile(resolved) &&
+          java.nio.file.Files.isExecutable(resolved)) {
+        return Optional.of(resolved);
+      }
+    }
+    return Optional.<Path>absent();
+  }
 }
