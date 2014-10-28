@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -288,9 +289,18 @@ public class ExopackageInstaller {
       }
       LOG.debug("Agent version: %s", agentInfo.get().versionCode);
       if (!agentInfo.get().versionCode.equals(AgentUtil.AGENT_VERSION_CODE)) {
+        // Always uninstall before installing.  We might be downgrading, which requires
+        // an uninstall, or we might just want a clean installation.
+        uninstallAgent();
         return installAgentApk();
       }
       return agentInfo;
+    }
+
+    private void uninstallAgent() throws InstallException {
+      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "uninstall_old_agent")) {
+        device.uninstallPackage(AgentUtil.AGENT_PACKAGE_NAME);
+      }
     }
 
     private Optional<PackageInfo> installAgentApk() throws Exception {
