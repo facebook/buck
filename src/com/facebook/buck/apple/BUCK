@@ -23,6 +23,7 @@ java_immutables_library(
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
+    '//third-party/java/dd-plist:dd-plist',
     '//third-party/java/infer-annotations:infer-annotations',
     '//third-party/java/jackson:jackson',
   ],
