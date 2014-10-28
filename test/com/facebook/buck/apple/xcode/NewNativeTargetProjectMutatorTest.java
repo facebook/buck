@@ -21,6 +21,7 @@ import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasS
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
+import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.getSingletonPhaseByType;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.hamcrest.core.IsNot.not;
@@ -56,6 +57,10 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -71,6 +76,7 @@ import org.junit.Test;
 import java.nio.file.Paths;
 
 public class NewNativeTargetProjectMutatorTest {
+  private ExecutionContext executionContext;
   private BuildRuleResolver buildRuleResolver;
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
@@ -78,6 +84,7 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Before
   public void setUp() {
+    executionContext = TestExecutionContext.newInstance();
     buildRuleResolver = new BuildRuleResolver();
     generatedProject = new PBXProject("TestProject");
     sourcePathResolver = new SourcePathResolver(buildRuleResolver);
@@ -91,6 +98,7 @@ public class NewNativeTargetProjectMutatorTest {
   public void shouldCreateTargetAndTargetGroup() {
     BuildTarget testBuildTarget = BuildTarget.builder("//foo", "test").build();
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
+        executionContext,
         pathRelativizer,
         sourcePathResolver,
         testBuildTarget);
@@ -297,11 +305,9 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void assetCatalogsBuildPhaseBuildsBothCommonAndBundledAssetCatalogs() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
     AppleAssetCatalog assetCatalog1 = (AppleAssetCatalog) createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "asset_catalog1").build(),
-        resolver,
+        buildRuleResolver,
         ImmutableSortedSet.<BuildRule>of(),
         new AppleAssetCatalogDescription(),
         new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
@@ -311,11 +317,11 @@ public class NewNativeTargetProjectMutatorTest {
             return input;
           }
         });
-    resolver.addToIndex(assetCatalog1);
+    buildRuleResolver.addToIndex(assetCatalog1);
 
     AppleAssetCatalog assetCatalog2 = (AppleAssetCatalog) createBuildRuleWithDefaults(
         BuildTarget.builder("//foo", "asset_catalog2").build(),
-        resolver,
+        buildRuleResolver,
         ImmutableSortedSet.<BuildRule>of(),
         new AppleAssetCatalogDescription(),
         new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
@@ -326,7 +332,7 @@ public class NewNativeTargetProjectMutatorTest {
             return input;
           }
         });
-    resolver.addToIndex(assetCatalog2);
+    buildRuleResolver.addToIndex(assetCatalog2);
 
     BuildTarget testBuildTarget = BuildTarget.builder("//foo", "binary").build();
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
@@ -338,8 +344,37 @@ public class NewNativeTargetProjectMutatorTest {
     assertTrue(hasShellScriptPhaseToCompileCommonAndSplitAssetCatalogs(result.target));
   }
 
+  @Test
+  public void testScriptBuildPhase() {
+    BuildTarget testBuildTarget = BuildTarget.builder("//foo", "library").build();
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+
+    Genrule genrule = (Genrule) GenruleBuilder
+        .newGenruleBuilder(BuildTarget.builder("//foo", "script").build())
+        .setSrcs(ImmutableList.<SourcePath>of(new TestSourcePath("script/input.png")))
+        .setBash("echo \"hello world!\"")
+        .setOut("helloworld.txt")
+        .build(buildRuleResolver);
+
+    mutator.setPostBuildRunScriptPhases(ImmutableList.of(genrule));
+    NewNativeTargetProjectMutator.Result result =
+        mutator.buildTargetAndAddToProject(generatedProject);
+
+    PBXShellScriptBuildPhase phase =
+        getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
+    assertEquals(
+        "Should set input paths correctly",
+        "../script/input.png",
+        Iterables.getOnlyElement(phase.getInputPaths()));
+    assertEquals(
+        "should set script correctly",
+        "/bin/bash -e -c 'echo \"hello world!\"'",
+        phase.getShellScript());
+  }
+
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults(BuildTarget target) {
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
+        executionContext,
         pathRelativizer,
         sourcePathResolver,
         target);

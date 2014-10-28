@@ -52,7 +52,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
@@ -60,17 +59,13 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
 import com.facebook.buck.rules.coercer.XcodeRuleConfigurationLayer;
 import com.facebook.buck.shell.Genrule;
-import com.facebook.buck.shell.GenruleDescription;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MorePaths;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -456,8 +451,6 @@ public class ProjectGenerator {
         AppleBundleDescription.TYPE);
     generateCopyFilesBuildPhases(project, target, copiedRules);
 
-    addPostBuildScriptPhasesForDependencies(bundle, target);
-
     LOG.debug("Generated iOS bundle target %s", target);
     return target;
   }
@@ -538,6 +531,7 @@ public class ProjectGenerator {
 
     String productName = getProductName(buildTarget);
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
+        executionContext,
         pathRelativizer,
         resolver,
         buildTarget);
@@ -573,6 +567,17 @@ public class ProjectGenerator {
       mutator.setFrameworks(frameworksBuilder.build());
       mutator.setArchives(collectRecursiveLibraryDependencies(appleBuildRule));
     }
+
+    // TODO(Task #3772930): Go through all dependencies of the rule
+    // and add any shell script rules here
+    ImmutableList.Builder<Genrule> preScriptPhases = ImmutableList.builder();
+    ImmutableList.Builder<Genrule> postScriptPhases = ImmutableList.builder();
+    if (bundle.isPresent()) {
+      collectBuildScriptDependencies(bundle.get().getDeps(), preScriptPhases, postScriptPhases);
+    }
+    collectBuildScriptDependencies(appleBuildRule.getDeps(), preScriptPhases, postScriptPhases);
+    mutator.setPreBuildRunScriptPhases(preScriptPhases.build());
+    mutator.setPostBuildRunScriptPhases(postScriptPhases.build());
 
     NewNativeTargetProjectMutator.Result targetBuilderResult =
         mutator.buildTargetAndAddToProject(project);
@@ -639,12 +644,6 @@ public class ProjectGenerator {
         appendConfigsBuilder.build());
 
     // -- phases
-    // TODO(Task #3772930): Go through all dependencies of the rule
-    // and add any shell script rules here
-    if (bundle.isPresent()) {
-      addRunScriptBuildPhasesForDependencies(bundle.get(), target);
-    }
-    addRunScriptBuildPhasesForDependencies(appleBuildRule, target);
     if (appleBuildRule.getUseBuckHeaderMaps()) {
       addHeaderMapsForHeaders(
           appleBuildRule,
@@ -792,58 +791,17 @@ public class ProjectGenerator {
     }
   }
 
-  private void addRunScriptBuildPhase(
-    PBXNativeTarget target,
-    ImmutableList<Path> srcs,
-    ShellStep genruleStep,
-    String outputName) {
-    // TODO(user): Check and validate dependencies of the script. If it depends on libraries etc.
-    // we can't handle it currently.
-    PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
-    target.getBuildPhases().add(shellScriptBuildPhase);
-    for (Path path : srcs) {
-      shellScriptBuildPhase.getInputPaths().add(
-          pathRelativizer.outputDirToRootRelative(path).toString());
-    }
-
-    StringBuilder bashCommandBuilder = new StringBuilder();
-    for (String commandElement : genruleStep.getShellCommand(executionContext)) {
-      if (bashCommandBuilder.length() > 0) {
-        bashCommandBuilder.append(' ');
-      }
-      bashCommandBuilder.append(Escaper.escapeAsBashString(commandElement));
-    }
-    shellScriptBuildPhase.setShellScript(bashCommandBuilder.toString());
-    if (outputName.length() > 0) {
-      shellScriptBuildPhase.getOutputPaths().add(outputName);
-    }
-  }
-
-  private void addRunScriptBuildPhasesForDependenciesWithType(
-      BuildRule rule,
-      PBXNativeTarget target,
-      BuildRuleType type) {
-    for (BuildRule dependency : rule.getDeps()) {
-      if (dependency.getType().equals(type)) {
-        Genrule genrule = (Genrule) dependency;
-        addRunScriptBuildPhase(
-            target,
-            genrule.getSrcs(),
-            genrule.createGenruleStep(),
-            genrule.getOutputName());
+  private void collectBuildScriptDependencies(
+      Iterable<BuildRule> rules,
+      ImmutableList.Builder<Genrule> preRules,
+      ImmutableList.Builder<Genrule> postRules) {
+    for (Genrule rule : Iterables.filter(rules, Genrule.class)) {
+      if (rule.getType().equals(IosPostprocessResourcesDescription.TYPE)) {
+        postRules.add(rule);
+      } else {
+        preRules.add(rule);
       }
     }
-  }
-
-  private void addRunScriptBuildPhasesForDependencies(BuildRule rule, PBXNativeTarget target) {
-    addRunScriptBuildPhasesForDependenciesWithType(rule, target, GenruleDescription.TYPE);
-  }
-
-  private void addPostBuildScriptPhasesForDependencies(BuildRule rule, PBXNativeTarget target) {
-    addRunScriptBuildPhasesForDependenciesWithType(
-        rule,
-        target,
-        IosPostprocessResourcesDescription.TYPE);
   }
 
   /**

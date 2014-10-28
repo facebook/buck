@@ -43,6 +43,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -73,6 +76,7 @@ public class NewNativeTargetProjectMutator {
     }
   }
 
+  private final ExecutionContext executionContext;
   private final PathRelativizer pathRelativizer;
   private final SourcePathResolver sourcePathResolver;
   private final BuildTarget buildTarget;
@@ -90,11 +94,15 @@ public class NewNativeTargetProjectMutator {
   private ImmutableSet<AppleResource> resources = ImmutableSet.of();
   private ImmutableSet<AppleAssetCatalog> assetCatalogs = ImmutableSet.of();
   private Path assetCatalogBuildScript = Paths.get("");
+  private Iterable<Genrule> preBuildRunScriptPhases = ImmutableList.of();
+  private Iterable<Genrule> postBuildRunScriptPhases = ImmutableList.of();
 
   public NewNativeTargetProjectMutator(
+      ExecutionContext executionContext,
       PathRelativizer pathRelativizer,
       SourcePathResolver sourcePathResolver,
       BuildTarget buildTarget) {
+    this.executionContext = executionContext;
     this.pathRelativizer = pathRelativizer;
     this.sourcePathResolver = sourcePathResolver;
     this.buildTarget = buildTarget;
@@ -156,6 +164,16 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
+  public NewNativeTargetProjectMutator setPreBuildRunScriptPhases(Iterable<Genrule> phases) {
+    preBuildRunScriptPhases = phases;
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setPostBuildRunScriptPhases(Iterable<Genrule> phases) {
+    postBuildRunScriptPhases = phases;
+    return this;
+  }
+
   /**
    * @param assetCatalogBuildScript Path of the asset catalog build script relative to repo root.
    * @param assetCatalogs List of asset catalog targets.
@@ -177,10 +195,12 @@ public class NewNativeTargetProjectMutator {
     }
 
     // Phases
+    addRunScriptBuildPhases(target, preBuildRunScriptPhases);
     addPhasesAndGroupsForSources(target, targetGroup);
     addFrameworksBuildPhase(project, target);
     addResourcesBuildPhase(target, targetGroup);
     addAssetCatalogBuildPhase(target, targetGroup);
+    addRunScriptBuildPhases(target, postBuildRunScriptPhases);
 
     // Product
 
@@ -490,5 +510,30 @@ public class NewNativeTargetProjectMutator {
     target.getBuildPhases().add(phase);
     phase.setShellScript(scriptBuilder.toString());
     LOG.debug("Added asset catalog build phase %s", phase);
+  }
+
+  private void addRunScriptBuildPhases(PBXNativeTarget target, Iterable<Genrule> rules) {
+    for (Genrule rule : rules) {
+      // TODO(user): Check and validate dependencies of the script. If it depends on libraries etc.
+      // we can't handle it currently.
+      PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
+      target.getBuildPhases().add(shellScriptBuildPhase);
+      for (Path path : rule.getSrcs()) {
+        shellScriptBuildPhase.getInputPaths().add(
+            pathRelativizer.outputDirToRootRelative(path).toString());
+      }
+
+      StringBuilder bashCommandBuilder = new StringBuilder();
+      for (String commandElement : rule.createGenruleStep().getShellCommand(executionContext)) {
+        if (bashCommandBuilder.length() > 0) {
+          bashCommandBuilder.append(' ');
+        }
+        bashCommandBuilder.append(Escaper.escapeAsBashString(commandElement));
+      }
+      shellScriptBuildPhase.setShellScript(bashCommandBuilder.toString());
+      if (rule.getOutputName().length() > 0) {
+        shellScriptBuildPhase.getOutputPaths().add(rule.getOutputName());
+      }
+    }
   }
 }

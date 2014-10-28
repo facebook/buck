@@ -74,7 +74,6 @@ import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Pair;
 import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
 import com.facebook.buck.rules.coercer.XcodeRuleConfigurationLayer;
-import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -1156,62 +1155,6 @@ public class ProjectGeneratorTest {
         target,
         ImmutableList.of(
             "$BUILT_PRODUCTS_DIR/librickandmorty.a"));
-  }
-
-  @Test
-  public void testAppleLibraryRuleWithGenruleDependency() throws IOException {
-
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
-
-    BuildRule genrule = GenruleBuilder
-        .newGenruleBuilder(BuildTarget.builder("//foo", "script").build())
-        .setSrcs(ImmutableList.<SourcePath>of(new TestSourcePath("script/input.png")))
-        .setBash("echo \"hello world!\"")
-        .setOut("helloworld.txt")
-        .build(buildRuleResolver);
-
-    BuildTarget libTarget = BuildTarget.builder("//foo", "lib").build();
-    BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget)
-        .setDeps(ImmutableSortedSet.of(genrule))
-        .setType(AppleLibraryDescription.TYPE)
-        .build();
-    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    arg.configs = Optional.of(
-        ImmutableSortedMap.of(
-            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
-    arg.srcs = Optional.of(
-        ImmutableList.of(
-            AppleSource.ofSourcePathWithFlags(
-                new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
-            AppleSource.ofSourcePath(new TestSourcePath("foo.h"))));
-    BuildRule rule = appleLibraryDescription.createBuildRule(libParams, buildRuleResolver, arg);
-
-    buildRuleResolver.addToIndex(rule);
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        buildRuleResolver,
-        ImmutableSet.of(rule.getBuildTarget()));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    assertThat(project.getTargets(), hasSize(1));
-    PBXTarget target = project.getTargets().get(0);
-    assertThat(target.getName(), equalTo("//foo:lib"));
-    assertThat(target.isa(), equalTo("PBXNativeTarget"));
-
-    PBXShellScriptBuildPhase shellScriptBuildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(
-            target,
-            PBXShellScriptBuildPhase.class);
-
-    assertThat(
-        Iterables.getOnlyElement(shellScriptBuildPhase.getInputPaths()),
-        equalTo("../script/input.png"));
-
-    assertThat(
-        shellScriptBuildPhase.getShellScript(),
-        equalTo("/bin/bash -e -c 'echo \"hello world!\"'"));
   }
 
   @Test
@@ -2340,14 +2283,6 @@ public class ProjectGeneratorTest {
     assertThat(
         projectFilesystem.getLastModifiedTime(OUTPUT_PROJECT_FILE_PATH),
         equalTo(49152L));
-  }
-
-  private ProjectGenerator createProjectGeneratorForCombinedProject(
-      BuildRuleResolver resolver,
-      ImmutableSet<BuildTarget> initialBuildTargets) {
-    return createProjectGeneratorForCombinedProject(
-        resolver.getBuildRules(),
-        initialBuildTargets);
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
