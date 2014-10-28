@@ -191,7 +191,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       pathsToClasses.add(pathToOutput);
     }
 
-    return new GenerateCodeCoverageReportStep(pathsToClasses.build(), outputDirectory, format);
+    return new GenerateCodeCoverageReportStep(
+        srcDirectories.build(),
+        pathsToClasses.build(),
+        outputDirectory,
+        format);
   }
 
   /**

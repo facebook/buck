@@ -35,14 +35,17 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   static final String BUCK_HOME =
       System.getProperty("buck.buck_dir", System.getProperty("user.dir"));
 
+  private final Set<String> sourceDirectories;
   private final Set<Path> classesDirectories;
   private final Path outputDirectory;
   private CoverageReportFormat format;
 
   public GenerateCodeCoverageReportStep(
+      Set<String> sourceDirectories,
       Set<Path> classesDirectories,
       Path outputDirectory,
       CoverageReportFormat format) {
+    this.sourceDirectories = ImmutableSet.copyOf(sourceDirectories);
     this.classesDirectories = ImmutableSet.copyOf(classesDirectories);
     this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
     this.format = Preconditions.checkNotNull(format);
@@ -68,7 +71,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
         Joiner.on(":").join(Iterables.transform(classesDirectories,
             context.getProjectFilesystem().getAbsolutifier()))));
 
-    args.add(String.format("-Dsrc.dir=%s", "src"));
+    args.add(String.format("-Dsrc.dir=%s", Joiner.on(":").join(sourceDirectories)));
 
     // Generate report from JaCoCo exec file using 'ReportGenerator.java'
 

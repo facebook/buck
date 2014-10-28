@@ -41,17 +41,21 @@ public class GenerateCodeCoverageReportStepTest {
   @Test
   public void testGetShellCommandInternal() {
     String outputDirectory = "buck-out/gen/output";
+    Set<String> sourceDirectories = ImmutableSet.of(
+        "/absolute/path/to/parentDirectory1/src", "/absolute/path/to/parentDirectory2/src");
     Set<Path> classesDirectories = ImmutableSet.of(
         Paths.get("parentDirectory1/classes"), Paths.get("root/parentDirectory/classes"));
 
-    testJacocoReportGeneratorCommand(classesDirectories, outputDirectory);
+    testJacocoReportGeneratorCommand(sourceDirectories, classesDirectories, outputDirectory);
   }
 
   private void testJacocoReportGeneratorCommand(
+      Set<String> sourceDirectories,
       Set<Path> classesDirectories,
       String outputDirectory) {
     GenerateCodeCoverageReportStep step = new GenerateCodeCoverageReportStep(
-        classesDirectories, Paths.get(outputDirectory), CoverageReportFormat.HTML);
+        sourceDirectories, classesDirectories,
+        Paths.get(outputDirectory), CoverageReportFormat.HTML);
 
     ExecutionContext context = createMock(ExecutionContext.class);
     expect(
@@ -73,7 +77,10 @@ public class GenerateCodeCoverageReportStepTest {
                 "parentDirectory1/classes",
                 new File(".").getAbsoluteFile().toPath().normalize(),
                 "root/parentDirectory/classes")),
-        String.format("-Dsrc.dir=%s", "src"),
+        String.format("-Dsrc.dir=%s",
+            String.format("%s:%s",
+                "/absolute/path/to/parentDirectory1/src",
+                "/absolute/path/to/parentDirectory2/src")),
         "-jar", GenerateCodeCoverageReportStep.BUCK_HOME +
             "/buck-out/gen/src/com/facebook/buck/java/report-generator.jar");
 

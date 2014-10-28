@@ -24,6 +24,8 @@ import org.jacoco.core.tools.ExecFileLoader;
 import org.jacoco.report.DirectorySourceFileLocator;
 import org.jacoco.report.FileMultiReportOutput;
 import org.jacoco.report.IReportVisitor;
+import org.jacoco.report.ISourceFileLocator;
+import org.jacoco.report.MultiSourceFileLocator;
 import org.jacoco.report.csv.CSVFormatter;
 import org.jacoco.report.html.HTMLFormatter;
 import org.jacoco.report.xml.XMLFormatter;
@@ -38,12 +40,14 @@ import org.jacoco.report.xml.XMLFormatter;
  */
 public class ReportGenerator {
 
+        private static final int TAB_WIDTH = 4;
+
         private final String title;
 
         private final File executionDataFile;
         private final ExecFileLoader execFileLoader;
         private final String classesPath;
-        private final File sourceDirectory;
+        private final String sourcesPath;
         private final File reportDirectory;
         private final String reportFormat;
 
@@ -57,7 +61,7 @@ public class ReportGenerator {
                     jacocoOutputDir, System.getProperty("jacoco.exec.data.file"));
                 this.execFileLoader = new ExecFileLoader();
                 this.classesPath = System.getProperty("classes.dir");
-                this.sourceDirectory = new File(System.getProperty("src.dir"));
+                this.sourcesPath = System.getProperty("src.dir");
                 this.reportDirectory = new File(jacocoOutputDir, "code-coverage");
                 this.reportFormat = System.getProperty("jacoco.format", "html");
         }
@@ -124,8 +128,7 @@ public class ReportGenerator {
 
                 // Populate the report structure with the bundle coverage information.
                 // Call visitGroup if you need groups in your report.
-                visitor.visitBundle(bundleCoverage, new DirectorySourceFileLocator(
-                                sourceDirectory, "utf-8", 4));
+                visitor.visitBundle(bundleCoverage, createSourceFileLocator());
 
                 // Signal end of structure information to allow report to write all
                 // information out
@@ -149,6 +152,18 @@ public class ReportGenerator {
                 }
 
                 return coverageBuilder.getBundle(title);
+        }
+
+        private ISourceFileLocator createSourceFileLocator() {
+          final MultiSourceFileLocator result = new MultiSourceFileLocator(TAB_WIDTH);
+
+          String[] sourceDirectoryPaths = sourcesPath.split(":");
+          for (String sourceDirectoryPath : sourceDirectoryPaths) {
+            File sourceDirectory = new File(sourceDirectoryPath);
+            result.add(new DirectorySourceFileLocator(sourceDirectory, "utf-8", TAB_WIDTH));
+          }
+
+          return result;
         }
 
         /**
