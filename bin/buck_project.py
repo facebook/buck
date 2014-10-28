@@ -90,7 +90,7 @@ class BuckProject:
             if which('watchman'):
                 trigger_list_output = check_output(
                     ['watchman', 'trigger-list', self.root])
-                trigger_list = json.loads(trigger_list_output)
+                trigger_list = json.loads(trigger_list_output.decode())
                 if not trigger_list.get('triggers'):
                     subprocess.call(
                         ['watchman', 'watch-del', self.root],

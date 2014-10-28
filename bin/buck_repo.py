@@ -720,4 +720,4 @@ def check_output(*popenargs, **kwargs):
 def is_java8():
     output = check_output(['java', '-version'], stderr=subprocess.STDOUT)
     version_line = output.strip().splitlines()[0]
-    return re.compile('java version "1\.8\..*').match(version_line)
+    return re.compile(b'java version "1\.8\..*').match(version_line)
