@@ -257,71 +257,6 @@ public class ExopackageInstaller {
     }
   }
 
-  @VisibleForTesting
-  static Optional<PackageInfo> parsePackageInfo(String packageName, String lines) {
-    final String packagePrefix = "  Package [" + packageName + "] (";
-    final String otherPrefix = "  Package [";
-    boolean sawPackageLine = false;
-    final Splitter splitter = Splitter.on('=').limit(2);
-
-    String codePath = null;
-    String resourcePath = null;
-    String nativeLibPath = null;
-    String versionCode = null;
-
-    for (String line : Splitter.on("\r\n").split(lines)) {
-      // Just ignore everything until we see the line that says we are in the right package.
-      if (line.startsWith(packagePrefix)) {
-        sawPackageLine = true;
-        continue;
-      }
-      // This should never happen, but if we do see a different package, stop parsing.
-      if (line.startsWith(otherPrefix)) {
-        break;
-      }
-      // Ignore lines before our package.
-      if (!sawPackageLine) {
-        continue;
-      }
-      // Parse key-value pairs.
-      List<String> parts = splitter.splitToList(line.trim());
-      if (parts.size() != 2) {
-        continue;
-      }
-      switch (parts.get(0)) {
-        case "codePath":
-          codePath = parts.get(1);
-          break;
-        case "resourcePath":
-          resourcePath = parts.get(1);
-          break;
-        case "nativeLibraryPath":
-          nativeLibPath = parts.get(1);
-          break;
-        case "versionCode":
-          // Extra split to get rid of the SDK thing.
-          versionCode = parts.get(1).split(" ", 2)[0];
-          break;
-        default:
-          break;
-      }
-    }
-
-    if (!sawPackageLine) {
-      return Optional.absent();
-    }
-
-    Preconditions.checkNotNull(codePath, "Could not find codePath");
-    Preconditions.checkNotNull(resourcePath, "Could not find resourcePath");
-    Preconditions.checkNotNull(nativeLibPath, "Could not find nativeLibraryPath");
-    Preconditions.checkNotNull(versionCode, "Could not find versionCode");
-    if (!codePath.equals(resourcePath)) {
-      throw new IllegalStateException("Code and resource path do not match");
-    }
-
-    return Optional.of(new PackageInfo(codePath, nativeLibPath, versionCode));
-  }
-
   /**
    * @return  PackageInfo for the agent, or absent if installation failed.
    */
@@ -436,37 +371,6 @@ public class ExopackageInstaller {
       }
 
       return foundHashes.build();
-    }
-  }
-
-  /**
-   * @param output  Output of "ls" command.
-   * @param requiredHashes  Hashes of dex files required for this apk.
-   * @param foundHashesBuilder  Builder to receive hashes that we need and were found.
-   * @param toDeleteBuilder  Builder to receive files that we need to delete.
-   */
-  @VisibleForTesting
-  static void scanSecondaryDexDir(
-      String output,
-      ImmutableSet<String> requiredHashes,
-      ImmutableSet.Builder<String> foundHashesBuilder,
-      ImmutableSet.Builder<String> toDeleteBuilder) {
-    Pattern dexFilePattern = Pattern.compile("secondary-([0-9a-f]+)\\.[\\w.-]*");
-
-    for (String line : Splitter.on("\r\n").split(output)) {
-      if (line.equals("metadata.txt") || line.startsWith(AgentUtil.TEMP_PREFIX)) {
-        toDeleteBuilder.add(line);
-        continue;
-      }
-
-      Matcher m = dexFilePattern.matcher(line);
-      if (m.matches()) {
-        if (requiredHashes.contains(m.group(1))) {
-          foundHashesBuilder.add(m.group(1));
-        } else {
-          toDeleteBuilder.add(line);
-        }
-      }
     }
   }
 
@@ -605,6 +509,102 @@ public class ExopackageInstaller {
     // there's no easy way to do this in Java.  We can drop this if we drop support for the
     // Java agent.
     AdbHelper.executeCommandWithErrorChecking(device, "chmod 644 " + targetFileName);
+  }
+
+  @VisibleForTesting
+  static Optional<PackageInfo> parsePackageInfo(String packageName, String lines) {
+    final String packagePrefix = "  Package [" + packageName + "] (";
+    final String otherPrefix = "  Package [";
+    boolean sawPackageLine = false;
+    final Splitter splitter = Splitter.on('=').limit(2);
+
+    String codePath = null;
+    String resourcePath = null;
+    String nativeLibPath = null;
+    String versionCode = null;
+
+    for (String line : Splitter.on("\r\n").split(lines)) {
+      // Just ignore everything until we see the line that says we are in the right package.
+      if (line.startsWith(packagePrefix)) {
+        sawPackageLine = true;
+        continue;
+      }
+      // This should never happen, but if we do see a different package, stop parsing.
+      if (line.startsWith(otherPrefix)) {
+        break;
+      }
+      // Ignore lines before our package.
+      if (!sawPackageLine) {
+        continue;
+      }
+      // Parse key-value pairs.
+      List<String> parts = splitter.splitToList(line.trim());
+      if (parts.size() != 2) {
+        continue;
+      }
+      switch (parts.get(0)) {
+        case "codePath":
+          codePath = parts.get(1);
+          break;
+        case "resourcePath":
+          resourcePath = parts.get(1);
+          break;
+        case "nativeLibraryPath":
+          nativeLibPath = parts.get(1);
+          break;
+        case "versionCode":
+          // Extra split to get rid of the SDK thing.
+          versionCode = parts.get(1).split(" ", 2)[0];
+          break;
+        default:
+          break;
+      }
+    }
+
+    if (!sawPackageLine) {
+      return Optional.absent();
+    }
+
+    Preconditions.checkNotNull(codePath, "Could not find codePath");
+    Preconditions.checkNotNull(resourcePath, "Could not find resourcePath");
+    Preconditions.checkNotNull(nativeLibPath, "Could not find nativeLibraryPath");
+    Preconditions.checkNotNull(versionCode, "Could not find versionCode");
+    if (!codePath.equals(resourcePath)) {
+      throw new IllegalStateException("Code and resource path do not match");
+    }
+
+    return Optional.of(new PackageInfo(codePath, nativeLibPath, versionCode));
+  }
+
+  /**
+   * @param output  Output of "ls" command.
+   * @param requiredHashes  Hashes of dex files required for this apk.
+   * @param foundHashesBuilder  Builder to receive hashes that we need and were found.
+   * @param toDeleteBuilder  Builder to receive files that we need to delete.
+   */
+  @VisibleForTesting
+  static void scanSecondaryDexDir(
+      String output,
+      ImmutableSet<String> requiredHashes,
+      ImmutableSet.Builder<String> foundHashesBuilder,
+      ImmutableSet.Builder<String> toDeleteBuilder) {
+    Pattern dexFilePattern = Pattern.compile("secondary-([0-9a-f]+)\\.[\\w.-]*");
+
+    for (String line : Splitter.on("\r\n").split(output)) {
+      if (line.equals("metadata.txt") || line.startsWith(AgentUtil.TEMP_PREFIX)) {
+        toDeleteBuilder.add(line);
+        continue;
+      }
+
+      Matcher m = dexFilePattern.matcher(line);
+      if (m.matches()) {
+        if (requiredHashes.contains(m.group(1))) {
+          foundHashesBuilder.add(m.group(1));
+        } else {
+          toDeleteBuilder.add(line);
+        }
+      }
+    }
   }
 
   /**
