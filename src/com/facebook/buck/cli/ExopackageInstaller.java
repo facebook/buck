@@ -47,6 +47,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -73,11 +74,6 @@ public class ExopackageInstaller {
       "com.facebook.buck.android.agent.AgentMain ";
 
   /**
-   * Port to use for sending dex files.
-   */
-  private static final int AGENT_PORT = 2828;
-
-  /**
    * Maximum length of commands that can be passed to "adb shell".
    */
   private static final int MAX_ADB_COMMAND_SIZE = 1019;
@@ -94,18 +90,11 @@ public class ExopackageInstaller {
   private final InstallableApk.ExopackageInfo exopackageInfo;
 
   /**
-   * Set in {@link #install}.
+   * The next port number to use for communicating with the agent on a device.
+   * This resets for every instance of ExopackageInstaller,
+   * but is incremented for every device we are installing on when using "-x".
    */
-  @Nullable
-  private IDevice device;
-
-  private boolean useNativeAgent = true;
-
-  /**
-   * Set after the agent is installed.
-   */
-  @Nullable
-  private String nativeAgentPath;
+  private final AtomicInteger nextAgentPort = new AtomicInteger(2828);
 
   @VisibleForTesting
   static class PackageInfo {
@@ -141,18 +130,17 @@ public class ExopackageInstaller {
    * Installs the app specified in the constructor.  This object should be discarded afterward.
    */
   public synchronized boolean install() throws InterruptedException {
-    Preconditions.checkState(
-        device == null,
-        "ExopackageInstaller.install called twice.");
-
     eventBus.post(InstallEvent.started(apkRule.getBuildTarget()));
 
     boolean success = adbHelper.adbCall(
         new AdbHelper.AdbCallable() {
           @Override
           public boolean call(IDevice device) throws Exception {
-            ExopackageInstaller.this.device = device;
-            return doInstall();
+            try {
+              return new SingleDeviceInstaller(device, nextAgentPort.getAndIncrement()).doInstall();
+            } catch (Exception e) {
+              throw new RuntimeException("Failed to install exopackage on " + device, e);
+            }
           }
 
           @Override
@@ -165,350 +153,385 @@ public class ExopackageInstaller {
     return success;
   }
 
-  private boolean doInstall() throws Exception {
-    Optional<PackageInfo> agentInfo = installAgentIfNecessary();
-    if (!agentInfo.isPresent()) {
+  /**
+   * Helper class to manage the state required to install on a single device.
+   */
+  private class SingleDeviceInstaller {
+
+    /**
+     * Device that we are installing onto.
+     */
+    private final IDevice device;
+
+    /**
+     * Port to use for sending files to the agent.
+     */
+    private final int agentPort;
+
+    /**
+     * True iff we should use the native agent.
+     */
+    private boolean useNativeAgent = true;
+
+    /**
+     * Set after the agent is installed.
+     */
+    @Nullable
+    private String nativeAgentPath;
+
+    private SingleDeviceInstaller(IDevice device, int agentPort) {
+      this.device = device;
+      this.agentPort = agentPort;
+    }
+
+    boolean doInstall() throws Exception {
+      Optional<PackageInfo> agentInfo = installAgentIfNecessary();
+      if (!agentInfo.isPresent()) {
+        return false;
+      }
+
+      nativeAgentPath = agentInfo.get().nativeLibPath;
+      determineBestAgent();
+
+      final File apk = apkRule.getApkPath().toFile();
+      // TODO(user): Support SD installation.
+      final boolean installViaSd = false;
+
+      if (shouldAppBeInstalled()) {
+        try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "install_exo_apk")) {
+          Preconditions.checkNotNull(device);
+          boolean success = adbHelper.installApkOnDevice(device, apk, installViaSd);
+          if (!success) {
+            return false;
+          }
+        }
+      }
+
+      final ImmutableMap<String, String> hashToBasename = getRequiredDexFiles();
+      final ImmutableSet<String> requiredHashes = hashToBasename.keySet();
+      final ImmutableSet<String> presentHashes = prepareSecondaryDexDir(requiredHashes);
+      final Set<String> hashesToInstall = Sets.difference(requiredHashes, presentHashes);
+
+      installSecondaryDexFiles(hashesToInstall, hashToBasename);
+
+      // TODO(user): Make this work on Gingerbread.
+      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "kill_app")) {
+        AdbHelper.executeCommandWithErrorChecking(device, "am force-stop " + packageName);
+      }
+
+      return true;
+    }
+
+    /**
+     * Sets {@link #useNativeAgent} to true on pre-L devices, because our native agent is built
+     * without -fPIC.  The java agent works fine on L as long as we don't use it for mkdir.
+     */
+    private void determineBestAgent() throws Exception {
+      Preconditions.checkNotNull(device);
+      String value = AdbHelper.executeCommandWithErrorChecking(
+          device, "getprop ro.build.version.sdk");
+      try {
+        if (Integer.valueOf(value.trim()) > 19) {
+          useNativeAgent = false;
+        }
+      } catch (NumberFormatException exn) {
+        useNativeAgent = false;
+      }
+    }
+
+    private String getAgentCommand() {
+      if (useNativeAgent) {
+        return nativeAgentPath + "/libagent.so ";
+      } else {
+        return JAVA_AGENT_COMMAND;
+      }
+    }
+
+    private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
+      try (TraceEventLogger ignored = TraceEventLogger.start(
+          eventBus,
+          "get_package_info",
+          ImmutableMap.of("package", packageName))) {
+
+        Preconditions.checkNotNull(device);
+
+        /* This produces output that looks like
+
+          Package [com.facebook.katana] (4229ce68):
+            userId=10145 gids=[1028, 1015, 3003]
+            pkg=Package{42690b80 com.facebook.katana}
+            codePath=/data/app/com.facebook.katana-1.apk
+            resourcePath=/data/app/com.facebook.katana-1.apk
+            nativeLibraryPath=/data/app-lib/com.facebook.katana-1
+            versionCode=1640376 targetSdk=14
+            versionName=8.0.0.0.23
+
+            ...
+
+         */
+        String lines = AdbHelper.executeCommandWithErrorChecking(
+            device, "dumpsys package " + packageName);
+
+        return parsePackageInfo(packageName, lines);
+      }
+    }
+
+    /**
+     * @return PackageInfo for the agent, or absent if installation failed.
+     */
+    private Optional<PackageInfo> installAgentIfNecessary() throws Exception {
+      Optional<PackageInfo> agentInfo = getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
+      if (!agentInfo.isPresent()) {
+        LOG.debug("Agent not installed.  Installing.");
+        return installAgentApk();
+      }
+      LOG.debug("Agent version: %s", agentInfo.get().versionCode);
+      if (!agentInfo.get().versionCode.equals(AgentUtil.AGENT_VERSION_CODE)) {
+        return installAgentApk();
+      }
+      return agentInfo;
+    }
+
+    private Optional<PackageInfo> installAgentApk() throws Exception {
+      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "install_agent_apk")) {
+        String apkFileName = System.getProperty("buck.android_agent_path");
+        if (apkFileName == null) {
+          throw new RuntimeException("Android agent apk path not specified in properties");
+        }
+        File apkPath = new File(apkFileName);
+        Preconditions.checkNotNull(device);
+        boolean success = adbHelper.installApkOnDevice(device, apkPath, /* installViaSd */ false);
+        if (!success) {
+          return Optional.absent();
+        }
+        return getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
+      }
+    }
+
+    private boolean shouldAppBeInstalled() throws Exception {
+      Optional<PackageInfo> appPackageInfo = getPackageInfo(packageName);
+      if (!appPackageInfo.isPresent()) {
+        eventBus.post(ConsoleEvent.info("App not installed.  Installing now."));
+        return true;
+      }
+
+      LOG.debug("App path: %s", appPackageInfo.get().apkPath);
+      String installedAppSignature = getInstalledAppSignature(appPackageInfo.get().apkPath);
+      String localAppSignature = AgentUtil.getJarSignature(apkRule.getApkPath().toString());
+      LOG.debug("Local app signature: %s", localAppSignature);
+      LOG.debug("Remote app signature: %s", installedAppSignature);
+
+      if (!installedAppSignature.equals(localAppSignature)) {
+        LOG.debug("App signatures do not match.  Must re-install.");
+        return true;
+      }
+
+      LOG.debug("App signatures match.  No need to install.");
       return false;
     }
 
-    nativeAgentPath = agentInfo.get().nativeLibPath;
-    determineBestAgent();
-
-    final File apk = apkRule.getApkPath().toFile();
-    // TODO(user): Support SD installation.
-    final boolean installViaSd = false;
-
-    if (shouldAppBeInstalled()) {
-      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "install_exo_apk")) {
-        Preconditions.checkNotNull(device);
-        boolean success = adbHelper.installApkOnDevice(device, apk, installViaSd);
-        if (!success) {
-          return false;
-        }
-      }
-    }
-
-    final ImmutableMap<String, String> hashToBasename = getRequiredDexFiles();
-    final ImmutableSet<String> requiredHashes = hashToBasename.keySet();
-    final ImmutableSet<String> presentHashes = prepareSecondaryDexDir(requiredHashes);
-    final Set<String> hashesToInstall = Sets.difference(requiredHashes, presentHashes);
-
-    installSecondaryDexFiles(hashesToInstall, hashToBasename);
-
-    // TODO(user): Make this work on Gingerbread.
-    try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "kill_app")) {
-      AdbHelper.executeCommandWithErrorChecking(device, "am force-stop " + packageName);
-    }
-
-    return true;
-  }
-
-  /**
-   * Sets {@link #useNativeAgent} to true on pre-L devices, because our native agent is built
-   * without -fPIC.  The java agent works fine on L as long as we don't use it for mkdir.
-   */
-  private void determineBestAgent() throws Exception {
-    Preconditions.checkNotNull(device);
-    String value = AdbHelper.executeCommandWithErrorChecking(
-        device, "getprop ro.build.version.sdk");
-    try {
-      if (Integer.valueOf(value.trim()) > 19) {
-        useNativeAgent = false;
-      }
-    } catch (NumberFormatException exn) {
-      useNativeAgent = false;
-    }
-  }
-
-  private String getAgentCommand() {
-    if (useNativeAgent) {
-      return nativeAgentPath + "/libagent.so ";
-    } else {
-      return JAVA_AGENT_COMMAND;
-    }
-  }
-
-  private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
-    try (TraceEventLogger ignored = TraceEventLogger.start(
-        eventBus,
-        "get_package_info",
-        ImmutableMap.of("package", packageName))) {
-
-      Preconditions.checkNotNull(device);
-
-      /* This produces output that looks like
-
-        Package [com.facebook.katana] (4229ce68):
-          userId=10145 gids=[1028, 1015, 3003]
-          pkg=Package{42690b80 com.facebook.katana}
-          codePath=/data/app/com.facebook.katana-1.apk
-          resourcePath=/data/app/com.facebook.katana-1.apk
-          nativeLibraryPath=/data/app-lib/com.facebook.katana-1
-          versionCode=1640376 targetSdk=14
-          versionName=8.0.0.0.23
-
-          ...
-
-       */
-      String lines = AdbHelper.executeCommandWithErrorChecking(
-        device, "dumpsys package " + packageName);
-
-      return parsePackageInfo(packageName, lines);
-    }
-  }
-
-  /**
-   * @return  PackageInfo for the agent, or absent if installation failed.
-   */
-  private Optional<PackageInfo> installAgentIfNecessary() throws Exception {
-    Optional<PackageInfo> agentInfo = getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
-    if (!agentInfo.isPresent()) {
-      LOG.debug("Agent not installed.  Installing.");
-      return installAgentApk();
-    }
-    LOG.debug("Agent version: %s", agentInfo.get().versionCode);
-    if (!agentInfo.get().versionCode.equals(AgentUtil.AGENT_VERSION_CODE)) {
-      return installAgentApk();
-    }
-    return agentInfo;
-  }
-
-  private Optional<PackageInfo> installAgentApk() throws Exception {
-    try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "install_agent_apk")) {
-      String apkFileName = System.getProperty("buck.android_agent_path");
-      if (apkFileName == null) {
-        throw new RuntimeException("Android agent apk path not specified in properties");
-      }
-      File apkPath = new File(apkFileName);
-      Preconditions.checkNotNull(device);
-      boolean success = adbHelper.installApkOnDevice(device, apkPath, /* installViaSd */ false);
-      if (!success) {
-        return Optional.absent();
-      }
-      return getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
-    }
-  }
-
-  private boolean shouldAppBeInstalled() throws Exception {
-    Optional<PackageInfo> appPackageInfo = getPackageInfo(packageName);
-    if (!appPackageInfo.isPresent()) {
-      eventBus.post(ConsoleEvent.info("App not installed.  Installing now."));
-      return true;
-    }
-
-    LOG.debug("App path: %s", appPackageInfo.get().apkPath);
-    String installedAppSignature = getInstalledAppSignature(appPackageInfo.get().apkPath);
-    String localAppSignature = AgentUtil.getJarSignature(apkRule.getApkPath().toString());
-    LOG.debug("Local app signature: %s", localAppSignature);
-    LOG.debug("Remote app signature: %s", installedAppSignature);
-
-    if (!installedAppSignature.equals(localAppSignature)) {
-      LOG.debug("App signatures do not match.  Must re-install.");
-      return true;
-    }
-
-    LOG.debug("App signatures match.  No need to install.");
-    return false;
-  }
-
-  private String getInstalledAppSignature(final String packagePath) throws Exception {
-    try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "get_app_signature")) {
-      String command = getAgentCommand() + "get-signature " + packagePath;
-      LOG.debug("Executing %s", command);
-      Preconditions.checkNotNull(device);
-      String output = AdbHelper.executeCommandWithErrorChecking(device, command);
-
-      String result = output.trim();
-      if (result.contains("\n") || result.contains("\r")) {
-        throw new IllegalStateException("Unexpected return from get-signature:\n" + output);
-      }
-
-      return result;
-    }
-  }
-
-  private ImmutableMap<String, String> getRequiredDexFiles() throws IOException {
-    ImmutableMap.Builder<String, String> hashToBasenameBuilder = ImmutableMap.builder();
-    for (String line : projectFilesystem.readLines(exopackageInfo.dexMetadata)) {
-      List<String> parts = Splitter.on(' ').splitToList(line);
-      if (parts.size() < 2) {
-        throw new RuntimeException("Illegal line in metadata file: " + line);
-      }
-      hashToBasenameBuilder.put(parts.get(1), parts.get(0));
-    }
-    return hashToBasenameBuilder.build();
-  }
-
-  private ImmutableSet<String> prepareSecondaryDexDir(ImmutableSet<String> requiredHashes)
-      throws Exception {
-    try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "prepare_dex_dir")) {
-      final ImmutableSet.Builder<String> foundHashes = ImmutableSet.builder();
-
-      // Kind of a hack here.  The java agent can't force the proper permissions on the directories
-      // it creates, so we use the command-line "mkdir -p" instead of the java agent.  Fortunately,
-      // "mkdir -p" seems to work on all devices where we use use the java agent.
-      String mkdirP = useNativeAgent ? getAgentCommand() + "mkdir-p" : "mkdir -p";
-
-      Preconditions.checkNotNull(device);
-      String secondaryDexDir = dataRoot.resolve(SECONDARY_DEX_DIR).toString();
-      AdbHelper.executeCommandWithErrorChecking(
-          device, "umask 022 && " + mkdirP + " " + secondaryDexDir);
-      String output = AdbHelper.executeCommandWithErrorChecking(device, "ls " + secondaryDexDir);
-
-      ImmutableSet.Builder<String> toDeleteBuilder = ImmutableSet.builder();
-
-      scanSecondaryDexDir(output, requiredHashes, foundHashes, toDeleteBuilder);
-
-      Iterable<String> filesToDelete = toDeleteBuilder.build();
-
-      String commandPrefix = "cd " + secondaryDexDir + " && rm ";
-      // Add a fudge factor for separators and error checking.
-      final int overhead = commandPrefix.length() + 100;
-      for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
-        String command = commandPrefix + Joiner.on(' ').join(rmArgs);
+    private String getInstalledAppSignature(final String packagePath) throws Exception {
+      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "get_app_signature")) {
+        String command = getAgentCommand() + "get-signature " + packagePath;
         LOG.debug("Executing %s", command);
-        AdbHelper.executeCommandWithErrorChecking(device, command);
+        Preconditions.checkNotNull(device);
+        String output = AdbHelper.executeCommandWithErrorChecking(device, command);
+
+        String result = output.trim();
+        if (result.contains("\n") || result.contains("\r")) {
+          throw new IllegalStateException("Unexpected return from get-signature:\n" + output);
+        }
+
+        return result;
       }
-
-      return foundHashes.build();
     }
-  }
 
-  private void installSecondaryDexFiles(
-      Set<String> hashesToInstall,
-      ImmutableMap<String, String> hashToBasename)
-      throws Exception {
-    Preconditions.checkNotNull(device);
-    try (TraceEventLogger ignored1 = TraceEventLogger.start(eventBus, "install_secondary_dexes")) {
-      device.createForward(AGENT_PORT, AGENT_PORT);
-      try {
-        for (String hash : hashesToInstall) {
-          String basename = hashToBasename.get(hash);
+    private ImmutableMap<String, String> getRequiredDexFiles() throws IOException {
+      ImmutableMap.Builder<String, String> hashToBasenameBuilder = ImmutableMap.builder();
+      for (String line : projectFilesystem.readLines(exopackageInfo.dexMetadata)) {
+        List<String> parts = Splitter.on(' ').splitToList(line);
+        if (parts.size() < 2) {
+          throw new RuntimeException("Illegal line in metadata file: " + line);
+        }
+        hashToBasenameBuilder.put(parts.get(1), parts.get(0));
+      }
+      return hashToBasenameBuilder.build();
+    }
+
+    private ImmutableSet<String> prepareSecondaryDexDir(ImmutableSet<String> requiredHashes)
+        throws Exception {
+      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "prepare_dex_dir")) {
+        final ImmutableSet.Builder<String> foundHashes = ImmutableSet.builder();
+
+        // Kind of a hack here.  The java agent can't force the proper permissions on the
+        // directories it creates, so we use the command-line "mkdir -p" instead of the java agent.
+        // Fortunately, "mkdir -p" seems to work on all devices where we use use the java agent.
+        String mkdirP = useNativeAgent ? getAgentCommand() + "mkdir-p" : "mkdir -p";
+
+        Preconditions.checkNotNull(device);
+      String secondaryDexDir = dataRoot.resolve(SECONDARY_DEX_DIR).toString();
+        AdbHelper.executeCommandWithErrorChecking(
+            device, "umask 022 && " + mkdirP + " " + secondaryDexDir);
+        String output = AdbHelper.executeCommandWithErrorChecking(device, "ls " + secondaryDexDir);
+
+        ImmutableSet.Builder<String> toDeleteBuilder = ImmutableSet.builder();
+
+        scanSecondaryDexDir(output, requiredHashes, foundHashes, toDeleteBuilder);
+
+        Iterable<String> filesToDelete = toDeleteBuilder.build();
+
+        String commandPrefix = "cd " + secondaryDexDir + " && rm ";
+        // Add a fudge factor for separators and error checking.
+        final int overhead = commandPrefix.length() + 100;
+        for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
+          String command = commandPrefix + Joiner.on(' ').join(rmArgs);
+          LOG.debug("Executing %s", command);
+          AdbHelper.executeCommandWithErrorChecking(device, command);
+        }
+
+        return foundHashes.build();
+      }
+    }
+
+    private void installSecondaryDexFiles(
+        Set<String> hashesToInstall,
+        ImmutableMap<String, String> hashToBasename)
+        throws Exception {
+      Preconditions.checkNotNull(device);
+
+      try (TraceEventLogger ignored1 = TraceEventLogger.start(
+          eventBus,
+          "install_secondary_dexes")) {
+        device.createForward(agentPort, agentPort);
+        try {
+          for (String hash : hashesToInstall) {
+            String basename = hashToBasename.get(hash);
+            try (TraceEventLogger ignored2 = TraceEventLogger.start(
+                eventBus,
+                "install_secondary_dex",
+                ImmutableMap.of("basename", basename))) {
+              installSecondaryDex(
+                  device,
+                  agentPort,
+                  hash,
+                  exopackageInfo.dexDirectory.resolve(basename));
+            }
+          }
           try (TraceEventLogger ignored2 = TraceEventLogger.start(
               eventBus,
-              "install_secondary_dex",
-              ImmutableMap.of("basename", basename))) {
-            installSecondaryDex(
-              device,
-              AGENT_PORT,
-              hash,
-              exopackageInfo.dexDirectory.resolve(basename));
+              "install_secondary_dex_metadata")) {
+
+            // This is a bit gross.  It was a late addition.  Ideally, we could eliminate this, but
+            // it wouldn't be terrible if we don't.  We store the dexed jars on the device
+            // with the full SHA-1 hashes in their names.  This is the format that the loader uses
+            // internally, so ideally we would just load them in place.  However, the code currently
+            // expects to be able to copy the jars from a directory that matches the name in the
+            // metadata file, like "secondary-1.dex.jar".  We don't want to give up putting the
+            // hashes in the file names (because we use that to skip re-uploads), so just hack
+            // the metadata file to have hash-like names.
+            try (NamedTemporaryFile temp = new NamedTemporaryFile("metadata", "tmp")) {
+              com.google.common.io.Files.write(
+                  com.google.common.io.Files.toString(
+                      exopackageInfo.dexMetadata.toFile(),
+                      Charsets.UTF_8)
+                      .replaceAll(
+                          "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ",
+                          "secondary-$2.dex.jar $2 "),
+                  temp.get().toFile(), Charsets.UTF_8);
+
+              installFile(
+                  device,
+                  agentPort,
+                  SECONDARY_DEX_DIR.resolve("metadata.txt"),
+                  temp.get());
+            }
           }
-        }
-        try (TraceEventLogger ignored2 = TraceEventLogger.start(
-            eventBus,
-            "install_secondary_dex_metadata")) {
-
-          // This is a bit gross.  It was a late addition.  Ideally, we could eliminate this, but
-          // it wouldn't be terrible if we don't.  We store the dexed jars on the device
-          // with the full SHA-1 hashes in their names.  This is the format that the loader uses
-          // internally, so ideally we would just load them in place.  However, the code currently
-          // expects to be able to copy the jars from a directory that matches the name in the
-          // metadata file, like "secondary-1.dex.jar".  We don't want to give up putting the
-          // hashes in the file names (because we use that to skip re-uploads), so just hack
-          // the metadata file to have hash-like names.
-          try (NamedTemporaryFile temp = new NamedTemporaryFile("metadata", "tmp")) {
-            com.google.common.io.Files.write(
-                com.google.common.io.Files.toString(
-                    exopackageInfo.dexMetadata.toFile(),
-                    Charsets.UTF_8)
-                    .replaceAll(
-                      "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ",
-                      "secondary-$2.dex.jar $2 "),
-                temp.get().toFile(), Charsets.UTF_8);
-
-            installFile(
-                device,
-                AGENT_PORT,
-                SECONDARY_DEX_DIR.resolve("metadata.txt"),
-                temp.get());
-          }
-        }
-      } finally {
-        device.removeForward(AGENT_PORT, AGENT_PORT);
-      }
-    }
-  }
-
-  private void installSecondaryDex(
-      final IDevice device,
-      final int port,
-      String hash,
-      final Path source)
-      throws Exception {
-    installFile(device, port, SECONDARY_DEX_DIR.resolve("secondary-" + hash + ".dex.jar"), source);
-  }
-
-  private void installFile(
-      IDevice device,
-      final int port,
-      Path pathRelativeToDataRoot,
-      final Path source) throws Exception {
-    CollectingOutputReceiver receiver = new CollectingOutputReceiver() {
-
-      private boolean sentPayload = false;
-
-      @Override
-      public void addOutput(byte[] data, int offset, int length) {
-        super.addOutput(data, offset, length);
-        if (!sentPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
-          LOG.verbose("Got key: %s", getOutput().trim());
-
-          sentPayload = true;
-          try (Socket clientSocket = new Socket("localhost", port)) {
-            LOG.verbose("Connected");
-            OutputStream outToDevice = clientSocket.getOutputStream();
-            outToDevice.write(
-                getOutput().substring(
-                    0,
-                    AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
-            LOG.verbose("Wrote key");
-            com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
-            LOG.verbose("Wrote file");
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
+        } finally {
+          device.removeForward(agentPort, agentPort);
         }
       }
-    };
-
-    String targetFileName = dataRoot.resolve(pathRelativeToDataRoot).toString();
-    String command =
-        "umask 022 && " +
-            getAgentCommand() +
-            "receive-file " + port + " " + Files.size(source) + " " +
-            targetFileName +
-            " ; echo -n :$?";
-    LOG.debug("Executing %s", command);
-
-    // If we fail to execute the command, stash the exception.  My experience during development
-    // has been that the exception from checkReceiverOutput is more actionable.
-    Exception shellException = null;
-    try {
-      device.executeShellCommand(command, receiver);
-    } catch (Exception e) {
-      shellException = e;
     }
 
-    try {
-      AdbHelper.checkReceiverOutput(command, receiver);
-    } catch (Exception e) {
+    private void installSecondaryDex(
+        final IDevice device,
+        final int port,
+        String hash,
+        final Path source)
+        throws Exception {
+      installFile(device, port, SECONDARY_DEX_DIR.resolve("secondary-" + hash + ".dex.jar"), source);
+    }
+
+    private void installFile(
+        IDevice device,
+        final int port,
+        Path pathRelativeToDataRoot,
+        final Path source) throws Exception {
+      CollectingOutputReceiver receiver = new CollectingOutputReceiver() {
+
+        private boolean sentPayload = false;
+
+        @Override
+        public void addOutput(byte[] data, int offset, int length) {
+          super.addOutput(data, offset, length);
+          if (!sentPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
+            LOG.verbose("Got key: %s", getOutput().trim());
+
+            sentPayload = true;
+            try (Socket clientSocket = new Socket("localhost", port)) {
+              LOG.verbose("Connected");
+              OutputStream outToDevice = clientSocket.getOutputStream();
+              outToDevice.write(
+                  getOutput().substring(
+                      0,
+                      AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
+              LOG.verbose("Wrote key");
+              com.google.common.io.Files.asByteSource(source.toFile()).copyTo(outToDevice);
+              LOG.verbose("Wrote file");
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            }
+          }
+        }
+      };
+
+      String targetFileName = dataRoot.resolve(pathRelativeToDataRoot).toString();
+      String command =
+          "umask 022 && " +
+              getAgentCommand() +
+              "receive-file " + port + " " + Files.size(source) + " " +
+              targetFileName +
+              " ; echo -n :$?";
+      LOG.debug("Executing %s", command);
+
+      // If we fail to execute the command, stash the exception.  My experience during development
+      // has been that the exception from checkReceiverOutput is more actionable.
+      Exception shellException = null;
+      try {
+        device.executeShellCommand(command, receiver);
+      } catch (Exception e) {
+        shellException = e;
+      }
+
+      try {
+        AdbHelper.checkReceiverOutput(command, receiver);
+      } catch (Exception e) {
+        if (shellException != null) {
+          e.addSuppressed(shellException);
+        }
+        throw e;
+      }
+
       if (shellException != null) {
-        e.addSuppressed(shellException);
+        throw shellException;
       }
-      throw e;
-    }
 
-    if (shellException != null) {
-      throw shellException;
+      // The standard Java libraries on Android always create new files un-readable by other users.
+      // We use the shell user or root to create these files, so we need to explicitly set the mode
+      // to allow the app to read them.  Ideally, the agent would do this automatically, but
+      // there's no easy way to do this in Java.  We can drop this if we drop support for the
+      // Java agent.
+      AdbHelper.executeCommandWithErrorChecking(device, "chmod 644 " + targetFileName);
     }
-
-    // The standard Java libraries on Android always create new files un-readable by other users.
-    // We use the shell user or root to create these files, so we need to explicitly set the mode
-    // to allow the app to read them.  Ideally, the agent would do this automatically, but
-    // there's no easy way to do this in Java.  We can drop this if we drop support for the
-    // Java agent.
-    AdbHelper.executeCommandWithErrorChecking(device, "chmod 644 " + targetFileName);
   }
 
   @VisibleForTesting
