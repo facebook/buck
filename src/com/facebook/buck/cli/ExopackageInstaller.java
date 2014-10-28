@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.facebook.buck.android.agent.util.AgentUtil;
@@ -447,7 +448,17 @@ public class ExopackageInstaller {
             }
           }
         } finally {
-          device.removeForward(agentPort, agentPort);
+          try {
+            device.removeForward(agentPort, agentPort);
+          } catch (AdbCommandRejectedException e) {
+            LOG.warn(e, "Failed to remove adb forward on port %d for device %s", agentPort, device);
+            eventBus.post(
+                ConsoleEvent.warning(
+                    "Failed to remove adb forward %d. This is not necessarily a problem\n" +
+                    "because it will be recreated during the next exopackage installation.\n" +
+                    "See the log for the full exception.",
+                    agentPort));
+          }
         }
       }
     }
