@@ -16,9 +16,11 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -51,7 +53,13 @@ public class EnvironmentFilter {
     for (Map.Entry<String, String> envEntry : environment.entrySet()) {
       String key = envEntry.getKey();
       if (!ENV_TO_REMOVE.contains(key)) {
-        filteredEnvironmentBuilder.put(envEntry);
+        if (Platform.detect() == Platform.WINDOWS) {
+          // Windows environment variables are case insensitive.  While an ImmutableMap will throw
+          // if we get duplicate key, we don't have to worry about this for Windows.
+          filteredEnvironmentBuilder.put(key.toUpperCase(Locale.US), envEntry.getValue());
+        } else {
+          filteredEnvironmentBuilder.put(envEntry);
+        }
       }
     }
     return filteredEnvironmentBuilder.build();
