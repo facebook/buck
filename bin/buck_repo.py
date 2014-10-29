@@ -391,8 +391,8 @@ class BuckRepo:
                 if os.path.exists(self._build_success_file):
                     os.remove(self._build_success_file)
 
-                self._check_for_ant()
-                self._run_ant_clean()
+                ant = self._check_for_ant()
+                self._run_ant_clean(ant)
                 self._restart_buck()
 
     def _join_buck_dir(self, relative_path):
