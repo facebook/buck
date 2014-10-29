@@ -17,6 +17,7 @@ local.properties
 
 # Eclipse
 /.settings/
+/.apt_generated/
 
 # IntelliJ, based on http://devnet.jetbrains.net/docs/DOC-1186
 .idea/ant.xml
