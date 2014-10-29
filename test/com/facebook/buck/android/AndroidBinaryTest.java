@@ -19,14 +19,9 @@ package com.facebook.buck.android;
 import static com.facebook.buck.util.BuckConstant.BIN_PATH;
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static com.facebook.buck.util.BuckConstant.GEN_PATH;
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.Keystore;
@@ -39,11 +34,9 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -324,43 +317,6 @@ public class AndroidBinaryTest {
   }
 
   @Test
-  public void testCopyNativeLibraryCommandWithoutCpuFilter() {
-    createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
-        ImmutableSet.<TargetCpuType>of() /* cpuFilters */,
-        "/path/to/source",
-        "/path/to/destination/",
-        ImmutableList.of(
-            "cp -R /path/to/source/* /path/to/destination",
-            "rename_native_executables"));
-  }
-
-  @Test
-  public void testCopyNativeLibraryCommand() {
-    createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
-        ImmutableSet.of(TargetCpuType.ARMV7),
-        "/path/to/source",
-        "/path/to/destination/",
-        ImmutableList.of(
-            "[ -d /path/to/source/armeabi-v7a ] && mkdir -p /path/to/destination/armeabi-v7a " +
-                "&& cp -R /path/to/source/armeabi-v7a/* /path/to/destination/armeabi-v7a",
-            "rename_native_executables"));
-  }
-
-  @Test
-  public void testCopyNativeLibraryCommandWithMultipleCpuFilters() {
-    createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
-        ImmutableSet.of(TargetCpuType.ARM, TargetCpuType.X86),
-        "/path/to/source",
-        "/path/to/destination/",
-        ImmutableList.of(
-            "[ -d /path/to/source/armeabi ] && mkdir -p /path/to/destination/armeabi " +
-                "&& cp -R /path/to/source/armeabi/* /path/to/destination/armeabi",
-            "[ -d /path/to/source/x86 ] && mkdir -p /path/to/destination/x86 " +
-                "&& cp -R /path/to/source/x86/* /path/to/destination/x86",
-            "rename_native_executables"));
-  }
-
-  @Test
   public void testCreateFilterResourcesStep() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildRule keystoreRule = addKeystoreRule(resolver);
@@ -388,43 +344,6 @@ public class AndroidBinaryTest {
             Paths.get("buck-out/bin/__filtered__target#resources_filter__/0"),
             Paths.get("buck-out/bin/__filtered__target#resources_filter__/1")),
         filteredDirs.build());
-  }
-
-  private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
-      ImmutableSet<TargetCpuType> cpuFilters,
-      String sourceDir,
-      String destinationDir,
-      ImmutableList<String> expectedCommandDescriptions) {
-
-    class FakeProjectFilesystem extends ProjectFilesystem {
-
-      public FakeProjectFilesystem() {
-        super(Paths.get("."));
-      }
-
-      @Override
-      public Path resolve(Path path) {
-        return path;
-      }
-    }
-
-    // Invoke copyNativeLibrary to populate the steps.
-    ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    AndroidBinary.copyNativeLibrary(
-        Paths.get(sourceDir), Paths.get(destinationDir), cpuFilters, stepsBuilder);
-    ImmutableList<Step> steps = stepsBuilder.build();
-
-    assertEquals(steps.size(), expectedCommandDescriptions.size());
-    ExecutionContext context = createMock(ExecutionContext.class);
-    expect(context.getProjectFilesystem()).andReturn(new FakeProjectFilesystem()).anyTimes();
-    replay(context);
-
-    for (int i = 0; i < steps.size(); ++i) {
-      String description = steps.get(i).getDescription(context);
-      assertEquals(expectedCommandDescriptions.get(i), description);
-    }
-
-    verify(context);
   }
 
   private Keystore addKeystoreRule(BuildRuleResolver ruleResolver) {

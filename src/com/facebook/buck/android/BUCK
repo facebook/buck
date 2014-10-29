@@ -53,6 +53,7 @@ RULES_SRCS = [
   'ApkGenrule.java',
   'ApkGenruleDescription.java',
   'ComputeExopackageDepsAbi.java',
+  'CopyNativeLibraries.java',
   'DexProducedFromJavaLibrary.java',
   'DexWithClasses.java',
   'DummyRDotJava.java',
