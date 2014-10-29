@@ -22,19 +22,25 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.parser.TargetGraph;
+import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -85,7 +91,6 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       }
     }
 
-    // Find the build targets that match the specified options.
     ImmutableSet<BuildTarget> matchingBuildTargets;
     try {
       matchingBuildTargets = ImmutableSet.copyOf(
@@ -97,25 +102,27 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
     // Parse the entire action graph, or (if targets are specified),
     // only the specified targets and their dependencies..
-    PartialGraph graph;
+    TargetGraph graph;
     try {
       if (matchingBuildTargets.isEmpty()) {
-        graph = PartialGraph.createFullGraph(
-            getProjectFilesystem(),
+        graph = getParser().buildTargetGraphForTargetNodeSpecs(
+            ImmutableList.of(
+                new TargetNodePredicateSpec(
+                    Predicates.<TargetNode<?>>alwaysTrue(),
+                    getProjectFilesystem().getIgnorePaths())),
             options.getDefaultIncludes(),
-            getParser(),
             getBuckEventBus(),
             console,
             environment,
-            false /* enableProfiling */);
+            options.getEnableProfiling());
       } else {
-        graph = PartialGraph.createPartialGraph(
+        graph = getParser().buildTargetGraphForBuildTargets(
             matchingBuildTargets,
             options.getDefaultIncludes(),
-            getParser(),
             getBuckEventBus(),
             console,
-            environment);
+            environment,
+            options.getEnableProfiling());
       }
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
@@ -131,12 +138,14 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       matchingBuildRules = ImmutableSortedMap.of();
     } else {
       matchingBuildRules = getMatchingBuildRules(
-          graph.getTargetGraph().getActionGraph(getBuckEventBus()),
+          graph.getActionGraph(getBuckEventBus()),
           new TargetsCommandPredicate(
               graph,
               buildRuleTypesBuilder.build(),
               referencedFiles.relativePathsUnderProjectRoot,
-              matchingBuildTargets,
+              matchingBuildTargets.isEmpty() ?
+                  Optional.<ImmutableSet<BuildTarget>>absent() :
+                  Optional.of(matchingBuildTargets),
               getBuckEventBus()));
     }
 
@@ -368,24 +377,35 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     private ImmutableSet<Path> referencedInputs;
     private final Set<Path> basePathOfTargets;
     private final Set<BuildRule> dependentTargets;
-    private final Set<BuildTarget> matchingBuildRules;
+    private final Optional<ImmutableSet<BuildTarget>> matchingTargets;
 
     /**
-     * @param referencedInputs All of these paths must be relative to the project root.
+     * @param buildRuleTypes A {@link BuildRule}'s {@link BuildRuleType} must be contained in this
+     *     set for it to match. Ignored if empty.
+     * @param referencedInputs A {@link BuildRule} must reference at least one of these paths as
+     *     input to match the predicate. All the paths must be relative to the project root. Ignored
+     *     if empty.
+     * @param matchingTargets If present, a {@link BuildRule}'s {@link BuildTarget} must be
+     *     contained in this set for it to match.
      */
     public TargetsCommandPredicate(
-        PartialGraph partialGraph,
+        TargetGraph targetGraph,
         ImmutableSet<BuildRuleType> buildRuleTypes,
         ImmutableSet<Path> referencedInputs,
-        ImmutableSet<BuildTarget> matchingBuildRules,
+        Optional<ImmutableSet<BuildTarget>> matchingTargets,
         BuckEventBus eventBus) {
-      this.graph = partialGraph.getTargetGraph().getActionGraph(eventBus);
+      this.graph = targetGraph.getActionGraph(eventBus);
       this.buildRuleTypes = buildRuleTypes;
-      this.matchingBuildRules = matchingBuildRules;
+      this.matchingTargets = matchingTargets;
 
       if (!referencedInputs.isEmpty()) {
         this.referencedInputs = referencedInputs;
-        BuildFileTree tree = new InMemoryBuildFileTree(partialGraph.getTargets());
+        BuildFileTree tree = new InMemoryBuildFileTree(
+            matchingTargets.or(
+                FluentIterable
+                    .from(graph.getNodes())
+                    .transform(HasBuildTarget.TO_TARGET)
+                    .toSet()));
         basePathOfTargets = Sets.newHashSet();
         dependentTargets = Sets.newHashSet();
         for (Path input : referencedInputs) {
@@ -426,8 +446,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         }
       }
 
-      if (!matchingBuildRules.isEmpty() &&
-          !matchingBuildRules.contains(rule.getBuildTarget())) {
+      if (matchingTargets.isPresent() && !matchingTargets.get().contains(rule.getBuildTarget())) {
         return false;
       }
 
