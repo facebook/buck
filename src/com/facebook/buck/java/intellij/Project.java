@@ -111,6 +111,7 @@ public class Project {
    */
   public static final String ANDROID_GEN_DIR = BuckConstant.BUCK_OUTPUT_DIRECTORY + "/android";
   public static final Path ANDROID_GEN_PATH = BuckConstant.BUCK_OUTPUT_PATH.resolve("android");
+  public static final String ANDROID_APK_DIR = BuckConstant.BUCK_OUTPUT_DIRECTORY + "/gen";
 
   /**
    * Prefix for build targets whose output will be in {@link #ANDROID_GEN_DIR}.
@@ -415,6 +416,7 @@ public class Project {
         module.resFolder = defaultAndroidConfig.getResourceDefaultRelativePath();
         module.assetFolder = defaultAndroidConfig.getAssetsDefaultRelativePath();
         module.isAndroidLibraryProject = false;
+        module.binaryPath = generateRelativeAPKPath(projectRule.getBuildTarget().getShortName(),basePathWithSlash);
         KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
             androidBinary.getKeystore().getPathToStore(),
             androidBinary.getKeystore().getPathToPropertiesFile(),
@@ -551,6 +553,15 @@ public class Project {
         ANDROID_GEN_DIR,
         Paths.get("").relativize(Paths.get(basePathOfModuleWithSlash)).toString(),
         "gen");
+  }
+
+  static String generateRelativeAPKPath(String targetName, String basePathOfModuleWithSlash) {
+    return Paths.get(
+        "/",
+        Paths.get(basePathOfModuleWithSlash).relativize(Paths.get("")).toString(),
+        ANDROID_APK_DIR,
+        Paths.get("").relativize(Paths.get(basePathOfModuleWithSlash)).toString(),
+        targetName + ".apk").toString();
   }
 
   private boolean addSourceFolders(Module module,

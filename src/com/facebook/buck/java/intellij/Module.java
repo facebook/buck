@@ -108,6 +108,9 @@ final class Module {
   @Nullable
   @JsonProperty Boolean annotationGenIsForTest;
 
+  @Nullable
+  @JsonProperty String binaryPath;
+
   Module(BuildRule srcRule, BuildTarget target) {
     this.srcRule = srcRule;
     this.target = target;

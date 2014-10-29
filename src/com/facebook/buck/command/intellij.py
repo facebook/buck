@@ -34,7 +34,7 @@ ANDROID_FACET = """
         <option name="CUSTOM_APK_RESOURCE_FOLDER" value="" />
         <option name="USE_CUSTOM_COMPILER_MANIFEST" value="false" />
         <option name="CUSTOM_COMPILER_MANIFEST" value="" />
-        <option name="APK_PATH" value="" />
+        <option name="APK_PATH" value="%(apk_path)s" />
         <option name="LIBRARY_PROJECT" value="%(is_android_library_project)s" />
         <option name="RUN_PROCESS_RESOURCES_MAVEN_TASK" value="true" />
         <option name="GENERATE_UNSIGNED_APK" value="false" />
@@ -242,6 +242,7 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
                 'proguard_config': '/proguard.cfg',
                 'keystore': keystore,
                 'libs_path': '/%s' % module.get('nativeLibs', 'libs'),
+                'apk_path' : get_value_in_map(module, 'binaryPath'),
             }
 
             if android_auto_generation_disabled:
