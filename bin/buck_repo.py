@@ -195,7 +195,7 @@ class BuckRepo:
                                   file=sys.stderr)
                         return exit_code
 
-            command = ["java"]
+            command = [which("java")]
             command.extend(self._get_java_args(self._buck_version_uid))
             command.append("-Djava.io.tmpdir={0}".format(self._tmp_dir))
             command.append("-classpath")
@@ -220,7 +220,7 @@ class BuckRepo:
             disconnection occurs. Specify port 0 to allow Nailgun to find an
             available port, then parse the port number out of the first log entry.
             '''
-            command = ["java"]
+            command = [which("java")]
             command.extend(self._get_java_args(self._buck_version_uid))
             command.append("-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()))
             command.append("-Dbuck.buckd_watcher=Watchman")
@@ -744,6 +744,6 @@ def check_output(*popenargs, **kwargs):
 
 
 def is_java8():
-    output = check_output(['java', '-version'], stderr=subprocess.STDOUT)
+    output = check_output([which('java'), '-version'], stderr=subprocess.STDOUT)
     version_line = output.strip().splitlines()[0]
     return re.compile(b'java version "1\.8\..*').match(version_line)
