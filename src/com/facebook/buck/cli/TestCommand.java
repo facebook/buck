@@ -26,7 +26,8 @@ import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.parser.TargetGraph;
+import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
@@ -57,7 +58,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -284,37 +284,26 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // The first step is to parse all of the build files. This will populate the parser and find all
     // of the test rules.
-    PartialGraph partialGraph = PartialGraph.createPartialGraph(
-        new Predicate<TargetNode<?>>() {
-          @Override
-          public boolean apply(TargetNode<?> input) {
-            return input.getType().isTestRule();
-          }
-        },
-        getProjectFilesystem(),
+    TargetGraph targetGraph = getParser().buildTargetGraphForTargetNodeSpecs(
+        ImmutableList.of(
+            new TargetNodePredicateSpec(
+                new Predicate<TargetNode<?>>() {
+                  @Override
+                  public boolean apply(TargetNode<?> input) {
+                    return input.getType().isTestRule();
+                  }
+                },
+                getProjectFilesystem().getIgnorePaths())),
         options.getDefaultIncludes(),
-        getParser(),
         getBuckEventBus(),
         console,
         environment,
-        false /* enableProfiling */);
+        options.getEnableProfiling());
 
-    final ActionGraph graph = partialGraph.getTargetGraph().getActionGraph(getBuckEventBus());
+    ActionGraph graph = targetGraph.getActionGraph(getBuckEventBus());
 
     // Look up all of the test rules in the action graph.
-    Iterable<TestRule> testRules = Iterables.transform(
-        partialGraph.getTargets(),
-        new Function<BuildTarget, TestRule>() {
-          @Override
-          public TestRule apply(BuildTarget buildTarget) {
-            BuildRule test = graph.findBuildRuleByTarget(buildTarget);
-            if (test instanceof TestRule) {
-              return (TestRule) test;
-            }
-            throw new RuntimeException(
-                "Unexpectedly asked to find a test rule, but could not: " + buildTarget);
-          }
-        });
+    Iterable<TestRule> testRules = Iterables.filter(graph.getNodes(), TestRule.class);
 
     testRules = filterTestRules(options, testRules);
     if (options.isDryRun()) {
@@ -324,7 +313,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Create artifact cache to initialize Cassandra connection, if appropriate.
     ArtifactCache artifactCache = getArtifactCache();
 
-    try (Build build = options.createBuild(options.getBuckConfig(),
+    try (Build build = options.createBuild(
+        options.getBuckConfig(),
         graph,
         getProjectFilesystem(),
         getAndroidDirectoryResolver(),
