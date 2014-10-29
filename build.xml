@@ -126,7 +126,7 @@
 
   <!-- Default target so that a command line build can
        do more than one thing. -->
-  <target name="default" depends="compile, dx, client, javacc-tests" />
+  <target name="default" depends="compile, dx, client, generate-test-immutables, javacc-tests" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
