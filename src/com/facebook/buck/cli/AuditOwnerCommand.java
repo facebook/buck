@@ -111,13 +111,13 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     OwnersReport report = OwnersReport.emptyReport();
     Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
 
-    for (String filePath : options.getArguments()) {
-      Path buckFile = findBuckFileFor(Paths.get(filePath));
+    for (Path filePath : options.getArgumentsAsPaths(getProjectFilesystem().getRootPath())) {
+      Path buckFile = findBuckFileFor(filePath);
       if (buckFile == null) {
         report = report.updatedWith(
           new OwnersReport(
               ImmutableSetMultimap.<TargetNode<?>, Path>of(),
-              /* inputWithNoOwners */ ImmutableSet.of(new File(filePath).toPath()),
+              /* inputWithNoOwners */ ImmutableSet.of(filePath),
               Sets.<String>newHashSet(),
               Sets.<String>newHashSet()));
         continue;
@@ -169,7 +169,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
         report = report.updatedWith(
             generateOwnersReport(
                 targetNode,
-                ImmutableList.of(filePath),
+                ImmutableList.of(filePath.toString()),
                 options.isGuessForDeletedEnabled()));
       }
     }

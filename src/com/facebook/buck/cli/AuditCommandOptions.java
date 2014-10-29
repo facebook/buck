@@ -21,6 +21,8 @@ import com.google.common.collect.Lists;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 public class AuditCommandOptions extends AbstractCommandOptions {
@@ -53,6 +55,14 @@ public class AuditCommandOptions extends AbstractCommandOptions {
 
   public List<String> getArgumentsFormattedAsBuildTargets() {
     return getCommandLineBuildTargetNormalizer().normalizeAll(getArguments());
+  }
+
+  /**
+   * @return relative paths under the project root
+   */
+  public Iterable<Path> getArgumentsAsPaths(Path projectRoot) throws IOException {
+    return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, getArguments())
+        .relativePathsUnderProjectRoot;
   }
 
   public boolean shouldGenerateDotOutput() {
