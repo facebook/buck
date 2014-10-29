@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.cli.TargetsCommandOptions.ReferencedFiles;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.json.BuildFileParseException;
@@ -123,7 +122,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       return 1;
     }
 
-    ReferencedFiles referencedFiles = options.getReferencedFiles(
+    PathArguments.ReferencedFiles referencedFiles = options.getReferencedFiles(
         getProjectFilesystem().getRootPath());
     SortedMap<String, BuildRule> matchingBuildRules;
     // If all of the referenced files are paths outside the project root, then print nothing.

@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cli.TargetsCommandOptions.ReferencedFiles;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableSet;
@@ -30,14 +29,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class TargetsCommandOptionsTest {
+public class PathArgumentsTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
   public void testGetCanonicalFilesUnderProjectRoot() throws IOException {
-    TestDataHelper.createProjectWorkspaceForScenario(this, "target_command_options", tmp).setUp();
+    TestDataHelper.createProjectWorkspaceForScenario(this, "path_arguments", tmp).setUp();
 
     Path projectRoot = tmp.getRootPath();
     ImmutableSet<String> nonCanonicalFilePaths = ImmutableSet.of(
@@ -47,7 +46,7 @@ public class TargetsCommandOptionsTest {
         projectRoot + "/ProjectRoot/src/com/facebook/AbsolutePath.txt",
         projectRoot + "/ProjectRoot/../PathNotUnderProjectRoot.txt");
 
-    ReferencedFiles referencedFiles = TargetsCommandOptions.getCanonicalFilesUnderProjectRoot(
+    PathArguments.ReferencedFiles referencedFiles = PathArguments.getCanonicalFilesUnderProjectRoot(
         projectRoot.resolve("ProjectRoot"),
         nonCanonicalFilePaths);
     assertEquals(

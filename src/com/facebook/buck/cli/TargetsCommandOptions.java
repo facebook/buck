@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 
@@ -27,7 +26,6 @@ import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
@@ -70,62 +68,9 @@ public class TargetsCommandOptions extends BuildCommandOptions {
     return types.get();
   }
 
-  static class ReferencedFiles {
-    final ImmutableSet<Path> relativePathsUnderProjectRoot;
-    final ImmutableSet<Path> absolutePathsOutsideProjectRootOrNonExistingPaths;
-
-    public ReferencedFiles(
-        ImmutableSet<Path> relativePathsUnderProjectRoot,
-        ImmutableSet<Path> absolutePathsOutsideProjectRootOrNonExistingPaths) {
-      this.relativePathsUnderProjectRoot = relativePathsUnderProjectRoot;
-      this.absolutePathsOutsideProjectRootOrNonExistingPaths =
-          absolutePathsOutsideProjectRootOrNonExistingPaths;
-    }
-  }
-
-  /**
-   * Filter files under the project root, and convert to canonical relative path style.
-   * For example, the project root is /project,
-   * 1. file path /project/./src/com/facebook/./test/../Test.java will be converted to
-   *    src/com/facebook/Test.java
-   * 2. file path /otherproject/src/com/facebook/Test.java will be ignored.
-   */
-  @VisibleForTesting
-  static ReferencedFiles getCanonicalFilesUnderProjectRoot(
-      Path projectRoot, ImmutableSet<String> nonCanonicalFilePaths)
+  public PathArguments.ReferencedFiles getReferencedFiles(Path projectRoot)
       throws IOException {
-    // toRealPath() is used throughout to resolve symlinks or else the Path.startsWith() check will
-    // not be reliable.
-    ImmutableSet.Builder<Path> projectFiles = ImmutableSet.builder();
-    ImmutableSet.Builder<Path> nonProjectFiles = ImmutableSet.builder();
-    Path normalizedRoot = projectRoot.toRealPath();
-    for (String filePath : nonCanonicalFilePaths) {
-      Path canonicalFullPath = Paths.get(filePath);
-      if (!canonicalFullPath.isAbsolute()) {
-        canonicalFullPath = projectRoot.resolve(canonicalFullPath);
-      }
-      if (!canonicalFullPath.toFile().exists()) {
-        nonProjectFiles.add(canonicalFullPath);
-        continue;
-      }
-      canonicalFullPath = canonicalFullPath.toRealPath();
-
-      // Ignore files that aren't under project root.
-      if (canonicalFullPath.startsWith(normalizedRoot)) {
-        Path relativePath = canonicalFullPath.subpath(
-            normalizedRoot.getNameCount(),
-            canonicalFullPath.getNameCount());
-        projectFiles.add(relativePath);
-      } else {
-        nonProjectFiles.add(canonicalFullPath);
-      }
-    }
-    return new ReferencedFiles(projectFiles.build(), nonProjectFiles.build());
-  }
-
-  public ReferencedFiles getReferencedFiles(Path projectRoot)
-      throws IOException {
-    return getCanonicalFilesUnderProjectRoot(projectRoot, referencedFiles.get());
+    return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, referencedFiles.get());
   }
 
   public boolean getPrintJson() {
