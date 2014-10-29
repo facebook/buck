@@ -29,8 +29,6 @@ import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -93,11 +91,9 @@ public class AuditClasspathCommandTest {
   public void testClassPathOutput()
       throws IOException, InterruptedException {
     // Test that no output is created.
-    PartialGraph partialGraph1 = PartialGraphFactory.newInstance(
-        TargetGraphFactory.newInstance(
-            ImmutableSet.<TargetNode<?>>of()),
+    auditClasspathCommand.printClasspath(
+        TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of()),
         ImmutableSet.<BuildTarget>of());
-    auditClasspathCommand.printClasspath(partialGraph1);
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
 
@@ -139,7 +135,7 @@ public class AuditClasspathCommandTest {
         .addSrc(Paths.get("src/com/facebook/test/ProjectTests.java"))
         .build();
 
-    PartialGraph partialGraph2 = PartialGraphFactory.newInstance(
+    auditClasspathCommand.printClasspath(
         TargetGraphFactory.newInstance(
             ImmutableSet.of(
                 javaLibraryNode,
@@ -148,7 +144,6 @@ public class AuditClasspathCommandTest {
                 testAndroidNode,
                 testJavaNode)),
         ImmutableSet.<BuildTarget>of());
-    auditClasspathCommand.printClasspath(partialGraph2);
 
     // Still empty.
     assertEquals("", console.getTextWrittenToStdOut());
@@ -158,7 +153,7 @@ public class AuditClasspathCommandTest {
     // - paths don't appear multiple times when dependencies are referenced multiple times.
     // - dependencies are walked
     // - independent targets in the same BUCK file are not included in the output
-    PartialGraph partialGraph3 =  PartialGraphFactory.newInstance(
+    auditClasspathCommand.printClasspath(
         TargetGraphFactory.newInstance(
             ImmutableSet.of(
                 javaLibraryNode,
@@ -168,7 +163,6 @@ public class AuditClasspathCommandTest {
                 testJavaNode)),
         ImmutableSet.of(
             testAndroidTarget));
-    auditClasspathCommand.printClasspath(partialGraph3);
 
     SortedSet<String> expectedPaths = Sets.newTreeSet(
         Arrays.asList(
@@ -184,7 +178,7 @@ public class AuditClasspathCommandTest {
     // - all rules have implemented HasClasspathEntries.
     // Note that the output streams are reset.
     setUp();
-    PartialGraph partialGraph4 =  PartialGraphFactory.newInstance(
+    auditClasspathCommand.printClasspath(
         TargetGraphFactory.newInstance(
             ImmutableSet.of(
                 javaLibraryNode,
@@ -197,7 +191,6 @@ public class AuditClasspathCommandTest {
             javaLibraryTarget,
             androidLibraryTarget,
             testJavaTarget));
-    auditClasspathCommand.printClasspath(partialGraph4);
 
     expectedPaths.add(GEN_DIR + "/lib__project-tests__output/project-tests.jar");
     expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
@@ -235,7 +228,7 @@ public class AuditClasspathCommandTest {
         .addDep(javaTarget)
         .build();
 
-    PartialGraph partialGraph =  PartialGraphFactory.newInstance(
+    auditClasspathCommand.printJsonClasspath(
         TargetGraphFactory.newInstance(
             ImmutableSet.of(
                 androidNode,
@@ -243,7 +236,6 @@ public class AuditClasspathCommandTest {
         ImmutableSet.of(
             androidTarget,
             javaTarget));
-    auditClasspathCommand.printJsonClasspath(partialGraph);
 
     assertEquals(EXPECTED_JSON, console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
