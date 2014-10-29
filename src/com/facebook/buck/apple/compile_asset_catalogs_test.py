@@ -23,6 +23,7 @@ from compile_asset_catalogs import actool_cmds
 from compile_asset_catalogs import transform_actool_output_line
 from compile_asset_catalogs import transform_actool_output
 
+import os
 import StringIO
 import unittest
 
@@ -92,72 +93,88 @@ class TestCompileAssetCatalogs(unittest.TestCase):
 
 
     def test_splits_into_bundles_when_told_prior_to_ios7(self):
-        catalogs = ['/A.xcassets', '/B.xcassets']
+        catalogs = ['A.xcassets', 'B.xcassets']
         pairs = actool_cmds(
             '6.0',
             'iphoneos',
             ['iphone'],
-            '/output',
+            'output',
             catalogs,
             True)
         self.assertTrue(len(pairs) == 2)
         (c, d) = pairs[0]
         s = ' '.join(c)
-        self.assertTrue('--compile /output/A.bundle /A.xcassets' in s)
+        self.assertTrue('--compile {0} {1}'.format(
+            os.path.join('output', 'A.bundle'),
+            'A.xcassets') in s)
         (c, d) = pairs[1]
         s = ' '.join(c)
-        self.assertTrue('--compile /output/B.bundle /B.xcassets' in s)
+        self.assertTrue('--compile {0} {1}'.format(
+            os.path.join('output', 'B.bundle'),
+            'B.xcassets') in s)
 
     def test_splits_into_bundles_when_told_post_ios7(self):
-        catalogs = ['/A.xcassets', '/B.xcassets']
+        catalogs = ['A.xcassets', 'B.xcassets']
         pairs = actool_cmds(
             '7.0',
             'iphoneos',
             ['iphone'],
-            '/output',
+            'output',
             catalogs,
             True)
         self.assertTrue(len(pairs) == 2)
         (c, d) = pairs[0]
         s = ' '.join(c)
-        self.assertTrue('--compile /output/A.bundle /A.xcassets' in s)
+        self.assertTrue('--compile {0} {1}'.format(
+            os.path.join('output', 'A.bundle'),
+            'A.xcassets') in s)
         (c, d) = pairs[1]
         s = ' '.join(c)
-        self.assertTrue('--compile /output/B.bundle /B.xcassets' in s)
+        self.assertTrue('--compile {0} {1}'.format(
+            os.path.join('output', 'B.bundle'),
+            'B.xcassets') in s)
 
     def test_splits_into_bundles_when_told_prior_to_osx10_9(self):
-        catalogs = ['/A.xcassets', '/B.xcassets']
+        catalogs = ['A.xcassets', 'B.xcassets']
         pairs = actool_cmds(
             '10.8',
             'macosx',
             ['mac'],
-            '/output',
+            'output',
             catalogs,
             True)
         self.assertTrue(len(pairs) == 2)
         (c, d) = pairs[0]
         s = ' '.join(c)
-        self.assertTrue('--compile /output/A.bundle /A.xcassets' in s)
+        self.assertTrue('--compile {0} {1}'.format(
+            os.path.join('output', 'A.bundle'),
+            'A.xcassets') in s)
         (c, d) = pairs[1]
         s = ' '.join(c)
-        self.assertTrue('--compile /output/B.bundle /B.xcassets' in s)
+        self.assertTrue('--compile {0} {1}'.format(
+            os.path.join('output', 'B.bundle'),
+            'B.xcassets') in s)
 
     def test_splits_into_bundles_when_told_post_osx10_9(self):
-        catalogs = ['/A.xcassets', '/B.xcassets']
+        catalogs = ['A.xcassets', 'B.xcassets']
         pairs = actool_cmds(
             '10.9',
             'macosx',
             ['mac'],
-            '/output',
+            'output',
             catalogs,
             True)
         self.assertTrue(len(pairs) == 2)
         (c, d) = pairs[0]
         s = ' '.join(c)
-        self.assertTrue('--compile /output/A.bundle /A.xcassets' in s)
+        self.assertTrue('--compile {0} {1}'.format(
+            os.path.join('output', 'A.bundle'),
+            'A.xcassets') in s)
         (c, d) = pairs[1]
         s = ' '.join(c)
-        self.assertTrue('--compile /output/B.bundle /B.xcassets' in s)
+        self.assertTrue('--compile {0} {1}'.format(
+            os.path.join('output', 'B.bundle'),
+            'B.xcassets') in s)
 
     def test_generates_one_actool_cmd_with_root_output_when_split_bundles_is_false(self):
         catalogs = ['/A.xcassets', '/B.xcassets']
