@@ -480,7 +480,11 @@ public class ExopackageInstaller {
         String hash,
         final Path source)
         throws Exception {
-      installFile(device, port, SECONDARY_DEX_DIR.resolve("secondary-" + hash + ".dex.jar"), source);
+      installFile(
+          device,
+          port,
+          SECONDARY_DEX_DIR.resolve("secondary-" + hash + ".dex.jar"),
+          source);
     }
 
     private void installFile(
