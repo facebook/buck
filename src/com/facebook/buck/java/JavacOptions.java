@@ -26,6 +26,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
+import java.io.File;
 import java.nio.file.Path;
 
 import javax.annotation.Nullable;
@@ -120,10 +121,10 @@ public class JavacOptions {
 
       // Specify processorpath to search for processors.
       optionsBuilder.add("-processorpath",
-          Joiner.on(':').join(
+          Joiner.on(File.pathSeparator).join(
               FluentIterable.from(annotationProcessingData.getSearchPathElements())
-                .transform(pathRelativizerThatOmitsAbiProcessor)
-                .transform(Functions.toStringFunction())));
+                  .transform(pathRelativizerThatOmitsAbiProcessor)
+                  .transform(Functions.toStringFunction())));
 
       // Specify names of processors.
       if (!annotationProcessingData.getNames().isEmpty()) {
