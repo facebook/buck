@@ -443,11 +443,13 @@ class BuckRepo:
         return returncode == 0
 
     def _check_for_ant(self):
-        if not which('ant'):
+        ant = which('ant')
+        if not ant:
             message = "You do not have ant on your $PATH. Cannot build Buck."
             if sys.platform == "darwin":
                 message += "\nTry running 'brew install ant'."
             raise BuckRepoException(message)
+        return ant
 
     def _print_ant_failure_and_exit(self, ant_log_path):
         print(textwrap.dedent("""\
@@ -465,18 +467,18 @@ class BuckRepo:
                 ::: It is possible that running this command will fix it:
                 ::: rm -rf "{0}"/build""".format(self._buck_dir)))
 
-    def _run_ant_clean(self):
+    def _run_ant_clean(self, ant):
         clean_log_path = os.path.join(self._buck_project.get_buck_out_log_dir(), 'ant-clean.log')
         with open(clean_log_path, 'w') as clean_log:
-            exitcode = subprocess.call(['ant', 'clean'], stdout=clean_log,
+            exitcode = subprocess.call([ant, 'clean'], stdout=clean_log,
                                        cwd=self._buck_dir)
             if exitcode is not 0:
                 self._print_ant_failure_and_exit(clean_log_path)
 
-    def _run_ant(self):
+    def _run_ant(self, ant):
         ant_log_path = os.path.join(self._buck_project.get_buck_out_log_dir(), 'ant.log')
         with open(ant_log_path, 'w') as ant_log:
-            exitcode = subprocess.call(['ant'], stdout=ant_log,
+            exitcode = subprocess.call([ant], stdout=ant_log,
                                        cwd=self._buck_dir)
             if exitcode is not 0:
                 self._print_ant_failure_and_exit(ant_log_path)
@@ -495,8 +497,8 @@ class BuckRepo:
             ['git', 'log', '-n1', '--pretty=format:%T', 'HEAD', '--'],
             cwd=self._buck_dir).strip()
 
-        with tempfile.NamedTemporaryFile(prefix='buck-git-index',
-                                         dir=self._tmp_dir) as index_file:
+        with EmptyTempFile(prefix='buck-git-index',
+                           dir=self._tmp_dir) as index_file:
             new_environ = os.environ.copy()
             new_environ['GIT_INDEX_FILE'] = index_file.name
             subprocess.check_call(
@@ -514,10 +516,11 @@ class BuckRepo:
                 cwd=self._buck_dir,
                 env=new_environ).strip()
 
-        with tempfile.NamedTemporaryFile(prefix='buck-version-uid-input',
-                                         dir=self._tmp_dir) as uid_input:
+        with EmptyTempFile(prefix='buck-version-uid-input',
+                           dir=self._tmp_dir,
+                           closed=False) as uid_input:
             subprocess.check_call(
-                ['git', 'ls-tree',  '--full-tree', git_tree_out],
+                ['git', 'ls-tree', '--full-tree', git_tree_out],
                 cwd=self._buck_dir,
                 stdout=uid_input)
             return check_output(
@@ -530,9 +533,9 @@ class BuckRepo:
                 print(
                     "Buck does not appear to have been built -- building Buck!",
                     file=sys.stderr)
-                self._check_for_ant()
-                self._run_ant_clean()
-                self._run_ant()
+                ant = self._check_for_ant()
+                self._run_ant_clean(ant)
+                self._run_ant(ant)
                 open(self._build_success_file, 'w').close()
 
     def _get_buck_version_uid(self):
@@ -622,6 +625,29 @@ class BuckRepo:
 
 class BuckRepoException(Exception):
     pass
+
+
+class EmptyTempFile:
+    def __init__(self, prefix=None, dir=None, closed=True):
+        self.file, self.name = tempfile.mkstemp(prefix=prefix, dir=dir)
+        if closed:
+            os.close(self.file)
+        self.closed = closed
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        os.remove(self.name)
+
+    def close(self):
+        if not self.closed:
+            os.close(self.file)
+        self.closed = True
+
+    def fileno(self):
+        return self.file
 
 
 #
