@@ -561,7 +561,11 @@ public class AdbHelper {
 
       try {
         output = executeCommandWithErrorChecking(device, "ls -l -d /data/local/tmp");
-        if (!output.matches("\\Adrwx....-x +shell +shell.* tmp[\\r\\n]*\\z")) {
+        if (!(
+            // Pattern for Android's "toolbox" version of ls
+            output.matches("\\Adrwx....-x +shell +shell.* tmp[\\r\\n]*\\z") ||
+            // Pattern for CyanogenMod's busybox version of ls
+            output.matches("\\Adrwx....-x +[0-9]+ +shell +shell.* /data/local/tmp[\\r\\n]*\\z"))) {
           loggingInfo.append(
               String.format(
                   java.util.Locale.ENGLISH,
