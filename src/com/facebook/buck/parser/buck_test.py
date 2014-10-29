@@ -162,7 +162,10 @@ class TestBuck(unittest.TestCase):
             f.close()
             os.makedirs(os.path.join(subdir, 'NotAFile.java'))
             self.assertEqual(
-                ['b/a/c/a/A.java', 'b/a/c/a/B.java'],
+                [
+                    os.path.join('b', 'a', 'c', 'a', 'A.java'),
+                    os.path.join('b', 'a', 'c', 'a', 'B.java'),
+                ],
                 glob_internal(
                     includes=['b/a/**/*.java'],
                     excludes=['**/*Test.java'],
