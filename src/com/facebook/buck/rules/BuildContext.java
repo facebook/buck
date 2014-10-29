@@ -34,6 +34,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -267,7 +268,7 @@ public class BuildContext {
             List<Path> bootclasspathEntries = androidPlatformTarget.getBootclasspathEntries();
             Preconditions.checkState(!bootclasspathEntries.isEmpty(),
                 "There should be entries for the bootclasspath");
-            return Joiner.on(":").join(bootclasspathEntries);
+            return Joiner.on(File.pathSeparator).join(bootclasspathEntries);
           }
         });
       } else {
