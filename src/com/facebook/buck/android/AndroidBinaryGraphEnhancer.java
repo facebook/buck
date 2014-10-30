@@ -52,6 +52,7 @@ import java.util.Map;
 
 public class AndroidBinaryGraphEnhancer {
 
+  private static final Flavor COPY_NATIVE_LIBS_FLAVOR = new Flavor("copy_native_libs");
   private static final Flavor DEX_FLAVOR = new Flavor("dex");
   private static final Flavor DEX_MERGE_FLAVOR = new Flavor("dex_merge");
   private static final Flavor RESOURCES_FILTER_FLAVOR = new Flavor("resources_filter");
@@ -248,6 +249,22 @@ public class AndroidBinaryGraphEnhancer {
       enhancedDeps.addAll(getTargetsAsRules(packageableCollection.javaLibrariesToDex));
     }
 
+    Optional<CopyNativeLibraries> copyNativeLibraries = Optional.absent();
+    if (!packageableCollection.nativeLibsDirectories.isEmpty()) {
+      BuildRuleParams paramsForCopyNativeLibraries = buildRuleParams.copyWithChanges(
+          BuildRuleType.COPY_NATIVE_LIBS,
+          createBuildTargetWithFlavor(COPY_NATIVE_LIBS_FLAVOR),
+          getTargetsAsRules(packageableCollection.nativeLibsTargets),
+          /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
+      copyNativeLibraries = Optional.of(new CopyNativeLibraries(
+              paramsForCopyNativeLibraries,
+              pathResolver,
+              packageableCollection.nativeLibsDirectories,
+              cpuFilters));
+      ruleResolver.addToIndex(copyNativeLibraries.get());
+      enhancedDeps.add(copyNativeLibraries.get());
+    }
+
     ImmutableSortedSet<BuildRule> finalDeps;
     Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi = Optional.absent();
     if (!exopackageModes.isEmpty()) {
@@ -262,6 +279,7 @@ public class AndroidBinaryGraphEnhancer {
               pathResolver,
               packageableCollection,
               aaptPackageResources,
+              copyNativeLibraries,
               packageStringAssets,
               preDexMerge,
               keystore));
@@ -275,6 +293,7 @@ public class AndroidBinaryGraphEnhancer {
         filteredResourcesProvider,
         packageableCollection,
         aaptPackageResources,
+        copyNativeLibraries,
         packageStringAssets,
         preDexMerge,
         computeExopackageDepsAbi,
@@ -439,6 +458,7 @@ public class AndroidBinaryGraphEnhancer {
     private final FilteredResourcesProvider filteredResourcesProvider;
     private final AndroidPackageableCollection packageableCollection;
     private final AaptPackageResources aaptPackageResources;
+    private final Optional<CopyNativeLibraries> copyNativeLibraries;
     private final Optional<PackageStringAssets> packageStringAssets;
     private final Optional<PreDexMerge> preDexMerge;
     private final Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
@@ -456,6 +476,7 @@ public class AndroidBinaryGraphEnhancer {
         FilteredResourcesProvider filteredResourcesProvider,
         AndroidPackageableCollection packageableCollection,
         AaptPackageResources aaptPackageBuildable,
+        Optional<CopyNativeLibraries> copyNativeLibraries,
         Optional<PackageStringAssets> packageStringAssets,
         Optional<PreDexMerge> preDexMerge,
         Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi,
@@ -464,6 +485,7 @@ public class AndroidBinaryGraphEnhancer {
       this.filteredResourcesProvider = filteredResourcesProvider;
       this.packageableCollection = packageableCollection;
       this.aaptPackageResources = aaptPackageBuildable;
+      this.copyNativeLibraries = copyNativeLibraries;
       this.packageStringAssets = packageStringAssets;
       this.preDexMerge = preDexMerge;
       this.computeExopackageDepsAbi = computeExopackageDepsAbi;
@@ -501,6 +523,10 @@ public class AndroidBinaryGraphEnhancer {
 
     public AndroidPackageableCollection getPackageableCollection() {
       return packageableCollection;
+    }
+
+    public Optional<CopyNativeLibraries> getCopyNativeLibraries() {
+      return copyNativeLibraries;
     }
   }
 

@@ -60,6 +60,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
 
   private final AndroidPackageableCollection packageableCollection;
   private final AaptPackageResources aaptPackageResources;
+  private final Optional<CopyNativeLibraries> copyNativeLibraries;
   private final Optional<PackageStringAssets> packageStringAssets;
   private final Optional<PreDexMerge> preDexMerge;
   private final Keystore keystore;
@@ -70,12 +71,14 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
       SourcePathResolver resolver,
       AndroidPackageableCollection packageableCollection,
       AaptPackageResources aaptPackageResources,
+      Optional<CopyNativeLibraries> copyNativeLibraries,
       Optional<PackageStringAssets> packageStringAssets,
       Optional<PreDexMerge> preDexMerge,
       Keystore keystore) {
     super(params, resolver);
     this.packageableCollection = packageableCollection;
     this.aaptPackageResources = aaptPackageResources;
+    this.copyNativeLibraries = copyNativeLibraries;
     this.packageStringAssets = packageStringAssets;
     this.preDexMerge = preDexMerge;
     this.keystore = keystore;
@@ -133,8 +136,9 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               // AndroidTransitiveDependencies doesn't provide BuildRules, only paths.
               // We could augment it, but our current native libraries are small enough that
               // we can just hash them all without too much of a perf hit.
-              for (final Path libDir : packageableCollection.nativeLibsDirectories) {
-                for (Path nativeFile : filesystem.getFilesUnderPath(libDir)) {
+              if (copyNativeLibraries.isPresent()) {
+                for (Path nativeFile : filesystem.getFilesUnderPath(
+                    copyNativeLibraries.get().getPathToNativeLibsDir())) {
                   filesToHash.put(nativeFile, "native_lib");
                 }
               }

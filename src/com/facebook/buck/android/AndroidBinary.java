@@ -361,17 +361,10 @@ public class AndroidBinary extends AbstractBuildRule implements
     // Copy the transitive closure of files in native_libs to a single directory, if any.
     AndroidPackageableCollection packageableCollection =
         enhancementResult.getPackageableCollection();
-    ImmutableSet<Path> nativeLibraryDirectories;
-    if (!packageableCollection.nativeLibsDirectories.isEmpty()) {
-      Path pathForNativeLibs = getPathForNativeLibs();
-      Path libSubdirectory = pathForNativeLibs.resolve("lib");
-      steps.add(new MakeCleanDirectoryStep(libSubdirectory));
-      for (Path nativeLibDir : packageableCollection.nativeLibsDirectories) {
-        CopyNativeLibraries.copyNativeLibrary(nativeLibDir, libSubdirectory, cpuFilters, steps);
-      }
-      nativeLibraryDirectories = ImmutableSet.of(libSubdirectory);
-    } else {
-      nativeLibraryDirectories = ImmutableSet.of();
+    ImmutableSet<Path> nativeLibraryDirectories = ImmutableSet.of();
+    if (enhancementResult.getCopyNativeLibraries().isPresent()) {
+      nativeLibraryDirectories = ImmutableSet.of(
+          enhancementResult.getCopyNativeLibraries().get().getPathToNativeLibsDir());
     }
 
     // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
@@ -636,13 +629,6 @@ public class AndroidBinary extends AbstractBuildRule implements
   @VisibleForTesting
   Path getPathForProGuardDirectory() {
     return BuildTargets.getGenPath(getBuildTarget(), ".proguard/%s");
-  }
-
-  /**
-   * All native libs are copied to this directory before running apkbuilder.
-   */
-  private Path getPathForNativeLibs() {
-    return getBinPath("__native_libs_%s__");
   }
 
   /**
