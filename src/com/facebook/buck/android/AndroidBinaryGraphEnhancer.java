@@ -279,6 +279,7 @@ public class AndroidBinaryGraphEnhancer {
           new ComputeExopackageDepsAbi(
               paramsForComputeExopackageAbi,
               pathResolver,
+              exopackageModes,
               packageableCollection,
               aaptPackageResources,
               copyNativeLibraries,

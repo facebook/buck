@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.ComputeExopackageDepsAbi.BuildOutput;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.log.Logger;
@@ -43,6 +44,7 @@ import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -58,6 +60,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
 
   private static final String METADATA_KEY = "EXOPACKAGE_ABI_OF_DEPS";
 
+  private final EnumSet<ExopackageMode> exopackageModes;
   private final AndroidPackageableCollection packageableCollection;
   private final AaptPackageResources aaptPackageResources;
   private final Optional<CopyNativeLibraries> copyNativeLibraries;
@@ -69,6 +72,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
   public ComputeExopackageDepsAbi(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      EnumSet<ExopackageMode> exopackageModes,
       AndroidPackageableCollection packageableCollection,
       AaptPackageResources aaptPackageResources,
       Optional<CopyNativeLibraries> copyNativeLibraries,
@@ -76,6 +80,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
       Optional<PreDexMerge> preDexMerge,
       Keystore keystore) {
     super(params, resolver);
+    this.exopackageModes = exopackageModes;
     this.packageableCollection = packageableCollection;
     this.aaptPackageResources = aaptPackageResources;
     this.copyNativeLibraries = copyNativeLibraries;
@@ -132,11 +137,20 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               ImmutableSortedMap.Builder<Path, String> filesToHash =
                   ImmutableSortedMap.naturalOrder();
 
-              // We add native libraries in apkbuilder, so we need to include their hashes.
-              // AndroidTransitiveDependencies doesn't provide BuildRules, only paths.
-              // We could augment it, but our current native libraries are small enough that
-              // we can just hash them all without too much of a perf hit.
-              if (copyNativeLibraries.isPresent()) {
+              // If exopackage is disabled for secondary dexes, we need to hash the secondary dex
+              // files that end up in the APK. PreDexMerge already hashes those files, so we can
+              // just hash the summary of those hashes.
+              if (!ExopackageMode.enabledForSecondaryDexes(exopackageModes) &&
+                  preDexMerge.isPresent()) {
+                filesToHash.put(preDexMerge.get().getMetadataTxtPath(), "secondary_dexes");
+              }
+
+              // If exopackage is disabled for native libraries, we add them in apkbuilder, so we
+              // need to include their hashes. AndroidTransitiveDependencies doesn't provide
+              // BuildRules, only paths. We could augment it, but our current native libraries are
+              // small enough that we can just hash them all without too much of a perf hit.
+              if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
+                  copyNativeLibraries.isPresent()) {
                 for (Path nativeFile : filesystem.getFilesUnderPath(
                     copyNativeLibraries.get().getPathToNativeLibsDir())) {
                   filesToHash.put(nativeFile, "native_lib");
