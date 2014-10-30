@@ -123,7 +123,6 @@ public class AgentMain {
    * {@link AgentUtil#TEXT_SECRET_KEY_SIZE} bytes.  The caller must prepend those bytes to the
    * file being transmitted, in order to prevent another process from sending a malicious payload.
    */
-  //@SuppressWarnings("PMD.PrematureDeclaration")
   private static void doReceiveFile(List<String> userArgs) throws IOException {
     if (userArgs.size() != 3) {
       throw new IllegalArgumentException("usage: receive-file PORT SIZE PATH");

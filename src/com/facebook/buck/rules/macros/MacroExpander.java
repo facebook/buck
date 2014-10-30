@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 
-@SuppressWarnings("checkstyle:linelength")
 public interface MacroExpander {
 
   /**
