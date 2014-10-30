@@ -47,6 +47,7 @@ public class AndroidPackageableCollector {
   private final ImmutableSet.Builder<String> rDotJavaPackages = ImmutableSet.builder();
   private final ImmutableCollection.Builder<Supplier<String>> rDotJavaPackageSuppliers =
       ImmutableList.builder();
+  private final ImmutableSet.Builder<BuildTarget> nativeLibsTargets = ImmutableSet.builder();
   private final ImmutableSet.Builder<Path> nativeLibsDirectories = ImmutableSet.builder();
   private final ImmutableSet.Builder<Path> nativeLibAssetsDirectories = ImmutableSet.builder();
   private final ImmutableSet.Builder<Path> assetsDirectories = ImmutableSet.builder();
@@ -150,7 +151,10 @@ public class AndroidPackageableCollector {
     resourceDirectories.add(resourceDir);
   }
 
-  public AndroidPackageableCollector addNativeLibsDirectory(Path nativeLibDir) {
+  public AndroidPackageableCollector addNativeLibsDirectory(
+      BuildTarget owner,
+      Path nativeLibDir) {
+    nativeLibsTargets.add(owner);
     nativeLibsDirectories.add(nativeLibDir);
     return this;
   }
@@ -271,6 +275,7 @@ public class AndroidPackageableCollector {
             hasRDotJavaPackages,
             resourcesWithNonEmptyResDir.build().reverse(),
             resourcesWithEmptyResButNonEmptyAssetsDir.build().reverse()),
+        nativeLibsTargets.build(),
         nativeLibsDirectories.build(),
         nativeLibAssetsDirectories.build(),
         assetsDirectories.build(),

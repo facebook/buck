@@ -88,6 +88,11 @@ public class AndroidPackageableCollection {
   public final ResourceDetails resourceDetails;
 
   /**
+   * A set of build targets that produce native libraries.
+   */
+  public final ImmutableSet<BuildTarget> nativeLibsTargets;
+
+  /**
    * Directories containing native libraries.
    */
   public final ImmutableSet<Path> nativeLibsDirectories;
@@ -146,6 +151,7 @@ public class AndroidPackageableCollection {
 
   AndroidPackageableCollection(
       ResourceDetails resourceDetails,
+      ImmutableSet<BuildTarget> nativeLibsTargets,
       ImmutableSet<Path> nativeLibsDirectories,
       ImmutableSet<Path> nativeLibAssetsDirectories,
       ImmutableSet<Path> assetsDirectories,
@@ -158,6 +164,7 @@ public class AndroidPackageableCollection {
       ImmutableSet<BuildTarget> javaLibrariesToDex,
       Supplier<Map<String, HashCode>> classNamesToHashesSupplier) {
     this.resourceDetails = resourceDetails;
+    this.nativeLibsTargets = nativeLibsTargets;
     this.nativeLibsDirectories = nativeLibsDirectories;
     this.nativeLibAssetsDirectories = nativeLibAssetsDirectories;
     this.assetsDirectories = assetsDirectories;

@@ -108,7 +108,7 @@ public class PrebuiltNativeLibrary extends AbstractBuildRule
     if (isAsset) {
       collector.addNativeLibAssetsDirectory(getLibraryPath());
     } else {
-      collector.addNativeLibsDirectory(getLibraryPath());
+      collector.addNativeLibsDirectory(getBuildTarget(), getLibraryPath());
     }
   }
 }
