@@ -252,8 +252,8 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     return ExecutionContext.builder()
         .setProjectFilesystem(getProjectFilesystem())
         .setConsole(console)
-        .setAndroidPlatformTarget(
-            options.findAndroidPlatformTarget(androidDirectoryResolver,
+        .setAndroidPlatformTarget(options.findAndroidPlatformTarget(
+                androidDirectoryResolver,
                 actionGraph,
                 getBuckEventBus()))
         .setEventBus(eventBus)

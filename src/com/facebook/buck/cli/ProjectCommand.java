@@ -94,29 +94,29 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
   private static final String XCODE_PROCESS_NAME = "Xcode";
 
-  private static class ActionGraphs {
-    private final ActionGraph mainGraph;
-    private final Optional<ActionGraph> testGraph;
-    private final ActionGraph projectGraph;
+  private static class TargetGraphs {
+    private final TargetGraph mainGraph;
+    private final Optional<TargetGraph> testGraph;
+    private final TargetGraph projectGraph;
 
-    public ActionGraphs(
-        ActionGraph mainGraph,
-        Optional<ActionGraph> testGraph,
-        ActionGraph projectGraph) {
+    public TargetGraphs(
+        TargetGraph mainGraph,
+        Optional<TargetGraph> testGraph,
+        TargetGraph projectGraph) {
       this.mainGraph = mainGraph;
       this.testGraph = testGraph;
       this.projectGraph = projectGraph;
     }
 
-    public ActionGraph getMainGraph() {
+    public TargetGraph getMainGraph() {
       return mainGraph;
     }
 
-    public Optional<ActionGraph> getTestGraph() {
+    public Optional<TargetGraph> getTestGraph() {
       return testGraph;
     }
 
-    public ActionGraph getProjectGraph() {
+    public TargetGraph getProjectGraph() {
       return projectGraph;
     }
   }
@@ -154,7 +154,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ActionGraph actionGraph;
 
     try {
-      actionGraph = createActionGraphs(options).getProjectGraph();
+      actionGraph = createTargetGraphs(options).getProjectGraph().getActionGraph(getBuckEventBus());
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -271,12 +271,13 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       throws IOException, InterruptedException {
     checkForAndKillXcodeIfRunning(options.getIdePrompt());
 
-    ActionGraphs actionGraphs;
+    TargetGraphs targetGraphs;
     SourcePathResolver resolver;
     try {
-      actionGraphs = createActionGraphs(options);
+      targetGraphs = createTargetGraphs(options);
       resolver = new SourcePathResolver(
-          new BuildRuleResolver(actionGraphs.getProjectGraph().getNodes()));
+          new BuildRuleResolver(
+              targetGraphs.getProjectGraph().getActionGraph(getBuckEventBus()).getNodes()));
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -292,7 +293,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     ExecutionContext executionContext = createExecutionContext(
         options,
-        actionGraphs.getProjectGraph());
+        targetGraphs.getProjectGraph().getActionGraph(getBuckEventBus()));
 
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (options.getReadOnly()) {
@@ -306,7 +307,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       // Generate a single project containing a target and all its dependencies and tests.
       ProjectGenerator projectGenerator = new ProjectGenerator(
           resolver,
-          actionGraphs.getProjectGraph().getNodes(),
+          targetGraphs.getProjectGraph().getActionGraph(getBuckEventBus()).getNodes(),
           passedInTargetsSet,
           getProjectFilesystem(),
           executionContext,
@@ -318,7 +319,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       ImmutableSet<BuildTarget> targets;
       if (passedInTargetsSet.isEmpty()) {
         targets = getAllTargetsOfType(
-            actionGraphs.getMainGraph().getNodes(),
+            targetGraphs.getMainGraph().getActionGraph(getBuckEventBus()).getNodes(),
             XcodeWorkspaceConfigDescription.TYPE);
       } else {
         targets = passedInTargetsSet;
@@ -328,15 +329,20 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       for (BuildTarget workspaceConfig : targets) {
         BuildRule workspaceRule =
             Preconditions.checkNotNull(
-                actionGraphs.getMainGraph().findBuildRuleByTarget(workspaceConfig));
+                targetGraphs.getMainGraph().getActionGraph(getBuckEventBus()).findBuildRuleByTarget(
+                    workspaceConfig));
         if (!(workspaceRule instanceof XcodeWorkspaceConfig)) {
           throw new HumanReadableException(
               "%s must be a xcode_workspace_config",
               workspaceRule.getFullyQualifiedName());
         }
         Iterable<BuildRule> testBuildRules;
-        if (actionGraphs.getTestGraph().isPresent()) {
-          testBuildRules = actionGraphs.getTestGraph().get().getNodes();
+        if (targetGraphs.getTestGraph().isPresent()) {
+          testBuildRules = targetGraphs
+              .getTestGraph()
+              .get()
+              .getActionGraph(getBuckEventBus())
+              .getNodes();
         } else {
           testBuildRules = Collections.emptySet();
         }
@@ -344,13 +350,12 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
             resolver,
             getProjectFilesystem(),
-            actionGraphs.getProjectGraph(),
+            targetGraphs.getProjectGraph().getActionGraph(getBuckEventBus()),
             executionContext,
             workspaceConfigRule,
             optionsBuilder.build(),
             AppleBuildRules.getSourceRuleToTestRulesMap(testBuildRules),
-            workspaceConfigRule.getExtraTests()
-        );
+            workspaceConfigRule.getExtraTests());
         generator.generateWorkspaceAndDependentProjects(projectGenerators);
       }
     } else {
@@ -360,7 +365,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       ImmutableSet<BuildTarget> targets;
       if (passedInTargetsSet.isEmpty()) {
         targets = getAllTargetsOfType(
-            actionGraphs.getProjectGraph().getNodes(),
+            targetGraphs.getProjectGraph().getActionGraph(getBuckEventBus()).getNodes(),
             XcodeProjectConfigDescription.TYPE);
       } else {
         targets = passedInTargetsSet;
@@ -369,7 +374,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       SeparatedProjectsGenerator projectGenerator = new SeparatedProjectsGenerator(
           resolver,
           getProjectFilesystem(),
-          actionGraphs.getProjectGraph(),
+          targetGraphs.getProjectGraph().getActionGraph(getBuckEventBus()),
           executionContext,
           targets,
           optionsBuilder.build());
@@ -465,7 +470,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         /* enableProfiling */ false);
   }
 
-  private ActionGraphs createActionGraphs(final ProjectCommandOptions options)
+  private TargetGraphs createTargetGraphs(final ProjectCommandOptions options)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     Predicate<TargetNode<?>> projectRootsPredicate;
     Predicate<TargetNode<?>> projectPredicate;
@@ -632,15 +637,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         associatedProjectPredicate,
         options);
 
-    return new ActionGraphs(
-        mainGraph.getActionGraph(getBuckEventBus()),
-        testGraph.transform(new Function<TargetGraph, ActionGraph>() {
-                              @Override
-                              public ActionGraph apply(TargetGraph input) {
-                                return input.getActionGraph(getBuckEventBus());
-                              }
-                            }),
-        projectGraph.getActionGraph(getBuckEventBus()));
+    return new TargetGraphs(
+        mainGraph,
+        testGraph,
+        projectGraph);
   }
 
   private static ImmutableSet<BuildTarget> filterTargetsFromGraph(
