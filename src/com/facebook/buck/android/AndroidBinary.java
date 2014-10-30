@@ -135,6 +135,19 @@ public class AndroidBinary extends AbstractBuildRule implements
     MIPS,
   }
 
+  static enum ExopackageMode {
+    SECONDARY_DEX,
+    NATIVE_LIBRARY;
+
+    public static boolean enabledForSecondaryDexes(EnumSet<ExopackageMode> modes) {
+      return modes.contains(SECONDARY_DEX);
+    }
+
+    public static boolean enabledForNativeLibraries(EnumSet<ExopackageMode> modes) {
+      return modes.contains(NATIVE_LIBRARY);
+    }
+  }
+
   private final SourcePath manifest;
   private final String target;
   private final Keystore keystore;
@@ -148,7 +161,7 @@ public class AndroidBinary extends AbstractBuildRule implements
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final ResourceFilter resourceFilter;
   private final Path primaryDexPath;
-  private final boolean exopackage;
+  private final EnumSet<ExopackageMode> exopackageModes;
   private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
   private final Function<String, String> macroExpander;
   private final Optional<String> preprocessJavaClassesBash;
@@ -177,7 +190,7 @@ public class AndroidBinary extends AbstractBuildRule implements
       ResourceCompressionMode resourceCompressionMode,
       Set<TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
-      boolean exopackage,
+      EnumSet<ExopackageMode> exopackageModes,
       Set<BuildRule> preprocessJavaClassesDeps,
       Function<String, String> macroExpander,
       Optional<String> preprocessJavaClassesBash,
@@ -198,7 +211,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     this.resourceCompressionMode = resourceCompressionMode;
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
     this.resourceFilter = resourceFilter;
-    this.exopackage = exopackage;
+    this.exopackageModes = exopackageModes;
     this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
     this.macroExpander = macroExpander;
     this.preprocessJavaClassesBash = preprocessJavaClassesBash;
@@ -206,7 +219,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     this.enhancementResult = enhancementResult;
     this.primaryDexPath = getPrimaryDexPath(params.getBuildTarget());
 
-    if (exopackage) {
+    if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(enhancementResult.getPreDexMerge().isPresent(),
           "%s specified exopackage without pre-dexing, which is invalid.",
           getBuildTarget());
@@ -243,7 +256,7 @@ public class AndroidBinary extends AbstractBuildRule implements
         .setReflectively("optimizationPasses", optimizationPasses)
         .setReflectively("resourceCompressionMode", resourceCompressionMode)
         .setReflectively("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters))
-        .setReflectively("exopackage", exopackage)
+        .setReflectively("exopackageModes", exopackageModes)
         .setReflectively("preprocessJavaClassesBash", preprocessJavaClassesBash)
         .setReflectively("preprocessJavaClassesDeps", preprocessJavaClassesDeps)
         .setReflectively("proguardJarOverride", proguardJarOverride);
@@ -436,7 +449,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     // For non-exopackages, there is no benefit to the ABI optimization, so we want to disable it.
     // Returning our RuleKey has this effect because we will never get an ABI match after a
     // RuleKey miss.
-    if (!exopackage) {
+    if (exopackageModes.isEmpty()) {
       return new Sha1HashCode(getRuleKey().toString());
     }
 
@@ -566,7 +579,7 @@ public class AndroidBinary extends AbstractBuildRule implements
           secondaryDexDirectoriesBuilder,
           steps,
           primaryDexPath);
-    } else if (!exopackage) {
+    } else if (!ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       secondaryDexDirectoriesBuilder.addAll(preDexMerge.get().getSecondaryDexDirectories());
     }
 
@@ -889,7 +902,7 @@ public class AndroidBinary extends AbstractBuildRule implements
 
   @Override
   public Optional<ExopackageInfo> getExopackageInfo() {
-    if (!exopackage) {
+    if (exopackageModes.isEmpty()) {
       return Optional.absent();
     }
     Optional<PreDexMerge> preDexMerge = enhancementResult.getPreDexMerge();

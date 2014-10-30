@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.EnumSet;
 
 
 /**
@@ -71,7 +72,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getResourceCompressionMode(),
         apkUnderTest.getCpuFilters(),
         apkUnderTest.getResourceFilter(),
-        /* exopackage */ false,
+        EnumSet.noneOf(ExopackageMode.class),
         // preprocessJavaClassDeps is not supported in instrumentation
         ImmutableSet.<BuildRule>of(),
         apkUnderTest.getMacroExpander(),

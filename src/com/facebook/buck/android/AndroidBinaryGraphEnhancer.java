@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.AndroidPackageableCollection.ResourceDetails;
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Map;
 
 public class AndroidBinaryGraphEnhancer {
@@ -74,7 +76,7 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ImmutableSet<BuildTarget> resourcesToExclude;
   private final JavacOptions javacOptions;
-  private final boolean exopackage;
+  private final EnumSet<ExopackageMode> exopackageModes;
   private final Keystore keystore;
   private final BuildConfigFields buildConfigValues;
   private final Optional<SourcePath> buildConfigValuesFile;
@@ -94,7 +96,7 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
       ImmutableSet<BuildTarget> resourcesToExclude,
       JavacOptions javacOptions,
-      boolean exopackage,
+      EnumSet<ExopackageMode> exopackageModes,
       Keystore keystore,
       BuildConfigFields buildConfigValues,
       Optional<SourcePath> buildConfigValuesFile) {
@@ -115,7 +117,7 @@ public class AndroidBinaryGraphEnhancer {
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
     this.javacOptions = javacOptions;
-    this.exopackage = exopackage;
+    this.exopackageModes = exopackageModes;
     this.keystore = keystore;
     this.buildConfigValues = buildConfigValues;
     this.buildConfigValuesFile = buildConfigValuesFile;
@@ -248,7 +250,7 @@ public class AndroidBinaryGraphEnhancer {
 
     ImmutableSortedSet<BuildRule> finalDeps;
     Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi = Optional.absent();
-    if (exopackage) {
+    if (!exopackageModes.isEmpty()) {
       BuildRuleParams paramsForComputeExopackageAbi = buildRuleParams.copyWithChanges(
           BuildRuleType.EXOPACKAGE_DEPS_ABI,
           createBuildTargetWithFlavor(CALCULATE_ABI_FLAVOR),
@@ -302,7 +304,7 @@ public class AndroidBinaryGraphEnhancer {
         new BuildConfigFields.Field(
             "boolean",
             BuildConfigs.IS_EXO_CONSTANT,
-            String.valueOf(exopackage))));
+            String.valueOf(!exopackageModes.isEmpty()))));
     for (Map.Entry<String, BuildConfigFields> entry :
         packageableCollection.buildConfigs.entrySet()) {
       // Merge the user-defined constants with the APK-specific overrides.

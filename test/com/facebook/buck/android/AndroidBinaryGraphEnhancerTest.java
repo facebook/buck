@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.AndroidBinaryGraphEnhancer.EnhancementResult;
 import com.facebook.buck.java.HasJavaClassHashes;
@@ -58,6 +59,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.EnumSet;
 import java.util.Iterator;
 
 public class AndroidBinaryGraphEnhancerTest {
@@ -116,7 +118,7 @@ public class AndroidBinaryGraphEnhancerTest {
         buildRulesToExcludeFromDex,
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         JavacOptions.DEFAULTS,
-        /* exopackage */ false,
+        EnumSet.noneOf(ExopackageMode.class),
         createStrictMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.<SourcePath>absent());
@@ -222,7 +224,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
         JavacOptions.DEFAULTS,
-        /* exopackage */ true,
+        EnumSet.of(ExopackageMode.SECONDARY_DEX),
         keystore,
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent());
