@@ -129,7 +129,7 @@ java_library(
   ],
 )
 
-java_library(
+java_immutables_library(
   name = 'rules',
   srcs = [
     'AbiRule.java',
@@ -149,6 +149,7 @@ java_library(
     'BuildRuleBuilderParams.java',
     'DependencyEnhancer.java',
     'DirArtifactCache.java',
+    'ExopackageInfo.java',
     'HttpArtifactCache.java',
     'IndividualTestEvent.java',
     'InitializableFromDisk.java',

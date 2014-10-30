@@ -35,6 +35,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.ExopackageInfo;
+import com.facebook.buck.rules.ImmutableExopackageInfo;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -892,10 +894,12 @@ public class AndroidBinary extends AbstractBuildRule implements
       return Optional.absent();
     }
     Optional<PreDexMerge> preDexMerge = enhancementResult.getPreDexMerge();
-    return Optional.of(
-        new ExopackageInfo(
-            preDexMerge.get().getMetadataTxtPath(),
-            preDexMerge.get().getDexDirectory()));
+    ExopackageInfo exopackageInfo = ImmutableExopackageInfo.builder()
+        .dexInfo(ImmutableExopackageInfo.DexInfo.of(
+                preDexMerge.get().getMetadataTxtPath(),
+                preDexMerge.get().getDexDirectory()))
+        .build();
+    return Optional.of(exopackageInfo);
   }
 
   public ImmutableSortedSet<BuildRule> getClasspathDeps() {

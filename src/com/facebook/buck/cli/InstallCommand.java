@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.InstallableApk;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -89,7 +90,7 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
     }
 
     boolean installSuccess;
-    Optional<InstallableApk.ExopackageInfo> exopackageInfo = installableApk.getExopackageInfo();
+    Optional<ExopackageInfo> exopackageInfo = installableApk.getExopackageInfo();
     if (exopackageInfo.isPresent()) {
       installSuccess = new ExopackageInstaller(
           build.getExecutionContext(),

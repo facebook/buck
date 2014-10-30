@@ -25,6 +25,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.NamedTemporaryFile;
@@ -90,7 +91,7 @@ public class ExopackageInstaller {
   private final String packageName;
   private final Path dataRoot;
 
-  private final InstallableApk.ExopackageInfo exopackageInfo;
+  private final ExopackageInfo exopackageInfo;
 
   /**
    * The next port number to use for communicating with the agent on a device.
@@ -124,7 +125,7 @@ public class ExopackageInstaller {
 
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
 
-    Optional<InstallableApk.ExopackageInfo> exopackageInfo = apkRule.getExopackageInfo();
+    Optional<ExopackageInfo> exopackageInfo = apkRule.getExopackageInfo();
     Preconditions.checkArgument(exopackageInfo.isPresent());
     this.exopackageInfo = exopackageInfo.get();
   }
@@ -360,7 +361,7 @@ public class ExopackageInstaller {
 
     private ImmutableMap<String, String> getRequiredDexFiles() throws IOException {
       ImmutableMap.Builder<String, String> hashToBasenameBuilder = ImmutableMap.builder();
-      for (String line : projectFilesystem.readLines(exopackageInfo.dexMetadata)) {
+      for (String line : projectFilesystem.readLines(exopackageInfo.dexInfo().get().metadata())) {
         List<String> parts = Splitter.on(' ').splitToList(line);
         if (parts.size() < 2) {
           throw new RuntimeException("Illegal line in metadata file: " + line);
@@ -426,7 +427,7 @@ public class ExopackageInstaller {
                   device,
                   agentPort,
                   hash,
-                  exopackageInfo.dexDirectory.resolve(basename));
+                  exopackageInfo.dexInfo().get().directory().resolve(basename));
             }
           }
           try (TraceEventLogger ignored2 = TraceEventLogger.start(
@@ -444,7 +445,7 @@ public class ExopackageInstaller {
             try (NamedTemporaryFile temp = new NamedTemporaryFile("metadata", "tmp")) {
               com.google.common.io.Files.write(
                   com.google.common.io.Files.toString(
-                      exopackageInfo.dexMetadata.toFile(),
+                      exopackageInfo.dexInfo().get().metadata().toFile(),
                       Charsets.UTF_8)
                       .replaceAll(
                           "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ",
