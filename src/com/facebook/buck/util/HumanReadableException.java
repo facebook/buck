@@ -35,7 +35,7 @@ public class HumanReadableException extends RuntimeException
   }
 
   public HumanReadableException(String humanReadableErrorMessage) {
-    this((Throwable) null /* cause */, humanReadableErrorMessage);
+    this(null /* cause */, humanReadableErrorMessage);
   }
 
   public HumanReadableException(@Nullable Throwable cause, String humanReadableErrorMessage) {

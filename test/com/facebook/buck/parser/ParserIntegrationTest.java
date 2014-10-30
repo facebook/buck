@@ -57,7 +57,7 @@ public class ParserIntegrationTest {
   public void testParseRuleWithBadDependency() throws IOException {
     // Ensure an exception with a specific message is thrown.
     thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("Couldn't get dependency //:bad-dep of target //:base.");
+    thrown.expectMessage("Couldn't get dependency '//:bad-dep' of target '//:base'");
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

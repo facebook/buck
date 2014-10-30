@@ -305,8 +305,8 @@ public class ParserTest extends EasyMockSupport {
     // Ensure an exception with a specific message is thrown.
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Couldn't get dependency //java/com/facebook/invalid/lib:missing_rule of target " +
-        "//java/com/facebook/invalid:foo.");
+        "Couldn't get dependency '//java/com/facebook/invalid/lib:missing_rule' of target " +
+        "'//java/com/facebook/invalid:foo'");
 
     // Execute buildTargetGraphForBuildTargets() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "invalid");
