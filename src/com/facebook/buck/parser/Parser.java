@@ -633,17 +633,6 @@ public class Parser {
   }
 
   /**
-   * @param filter the test to apply to all targets that have been read from build files, or null.
-   * @return the build targets that pass the test, or null if the filter was null.
-   */
-  @VisibleForTesting
-  ImmutableSet<BuildTarget> filterTargets(RuleJsonPredicate filter)
-      throws NoSuchBuildTargetException {
-
-    return state.filterTargets(filter);
-  }
-
-  /**
    * @param map the map of values that define the rule.
    * @return the type of rule defined by the map.
    */
@@ -1042,19 +1031,6 @@ public class Parser {
           target,
           normalize(Paths.get((String) rawRules.get("buck.base_path")))
               .resolve("BUCK").toAbsolutePath());
-    }
-
-    public ImmutableSet<BuildTarget> filterTargets(RuleJsonPredicate filter) {
-      ImmutableSet.Builder<BuildTarget> matchingTargets = ImmutableSet.builder();
-      for (Map<String, Object> map : parsedBuildFiles.values()) {
-        BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
-        BuildTarget target = parseBuildTargetFromRawRule(map);
-        if (filter.isMatch(map, buildRuleType, target)) {
-          matchingTargets.add(target);
-        }
-      }
-
-      return matchingTargets.build();
     }
 
     @Nullable
