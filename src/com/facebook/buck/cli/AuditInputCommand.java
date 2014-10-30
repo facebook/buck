@@ -49,8 +49,8 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
   @Override
   int runCommandWithOptionsInternal(AuditCommandOptions options)
       throws IOException, InterruptedException {
-    // Create a PartialGraph that is composed of the transitive closure of all of the dependent
-    // BuildRules for the specified BuildTargets.
+    // Create a TargetGraph that is composed of the transitive closure of all of the dependent
+    // TargetNodes for the specified BuildTargets.
     final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
         options.getArgumentsFormattedAsBuildTargets());
 
@@ -121,7 +121,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
   }
 
   private int printInputs(TargetGraph graph) {
-    // Traverse the PartialGraph and print out all of the inputs used to produce each BuildRule.
+    // Traverse the TargetGraph and print out all of the inputs used to produce each TargetNode.
     // Keep track of the inputs that have been displayed to ensure that they are not displayed more
     // than once.
     new AbstractBottomUpTraversal<BuildRule, Void>(graph.getActionGraph(getBuckEventBus())) {

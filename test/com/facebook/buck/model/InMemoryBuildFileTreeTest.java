@@ -18,14 +18,10 @@ package com.facebook.buck.model;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.java.JavaLibraryBuilder;
-import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
-import org.easymock.EasyMock;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -44,15 +40,15 @@ public class InMemoryBuildFileTreeTest {
 
   @Test
   public void testGetChildPaths() {
-    PartialGraph graph = createGraphForRules(
-        "//:fb4a",
-        "//java/com/facebook/common:base",
-        "//java/com/facebook/common/rpc:rpc",
-        "//java/com/facebook/common/ui:ui",
-        "//javatests/com/facebook/common:base",
-        "//javatests/com/facebook/common/rpc:rpc",
-        "//javatests/com/facebook/common/ui:ui");
-    buildFileTree = new InMemoryBuildFileTree(graph.getTargets());
+    ImmutableSet<BuildTarget> targets = ImmutableSet.of(
+        BuildTargetFactory.newInstance("//:fb4a"),
+        BuildTargetFactory.newInstance("//java/com/facebook/common:base"),
+        BuildTargetFactory.newInstance("//java/com/facebook/common/rpc:rpc"),
+        BuildTargetFactory.newInstance("//java/com/facebook/common/ui:ui"),
+        BuildTargetFactory.newInstance("//javatests/com/facebook/common:base"),
+        BuildTargetFactory.newInstance("//javatests/com/facebook/common/rpc:rpc"),
+        BuildTargetFactory.newInstance("//javatests/com/facebook/common/ui:ui"));
+    buildFileTree = new InMemoryBuildFileTree(targets);
 
     assertGetChildPaths("",
         ImmutableSet.of("java/com/facebook/common", "javatests/com/facebook/common"));
@@ -68,20 +64,5 @@ public class InMemoryBuildFileTreeTest {
     assertEquals(
         expectedChildren,
         FluentIterable.from(children).transform(Functions.toStringFunction()).toSet());
-  }
-
-  private static PartialGraph createGraphForRules(String... ruleNames) {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    ImmutableSet.Builder<BuildTarget> targetsBuilder = ImmutableSet.builder();
-    for (String ruleName : ruleNames) {
-      BuildTarget buildTarget = BuildTargetFactory.newInstance(ruleName);
-      JavaLibraryBuilder.createBuilder(buildTarget).build(ruleResolver);
-      targetsBuilder.add(buildTarget);
-    }
-
-    PartialGraph partialGraph = EasyMock.createMock(PartialGraph.class);
-    EasyMock.expect(partialGraph.getTargets()).andReturn(targetsBuilder.build());
-    EasyMock.replay(partialGraph);
-    return partialGraph;
   }
 }

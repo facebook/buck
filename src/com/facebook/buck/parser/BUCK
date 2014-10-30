@@ -6,7 +6,6 @@ java_library(
     'MissingBuildFileException.java',
     'ParseEvent.java',
     'Parser.java',
-    'PartialGraph.java',
     'TargetNodePredicateSpec.java',
     'TargetNodeSpec.java',
   ],

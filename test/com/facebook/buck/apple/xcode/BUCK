@@ -30,7 +30,6 @@ java_library(
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/util:util',
-    '//test/com/facebook/buck/parser:PartialGraphFactory',
     '//test/com/facebook/buck/rules:testutil',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/junit:junit',

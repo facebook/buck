@@ -120,7 +120,6 @@ java_test(
     '//test/com/facebook/buck/event:testutil',
     '//test/com/facebook/buck/java:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',
-    '//test/com/facebook/buck/parser:PartialGraphFactory',
     '//test/com/facebook/buck/rules:testutil',
     '//test/com/facebook/buck/step:testutil',
     '//test/com/facebook/buck/testutil:testutil',
