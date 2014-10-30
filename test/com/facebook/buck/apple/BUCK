@@ -32,3 +32,25 @@ java_test(
     '//third-party/java/junit:junit',
   ]
 )
+
+java_library(
+  name = 'testutil',
+  srcs = [
+    'AppleBinaryBuilder.java',
+    'AppleBundleBuilder.java',
+    'AppleLibraryBuilder.java',
+    'XcodeProjectConfigBuilder.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/apple:rules',
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//test/com/facebook/buck/cli:FakeBuckConfig',
+    '//test/com/facebook/buck/rules:testutil',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = [
+    '//test/...',
+  ],
+)
