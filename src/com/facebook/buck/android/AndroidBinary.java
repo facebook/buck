@@ -363,7 +363,8 @@ public class AndroidBinary extends AbstractBuildRule implements
     AndroidPackageableCollection packageableCollection =
         enhancementResult.packageableCollection();
     ImmutableSet<Path> nativeLibraryDirectories = ImmutableSet.of();
-    if (enhancementResult.copyNativeLibraries().isPresent()) {
+    if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
+        enhancementResult.copyNativeLibraries().isPresent()) {
       nativeLibraryDirectories = ImmutableSet.of(
           enhancementResult.copyNativeLibraries().get().getPathToNativeLibsDir());
     }
@@ -888,15 +889,33 @@ public class AndroidBinary extends AbstractBuildRule implements
 
   @Override
   public Optional<ExopackageInfo> getExopackageInfo() {
-    if (exopackageModes.isEmpty()) {
+    boolean shouldInstall = false;
+
+    ImmutableExopackageInfo.Builder builder = ImmutableExopackageInfo.builder();
+    if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
+      PreDexMerge preDexMerge = enhancementResult.preDexMerge().get();
+      builder.dexInfo(
+          ImmutableExopackageInfo.DexInfo.of(
+              preDexMerge.getMetadataTxtPath(),
+              preDexMerge.getDexDirectory()));
+      shouldInstall = true;
+    }
+
+    if (ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
+        enhancementResult.copyNativeLibraries().isPresent()) {
+      CopyNativeLibraries copyNativeLibraries = enhancementResult.copyNativeLibraries().get();
+      builder.nativeLibsInfo(
+          ImmutableExopackageInfo.NativeLibsInfo.of(
+              copyNativeLibraries.getPathToMetadataTxt(),
+              copyNativeLibraries.getPathToNativeLibsDir()));
+      shouldInstall = true;
+    }
+
+    if (!shouldInstall) {
       return Optional.absent();
     }
-    Optional<PreDexMerge> preDexMerge = enhancementResult.preDexMerge();
-    ExopackageInfo exopackageInfo = ImmutableExopackageInfo.builder()
-        .dexInfo(ImmutableExopackageInfo.DexInfo.of(
-                preDexMerge.get().getMetadataTxtPath(),
-                preDexMerge.get().getDexDirectory()))
-        .build();
+
+    ExopackageInfo exopackageInfo = builder.build();
     return Optional.of(exopackageInfo);
   }
 
