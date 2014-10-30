@@ -24,6 +24,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 public class TargetNodeToBuildRuleTransformer {
 
   public <T> BuildRule transform(
+      TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
       TargetNode<T> targetNode)
       throws NoSuchBuildTargetException {
@@ -41,7 +42,8 @@ public class TargetNodeToBuildRuleTransformer {
         ruleResolver.getAllRules(targetNode.getExtraDeps()),
         ruleFactoryParams.getProjectFilesystem(),
         ruleFactoryParams.getRuleKeyBuilderFactory(),
-        description.getBuildRuleType());
+        description.getBuildRuleType(),
+        targetGraph);
     BuildRule buildRule = description.createBuildRule(params, ruleResolver, arg);
 
     // Note that describedRule has not been added to the BuildRuleResolver yet.
@@ -52,6 +54,7 @@ public class TargetNodeToBuildRuleTransformer {
           buildRule,
           ruleFactoryParams.getProjectFilesystem(),
           ruleFactoryParams.getRuleKeyBuilderFactory(),
+          targetGraph,
           ruleResolver);
     }
 

@@ -7,7 +7,6 @@ java_library(
     'ParseEvent.java',
     'Parser.java',
     'PartialGraph.java',
-    'TargetGraph.java',
     'TargetNodePredicateSpec.java',
     'TargetNodeSpec.java',
   ],

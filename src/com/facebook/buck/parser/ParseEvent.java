@@ -20,6 +20,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.TargetGraph;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;

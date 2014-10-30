@@ -46,6 +46,7 @@ import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RepositoryFactory;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.TestConsole;

@@ -21,6 +21,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;

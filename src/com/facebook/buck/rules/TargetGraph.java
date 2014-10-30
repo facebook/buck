@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
@@ -22,17 +22,13 @@ import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.AbstractDependencyVisitor;
-import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.ActionGraphEvent;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -41,11 +37,23 @@ import com.google.common.collect.ImmutableSet;
  */
 public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode<?>> {
 
+  public static final TargetGraph EMPTY = new TargetGraph(
+      new MutableDirectedGraph<TargetNode<?>>(),
+      ImmutableMap.<BuildTarget, TargetNode<?>>of());
+
+  private final ImmutableMap<BuildTarget, TargetNode<?>> unflavoredNodes;
   private final Supplier<ActionGraph> actionGraphSupplier;
 
-  public TargetGraph(MutableDirectedGraph<TargetNode<?>> graph) {
+  public TargetGraph(
+      MutableDirectedGraph<TargetNode<?>> graph,
+      ImmutableMap<BuildTarget, TargetNode<?>> unflavoredNodes) {
     super(graph);
+    this.unflavoredNodes = Preconditions.checkNotNull(unflavoredNodes);
     actionGraphSupplier = createActionGraphSupplier();
+  }
+
+  public TargetNode<?> get(BuildTarget target) {
+    return unflavoredNodes.get(target.getUnflavoredTarget());
   }
 
   private Supplier<ActionGraph> createActionGraphSupplier() {
@@ -67,7 +75,7 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
                   public void visit(TargetNode<?> node) {
                     BuildRule rule;
                     try {
-                      rule = transformer.transform(ruleResolver, node);
+                      rule = transformer.transform(TargetGraph.this, ruleResolver, node);
                     } catch (NoSuchBuildTargetException e) {
                       throw new HumanReadableException(e);
                     }
@@ -135,4 +143,5 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
 
     return actionGraph;
   }
+
 }

@@ -37,7 +37,7 @@ import com.facebook.buck.parser.AssociatedRulePredicates;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.parser.TargetGraph;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;

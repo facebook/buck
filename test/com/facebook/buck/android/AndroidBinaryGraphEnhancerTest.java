@@ -35,6 +35,7 @@ import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -98,7 +99,8 @@ public class AndroidBinaryGraphEnhancerTest {
         originalDeps,
         new FakeProjectFilesystem(),
         ruleKeyBuilderFactory,
-        AndroidBinaryDescription.TYPE);
+        AndroidBinaryDescription.TYPE,
+        TargetGraph.EMPTY);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         originalParams,
         ruleResolver,

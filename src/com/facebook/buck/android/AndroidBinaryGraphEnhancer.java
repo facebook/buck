@@ -321,7 +321,8 @@ public class AndroidBinaryGraphEnhancer {
           /* extraDeps */ ImmutableSortedSet.<BuildRule>of(),
           buildRuleParams.getProjectFilesystem(),
           buildRuleParams.getRuleKeyBuilderFactory(),
-          AndroidBuildConfigDescription.TYPE);
+          AndroidBuildConfigDescription.TYPE,
+          buildRuleParams.getTargetGraph());
       JavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription.createBuildRule(
           buildConfigParams,
           javaPackage,

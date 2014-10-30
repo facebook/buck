@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -88,6 +89,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       BuildRule buildRule,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
+      TargetGraph targetGraph,
       BuildRuleResolver ruleResolver) {
     BuildTarget prebuiltJarBuildTarget = buildRule.getBuildTarget();
     BuildTarget flavoredBuildTarget = BuildTargets.createFlavoredBuildTarget(
@@ -98,7 +100,8 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         /* inferredDeps */ ImmutableSortedSet.<BuildRule>of(),
         projectFilesystem,
         ruleKeyBuilderFactory,
-        BuildRuleType.GWT_MODULE);
+        BuildRuleType.GWT_MODULE,
+        targetGraph);
     BuildRule gwtModule = createGwtModule(params, new SourcePathResolver(ruleResolver), arg);
     ruleResolver.addToIndex(gwtModule);
   }

@@ -38,6 +38,7 @@ public class BuildRuleParams {
   private final ProjectFilesystem projectFilesystem;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final BuildRuleType buildRuleType;
+  private final TargetGraph targetGraph;
 
   public BuildRuleParams(
       BuildTarget buildTarget,
@@ -45,13 +46,15 @@ public class BuildRuleParams {
       ImmutableSortedSet<BuildRule> extraDeps,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
-      BuildRuleType buildRuleType) {
+      BuildRuleType buildRuleType,
+      TargetGraph targetGraph) {
     this.buildTarget = Preconditions.checkNotNull(buildTarget);
     this.declaredDeps = Preconditions.checkNotNull(declaredDeps);
     this.extraDeps = Preconditions.checkNotNull(extraDeps);
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
     this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
     this.buildRuleType = Preconditions.checkNotNull(buildRuleType);
+    this.targetGraph = Preconditions.checkNotNull(targetGraph);
 
     this.totalDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(declaredDeps)
@@ -80,7 +83,8 @@ public class BuildRuleParams {
         extraDeps,
         projectFilesystem,
         ruleKeyBuilderFactory,
-        buildRuleType);
+        buildRuleType,
+        targetGraph);
   }
 
   public BuildTarget getBuildTarget() {
@@ -113,5 +117,9 @@ public class BuildRuleParams {
 
   public BuildRuleType getBuildRuleType() {
     return buildRuleType;
+  }
+
+  public TargetGraph getTargetGraph() {
+    return targetGraph;
   }
 }

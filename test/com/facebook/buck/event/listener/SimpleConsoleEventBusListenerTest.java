@@ -25,7 +25,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParseEvent;
-import com.facebook.buck.parser.TargetGraph;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
