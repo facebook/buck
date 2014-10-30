@@ -25,7 +25,6 @@ import com.facebook.buck.apple.xcode.ProjectGenerator;
 import com.facebook.buck.apple.xcode.SeparatedProjectsGenerator;
 import com.facebook.buck.apple.xcode.WorkspaceAndProjectGenerator;
 import com.facebook.buck.command.Project;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
@@ -35,9 +34,6 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.AssociatedRulePredicate;
 import com.facebook.buck.parser.AssociatedRulePredicates;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -46,23 +42,21 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.io.BufferedReader;
@@ -160,7 +154,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ActionGraph actionGraph;
 
     try {
-      actionGraph = createPartialGraphs(options).getProjectGraph();
+      actionGraph = createActionGraphs(options).getProjectGraph();
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -261,30 +255,13 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
   ImmutableList<String> getAnnotationProcessingTargets(ProjectCommandOptions options)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    Optional<ImmutableSet<BuildTarget>> buildTargets = getRootsFromOptions(options);
-    PartialGraph partialGraph = Iterables.getOnlyElement(
-        createPartialGraphs(
-          buildTargets,
-          Optional.of(ANNOTATION_PREDICATE),
-          ImmutableList.<Predicate<TargetNode<?>>>of(),
-          ImmutableList.<AssociatedRulePredicate>of(),
-          getProjectFilesystem(),
-          options.getDefaultIncludes(),
-          getParser(),
-          getBuckEventBus(),
-          console,
-          environment,
-          options.getEnableProfiling()));
-
-    return ImmutableList.copyOf(
-        Iterables.transform(
-            partialGraph.getTargets(),
-            new Function<BuildTarget, String>() {
-              @Override
-              public String apply(BuildTarget target) {
-                return target.getFullyQualifiedName();
-              }
-            }));
+    ImmutableSet<BuildTarget> buildTargets = getRootsFromOptionsWithPredicate(
+        options,
+        ANNOTATION_PREDICATE);
+    return FluentIterable
+        .from(buildTargets)
+        .transform(Functions.toStringFunction())
+        .toList();
   }
 
   /**
@@ -297,7 +274,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ActionGraphs actionGraphs;
     SourcePathResolver resolver;
     try {
-      actionGraphs = createPartialGraphs(options);
+      actionGraphs = createActionGraphs(options);
       resolver = new SourcePathResolver(
           new BuildRuleResolver(actionGraphs.getProjectGraph().getNodes()));
     } catch (BuildTargetException | BuildFileParseException e) {
@@ -470,24 +447,31 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return targetsBuilder.build();
   }
 
-  private Optional<ImmutableSet<BuildTarget>> getRootsFromOptions(ProjectCommandOptions options)
-      throws BuildTargetException, IOException {
-    Optional<ImmutableSet<BuildTarget>> buildTargets = Optional.absent();
-    {
-      ImmutableSet<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
-      if (!argumentsAsBuildTargets.isEmpty()) {
-        buildTargets = Optional.of(getBuildTargets(argumentsAsBuildTargets));
-      }
+  private ImmutableSet<BuildTarget> getRootsFromOptionsWithPredicate(
+      ProjectCommandOptions options,
+      Predicate<TargetNode<?>> rootsPredicate)
+      throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
+    ImmutableSet<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
+    if (!argumentsAsBuildTargets.isEmpty()) {
+      return getBuildTargets(argumentsAsBuildTargets);
     }
-    return buildTargets;
+    return getParser().filterAllTargetsInProject(
+        getProjectFilesystem(),
+        options.getDefaultIncludes(),
+        rootsPredicate,
+        console,
+        environment,
+        getBuckEventBus(),
+        /* enableProfiling */ false);
   }
 
-  private ActionGraphs createPartialGraphs(final ProjectCommandOptions options)
+  private ActionGraphs createActionGraphs(final ProjectCommandOptions options)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     Predicate<TargetNode<?>> projectRootsPredicate;
     Predicate<TargetNode<?>> projectPredicate;
     AssociatedRulePredicate associatedProjectPredicate;
 
+    // Prepare the predicates to create the project graph based on the IDE.
     switch (options.getIde()) {
       case INTELLIJ:
         projectRootsPredicate = new Predicate<TargetNode<?>>() {
@@ -574,8 +558,33 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
     }
 
-    Optional<ImmutableSet<BuildTarget>> buildTargets = getRootsFromOptions(options);
+    TargetGraph fullGraph = getParser().buildTargetGraphForTargetNodeSpecs(
+        ImmutableList.of(
+            new TargetNodePredicateSpec(
+                Predicates.<TargetNode<?>>alwaysTrue(),
+                getProjectFilesystem().getIgnorePaths())),
+        options.getDefaultIncludes(),
+        getBuckEventBus(),
+        console,
+        environment,
+        options.getEnableProfiling());
 
+    // Create the main graph. This contains all the targets in the project slice, or all the valid
+    // project roots if a project slice is not specified, and their transitive dependencies.
+    ImmutableSet<BuildTarget> mainRoots = getRootsFromOptionsWithPredicate(
+        options,
+        projectRootsPredicate);
+    TargetGraph mainGraph = getParser().buildTargetGraphForBuildTargets(
+        mainRoots,
+        options.getDefaultIncludes(),
+        getBuckEventBus(),
+        console,
+        environment,
+        options.getEnableProfiling());
+
+    // Optionally create the test graph. This contains all the tests that cover targets in the main
+    // graph, all the transitive dependencies of those tests, and all the targets in the main graph.
+    Optional<TargetGraph> testGraph = Optional.absent();
     if (options.isWithTests()) {
       Predicate<TargetNode<?>> testPredicate = new Predicate<TargetNode<?>>() {
         @Override
@@ -583,56 +592,37 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           return input.getType().isTestRule();
         }
       };
-      ImmutableList<PartialGraph> partialGraphs = createPartialGraphs(
-          buildTargets,
-          Optional.of(projectRootsPredicate),
-          ImmutableList.of(
+
+      testGraph = Optional.of(
+          getAssociatedTargetGraph(
+              mainGraph,
+              mainRoots,
+              fullGraph,
               testPredicate,
-              projectPredicate),
-          ImmutableList.of(
               AssociatedRulePredicates.associatedTestsRules(),
-              associatedProjectPredicate),
-          getProjectFilesystem(),
-          options.getDefaultIncludes(),
-          getParser(),
-          getBuckEventBus(),
-          console,
-          environment,
-          options.getEnableProfiling());
-      return new ActionGraphs(
-          partialGraphs
-              .get(0)
-              .getTargetGraph()
-              .getActionGraph(getBuckEventBus()),
-          Optional.of(
-              partialGraphs
-                  .get(1)
-                  .getTargetGraph()
-                  .getActionGraph(getBuckEventBus())),
-          partialGraphs.get(2).getTargetGraph().getActionGraph(getBuckEventBus()));
-    } else {
-      ImmutableList<PartialGraph> partialGraphs = createPartialGraphs(
-          buildTargets,
-          Optional.of(projectRootsPredicate),
-          ImmutableList.of(
-              projectPredicate),
-          ImmutableList.of(
-              associatedProjectPredicate),
-          getProjectFilesystem(),
-          options.getDefaultIncludes(),
-          getParser(),
-          getBuckEventBus(),
-          console,
-          environment,
-          options.getEnableProfiling());
-      return new ActionGraphs(
-          partialGraphs
-              .get(0)
-              .getTargetGraph()
-              .getActionGraph(getBuckEventBus()),
-          Optional.<ActionGraph>absent(),
-          partialGraphs.get(1).getTargetGraph().getActionGraph(getBuckEventBus()));
+              options));
     }
+
+    // Create the project graph. This contains all the projects that reference the targets in the
+    // main graph, or the test graph if present, and all the transitive dependencies of those
+    // projects.
+    TargetGraph projectGraph = getAssociatedTargetGraph(
+        testGraph.or(mainGraph),
+        /* additionalRoots */ ImmutableSet.<BuildTarget>of(),
+        fullGraph,
+        projectPredicate,
+        associatedProjectPredicate,
+        options);
+
+    return new ActionGraphs(
+        mainGraph.getActionGraph(getBuckEventBus()),
+        testGraph.transform(new Function<TargetGraph, ActionGraph>() {
+                              @Override
+                              public ActionGraph apply(TargetGraph input) {
+                                return input.getActionGraph(getBuckEventBus());
+                              }
+                            }),
+        projectGraph.getActionGraph(getBuckEventBus()));
   }
 
   private static ImmutableSet<BuildTarget> filterTargetsFromGraph(
@@ -646,106 +636,50 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   }
 
   /**
-   * Creates a graph containing the {@link BuildRule}s identified by {@code roots} and their
-   * dependencies. Then for each pair of {@link Predicate} in {@code predicates} and
-   * {@link AssociatedRulePredicate} in {@code associatedRulePredicates}, rules throughout the
-   * project that pass are added to the graph. The passed in {@link BuildRuleResolver} will contain
-   * all rules in the last partial graph.
+   * @param targetGraph The TargetGraph the nodes of the new TargetGraph are related to.
+   * @param additionalRoots Additional roots to be used to create the new TargetGraph.
+   * @param fullGraph A TargetGraph containing all nodes that could be related.
+   * @param predicate A predicate that all related nodes pass. Unrelated nodes can pass it as well.
+   * @param associatedRulePredicate A predicate to determine whether a node is related or not.
+   * @return A TargetGraph with nodes related to the given {@code targetGraph}.
    */
-  public static ImmutableList<PartialGraph> createPartialGraphs(
-      Optional<ImmutableSet<BuildTarget>> rootsOptional,
-      Optional<Predicate<TargetNode<?>>> rootsPredicate,
-      ImmutableList<Predicate<TargetNode<?>>> predicates,
-      ImmutableList<AssociatedRulePredicate> associatedRulePredicates,
-      ProjectFilesystem filesystem,
-      Iterable<String> includes,
-      Parser parser,
-      BuckEventBus eventBus,
-      Console console,
-      ImmutableMap<String, String> environment,
-      boolean enableProfiling)
-      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-
-    TargetGraph fullGraph = parser.buildTargetGraphForTargetNodeSpecs(
-        ImmutableList.of(
-            new TargetNodePredicateSpec(
-                Predicates.<TargetNode<?>>alwaysTrue(),
-                filesystem.getIgnorePaths())),
-        includes,
-        eventBus,
+  private TargetGraph getAssociatedTargetGraph(
+      TargetGraph targetGraph,
+      ImmutableSet<BuildTarget> additionalRoots,
+      TargetGraph fullGraph,
+      Predicate<TargetNode<?>> predicate,
+      AssociatedRulePredicate associatedRulePredicate,
+      ProjectCommandOptions options)
+      throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
+    ImmutableSet<BuildTarget> candidateTargets = filterTargetsFromGraph(fullGraph, predicate);
+    TargetGraph candidateGraph = getParser().buildTargetGraphForBuildTargets(
+        candidateTargets,
+        options.getDefaultIncludes(),
+        getBuckEventBus(),
         console,
         environment,
-        enableProfiling);
+        options.getEnableProfiling());
 
-    ImmutableSet<BuildTarget> allTargets =
-        FluentIterable.from(fullGraph.getNodes())
-            .transform(HasBuildTarget.TO_TARGET)
-            .toSet();
+    ImmutableSet.Builder<BuildTarget> rootsBuilder = ImmutableSet.builder();
+    rootsBuilder.addAll(additionalRoots);
 
-    ImmutableSet<BuildTarget> roots;
-    if (rootsOptional.isPresent()) {
-      roots = rootsOptional.get();
-    } else if (rootsPredicate.isPresent()) {
-      roots = filterTargetsFromGraph(fullGraph, rootsPredicate.get());
-    } else {
-      roots = allTargets;
-    }
+    ActionGraph actionGraph = targetGraph.getActionGraph(getBuckEventBus());
+    ActionGraph candidateActionGraph = candidateGraph.getActionGraph(getBuckEventBus());
 
-    ImmutableList.Builder<PartialGraph> graphs = ImmutableList.builder();
-
-    PartialGraph partialGraph = PartialGraph.createPartialGraph(
-        roots,
-        includes,
-        parser,
-        eventBus,
-        console,
-        environment);
-
-    graphs.add(partialGraph);
-
-    for (int i = 0; i < predicates.size(); i++) {
-      Predicate<TargetNode<?>> predicate = predicates.get(i);
-      AssociatedRulePredicate associatedRulePredicate = associatedRulePredicates.get(i);
-
-      ImmutableSet<BuildTarget> associatedRules = filterTargetsFromGraph(fullGraph, predicate);
-
-      PartialGraph associatedPartialGraph = PartialGraph.createPartialGraph(
-          associatedRules,
-          includes,
-          parser,
-          eventBus,
-          console,
-          environment);
-
-      ImmutableSet.Builder<BuildTarget> allTargetsBuilder = ImmutableSet.builder();
-      allTargetsBuilder.addAll(partialGraph.getTargets());
-
-      ActionGraph actionGraph = partialGraph
-          .getTargetGraph()
-          .getActionGraph(eventBus);
-      ActionGraph associatedActionGraph = associatedPartialGraph
-          .getTargetGraph()
-          .getActionGraph(eventBus);
-      for (BuildTarget buildTarget : associatedPartialGraph.getTargets()) {
-        BuildRule buildRule = associatedActionGraph.findBuildRuleByTarget(buildTarget);
-        if (buildRule != null &&
-            associatedRulePredicate.isMatch(buildRule, actionGraph)) {
-          allTargetsBuilder.add(buildRule.getBuildTarget());
-        }
+    for (BuildTarget buildTarget : candidateTargets) {
+      BuildRule buildRule = candidateActionGraph.findBuildRuleByTarget(buildTarget);
+      if (buildRule != null && associatedRulePredicate.isMatch(buildRule, actionGraph)) {
+        rootsBuilder.add(buildRule.getBuildTarget());
       }
-
-      partialGraph = PartialGraph.createPartialGraph(
-          allTargetsBuilder.build(),
-          includes,
-          parser,
-          eventBus,
-          console,
-          environment);
-
-      graphs.add(partialGraph);
     }
 
-    return graphs.build();
+    return getParser().buildTargetGraphForBuildTargets(
+        rootsBuilder.build(),
+        options.getDefaultIncludes(),
+        getBuckEventBus(),
+        console,
+        environment,
+        options.getEnableProfiling());
   }
 
   @Override
