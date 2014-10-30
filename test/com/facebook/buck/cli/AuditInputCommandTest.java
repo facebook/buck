@@ -24,8 +24,6 @@ import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.PartialGraph;
-import com.facebook.buck.parser.PartialGraphFactory;
 import com.facebook.buck.parser.TargetGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.FakeRepositoryFactory;
@@ -106,12 +104,10 @@ public class AuditInputCommandTest {
         .addDep(rootTarget)
         .build();
 
-    ImmutableSet<BuildTarget> targets = ImmutableSet.of(rootTarget, libraryTarget);
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(rootNode, libraryNode);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-    PartialGraph partialGraph = PartialGraphFactory.newInstance(targetGraph, targets);
 
-    auditInputCommand.printJsonInputs(partialGraph);
+    auditInputCommand.printJsonInputs(targetGraph);
     assertEquals(EXPECTED_JSON, console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
   }

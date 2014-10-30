@@ -18,12 +18,14 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.PartialGraph;
+import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.parser.TargetGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.TargetNode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Predicate;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -57,40 +59,43 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
       return 1;
     }
 
-    PartialGraph partialGraph;
+    ImmutableSet<BuildTarget> targets = FluentIterable
+        .from(options.getArgumentsFormattedAsBuildTargets())
+        .transform(new Function<String, BuildTarget>() {
+                     @Override
+                     public BuildTarget apply(String input) {
+                       return getParser().getBuildTargetParser().parse(
+                           input,
+                           ParseContext.fullyQualified());
+                     }
+                   })
+        .toSet();
+
+    TargetGraph graph;
     try {
-      partialGraph = PartialGraph.createPartialGraph(
-          new Predicate<TargetNode<?>>() {
-            @Override
-            public boolean apply(TargetNode<?> input) {
-              return fullyQualifiedBuildTargets.contains(
-                  input.getBuildTarget().getFullyQualifiedName());
-            }
-          },
-          getProjectFilesystem(),
+      graph = getParser().buildTargetGraphForBuildTargets(
+          targets,
           options.getDefaultIncludes(),
-          getParser(),
           getBuckEventBus(),
           console,
           environment,
-          false /* enableProfiling */);
+          options.getEnableProfiling());
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
     if (options.shouldGenerateJsonOutput()) {
-      return printJsonInputs(partialGraph);
+      return printJsonInputs(graph);
     }
-    return printInputs(partialGraph);
+    return printInputs(graph);
   }
 
   @VisibleForTesting
-  int printJsonInputs(PartialGraph partialGraph) throws IOException {
+  int printJsonInputs(TargetGraph graph) throws IOException {
     final Multimap<String, String> targetInputs = TreeMultimap.create();
 
-    new AbstractBottomUpTraversal<BuildRule, Void>(
-        partialGraph.getTargetGraph().getActionGraph(getBuckEventBus())) {
+    new AbstractBottomUpTraversal<BuildRule, Void>(graph.getActionGraph(getBuckEventBus())) {
 
       @Override
       public void visit(BuildRule rule) {
@@ -115,12 +120,11 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
     return 0;
   }
 
-  private int printInputs(final PartialGraph partialGraph) {
+  private int printInputs(TargetGraph graph) {
     // Traverse the PartialGraph and print out all of the inputs used to produce each BuildRule.
     // Keep track of the inputs that have been displayed to ensure that they are not displayed more
     // than once.
-    new AbstractBottomUpTraversal<BuildRule, Void>(
-        partialGraph.getTargetGraph().getActionGraph(getBuckEventBus())) {
+    new AbstractBottomUpTraversal<BuildRule, Void>(graph.getActionGraph(getBuckEventBus())) {
 
       final Set<Path> inputs = Sets.newHashSet();
 
