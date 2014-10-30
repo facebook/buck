@@ -32,7 +32,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.AssociatedRulePredicate;
-import com.facebook.buck.parser.AssociatedRulePredicates;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
@@ -44,6 +43,7 @@ import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessManager;
@@ -593,13 +593,31 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         }
       };
 
+      AssociatedRulePredicate associatedTestsPredicate = new AssociatedRulePredicate() {
+        @Override
+        public boolean isMatch(BuildRule buildRule, ActionGraph actionGraph) {
+          TestRule testRule;
+          if (buildRule instanceof TestRule) {
+            testRule = (TestRule) buildRule;
+          } else {
+            return false;
+          }
+          for (BuildRule buildRuleUnderTest : testRule.getSourceUnderTest()) {
+            if (actionGraph.findBuildRuleByTarget(buildRuleUnderTest.getBuildTarget()) != null) {
+              return true;
+            }
+          }
+          return false;
+        }
+      };
+
       testGraph = Optional.of(
           getAssociatedTargetGraph(
               mainGraph,
               mainRoots,
               fullGraph,
               testPredicate,
-              AssociatedRulePredicates.associatedTestsRules(),
+              associatedTestsPredicate,
               options));
     }
 

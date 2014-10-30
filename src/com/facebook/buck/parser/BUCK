@@ -40,7 +40,6 @@ java_library(
   srcs = [
     'RuleJsonPredicate.java',
     'AssociatedRulePredicate.java',
-    'AssociatedRulePredicates.java',
   ],
   deps = [
     ':rule_pattern',
