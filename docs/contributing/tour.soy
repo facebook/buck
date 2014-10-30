@@ -1,0 +1,62 @@
+{namespace buck.tour}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Tour of the Codebase' /}
+    {param prettify: true /}
+    {param description}
+      How the Buck repository is organized.
+    {/param}
+    {param content}
+<p>
+This is a high-level overview of how the Buck repository is organized.
+<p>
+<code>docs/</code>
+<br>
+Buck's public documentation. The docs on <a href="https://github.com/facebook/buck">
+https://github.com/facebook/buck</a> are generated from the files in this directory.
+
+<p>
+<code>config/</code>
+<br>
+This is where configuration files live (currently, this includes only logging configurations).
+
+<p>
+<code>src/</code>
+<br>
+This is where Buck's Java source code lives.
+
+<p>
+<code>test/</code>
+<br>
+This is where tests, both unit and integration tests, should go.
+If an integration test needs to create a sample project to run on,
+follow the example of creating a <code>testdata</code> directory in
+the folder where the integration test code lives and putting each
+sample project in its own subdirectory of <code>testdata</code>.
+Use <code>com.facebook.buck.testutil.integration.ProjectWorkspace</code> to
+drive your integration test.
+
+<p>
+<code>testdata/</code>
+<br>
+This directory is deprecated. See the description of
+the <code>test/</code> directory about how to organize test data
+for new integration tests.
+
+<p>
+<code>third-party/</code>
+<br>
+This is where third-party dependencies live. These dependencies are
+organized by programming language.
+
+<p>
+<code>webserver/</code>
+<br>
+The static content served by Buck's webserver.
+(See {call buck.concept_buckconfig /} for details.)
+
+    {/param}
+  {/call}
+{/template}
