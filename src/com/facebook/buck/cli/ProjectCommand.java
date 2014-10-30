@@ -319,7 +319,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       ImmutableSet<BuildTarget> targets;
       if (passedInTargetsSet.isEmpty()) {
         targets = getAllTargetsOfType(
-            targetGraphs.getMainGraph().getActionGraph(getBuckEventBus()).getNodes(),
+            targetGraphs.getMainGraph().getNodes(),
             XcodeWorkspaceConfigDescription.TYPE);
       } else {
         targets = passedInTargetsSet;
@@ -365,7 +365,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       ImmutableSet<BuildTarget> targets;
       if (passedInTargetsSet.isEmpty()) {
         targets = getAllTargetsOfType(
-            targetGraphs.getProjectGraph().getActionGraph(getBuckEventBus()).getNodes(),
+            targetGraphs.getProjectGraph().getNodes(),
             XcodeProjectConfigDescription.TYPE);
       } else {
         targets = passedInTargetsSet;
@@ -441,10 +441,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   }
 
   private static ImmutableSet<BuildTarget> getAllTargetsOfType(
-      Iterable<BuildRule> nodes,
+      Iterable<TargetNode<?>> nodes,
       BuildRuleType type) {
     ImmutableSet.Builder<BuildTarget> targetsBuilder = ImmutableSet.builder();
-    for (BuildRule node : nodes) {
+    for (TargetNode<?> node : nodes) {
       if (node.getType() == type) {
         targetsBuilder.add(node.getBuildTarget());
       }
