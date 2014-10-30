@@ -437,10 +437,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     // Returning our RuleKey has this effect because we will never get an ABI match after a
     // RuleKey miss.
     if (!exopackage) {
-      // TODO(natthu): This is a hack which avoids having to return rule key from the buildable.
-      // Once we figure out a way to expose the build engine to a buildable, this should return the
-      // rule key as before.
-      return Sha1HashCode.newRandomHashCode();
+      return new Sha1HashCode(getRuleKey().toString());
     }
 
     return enhancementResult.getComputeExopackageDepsAbi().get().getAndroidBinaryAbiHash();
