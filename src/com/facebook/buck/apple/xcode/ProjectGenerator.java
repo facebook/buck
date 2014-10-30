@@ -111,7 +111,6 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -227,7 +226,7 @@ public class ProjectGenerator {
   private final ImmutableMultimap.Builder<String, ConfigInXcodeLayout>
     xcodeConfigurationLayersMultimapBuilder;
 
-  private Set<String> nativeTargetGIDs;
+  private Map<String, String> gidsToTargetNames;
 
   public ProjectGenerator(
       SourcePathResolver resolver,
@@ -275,7 +274,7 @@ public class ProjectGenerator {
         });
 
     xcodeConfigurationLayersMultimapBuilder = ImmutableMultimap.builder();
-    nativeTargetGIDs = new HashSet<>();
+    gidsToTargetNames = new HashMap<>();
   }
 
   @VisibleForTesting
@@ -362,10 +361,14 @@ public class ProjectGenerator {
     } catch (UncheckedExecutionException e) {
       // if any code throws an exception, they tend to get wrapped in LoadingCache's
       // UncheckedExecutionException. Unwrap it if its cause is HumanReadable.
+      UncheckedExecutionException originalException = e;
+      while (e.getCause() instanceof UncheckedExecutionException) {
+        e = (UncheckedExecutionException) e.getCause();
+      }
       if (e.getCause() instanceof HumanReadableException) {
         throw (HumanReadableException) e.getCause();
       } else {
-        throw e;
+        throw originalException;
       }
     }
   }
@@ -375,19 +378,15 @@ public class ProjectGenerator {
         isBuiltByCurrentProject(rule.getBuildTarget()),
         "should not generate rule if it shouldn't be built by current project");
     Optional<PBXTarget> result;
-    Optional<AbstractAppleNativeTargetBuildRule> nativeTargetRule;
     if (rule.getType().equals(AppleLibraryDescription.TYPE)) {
       AppleLibrary appleLibrary = (AppleLibrary) rule;
       result = Optional.<PBXTarget>of(generateAppleLibraryTarget(project, appleLibrary));
-      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(appleLibrary);
     } else if (rule.getType().equals(AppleBinaryDescription.TYPE)) {
       AppleBinary appleBinary = (AppleBinary) rule;
       result = Optional.<PBXTarget>of(generateAppleBinaryTarget(project, appleBinary));
-      nativeTargetRule = Optional.<AbstractAppleNativeTargetBuildRule>of(appleBinary);
     } else if (rule.getType().equals(AppleBundleDescription.TYPE)) {
       AppleBundle bundle = (AppleBundle) rule;
       result = Optional.<PBXTarget>of(generateAppleBundleTarget(project, bundle));
-      nativeTargetRule = Optional.of((AbstractAppleNativeTargetBuildRule) bundle.getBinary());
     } else if (rule.getType().equals(AppleTestDescription.TYPE)) {
       AppleTest test = (AppleTest) rule;
       if (test.getTestBundle().getType().equals(AppleBundleDescription.TYPE)) {
@@ -395,7 +394,6 @@ public class ProjectGenerator {
         if (bundle.getExtensionValue().isPresent() &&
             AppleBuildRules.isXcodeTargetTestBundleExtension(bundle.getExtensionValue().get())) {
           result = Optional.<PBXTarget>of(generateAppleBundleTarget(project, bundle));
-          nativeTargetRule = Optional.of((AbstractAppleNativeTargetBuildRule) bundle.getBinary());
         } else {
           throw new HumanReadableException("Incorrect extension: " + bundle.getExtensionString());
         }
@@ -404,17 +402,6 @@ public class ProjectGenerator {
       }
     } else {
       result = Optional.absent();
-      nativeTargetRule = Optional.absent();
-    }
-
-    if (result.isPresent() &&
-        nativeTargetRule.isPresent()) {
-      Optional<String> gid = nativeTargetRule.get().getGid();
-      if (gid.isPresent()) {
-        // Remember the GID hard-coded in the target's BUCK file
-        // so we don't try to re-use it later.
-        nativeTargetGIDs.add(gid.get());
-      }
     }
 
     return result;
@@ -525,6 +512,19 @@ public class ProjectGenerator {
       ImmutableSet<AppleResource> resources,
       ImmutableSet<AppleAssetCatalog> assetCatalogs)
       throws IOException {
+    Optional<String> targetGid = appleBuildRule.getGid();
+    if (targetGid.isPresent()) {
+      // Check if we have used this hardcoded GID before.
+      // If not, remember it so we don't use it again.
+      String conflictingTargetName = gidsToTargetNames.get(targetGid.get());
+      if (conflictingTargetName != null) {
+        throw new HumanReadableException(
+            "Targets %s and %s have the same hardcoded GID (%s)",
+            appleBuildRule.getFullyQualifiedName(), conflictingTargetName, targetGid.get());
+      }
+      gidsToTargetNames.put(targetGid.get(), appleBuildRule.getFullyQualifiedName());
+    }
+
     BuildTarget buildTarget = bundle.isPresent()
         ? bundle.get().getBuildTarget()
         : appleBuildRule.getBuildTarget();
@@ -541,7 +541,7 @@ public class ProjectGenerator {
             productType,
             productName,
             Paths.get(String.format(productOutputFormat, productName)))
-        .setGid(appleBuildRule.getGid())
+        .setGid(targetGid)
         .setShouldGenerateCopyHeadersPhase(!appleBuildRule.getUseBuckHeaderMaps())
         .setSources(appleBuildRule.getSrcs(), appleBuildRule.getPerFileFlags())
         .setResources(resources);
@@ -1063,10 +1063,7 @@ public class ProjectGenerator {
    */
   private Path writeProjectFile(PBXProject project) throws IOException {
     XcodeprojSerializer serializer = new XcodeprojSerializer(
-        new GidGenerator(
-            ImmutableSet.<String>builder()
-                .addAll(nativeTargetGIDs)
-                .build()),
+        new GidGenerator(ImmutableSet.copyOf(gidsToTargetNames.keySet())),
         project);
     NSDictionary rootObject = serializer.toPlist();
     Path xcodeprojDir = outputDirectory.resolve(projectName + ".xcodeproj");

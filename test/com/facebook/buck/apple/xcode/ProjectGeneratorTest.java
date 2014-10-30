@@ -91,7 +91,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.w3c.dom.Document;
 
 import java.io.IOException;
@@ -125,6 +127,9 @@ public class ProjectGeneratorTest {
   private AppleBinaryDescription appleBinaryDescription;
   private CoreDataModelDescription coreDataModelDescription;
   private XcodeNativeDescription xcodeNativeDescription;
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() throws IOException {
@@ -2228,6 +2233,43 @@ public class ProjectGeneratorTest {
         "expected GID has correct value",
         "E66DC04E36F2D8BE00000001", expectedGID);
     assertEquals("generated GID is same as expected", expectedGID, target.getGlobalID());
+  }
+
+  @Test
+  public void conflictingHardcodedGidsThrow() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
+    BuildRuleParams fooParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
+            .setType(AppleLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg fooArg =
+        createDescriptionArgWithDefaults(appleLibraryDescription);
+    fooArg.gid = Optional.of("E66DC04E36F2D8BE00000000");
+    BuildRule fooRule =
+        appleLibraryDescription.createBuildRule(fooParams, resolver, fooArg);
+    resolver.addToIndex(fooRule);
+
+    BuildRuleParams barParams =
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//bar", "lib").build())
+            .setType(AppleLibraryDescription.TYPE)
+            .build();
+    AppleNativeTargetDescriptionArg barArg =
+        createDescriptionArgWithDefaults(appleLibraryDescription);
+    barArg.gid = Optional.of("E66DC04E36F2D8BE00000000");
+    BuildRule barRule =
+        appleLibraryDescription.createBuildRule(barParams, resolver, barArg);
+    resolver.addToIndex(barRule);
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(fooRule, barRule),
+        ImmutableSet.of(fooRule.getBuildTarget(), barRule.getBuildTarget()));
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "Targets //bar:lib and //foo:lib have the same hardcoded GID (E66DC04E36F2D8BE00000000)");
+
+    projectGenerator.createXcodeProjects();
   }
 
   @Test
