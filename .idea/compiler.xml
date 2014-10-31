@@ -22,8 +22,13 @@
       <entry name="?*.soy" />
     </wildcardResourcePatterns>
     <annotationProcessing>
-      <profile default="true" name="Default" enabled="false">
-        <processorPath useClasspath="true" />
+      <profile default="true" name="Default" enabled="true">
+        <sourceOutputDir name="immutables" />
+        <sourceTestOutputDir name="immutables-test" />
+        <processor name="org.immutables.value.internal.processor.Processor" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-standalone-0.31-SNAPSHOT.jar" />
+        </processorPath>
       </profile>
     </annotationProcessing>
   </component>
