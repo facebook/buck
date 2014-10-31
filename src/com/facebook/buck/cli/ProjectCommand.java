@@ -303,7 +303,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       optionsBuilder.add(ProjectGenerator.Option.INCLUDE_TESTS);
     }
 
-    if (options.getCombinedProject() != null) {
+    if (options.getCombinedProject()) {
       // Generate a single project containing a target and all its dependencies and tests.
       ProjectGenerator projectGenerator = new ProjectGenerator(
           resolver,

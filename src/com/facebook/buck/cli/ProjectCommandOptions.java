@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Function;
@@ -62,8 +61,7 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
   @Option(
       name = "--combined-project",
       usage = "Generate an xcode project of a target and its dependencies.")
-  @SuppressFieldNotInitialized
-  private String combinedProject;
+  private boolean combinedProject;
 
   @Option(
       name = "--workspace-and-projects",
@@ -112,7 +110,7 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
     return ImmutableSet.copyOf(getCommandLineBuildTargetNormalizer().normalizeAll(getArguments()));
   }
 
-  public String getCombinedProject() {
+  public boolean getCombinedProject() {
     return combinedProject;
   }
 
