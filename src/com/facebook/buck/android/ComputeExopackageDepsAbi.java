@@ -151,10 +151,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               // small enough that we can just hash them all without too much of a perf hit.
               if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
                   copyNativeLibraries.isPresent()) {
-                for (Path nativeFile : filesystem.getFilesUnderPath(
-                    copyNativeLibraries.get().getPathToNativeLibsDir())) {
-                  filesToHash.put(nativeFile, "native_lib");
-                }
+                filesToHash.put(copyNativeLibraries.get().getPathToMetadataTxt(), "native_libs");
               }
 
               // Same deal for native libs as assets.
