@@ -272,12 +272,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     checkForAndKillXcodeIfRunning(options.getIdePrompt());
 
     TargetGraphs targetGraphs;
-    SourcePathResolver resolver;
     try {
       targetGraphs = createTargetGraphs(options);
-      resolver = new SourcePathResolver(
-          new BuildRuleResolver(
-              targetGraphs.getProjectGraph().getActionGraph(getBuckEventBus()).getNodes()));
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -306,7 +302,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     if (options.getCombinedProject()) {
       // Generate a single project containing a target and all its dependencies and tests.
       ProjectGenerator projectGenerator = new ProjectGenerator(
-          resolver,
           targetGraphs.getProjectGraph().getActionGraph(getBuckEventBus()).getNodes(),
           passedInTargetsSet,
           getProjectFilesystem(),
@@ -348,7 +343,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         }
         XcodeWorkspaceConfig workspaceConfigRule = (XcodeWorkspaceConfig) workspaceRule;
         WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
-            resolver,
             getProjectFilesystem(),
             targetGraphs.getProjectGraph(),
             executionContext,

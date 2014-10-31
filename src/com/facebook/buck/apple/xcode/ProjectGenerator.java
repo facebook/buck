@@ -57,6 +57,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
@@ -227,7 +228,6 @@ public class ProjectGenerator {
   private Map<String, String> gidsToTargetNames;
 
   public ProjectGenerator(
-      SourcePathResolver resolver,
       Iterable<BuildRule> rulesToBuild,
       Set<BuildTarget> initialTargets,
       ProjectFilesystem projectFilesystem,
@@ -235,7 +235,8 @@ public class ProjectGenerator {
       Path outputDirectory,
       String projectName,
       Set<Option> options) {
-    this.resolver = resolver;
+    this.resolver = new SourcePathResolver(
+        new BuildRuleResolver(ImmutableSet.copyOf(rulesToBuild)));
     this.rulesToBuild = ImmutableSet.copyOf(rulesToBuild);
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectFilesystem = projectFilesystem;

@@ -21,8 +21,6 @@ import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -104,7 +102,6 @@ public class SeparatedProjectsGenerator {
       }
       ImmutableSet<BuildRule> buildRules = targetGraph.getActionGraph(buckEventBus).getNodes();
       ProjectGenerator generator = new ProjectGenerator(
-          new SourcePathResolver(new BuildRuleResolver(buildRules)),
           buildRules,
           initialTargetsBuilder.build(),
           projectFilesystem,

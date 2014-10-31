@@ -2243,7 +2243,6 @@ public class ProjectGeneratorTest {
         .build();
 
     return new ProjectGenerator(
-        new SourcePathResolver(new BuildRuleResolver()),
         rulesToBuild,
         initialBuildTargets,
         projectFilesystem,
