@@ -89,7 +89,7 @@
     <include name="gson/gson-2.2.4.jar" />
     <include name="icu4j/icu4j-54.1.1.jar" />
     <include name="immutables/value-0.31-SNAPSHOT.jar" />
-    <include name="infer-annotations/infer-annotations-1.1.jar" />
+    <include name="infer-annotations/infer-annotations-1.2.jar" />
     <include name="jacoco/org.jacoco.core-0.7.2.201409121644.jar" />
     <include name="jacoco/org.jacoco.report-0.7.2.201409121644.jar" />
     <include name="jetty/jetty-all-9.0.4.v20130625.jar" />
