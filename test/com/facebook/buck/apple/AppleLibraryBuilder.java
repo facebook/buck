@@ -19,8 +19,11 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -40,8 +43,38 @@ public class AppleLibraryBuilder extends AbstractNodeBuilder<AppleNativeTargetDe
     return this;
   }
 
+  public AppleLibraryBuilder setSrcs(Optional<ImmutableList<AppleSource>> srcs) {
+    arg.srcs = srcs;
+    return this;
+  }
+
+  public AppleLibraryBuilder setFrameworks(Optional<ImmutableSortedSet<String>> frameworks) {
+    arg.frameworks = frameworks;
+    return this;
+  }
+
   public AppleLibraryBuilder setDeps(Optional<ImmutableSortedSet<BuildTarget>> deps) {
     arg.deps = deps;
+    return this;
+  }
+
+  public AppleLibraryBuilder setGid(Optional<String> gid) {
+    arg.gid = gid;
+    return this;
+  }
+
+  public AppleLibraryBuilder setHeaderPathPrefix(Optional<String> headerPathPrefix) {
+    arg.headerPathPrefix = headerPathPrefix;
+    return this;
+  }
+
+  public AppleLibraryBuilder setUseBuckHeaderMaps(Optional<Boolean> useBuckHeaderMaps) {
+    arg.useBuckHeaderMaps = useBuckHeaderMaps;
+    return this;
+  }
+
+  public AppleLibraryBuilder setPrefixHeader(Optional<SourcePath> prefixHeader) {
+    arg.prefixHeader = prefixHeader;
     return this;
   }
 

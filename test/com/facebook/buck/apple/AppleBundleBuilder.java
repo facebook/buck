@@ -18,7 +18,12 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.AppleBundleDestination;
 import com.facebook.buck.rules.coercer.Either;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 public class AppleBundleBuilder
     extends AbstractNodeBuilder<AppleBundleDescription.Arg> {
@@ -38,6 +43,27 @@ public class AppleBundleBuilder
 
   public AppleBundleBuilder setBinary(BuildTarget binary) {
     arg.binary = binary;
+    return this;
+  }
+
+  public AppleBundleBuilder setInfoPlist(Optional<SourcePath> infoPlist) {
+    arg.infoPlist = infoPlist;
+    return this;
+  }
+
+  public AppleBundleBuilder setHeaders(Optional<ImmutableMap<String, SourcePath>> headers) {
+    arg.headers = headers;
+    return this;
+  }
+
+  public AppleBundleBuilder setFiles(
+      Optional<ImmutableMap<AppleBundleDestination, SourcePath>> files) {
+    arg.files = files;
+    return this;
+  }
+
+  public AppleBundleBuilder setDeps(Optional<ImmutableSortedSet<BuildTarget>> deps) {
+    arg.deps = deps;
     return this;
   }
 

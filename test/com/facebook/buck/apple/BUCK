@@ -37,12 +37,8 @@ java_test(
 
 java_library(
   name = 'testutil',
-  srcs = [
-    'AppleBinaryBuilder.java',
-    'AppleBundleBuilder.java',
-    'AppleLibraryBuilder.java',
+  srcs = glob(['*Builder.java']) + [
     'FakeAppleConfig.java',
-    'XcodeProjectConfigBuilder.java',
   ],
   deps = [
     '//src/com/facebook/buck/apple:rules',
