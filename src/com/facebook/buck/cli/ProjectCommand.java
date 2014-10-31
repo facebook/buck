@@ -372,9 +372,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       }
 
       SeparatedProjectsGenerator projectGenerator = new SeparatedProjectsGenerator(
-          resolver,
           getProjectFilesystem(),
-          targetGraphs.getProjectGraph().getActionGraph(getBuckEventBus()),
+          getBuckEventBus(),
+          targetGraphs.getProjectGraph(),
           executionContext,
           targets,
           optionsBuilder.build());
