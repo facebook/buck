@@ -229,6 +229,10 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
         ProjectFilesystem filesystem = executionContext.getProjectFilesystem();
         Map<Path, DexWithClasses> metadataTxtEntries = sortResult.metadataTxtDexEntries;
         List<String> lines = Lists.newArrayListWithCapacity(metadataTxtEntries.size());
+        if (dexSplitMode.getDexStore() == DexStore.RAW) {
+          lines.add(".root_relative");
+        }
+
         try {
           for (Map.Entry<Path, DexWithClasses> entry : metadataTxtEntries.entrySet()) {
             Path pathToSecondaryDex = entry.getKey();
