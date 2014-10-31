@@ -130,7 +130,17 @@ public final class MoreFiles {
         Path destPath = toPath.resolve(fromPath.relativize(file));
         Path transformedDestPath = transform.apply(destPath);
         if (transformedDestPath != null) {
-          java.nio.file.Files.copy(file, transformedDestPath, StandardCopyOption.REPLACE_EXISTING);
+          if (java.nio.file.Files.isSymbolicLink(file)) {
+            java.nio.file.Files.deleteIfExists(transformedDestPath);
+            java.nio.file.Files.createSymbolicLink(
+                transformedDestPath,
+                java.nio.file.Files.readSymbolicLink(file));
+          } else {
+            java.nio.file.Files.copy(
+                file,
+                transformedDestPath,
+                StandardCopyOption.REPLACE_EXISTING);
+          }
         }
         return FileVisitResult.CONTINUE;
       }

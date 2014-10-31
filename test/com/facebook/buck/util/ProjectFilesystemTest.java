@@ -341,7 +341,8 @@ public class ProjectFilesystemTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
     final ImmutableList.Builder<String> fileNames = ImmutableList.builder();
 
-    Path pathRelativeToProjectRoot = Paths.get("test/com/facebook/buck/util/testdata");
+    Path pathRelativeToProjectRoot = Paths.get(
+        "test/com/facebook/buck/util/testdata/directory_traversal_ignore_paths");
     projectFilesystem.walkRelativeFileTree(
         pathRelativeToProjectRoot,
         new SimpleFileVisitor<Path>() {
