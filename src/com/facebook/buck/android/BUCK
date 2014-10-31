@@ -79,7 +79,7 @@ RULES_SRCS = [
   'RDotJava.java',
   'UnsortedAndroidResourceDeps.java',
 ]
-java_library(
+java_immutables_library(
   name = 'rules',
   srcs = RULES_SRCS,
   deps = [

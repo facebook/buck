@@ -45,6 +45,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.immutables.value.Value;
+
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -289,19 +291,20 @@ public class AndroidBinaryGraphEnhancer {
       finalDeps = enhancedDeps.build();
     }
 
-    return new EnhancementResult(
-        filteredResourcesProvider,
-        packageableCollection,
-        aaptPackageResources,
-        copyNativeLibraries,
-        packageStringAssets,
-        preDexMerge,
-        computeExopackageDepsAbi,
-        /* classpathEntriesToDex */ ImmutableSet.<Path>builder()
+    return ImmutableEnhancementResult.builder()
+        .filteredResourcesProvider(filteredResourcesProvider)
+        .packageableCollection(packageableCollection)
+        .aaptPackageResources(aaptPackageResources)
+        .copyNativeLibraries(copyNativeLibraries)
+        .packageStringAssets(packageStringAssets)
+        .preDexMerge(preDexMerge)
+        .computeExopackageDepsAbi(computeExopackageDepsAbi)
+        .classpathEntriesToDex(ImmutableSet.<Path>builder()
             .addAll(packageableCollection.classpathEntriesToDex)
             .addAll(buildConfigJarFiles)
-            .build(),
-        finalDeps);
+            .build())
+        .finalDeps(finalDeps)
+        .build();
   }
 
   /**
@@ -454,80 +457,24 @@ public class AndroidBinaryGraphEnhancer {
     return preDexMerge;
   }
 
-  static class EnhancementResult {
-    private final FilteredResourcesProvider filteredResourcesProvider;
-    private final AndroidPackageableCollection packageableCollection;
-    private final AaptPackageResources aaptPackageResources;
-    private final Optional<CopyNativeLibraries> copyNativeLibraries;
-    private final Optional<PackageStringAssets> packageStringAssets;
-    private final Optional<PreDexMerge> preDexMerge;
-    private final Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi;
+  @Value.Immutable
+  static interface EnhancementResult {
+    FilteredResourcesProvider filteredResourcesProvider();
+    AndroidPackageableCollection packageableCollection();
+    AaptPackageResources aaptPackageResources();
+    Optional<CopyNativeLibraries> copyNativeLibraries();
+    Optional<PackageStringAssets> packageStringAssets();
+    Optional<PreDexMerge> preDexMerge();
+    Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi();
 
     /**
      * This includes everything from the corresponding
      * {@link AndroidPackageableCollection#classpathEntriesToDex}, and may include additional
      * entries due to {@link AndroidBuildConfig}s.
      */
-    private final ImmutableSet<Path> classpathEntriesToDex;
+    ImmutableSet<Path> classpathEntriesToDex();
 
-    private final ImmutableSortedSet<BuildRule> finalDeps;
-
-    public EnhancementResult(
-        FilteredResourcesProvider filteredResourcesProvider,
-        AndroidPackageableCollection packageableCollection,
-        AaptPackageResources aaptPackageBuildable,
-        Optional<CopyNativeLibraries> copyNativeLibraries,
-        Optional<PackageStringAssets> packageStringAssets,
-        Optional<PreDexMerge> preDexMerge,
-        Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi,
-        ImmutableSet<Path> classpathEntriesToDex,
-        ImmutableSortedSet<BuildRule> finalDeps) {
-      this.filteredResourcesProvider = filteredResourcesProvider;
-      this.packageableCollection = packageableCollection;
-      this.aaptPackageResources = aaptPackageBuildable;
-      this.copyNativeLibraries = copyNativeLibraries;
-      this.packageStringAssets = packageStringAssets;
-      this.preDexMerge = preDexMerge;
-      this.computeExopackageDepsAbi = computeExopackageDepsAbi;
-      this.classpathEntriesToDex = classpathEntriesToDex;
-      this.finalDeps = finalDeps;
-    }
-
-    public FilteredResourcesProvider getFilteredResourcesProvider() {
-      return filteredResourcesProvider;
-    }
-
-    public AaptPackageResources getAaptPackageResources() {
-      return aaptPackageResources;
-    }
-
-    public Optional<PreDexMerge> getPreDexMerge() {
-      return preDexMerge;
-    }
-
-    public ImmutableSortedSet<BuildRule> getFinalDeps() {
-      return finalDeps;
-    }
-
-    public Optional<ComputeExopackageDepsAbi> getComputeExopackageDepsAbi() {
-      return computeExopackageDepsAbi;
-    }
-
-    public Optional<PackageStringAssets> getPackageStringAssets() {
-      return packageStringAssets;
-    }
-
-    public ImmutableSet<Path> getClasspathEntriesToDex() {
-      return classpathEntriesToDex;
-    }
-
-    public AndroidPackageableCollection getPackageableCollection() {
-      return packageableCollection;
-    }
-
-    public Optional<CopyNativeLibraries> getCopyNativeLibraries() {
-      return copyNativeLibraries;
-    }
+    ImmutableSortedSet<BuildRule> finalDeps();
   }
 
   private BuildTarget createBuildTargetWithFlavor(Flavor flavor) {

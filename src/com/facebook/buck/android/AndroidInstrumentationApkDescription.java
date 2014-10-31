@@ -123,7 +123,7 @@ public class AndroidInstrumentationApkDescription
         graphEnhancer.createAdditionalBuildables();
 
     return new AndroidInstrumentationApk(
-        params.copyWithExtraDeps(enhancementResult.getFinalDeps()),
+        params.copyWithExtraDeps(enhancementResult.finalDeps()),
         new SourcePathResolver(resolver),
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),
