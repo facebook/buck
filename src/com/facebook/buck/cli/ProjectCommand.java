@@ -467,7 +467,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         console,
         environment,
         getBuckEventBus(),
-        /* enableProfiling */ false);
+        options.getEnableProfiling());
   }
 
   private TargetGraphs createTargetGraphs(final ProjectCommandOptions options)
