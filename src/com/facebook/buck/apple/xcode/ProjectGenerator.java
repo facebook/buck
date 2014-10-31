@@ -514,13 +514,17 @@ public class ProjectGenerator {
     if (targetGid.isPresent()) {
       // Check if we have used this hardcoded GID before.
       // If not, remember it so we don't use it again.
+      String thisTargetName = appleBuildRule.getFullyQualifiedName();
       String conflictingTargetName = gidsToTargetNames.get(targetGid.get());
-      if (conflictingTargetName != null) {
+      // TODO(user): generateBinaryTarget should not be executed multiple times for the same
+      // rule, but it happens for combined project generation. Figure out why, fix it and remove the
+      // second part of the condition.
+      if (conflictingTargetName != null && !conflictingTargetName.equals(thisTargetName)) {
         throw new HumanReadableException(
             "Targets %s and %s have the same hardcoded GID (%s)",
-            appleBuildRule.getFullyQualifiedName(), conflictingTargetName, targetGid.get());
+            thisTargetName, conflictingTargetName, targetGid.get());
       }
-      gidsToTargetNames.put(targetGid.get(), appleBuildRule.getFullyQualifiedName());
+      gidsToTargetNames.put(targetGid.get(), thisTargetName);
     }
 
     BuildTarget buildTarget = bundle.isPresent()
