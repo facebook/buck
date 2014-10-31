@@ -18,9 +18,6 @@ package com.facebook.buck.apple.xcode;
 
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
-import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createAppleBundleBuildRule;
-import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
-import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.hasKey;
@@ -34,17 +31,16 @@ import static org.junit.Assert.assertTrue;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
-import com.facebook.buck.apple.AppleAssetCatalogDescription;
-import com.facebook.buck.apple.AppleBinaryDescription;
-import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleAssetCatalogBuilder;
+import com.facebook.buck.apple.AppleBinaryBuilder;
+import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
-import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleLibraryDescription;
-import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
-import com.facebook.buck.apple.AppleResourceDescription;
-import com.facebook.buck.apple.AppleTestDescription;
-import com.facebook.buck.apple.CoreDataModelDescription;
-import com.facebook.buck.apple.IosPostprocessResourcesDescription;
+import com.facebook.buck.apple.AppleResourceBuilder;
+import com.facebook.buck.apple.AppleTestBuilder;
+import com.facebook.buck.apple.CoreDataModelBuilder;
+import com.facebook.buck.apple.IosPostprocessResourcesBuilder;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
@@ -58,28 +54,25 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.Pair;
 import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
 import com.facebook.buck.rules.coercer.XcodeRuleConfigurationLayer;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -118,13 +111,6 @@ public class ProjectGeneratorTest {
   private ProjectFilesystem projectFilesystem;
   private FakeProjectFilesystem fakeProjectFilesystem;
   private ExecutionContext executionContext;
-  private AppleLibraryDescription appleLibraryDescription;
-  private AppleTestDescription appleTestDescription;
-  private IosPostprocessResourcesDescription iosPostprocessResourcesDescription;
-  private AppleResourceDescription appleResourceDescription;
-  private AppleBundleDescription appleBundleDescription;
-  private AppleBinaryDescription appleBinaryDescription;
-  private CoreDataModelDescription coreDataModelDescription;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -135,14 +121,6 @@ public class ProjectGeneratorTest {
     fakeProjectFilesystem = new FakeProjectFilesystem(clock);
     projectFilesystem = fakeProjectFilesystem;
     executionContext = TestExecutionContext.newInstance();
-    AppleConfig appleConfig = new AppleConfig(new FakeBuckConfig());
-    appleLibraryDescription = new AppleLibraryDescription(appleConfig);
-    appleTestDescription = new AppleTestDescription();
-    iosPostprocessResourcesDescription = new IosPostprocessResourcesDescription();
-    appleResourceDescription = new AppleResourceDescription();
-    appleBundleDescription = new AppleBundleDescription();
-    appleBinaryDescription = new AppleBinaryDescription(appleConfig);
-    coreDataModelDescription = new CoreDataModelDescription();
 
     // Add support files needed by project generation to fake filesystem.
     projectFilesystem.writeContentsToPath(
@@ -156,7 +134,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testProjectStructureForEmptyProject() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<TargetNode<?>>of(),
         ImmutableSet.<BuildTarget>of());
 
     Path outputWorkspaceBundlePath = OUTPUT_DIRECTORY.resolve(PROJECT_NAME + ".xcworkspace");
@@ -175,7 +153,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testWorkspaceGeneration() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<TargetNode<?>>of(),
         ImmutableSet.<BuildTarget>of());
     projectGenerator.createXcodeProjects();
 
@@ -188,30 +166,25 @@ public class ProjectGeneratorTest {
 
   @Test
   public void shouldNotCreateHeaderMapsWhenHeaderMapsAreDisabled() throws IOException {
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    arg.configs = Optional.of(
-        ImmutableSortedMap.of(
-            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
-    arg.srcs = Optional.of(
-        ImmutableList.of(
-            AppleSource.ofSourceGroup(
-                new Pair<>(
-                    "HeaderGroup1",
-                    ImmutableList.of(
-                        AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
-                        AppleSource.ofSourcePathWithFlags(
-                            new Pair<SourcePath, String>(
-                                new TestSourcePath("bar.h"), "public")))))));
-    arg.useBuckHeaderMaps = Optional.of(false);
-    BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(
+                    AppleSource.ofSourceGroup(
+                        new Pair<>(
+                            "HeaderGroup1",
+                            ImmutableList.of(
+                                AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
+                                AppleSource.ofSourcePathWithFlags(
+                                    new Pair<SourcePath, String>(
+                                        new TestSourcePath("bar.h"), "public"))))))))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget));
 
     projectGenerator.createXcodeProjects();
 
@@ -222,69 +195,63 @@ public class ProjectGeneratorTest {
 
   @Test(expected = HumanReadableException.class)
   public void testLibraryPrivateHeaderWithHeaderMaps() throws IOException {
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    arg.configs = Optional.of(
-        ImmutableSortedMap.of(
-            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
-    arg.srcs = Optional.of(
-        ImmutableList.of(
-            AppleSource.ofSourceGroup(
-                new Pair<>(
-                    "HeaderGroup2",
-                    ImmutableList.of(
-                        AppleSource.ofSourcePathWithFlags(
-                            new Pair<SourcePath, String>(
-                                new TestSourcePath("blech.h"), "private")))))));
-    arg.useBuckHeaderMaps = Optional.of(true);
-    BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(
+                    AppleSource.ofSourceGroup(
+                        new Pair<>(
+                            "HeaderGroup2",
+                            ImmutableList.of(
+                                AppleSource.ofSourcePathWithFlags(
+                                    new Pair<SourcePath, String>(
+                                        new TestSourcePath("blech.h"), "private"))))))))
+        .setUseBuckHeaderMaps(Optional.of(true))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget));
 
     projectGenerator.createXcodeProjects();
   }
 
   @Test
   public void testLibraryHeaderGroupsWithHeaderMaps() throws IOException {
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    arg.configs = Optional.of(
-        ImmutableSortedMap.of(
-            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
-    arg.srcs = Optional.of(
-        ImmutableList.of(
-            AppleSource.ofSourceGroup(
-                new Pair<>(
-                    "HeaderGroup1",
-                    ImmutableList.of(
-                        AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
-                        AppleSource.ofSourcePathWithFlags(
-                            new Pair<SourcePath, String>(new TestSourcePath("bar.h"), "public"))))),
-            AppleSource.ofSourceGroup(
-                new Pair<>(
-                    "HeaderGroup2",
-                    ImmutableList.of(
-                        AppleSource.ofSourcePath(new TestSourcePath("baz.h")))))));
-    arg.useBuckHeaderMaps = Optional.of(true);
-    BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(
+                    AppleSource.ofSourceGroup(
+                        new Pair<>(
+                            "HeaderGroup1",
+                            ImmutableList.of(
+                                AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
+                                AppleSource.ofSourcePathWithFlags(
+                                    new Pair<SourcePath, String>(
+                                        new TestSourcePath("bar.h"),
+                                        "public"))))),
+                    AppleSource.ofSourceGroup(
+                        new Pair<>(
+                            "HeaderGroup2",
+                            ImmutableList.of(
+                                AppleSource.ofSourcePath(new TestSourcePath("baz.h"))))))))
+        .setUseBuckHeaderMaps(Optional.of(true))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget));
 
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
     PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(rule.getFullyQualifiedName());
+        project.getMainGroup().getOrCreateChildGroupByName(buildTarget.getFullyQualifiedName());
     PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
 
     assertThat(sourcesGroup.getChildren(), hasSize(2));
@@ -357,26 +324,26 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryRule() throws IOException {
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    arg.configs = Optional.of(
-        ImmutableSortedMap.of(
-            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
-    arg.srcs = Optional.of(
-        ImmutableList.of(
-            AppleSource.ofSourcePathWithFlags(
-                new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
-            AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
-            AppleSource.ofSourcePath(new TestSourcePath("bar.m"))));
-    arg.useBuckHeaderMaps = Optional.of(false);
-    BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()))))
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
+                    AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
+                    AppleSource.ofSourcePath(new TestSourcePath("bar.m")))))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget));
 
     projectGenerator.createXcodeProjects();
 
@@ -421,26 +388,25 @@ public class ProjectGeneratorTest {
     SourcePath xcconfigFile = new PathSourcePath(rawXcconfigFile);
     projectFilesystem.writeContentsToPath("", rawXcconfigFile);
 
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    arg.configs = Optional.of(
-        ImmutableSortedMap.of(
-            "Debug",
-            new XcodeRuleConfiguration(
-                ImmutableList.of(
-                    new XcodeRuleConfigurationLayer(xcconfigFile),
-                    new XcodeRuleConfigurationLayer(xcconfigFile)))));
-    arg.headerPathPrefix = Optional.of("MyHeaderPathPrefix");
-    arg.prefixHeader = Optional.<SourcePath>of(new TestSourcePath("Foo/Foo-Prefix.pch"));
-    arg.useBuckHeaderMaps = Optional.of(false);
-    BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    new XcodeRuleConfiguration(
+                        ImmutableList.of(
+                            new XcodeRuleConfigurationLayer(xcconfigFile),
+                            new XcodeRuleConfigurationLayer(xcconfigFile))))))
+        .setHeaderPathPrefix(Optional.of("MyHeaderPathPrefix"))
+        .setPrefixHeader(Optional.<SourcePath>of(new TestSourcePath("Foo/Foo-Prefix.pch")))
+        .setUseBuckHeaderMaps(Optional.of(false))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()),
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
     projectGenerator.createXcodeProjects();
@@ -475,24 +441,22 @@ public class ProjectGeneratorTest {
     BuildTarget buildTarget = BuildTarget.builder("//hi", "lib")
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
         .build();
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(buildTarget)
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    arg.configs = Optional.of(
-        ImmutableSortedMap.of(
-            "Debug",
-            new XcodeRuleConfiguration(
-                ImmutableList.of(
-                    new XcodeRuleConfigurationLayer(xcconfigFile),
-                    new XcodeRuleConfigurationLayer(xcconfigFile)))));
-    arg.headerPathPrefix = Optional.of("MyHeaderPathPrefix");
-    BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    new XcodeRuleConfiguration(
+                        ImmutableList.of(
+                            new XcodeRuleConfigurationLayer(xcconfigFile),
+                            new XcodeRuleConfigurationLayer(xcconfigFile))))))
+        .setHeaderPathPrefix(Optional.of("MyHeaderPathPrefix"))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()),
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
     projectGenerator.createXcodeProjects();
@@ -521,27 +485,26 @@ public class ProjectGeneratorTest {
     SourcePath xcconfigFile = new PathSourcePath(rawXcconfigFile);
     projectFilesystem.writeContentsToPath("", rawXcconfigFile);
 
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    arg.configs = Optional.of(
-        ImmutableSortedMap.of(
-            "Debug",
-            new XcodeRuleConfiguration(
-                ImmutableList.of(
-                    new XcodeRuleConfigurationLayer(xcconfigFile),
-                    new XcodeRuleConfigurationLayer(
-                        ImmutableMap.of("PUBLIC_HEADERS_FOLDER_PATH", "FooHeaders")),
-                    new XcodeRuleConfigurationLayer(xcconfigFile),
-                    new XcodeRuleConfigurationLayer(
-                        ImmutableMap.of("PUBLIC_HEADERS_FOLDER_PATH", "FooHeaders"))))));
-    BuildRule rule = appleLibraryDescription.createBuildRule(params, new BuildRuleResolver(), arg);
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    new XcodeRuleConfiguration(
+                        ImmutableList.of(
+                            new XcodeRuleConfigurationLayer(xcconfigFile),
+                            new XcodeRuleConfigurationLayer(
+                                ImmutableMap.of("PUBLIC_HEADERS_FOLDER_PATH", "FooHeaders")),
+                            new XcodeRuleConfigurationLayer(xcconfigFile),
+                            new XcodeRuleConfigurationLayer(
+                                ImmutableMap.of("PUBLIC_HEADERS_FOLDER_PATH", "FooHeaders")))))))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()),
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
     projectGenerator.createXcodeProjects();
@@ -566,14 +529,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryDependentsSearchHeadersAndLibraries() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
     Path rawXcconfigFile = Paths.get("Test.xcconfig");
     SourcePath xcconfigFile = new PathSourcePath(rawXcconfigFile);
     projectFilesystem.writeContentsToPath("", rawXcconfigFile);
-
-    BuildRule libraryRule;
-    BuildRule testRule;
 
     ImmutableSortedMap<String, XcodeRuleConfiguration> configs =
         ImmutableSortedMap.of(
@@ -583,74 +541,44 @@ public class ProjectGeneratorTest {
                     new XcodeRuleConfigurationLayer(xcconfigFile),
                     new XcodeRuleConfigurationLayer(xcconfigFile))));
 
-    {
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-              .setType(AppleLibraryDescription.TYPE)
-              .build();
-      AppleNativeTargetDescriptionArg arg =
-          createDescriptionArgWithDefaults(appleLibraryDescription);
-      arg.configs = Optional.of(configs);
-      arg.srcs =
-          Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m"))));
-      arg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework"));
-      libraryRule = appleLibraryDescription.createBuildRule(params, resolver, arg);
-      resolver.addToIndex(libraryRule);
-    }
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setConfigs(Optional.of(configs))
+        .setSrcs(
+            Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")))))
+        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework")))
+        .build();
 
-    {
-      BuildRuleParams dynamicLibraryParams =
-          new FakeBuildRuleParamsBuilder(
-              BuildTarget.builder("//foo", "testlib")
-                  .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-                  .build())
-              .setDeps(ImmutableSortedSet.of(libraryRule))
-              .setType(AppleLibraryDescription.TYPE)
-              .build();
-      AppleNativeTargetDescriptionArg dynamicLibraryArg =
-          createDescriptionArgWithDefaults(appleLibraryDescription);
-      dynamicLibraryArg.configs = Optional.of(configs);
-      dynamicLibraryArg.srcs =
-          Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m"))));
-      dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework"));
-      BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
-          dynamicLibraryParams,
-          resolver,
-          dynamicLibraryArg);
-      resolver.addToIndex(dynamicLibraryDep);
+    BuildTarget testLibraryTarget = BuildTarget.builder("//foo", "testlib")
+        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    TargetNode<?> testLibraryNode = AppleLibraryBuilder
+        .createBuilder(testLibraryTarget)
+        .setConfigs(Optional.of(configs))
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m")))))
+        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework")))
+        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .build();
 
-      BuildRule xctestRule = createAppleBundleBuildRule(
-          BuildTarget.builder("//foo", "xctest").build(),
-          resolver,
-          appleBundleDescription,
-          dynamicLibraryDep,
-          AppleBundleExtension.XCTEST);
-      resolver.addToIndex(xctestRule);
+    BuildTarget testBundleTarget = BuildTarget.builder("//foo", "xctest").build();
+    TargetNode<?> testBundleNode = AppleBundleBuilder
+        .createBuilder(testBundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setBinary(testLibraryTarget)
+        .build();
 
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
-              .setDeps(ImmutableSortedSet.of(xctestRule))
-              .setType(AppleTestDescription.TYPE)
-              .build();
-
-      AppleTestDescription.Arg arg =
-          appleTestDescription.createUnpopulatedConstructorArg();
-      arg.testBundle = xctestRule.getBuildTarget();
-      arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
-      arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-      arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
-      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-
-      testRule = appleTestDescription.createBuildRule(
-          params,
-          resolver,
-          arg);
-      resolver.addToIndex(testRule);
-    }
+    BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setTestBundle(testBundleTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(libraryRule, testRule),
-        ImmutableSet.of(testRule.getBuildTarget()),
+        ImmutableSet.of(libraryNode, testLibraryNode, testBundleNode, testNode),
+        ImmutableSet.of(testNode.getBuildTarget()),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
     projectGenerator.createXcodeProjects();
@@ -682,14 +610,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryDependentsInheritSearchPaths() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
     Path rawXcconfigFile = Paths.get("Test.xcconfig");
     SourcePath xcconfigFile = new PathSourcePath(rawXcconfigFile);
     projectFilesystem.writeContentsToPath("", rawXcconfigFile);
-
-    BuildRule libraryRule;
-    BuildRule testRule;
 
     ImmutableSortedMap<String, XcodeRuleConfiguration> configs = ImmutableSortedMap.of(
         "Debug",
@@ -710,74 +633,44 @@ public class ProjectGeneratorTest {
                         "LIBRARY_SEARCH_PATHS", "libraries",
                         "FRAMEWORK_SEARCH_PATHS", "frameworks")))));
 
-    {
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-              .setType(AppleLibraryDescription.TYPE)
-              .build();
-      AppleNativeTargetDescriptionArg arg =
-          createDescriptionArgWithDefaults(appleLibraryDescription);
-      arg.configs = Optional.of(configs);
-      arg.srcs =
-          Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m"))));
-      arg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework"));
-      libraryRule = appleLibraryDescription.createBuildRule(params, resolver, arg);
-      resolver.addToIndex(libraryRule);
-    }
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setConfigs(Optional.of(configs))
+        .setSrcs(
+            Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")))))
+        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework")))
+        .build();
 
-    {
-      BuildRuleParams dynamicLibraryParams =
-          new FakeBuildRuleParamsBuilder(
-              BuildTarget.builder("//foo", "testlib")
-                  .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-                  .build())
-              .setDeps(ImmutableSortedSet.of(libraryRule))
-              .setType(AppleLibraryDescription.TYPE)
-              .build();
-      AppleNativeTargetDescriptionArg dynamicLibraryArg =
-          createDescriptionArgWithDefaults(appleLibraryDescription);
-      dynamicLibraryArg.configs = Optional.of(configs);
-      dynamicLibraryArg.srcs =
-          Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m"))));
-      dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework"));
-      BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
-          dynamicLibraryParams,
-          resolver,
-          dynamicLibraryArg);
-      resolver.addToIndex(dynamicLibraryDep);
+    BuildTarget testLibraryTarget = BuildTarget.builder("//foo", "testlib")
+        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    TargetNode<?> testLibraryNode = AppleLibraryBuilder
+        .createBuilder(testLibraryTarget)
+        .setConfigs(Optional.of(configs))
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m")))))
+        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework")))
+        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .build();
 
-      BuildRule xctestRule = createAppleBundleBuildRule(
-          BuildTarget.builder("//foo", "xctest").build(),
-          resolver,
-          appleBundleDescription,
-          dynamicLibraryDep,
-          AppleBundleExtension.XCTEST);
-      resolver.addToIndex(xctestRule);
+    BuildTarget testBundleTarget = BuildTarget.builder("//foo", "xctest").build();
+    TargetNode<?> testBundleNode = AppleBundleBuilder
+        .createBuilder(testBundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setBinary(testLibraryTarget)
+        .build();
 
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
-              .setDeps(ImmutableSortedSet.of(xctestRule))
-              .setType(AppleTestDescription.TYPE)
-              .build();
-
-      AppleTestDescription.Arg arg =
-          appleTestDescription.createUnpopulatedConstructorArg();
-      arg.testBundle = xctestRule.getBuildTarget();
-      arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
-      arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-      arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
-      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-
-      testRule = appleTestDescription.createBuildRule(
-          params,
-          resolver,
-          arg);
-      resolver.addToIndex(testRule);
-    }
+    BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setTestBundle(testBundleTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(libraryRule, testRule),
-        ImmutableSet.of(testRule.getBuildTarget()),
+        ImmutableSet.of(libraryNode, testLibraryNode, testBundleNode, testNode),
+        ImmutableSet.of(testTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
     projectGenerator.createXcodeProjects();
@@ -809,15 +702,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryTransitiveDependentsSearchHeadersAndLibraries() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
     Path rawXcconfigFile = Paths.get("Test.xcconfig");
     SourcePath xcconfigFile = new PathSourcePath(rawXcconfigFile);
     projectFilesystem.writeContentsToPath("", rawXcconfigFile);
-
-    BuildRule libraryDepRule;
-    BuildRule libraryRule;
-    BuildRule testRule;
 
     ImmutableSortedMap<String, XcodeRuleConfiguration> configs =
         ImmutableSortedMap.of(
@@ -827,91 +714,54 @@ public class ProjectGeneratorTest {
                     new XcodeRuleConfigurationLayer(xcconfigFile),
                     new XcodeRuleConfigurationLayer(xcconfigFile))));
 
-    {
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//bar", "lib").build())
-              .setType(AppleLibraryDescription.TYPE)
-              .build();
-      AppleNativeTargetDescriptionArg arg =
-          createDescriptionArgWithDefaults(appleLibraryDescription);
-      arg.configs = Optional.of(configs);
-      arg.srcs =
-          Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m"))));
-      arg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework"));
-      libraryDepRule =
-          appleLibraryDescription.createBuildRule(params, resolver, arg);
-      resolver.addToIndex(libraryDepRule);
-    }
+    BuildTarget libraryDepTarget = BuildTarget.builder("//bar", "lib").build();
+    TargetNode<?> libraryDepNode = AppleLibraryBuilder
+        .createBuilder(libraryDepTarget)
+        .setConfigs(Optional.of(configs))
+        .setSrcs(
+            Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")))))
+        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework")))
+        .build();
 
-    {
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-              .setDeps(ImmutableSortedSet.of(libraryDepRule))
-              .setType(AppleLibraryDescription.TYPE)
-              .build();
-      AppleNativeTargetDescriptionArg arg =
-          createDescriptionArgWithDefaults(appleLibraryDescription);
-      arg.configs = Optional.of(configs);
-      arg.srcs =
-          Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m"))));
-      arg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework"));
-      libraryRule = appleLibraryDescription.createBuildRule(params, resolver, arg);
-      resolver.addToIndex(libraryRule);
-    }
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setConfigs(Optional.of(configs))
+        .setSrcs(
+            Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo.m")))))
+        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework")))
+        .setDeps(Optional.of(ImmutableSortedSet.of(libraryDepTarget)))
+        .build();
 
-    {
-      BuildRuleParams dynamicLibraryParams =
-          new FakeBuildRuleParamsBuilder(
-              BuildTarget.builder("//foo", "testlib")
-                  .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-                  .build())
-              .setDeps(ImmutableSortedSet.of(libraryRule))
-              .setType(AppleLibraryDescription.TYPE)
-              .build();
-      AppleNativeTargetDescriptionArg dynamicLibraryArg =
-          createDescriptionArgWithDefaults(appleLibraryDescription);
-      dynamicLibraryArg.configs = Optional.of(configs);
-      dynamicLibraryArg.srcs =
-          Optional.of(ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m"))));
-      dynamicLibraryArg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework"));
-      BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
-          dynamicLibraryParams,
-          resolver,
-          dynamicLibraryArg);
-      resolver.addToIndex(dynamicLibraryDep);
+    BuildTarget testLibraryTarget = BuildTarget.builder("//foo", "testlib")
+        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    TargetNode<?> testLibraryNode = AppleLibraryBuilder
+        .createBuilder(testLibraryTarget)
+        .setConfigs(Optional.of(configs))
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("fooTest.m")))))
+        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework")))
+        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .build();
 
-      BuildRule xctestRule = createAppleBundleBuildRule(
-          BuildTarget.builder("//foo", "xctest").build(),
-          resolver,
-          appleBundleDescription,
-          dynamicLibraryDep,
-          AppleBundleExtension.XCTEST);
-      resolver.addToIndex(xctestRule);
+    BuildTarget testBundleTarget = BuildTarget.builder("//foo", "xctest").build();
+    TargetNode<?> testBundleNode = AppleBundleBuilder
+        .createBuilder(testBundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setBinary(testLibraryTarget)
+        .build();
 
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
-              .setDeps(ImmutableSortedSet.of(xctestRule))
-              .setType(AppleTestDescription.TYPE)
-              .build();
-
-      AppleTestDescription.Arg arg =
-          appleTestDescription.createUnpopulatedConstructorArg();
-      arg.testBundle = xctestRule.getBuildTarget();
-      arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
-      arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-      arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
-      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-
-      testRule = appleTestDescription.createBuildRule(
-          params,
-          resolver,
-          arg);
-      resolver.addToIndex(testRule);
-    }
+    BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setTestBundle(testBundleTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(libraryRule, testRule),
-        ImmutableSet.of(testRule.getBuildTarget()),
+        ImmutableSet.of(libraryDepNode, libraryNode, testLibraryNode, testBundleNode, testNode),
+        ImmutableSet.of(testTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
     projectGenerator.createXcodeProjects();
@@ -946,46 +796,29 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleTestRule() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget dynamicLibraryTarget = BuildTarget.builder("//dep", "dynamic")
+        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    TargetNode<?> dynamicLibraryNode = AppleLibraryBuilder
+        .createBuilder(dynamicLibraryTarget)
+        .build();
 
-    BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
-        BuildTarget.builder("//dep", "dynamic").setFlavor(
-            AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription, resolver);
-    resolver.addToIndex(dynamicLibraryDep);
+    BuildTarget xctestTarget = BuildTarget.builder("//foo", "xctest").build();
+    TargetNode<?> xctestNode = AppleBundleBuilder
+        .createBuilder(xctestTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setBinary(dynamicLibraryTarget)
+        .build();
 
-    BuildRule xctestRule = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "xctest").build(),
-        resolver,
-        appleBundleDescription,
-        dynamicLibraryDep,
-        AppleBundleExtension.XCTEST);
-    resolver.addToIndex(xctestRule);
-
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
-            .setDeps(ImmutableSortedSet.of(xctestRule))
-            .setType(AppleTestDescription.TYPE)
-            .build();
-
-    AppleTestDescription.Arg arg =
-        appleTestDescription.createUnpopulatedConstructorArg();
-    arg.testBundle = xctestRule.getBuildTarget();
-    arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
-    arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
-    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-
-    BuildRule rule = appleTestDescription.createBuildRule(
-        params,
-        resolver,
-        arg);
-    resolver.addToIndex(rule);
+    BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setTestBundle(xctestTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
+        ImmutableSet.of(dynamicLibraryNode, xctestNode, testNode),
+        ImmutableSet.of(testTarget));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -999,42 +832,36 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBinaryRule() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget depTarget = BuildTarget.builder("//dep", "dep").build();
+    TargetNode<?> depNode = AppleLibraryBuilder
+        .createBuilder(depTarget)
+        .build();
 
-    BuildRule depRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//dep", "dep").build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(depRule);
-
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "binary").build())
-            .setDeps(ImmutableSortedSet.of(depRule))
-            .setType(AppleBinaryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = appleBinaryDescription.createUnpopulatedConstructorArg();
-    arg.configs = Optional.of(
-        ImmutableSortedMap.of(
-            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
-    arg.srcs = Optional.of(
-        ImmutableList.of(
-            AppleSource.ofSourcePathWithFlags(
-                new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
-            AppleSource.ofSourcePath(new TestSourcePath("foo.h"))));
-    arg.frameworks = Optional.of(ImmutableSortedSet.of("$SDKROOT/Foo.framework"));
-    arg.deps = Optional.absent();
-    arg.gid = Optional.absent();
-    arg.headerPathPrefix = Optional.absent();
-    arg.useBuckHeaderMaps = Optional.absent();
-    arg.prefixHeader = Optional.absent();
-
-    BuildRule rule = appleBinaryDescription.createBuildRule(params, resolver, arg);
-    resolver.addToIndex(rule);
+    BuildTarget binaryTarget = BuildTarget.builder("//foo", "binary").build();
+    TargetNode<?> binaryNode = AppleBinaryBuilder
+        .createBuilder(binaryTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()))))
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
+                    AppleSource.ofSourcePath(new TestSourcePath("foo.h")))))
+        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Foo.framework")))
+        .setDeps(Optional.of(ImmutableSortedSet.of(depTarget)))
+        .setGid(Optional.<String>absent())
+        .setHeaderPathPrefix(Optional.<String>absent())
+        .setUseBuckHeaderMaps(Optional.<Boolean>absent())
+        .setPrefixHeader(Optional.<SourcePath>absent())
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
+        ImmutableSet.of(depNode, binaryNode),
+        ImmutableSet.of(binaryTarget));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1061,59 +888,39 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBundleRuleWithPostBuildScriptDependency() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget scriptTarget = BuildTarget.builder("//foo", "post_build_script").build();
+    TargetNode<?> scriptNode = IosPostprocessResourcesBuilder
+        .createBuilder(scriptTarget)
+        .setCmd(Optional.of("script.sh"))
+        .build();
 
-    BuildRule scriptRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "post_build_script").build(),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        iosPostprocessResourcesDescription,
-        new Function<IosPostprocessResourcesDescription.Arg,
-                     IosPostprocessResourcesDescription.Arg>() {
-          @Override
-          public IosPostprocessResourcesDescription.Arg apply(
-            IosPostprocessResourcesDescription.Arg input) {
+    BuildTarget resourceTarget = BuildTarget.builder("//foo", "resource").build();
+    TargetNode<?> resourceNode = AppleResourceBuilder
+        .createBuilder(resourceTarget)
+        .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png")))
+        .setDirs(ImmutableSet.<Path>of())
+        .build();
 
-            input.cmd = Optional.of("script.sh");
-            return input;
-          }
-        });
-    resolver.addToIndex(scriptRule);
+    BuildTarget dynamicLibraryTarget = BuildTarget
+        .builder("//dep", "dynamic")
+        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    TargetNode<?> dynamicLibraryNode = AppleLibraryBuilder
+        .createBuilder(dynamicLibraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .build();
 
-    BuildRule resourceRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "resource").build(),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        appleResourceDescription,
-        new Function<AppleResourceDescription.Arg, AppleResourceDescription.Arg>() {
-          @Override
-          public AppleResourceDescription.Arg apply(AppleResourceDescription.Arg input) {
-            input.files = ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png"));
-            return input;
-          }
-        });
-    resolver.addToIndex(resourceRule);
-
-    BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
-        BuildTarget.builder("//dep", "dynamic").setFlavor(
-            AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
-        ImmutableSortedSet.of(resourceRule),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(dynamicLibraryDep);
-
-    BuildRule bundleRule = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "bundle").build(),
-        resolver,
-        appleBundleDescription,
-        dynamicLibraryDep,
-        AppleBundleExtension.BUNDLE,
-        ImmutableList.of(scriptRule));
-    resolver.addToIndex(bundleRule);
+    BuildTarget bundleTarget = BuildTarget.builder("//foo", "bundle").build();
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.BUNDLE))
+        .setBinary(dynamicLibraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(scriptTarget)))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-      ImmutableSet.of(bundleRule),
-      ImmutableSet.of(bundleRule.getBuildTarget()));
+      ImmutableSet.of(scriptNode, resourceNode, dynamicLibraryNode, bundleNode),
+      ImmutableSet.of(bundleTarget));
 
     projectGenerator.createXcodeProjects();
 
@@ -1144,42 +951,37 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBundleRuleForDynamicFramework() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
     SourcePath xcconfigFile = new PathSourcePath(Paths.get("Test.xcconfig"));
     projectFilesystem.writeContentsToPath(
         "",
-        new SourcePathResolver(resolver).getPath(xcconfigFile));
+        new SourcePathResolver(new BuildRuleResolver()).getPath(xcconfigFile));
 
-    BuildRuleParams dynamicLibraryParams =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//dep", "dynamic").setFlavor(
-            AppleLibraryDescription.DYNAMIC_LIBRARY).build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg dynamicLibraryArg =
-      createDescriptionArgWithDefaults(appleLibraryDescription);
-    dynamicLibraryArg.configs = Optional.of(
-        ImmutableSortedMap.of(
-            "Debug",
-            new XcodeRuleConfiguration(
-                ImmutableList.of(
-                    new XcodeRuleConfigurationLayer(xcconfigFile),
-                    new XcodeRuleConfigurationLayer(xcconfigFile)))));
-    BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
-        dynamicLibraryParams, resolver, dynamicLibraryArg);
-    resolver.addToIndex(dynamicLibraryDep);
+    BuildTarget dynamicLibraryTarget = BuildTarget
+        .builder("//dep", "dynamic")
+        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    TargetNode<?> dynamicLibraryNode = AppleLibraryBuilder
+        .createBuilder(dynamicLibraryTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    new XcodeRuleConfiguration(
+                        ImmutableList.of(
+                            new XcodeRuleConfigurationLayer(xcconfigFile),
+                            new XcodeRuleConfigurationLayer(xcconfigFile))))))
+        .build();
 
-    BuildRule rule = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "bundle").build(),
-        resolver,
-        appleBundleDescription,
-        dynamicLibraryDep,
-        AppleBundleExtension.FRAMEWORK);
-    resolver.addToIndex(rule);
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "bundle").build();
+    TargetNode<?> node = AppleBundleBuilder
+        .createBuilder(buildTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setBinary(dynamicLibraryTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSortedSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()),
+        ImmutableSet.of(dynamicLibraryNode, node),
+        ImmutableSet.of(buildTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
     projectGenerator.createXcodeProjects();
 
@@ -1202,38 +1004,27 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCoreDataModelRuleAddsReference() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget modelTarget = BuildTarget.builder("//foo", "model").build();
+    TargetNode<?> modelNode = CoreDataModelBuilder
+        .createBuilder(modelTarget)
+        .setPath(new TestSourcePath("foo.xcdatamodel").getRelativePath())
+        .build();
 
-    BuildRule modelRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "model").build(),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        coreDataModelDescription,
-        new Function<CoreDataModelDescription.Arg, CoreDataModelDescription.Arg>() {
-          @Override
-          public CoreDataModelDescription.Arg apply(CoreDataModelDescription.Arg args) {
-            args.path = new TestSourcePath("foo.xcdatamodel").getRelativePath();
-            return args;
-          }
-        });
-    resolver.addToIndex(modelRule);
-
-    BuildRule libraryRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "lib").build(),
-        ImmutableSortedSet.of(modelRule),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(libraryRule);
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(modelTarget)))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(libraryRule),
-        ImmutableSet.of(libraryRule.getBuildTarget()));
+        ImmutableSet.of(modelNode, libraryNode),
+        ImmutableSet.of(libraryTarget));
 
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
     PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(libraryRule.getFullyQualifiedName());
+        project.getMainGroup().getOrCreateChildGroupByName(libraryTarget.getFullyQualifiedName());
     PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
 
     assertThat(resourcesGroup.getChildren(), hasSize(1));
@@ -1246,32 +1037,25 @@ public class ProjectGeneratorTest {
 
   @Test
   public void ruleToTargetMapContainsPBXTarget() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    arg.configs = Optional.of(
-        ImmutableSortedMap.of(
-            "Debug", new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
-    arg.srcs = Optional.of(
-        ImmutableList.of(
-            AppleSource.ofSourcePathWithFlags(
-                new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
-            AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
-            AppleSource.ofSourcePath(new TestSourcePath("bar.m"))));
-    BuildRule rule = appleLibraryDescription.createBuildRule(params, resolver, arg);
-    resolver.addToIndex(rule);
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-foo")),
+                    AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
+                    AppleSource.ofSourcePath(new TestSourcePath("bar.m")))))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget));
 
     projectGenerator.createXcodeProjects();
 
-    assertEquals(rule.getBuildTarget(), Iterables.getOnlyElement(
+    assertEquals(buildTarget, Iterables.getOnlyElement(
             projectGenerator.getBuildTargetToGeneratedTargetMap().keySet()));
 
     PBXTarget target = Iterables.getOnlyElement(
@@ -1295,189 +1079,121 @@ public class ProjectGeneratorTest {
     //
     // Calling generate on FooBin should pull in everything except BazLibTest
 
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget barLibTarget = BuildTarget.builder("//bar", "lib").build();
+    TargetNode<?> barLibNode = AppleLibraryBuilder
+        .createBuilder(barLibTarget)
+        .build();
 
-    final BuildRule barLib = createBuildRuleWithDefaults(
-        BuildTarget.builder("//bar", "lib").build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(barLib);
+    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> fooLibNode = AppleLibraryBuilder
+        .createBuilder(fooLibTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
+        .build();
 
-    final BuildRule fooLib = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "lib").build(),
-        ImmutableSortedSet.of(barLib),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(fooLib);
+    BuildTarget fooBinBinaryTarget = BuildTarget.builder("//foo", "binbinary").build();
+    TargetNode<?> fooBinBinaryNode = AppleBinaryBuilder
+        .createBuilder(fooBinBinaryTarget)
+        .build();
 
-    BuildRule fooBinBinary = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "binbinary").build(),
-        ImmutableSortedSet.of(fooLib),
-        appleBinaryDescription,
-        resolver);
-    resolver.addToIndex(fooBinBinary);
+    BuildTarget fooBinTarget = BuildTarget.builder("//foo", "bin").build();
+    TargetNode<?> fooBinNode = AppleBundleBuilder
+        .createBuilder(fooBinTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
+        .setBinary(fooBinBinaryTarget)
+        .build();
 
-    BuildRule fooBin = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "bin").build(),
-        resolver,
-        appleBundleDescription,
-        fooBinBinary,
-        AppleBundleExtension.APP);
-    resolver.addToIndex(fooBin);
+    BuildTarget bazLibTarget = BuildTarget.builder("//baz", "lib").build();
+    TargetNode<?> bazLibNode = AppleLibraryBuilder
+        .createBuilder(bazLibTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
+        .build();
 
-    final BuildRule bazLib = createBuildRuleWithDefaults(
-        BuildTarget.builder("//baz", "lib").build(),
-        ImmutableSortedSet.of(fooLib),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(bazLib);
+    BuildTarget bazTestLibTarget = BuildTarget
+        .builder("//baz", "testlib")
+        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    TargetNode<?> bazTestLibNode = AppleLibraryBuilder
+        .createBuilder(bazTestLibTarget)
+        .build();
 
-    BuildRule bazTest;
-    {
-      BuildRuleParams dynamicLibraryParams =
-          new FakeBuildRuleParamsBuilder(
-              BuildTarget.builder("//baz", "testlib")
-                  .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-                  .build())
-              .setDeps(ImmutableSortedSet.of(bazLib))
-              .setType(AppleLibraryDescription.TYPE)
-              .build();
-      AppleNativeTargetDescriptionArg dynamicLibraryArg =
-          createDescriptionArgWithDefaults(appleLibraryDescription);
-      BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
-          dynamicLibraryParams,
-          resolver,
-          dynamicLibraryArg);
-      resolver.addToIndex(dynamicLibraryDep);
+    BuildTarget bazTestBundleTarget = BuildTarget.builder("//foo", "xctest").build();
+    TargetNode<?> bazTestBundleNode = AppleBundleBuilder
+        .createBuilder(bazTestBundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setBinary(bazTestLibTarget)
+        .build();
 
-      BuildRule xctestRule = createAppleBundleBuildRule(
-          BuildTarget.builder("//foo", "xctest").build(),
-          resolver,
-          appleBundleDescription,
-          dynamicLibraryDep,
-          AppleBundleExtension.XCTEST);
-      resolver.addToIndex(xctestRule);
+    BuildTarget bazTestTarget = BuildTarget.builder("//baz", "test").build();
+    TargetNode<?> bazTestNode = AppleTestBuilder
+        .createBuilder(bazTestTarget)
+        .setTestBundle(bazTestBundleTarget)
+        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .build();
 
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//baz", "test").build())
-              .setDeps(ImmutableSortedSet.of(xctestRule))
-              .setType(AppleTestDescription.TYPE)
-              .build();
+    BuildTarget fooTestLibTarget = BuildTarget
+        .builder("//foo", "lib-testlib")
+        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    TargetNode<?> fooTestLibNode = AppleLibraryBuilder
+        .createBuilder(fooTestLibTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .build();
 
-      AppleTestDescription.Arg arg =
-          appleTestDescription.createUnpopulatedConstructorArg();
-      arg.testBundle = xctestRule.getBuildTarget();
-      arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
-      arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-      arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
-      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(bazLib.getBuildTarget()));
+    BuildTarget fooTestBundleTarget = BuildTarget.builder("//foo", "lib-xctest").build();
+    TargetNode<?> fooTestBundleNode = AppleBundleBuilder
+        .createBuilder(fooTestBundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setBinary(fooTestLibTarget)
+        .build();
 
-      bazTest = appleTestDescription.createBuildRule(
-          params,
-          resolver,
-          arg);
-      resolver.addToIndex(bazTest);
-    }
-    final BuildRule bazLibTest = bazTest;
+    BuildTarget fooTestTarget = BuildTarget.builder("//foo", "lib-test").build();
+    TargetNode<?> fooTestNode = AppleTestBuilder
+        .createBuilder(fooTestTarget)
+        .setTestBundle(fooTestBundleTarget)
+        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .build();
 
-    BuildRule fooLibTest;
-    {
-      BuildRuleParams dynamicLibraryParams =
-          new FakeBuildRuleParamsBuilder(
-              BuildTarget.builder("//foo", "lib-testlib")
-                  .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-                  .build())
-              .setDeps(ImmutableSortedSet.of(bazLib))
-              .setType(AppleLibraryDescription.TYPE)
-              .build();
-      AppleNativeTargetDescriptionArg dynamicLibraryArg =
-          createDescriptionArgWithDefaults(appleLibraryDescription);
-      BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
-          dynamicLibraryParams,
-          resolver,
-          dynamicLibraryArg);
-      resolver.addToIndex(dynamicLibraryDep);
+    BuildTarget fooBinTestLibTarget = BuildTarget
+        .builder("//foo", "bin-testlib")
+        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    TargetNode<?> fooBinTestLibNode = AppleLibraryBuilder
+        .createBuilder(fooBinTestLibTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .build();
 
-      BuildRule xctestRule = createAppleBundleBuildRule(
-          BuildTarget.builder("//foo", "lib-xctest").build(),
-          resolver,
-          appleBundleDescription,
-          dynamicLibraryDep,
-          AppleBundleExtension.XCTEST);
-      resolver.addToIndex(xctestRule);
+    BuildTarget fooBinTestBundleTarget = BuildTarget.builder("//foo", "bin-xctest").build();
+    TargetNode<?> fooBinTestBundleNode = AppleBundleBuilder
+        .createBuilder(fooBinTestBundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setBinary(fooBinTestLibTarget)
+        .build();
 
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib-test").build())
-              .setDeps(ImmutableSortedSet.of(xctestRule))
-              .setType(AppleTestDescription.TYPE)
-              .build();
-
-      AppleTestDescription.Arg arg =
-          appleTestDescription.createUnpopulatedConstructorArg();
-      arg.testBundle = xctestRule.getBuildTarget();
-      arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
-      arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-      arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
-      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(bazLib.getBuildTarget()));
-
-      fooLibTest = appleTestDescription.createBuildRule(
-          params,
-          resolver,
-          arg);
-      resolver.addToIndex(fooLibTest);
-    }
-
-    BuildRule fooBinTest;
-    {
-      BuildRuleParams dynamicLibraryParams =
-          new FakeBuildRuleParamsBuilder(
-              BuildTarget.builder("//foo", "bin-testlib")
-                  .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-                  .build())
-              .setDeps(ImmutableSortedSet.of(bazLib))
-              .setType(AppleLibraryDescription.TYPE)
-              .build();
-      AppleNativeTargetDescriptionArg dynamicLibraryArg =
-          createDescriptionArgWithDefaults(appleLibraryDescription);
-      BuildRule dynamicLibraryDep = appleLibraryDescription.createBuildRule(
-          dynamicLibraryParams,
-          resolver,
-          dynamicLibraryArg);
-      resolver.addToIndex(dynamicLibraryDep);
-
-      BuildRule xctestRule = createAppleBundleBuildRule(
-          BuildTarget.builder("//foo", "bin-xctest").build(),
-          resolver,
-          appleBundleDescription,
-          dynamicLibraryDep,
-          AppleBundleExtension.XCTEST);
-      resolver.addToIndex(xctestRule);
-
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "bin-test").build())
-              .setDeps(ImmutableSortedSet.of(xctestRule))
-              .setType(AppleTestDescription.TYPE)
-              .build();
-
-      AppleTestDescription.Arg arg =
-          appleTestDescription.createUnpopulatedConstructorArg();
-      arg.testBundle = xctestRule.getBuildTarget();
-      arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
-      arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-      arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
-      arg.sourceUnderTest = Optional.of(ImmutableSortedSet.of(bazLib.getBuildTarget()));
-
-      fooBinTest = appleTestDescription.createBuildRule(
-          params,
-          resolver,
-          arg);
-      resolver.addToIndex(fooBinTest);
-    }
+    BuildTarget fooBinTestTarget = BuildTarget.builder("//foo", "bin-test").build();
+    TargetNode<?> fooBinTestNode = AppleTestBuilder
+        .createBuilder(fooBinTestTarget)
+        .setTestBundle(fooBinTestBundleTarget)
+        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(barLib, fooLib, fooBin, bazLib, bazLibTest, fooLibTest, fooBinTest),
-        ImmutableSet.of(fooBin.getBuildTarget()));
+        // ant needs this to be explicit
+        ImmutableSet.<TargetNode<?>>of(
+            barLibNode,
+            fooLibNode,
+            fooBinBinaryNode,
+            fooBinNode,
+            bazLibNode,
+            bazTestLibNode,
+            bazTestBundleNode,
+            bazTestNode,
+            fooTestLibNode,
+            fooTestBundleNode,
+            fooTestNode,
+            fooBinTestLibNode,
+            fooBinTestBundleNode,
+            fooBinTestNode),
+        ImmutableSet.of(fooBinTarget));
     projectGenerator.createXcodeProjects();
 
     assertTargetExistsAndReturnTarget(
@@ -1502,17 +1218,14 @@ public class ProjectGeneratorTest {
 
   @Test
   public void generatedGidsForTargetsAreStable() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    BuildRule fooLib = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "foo").build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription,
-        resolver);
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "foo").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(fooLib),
-        ImmutableSet.of(fooLib.getBuildTarget()));
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1528,61 +1241,43 @@ public class ProjectGeneratorTest {
 
   @Test
   public void stopsLinkingRecursiveDependenciesAtDynamicLibraries() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    BuildRule dependentStaticLibrary = createBuildRuleWithDefaults(
-        BuildTarget.builder("//dep", "static").build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription,
-        resolver);
+    BuildTarget dependentStaticLibraryTarget = BuildTarget.builder("//dep", "static").build();
+    TargetNode<?> dependentStaticLibraryNode = AppleLibraryBuilder
+        .createBuilder(dependentStaticLibraryTarget)
+        .build();
 
     BuildTarget dependentDynamicLibraryTarget = BuildTarget
         .builder("//dep", "dynamic")
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
         .build();
-    BuildRuleParams dependentDynamicLibraryParams =
-        new FakeBuildRuleParamsBuilder(dependentDynamicLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(dependentStaticLibrary))
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-
-    AppleNativeTargetDescriptionArg dependentDynamicLibraryArg =
-      createDescriptionArgWithDefaults(appleLibraryDescription);
-    BuildRule dependentDynamicLibrary = appleLibraryDescription.createBuildRule(
-        dependentDynamicLibraryParams,
-        resolver,
-        dependentDynamicLibraryArg);
-    resolver.addToIndex(dependentDynamicLibrary);
+    TargetNode<?> dependentDynamicLibraryNode = AppleLibraryBuilder
+        .createBuilder(dependentDynamicLibraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(dependentStaticLibraryTarget)))
+        .build();
 
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
         .build();
-    BuildRuleParams libraryParams =
-        new FakeBuildRuleParamsBuilder(libraryTarget)
-            .setDeps(ImmutableSortedSet.of(dependentDynamicLibrary))
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(dependentDynamicLibraryTarget)))
+        .build();
 
-    AppleNativeTargetDescriptionArg libraryArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
-    BuildRule library = appleLibraryDescription.createBuildRule(
-        libraryParams,
-        resolver,
-        libraryArg);
-    resolver.addToIndex(library);
-
-    BuildRule bundle = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "final").build(),
-        resolver,
-        appleBundleDescription,
-        library,
-        AppleBundleExtension.BUNDLE);
-    resolver.addToIndex(bundle);
+    BuildTarget bundleTarget = BuildTarget.builder("//foo", "final").build();
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.BUNDLE))
+        .setBinary(libraryTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(bundle),
-        ImmutableSet.of(bundle.getBuildTarget()));
+        ImmutableSet.of(
+            dependentStaticLibraryNode,
+            dependentDynamicLibraryNode,
+            libraryNode,
+            bundleNode),
+        ImmutableSet.of(bundleTarget));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1596,70 +1291,51 @@ public class ProjectGeneratorTest {
 
   @Test
   public void stopsLinkingRecursiveDependenciesAtBundles() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    BuildRule dependentStaticLibrary = createBuildRuleWithDefaults(
-        BuildTarget.builder("//dep", "static").build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(dependentStaticLibrary);
+    BuildTarget dependentStaticLibraryTarget = BuildTarget.builder("//dep", "static").build();
+    TargetNode<?> dependentStaticLibraryNode = AppleLibraryBuilder
+        .createBuilder(dependentStaticLibraryTarget)
+        .build();
 
     BuildTarget dependentDynamicLibraryTarget = BuildTarget
         .builder("//dep", "dynamic")
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
         .build();
-    BuildRuleParams dependentDynamicLibraryParams =
-        new FakeBuildRuleParamsBuilder(dependentDynamicLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(dependentStaticLibrary))
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
+    TargetNode<?> dependentDynamicLibraryNode = AppleLibraryBuilder
+        .createBuilder(dependentDynamicLibraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(dependentStaticLibraryTarget)))
+        .build();
 
-    AppleNativeTargetDescriptionArg dependentDynamicLibraryArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
-    BuildRule dependentDynamicLibrary = appleLibraryDescription.createBuildRule(
-        dependentDynamicLibraryParams,
-        resolver,
-        dependentDynamicLibraryArg);
-    resolver.addToIndex(dependentDynamicLibrary);
-
-    BuildRule dependentFramework = createAppleBundleBuildRule(
-        BuildTarget.builder("//dep", "framework").build(),
-        resolver,
-        appleBundleDescription,
-        dependentDynamicLibrary,
-        AppleBundleExtension.FRAMEWORK);
-    resolver.addToIndex(dependentFramework);
+    BuildTarget dependentFrameworkTarget = BuildTarget.builder("//dep", "framework").build();
+    TargetNode<?> dependentFrameworkNode = AppleBundleBuilder
+        .createBuilder(dependentFrameworkTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setBinary(dependentDynamicLibraryTarget)
+        .build();
 
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
         .build();
-    BuildRuleParams libraryParams =
-        new FakeBuildRuleParamsBuilder(libraryTarget)
-            .setDeps(ImmutableSortedSet.of(dependentFramework))
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(dependentFrameworkTarget)))
+        .build();
 
-    AppleNativeTargetDescriptionArg libraryArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
-    BuildRule library = appleLibraryDescription.createBuildRule(
-        libraryParams,
-        resolver,
-        libraryArg);
-    resolver.addToIndex(library);
-
-    BuildRule bundle = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "final").build(),
-        resolver,
-        appleBundleDescription,
-        library,
-        AppleBundleExtension.BUNDLE);
-    resolver.addToIndex(bundle);
+    BuildTarget bundleTarget = BuildTarget.builder("//foo", "final").build();
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.BUNDLE))
+        .setBinary(libraryTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(bundle),
-        ImmutableSet.of(bundle.getBuildTarget()));
+        ImmutableSet.of(
+            dependentStaticLibraryNode,
+            dependentDynamicLibraryNode,
+            dependentFrameworkNode,
+            libraryNode,
+            bundleNode),
+        ImmutableSet.of(bundleTarget));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1673,77 +1349,62 @@ public class ProjectGeneratorTest {
 
   @Test
   public void stopsCopyingRecursiveDependenciesAtBundles() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget dependentStaticLibraryTarget = BuildTarget.builder("//dep", "static").build();
+    TargetNode<?> dependentStaticLibraryNode = AppleLibraryBuilder
+        .createBuilder(dependentStaticLibraryTarget)
+        .build();
 
-    BuildRule dependentStaticLibrary = createBuildRuleWithDefaults(
-        BuildTarget.builder("//dep", "static").build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(dependentStaticLibrary);
-
-    BuildRule dependentStaticFramework = createAppleBundleBuildRule(
-        BuildTarget.builder("//dep", "static-framework").build(),
-        resolver,
-        appleBundleDescription,
-        dependentStaticLibrary,
-        AppleBundleExtension.FRAMEWORK);
-    resolver.addToIndex(dependentStaticFramework);
+    BuildTarget dependentStaticFrameworkTarget = BuildTarget
+        .builder("//dep", "static-framework")
+        .build();
+    TargetNode<?> dependentStaticFrameworkNode = AppleBundleBuilder
+        .createBuilder(dependentStaticFrameworkTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setBinary(dependentStaticLibraryTarget)
+        .build();
 
     BuildTarget dependentDynamicLibraryTarget = BuildTarget
         .builder("//dep", "dynamic")
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
         .build();
-    BuildRuleParams dependentDynamicLibraryParams =
-        new FakeBuildRuleParamsBuilder(dependentDynamicLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(dependentStaticFramework))
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg dependentDynamicLibraryArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
-    BuildRule dependentDynamicLibrary = appleLibraryDescription.createBuildRule(
-        dependentDynamicLibraryParams,
-        resolver,
-        dependentDynamicLibraryArg);
-    resolver.addToIndex(dependentDynamicLibrary);
+    TargetNode<?> dependentDynamicLibraryNode = AppleLibraryBuilder
+        .createBuilder(dependentDynamicLibraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(dependentStaticFrameworkTarget)))
+        .build();
 
-    BuildRule dependentFramework = createAppleBundleBuildRule(
-        BuildTarget.builder("//dep", "framework").build(),
-        resolver,
-        appleBundleDescription,
-        dependentDynamicLibrary,
-        AppleBundleExtension.FRAMEWORK);
-    resolver.addToIndex(dependentFramework);
+    BuildTarget dependentFrameworkTarget = BuildTarget.builder("//dep", "framework").build();
+    TargetNode<?> dependentFrameworkNode = AppleBundleBuilder
+        .createBuilder(dependentFrameworkTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setBinary(dependentDynamicLibraryTarget)
+        .build();
 
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
         .build();
-    BuildRuleParams libraryParams =
-        new FakeBuildRuleParamsBuilder(libraryTarget)
-            .setDeps(ImmutableSortedSet.of(dependentFramework))
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(dependentFrameworkTarget)))
+        .build();
 
-    AppleNativeTargetDescriptionArg libraryArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
-    BuildRule library = appleLibraryDescription.createBuildRule(
-        libraryParams,
-        resolver,
-        libraryArg);
-    resolver.addToIndex(library);
-
-    BuildRule bundle = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "final").build(),
-        resolver,
-        appleBundleDescription,
-        library,
-        AppleBundleExtension.BUNDLE);
-    resolver.addToIndex(bundle);
+    BuildTarget bundleTarget = BuildTarget.builder("//foo", "final").build();
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.BUNDLE))
+        .setBinary(libraryTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(bundle),
-        ImmutableSet.of(bundle.getBuildTarget()));
+        // ant needs this to be explicit
+        ImmutableSet.<TargetNode<?>>of(
+            dependentStaticLibraryNode,
+            dependentStaticFrameworkNode,
+            dependentDynamicLibraryNode,
+            dependentFrameworkNode,
+            libraryNode,
+            bundleNode),
+        ImmutableSet.of(bundleTarget));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1757,37 +1418,24 @@ public class ProjectGeneratorTest {
 
   @Test
   public void bundlesDontLinkTheirOwnBinary() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
         .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
         .build();
-    BuildRuleParams libraryParams =
-        new FakeBuildRuleParamsBuilder(libraryTarget)
-            .setDeps(ImmutableSortedSet.<BuildRule>of())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .build();
 
-    AppleNativeTargetDescriptionArg libraryArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
-    BuildRule library = appleLibraryDescription.createBuildRule(
-        libraryParams,
-        resolver,
-        libraryArg);
-    resolver.addToIndex(library);
-
-    BuildRule bundle = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "final").build(),
-        resolver,
-        appleBundleDescription,
-        library,
-        AppleBundleExtension.BUNDLE);
-    resolver.addToIndex(bundle);
+    BuildTarget bundleTarget = BuildTarget.builder("//foo", "final").build();
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.BUNDLE))
+        .setBinary(libraryTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(bundle),
-        ImmutableSet.of(bundle.getBuildTarget()));
+        ImmutableSet.of(libraryNode, bundleNode),
+        ImmutableSet.of(bundleTarget));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1799,107 +1447,81 @@ public class ProjectGeneratorTest {
 
   @Test
   public void resourcesInDependenciesPropagatesToBundles() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget resourceTarget = BuildTarget.builder("//foo", "res").build();
+    TargetNode<?> resourceNode = AppleResourceBuilder
+        .createBuilder(resourceTarget)
+        .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png")))
+        .setDirs(ImmutableSet.of(Paths.get("foodir")))
+        .build();
 
-    BuildRule resourceRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "res").build(),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        appleResourceDescription,
-        new Function<AppleResourceDescription.Arg, AppleResourceDescription.Arg>() {
-          @Override
-          public AppleResourceDescription.Arg apply(AppleResourceDescription.Arg input) {
-            input.files = ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png"));
-            input.dirs = ImmutableSet.of(Paths.get("foodir"));
-            return input;
-          }
-        });
-    resolver.addToIndex(resourceRule);
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .build();
 
-    BuildRule libraryRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "lib").build(),
-        ImmutableSortedSet.of(resourceRule),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(libraryRule);
+    BuildTarget bundleLibraryTarget = BuildTarget.builder("//foo", "bundlelib").build();
+    TargetNode<?> bundleLibraryNode = AppleLibraryBuilder
+        .createBuilder(bundleLibraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .build();
 
-    BuildRule bundleLibraryRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "bundlelib").build(),
-        ImmutableSortedSet.of(libraryRule),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(bundleLibraryRule);
-
-    BuildRule bundleRule = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "bundle").build(),
-        resolver,
-        appleBundleDescription,
-        bundleLibraryRule,
-        AppleBundleExtension.BUNDLE);
-    resolver.addToIndex(bundleRule);
+    BuildTarget bundleTarget = BuildTarget.builder("//foo", "bundle").build();
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.BUNDLE))
+        .setBinary(bundleLibraryTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(resourceRule, libraryRule, bundleRule),
-        ImmutableSet.of(bundleRule.getBuildTarget()));
+        ImmutableSet.of(resourceNode, libraryNode, bundleLibraryNode, bundleNode),
+        ImmutableSet.of(bundleTarget));
     projectGenerator.createXcodeProjects();
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
-    PBXTarget bundleTarget = assertTargetExistsAndReturnTarget(
+    PBXTarget target = assertTargetExistsAndReturnTarget(
         generatedProject,
         "//foo:bundle");
-    assertHasSingletonResourcesPhaseWithEntries(bundleTarget, "foo.png", "foodir");
+    assertHasSingletonResourcesPhaseWithEntries(target, "foo.png", "foodir");
   }
 
   @Test
   public void assetCatalogsInDependenciesPropogatesToBundles() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget assetCatalogTarget = BuildTarget.builder("//foo", "asset_catalog").build();
+    TargetNode<?> assetCatalogNode = AppleAssetCatalogBuilder
+        .createBuilder(assetCatalogTarget)
+        .setDirs(ImmutableSet.of(Paths.get("AssetCatalog.xcassets")))
+        .build();
 
-    BuildRule assetCatalogRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "asset_catalog").build(),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        new AppleAssetCatalogDescription(),
-        new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
-          @Override
-          public AppleAssetCatalogDescription.Arg apply(AppleAssetCatalogDescription.Arg input) {
-            input.dirs = ImmutableSet.of(Paths.get("AssetCatalog.xcassets"));
-            return input;
-          }
-        });
-    resolver.addToIndex(assetCatalogRule);
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(assetCatalogTarget)))
+        .build();
 
-    BuildRule libraryRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "lib").build(),
-        ImmutableSortedSet.of(assetCatalogRule),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(libraryRule);
+    BuildTarget bundleLibraryTarget = BuildTarget.builder("//foo", "bundlelib").build();
+    TargetNode<?> bundleLibraryNode = AppleLibraryBuilder
+        .createBuilder(bundleLibraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .build();
 
-    BuildRule bundleLibraryRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "bundlelib").build(),
-        ImmutableSortedSet.of(libraryRule),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(bundleLibraryRule);
-
-    BuildRule bundleRule = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "bundle").build(),
-        resolver,
-        appleBundleDescription,
-        bundleLibraryRule,
-        AppleBundleExtension.BUNDLE);
-    resolver.addToIndex(bundleRule);
+    BuildTarget bundleTarget = BuildTarget.builder("//foo", "bundle").build();
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.BUNDLE))
+        .setBinary(bundleLibraryTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(assetCatalogRule, libraryRule, bundleRule),
-        ImmutableSet.of(bundleRule.getBuildTarget()));
+        ImmutableSet.of(assetCatalogNode, libraryNode, bundleLibraryNode, bundleNode),
+        ImmutableSet.of(bundleTarget));
     projectGenerator.createXcodeProjects();
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
-    PBXTarget bundleTarget = assertTargetExistsAndReturnTarget(
+    PBXTarget target = assertTargetExistsAndReturnTarget(
         generatedProject,
         "//foo:bundle");
-    assertTrue(hasShellScriptPhaseToCompileAssetCatalogs(bundleTarget));
+    assertTrue(hasShellScriptPhaseToCompileAssetCatalogs(target));
   }
 
   /**
@@ -1909,47 +1531,33 @@ public class ProjectGeneratorTest {
   @Test
   public void generatedProjectConfigurationListIsUnionOfAllTargetConfigurations()
       throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    BuildRule rule1 = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "rule1").build(),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription,
-        new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
-          @Override
-          public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
-            input.configs = Optional.of(
+    BuildTarget buildTarget1 = BuildTarget.builder("//foo", "rule1").build();
+    TargetNode<?> node1 = AppleLibraryBuilder
+        .createBuilder(buildTarget1)
+        .setConfigs(
+            Optional.of(
                 ImmutableSortedMap.of(
                     "Conf1",
                     new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()),
                     "Conf2",
-                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
-            return input;
-          }
-        });
+                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()))))
+        .build();
 
-    BuildRule rule2 = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "rule2").build(),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription,
-        new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
-          @Override
-          public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
-            input.configs = Optional.of(
+    BuildTarget buildTarget2 = BuildTarget.builder("//foo", "rule2").build();
+    TargetNode<?> node2 = AppleLibraryBuilder
+        .createBuilder(buildTarget2)
+        .setConfigs(
+            Optional.of(
                 ImmutableSortedMap.of(
                     "Conf2",
                     new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()),
                     "Conf3",
-                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of())));
-            return input;
-          }
-        });
+                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()))))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule1, rule2),
-        ImmutableSet.of(rule1.getBuildTarget(), rule2.getBuildTarget()));
+        ImmutableSet.of(node1, node2),
+        ImmutableSet.of(buildTarget1, buildTarget2));
     projectGenerator.createXcodeProjects();
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
@@ -1962,29 +1570,23 @@ public class ProjectGeneratorTest {
 
   @Test
   public void shouldEmitFilesForBuildSettingPrefixedFrameworks() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    BuildRule rule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "rule")
-            .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-            .build(),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription,
-        new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
-          @Override
-          public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
-            input.frameworks = Optional.of(
+    BuildTarget buildTarget = BuildTarget
+        .builder("//foo", "rule")
+        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setFrameworks(
+            Optional.of(
                 ImmutableSortedSet.of(
                     "$BUILT_PRODUCTS_DIR/libfoo.a",
                     "$SDKROOT/libfoo.a",
-                    "$SOURCE_ROOT/libfoo.a"));
-            return input;
-          }
-        });
+                    "$SOURCE_ROOT/libfoo.a")))
+        .build();
+
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget));
     projectGenerator.createXcodeProjects();
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
@@ -1999,34 +1601,25 @@ public class ProjectGeneratorTest {
 
   @Test(expected = HumanReadableException.class)
   public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    BuildRule rule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "rule")
-            .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-            .build(),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription,
-        new Function<AppleNativeTargetDescriptionArg, AppleNativeTargetDescriptionArg>() {
-          @Override
-          public AppleNativeTargetDescriptionArg apply(AppleNativeTargetDescriptionArg input) {
-            input.frameworks = Optional.of(ImmutableSortedSet.of("$FOOBAR/libfoo.a"));
-            return input;
-          }
-        }
-    );
+    BuildTarget buildTarget = BuildTarget
+        .builder("//foo", "rule")
+        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setFrameworks(Optional.of(ImmutableSortedSet.of("$FOOBAR/libfoo.a")))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget));
     projectGenerator.createXcodeProjects();
   }
 
   @Test
   public void testGeneratedProjectIsNotReadOnlyIfOptionNotSpecified() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<TargetNode<?>>of(),
         ImmutableSet.<BuildTarget>of());
 
     projectGenerator.createXcodeProjects();
@@ -2037,7 +1630,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testGeneratedProjectIsReadOnlyIfOptionSpecified() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<TargetNode<?>>of(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.of(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES));
 
@@ -2064,21 +1657,15 @@ public class ProjectGeneratorTest {
 
   @Test
   public void targetGidInDescriptionSetsTargetGidInGeneratedProject() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg arg = createDescriptionArgWithDefaults(appleLibraryDescription);
-    arg.gid = Optional.of("D00D64738");
-    BuildRule rule = appleLibraryDescription.createBuildRule(params, resolver, arg);
-    resolver.addToIndex(rule);
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setGid(Optional.of("D00D64738"))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rule),
-        ImmutableSet.of(rule.getBuildTarget()));
-
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -2090,32 +1677,20 @@ public class ProjectGeneratorTest {
 
   @Test
   public void targetGidInDescriptionReservesGidFromUseByAnotherTarget() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget fooTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> fooNode = AppleLibraryBuilder
+        .createBuilder(fooTarget)
+        .setGid(Optional.of("E66DC04E36F2D8BE00000000"))
+        .build();
 
-    BuildRuleParams fooParams =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg fooArg =
-      createDescriptionArgWithDefaults(appleLibraryDescription);
-    fooArg.gid = Optional.of("E66DC04E36F2D8BE00000000");
-    BuildRule fooRule =
-      appleLibraryDescription.createBuildRule(fooParams, resolver, fooArg);
-    resolver.addToIndex(fooRule);
-
-    BuildRuleParams barParams =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//bar", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg barArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
-    BuildRule barRule =
-      appleLibraryDescription.createBuildRule(barParams, resolver, barArg);
-    resolver.addToIndex(barRule);
+    BuildTarget barTarget = BuildTarget.builder("//bar", "lib").build();
+    TargetNode<?> barNode = AppleLibraryBuilder
+        .createBuilder(barTarget)
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(fooRule, barRule),
-        ImmutableSet.of(fooRule.getBuildTarget(), barRule.getBuildTarget()));
+        ImmutableSet.of(fooNode, barNode),
+        ImmutableSet.of(fooTarget, barTarget));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -2134,47 +1709,33 @@ public class ProjectGeneratorTest {
 
   @Test
   public void conflictingHardcodedGidsThrow() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget fooTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> fooNode = AppleLibraryBuilder
+        .createBuilder(fooTarget)
+        .setGid(Optional.of("E66DC04E36F2D8BE00000000"))
+        .build();
 
-    BuildRuleParams fooParams =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg fooArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
-    fooArg.gid = Optional.of("E66DC04E36F2D8BE00000000");
-    BuildRule fooRule =
-        appleLibraryDescription.createBuildRule(fooParams, resolver, fooArg);
-    resolver.addToIndex(fooRule);
-
-    BuildRuleParams barParams =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//bar", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg barArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
-    barArg.gid = Optional.of("E66DC04E36F2D8BE00000000");
-    BuildRule barRule =
-        appleLibraryDescription.createBuildRule(barParams, resolver, barArg);
-    resolver.addToIndex(barRule);
+    BuildTarget barTarget = BuildTarget.builder("//bar", "lib").build();
+    TargetNode<?> barNode = AppleLibraryBuilder
+        .createBuilder(barTarget)
+        .setGid(Optional.of("E66DC04E36F2D8BE00000000"))
+        .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(fooRule, barRule),
-        ImmutableSet.of(fooRule.getBuildTarget(), barRule.getBuildTarget()));
+        ImmutableSet.of(fooNode, barNode),
+        ImmutableSet.of(fooTarget, barTarget));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Targets //bar:lib and //foo:lib have the same hardcoded GID (E66DC04E36F2D8BE00000000)");
+        "Targets //foo:lib and //bar:lib have the same hardcoded GID (E66DC04E36F2D8BE00000000)");
 
     projectGenerator.createXcodeProjects();
   }
 
   @Test
   public void projectIsRewrittenIfContentsHaveChanged() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<TargetNode<?>>of(),
         ImmutableSet.<BuildTarget>of());
 
     clock.setCurrentTimeMillis(49152);
@@ -2183,16 +1744,13 @@ public class ProjectGeneratorTest {
         projectFilesystem.getLastModifiedTime(OUTPUT_PROJECT_FILE_PATH),
         equalTo(49152L));
 
-    BuildRule fooLib = createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "foo").build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(fooLib);
-
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "foo").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .build();
     ProjectGenerator projectGenerator2 = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(fooLib),
-        ImmutableSet.of(fooLib.getBuildTarget()));
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget));
 
     clock.setCurrentTimeMillis(64738);
     projectGenerator2.createXcodeProjects();
@@ -2204,7 +1762,7 @@ public class ProjectGeneratorTest {
   @Test
   public void projectIsNotRewrittenIfContentsHaveNotChanged() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<TargetNode<?>>of(),
         ImmutableSet.<BuildTarget>of());
 
     clock.setCurrentTimeMillis(49152);
@@ -2214,7 +1772,7 @@ public class ProjectGeneratorTest {
         equalTo(49152L));
 
     ProjectGenerator projectGenerator2 = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<TargetNode<?>>of(),
         ImmutableSet.<BuildTarget>of());
 
     clock.setCurrentTimeMillis(64738);
@@ -2225,16 +1783,16 @@ public class ProjectGeneratorTest {
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
-      Iterable<BuildRule> rulesToBuild,
+      Iterable<TargetNode<?>> nodes,
       ImmutableSet<BuildTarget> initialBuildTargets) {
     return createProjectGeneratorForCombinedProject(
-        rulesToBuild,
+        nodes,
         initialBuildTargets,
         ImmutableSet.<ProjectGenerator.Option>of());
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
-      Iterable<BuildRule> rulesToBuild,
+      Iterable<TargetNode<?>> nodes,
       ImmutableSet<BuildTarget> initialBuildTargets,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
     ImmutableSet<ProjectGenerator.Option> options = ImmutableSet.<ProjectGenerator.Option>builder()
@@ -2243,7 +1801,7 @@ public class ProjectGeneratorTest {
         .build();
 
     return new ProjectGenerator(
-        rulesToBuild,
+        TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes)),
         initialBuildTargets,
         projectFilesystem,
         executionContext,

@@ -56,10 +56,12 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
 import com.facebook.buck.rules.coercer.XcodeRuleConfigurationLayer;
 import com.facebook.buck.shell.Genrule;
@@ -228,16 +230,17 @@ public class ProjectGenerator {
   private Map<String, String> gidsToTargetNames;
 
   public ProjectGenerator(
-      Iterable<BuildRule> rulesToBuild,
+      TargetGraph targetGraph,
       Set<BuildTarget> initialTargets,
       ProjectFilesystem projectFilesystem,
       ExecutionContext executionContext,
       Path outputDirectory,
       String projectName,
       Set<Option> options) {
+    ActionGraph actionGraph = targetGraph.getActionGraph(executionContext.getBuckEventBus());
     this.resolver = new SourcePathResolver(
-        new BuildRuleResolver(ImmutableSet.copyOf(rulesToBuild)));
-    this.rulesToBuild = ImmutableSet.copyOf(rulesToBuild);
+        new BuildRuleResolver(ImmutableSet.copyOf(actionGraph.getNodes())));
+    this.rulesToBuild = ImmutableSet.copyOf(actionGraph.getNodes());
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectFilesystem = projectFilesystem;
     this.executionContext = executionContext;

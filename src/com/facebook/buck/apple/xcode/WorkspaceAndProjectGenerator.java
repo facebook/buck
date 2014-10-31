@@ -141,7 +141,7 @@ public class WorkspaceAndProjectGenerator {
       if (generator == null) {
         LOG.debug("Generating project for rule %s", xcodeProjectConfig);
         generator = new ProjectGenerator(
-            projectGraph.getActionGraph(executionContext.getBuckEventBus()).getNodes(),
+            projectGraph,
             initialTargets,
             projectFilesystem,
             executionContext,

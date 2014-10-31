@@ -100,9 +100,8 @@ public class SeparatedProjectsGenerator {
       for (BuildRule memberRule : buildable.getRules()) {
         initialTargetsBuilder.add(memberRule.getBuildTarget());
       }
-      ImmutableSet<BuildRule> buildRules = targetGraph.getActionGraph(buckEventBus).getNodes();
       ProjectGenerator generator = new ProjectGenerator(
-          buildRules,
+          targetGraph,
           initialTargetsBuilder.build(),
           projectFilesystem,
           executionContext,
