@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.CompilationDatabase.GenerateCompilationCommandsJson;
 import com.facebook.buck.apple.CompilationDatabase.JsonSerializableDatabaseEntry;
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
@@ -57,7 +56,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 public class CompilationDatabaseTest {
 
@@ -77,7 +75,6 @@ public class CompilationDatabaseTest {
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         testSourcePathResolver,
         appleConfig,
-        CompilationDatabase.PlatformFlavor.IOS_SIMULATOR_8,
         testTargetSources,
         /* frameworks */ ImmutableSortedSet.<String>of(),
         /* includePaths */ ImmutableSet.<Path>of(),
@@ -108,7 +105,6 @@ public class CompilationDatabaseTest {
         new FakeBuildRuleParamsBuilder(testBuildTarget).build(),
         testSourcePathResolver,
         appleConfig,
-        CompilationDatabase.PlatformFlavor.IOS_SIMULATOR_8,
         targetSources,
         /* frameworks */ ImmutableSortedSet.<String>of(),
         /* includePaths */ ImmutableSet.<Path>of(),
@@ -272,14 +268,19 @@ public class CompilationDatabaseTest {
         Paths.get("/Users/user/src/buck-out/gen/library/lib.hmap"));
     Optional<SourcePath> pchFile = Optional.<SourcePath>of(new PathSourcePath(Paths.get(
         "foo/bar.pch")));
-    appleConfig = new AppleConfig(new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of("apple",
-            ImmutableMap.of("xcode_developer_dir", "/path/to/somewhere"))));
+    ImmutableMap<String, AppleSdkPaths> appleSdkPaths = ImmutableMap.of(
+          "iphonesimulator8.0",
+          (AppleSdkPaths) ImmutableAppleSdkPaths.builder()
+              .toolchainPath(Paths.get("toolchainPath"))
+              .platformDeveloperPath(Paths.get("platformDeveloperPath"))
+              .sdkPath(Paths.get("/path/to/somewhere" +
+                  "/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
+              .build());
+    appleConfig = new FakeAppleConfig().setAppleSdkPaths(appleSdkPaths);
     return new CompilationDatabase(
         new FakeBuildRuleParamsBuilder(testBuildTarget).build(),
         testSourcePathResolver,
         appleConfig,
-        CompilationDatabase.PlatformFlavor.IOS_SIMULATOR_8,
         testTargetSources,
         frameworks,
         includePaths,

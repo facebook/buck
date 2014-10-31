@@ -702,7 +702,7 @@ public class BuckConfig {
   }
 
   @Nullable
-  Path resolvePathThatMayBeOutsideTheProjectFilesystem(@Nullable Path path) {
+  public Path resolvePathThatMayBeOutsideTheProjectFilesystem(@Nullable Path path) {
     if (path == null) {
       return path;
     }

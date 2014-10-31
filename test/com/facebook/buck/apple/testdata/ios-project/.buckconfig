@@ -2,4 +2,4 @@
   ide = xcode
 
 [apple]
-  xcode_developer_dir = /path/to/devloper/dir
+  xcode_developer_dir = xcode-developer-dir

@@ -5,6 +5,7 @@ java_test(
     '//src/com/facebook/buck/apple:rules',
   ],
   deps = [
+    ':testutil',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/apple/clang:headermap',
     '//src/com/facebook/buck/cxx:platform',
@@ -40,6 +41,7 @@ java_library(
     'AppleBinaryBuilder.java',
     'AppleBundleBuilder.java',
     'AppleLibraryBuilder.java',
+    'FakeAppleConfig.java',
     'XcodeProjectConfigBuilder.java',
   ],
   deps = [
@@ -47,9 +49,11 @@ java_library(
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/util:io',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/rules:testutil',
     '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
   visibility = [
     '//test/...',

@@ -22,6 +22,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -45,10 +46,20 @@ public class AppleConfig {
   public Supplier<Path> getAppleDeveloperDirectorySupplier(Console console) {
     Optional<String> xcodeDeveloperDirectory = delegate.getValue("apple", "xcode_developer_dir");
     if (xcodeDeveloperDirectory.isPresent()) {
-      Path developerDirectory = Paths.get(xcodeDeveloperDirectory.get());
+      Path developerDirectory = delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
+          Paths.get(xcodeDeveloperDirectory.get()));
       return Suppliers.ofInstance(developerDirectory);
     } else {
       return createAppleDeveloperDirectorySupplier(console);
+    }
+  }
+
+  public ImmutableMap<String, AppleSdkPaths> getAppleSdkPaths(Console console) {
+    Path appleDeveloperDirectory = getAppleDeveloperDirectorySupplier(console).get();
+    try {
+      return AppleSdkDiscovery.discoverAppleSdkPaths(appleDeveloperDirectory);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 

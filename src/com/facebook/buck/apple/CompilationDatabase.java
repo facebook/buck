@@ -32,16 +32,22 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -50,7 +56,7 @@ import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -62,26 +68,7 @@ public class CompilationDatabase extends AbstractBuildRule {
 
   public static final Flavor COMPILATION_DATABASE = new Flavor("compilation-database");
 
-  // TODO(mbolin): We should read these from the filesystem rather than hardcoding them.
-  static enum PlatformFlavor {
-    IOS("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"),
-    IOS_SIMULATOR_8("Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"),
-    MAC_OS_X("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"),
-    ;
-
-    private final Path sdkPath;
-
-    PlatformFlavor(String sdkPath) {
-      this.sdkPath = Paths.get(sdkPath);
-    }
-
-    Path getSdkPath() {
-      return sdkPath;
-    }
-  }
-
   private final AppleConfig appleConfig;
-  private final PlatformFlavor platformFlavor;
   private final TargetSources targetSources;
   private final Path outputJsonFile;
   private final ImmutableSortedSet<String> frameworks;
@@ -102,14 +89,12 @@ public class CompilationDatabase extends AbstractBuildRule {
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       AppleConfig appleConfig,
-      PlatformFlavor platformFlavor,
       TargetSources targetSources,
       ImmutableSortedSet<String> frameworks,
       ImmutableSet<Path> includePaths,
       Optional<SourcePath> pchFile) {
     super(buildRuleParams, resolver);
     this.appleConfig = appleConfig;
-    this.platformFlavor = platformFlavor;
     this.targetSources = targetSources;
     this.outputJsonFile = BuildTargets.getGenPath(
         buildRuleParams.getBuildTarget(),
@@ -245,15 +230,16 @@ public class CompilationDatabase extends AbstractBuildRule {
         commandArgs.add("-fobjc-arc");
 
         // Result of `xcode-select --print-path`.
-        Path resultOfXcodeSelect = appleConfig.getAppleDeveloperDirectorySupplier(
-            context.getConsole()).get();
+        ImmutableMap<String, AppleSdkPaths> allAppleSdkPaths = appleConfig.getAppleSdkPaths(
+            context.getConsole());
+        AppleSdkPaths appleSdkPaths = selectNewestSimulatorSdk(allAppleSdkPaths);
 
         // TODO(mbolin): Make the sysroot configurable.
         commandArgs.add("-isysroot");
-        Path sysroot = resultOfXcodeSelect.resolve(platformFlavor.sdkPath);
+        Path sysroot = appleSdkPaths.sdkPath();
         commandArgs.add(sysroot.toString());
 
-        String sdkRoot = resultOfXcodeSelect.resolve(platformFlavor.sdkPath).toString();
+        String sdkRoot = appleSdkPaths.sdkPath().toString();
         for (String framework : frameworks) {
           // TODO(mbolin): Other placeholders are possible, but do not appear to be used yet.
           // Specifically, PBXReference.SourceTree#fromBuildSetting() seems to have more
@@ -325,6 +311,34 @@ public class CompilationDatabase extends AbstractBuildRule {
           getPathToOutputFile(),
           getBuildTarget());
     }
+  }
+
+  // TODO(mbolin): This method should go away when the sdkName becomes a flavor.
+  static AppleSdkPaths selectNewestSimulatorSdk(
+      ImmutableMap<String, AppleSdkPaths> allAppleSdkPaths) {
+    final String prefix = "iphonesimulator";
+    List<String> iphoneSimulatorVersions = Lists.newArrayList(FluentIterable
+        .from(allAppleSdkPaths.keySet())
+        .filter(new Predicate<String>() {
+          @Override
+          public boolean apply(String sdkName) {
+            return sdkName.startsWith(prefix);
+          }
+        })
+        .transform(new Function<String, String>() {
+          @Override
+          public String apply(String sdkName) {
+            return sdkName.substring(prefix.length());
+          }
+        })
+        .toSet());
+    if (iphoneSimulatorVersions.isEmpty()) {
+      throw new RuntimeException("No iphonesimulator found in: " + allAppleSdkPaths.keySet());
+    }
+
+    Collections.sort(iphoneSimulatorVersions, new VersionStringComparator());
+    String version = iphoneSimulatorVersions.get(iphoneSimulatorVersions.size() - 1);
+    return Preconditions.checkNotNull(allAppleSdkPaths.get(prefix + version));
   }
 
   @VisibleForTesting

@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.CompilationDatabase.JsonSerializableDatabaseEntry;
-import com.facebook.buck.apple.CompilationDatabase.PlatformFlavor;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -48,7 +47,7 @@ import java.util.Map;
 public class CompilationDatabaseIntegrationTest {
 
   /** This is the value of xcode_developer_dir in the .buckconfig for this test. */
-  private static final Path XCODE_DEVEOPER_DIR = Paths.get("/path/to/devloper/dir");
+  private static final Path XCODE_DEVELOPER_DIR = Paths.get("xcode-developer-dir");
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -208,8 +207,10 @@ public class CompilationDatabaseIntegrationTest {
     JsonSerializableDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
 
-    String sdkRoot = XCODE_DEVEOPER_DIR.resolve(PlatformFlavor.IOS_SIMULATOR_8.getSdkPath())
-        .toString();
+    String sdkRoot = tmp.getRootPath()
+        .resolve(XCODE_DEVELOPER_DIR)
+        .resolve("Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk")
+        .toRealPath().toString();
     List<String> commandArgs = Lists.newArrayList(
         "clang",
         "-x",

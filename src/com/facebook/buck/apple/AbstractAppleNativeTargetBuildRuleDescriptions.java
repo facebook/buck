@@ -197,8 +197,6 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
         compilationDatabaseParams,
         pathResolver,
         appleConfig,
-        // TODO(mbolin): This should be determined via a flavor.
-        CompilationDatabase.PlatformFlavor.IOS_SIMULATOR_8,
         targetSources,
         args.frameworks.get(),
         traversal.includePaths.build(),
