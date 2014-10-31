@@ -27,7 +27,7 @@
         <sourceTestOutputDir name="immutables-test" />
         <processor name="org.immutables.value.internal.processor.Processor" />
         <processorPath useClasspath="false">
-          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-standalone-0.31-SNAPSHOT.jar" />
+          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-standalone-1.0.1.jar" />
         </processorPath>
       </profile>
     </annotationProcessing>
