@@ -29,6 +29,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
@@ -51,7 +52,7 @@ public class WorkspaceAndProjectGenerator {
 
   private final SourcePathResolver resolver;
   private final ProjectFilesystem projectFilesystem;
-  private final ActionGraph projectGraph;
+  private final TargetGraph projectGraph;
   private final ExecutionContext executionContext;
   private final XcodeWorkspaceConfig workspaceBuildable;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
@@ -61,7 +62,7 @@ public class WorkspaceAndProjectGenerator {
   public WorkspaceAndProjectGenerator(
       SourcePathResolver resolver,
       ProjectFilesystem projectFilesystem,
-      ActionGraph projectGraph,
+      TargetGraph projectGraph,
       ExecutionContext executionContext,
       XcodeWorkspaceConfig workspaceBuildable,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
@@ -109,7 +110,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder = ImmutableSet.builder();
 
       getOrderedTestRules(
-          projectGraph,
+          projectGraph.getActionGraph(executionContext.getBuckEventBus()),
           sourceRuleToTestRules,
           orderedBuildRules,
           extraTestBundleRules,
@@ -128,7 +129,7 @@ public class WorkspaceAndProjectGenerator {
         ImmutableMap.builder();
 
     for (XcodeProjectConfig xcodeProjectConfig : Iterables.filter(
-        projectGraph.getNodes(),
+        projectGraph.getActionGraph(executionContext.getBuckEventBus()).getNodes(),
         XcodeProjectConfig.class)) {
       if (Sets.intersection(rulesInRequiredProjects, xcodeProjectConfig.getRules()).isEmpty()) {
         continue;
@@ -145,7 +146,7 @@ public class WorkspaceAndProjectGenerator {
         LOG.debug("Generating project for rule %s", xcodeProjectConfig);
         generator = new ProjectGenerator(
             resolver,
-            projectGraph.getNodes(),
+            projectGraph.getActionGraph(executionContext.getBuckEventBus()).getNodes(),
             initialTargets,
             projectFilesystem,
             executionContext,

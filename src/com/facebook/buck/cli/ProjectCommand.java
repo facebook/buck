@@ -350,7 +350,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
             resolver,
             getProjectFilesystem(),
-            targetGraphs.getProjectGraph().getActionGraph(getBuckEventBus()),
+            targetGraphs.getProjectGraph(),
             executionContext,
             workspaceConfigRule,
             optionsBuilder.build(),
