@@ -41,8 +41,6 @@ import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.HeaderVisibility;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
-import com.facebook.buck.apple.XcodeNative;
-import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcconfig.XcconfigStack;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
@@ -1231,8 +1229,6 @@ public class ProjectGenerator {
               .omitPadding()
               .encode(rule.getFullyQualifiedName().getBytes()),
           "Headers");
-    } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
-      return "$BUILT_PRODUCTS_DIR/Headers";
     } else {
       throw new RuntimeException("Unexpected type: " + rule.getType());
     }
@@ -1249,8 +1245,6 @@ public class ProjectGenerator {
           // $EFFECTIVE_PLATFORM_NAME starts with a dash, so this expands to something like:
           // Debug-iphonesimulator
           "$CONFIGURATION$EFFECTIVE_PLATFORM_NAME");
-    } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
-      return "$BUILT_PRODUCTS_DIR";
     } else {
       throw new RuntimeException("Unexpected type: " + rule.getType());
     }
@@ -1267,8 +1261,7 @@ public class ProjectGenerator {
             AppleBuildRules.getRecursiveRuleDependenciesOfType(
                 AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
                 rule,
-                AppleLibraryDescription.TYPE,
-                XcodeNativeDescription.TYPE))
+                AppleLibraryDescription.TYPE))
         .filter(new Predicate<BuildRule>() {
           @Override
           public boolean apply(BuildRule input) {
@@ -1324,8 +1317,7 @@ public class ProjectGenerator {
             AppleBuildRules.getRecursiveRuleDependenciesOfType(
                 AppleBuildRules.RecursiveRuleDependenciesMode.LINKING,
                 rule,
-                AppleLibraryDescription.TYPE,
-                XcodeNativeDescription.TYPE))
+                AppleLibraryDescription.TYPE))
         .transform(
             new Function<BuildRule, String>() {
               @Override
@@ -1342,8 +1334,7 @@ public class ProjectGenerator {
             AppleBuildRules.getRecursiveRuleDependenciesOfType(
                 AppleBuildRules.RecursiveRuleDependenciesMode.LINKING,
                 rule,
-                AppleLibraryDescription.TYPE,
-                XcodeNativeDescription.TYPE))
+                AppleLibraryDescription.TYPE))
         .transform(
             new Function<BuildRule, String>() {
               @Override
@@ -1375,8 +1366,7 @@ public class ProjectGenerator {
             AppleBuildRules.RecursiveRuleDependenciesMode.LINKING,
             rule,
             AppleLibraryDescription.TYPE,
-            AppleBundleDescription.TYPE,
-            XcodeNativeDescription.TYPE))
+            AppleBundleDescription.TYPE))
         .filter(
             new Predicate<BuildRule>() {
               @Override
@@ -1435,14 +1425,6 @@ public class ProjectGenerator {
             .getOrCreateChildGroupByName("Frameworks")
             .getOrCreateFileReferenceBySourceTreePath(productsPath);
       }
-    } else if (rule.getType().equals(XcodeNativeDescription.TYPE)) {
-      XcodeNative nativeRule = (XcodeNative) rule;
-        return project.getMainGroup()
-            .getOrCreateChildGroupByName("Frameworks")
-            .getOrCreateFileReferenceBySourceTreePath(
-                new SourceTreePath(
-                    PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                    Paths.get(nativeRule.getBuildableName())));
     } else {
       throw new RuntimeException("Unexpected type: " + rule.getType());
     }

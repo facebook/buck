@@ -45,7 +45,6 @@ java_test(
     'NewNativeTargetProjectMutatorTest.java',
     'PathRelativizerTest.java',
     'ProjectGeneratorTest.java',
-    'ProjectParserTest.java',
     'SchemeGeneratorTest.java',
     'SeparatedProjectsGeneratorTest.java',
     'WorkspaceGeneratorTest.java',

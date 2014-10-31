@@ -16,14 +16,10 @@
 
 package com.facebook.buck.apple.xcode;
 
-import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleTest;
-import com.facebook.buck.apple.XcodeNative;
 import com.facebook.buck.apple.XcodeProjectConfig;
 import com.facebook.buck.apple.XcodeWorkspaceConfig;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.log.Logger;
@@ -46,7 +42,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -168,56 +163,6 @@ public class WorkspaceAndProjectGenerator {
       buildTargetToPbxTargetMapBuilder.putAll(generator.getBuildTargetToGeneratedTargetMap());
       for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
         targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
-      }
-    }
-
-    for (XcodeNative buildable : Iterables.filter(
-        projectGraph.getNodes(),
-        XcodeNative.class)) {
-      Path projectPath = resolver.getPath(buildable.getProjectContainerPath());
-      Path pbxprojectPath = projectPath.resolve("project.pbxproj");
-      String targetName = buildable.getTargetName();
-
-      workspaceGenerator.addFilePath(projectPath);
-
-      ImmutableMap.Builder<String, String> targetNameToGIDMapBuilder = ImmutableMap.builder();
-      ImmutableMap.Builder<String, String> targetNameToFileNameBuilder = ImmutableMap.builder();
-      try (InputStream projectInputStream =
-          projectFilesystem.newFileInputStream(pbxprojectPath)) {
-        NSDictionary projectObjects =
-            ProjectParser.extractObjectsFromXcodeProject(projectInputStream);
-        ProjectParser.extractTargetNameToGIDAndFileNameMaps(
-            projectObjects,
-            targetNameToGIDMapBuilder,
-            targetNameToFileNameBuilder);
-        Map<String, String> targetNameToGIDMap = targetNameToGIDMapBuilder.build();
-        String targetGid = targetNameToGIDMap.get(targetName);
-
-        Map<String, String> targetNameToFileNameMap = targetNameToFileNameBuilder.build();
-        String targetFileName = targetNameToFileNameMap.get(targetName);
-
-        if (targetGid == null || targetFileName == null) {
-          LOG.error(
-              "Looked up target %s, could not find GID (%s) or filename (%s)",
-              targetName,
-              targetGid,
-              targetFileName);
-          throw new HumanReadableException(
-              "xcode_native target %s not found in Xcode project %s",
-              targetName,
-              pbxprojectPath);
-        }
-
-        PBXTarget fakeTarget =
-            new PBXNativeTarget(targetName, PBXTarget.ProductType.STATIC_LIBRARY);
-        fakeTarget.setGlobalID(targetGid);
-        PBXFileReference fakeProductReference = new PBXFileReference(
-            targetFileName,
-            targetFileName,
-            PBXFileReference.SourceTree.BUILT_PRODUCTS_DIR);
-        fakeTarget.setProductReference(fakeProductReference);
-        buildTargetToPbxTargetMapBuilder.put(buildable.getBuildTarget(), fakeTarget);
-        targetToProjectPathMapBuilder.put(fakeTarget, projectPath);
       }
     }
 

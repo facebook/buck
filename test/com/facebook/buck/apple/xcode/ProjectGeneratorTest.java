@@ -45,7 +45,6 @@ import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
-import com.facebook.buck.apple.XcodeNativeDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
@@ -126,7 +125,6 @@ public class ProjectGeneratorTest {
   private AppleBundleDescription appleBundleDescription;
   private AppleBinaryDescription appleBinaryDescription;
   private CoreDataModelDescription coreDataModelDescription;
-  private XcodeNativeDescription xcodeNativeDescription;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -145,7 +143,6 @@ public class ProjectGeneratorTest {
     appleBundleDescription = new AppleBundleDescription();
     appleBinaryDescription = new AppleBinaryDescription(appleConfig);
     coreDataModelDescription = new CoreDataModelDescription();
-    xcodeNativeDescription = new XcodeNativeDescription();
 
     // Add support files needed by project generation to fake filesystem.
     projectFilesystem.writeContentsToPath(
@@ -1060,106 +1057,6 @@ public class ProjectGeneratorTest {
     // this test does not have a dependency on any asset catalogs, so verify no build phase for them
     // exists.
     assertFalse(hasShellScriptPhaseToCompileAssetCatalogs(target));
-  }
-
-  @Test
-  public void testAppleBundleRuleGathersXcodeNativeDependencies() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    BuildRule fooRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//external", "extFoo").build(),
-        ImmutableSortedSet.<BuildRule>of(),
-        xcodeNativeDescription,
-        resolver);
-    resolver.addToIndex(fooRule);
-
-    BuildRule barRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//external", "extBar").build(),
-        ImmutableSortedSet.of(fooRule),
-        xcodeNativeDescription,
-        resolver);
-    resolver.addToIndex(barRule);
-
-    BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
-        BuildTarget.builder("//dep", "dynamic").setFlavor(
-            AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
-        ImmutableSortedSet.of(barRule),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(dynamicLibraryDep);
-
-    BuildRule binaryRule = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "foo").build(),
-        resolver,
-        appleBundleDescription,
-        dynamicLibraryDep,
-        AppleBundleExtension.BUNDLE);
-    resolver.addToIndex(binaryRule);
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(fooRule, barRule, binaryRule),
-        ImmutableSet.of(binaryRule.getBuildTarget()));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(),
-        "//foo:foo");
-    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
-        target,
-        ImmutableList.of(
-            "$BUILT_PRODUCTS_DIR/libextFoo.a",
-            "$BUILT_PRODUCTS_DIR/libextBar.a"));
-  }
-
-  @Test
-  public void testAppleBundleRuleUsesCustomXcodeNativeBuildableNames() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    BuildRule fooRule = createBuildRuleWithDefaults(
-        BuildTarget.builder("//external", "extFoo").build(),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        xcodeNativeDescription,
-        new Function<XcodeNativeDescription.Arg,
-            XcodeNativeDescription.Arg>() {
-          @Override
-          public XcodeNativeDescription.Arg apply(
-              XcodeNativeDescription.Arg input) {
-            input.buildableName = Optional.of("librickandmorty.a");
-            return input;
-          }
-        });
-    resolver.addToIndex(fooRule);
-
-    BuildRule dynamicLibraryDep = createBuildRuleWithDefaults(
-        BuildTarget.builder("//dep", "dynamic").setFlavor(
-            AppleLibraryDescription.DYNAMIC_LIBRARY).build(),
-        ImmutableSortedSet.of(fooRule),
-        appleLibraryDescription,
-        resolver);
-    resolver.addToIndex(dynamicLibraryDep);
-
-    BuildRule binaryRule = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "foo").build(),
-        resolver,
-        appleBundleDescription,
-        dynamicLibraryDep,
-        AppleBundleExtension.FRAMEWORK);
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(fooRule, binaryRule),
-        ImmutableSet.of(binaryRule.getBuildTarget()));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(),
-        "//foo:foo");
-    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
-        target,
-        ImmutableList.of(
-            "$BUILT_PRODUCTS_DIR/librickandmorty.a"));
   }
 
   @Test
