@@ -18,8 +18,9 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
+import javax.annotation.Nullable;
 
 /**
  * A class containing inputs to be passed to the native linker.  Dependencies (e.g. C++ libraries)
@@ -39,8 +40,8 @@ public class NativeLinkableInput {
       ImmutableList<SourcePath> inputs,
       ImmutableList<String> args) {
 
-    this.inputs = Preconditions.checkNotNull(inputs);
-    this.args = Preconditions.checkNotNull(args);
+    this.inputs = inputs;
+    this.args = args;
   }
 
   /**
@@ -69,7 +70,7 @@ public class NativeLinkableInput {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
 
     if (this == o) {
       return true;

@@ -31,6 +31,8 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents the graph of {@link com.facebook.buck.rules.TargetNode}s constructed
  * by parsing the build files.
@@ -52,6 +54,7 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
     actionGraphSupplier = createActionGraphSupplier();
   }
 
+  @Nullable
   public TargetNode<?> get(BuildTarget target) {
     return unflavoredNodes.get(target.getUnflavoredTarget());
   }

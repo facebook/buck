@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -54,11 +53,11 @@ public class CxxPreprocessorInput {
       ImmutableMap<Path, SourcePath> includes,
       ImmutableList<Path> includeRoots,
       ImmutableList<Path> systemIncludeRoots) {
-    this.rules = Preconditions.checkNotNull(rules);
-    this.preprocessorFlags = Preconditions.checkNotNull(preprocessorFlags);
-    this.includes = Preconditions.checkNotNull(includes);
-    this.includeRoots = Preconditions.checkNotNull(includeRoots);
-    this.systemIncludeRoots = Preconditions.checkNotNull(systemIncludeRoots);
+    this.rules = rules;
+    this.preprocessorFlags = preprocessorFlags;
+    this.includes = includes;
+    this.includeRoots = includeRoots;
+    this.systemIncludeRoots = systemIncludeRoots;
   }
 
   /**

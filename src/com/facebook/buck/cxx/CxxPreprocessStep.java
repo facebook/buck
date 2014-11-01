@@ -20,7 +20,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -45,12 +44,12 @@ public class CxxPreprocessStep extends ShellStep {
       Path input,
       ImmutableList<Path> includes,
       ImmutableList<Path> systemIncludes) {
-    this.preprocessor = Preconditions.checkNotNull(preprocessor);
-    this.flags = Preconditions.checkNotNull(flags);
-    this.output = Preconditions.checkNotNull(output);
-    this.input = Preconditions.checkNotNull(input);
-    this.includes = Preconditions.checkNotNull(includes);
-    this.systemIncludes = Preconditions.checkNotNull(systemIncludes);
+    this.preprocessor = preprocessor;
+    this.flags = flags;
+    this.output = output;
+    this.input = input;
+    this.includes = includes;
+    this.systemIncludes = systemIncludes;
   }
 
   @Override

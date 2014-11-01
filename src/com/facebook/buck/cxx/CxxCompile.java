@@ -53,11 +53,11 @@ public class CxxCompile extends AbstractBuildRule {
       Path output,
       SourcePath input) {
     super(params, resolver);
-    this.compiler = Preconditions.checkNotNull(compiler);
-    this.flags = Preconditions.checkNotNull(flags);
-    this.plugin = Preconditions.checkNotNull(plugin);
-    this.output = Preconditions.checkNotNull(output);
-    this.input = Preconditions.checkNotNull(input);
+    this.compiler = compiler;
+    this.flags = flags;
+    this.plugin = plugin;
+    this.output = output;
+    this.input = input;
   }
 
   @Override
@@ -136,9 +136,9 @@ public class CxxCompile extends AbstractBuildRule {
     private ImmutableList<String> flags;
 
     public Plugin(String name, Path plugin, ImmutableList<String> flags) {
-      this.name = Preconditions.checkNotNull(name);
-      this.path = Preconditions.checkNotNull(plugin);
-      this.flags = Preconditions.checkNotNull(flags);
+      this.name = name;
+      this.path = plugin;
+      this.flags = flags;
 
       Preconditions.checkState(!name.isEmpty(), "Empty plugin name not allowed.");
       Preconditions.checkState(!flags.isEmpty(), "Empty plugin flags not allowed.");

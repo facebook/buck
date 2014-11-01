@@ -63,11 +63,11 @@ public class CopyNativeLibraries extends AbstractBuildRule {
       ImmutableSet<Path> nativeLibDirectories,
       ImmutableSet<TargetCpuType> cpuFilters) {
     super(buildRuleParams, resolver);
-    this.nativeLibDirectories = Preconditions.checkNotNull(nativeLibDirectories);
+    this.nativeLibDirectories = nativeLibDirectories;
     Preconditions.checkArgument(
         !nativeLibDirectories.isEmpty(),
         "There should be at least one native library to copy.");
-    this.cpuFilters = Preconditions.checkNotNull(cpuFilters);
+    this.cpuFilters = cpuFilters;
   }
 
   public Path getPathToNativeLibsDir() {

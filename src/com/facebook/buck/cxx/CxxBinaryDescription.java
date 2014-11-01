@@ -28,7 +28,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -46,9 +45,9 @@ public class CxxBinaryDescription implements
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
-    this.defaultCxxPlatform = Preconditions.checkNotNull(defaultCxxPlatform);
-    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
+    this.cxxBuckConfig = cxxBuckConfig;
+    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override

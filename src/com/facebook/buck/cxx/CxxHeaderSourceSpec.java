@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
@@ -32,8 +31,8 @@ public class CxxHeaderSourceSpec {
       ImmutableMap<Path, SourcePath> cxxHeaders,
       ImmutableMap<String, CxxSource> cxxSources) {
 
-    this.cxxHeaders = Preconditions.checkNotNull(cxxHeaders);
-    this.cxxSources = Preconditions.checkNotNull(cxxSources);
+    this.cxxHeaders = cxxHeaders;
+    this.cxxSources = cxxSources;
   }
 
   public ImmutableMap<Path, SourcePath> getCxxHeaders() {

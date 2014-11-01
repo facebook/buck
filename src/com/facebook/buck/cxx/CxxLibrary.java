@@ -56,12 +56,12 @@ public class CxxLibrary extends AbstractCxxLibrary {
       boolean linkWhole,
       Optional<String> soname) {
     super(params, pathResolver);
-    this.params = Preconditions.checkNotNull(params);
-    this.ruleResolver = Preconditions.checkNotNull(ruleResolver);
-    this.exportedPreprocessorFlags = Preconditions.checkNotNull(exportedPreprocessorFlags);
-    this.headers = Preconditions.checkNotNull(headers);
+    this.params = params;
+    this.ruleResolver = ruleResolver;
+    this.exportedPreprocessorFlags = exportedPreprocessorFlags;
+    this.headers = headers;
     this.linkWhole = linkWhole;
-    this.soname = Preconditions.checkNotNull(soname);
+    this.soname = soname;
   }
 
   @Override

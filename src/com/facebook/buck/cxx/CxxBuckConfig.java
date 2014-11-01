@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Preconditions;
 
 /**
  * Contains platform independent settings for C/C++ rules.
@@ -28,7 +27,7 @@ public class CxxBuckConfig {
   private final BuckConfig delegate;
 
   public CxxBuckConfig(BuckConfig delegate) {
-    this.delegate = Preconditions.checkNotNull(delegate);
+    this.delegate = delegate;
   }
 
   /**

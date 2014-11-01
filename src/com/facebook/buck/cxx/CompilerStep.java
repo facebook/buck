@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -51,12 +50,12 @@ public class CompilerStep extends ShellStep {
       boolean shouldAddProjectRootToIncludePaths,
       ImmutableSortedSet<Path> includePaths,
       Collection<String> commandLineArgs) {
-    this.compiler = Preconditions.checkNotNull(compiler);
+    this.compiler = compiler;
     this.shouldLink = shouldLink;
-    this.srcs = Preconditions.checkNotNull(srcs);
-    this.outputFile = Preconditions.checkNotNull(outputFile);
+    this.srcs = srcs;
+    this.outputFile = outputFile;
     this.shouldAddProjectRootToIncludePaths = shouldAddProjectRootToIncludePaths;
-    this.includePaths = Preconditions.checkNotNull(includePaths);
+    this.includePaths = includePaths;
     this.commandLineArgs = ImmutableList.copyOf(commandLineArgs);
   }
 

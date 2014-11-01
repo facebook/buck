@@ -140,7 +140,8 @@ public class BuildTargetParser {
     for (String flavor : flavorNames) {
       builder.addFlavor(flavor);
     }
-    Optional<String> canonicalRepoName = localToCanonicalRepoNamesMap.get(givenRepoName);
+    Optional<String> canonicalRepoName = Preconditions.checkNotNull(
+        localToCanonicalRepoNamesMap.get(givenRepoName));
     if (canonicalRepoName.isPresent()) {
       builder.setRepository(canonicalRepoName.get());
     }

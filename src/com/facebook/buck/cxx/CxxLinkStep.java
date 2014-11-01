@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -33,9 +32,9 @@ public class CxxLinkStep extends ShellStep {
       Path linker,
       Path output,
       ImmutableList<String> args) {
-    this.linker = Preconditions.checkNotNull(linker);
-    this.output = Preconditions.checkNotNull(output);
-    this.args = Preconditions.checkNotNull(args);
+    this.linker = linker;
+    this.output = output;
+    this.args = args;
   }
 
   @Override

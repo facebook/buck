@@ -23,7 +23,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -43,9 +42,9 @@ public class CxxTestStep implements Step {
   private final Path output;
 
   public CxxTestStep(ImmutableList<String> command, Path exitCode, Path output) {
-    this.command = Preconditions.checkNotNull(command);
-    this.exitCode = Preconditions.checkNotNull(exitCode);
-    this.output = Preconditions.checkNotNull(output);
+    this.command = command;
+    this.exitCode = exitCode;
+    this.output = output;
   }
 
   @Override

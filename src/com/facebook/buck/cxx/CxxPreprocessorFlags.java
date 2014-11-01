@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -44,8 +43,6 @@ public class CxxPreprocessorFlags {
       Optional<ImmutableList<String>> defaultFlags,
       Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> perLanguageFlags
   ) {
-    Preconditions.checkNotNull(defaultFlags);
-    Preconditions.checkNotNull(perLanguageFlags);
 
     ImmutableMultimap.Builder<CxxSource.Type, String> result = ImmutableMultimap.builder();
     if (defaultFlags.isPresent()) {

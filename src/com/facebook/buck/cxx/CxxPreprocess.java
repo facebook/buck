@@ -25,7 +25,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -57,13 +56,13 @@ public class CxxPreprocess extends AbstractBuildRule {
       ImmutableList<Path> systemIncludeRoots,
       ImmutableMap<Path, SourcePath> includes) {
     super(params, resolver);
-    this.preprocessor = Preconditions.checkNotNull(preprocessor);
-    this.flags = Preconditions.checkNotNull(flags);
-    this.output = Preconditions.checkNotNull(output);
-    this.input = Preconditions.checkNotNull(input);
-    this.includeRoots = Preconditions.checkNotNull(includeRoots);
-    this.systemIncludeRoots = Preconditions.checkNotNull(systemIncludeRoots);
-    this.includes = Preconditions.checkNotNull(includes);
+    this.preprocessor = preprocessor;
+    this.flags = flags;
+    this.output = output;
+    this.input = input;
+    this.includeRoots = includeRoots;
+    this.systemIncludeRoots = systemIncludeRoots;
+    this.includes = includes;
   }
 
   @Override

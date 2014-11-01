@@ -35,7 +35,7 @@ public class PBXFileReference extends PBXReference {
 
     // this is necessary to prevent O(n^2) behavior in xcode project loading
     String fileType = FileTypes.FILE_EXTENSION_TO_UTI.get(Files.getFileExtension(name));
-    if (FileTypes.EXPLICIT_FILE_TYPE_BROKEN_UTIS.contains(fileType)) {
+    if (fileType != null && FileTypes.EXPLICIT_FILE_TYPE_BROKEN_UTIS.contains(fileType)) {
       explicitFileType = Optional.absent();
       lastKnownFileType = Optional.of(fileType);
     } else {

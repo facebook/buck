@@ -354,7 +354,7 @@ public class ThriftLibraryDescription
           ent.getKey(),
           new ThriftSource(
               Preconditions.checkNotNull(compilerRules.get(ent.getKey())),
-              args.srcs.get(ent.getValue()),
+              Preconditions.checkNotNull(args.srcs.get(ent.getValue())),
               getThriftCompilerOutputDir(target, ent.getKey())));
     }
     ImmutableMap<String, ThriftSource> thriftSources = thriftSourceBuilder.build();

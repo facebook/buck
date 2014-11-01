@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -47,7 +46,7 @@ public class CxxSource {
     private final ImmutableSet<String> extensions;
 
     private Type(String language, String... extensions) {
-      this.language = Preconditions.checkNotNull(language);
+      this.language = language;
       this.extensions = ImmutableSet.copyOf(extensions);
     }
 
@@ -74,8 +73,8 @@ public class CxxSource {
   private final SourcePath path;
 
   public CxxSource(Type type, SourcePath path) {
-    this.type = Preconditions.checkNotNull(type);
-    this.path = Preconditions.checkNotNull(path);
+    this.type = type;
+    this.path = path;
   }
 
   public Type getType() {

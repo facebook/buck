@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -28,7 +27,7 @@ public class DarwinLinker implements Linker {
   private final SourcePath path;
 
   public DarwinLinker(SourcePath path) {
-    this.path = Preconditions.checkNotNull(path);
+    this.path = path;
   }
 
   @Override

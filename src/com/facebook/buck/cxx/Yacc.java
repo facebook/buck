@@ -26,7 +26,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -49,10 +48,10 @@ public class Yacc extends AbstractBuildRule {
       Path outputPrefix,
       SourcePath input) {
     super(params, resolver);
-    this.yacc = Preconditions.checkNotNull(yacc);
-    this.flags = Preconditions.checkNotNull(flags);
-    this.outputPrefix = Preconditions.checkNotNull(outputPrefix);
-    this.input = Preconditions.checkNotNull(input);
+    this.yacc = yacc;
+    this.flags = flags;
+    this.outputPrefix = outputPrefix;
+    this.input = input;
   }
 
   public static Path getHeaderOutputPath(Path outputPrefix) {

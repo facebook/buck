@@ -241,7 +241,9 @@ public class MiniAapt implements Step {
       int dotIndex = filename.indexOf('.');
       String resourceName = dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
 
-      resourceCollector.addIntResourceIfNotPresent(RESOURCE_TYPES.get(dirname), resourceName);
+      resourceCollector.addIntResourceIfNotPresent(
+          Preconditions.checkNotNull(RESOURCE_TYPES.get(dirname)),
+          resourceName);
     }
   }
 
@@ -310,7 +312,7 @@ public class MiniAapt implements Step {
               valuesFile);
         }
 
-        RType rType = RESOURCE_TYPES.get(resourceType);
+        RType rType = Preconditions.checkNotNull(RESOURCE_TYPES.get(resourceType));
         addToResourceCollector(node, rType);
       }
     }
@@ -404,7 +406,7 @@ public class MiniAapt implements Step {
         if (!RESOURCE_TYPES.containsKey(rawRType)) {
           throw new ResourceParseException("Invalid reference '%s' in '%s'", resourceName, xmlFile);
         }
-        RType rType = RESOURCE_TYPES.get(rawRType);
+        RType rType = Preconditions.checkNotNull(RESOURCE_TYPES.get(rawRType));
 
 
         references.add(new FakeRDotTxtEntry(IdType.INT, rType, sanitizeName(name)));

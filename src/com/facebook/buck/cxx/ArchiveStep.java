@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -38,9 +37,9 @@ public class ArchiveStep extends ShellStep {
       Path archiver,
       Path output,
       ImmutableList<Path> inputs) {
-    this.archiver = Preconditions.checkNotNull(archiver);
-    this.output = Preconditions.checkNotNull(output);
-    this.inputs = Preconditions.checkNotNull(inputs);
+    this.archiver = archiver;
+    this.output = output;
+    this.inputs = inputs;
   }
 
   @Override

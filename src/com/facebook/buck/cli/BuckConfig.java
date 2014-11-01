@@ -824,7 +824,7 @@ public class BuckConfig {
       return defaultValue;
     }
 
-    String answer = entries.get(propertyName);
+    String answer = Preconditions.checkNotNull(entries.get(propertyName));
     switch (answer.toLowerCase()) {
       case "yes":
       case "true":

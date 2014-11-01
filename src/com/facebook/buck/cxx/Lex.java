@@ -26,7 +26,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -53,11 +52,11 @@ public class Lex extends AbstractBuildRule {
 
     super(params, resolver);
 
-    this.lex = Preconditions.checkNotNull(lex);
-    this.flags = Preconditions.checkNotNull(flags);
-    this.outputSource = Preconditions.checkNotNull(outputSource);
-    this.outputHeader = Preconditions.checkNotNull(outputHeader);
-    this.input = Preconditions.checkNotNull(input);
+    this.lex = lex;
+    this.flags = flags;
+    this.outputSource = outputSource;
+    this.outputHeader = outputHeader;
+    this.input = input;
   }
 
   @Override

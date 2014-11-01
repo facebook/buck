@@ -36,7 +36,6 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -62,9 +61,9 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule {
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest) {
     super(params, resolver);
-    this.labels = Preconditions.checkNotNull(labels);
-    this.contacts = Preconditions.checkNotNull(contacts);
-    this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);
+    this.labels = labels;
+    this.contacts = contacts;
+    this.sourceUnderTest = sourceUnderTest;
   }
 
   @Override

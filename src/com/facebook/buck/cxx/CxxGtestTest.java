@@ -27,7 +27,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -60,7 +59,7 @@ public class CxxGtestTest extends CxxTest {
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest) {
     super(params, resolver, labels, contacts, sourceUnderTest);
-    this.binary = Preconditions.checkNotNull(binary);
+    this.binary = binary;
   }
 
   @Override

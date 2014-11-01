@@ -60,7 +60,7 @@ public class PrebuiltCxxLibraryDescription
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PrebuiltCxxLibraryDescription(FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
+    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override

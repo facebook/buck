@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -38,11 +37,11 @@ public class LexStep extends ShellStep {
       Path outputHeader,
       Path input) {
 
-    this.lex = Preconditions.checkNotNull(lex);
-    this.flags = Preconditions.checkNotNull(flags);
-    this.outputSource = Preconditions.checkNotNull(outputSource);
-    this.outputHeader = Preconditions.checkNotNull(outputHeader);
-    this.input = Preconditions.checkNotNull(input);
+    this.lex = lex;
+    this.flags = flags;
+    this.outputSource = outputSource;
+    this.outputHeader = outputHeader;
+    this.input = input;
   }
 
   @Override

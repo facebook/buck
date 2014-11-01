@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
@@ -41,9 +40,9 @@ public class CxxPythonExtension extends NoopBuildRule implements PythonPackagabl
       SourcePathResolver pathResolver,
       Path module) {
     super(params, pathResolver);
-    this.params = Preconditions.checkNotNull(params);
-    this.ruleResolver = Preconditions.checkNotNull(ruleResolver);
-    this.module = Preconditions.checkNotNull(module);
+    this.params = params;
+    this.ruleResolver = ruleResolver;
+    this.module = module;
   }
 
   @Override

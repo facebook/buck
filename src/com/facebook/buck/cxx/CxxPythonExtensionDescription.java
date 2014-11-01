@@ -65,8 +65,8 @@ public class CxxPythonExtensionDescription implements
   public CxxPythonExtensionDescription(
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
-    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
+    this.cxxBuckConfig = cxxBuckConfig;
+    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override

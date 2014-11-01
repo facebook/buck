@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.util.Console;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class AuditCommandRunner implements CommandRunner {
 
     String auditCmd = args.get(0);
     if (getAuditCommands().containsKey(auditCmd)) {
-      CommandRunner cmd = getAuditCommands().get(auditCmd);
+      CommandRunner cmd = Preconditions.checkNotNull(getAuditCommands().get(auditCmd));
       return cmd.runCommand(buckConfig, args.subList(1, args.size()));
     } else {
       console.printBuildFailure("Unknown audit command: " + auditCmd);

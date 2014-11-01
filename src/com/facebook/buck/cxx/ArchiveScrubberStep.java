@@ -44,7 +44,7 @@ public class ArchiveScrubberStep implements Step {
   private final Path archive;
 
   public ArchiveScrubberStep(Path archive) {
-    this.archive = Preconditions.checkNotNull(archive);
+    this.archive = archive;
   }
 
   private byte[] getBytes(ByteBuffer buffer, int len) {

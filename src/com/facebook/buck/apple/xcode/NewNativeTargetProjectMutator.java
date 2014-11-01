@@ -424,7 +424,8 @@ public class NewNativeTargetProjectMutator {
       }
 
       for (String virtualOutputPath : resource.getVariants().keySet()) {
-        ImmutableMap<String, SourcePath> contents = resource.getVariants().get(virtualOutputPath);
+        ImmutableMap<String, SourcePath> contents =
+            Preconditions.checkNotNull(resource.getVariants().get(virtualOutputPath));
 
         String variantName = Paths.get(virtualOutputPath).getFileName().toString();
         PBXVariantGroup variantGroup =
@@ -436,7 +437,8 @@ public class NewNativeTargetProjectMutator {
         for (String childVirtualName : contents.keySet()) {
           SourceTreePath sourceTreePath = new SourceTreePath(
               PBXReference.SourceTree.SOURCE_ROOT,
-              pathRelativizer.outputPathToSourcePath(contents.get(childVirtualName)));
+              pathRelativizer.outputPathToSourcePath(
+                  Preconditions.checkNotNull(contents.get(childVirtualName))));
 
           variantGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
               childVirtualName,

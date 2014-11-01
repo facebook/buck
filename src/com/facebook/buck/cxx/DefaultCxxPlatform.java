@@ -24,7 +24,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
@@ -79,8 +78,8 @@ public class DefaultCxxPlatform implements CxxPlatform {
   private final BuckConfig delegate;
 
   public DefaultCxxPlatform(Platform platform, BuckConfig delegate) {
-    this.platform = Preconditions.checkNotNull(platform);
-    this.delegate = Preconditions.checkNotNull(delegate);
+    this.platform = platform;
+    this.delegate = delegate;
   }
 
   public DefaultCxxPlatform(BuckConfig delegate) {

@@ -26,7 +26,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -49,9 +48,9 @@ public class Archive extends AbstractBuildRule {
       Path output,
       ImmutableList<SourcePath> inputs) {
     super(params, resolver);
-    this.archiver = Preconditions.checkNotNull(archiver);
-    this.output = Preconditions.checkNotNull(output);
-    this.inputs = Preconditions.checkNotNull(inputs);
+    this.archiver = archiver;
+    this.output = output;
+    this.inputs = inputs;
   }
 
   @Override

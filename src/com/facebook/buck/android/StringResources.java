@@ -170,7 +170,10 @@ public class StringResources {
         outputStream.writeByte(categoryMap.size());
 
         for (Map.Entry<String, String> cat : categoryMap.entrySet()) {
-          outputStream.writeByte(PLURAL_CATEGORY_MAP.get(cat.getKey()).byteValue());
+          outputStream.writeByte(
+              Preconditions.checkNotNull(
+                  PLURAL_CATEGORY_MAP.get(cat.getKey()))
+                  .byteValue());
           byte[] pluralValue = getUnescapedStringBytes(cat.getValue());
           writeShort(outputStream, pluralValue.length);
           dataStream.write(pluralValue);

@@ -391,7 +391,7 @@ public class OCamlBuildRulesGenerator {
 
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
     if (sources.containsKey(mlSource)) {
-      for (SourcePath dep : sources.get(mlSource)) {
+      for (SourcePath dep : Preconditions.checkNotNull(sources.get(mlSource))) {
         generateSingleMLCompilation(sourceToRule, cmxFiles, dep, sources, newCycleDetector);
         deps.add(sourceToRule.get(dep));
       }
@@ -475,7 +475,7 @@ public class OCamlBuildRulesGenerator {
 
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
     if (sources.containsKey(mlSource)) {
-      for (SourcePath dep : sources.get(mlSource)) {
+      for (SourcePath dep : Preconditions.checkNotNull(sources.get(mlSource))) {
         generateSingleMLBytecodeCompilation(
             sourceToRule,
             cmoFiles,

@@ -33,7 +33,6 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -70,8 +69,8 @@ public class CxxLibraryDescription implements
   public CxxLibraryDescription(
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
-    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
+    this.cxxBuckConfig = cxxBuckConfig;
+    this.cxxPlatforms = cxxPlatforms;
   }
 
   private static final Flavor LEX_YACC_SOURCE_FLAVOR = new Flavor("lex_yacc_sources");

@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.util.DirectoryTraverser;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -128,7 +129,8 @@ public class AppleResource extends AbstractBuildRule {
     }
 
     for (String virtualPathName : variants.keySet()) {
-      Map<String, SourcePath> variant = variants.get(virtualPathName);
+      Map<String, SourcePath> variant =
+          Preconditions.checkNotNull(variants.get(virtualPathName));
       inputsToConsiderForCachingPurposes.addAll(
           getResolver().filterInputsToCompareToOutput(variant.values()));
     }

@@ -70,7 +70,7 @@ public class CxxBoostTest extends CxxTest {
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest) {
     super(params, resolver, labels, contacts, sourceUnderTest);
-    this.binary = Preconditions.checkNotNull(binary);
+    this.binary = binary;
   }
 
   @Override

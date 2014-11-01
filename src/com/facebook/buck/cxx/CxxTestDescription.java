@@ -49,9 +49,9 @@ public class CxxTestDescription implements
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.cxxBuckConfig = Preconditions.checkNotNull(cxxBuckConfig);
-    this.defaultCxxPlatform = Preconditions.checkNotNull(defaultCxxPlatform);
-    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
+    this.cxxBuckConfig = cxxBuckConfig;
+    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override

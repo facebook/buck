@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -56,13 +55,13 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
       boolean linkWhole,
       boolean provided) {
     super(params, pathResolver);
-    this.params = Preconditions.checkNotNull(params);
-    this.ruleResolver = Preconditions.checkNotNull(ruleResolver);
-    this.pathResolver = Preconditions.checkNotNull(pathResolver);
-    this.includeDirs = Preconditions.checkNotNull(includeDirs);
-    this.staticLibraryPath = Preconditions.checkNotNull(staticLibraryPath);
-    this.sharedLibraryPath = Preconditions.checkNotNull(sharedLibraryPath);
-    this.soname = Preconditions.checkNotNull(soname);
+    this.params = params;
+    this.ruleResolver = ruleResolver;
+    this.pathResolver = pathResolver;
+    this.includeDirs = includeDirs;
+    this.staticLibraryPath = staticLibraryPath;
+    this.sharedLibraryPath = sharedLibraryPath;
+    this.soname = soname;
     this.headerOnly = headerOnly;
     this.linkWhole = linkWhole;
     this.provided = provided;

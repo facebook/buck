@@ -132,7 +132,7 @@ class SchemeGenerator {
         buildTargetToBuildableReferenceMap = Maps.newHashMap();
 
     for (BuildTarget buildTarget : Iterables.concat(orderedBuildTargets, orderedTestBuildTargets)) {
-      PBXTarget target = buildTargetToPbxTargetMap.get(buildTarget);
+      PBXTarget target = Preconditions.checkNotNull(buildTargetToPbxTargetMap.get(buildTarget));
 
       String blueprintName = target.getProductName();
       if (blueprintName == null) {

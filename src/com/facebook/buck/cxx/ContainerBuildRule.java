@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
@@ -38,7 +37,7 @@ public class ContainerBuildRule<T> extends NoopBuildRule {
 
   private ContainerBuildRule(BuildRuleParams params, SourcePathResolver resolver, T item) {
     super(params, resolver);
-    this.item = Preconditions.checkNotNull(item);
+    this.item = item;
   }
 
   public static <T> ContainerBuildRule<T> of(
