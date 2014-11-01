@@ -221,7 +221,7 @@ public class Build implements Closeable {
   }
 
   /**
-   * If {@code isKeepGoing}, then this returns a future that succeeds only if all of
+   * If {@code isKeepGoing} is false, then this returns a future that succeeds only if all of
    * {@code rulesToBuild} build successfully. Otherwise, this returns a future that should always
    * succeed, even if individual rules fail to build. In that case, a failed build rule is indicated
    * by a {@code null} value in the corresponding position in the iteration order of
