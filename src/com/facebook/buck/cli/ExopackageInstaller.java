@@ -35,10 +35,12 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -49,6 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
@@ -83,6 +86,9 @@ public class ExopackageInstaller {
   private static final int MAX_ADB_COMMAND_SIZE = 1019;
 
   private static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
+
+  @VisibleForTesting
+  static final Pattern DEX_FILE_PATTERN = Pattern.compile("secondary-([0-9a-f]+)\\.[\\w.-]*");
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
@@ -210,12 +216,9 @@ public class ExopackageInstaller {
         }
       }
 
-      final ImmutableMap<String, String> hashToBasename = getRequiredDexFiles();
-      final ImmutableSet<String> requiredHashes = hashToBasename.keySet();
-      final ImmutableSet<String> presentHashes = prepareSecondaryDexDir(requiredHashes);
-      final Set<String> hashesToInstall = Sets.difference(requiredHashes, presentHashes);
-
-      installSecondaryDexFiles(hashesToInstall, hashToBasename);
+      if (exopackageInfo.dexInfo().isPresent()) {
+        installSecondaryDexFiles();
+      }
 
       // TODO(user): Make this work on Gingerbread.
       try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "kill_app")) {
@@ -225,13 +228,44 @@ public class ExopackageInstaller {
       return true;
     }
 
+    private void installSecondaryDexFiles() throws Exception {
+      final ImmutableMap<String, Path> hashToSources = getRequiredDexFiles();
+      final ImmutableSet<String> requiredHashes = hashToSources.keySet();
+      final ImmutableSet<String> presentHashes = prepareSecondaryDexDir(requiredHashes);
+      final Set<String> hashesToInstall = Sets.difference(requiredHashes, presentHashes);
+
+      Map<String, Path> filesToInstallByHash =
+          Maps.filterKeys(hashToSources, Predicates.in(hashesToInstall));
+
+      // This is a bit gross.  It was a late addition.  Ideally, we could eliminate this, but
+      // it wouldn't be terrible if we don't.  We store the dexed jars on the device
+      // with the full SHA-1 hashes in their names.  This is the format that the loader uses
+      // internally, so ideally we would just load them in place.  However, the code currently
+      // expects to be able to copy the jars from a directory that matches the name in the
+      // metadata file, like "secondary-1.dex.jar".  We don't want to give up putting the
+      // hashes in the file names (because we use that to skip re-uploads), so just hack
+      // the metadata file to have hash-like names.
+      String metadataContents = com.google.common.io.Files.toString(
+          exopackageInfo.dexInfo().get().metadata().toFile(),
+          Charsets.UTF_8)
+          .replaceAll(
+              "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ",
+              "secondary-$2.dex.jar $2 ");
+
+      installFiles(
+          "secondary_dex",
+          ImmutableMap.copyOf(filesToInstallByHash),
+          metadataContents,
+          "secondary-%s.dex.jar",
+          SECONDARY_DEX_DIR);
+    }
+
     /**
      * Sets {@link #useNativeAgent} to true on pre-L devices, because our native agent is built
      * without -fPIC.  The java agent works fine on L as long as we don't use it for mkdir.
      */
     private void determineBestAgent() throws Exception {
-      String value = AdbHelper.executeCommandWithErrorChecking(
-          device, "getprop ro.build.version.sdk");
+      String value = getProperty("ro.build.version.sdk");
       try {
         if (Integer.valueOf(value.trim()) > 19) {
           useNativeAgent = false;
@@ -353,43 +387,44 @@ public class ExopackageInstaller {
       }
     }
 
-    private ImmutableMap<String, String> getRequiredDexFiles() throws IOException {
-      ImmutableMap.Builder<String, String> hashToBasenameBuilder = ImmutableMap.builder();
-      for (String line : projectFilesystem.readLines(exopackageInfo.dexInfo().get().metadata())) {
+    private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
+      ExopackageInfo.DexInfo dexInfo = exopackageInfo.dexInfo().get();
+      ImmutableMap.Builder<String, Path> hashToDexFilePaths = ImmutableMap.builder();
+      for (String line : projectFilesystem.readLines(dexInfo.metadata())) {
         List<String> parts = Splitter.on(' ').splitToList(line);
         if (parts.size() < 2) {
           throw new RuntimeException("Illegal line in metadata file: " + line);
         }
-        hashToBasenameBuilder.put(parts.get(1), parts.get(0));
+        hashToDexFilePaths.put(parts.get(1), dexInfo.directory().resolve(parts.get(0)));
       }
-      return hashToBasenameBuilder.build();
+      return hashToDexFilePaths.build();
     }
 
     private ImmutableSet<String> prepareSecondaryDexDir(ImmutableSet<String> requiredHashes)
         throws Exception {
-      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "prepare_dex_dir")) {
-        final ImmutableSet.Builder<String> foundHashes = ImmutableSet.builder();
+      return prepareDirectory("secondary-dex", DEX_FILE_PATTERN, requiredHashes);
+    }
 
-        // Kind of a hack here.  The java agent can't force the proper permissions on the
-        // directories it creates, so we use the command-line "mkdir -p" instead of the java agent.
-        // Fortunately, "mkdir -p" seems to work on all devices where we use use the java agent.
-        String mkdirP = useNativeAgent ? getAgentCommand() + "mkdir-p" : "mkdir -p";
+    private ImmutableSet<String> prepareDirectory(
+        String dirname,
+        Pattern filePattern,
+        ImmutableSet<String> requiredHashes) throws Exception {
+      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "prepare_" + dirname)) {
+        String dirPath = dataRoot.resolve(dirname).toString();
+        mkDirP(dirPath);
 
-      String secondaryDexDir = dataRoot.resolve(SECONDARY_DEX_DIR).toString();
-        AdbHelper.executeCommandWithErrorChecking(
-            device, "umask 022 && " + mkdirP + " " + secondaryDexDir);
-        String output = AdbHelper.executeCommandWithErrorChecking(device, "ls " + secondaryDexDir);
+        String output = AdbHelper.executeCommandWithErrorChecking(device, "ls " + dirPath);
 
-        ImmutableSet.Builder<String> toDeleteBuilder = ImmutableSet.builder();
+        ImmutableSet.Builder<String> foundHashes = ImmutableSet.builder();
+        ImmutableSet.Builder<String> filesToDelete = ImmutableSet.builder();
 
-        scanSecondaryDexDir(output, requiredHashes, foundHashes, toDeleteBuilder);
+        processLsOutput(output, filePattern, requiredHashes, foundHashes, filesToDelete);
 
-        Iterable<String> filesToDelete = toDeleteBuilder.build();
-
-        String commandPrefix = "cd " + secondaryDexDir + " && rm ";
+        String commandPrefix = "cd " + dirPath + " && rm ";
         // Add a fudge factor for separators and error checking.
         final int overhead = commandPrefix.length() + 100;
-        for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
+        for (List<String> rmArgs :
+            chunkArgs(filesToDelete.build(), MAX_ADB_COMMAND_SIZE - overhead)) {
           String command = commandPrefix + Joiner.on(' ').join(rmArgs);
           LOG.debug("Executing %s", command);
           AdbHelper.executeCommandWithErrorChecking(device, command);
@@ -399,55 +434,36 @@ public class ExopackageInstaller {
       }
     }
 
-    private void installSecondaryDexFiles(
-        Set<String> hashesToInstall,
-        ImmutableMap<String, String> hashToBasename)
-        throws Exception {
-
-      try (TraceEventLogger ignored1 = TraceEventLogger.start(
-          eventBus,
-          "install_secondary_dexes")) {
+    private void installFiles(
+        String filesType,
+        ImmutableMap<String, Path> filesToInstallByHash,
+        String metadataFileContents,
+        String filenameFormat,
+        Path destinationDirRelativeToDataRoot) throws Exception {
+      try (TraceEventLogger ignored1 =
+               TraceEventLogger.start(eventBus, "multi_install_" + filesType)) {
         device.createForward(agentPort, agentPort);
         try {
-          for (String hash : hashesToInstall) {
-            String basename = hashToBasename.get(hash);
-            try (TraceEventLogger ignored2 = TraceEventLogger.start(
-                eventBus,
-                "install_secondary_dex",
-                ImmutableMap.of("basename", basename))) {
-              installSecondaryDex(
-                  device,
-                  agentPort,
-                  hash,
-                  exopackageInfo.dexInfo().get().directory().resolve(basename));
+          for (Map.Entry<String, Path> entry : filesToInstallByHash.entrySet()) {
+            Path destination = destinationDirRelativeToDataRoot.resolve(
+                String.format(filenameFormat, entry.getKey()));
+            Path source = entry.getValue();
+
+            try (TraceEventLogger ignored2 =
+                     TraceEventLogger.start(eventBus, "install_" + filesType)) {
+              installFile(device, agentPort, destination, source);
             }
           }
-          try (TraceEventLogger ignored2 = TraceEventLogger.start(
-              eventBus,
-              "install_secondary_dex_metadata")) {
-
-            // This is a bit gross.  It was a late addition.  Ideally, we could eliminate this, but
-            // it wouldn't be terrible if we don't.  We store the dexed jars on the device
-            // with the full SHA-1 hashes in their names.  This is the format that the loader uses
-            // internally, so ideally we would just load them in place.  However, the code currently
-            // expects to be able to copy the jars from a directory that matches the name in the
-            // metadata file, like "secondary-1.dex.jar".  We don't want to give up putting the
-            // hashes in the file names (because we use that to skip re-uploads), so just hack
-            // the metadata file to have hash-like names.
+          try (TraceEventLogger ignored3 =
+                   TraceEventLogger.start(eventBus, "install_" + filesType + "_metadata")) {
             try (NamedTemporaryFile temp = new NamedTemporaryFile("metadata", "tmp")) {
               com.google.common.io.Files.write(
-                  com.google.common.io.Files.toString(
-                      exopackageInfo.dexInfo().get().metadata().toFile(),
-                      Charsets.UTF_8)
-                      .replaceAll(
-                          "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ",
-                          "secondary-$2.dex.jar $2 "),
-                  temp.get().toFile(), Charsets.UTF_8);
-
+                  metadataFileContents.getBytes(Charsets.UTF_8),
+                  temp.get().toFile());
               installFile(
                   device,
                   agentPort,
-                  SECONDARY_DEX_DIR.resolve("metadata.txt"),
+                  destinationDirRelativeToDataRoot.resolve("metadata.txt"),
                   temp.get());
             }
           }
@@ -459,25 +475,12 @@ public class ExopackageInstaller {
             eventBus.post(
                 ConsoleEvent.warning(
                     "Failed to remove adb forward %d. This is not necessarily a problem\n" +
-                    "because it will be recreated during the next exopackage installation.\n" +
-                    "See the log for the full exception.",
+                        "because it will be recreated during the next exopackage installation.\n" +
+                        "See the log for the full exception.",
                     agentPort));
           }
         }
       }
-    }
-
-    private void installSecondaryDex(
-        final IDevice device,
-        final int port,
-        String hash,
-        final Path source)
-        throws Exception {
-      installFile(
-          device,
-          port,
-          SECONDARY_DEX_DIR.resolve("secondary-" + hash + ".dex.jar"),
-          source);
     }
 
     private void installFile(
@@ -550,6 +553,19 @@ public class ExopackageInstaller {
       // there's no easy way to do this in Java.  We can drop this if we drop support for the
       // Java agent.
       AdbHelper.executeCommandWithErrorChecking(device, "chmod 644 " + targetFileName);
+    }
+
+    private String getProperty(String property) throws Exception {
+      return AdbHelper.executeCommandWithErrorChecking(device, "getprop " + property);
+    }
+
+    private void mkDirP(String dirpath) throws Exception {
+      // Kind of a hack here.  The java agent can't force the proper permissions on the
+      // directories it creates, so we use the command-line "mkdir -p" instead of the java agent.
+      // Fortunately, "mkdir -p" seems to work on all devices where we use use the java agent.
+      String mkdirP = useNativeAgent ? getAgentCommand() + "mkdir-p" : "mkdir -p";
+
+      AdbHelper.executeCommandWithErrorChecking(device, "umask 022 && " + mkdirP + " " + dirpath);
     }
   }
 
@@ -631,30 +647,31 @@ public class ExopackageInstaller {
 
   /**
    * @param output  Output of "ls" command.
+   * @param filePattern  A {@link Pattern} that is used to check if a file is valid, and if it
+   *     matches, {@code filePattern.group(1)} should return the hash in the file name.
    * @param requiredHashes  Hashes of dex files required for this apk.
-   * @param foundHashesBuilder  Builder to receive hashes that we need and were found.
-   * @param toDeleteBuilder  Builder to receive files that we need to delete.
+   * @param foundHashes  Builder to receive hashes that we need and were found.
+   * @param toDelete  Builder to receive files that we need to delete.
    */
   @VisibleForTesting
-  static void scanSecondaryDexDir(
+  static void processLsOutput(
       String output,
+      Pattern filePattern,
       ImmutableSet<String> requiredHashes,
-      ImmutableSet.Builder<String> foundHashesBuilder,
-      ImmutableSet.Builder<String> toDeleteBuilder) {
-    Pattern dexFilePattern = Pattern.compile("secondary-([0-9a-f]+)\\.[\\w.-]*");
-
+      ImmutableSet.Builder<String> foundHashes,
+      ImmutableSet.Builder<String> toDelete) {
     for (String line : Splitter.on("\r\n").split(output)) {
       if (line.equals("metadata.txt") || line.startsWith(AgentUtil.TEMP_PREFIX)) {
-        toDeleteBuilder.add(line);
+        toDelete.add(line);
         continue;
       }
 
-      Matcher m = dexFilePattern.matcher(line);
+      Matcher m = filePattern.matcher(line);
       if (m.matches()) {
         if (requiredHashes.contains(m.group(1))) {
-          foundHashesBuilder.add(m.group(1));
+          foundHashes.add(m.group(1));
         } else {
-          toDeleteBuilder.add(line);
+          toDelete.add(line);
         }
       }
     }

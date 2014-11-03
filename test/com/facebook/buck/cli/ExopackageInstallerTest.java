@@ -44,8 +44,9 @@ public class ExopackageInstallerTest {
     ImmutableSet.Builder<String> foundHashesBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<String> toDeleteBuilder = ImmutableSet.builder();
 
-    ExopackageInstaller.scanSecondaryDexDir(
+    ExopackageInstaller.processLsOutput(
         output,
+        ExopackageInstaller.DEX_FILE_PATTERN,
         requiredHashes,
         foundHashesBuilder,
         toDeleteBuilder);
