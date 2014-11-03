@@ -92,10 +92,6 @@ public final class AppleBuildRules {
 
   public enum RecursiveRuleDependenciesMode {
     /**
-     * Will always traverse dependencies.
-     */
-    COMPLETE,
-    /**
      * Will traverse all rules that are built.
      */
     BUILDING,
@@ -125,8 +121,7 @@ public final class AppleBuildRules {
           protected Iterator<BuildRule> findChildren(BuildRule node) throws IOException {
             ImmutableSortedSet<BuildRule> defaultDeps = node.getDeps();
 
-            if (node.getType().equals(AppleBundleDescription.TYPE) &&
-                mode != RecursiveRuleDependenciesMode.COMPLETE) {
+            if (node.getType().equals(AppleBundleDescription.TYPE)) {
               AppleBundle bundle = (AppleBundle) node;
 
               ImmutableSortedSet.Builder<BuildRule> editedDeps = ImmutableSortedSet.naturalOrder();
@@ -141,7 +136,7 @@ public final class AppleBuildRules {
               defaultDeps = editedDeps.build();
             }
 
-            ImmutableSortedSet<BuildRule> deps;
+            ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
 
             if (node != rule) {
               switch (mode) {
@@ -166,13 +161,11 @@ public final class AppleBuildRules {
                     deps = defaultDeps;
                   }
                   break;
-                //$CASES-OMITTED$
-              default:
-                  deps = defaultDeps;
-                  break;
+                case BUILDING:
+                  return defaultDeps.iterator();
               }
             } else {
-              deps = defaultDeps;
+              return defaultDeps.iterator();
             }
 
             return deps.iterator();
