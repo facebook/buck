@@ -63,7 +63,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -299,18 +298,12 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       optionsBuilder.add(ProjectGenerator.Option.INCLUDE_TESTS);
     }
 
-    if (options.getCombinedProject()) {
-      // Generate a single project containing a target and all its dependencies and tests.
-      ProjectGenerator projectGenerator = new ProjectGenerator(
-          targetGraphs.getProjectGraph(),
-          passedInTargetsSet,
-          getProjectFilesystem(),
-          executionContext,
-          getProjectFilesystem().getPathForRelativePath(Paths.get("_gen")),
-          "GeneratedProject",
-          optionsBuilder.addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS).build());
-      projectGenerator.createXcodeProjects();
-    } else if (options.getWorkspaceAndProjects()) {
+    if (options.getCombinedProject() || options.getWorkspaceAndProjects()) {
+      boolean combinedProject = options.getCombinedProject();
+      if (combinedProject && passedInTargetsSet.size() != 1) {
+        throw new HumanReadableException(
+            "Combined project can only be generated for one target at a time");
+      }
       ImmutableSet<BuildTarget> targets;
       if (passedInTargetsSet.isEmpty()) {
         targets = getAllTargetsOfType(
@@ -318,6 +311,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             XcodeWorkspaceConfigDescription.TYPE);
       } else {
         targets = passedInTargetsSet;
+      }
+      if (!combinedProject) {
+        optionsBuilder.addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
       }
       LOG.debug("Generating workspace for config targets %s", targets);
       Map<BuildRule, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -349,7 +345,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             workspaceConfigRule,
             optionsBuilder.build(),
             AppleBuildRules.getSourceRuleToTestRulesMap(testBuildRules),
-            workspaceConfigRule.getExtraTests());
+            workspaceConfigRule.getExtraTests(),
+            combinedProject);
         generator.generateWorkspaceAndDependentProjects(projectGenerators);
       }
     } else {

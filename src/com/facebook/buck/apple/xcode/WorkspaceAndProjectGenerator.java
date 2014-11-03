@@ -32,6 +32,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
@@ -43,6 +44,7 @@ import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,6 +58,8 @@ public class WorkspaceAndProjectGenerator {
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
   private final ImmutableMultimap<BuildRule, AppleTest> sourceRuleToTestRules;
   private final ImmutableSet<BuildRule> extraTestBundleRules;
+  private final boolean combinedProject;
+  private Optional<ProjectGenerator> combinedProjectGenerator;
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
@@ -64,17 +68,22 @@ public class WorkspaceAndProjectGenerator {
       XcodeWorkspaceConfig workspaceBuildable,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       Multimap<BuildRule, AppleTest> sourceRuleToTestRules,
-      Iterable<BuildRule> extraTestBundleRules) {
+      Iterable<BuildRule> extraTestBundleRules,
+      boolean combinedProject) {
     this.projectFilesystem = projectFilesystem;
     this.projectGraph = projectGraph;
     this.executionContext = executionContext;
     this.workspaceBuildable = workspaceBuildable;
-    this.projectGeneratorOptions = ImmutableSet.<ProjectGenerator.Option>builder()
-      .addAll(projectGeneratorOptions)
-      .addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS)
-      .build();
+    this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
     this.sourceRuleToTestRules = ImmutableMultimap.copyOf(sourceRuleToTestRules);
     this.extraTestBundleRules = ImmutableSet.copyOf(extraTestBundleRules);
+    this.combinedProject = combinedProject;
+    this.combinedProjectGenerator = Optional.absent();
+  }
+
+  @VisibleForTesting
+  Optional<ProjectGenerator> getCombinedProjectGenerator() {
+    return combinedProjectGenerator;
   }
 
   public Path generateWorkspaceAndDependentProjects(
@@ -82,9 +91,16 @@ public class WorkspaceAndProjectGenerator {
       throws IOException {
     LOG.debug("Generating workspace for rule %s", workspaceBuildable);
 
-    String workspaceName = workspaceBuildable.getWorkspaceName();
+    String workspaceName;
+    Path outputDirectory;
 
-    Path outputDirectory = workspaceBuildable.getBuildTarget().getBasePath();
+    if (combinedProject) {
+      workspaceName = "GeneratedProject";
+      outputDirectory = Paths.get("_gen");
+    } else {
+      workspaceName = workspaceBuildable.getWorkspaceName();
+      outputDirectory = workspaceBuildable.getBuildTarget().getBasePath();
+    }
 
     WorkspaceGenerator workspaceGenerator = new WorkspaceGenerator(
         projectFilesystem,
@@ -124,41 +140,75 @@ public class WorkspaceAndProjectGenerator {
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
         ImmutableMap.builder();
 
-    for (XcodeProjectConfig xcodeProjectConfig : Iterables.filter(
-        projectGraph.getActionGraph(executionContext.getBuckEventBus()).getNodes(),
-        XcodeProjectConfig.class)) {
-      if (Sets.intersection(rulesInRequiredProjects, xcodeProjectConfig.getRules()).isEmpty()) {
-        continue;
-      }
-
+    if (combinedProject) {
       ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
-      for (BuildRule memberRule : xcodeProjectConfig.getRules()) {
-        initialTargetsBuilder.add(memberRule.getBuildTarget());
+      for (XcodeProjectConfig xcodeProjectConfig : Iterables.filter(
+          projectGraph.getActionGraph(executionContext.getBuckEventBus()).getNodes(),
+          XcodeProjectConfig.class)) {
+        if (Sets.intersection(rulesInRequiredProjects, xcodeProjectConfig.getRules()).isEmpty()) {
+          continue;
+        }
+        initialTargetsBuilder.addAll(
+            Iterables.transform(
+                xcodeProjectConfig.getRules(),
+                HasBuildTarget.TO_TARGET));
       }
-      Set<BuildTarget> initialTargets = initialTargetsBuilder.build();
 
-      ProjectGenerator generator = projectGenerators.get(xcodeProjectConfig);
-      if (generator == null) {
-        LOG.debug("Generating project for rule %s", xcodeProjectConfig);
-        generator = new ProjectGenerator(
-            projectGraph,
-            initialTargets,
-            projectFilesystem,
-            executionContext,
-            xcodeProjectConfig.getBuildTarget().getBasePath(),
-            xcodeProjectConfig.getProjectName(),
-            projectGeneratorOptions);
-        generator.createXcodeProjects();
-        projectGenerators.put(xcodeProjectConfig, generator);
-      } else {
-        LOG.debug("Already generated project for rule %s, skipping", xcodeProjectConfig);
-      }
+      LOG.debug("Generating a combined project");
+      ProjectGenerator generator = new ProjectGenerator(
+          projectGraph,
+          initialTargetsBuilder.build(),
+          projectFilesystem,
+          executionContext,
+          outputDirectory,
+          "GeneratedProject",
+          projectGeneratorOptions);
+      combinedProjectGenerator = Optional.of(generator);
+      generator.createXcodeProjects();
 
       workspaceGenerator.addFilePath(generator.getProjectPath());
 
       buildTargetToPbxTargetMapBuilder.putAll(generator.getBuildTargetToGeneratedTargetMap());
       for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
         targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
+      }
+    } else {
+      for (XcodeProjectConfig xcodeProjectConfig : Iterables.filter(
+          projectGraph.getActionGraph(executionContext.getBuckEventBus()).getNodes(),
+          XcodeProjectConfig.class)) {
+        if (Sets.intersection(rulesInRequiredProjects, xcodeProjectConfig.getRules()).isEmpty()) {
+          continue;
+        }
+
+        ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
+        for (BuildRule memberRule : xcodeProjectConfig.getRules()) {
+          initialTargetsBuilder.add(memberRule.getBuildTarget());
+        }
+        Set<BuildTarget> initialTargets = initialTargetsBuilder.build();
+
+        ProjectGenerator generator = projectGenerators.get(xcodeProjectConfig);
+        if (generator == null) {
+          LOG.debug("Generating project for rule %s", xcodeProjectConfig);
+          generator = new ProjectGenerator(
+              projectGraph,
+              initialTargets,
+              projectFilesystem,
+              executionContext,
+              xcodeProjectConfig.getBuildTarget().getBasePath(),
+              xcodeProjectConfig.getProjectName(),
+              projectGeneratorOptions);
+          generator.createXcodeProjects();
+          projectGenerators.put(xcodeProjectConfig, generator);
+        } else {
+          LOG.debug("Already generated project for rule %s, skipping", xcodeProjectConfig);
+        }
+
+        workspaceGenerator.addFilePath(generator.getProjectPath());
+
+        buildTargetToPbxTargetMapBuilder.putAll(generator.getBuildTargetToGeneratedTargetMap());
+        for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
+          targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
+        }
       }
     }
 

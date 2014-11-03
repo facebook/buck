@@ -48,6 +48,7 @@ java_test(
     'SchemeGeneratorTest.java',
     'SeparatedProjectsGeneratorTest.java',
     'WorkspaceGeneratorTest.java',
+    'WorkspaceAndProjectGeneratorTest.java',
   ],
   source_under_test = ['//src/com/facebook/buck/apple/xcode:project_generator'],
   deps = [

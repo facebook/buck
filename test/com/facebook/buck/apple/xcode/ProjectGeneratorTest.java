@@ -1207,7 +1207,8 @@ public class ProjectGeneratorTest {
             fooBinTestLibNode,
             fooBinTestBundleNode,
             fooBinTestNode),
-        ImmutableSet.of(fooBinTarget));
+        ImmutableSet.of(fooBinTarget),
+        ImmutableSet.of(ProjectGenerator.Option.GENERATE_TARGETS_FOR_DEPENDENCIES));
     projectGenerator.createXcodeProjects();
 
     assertTargetExistsAndReturnTarget(
@@ -1816,7 +1817,7 @@ public class ProjectGeneratorTest {
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
     ImmutableSet<ProjectGenerator.Option> options = ImmutableSet.<ProjectGenerator.Option>builder()
         .addAll(projectGeneratorOptions)
-        .addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS)
+        .add(ProjectGenerator.Option.GENERATE_WORKSPACE)
         .build();
 
     return new ProjectGenerator(

@@ -168,12 +168,8 @@ public class ProjectGenerator {
   }
 
   /**
-   * Standard options for generating a combined project
+   * Standard options for generating a separated project
    */
-  public static final ImmutableSet<Option> COMBINED_PROJECT_OPTIONS = ImmutableSet.of(
-      Option.GENERATE_TARGETS_FOR_DEPENDENCIES,
-      Option.GENERATE_WORKSPACE);
-
   public static final ImmutableSet<Option> SEPARATED_PROJECT_OPTIONS = ImmutableSet.of(
       Option.REFERENCE_EXISTING_XCCONFIGS,
       Option.USE_SHORT_NAMES_FOR_TARGETS);
