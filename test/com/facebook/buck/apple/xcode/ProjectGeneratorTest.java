@@ -22,7 +22,6 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.xml.HasXPath.hasXPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -86,7 +85,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.w3c.dom.Document;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -141,31 +139,10 @@ public class ProjectGeneratorTest {
         ImmutableSet.<TargetNode<?>>of(),
         ImmutableSet.<BuildTarget>of());
 
-    Path outputWorkspaceBundlePath = OUTPUT_DIRECTORY.resolve(PROJECT_NAME + ".xcworkspace");
-    Path outputWorkspaceFilePath = outputWorkspaceBundlePath.resolve("contents.xcworkspacedata");
-
     projectGenerator.createXcodeProjects();
 
     Optional<String> pbxproj = projectFilesystem.readFileIfItExists(OUTPUT_PROJECT_FILE_PATH);
     assertTrue(pbxproj.isPresent());
-
-    Optional<String> xcworkspacedata =
-        projectFilesystem.readFileIfItExists(outputWorkspaceFilePath);
-    assertTrue(xcworkspacedata.isPresent());
-  }
-
-  @Test
-  public void testWorkspaceGeneration() throws IOException {
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(),
-        ImmutableSet.<BuildTarget>of());
-    projectGenerator.createXcodeProjects();
-
-    Document workspace = projectGenerator.getGeneratedWorkspace();
-    assertThat(workspace, hasXPath("/Workspace[@version = \"1.0\"]"));
-    assertThat(
-        workspace,
-        hasXPath("/Workspace/FileRef/@location", equalTo("container:" + PROJECT_CONTAINER)));
   }
 
   @Test
@@ -1664,11 +1641,6 @@ public class ProjectGeneratorTest {
       Iterable<TargetNode<?>> nodes,
       ImmutableSet<BuildTarget> initialBuildTargets,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
-    ImmutableSet<ProjectGenerator.Option> options = ImmutableSet.<ProjectGenerator.Option>builder()
-        .addAll(projectGeneratorOptions)
-        .add(ProjectGenerator.Option.GENERATE_WORKSPACE)
-        .build();
-
     return new ProjectGenerator(
         TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes)),
         initialBuildTargets,
@@ -1676,7 +1648,7 @@ public class ProjectGeneratorTest {
         executionContext,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
-        options);
+        projectGeneratorOptions);
   }
 
   private String assertFileRefIsRelativeAndResolvePath(PBXReference fileRef) {

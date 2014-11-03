@@ -93,12 +93,7 @@ import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitResult;
@@ -116,17 +111,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
 /**
  * Generator for xcode project and associated files from a set of xcode/ios rules.
  */
@@ -134,11 +118,6 @@ public class ProjectGenerator {
   private static final Logger LOG = Logger.get(ProjectGenerator.class);
 
   public enum Option {
-    /**
-     * Generate a workspace
-     */
-    GENERATE_WORKSPACE,
-
     /**
      * Attempt to generate projects with configurations in the standard xcode configuration layout.
      *
@@ -203,8 +182,6 @@ public class ProjectGenerator {
   // These fields are created/filled when creating the projects.
   private final PBXProject project;
   private final LoadingCache<BuildRule, Optional<PBXTarget>> buildRuleToXcodeTarget;
-  @Nullable
-  private Document workspace = null;
   private boolean shouldPlaceAssetCatalogCompiler = false;
   private final ImmutableMap.Builder<BuildRule, PBXTarget> buildRuleToGeneratedTargetBuilder;
   private boolean projectGenerated;
@@ -280,12 +257,6 @@ public class ProjectGenerator {
     return headerMaps;
   }
 
-  @Nullable
-  @VisibleForTesting
-  Document getGeneratedWorkspace() {
-    return workspace;
-  }
-
   public Path getProjectPath() {
     return projectPath;
   }
@@ -331,10 +302,6 @@ public class ProjectGenerator {
       }
 
       writeProjectFile(project);
-
-      if (options.contains(Option.GENERATE_WORKSPACE)) {
-        writeWorkspace(projectPath);
-      }
 
       if (shouldPlaceAssetCatalogCompiler) {
         Path placedAssetCatalogCompilerPath = projectFilesystem.getPathForRelativePath(
@@ -1076,61 +1043,6 @@ public class ProjectGenerator {
       LOG.debug("Not regenerating project at %s (contents have not changed)", serializedProject);
     }
     return xcodeprojDir;
-  }
-
-  /**
-   * Create the workspace bundle structure and write the workspace file.
-   *
-   * Updates {@link #workspace} with the written document for examination.
-   */
-  private void writeWorkspace(Path xcodeprojDir) throws IOException {
-    DocumentBuilder docBuilder;
-    Transformer transformer;
-    try {
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-      transformer = TransformerFactory.newInstance().newTransformer();
-    } catch (ParserConfigurationException | TransformerConfigurationException e) {
-      throw new RuntimeException(e);
-    }
-
-    DOMImplementation domImplementation = docBuilder.getDOMImplementation();
-    Document doc = domImplementation.createDocument(null, "Workspace", null);
-    doc.setXmlVersion("1.0");
-
-    Element rootElem = doc.getDocumentElement();
-    rootElem.setAttribute("version", "1.0");
-    Element fileRef = doc.createElement("FileRef");
-    fileRef.setAttribute("location", "container:" + xcodeprojDir.getFileName().toString());
-    rootElem.appendChild(fileRef);
-
-    workspace = doc;
-
-    Path projectWorkspaceDir = xcodeprojDir.getParent().resolve(projectName + ".xcworkspace");
-    projectFilesystem.mkdirs(projectWorkspaceDir);
-    Path serializedWorkspace = projectWorkspaceDir.resolve("contents.xcworkspacedata");
-    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-      DOMSource source = new DOMSource(doc);
-      StreamResult result = new StreamResult(outputStream);
-      transformer.transform(source, result);
-      String contentsToWrite = outputStream.toString();
-      if (MorePaths.fileContentsDiffer(
-          new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),
-          serializedWorkspace,
-          projectFilesystem)) {
-        if (shouldGenerateReadOnlyFiles()) {
-          projectFilesystem.writeContentsToPath(
-              contentsToWrite,
-              serializedWorkspace,
-              READ_ONLY_FILE_ATTRIBUTE);
-        } else {
-          projectFilesystem.writeContentsToPath(
-              contentsToWrite,
-              serializedWorkspace);
-        }
-      }
-    } catch (TransformerException e) {
-      throw new RuntimeException(e);
-    }
   }
 
   private String serializeBuildConfiguration(
