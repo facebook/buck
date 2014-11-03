@@ -106,6 +106,7 @@ public class ProjectGeneratorTest {
       OUTPUT_DIRECTORY.resolve(PROJECT_CONTAINER);
   private static final Path OUTPUT_PROJECT_FILE_PATH =
       OUTPUT_PROJECT_BUNDLE_PATH.resolve("project.pbxproj");
+  private static final Path EMPTY_XCCONFIG_PATH = Paths.get("Empty.xcconfig");
 
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
@@ -129,6 +130,9 @@ public class ProjectGeneratorTest {
     projectFilesystem.writeContentsToPath(
         "",
         Paths.get(ProjectGenerator.PATH_TO_ASSET_CATALOG_COMPILER));
+    projectFilesystem.writeContentsToPath(
+        "",
+        EMPTY_XCCONFIG_PATH);
   }
 
   @Test
@@ -324,6 +328,11 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleLibraryRule() throws IOException {
+    SourcePath confFile = new PathSourcePath(EMPTY_XCCONFIG_PATH);
+    ImmutableList<XcodeRuleConfigurationLayer> confFiles = ImmutableList.of(
+        new XcodeRuleConfigurationLayer(confFile),
+        new XcodeRuleConfigurationLayer(confFile));
+
     BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
@@ -331,7 +340,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedMap.of(
                     "Debug",
-                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()))))
+                    new XcodeRuleConfiguration(confFiles))))
         .setSrcs(
             Optional.of(
                 ImmutableList.of(
@@ -832,6 +841,11 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBinaryRule() throws IOException {
+    SourcePath confFile = new PathSourcePath(EMPTY_XCCONFIG_PATH);
+    ImmutableList<XcodeRuleConfigurationLayer> confFiles = ImmutableList.of(
+        new XcodeRuleConfigurationLayer(confFile),
+        new XcodeRuleConfigurationLayer(confFile));
+
     BuildTarget depTarget = BuildTarget.builder("//dep", "dep").build();
     TargetNode<?> depNode = AppleLibraryBuilder
         .createBuilder(depTarget)
@@ -844,7 +858,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedMap.of(
                     "Debug",
-                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()))))
+                    new XcodeRuleConfiguration(confFiles))))
         .setSrcs(
             Optional.of(
                 ImmutableList.of(
@@ -1531,6 +1545,11 @@ public class ProjectGeneratorTest {
   @Test
   public void generatedProjectConfigurationListIsUnionOfAllTargetConfigurations()
       throws IOException {
+    SourcePath confFile = new PathSourcePath(EMPTY_XCCONFIG_PATH);
+    ImmutableList<XcodeRuleConfigurationLayer> confFiles = ImmutableList.of(
+        new XcodeRuleConfigurationLayer(confFile),
+        new XcodeRuleConfigurationLayer(confFile));
+
     BuildTarget buildTarget1 = BuildTarget.builder("//foo", "rule1").build();
     TargetNode<?> node1 = AppleLibraryBuilder
         .createBuilder(buildTarget1)
@@ -1538,9 +1557,9 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedMap.of(
                     "Conf1",
-                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()),
+                    new XcodeRuleConfiguration(confFiles),
                     "Conf2",
-                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()))))
+                    new XcodeRuleConfiguration(confFiles))))
         .build();
 
     BuildTarget buildTarget2 = BuildTarget.builder("//foo", "rule2").build();
@@ -1550,9 +1569,9 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedMap.of(
                     "Conf2",
-                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()),
+                    new XcodeRuleConfiguration(confFiles),
                     "Conf3",
-                    new XcodeRuleConfiguration(ImmutableList.<XcodeRuleConfigurationLayer>of()))))
+                    new XcodeRuleConfiguration(confFiles))))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(

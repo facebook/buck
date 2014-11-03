@@ -696,30 +696,31 @@ public class ProjectGenerator {
     PBXGroup configurationsGroup = targetGroup.getOrCreateChildGroupByName("Configurations");
 
     for (Map.Entry<String, XcodeRuleConfiguration> configurationEntry : configurations.entrySet()) {
+      ConfigInXcodeLayout layers =
+          extractXcodeConfigurationLayers(buildTarget, configurationEntry.getValue());
+      xcodeConfigurationLayersMultimapBuilder.put(configurationEntry.getKey(), layers);
+
+      XCBuildConfiguration outputConfiguration = target
+          .getBuildConfigurationList()
+          .getBuildConfigurationsByName()
+          .getUnchecked(configurationEntry.getKey());
+
+      HashMap<String, String> combinedOverrideConfigs = Maps.newHashMap(overrideBuildSettings);
+      for (Map.Entry<String, String> entry: defaultBuildSettings.entrySet()) {
+        String existingSetting = layers.targetLevelInlineSettings.get(entry.getKey());
+        if (existingSetting == null) {
+          combinedOverrideConfigs.put(entry.getKey(), entry.getValue());
+        }
+      }
+
+      for (Map.Entry<String, String> entry : appendBuildSettings.entrySet()) {
+        String existingSetting = layers.targetLevelInlineSettings.get(entry.getKey());
+        String settingPrefix = existingSetting != null ? existingSetting : "$(inherited)";
+        combinedOverrideConfigs.put(entry.getKey(), settingPrefix + " " + entry.getValue());
+      }
+
       if (options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
-        ConfigInXcodeLayout layers =
-            extractXcodeConfigurationLayers(buildTarget, configurationEntry.getValue());
-        xcodeConfigurationLayersMultimapBuilder.put(configurationEntry.getKey(), layers);
-
-        XCBuildConfiguration outputConfiguration = target
-            .getBuildConfigurationList()
-            .getBuildConfigurationsByName()
-            .getUnchecked(configurationEntry.getKey());
         if (layers.targetLevelConfigFile.isPresent()) {
-          HashMap<String, String> combinedOverrideConfigs = Maps.newHashMap(overrideBuildSettings);
-          for (Map.Entry<String, String> entry: defaultBuildSettings.entrySet()) {
-            String existingSetting = layers.targetLevelInlineSettings.get(entry.getKey());
-            if (existingSetting == null) {
-              combinedOverrideConfigs.put(entry.getKey(), entry.getValue());
-            }
-          }
-
-          for (Map.Entry<String, String> entry : appendBuildSettings.entrySet()) {
-            String existingSetting = layers.targetLevelInlineSettings.get(entry.getKey());
-            String settingPrefix = existingSetting != null ? existingSetting : "$(inherited)";
-            combinedOverrideConfigs.put(entry.getKey(), settingPrefix + " " + entry.getValue());
-          }
-
           PBXFileReference fileReference =
               configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
                   new SourceTreePath(
@@ -727,25 +728,17 @@ public class ProjectGenerator {
                       pathRelativizer.outputPathToSourcePath(
                           layers.targetLevelConfigFile.get())));
           outputConfiguration.setBaseConfigurationReference(fileReference);
-
-          NSDictionary inlineSettings = new NSDictionary();
-          Iterable<Map.Entry<String, String>> entries = Iterables.concat(
-              layers.targetLevelInlineSettings.entrySet(),
-              combinedOverrideConfigs.entrySet());
-          for (Map.Entry<String, String> entry : entries) {
-            inlineSettings.put(entry.getKey(), entry.getValue());
-          }
-          outputConfiguration.setBuildSettings(inlineSettings);
         }
+
+        NSDictionary inlineSettings = new NSDictionary();
+        Iterable<Map.Entry<String, String>> entries = Iterables.concat(
+            layers.targetLevelInlineSettings.entrySet(),
+            combinedOverrideConfigs.entrySet());
+        for (Map.Entry<String, String> entry : entries) {
+          inlineSettings.put(entry.getKey(), entry.getValue());
+        }
+        outputConfiguration.setBuildSettings(inlineSettings);
       } else {
-        // Add search paths for dependencies
-        Map<String, String> mutableExtraConfigs = new HashMap<>(overrideBuildSettings);
-        for (Map.Entry<String, String> entry : appendBuildSettings.entrySet()) {
-          String setting = "$(inherited) " + entry.getValue();
-          mutableExtraConfigs.put(entry.getKey(), setting);
-        }
-        overrideBuildSettings = ImmutableMap.copyOf(mutableExtraConfigs);
-
         Path outputConfigurationDirectory = outputDirectory.resolve("Configurations");
         projectFilesystem.mkdirs(outputConfigurationDirectory);
 
@@ -766,7 +759,7 @@ public class ProjectGenerator {
         String serializedConfiguration = serializeBuildConfiguration(
             configurationEntry.getValue(),
             searchPaths,
-            overrideBuildSettings);
+            ImmutableMap.copyOf(combinedOverrideConfigs));
         if (MorePaths.fileContentsDiffer(
             new ByteArrayInputStream(serializedConfiguration.getBytes(Charsets.UTF_8)),
             configurationFilePath,
@@ -788,10 +781,6 @@ public class ProjectGenerator {
                 new SourceTreePath(
                     PBXReference.SourceTree.SOURCE_ROOT,
                     pathRelativizer.outputDirToRootRelative(configurationFilePath)));
-        XCBuildConfiguration outputConfiguration = target
-            .getBuildConfigurationList()
-            .getBuildConfigurationsByName()
-            .getUnchecked(configurationEntry.getKey());
         outputConfiguration.setBaseConfigurationReference(fileReference);
       }
     }
