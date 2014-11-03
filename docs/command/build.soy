@@ -4,6 +4,7 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'buck build' /}
+    {param prettify: true /}
     {param description}
       A command that builds one or more specified targets.
     {/param}
@@ -12,20 +13,119 @@
 
 {call buck.command}
 {param overview}
-Builds one or more specified targets.
-
 <p>
-
+Builds one or more specified targets.
+<p>
 As Buck is a build system, this is the most commonly used command in
 Buck. To build a rule, pass its target to buck build:
 
 <pre>buck build /&#x2F;java/com/example/app:amazing</pre>
 
-Buck will build the rule and print the location of the generated
-file(s) to the console.
 {/param}
-
 {param params}
+
+{call buck.param}
+  {param name: 'build-dependencies' /}
+  {param alias: 'b'/}
+  {param desc}
+  How to handle including dependencies when building.  Valid values are:
+  <ul>
+    <li><code>TRANSITIVE</code>: Rules will compile against all of their
+    transitive dependencies when building.
+    <li><code>WARN_ON_TRANSITIVE</code>: Rules will first try to compile against
+    only their first order dependencies, and should that fail will build again
+    including their transitive dependencies and show a warning.
+    <li><code>FIRST_ORDER_ONLY</code>:  Rules will only compile against their
+    first order dependencies (e.g. dependencies listed in the
+    {sp}<code>deps</code> field of their rule).
+  </ul>
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'build-report' /}
+  {param desc}
+  Specifies a file where a JSON summary of the build output should be written.
+  Note that <code>--build-report</code> can be used without <code>--keep-going</code>,
+  though if <code>--keep-going</code> is not specified, the report will only be written
+  if all of the targets are built successfully. Here is a sample build report:
+  <p>
+<pre class="prettyprint lang-js">{literal}
+{
+  "results": {
+    "//fake:rule1": {
+      "success": true,
+      "type": "BUILT_LOCALLY",
+      "output": "buck-out/gen/fake/rule1.txt"
+    },
+    "//fake:rule2": {
+      "success": false
+    },
+    "//fake:rule3": {
+      "success": true,
+      "type": "FETCHED_FROM_CACHE"
+    }
+  }
+}
+{/literal}</pre>
+  <p>
+  In this example, both <code>//fake:rule1</code> and <code>//fake:rule3</code> were
+  built successfully, but only <code>//fake:rule1</code> had an output file
+  associated with the rule.
+  <p>
+  Note that this contains the same information that <code>--keep-going</code> prints
+  to the console, but is easier to parse programmatically. This report may contain
+  more fields in the future.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'keep-going' /}
+  {param desc}
+  When specified, Buck will attempt to build all targets specified on the command line,
+  even if some of the targets fail. (Buck's default behavior is to exit immediately when
+  any of the specified targets fail.)
+  <p>
+  <p>
+  When <code>--keep-going</code> is specified, a report of the build will be printed to
+  stderr, detailing the build status of each target. Each line of the report represents
+  the status of one build target, which has up to four columns:
+  <ol>
+    <li><code>OK</code> or <code>FAIL</code>, as per the success of the build rule.
+    <li>The build target of the rule.
+    <li>If successful, the type of the success as defined by the{sp}
+      <a href="http://facebook.github.io/buck/javadoc/com/facebook/buck/rules/BuildRuleSuccess.Type.html">
+        <code>com.facebook.buck.rules.BuildRuleSuccess.Type</code>
+      </a> enum.
+    <li>If successful, the path to the output file of the rule, if it exists.
+  </ol>
+  For example, if Buck were run with the following arguments:
+  <p>
+  <pre>buck build
+  --keep-going {nil}//fake:rule1 {nil}//fake:rule2 {nil}//fake:rule3</code>
+  </pre>
+  <p>
+  Then the report printed to stderr might look like:
+  <p>
+  <pre>
+  OK   {nil}//fake:rule1 BUILT_LOCALLY buck-out/gen/fake/rule1.txt{\n}
+  FAIL {nil}//fake:rule2{\n}
+  OK   {nil}//fake:rule3 FETCHED_FROM_CACHE{\n}
+  </pre>
+  <p>
+  In this example, both <code>//fake:rule1</code> and <code>//fake:rule3</code> were
+  built successfully, but only <code>//fake:rule1</code> had an output file
+  associated with the rule. Admittedly, the state of column 1 could be derived from
+  the presence of column 3, but the encoding of column 1 makes it easier to filter
+  out successful rules from failed ones.
+  <p>
+  Note that when <code>--keep-going</code> is specified, the exit code will be
+  0 only if all targets were built successfully.
+  <p>
+  This option is analogous to <code>-k/--keep-going</code> in Make.
+ {/param}
+{/call}
+
 {call buck.param}
   {param name: 'num-threads' /}
   {param desc}
@@ -52,24 +152,6 @@ file(s) to the console.
   {param desc}
   How verbose logging to the console should be, with 1 as the minimum
   and 10 as the most verbose.
-  {/param}
-{/call}
-
-{call buck.param}
-  {param name: 'build-dependencies' /}
-  {param alias: 'b'/}
-  {param desc}
-  How to handle including dependencies when building.  Valid values are:
-  <ul>
-    <li><code>TRANSITIVE</code>: Rules will compile against all of their
-    transitive dependencies when building.
-    <li><code>WARN_ON_TRANSITIVE</code>: Rules will first try to compile against
-    only their first order dependencies, and should that fail will build again
-    including their transitive dependencies and show a warning.
-    <li><code>FIRST_ORDER_ONLY</code>:  Rules will only compile against their
-    first order dependencies (e.g. dependencies listed in the
-    {sp}<code>deps</code> field of their rule).
-  </ul>
   {/param}
 {/call}
 
