@@ -32,11 +32,14 @@ import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -87,8 +90,12 @@ public class ExopackageInstaller {
 
   private static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
 
+  private static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
+
   @VisibleForTesting
   static final Pattern DEX_FILE_PATTERN = Pattern.compile("secondary-([0-9a-f]+)\\.[\\w.-]*");
+
+  private final Pattern NATIVE_LIB_PATTERN = Pattern.compile("native-([0-9a-f]+\\.so)");
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
@@ -220,6 +227,10 @@ public class ExopackageInstaller {
         installSecondaryDexFiles();
       }
 
+      if (exopackageInfo.nativeLibsInfo().isPresent()) {
+        installNativeLibraryFiles();
+      }
+
       // TODO(user): Make this work on Gingerbread.
       try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "kill_app")) {
         AdbHelper.executeCommandWithErrorChecking(device, "am force-stop " + packageName);
@@ -258,6 +269,66 @@ public class ExopackageInstaller {
           metadataContents,
           "secondary-%s.dex.jar",
           SECONDARY_DEX_DIR);
+    }
+
+    private void installNativeLibraryFiles() throws Exception {
+      String abi1 = getProperty("ro.product.cpu.abi");
+      if (abi1.isEmpty()) {
+        throw new RuntimeException("adb returned empty result for ro.product.cpu.abi property.");
+      }
+
+      ImmutableMap<String, Path> allLibraries = getAllLibraries();
+
+      ImmutableMap<String, Path> abi1Libraries =
+          getRequiredLibrariesForAbi(allLibraries, abi1, ImmutableSet.<String>of());
+      installNativeLibrariesForAbi(abi1, abi1Libraries);
+
+      String abi2 = getProperty("ro.product.cpu.abi2");
+      if (abi2.isEmpty()) {
+        return;
+      }
+
+      ImmutableSet<String> abi1LibraryNames = FluentIterable.from(abi1Libraries.values())
+          .transform(
+              new Function<Path, String>() {
+                @Override
+                public String apply(Path input) {
+                  return input.getFileName().toString();
+                }
+              })
+          .toSet();
+      ImmutableMap<String, Path> abi2Libraries =
+          getRequiredLibrariesForAbi(allLibraries, abi2, abi1LibraryNames);
+      installNativeLibrariesForAbi(abi2, abi2Libraries);
+    }
+
+    private void installNativeLibrariesForAbi(String abi, ImmutableMap<String, Path> libraries)
+        throws Exception {
+      if (libraries.isEmpty()) {
+        return;
+      }
+
+      ImmutableSet<String> requiredHashes = libraries.keySet();
+      ImmutableSet<String> presentHashes = prepareNativeLibsDir(abi, requiredHashes);
+
+      Map<String, Path> filesToInstallByHash =
+          Maps.filterKeys(libraries, Predicates.not(Predicates.in(presentHashes)));
+
+      ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
+      for (Map.Entry<String, Path> entry : libraries.entrySet()) {
+        String filename = entry.getValue().getFileName().toString();
+        Preconditions.checkState(filename.startsWith("lib") && filename.endsWith(".so"));
+        String libname = filename.substring(3, filename.length() - 3);
+
+        metadataLines.add(String.format("%s native-%s.so", libname, entry.getKey()));
+      }
+
+      installFiles(
+          "native_library",
+          ImmutableMap.copyOf(filesToInstallByHash),
+          Joiner.on('\n').join(metadataLines.build()),
+          "native-%s.so",
+          NATIVE_LIBS_DIR.resolve(abi));
     }
 
     /**
@@ -389,20 +460,21 @@ public class ExopackageInstaller {
 
     private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
       ExopackageInfo.DexInfo dexInfo = exopackageInfo.dexInfo().get();
-      ImmutableMap.Builder<String, Path> hashToDexFilePaths = ImmutableMap.builder();
-      for (String line : projectFilesystem.readLines(dexInfo.metadata())) {
-        List<String> parts = Splitter.on(' ').splitToList(line);
-        if (parts.size() < 2) {
-          throw new RuntimeException("Illegal line in metadata file: " + line);
-        }
-        hashToDexFilePaths.put(parts.get(1), dexInfo.directory().resolve(parts.get(0)));
-      }
-      return hashToDexFilePaths.build();
+      return parseExopackageInfoMetadata(
+          dexInfo.metadata(),
+          dexInfo.directory(),
+          projectFilesystem);
     }
 
     private ImmutableSet<String> prepareSecondaryDexDir(ImmutableSet<String> requiredHashes)
         throws Exception {
       return prepareDirectory("secondary-dex", DEX_FILE_PATTERN, requiredHashes);
+    }
+
+    private ImmutableSet<String> prepareNativeLibsDir(
+        String abi,
+        ImmutableSet<String> requiredHashes) throws Exception {
+      return prepareDirectory("native-libs/" + abi, NATIVE_LIB_PATTERN, requiredHashes);
     }
 
     private ImmutableSet<String> prepareDirectory(
@@ -556,7 +628,7 @@ public class ExopackageInstaller {
     }
 
     private String getProperty(String property) throws Exception {
-      return AdbHelper.executeCommandWithErrorChecking(device, "getprop " + property);
+      return AdbHelper.executeCommandWithErrorChecking(device, "getprop " + property).trim();
     }
 
     private void mkDirP(String dirpath) throws Exception {
@@ -567,6 +639,70 @@ public class ExopackageInstaller {
 
       AdbHelper.executeCommandWithErrorChecking(device, "umask 022 && " + mkdirP + " " + dirpath);
     }
+  }
+
+  private ImmutableMap<String, Path> getAllLibraries() throws IOException {
+    ExopackageInfo.NativeLibsInfo nativeLibsInfo = exopackageInfo.nativeLibsInfo().get();
+    return parseExopackageInfoMetadata(
+        nativeLibsInfo.metadata(),
+        nativeLibsInfo.directory(),
+        projectFilesystem);
+  }
+
+  private ImmutableMap<String, Path> getRequiredLibrariesForAbi(
+      ImmutableMap<String, Path> allLibraries,
+      String abi,
+      ImmutableSet<String> ignoreLibraries) throws IOException {
+    return filterLibrariesForAbi(
+        exopackageInfo.nativeLibsInfo().get().directory(),
+        allLibraries,
+        abi,
+        ignoreLibraries);
+  }
+
+  @VisibleForTesting
+  static ImmutableMap<String, Path> filterLibrariesForAbi(
+      final Path nativeLibsDir,
+      ImmutableMap<String, Path> allLibraries,
+      final String abi,
+      final ImmutableSet<String> ignoreLibraries) {
+    return ImmutableMap.copyOf(
+        Maps.filterValues(
+            allLibraries,
+            new Predicate<Path>() {
+              @Override
+              public boolean apply(Path input) {
+                Path relativePath = nativeLibsDir.relativize(input);
+                Preconditions.checkState(relativePath.getNameCount() == 2);
+                String libAbi = relativePath.getParent().toString();
+                String libName = relativePath.getFileName().toString();
+                return libAbi.equals(abi) && !ignoreLibraries.contains(libName);
+              }
+            }));
+  }
+
+  /**
+   * Parses a text file which is supposed to be in the following format:
+   * "file_path_without_spaces file_hash ...." i.e. it parses the first two columns of each line
+   * and ignores the rest of it.
+   *
+   * @return  A map from the file hash to its path, which equals the raw path resolved against
+   *     {@code resolvePathAgainst}.
+   */
+  @VisibleForTesting
+  static ImmutableMap<String, Path> parseExopackageInfoMetadata(
+      Path metadataTxt,
+      Path resolvePathAgainst,
+      ProjectFilesystem filesystem) throws IOException {
+    ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
+    for (String line : filesystem.readLines(metadataTxt)) {
+      List<String> parts = Splitter.on(' ').splitToList(line);
+      if (parts.size() < 2) {
+        throw new RuntimeException("Illegal line in metadata file: " + line);
+      }
+      builder.put(parts.get(1), resolvePathAgainst.resolve(parts.get(0)));
+    }
+    return builder.build();
   }
 
   @VisibleForTesting
