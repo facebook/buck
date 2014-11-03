@@ -360,7 +360,6 @@ public class AndroidBinary extends AbstractBuildRule implements
     // Any inputs to apkbuilder must be reflected in the hash returned by getAbiKeyForDeps.
     ////
 
-    // Copy the transitive closure of files in native_libs to a single directory, if any.
     AndroidPackageableCollection packageableCollection =
         enhancementResult.packageableCollection();
     ImmutableSet<Path> nativeLibraryDirectories = ImmutableSet.of();
