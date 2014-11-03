@@ -33,6 +33,8 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -46,13 +48,16 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -204,7 +209,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     // It is important to use this logic to determine the set of rules to build rather than
     // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
     // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
-    ImmutableSet<BuildRule> rulesToBuild = FluentIterable
+    ImmutableList<BuildRule> rulesToBuild = ImmutableList.copyOf(FluentIterable
         .from(buildTargetsToBuild)
         .transform(new Function<HasBuildTarget, BuildRule>() {
           @Override
@@ -213,10 +218,9 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
                 actionGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget()));
           }
         })
-        .toSet();
+        .toSet());
 
     int exitCode;
-    String buildReport = null;
     boolean isKeepGoing = options.isKeepGoing();
     try {
       // Get the Future representing the build and then block until everything is built.
@@ -236,18 +240,38 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         throw e;
       }
 
-      buildReport = generateBuildReport(
-          ImmutableList.copyOf(rulesToBuild),
-          results,
-          console.getAnsi());
+      LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult = Maps.newLinkedHashMap();
+      Preconditions.checkState(rulesToBuild.size() == results.size());
+      for (int i = 0, len = rulesToBuild.size(); i < len; i++) {
+        BuildRule rule = rulesToBuild.get(i);
+        BuildRuleSuccess success = results.get(i);
+        ruleToResult.put(rule, Optional.fromNullable(success));
+      }
+
       if (isKeepGoing) {
-        console.getStdErr().print(buildReport);
+        String buildReportForConsole = generateBuildReportForConsole(
+            ruleToResult,
+            console.getAnsi());
+        console.getStdErr().print(buildReportForConsole);
         exitCode = Iterables.any(results, Predicates.isNull()) ? 1 : 0;
         if (exitCode != 0) {
           console.printBuildFailure("Not all rules succeeded.");
         }
       } else {
         exitCode = 0;
+      }
+
+      Optional<Path> pathToBuildReport = options.getPathToBuildReport();
+      if (pathToBuildReport.isPresent()) {
+        // Note that pathToBuildReport is an absolute path that may exist outside of the project
+        // root, so it is not appropriate to use ProjectFilesystem to write the output.
+        String jsonBuildReport = generateJsonBuildReport(ruleToResult);
+        try {
+          Files.write(jsonBuildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
+        } catch (IOException e) {
+          e.printStackTrace(console.getStdErr());
+          exitCode = 1;
+        }
       }
     } catch (IOException e) {
       console.printBuildFailureWithoutStacktrace(e);
@@ -272,38 +296,29 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       }
     }
 
-    Optional<Path> pathToBuildReport = options.getPathToBuildReport();
-    if (buildReport != null && pathToBuildReport.isPresent()) {
-      // Note that pathToBuildReport is an absolute path that may exist outside of the project
-      // root, so it is not appropriate to use ProjectFilesystem to write the output.
-      try {
-        Files.write(buildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
-      } catch (IOException e) {
-        e.printStackTrace(console.getStdErr());
-        exitCode = 1;
-      }
-    }
-
     return exitCode;
   }
 
+  /**
+   * @param ruleToResult Keys are build rules built during this invocation of Buck. Values reflect
+   *     the success of each build rule, if it succeeded. ({@link Optional#absent()} represents a
+   *     failed build rule.)
+   */
   @VisibleForTesting
-  static String generateBuildReport(
-      List<BuildRule> rulesToBuild,
-      List<BuildRuleSuccess> results,
+  static String generateBuildReportForConsole(
+      LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult,
       Ansi ansi) {
-    Preconditions.checkArgument(rulesToBuild.size() == results.size());
     StringBuilder report = new StringBuilder();
-    for (int i = 0, len = rulesToBuild.size(); i < len; i++) {
-      BuildRule rule = rulesToBuild.get(i);
-      BuildRuleSuccess success = results.get(i);
+    for (Map.Entry<BuildRule, Optional<BuildRuleSuccess>> entry : ruleToResult.entrySet()) {
+      BuildRule rule = entry.getKey();
+      Optional<BuildRuleSuccess> success = entry.getValue();
 
       String successIndicator;
       String successType;
       Path outputFile;
-      if (success != null) {
+      if (success.isPresent()) {
         successIndicator = ansi.asHighlightedSuccessText("OK  ");
-        successType = success.getType().name();
+        successType = success.get().getType().name();
         outputFile = rule.getPathToOutputFile();
       } else {
         successIndicator = ansi.asHighlightedFailureText("FAIL");
@@ -320,6 +335,37 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     }
 
     return report.toString();
+  }
+
+  /**
+   * @param ruleToResult Keys are build rules built during this invocation of Buck. Values reflect
+   *     the success of each build rule, if it succeeded. ({@link Optional#absent()} represents a
+   *     failed build rule.)
+   */
+  @VisibleForTesting
+  static String generateJsonBuildReport(
+      LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult) throws IOException {
+    LinkedHashMap<String, Object> results = Maps.newLinkedHashMap();
+    for (Map.Entry<BuildRule, Optional<BuildRuleSuccess>> entry : ruleToResult.entrySet()) {
+      BuildRule rule = entry.getKey();
+      Optional<BuildRuleSuccess> success = entry.getValue();
+      Map<String, Object> value = Maps.newLinkedHashMap();
+      if (success.isPresent()) {
+        value.put("success", true);
+        value.put("type", success.get().getType().name());
+        Path outputFile = rule.getPathToOutputFile();
+        value.put("output", outputFile != null ? outputFile.toString() : null);
+      } else {
+        value.put("success", false);
+      }
+      results.put(rule.getFullyQualifiedName(), value);
+    }
+
+    Map<String, Object> report = Maps.newHashMap();
+    report.put("results", results);
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+    return objectMapper.writeValueAsString(report);
   }
 
   Build getBuild() {

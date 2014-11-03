@@ -26,6 +26,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -117,9 +118,19 @@ public class BuildKeepGoingIntegrationTest {
 
     assertTrue(buildReport.exists());
     String buildReportContents = com.google.common.io.Files.toString(buildReport, Charsets.UTF_8);
-    String expectedReport =
-        "OK   //:rule_with_output BUILT_LOCALLY buck-out/gen/rule_with_output.txt\n" +
-        "FAIL //:failing_rule\n";
+    String expectedReport = Joiner.on('\n').join(
+        "{",
+        "  \"results\" : {",
+        "    \"//:rule_with_output\" : {",
+        "      \"success\" : true,",
+        "      \"type\" : \"BUILT_LOCALLY\",",
+        "      \"output\" : \"buck-out/gen/rule_with_output.txt\"",
+        "    },",
+        "    \"//:failing_rule\" : {",
+        "      \"success\" : false",
+        "    }",
+        "  }",
+        "}");
     assertEquals(expectedReport, buildReportContents);
   }
 
