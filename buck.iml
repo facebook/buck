@@ -13,8 +13,6 @@
       <sourceFolder url="file://$MODULE_DIR$/build/javacc" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/build/testjavacc" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/dx-from-kitkat/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/build/immutables" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/build/immutables-tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/cli/quickstart" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/junit" />
