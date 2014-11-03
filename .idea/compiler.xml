@@ -23,8 +23,9 @@
     </wildcardResourcePatterns>
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true">
-        <sourceOutputDir name="immutables" />
-        <sourceTestOutputDir name="immutables-test" />
+        <sourceOutputDir name="build/ij/immutables" />
+        <sourceTestOutputDir name="build/ij/immutables-test" />
+        <outputRelativeToContentRoot value="true" />
         <processor name="org.immutables.value.internal.processor.Processor" />
         <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/third-party/java/immutables/value-standalone-1.0.1.jar" />
