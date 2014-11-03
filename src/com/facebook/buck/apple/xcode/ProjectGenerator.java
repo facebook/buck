@@ -135,11 +135,6 @@ public class ProjectGenerator {
 
   public enum Option {
     /**
-     * generate native xcode targets for dependent build targets.
-     */
-    GENERATE_TARGETS_FOR_DEPENDENCIES,
-
-    /**
      * Generate a workspace
      */
     GENERATE_WORKSPACE,
@@ -1427,8 +1422,7 @@ public class ProjectGenerator {
    * Whether a given build target is built by the project being generated, or being build elsewhere.
    */
   private boolean isBuiltByCurrentProject(BuildTarget buildTarget) {
-    return options.contains(Option.GENERATE_TARGETS_FOR_DEPENDENCIES) ||
-        initialTargets.contains(buildTarget);
+    return initialTargets.contains(buildTarget);
   }
 
   private String getXcodeTargetName(BuildTarget target) {
