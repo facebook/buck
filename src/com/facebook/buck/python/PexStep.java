@@ -20,7 +20,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -59,13 +58,13 @@ public class PexStep extends ShellStep {
       ImmutableMap<Path, Path> modules,
       ImmutableMap<Path, Path> resources,
       ImmutableMap<Path, Path> nativeLibraries) {
-    this.pathToPex = Preconditions.checkNotNull(pathToPex);
-    this.pythonPath = Preconditions.checkNotNull(pythonPath);
-    this.destination = Preconditions.checkNotNull(destination);
-    this.entry = Preconditions.checkNotNull(entry);
-    this.modules = Preconditions.checkNotNull(modules);
-    this.resources = Preconditions.checkNotNull(resources);
-    this.nativeLibraries = Preconditions.checkNotNull(nativeLibraries);
+    this.pathToPex = pathToPex;
+    this.pythonPath = pythonPath;
+    this.destination = destination;
+    this.entry = entry;
+    this.modules = modules;
+    this.resources = resources;
+    this.nativeLibraries = nativeLibraries;
   }
 
   @Override

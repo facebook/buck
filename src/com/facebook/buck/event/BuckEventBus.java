@@ -22,7 +22,6 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.eventbus.AsyncEventBus;
 
@@ -68,11 +67,11 @@ public class BuckEventBus implements Closeable {
       ExecutorService executorService,
       BuildId buildId,
       int shutdownTimeoutMillis) {
-    this.clock = Preconditions.checkNotNull(clock);
-    this.executorService = Preconditions.checkNotNull(executorService);
+    this.clock = clock;
+    this.executorService = executorService;
     this.eventBus = new AsyncEventBus("buck-build-events", executorService);
     this.threadIdSupplier = DEFAULT_THREAD_ID_SUPPLIER;
-    this.buildId = Preconditions.checkNotNull(buildId);
+    this.buildId = buildId;
     this.shutdownTimeoutMillis = shutdownTimeoutMillis;
   }
 

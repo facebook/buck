@@ -51,7 +51,6 @@ public class ArrayIterable<T> implements Iterable<T> {
   }
 
   public static <T> Iterable<T> of(final T[] array, final int startIndex, int endIndex) {
-    Preconditions.checkNotNull(array);
     Preconditions.checkPositionIndexes(startIndex, endIndex, array.length);
 
     // Special-case the empty Iterator with a singleton value.

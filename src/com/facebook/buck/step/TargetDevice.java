@@ -16,8 +16,6 @@
 
 package com.facebook.buck.step;
 
-import com.google.common.base.Preconditions;
-
 import javax.annotation.Nullable;
 
 /**
@@ -36,7 +34,7 @@ public class TargetDevice {
   }
 
   public TargetDevice(Type type, @Nullable String identifier) {
-    this.type = Preconditions.checkNotNull(type);
+    this.type = type;
     this.identifier = identifier;
   }
 

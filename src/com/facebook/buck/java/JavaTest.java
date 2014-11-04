@@ -41,7 +41,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -112,10 +111,10 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
         javacOptions,
         resourcesRoot);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
-    this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);
+    this.sourceUnderTest = sourceUnderTest;
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
-    this.additionalClasspathEntries = Preconditions.checkNotNull(addtionalClasspathEntries);
+    this.additionalClasspathEntries = addtionalClasspathEntries;
     this.testType = testType;
   }
 

@@ -16,7 +16,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.google.common.base.Preconditions;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +28,7 @@ public class LoggingArtifactCacheDecorator {
   private final BuckEventBus eventBus;
 
   public LoggingArtifactCacheDecorator(BuckEventBus eventBus) {
-    this.eventBus = Preconditions.checkNotNull(eventBus);
+    this.eventBus = eventBus;
   }
 
   public final ArtifactCache decorate(final ArtifactCache delegate) {

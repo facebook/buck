@@ -20,7 +20,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,8 +43,8 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
       Path root,
       ImmutableMap<Path, SourcePath> links) {
     super(params, resolver);
-    this.root = Preconditions.checkNotNull(root);
-    this.links = Preconditions.checkNotNull(links);
+    this.root = root;
+    this.links = links;
   }
 
   /**

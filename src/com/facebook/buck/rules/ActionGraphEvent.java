@@ -22,7 +22,6 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 
 
 /**
@@ -34,7 +33,7 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent implements Leaf
   private final Iterable<BuildTarget> buildTargets;
 
   protected ActionGraphEvent(Iterable<BuildTarget> buildTargets) {
-    this.buildTargets = Preconditions.checkNotNull(buildTargets);
+    this.buildTargets = buildTargets;
   }
 
   @Override

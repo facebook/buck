@@ -63,8 +63,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   private final Path metadataDirectory;
 
   public DefaultOnDiskBuildInfo(BuildTarget target, ProjectFilesystem projectFilesystem) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    Preconditions.checkNotNull(target);
+    this.projectFilesystem = projectFilesystem;
     this.metadataDirectory = BuildInfo.getPathToMetadataDirectory(target);
   }
 

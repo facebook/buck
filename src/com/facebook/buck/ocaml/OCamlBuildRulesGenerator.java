@@ -75,14 +75,14 @@ public class OCamlBuildRulesGenerator {
       ImmutableList<SourcePath> cInput,
       Path cCompiler,
       Path cxxCompiler) {
-    this.params = Preconditions.checkNotNull(params);
-    this.pathResolver = Preconditions.checkNotNull(pathResolver);
-    this.resolver = Preconditions.checkNotNull(resolver);
-    this.ocamlContext = Preconditions.checkNotNull(ocamlContext);
-    this.mlInput = Preconditions.checkNotNull(mlInput);
-    this.cInput = Preconditions.checkNotNull(cInput);
-    this.cCompiler = Preconditions.checkNotNull(cCompiler);
-    this.cxxCompiler = Preconditions.checkNotNull(cxxCompiler);
+    this.params = params;
+    this.pathResolver = pathResolver;
+    this.resolver = resolver;
+    this.ocamlContext = ocamlContext;
+    this.mlInput = mlInput;
+    this.cInput = cInput;
+    this.cCompiler = cCompiler;
+    this.cxxCompiler = cxxCompiler;
   }
 
   ImmutableList<BuildRule> generate() {

@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRunEvent;
-import com.google.common.base.Preconditions;
 import com.google.common.eventbus.Subscribe;
 
 
@@ -36,7 +35,6 @@ public class WebServerBuckEventListener implements BuckEventListener {
   private final StreamingWebSocketServlet streamingWebSocketServlet;
 
   WebServerBuckEventListener(WebServer webServer) {
-    Preconditions.checkNotNull(webServer);
     this.streamingWebSocketServlet = webServer.getStreamingWebSocketServlet();
   }
 

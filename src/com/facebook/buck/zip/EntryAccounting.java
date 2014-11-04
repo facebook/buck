@@ -69,9 +69,8 @@ class EntryAccounting {
   private final byte[] buffer = new byte[ARBITRARY_SIZE];
 
   public EntryAccounting(Clock clock, ZipEntry entry, long currentOffset) {
-    this.entry = Preconditions.checkNotNull(entry);
+    this.entry = entry;
     this.method = Method.detect(entry.getMethod());
-    Preconditions.checkNotNull(clock);
     this.offset = currentOffset;
 
     if (entry.getTime() == -1) {

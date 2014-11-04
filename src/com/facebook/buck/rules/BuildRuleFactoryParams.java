@@ -21,7 +21,6 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,7 +42,7 @@ public final class BuildRuleFactoryParams {
     this.filesystem = filesystem;
     this.buildTargetParser = buildTargetParser;
     this.buildTargetPatternParser = new BuildTargetPatternParser();
-    this.target = Preconditions.checkNotNull(target);
+    this.target = target;
     this.buildFileParseContext = ParseContext.forBaseName(target.getBaseName());
 
     this.abstractBuildRuleFactoryParams = new BuildRuleBuilderParams(filesystem,

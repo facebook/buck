@@ -23,7 +23,6 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -39,7 +38,7 @@ public class TestResultFormatter {
 
   public TestResultFormatter(Ansi ansi, boolean isTreatingAssumptionsAsErrors) {
     this.isTreatingAssumptionsAsErrors = isTreatingAssumptionsAsErrors;
-    this.ansi = Preconditions.checkNotNull(ansi);
+    this.ansi = ansi;
   }
 
   public void runStarted(

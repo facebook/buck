@@ -19,7 +19,6 @@ package com.facebook.buck.log;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ConcurrentMap;
@@ -46,8 +45,8 @@ public class CommandThreadFactory implements ThreadFactory {
   CommandThreadFactory(
       ThreadFactory threadFactory,
       ConcurrentMap<Long, String> threadIdToCommandId) {
-    this.threadFactory = Preconditions.checkNotNull(threadFactory);
-    this.threadIdToCommandId = Preconditions.checkNotNull(threadIdToCommandId);
+    this.threadFactory = threadFactory;
+    this.threadIdToCommandId = threadIdToCommandId;
 
     // This might be null in test environments which bypass `Main.runMainThenExit`.
     commandId = this.threadIdToCommandId.get(Thread.currentThread().getId());

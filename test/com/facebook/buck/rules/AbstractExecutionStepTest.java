@@ -48,13 +48,4 @@ public class AbstractExecutionStepTest {
     EasyMock.verify(context);
   }
 
-  @Test(expected = NullPointerException.class)
-  public void testConstructorThrowsNullPointerExceptionWhenNoDescriptionGiven() {
-    new AbstractExecutionStep(null) {
-      @Override
-      public int execute(ExecutionContext context) {
-        return 0;
-      }
-    };
-  }
 }

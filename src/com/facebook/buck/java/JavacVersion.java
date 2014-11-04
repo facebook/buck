@@ -16,14 +16,12 @@
 
 package com.facebook.buck.java;
 
-import com.google.common.base.Preconditions;
-
 public class JavacVersion {
 
   private final String version;
 
   public JavacVersion(String version) {
-    this.version = Preconditions.checkNotNull(version);
+    this.version = version;
   }
 
   @Override

@@ -18,7 +18,6 @@ package com.facebook.buck.util.environment;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.sun.management.OperatingSystemMXBean;
@@ -47,9 +46,9 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
       ImmutableMap<String, String> environment,
       Properties properties) {
     this.platform = Platform.detect();
-    this.processExecutor = Preconditions.checkNotNull(processExecutor);
-    this.environment = Preconditions.checkNotNull(environment);
-    this.properties = Preconditions.checkNotNull(properties);
+    this.processExecutor = processExecutor;
+    this.environment = environment;
+    this.properties = properties;
   }
 
   @Override

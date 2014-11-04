@@ -25,7 +25,6 @@ import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -271,8 +270,6 @@ public class JarDirectoryStepHelper {
    * @param from The Manifest to copy from.
    */
   private static void merge(Manifest into, Manifest from) {
-    Preconditions.checkNotNull(into);
-    Preconditions.checkNotNull(from);
 
     Attributes attributes = from.getMainAttributes();
     if (attributes != null) {

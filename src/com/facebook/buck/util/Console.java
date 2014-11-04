@@ -32,10 +32,10 @@ public class Console {
       PrintStream stdOut,
       PrintStream stdErr,
       Ansi ansi) {
-    this.verbosity = Preconditions.checkNotNull(verbosity);
-    this.stdOut = new DirtyPrintStreamDecorator(Preconditions.checkNotNull(stdOut));
-    this.stdErr = new DirtyPrintStreamDecorator(Preconditions.checkNotNull(stdErr));
-    this.ansi = Preconditions.checkNotNull(ansi);
+    this.verbosity = verbosity;
+    this.stdOut = new DirtyPrintStreamDecorator(stdOut);
+    this.stdErr = new DirtyPrintStreamDecorator(stdErr);
+    this.ansi = ansi;
   }
 
   public Verbosity getVerbosity() {

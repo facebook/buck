@@ -33,7 +33,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -54,8 +53,8 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
   public ThriftJavaEnhancer(
       ThriftBuckConfig thriftBuckConfig,
       JavaCompilerEnvironment javacEnv) {
-    this.thriftBuckConfig = Preconditions.checkNotNull(thriftBuckConfig);
-    this.javacEnv = Preconditions.checkNotNull(javacEnv);
+    this.thriftBuckConfig = thriftBuckConfig;
+    this.javacEnv = javacEnv;
   }
 
   @Override

@@ -102,13 +102,13 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
                   int overflow,
                   long timeoutMillis,
                   String query) {
-    this.watchmanProcessSupplier = Preconditions.checkNotNull(processSupplier);
-    this.eventBus = Preconditions.checkNotNull(fileChangeEventBus);
-    this.clock = Preconditions.checkNotNull(clock);
-    this.objectMapper = Preconditions.checkNotNull(objectMapper);
+    this.watchmanProcessSupplier = processSupplier;
+    this.eventBus = fileChangeEventBus;
+    this.clock = clock;
+    this.objectMapper = objectMapper;
     this.overflow = overflow;
     this.timeoutMillis = timeoutMillis;
-    this.query = Preconditions.checkNotNull(query);
+    this.query = query;
   }
 
   @VisibleForTesting

@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -43,9 +42,9 @@ public class BuildFileSpec {
   private final ImmutableSet<Path> recursiveIgnorePaths;
 
   private BuildFileSpec(Path basePath, boolean recursive, ImmutableSet<Path> recursiveIgnorePaths) {
-    this.basePath = Preconditions.checkNotNull(basePath);
+    this.basePath = basePath;
     this.recursive = recursive;
-    this.recursiveIgnorePaths = Preconditions.checkNotNull(recursiveIgnorePaths);
+    this.recursiveIgnorePaths = recursiveIgnorePaths;
   }
 
   public static BuildFileSpec fromRecursivePath(Path basePath, ImmutableSet<Path> ignorePaths) {

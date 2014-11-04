@@ -99,15 +99,15 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     if (linearAllocLimit <= 0) {
       throw new HumanReadableException("linear_alloc_hard_limit must be greater than zero.");
     }
-    this.filesystem = Preconditions.checkNotNull(filesystem);
+    this.filesystem = filesystem;
     this.inFiles = ImmutableSet.copyOf(inFiles);
-    this.outPrimary = Preconditions.checkNotNull(outPrimary);
+    this.outPrimary = outPrimary;
     this.secondaryDexWriter =
         new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);
-    this.requiredInPrimaryZip = Preconditions.checkNotNull(requiredInPrimaryZip);
+    this.requiredInPrimaryZip = requiredInPrimaryZip;
     this.wantedInPrimaryZip = ImmutableSet.copyOf(wantedInPrimaryZip);
     this.reportDir = reportDir;
-    this.dexSplitStrategy = Preconditions.checkNotNull(dexSplitStrategy);
+    this.dexSplitStrategy = dexSplitStrategy;
     this.linearAllocLimit = linearAllocLimit;
     this.dalvikStatsCache = new DalvikStatsCache();
   }

@@ -31,11 +31,6 @@ public class BuildTargetSourcePathTest {
 
   private BuildTarget target = BuildTargetFactory.newInstance("//example:target");
 
-  @Test(expected = NullPointerException.class)
-  public void requiresBuildTargetToNotBeNull() {
-    new BuildTargetSourcePath(null);
-  }
-
   @Test
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {
     BuildRuleResolver resolver = new BuildRuleResolver();

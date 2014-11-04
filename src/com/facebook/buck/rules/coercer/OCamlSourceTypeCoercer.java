@@ -20,7 +20,6 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
@@ -32,7 +31,7 @@ public class OCamlSourceTypeCoercer implements TypeCoercer<OCamlSource> {
 
   OCamlSourceTypeCoercer(
       TypeCoercer<SourcePath> sourcePathTypeCoercer) {
-    this.sourcePathTypeCoercer = Preconditions.checkNotNull(sourcePathTypeCoercer);
+    this.sourcePathTypeCoercer = sourcePathTypeCoercer;
   }
 
   @Override

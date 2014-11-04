@@ -28,7 +28,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -106,11 +105,11 @@ public class BuildInfoRecorder {
       RuleKey ruleKey,
       RuleKey rukeKeyWithoutDeps,
       DirectoryTraverser directoryTraverser) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    this.buildTarget = buildTarget;
     this.pathToMetadataDirectory = BuildInfo.getPathToMetadataDirectory(buildTarget);
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.clock = Preconditions.checkNotNull(clock);
-    this.buildId = Preconditions.checkNotNull(buildId);
+    this.projectFilesystem = projectFilesystem;
+    this.clock = clock;
+    this.buildId = buildId;
 
     this.artifactExtraData =
         String.format("artifact_data=%s", environment.get(BUCK_CACHE_DATA_ENV_VAR));
@@ -118,9 +117,9 @@ public class BuildInfoRecorder {
     this.metadataToWrite = Maps.newHashMap();
 
     metadataToWrite.put(BuildInfo.METADATA_KEY_FOR_RULE_KEY,
-        Preconditions.checkNotNull(ruleKey).toString());
+        ruleKey.toString());
     metadataToWrite.put(BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS,
-        Preconditions.checkNotNull(rukeKeyWithoutDeps).toString());
+        rukeKeyWithoutDeps.toString());
     this.ruleKey = ruleKey;
     this.pathsToOutputFiles = Sets.newHashSet();
     this.pathsToOutputDirectories = Sets.newHashSet();
@@ -148,7 +147,7 @@ public class BuildInfoRecorder {
    * This key/value pair is stored in memory until {@link #writeMetadataToDisk(boolean)} is invoked.
    */
   public void addMetadata(String key, String value) {
-    metadataToWrite.put(Preconditions.checkNotNull(key), Preconditions.checkNotNull(value));
+    metadataToWrite.put(key, value);
   }
 
   public void addMetadata(String key, Iterable<String> value) {
@@ -232,7 +231,6 @@ public class BuildInfoRecorder {
    */
   public CacheResult fetchArtifactForBuildable(File outputFile, ArtifactCache artifactCache)
       throws InterruptedException {
-    Preconditions.checkNotNull(outputFile);
     return artifactCache.fetch(ruleKey, outputFile);
   }
 
@@ -240,12 +238,10 @@ public class BuildInfoRecorder {
    * @param pathToArtifact Relative path to the project root.
    */
   public void recordArtifact(Path pathToArtifact) {
-    Preconditions.checkNotNull(pathToArtifact);
     pathsToOutputFiles.add(pathToArtifact);
   }
 
   public void recordArtifactsInDirectory(Path pathToArtifactsDirectory) {
-    Preconditions.checkNotNull(pathToArtifactsDirectory);
     pathsToOutputDirectories.add(pathToArtifactsDirectory);
   }
 

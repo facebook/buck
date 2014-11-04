@@ -25,7 +25,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -47,9 +46,9 @@ public class OCamlBuild extends AbstractBuildRule {
       SourcePath cCompiler,
       SourcePath cxxCompiler) {
     super(params, resolver);
-    this.ocamlContext = Preconditions.checkNotNull(ocamlContext);
-    this.cCompiler = Preconditions.checkNotNull(cCompiler);
-    this.cxxCompiler = Preconditions.checkNotNull(cxxCompiler);
+    this.ocamlContext = ocamlContext;
+    this.cCompiler = cCompiler;
+    this.cxxCompiler = cxxCompiler;
   }
 
   @Override

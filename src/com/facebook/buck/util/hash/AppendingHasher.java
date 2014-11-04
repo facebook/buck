@@ -55,7 +55,6 @@ public class AppendingHasher implements Hasher {
    * {@link Hasher}s created from the specified {@link HashFunction}.
    */
   public AppendingHasher(HashFunction hashFunction, int numHashers) {
-    Preconditions.checkNotNull(hashFunction);
     Preconditions.checkArgument(numHashers > 0);
     LinkedList<Hasher> hashers = Lists.newLinkedList();
     for (int i = 0; i < numHashers; ++i) {

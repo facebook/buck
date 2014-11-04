@@ -16,7 +16,6 @@
 
 package com.facebook.buck.thrift;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -32,9 +31,9 @@ public class ThriftSource {
       ImmutableList<String> services,
       Path outputDir) {
 
-    this.compileRule = Preconditions.checkNotNull(compileRule);
-    this.services = Preconditions.checkNotNull(services);
-    this.outputDir = Preconditions.checkNotNull(outputDir);
+    this.compileRule = compileRule;
+    this.services = services;
+    this.outputDir = outputDir;
   }
 
   public ThriftCompiler getCompileRule() {

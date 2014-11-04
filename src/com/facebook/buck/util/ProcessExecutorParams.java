@@ -45,13 +45,13 @@ public class ProcessExecutorParams {
       Optional<ProcessBuilder.Redirect> redirectInput,
       Optional<ProcessBuilder.Redirect> redirectOutput,
       Optional<ProcessBuilder.Redirect> redirectError) {
-    this.command = Preconditions.checkNotNull(command);
+    this.command = command;
     Preconditions.checkArgument(!command.isEmpty());
-    this.directory = Preconditions.checkNotNull(directory);
-    this.environment = Preconditions.checkNotNull(environment);
-    this.redirectInput = Preconditions.checkNotNull(redirectInput);
-    this.redirectOutput = Preconditions.checkNotNull(redirectOutput);
-    this.redirectError = Preconditions.checkNotNull(redirectError);
+    this.directory = directory;
+    this.environment = environment;
+    this.redirectInput = redirectInput;
+    this.redirectOutput = redirectOutput;
+    this.redirectError = redirectError;
   }
 
   /**

@@ -21,7 +21,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -43,7 +42,6 @@ public class BuildRuleResolver {
 
   @VisibleForTesting
   public BuildRuleResolver(Map<BuildTarget, BuildRule> buildRuleIndex) {
-    Preconditions.checkNotNull(buildRuleIndex);
     this.buildRuleIndex = Maps.newHashMap(buildRuleIndex);
   }
 
@@ -66,7 +64,7 @@ public class BuildRuleResolver {
    * Returns the {@link BuildRule} with the {@code buildTarget}.
    */
   public BuildRule getRule(BuildTarget buildTarget) {
-    BuildRule rule = buildRuleIndex.get(Preconditions.checkNotNull(buildTarget));
+    BuildRule rule = buildRuleIndex.get(buildTarget);
     if (rule == null) {
       throw new HumanReadableException("Rule for target '%s' could not be resolved.", buildTarget);
     }
@@ -74,7 +72,7 @@ public class BuildRuleResolver {
   }
 
   public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
-    return Optional.fromNullable(buildRuleIndex.get(Preconditions.checkNotNull(buildTarget)));
+    return Optional.fromNullable(buildRuleIndex.get(buildTarget));
   }
 
   public Function<BuildTarget, BuildRule> getRuleFunction() {

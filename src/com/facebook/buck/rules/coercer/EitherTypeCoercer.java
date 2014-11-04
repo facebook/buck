@@ -33,8 +33,8 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
   private final TypeCoercer<Right> rightTypeCoercer;
 
   public EitherTypeCoercer(TypeCoercer<Left> leftTypeCoercer, TypeCoercer<Right> rightTypeCoercer) {
-    this.leftTypeCoercer = Preconditions.checkNotNull(leftTypeCoercer);
-    this.rightTypeCoercer = Preconditions.checkNotNull(rightTypeCoercer);
+    this.leftTypeCoercer = leftTypeCoercer;
+    this.rightTypeCoercer = rightTypeCoercer;
 
     // disallow either of eithers, it doesn't work well with traversals
     Preconditions.checkState(

@@ -22,7 +22,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -61,7 +60,7 @@ public class MacroHandler {
   private final ImmutableMap<String, MacroExpander> expanders;
 
   public MacroHandler(ImmutableMap<String, MacroExpander> expanders) {
-    this.expanders = Preconditions.checkNotNull(expanders);
+    this.expanders = expanders;
   }
 
   public Function<String, String> getExpander(

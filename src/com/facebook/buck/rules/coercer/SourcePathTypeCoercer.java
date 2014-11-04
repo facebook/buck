@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
@@ -33,8 +32,8 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
   SourcePathTypeCoercer(
       TypeCoercer<BuildTarget> buildTargetTypeCoercer,
       TypeCoercer<Path> pathTypeCoercer) {
-    this.buildTargetTypeCoercer = Preconditions.checkNotNull(buildTargetTypeCoercer);
-    this.pathTypeCoercer = Preconditions.checkNotNull(pathTypeCoercer);
+    this.buildTargetTypeCoercer = buildTargetTypeCoercer;
+    this.pathTypeCoercer = pathTypeCoercer;
   }
 
   @Override

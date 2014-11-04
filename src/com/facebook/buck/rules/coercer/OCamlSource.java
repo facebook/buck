@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 
 /**
  * Describes a OCaml source and the various paths it uses from input to output.
@@ -37,8 +36,8 @@ public class OCamlSource {
   private final SourcePath source;
 
   private OCamlSource(String name, SourcePath source) {
-    this.name = Preconditions.checkNotNull(name);
-    this.source = Preconditions.checkNotNull(source);
+    this.name = name;
+    this.source = source;
   }
 
   public String getName() {

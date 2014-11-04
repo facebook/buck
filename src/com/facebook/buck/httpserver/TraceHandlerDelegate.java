@@ -17,7 +17,6 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyMapData;
 
@@ -37,7 +36,7 @@ public class TraceHandlerDelegate extends AbstractTemplateHandlerDelegate {
 
   TraceHandlerDelegate(TracesHelper tracesHelper) {
     super(ImmutableSet.of("trace.soy"));
-    this.tracesHelper = Preconditions.checkNotNull(tracesHelper);
+    this.tracesHelper = tracesHelper;
   }
 
   @Override

@@ -22,7 +22,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -42,7 +41,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
       @Nullable File workingDirectory) {
     super(workingDirectory);
     this.target = target;
-    this.commandString = Preconditions.checkNotNull(commandString);
+    this.commandString = commandString;
   }
 
   public static class CommandString {
@@ -51,9 +50,9 @@ public abstract class AbstractGenruleStep extends ShellStep {
     private Optional<String> cmdExe;
 
     public CommandString(Optional<String> cmd, Optional<String> bash, Optional<String> cmdExe) {
-      this.cmd = Preconditions.checkNotNull(cmd);
-      this.bash = Preconditions.checkNotNull(bash);
-      this.cmdExe = Preconditions.checkNotNull(cmdExe);
+      this.cmd = cmd;
+      this.bash = bash;
+      this.cmdExe = cmdExe;
     }
   }
 
@@ -145,8 +144,8 @@ public abstract class AbstractGenruleStep extends ShellStep {
     private final String command;
 
     private ExecutionArgsAndCommand(ImmutableList<String> executionArgs, String command) {
-      this.executionArgs = Preconditions.checkNotNull(executionArgs);
-      this.command = Preconditions.checkNotNull(command);
+      this.executionArgs = executionArgs;
+      this.command = command;
     }
   }
 }

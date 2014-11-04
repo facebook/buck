@@ -24,7 +24,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,8 +38,8 @@ public class RunShTestAndRecordResultStep implements Step {
   private Path pathToTestResultFile;
 
   public RunShTestAndRecordResultStep(Path pathToShellScript, Path pathToTestResultFile) {
-    this.pathToShellScript = Preconditions.checkNotNull(pathToShellScript);
-    this.pathToTestResultFile = Preconditions.checkNotNull(pathToTestResultFile);
+    this.pathToShellScript = pathToShellScript;
+    this.pathToTestResultFile = pathToTestResultFile;
   }
 
   @Override

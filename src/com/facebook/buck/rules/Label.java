@@ -16,13 +16,11 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Preconditions;
-
 public class Label implements Comparable<Label> {
   private final String labelString;
 
   public Label(String labelString) {
-    this.labelString = Preconditions.checkNotNull(labelString);
+    this.labelString = labelString;
   }
 
   @Override

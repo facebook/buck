@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -34,8 +33,8 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
 
   public PairTypeCoercer(
       TypeCoercer<FIRST> firstTypeCoercer, TypeCoercer<SECOND> secondTypeCoercer) {
-    this.firstTypeCoercer = Preconditions.checkNotNull(firstTypeCoercer);
-    this.secondTypeCoercer = Preconditions.checkNotNull(secondTypeCoercer);
+    this.firstTypeCoercer = firstTypeCoercer;
+    this.secondTypeCoercer = secondTypeCoercer;
   }
 
   @SuppressWarnings("unchecked")

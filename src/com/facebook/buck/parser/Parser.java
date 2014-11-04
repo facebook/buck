@@ -143,7 +143,7 @@ public class Parser {
      * @param buildFileTreeSupplier each call to get() must reconstruct the tree from disk.
      */
     public BuildFileTreeCache(Supplier<BuildFileTree> buildFileTreeSupplier) {
-      this.supplier = Preconditions.checkNotNull(buildFileTreeSupplier);
+      this.supplier = buildFileTreeSupplier;
     }
 
     /**
@@ -222,13 +222,13 @@ public class Parser {
       ImmutableSet<Pattern> tempFilePatterns,
       RuleKeyBuilderFactory ruleKeyBuilderFactory)
       throws IOException, InterruptedException {
-    this.repositoryFactory = Preconditions.checkNotNull(repositoryFactory);
+    this.repositoryFactory = repositoryFactory;
     this.repository = repositoryFactory.getRootRepository();
     this.buildFileTreeCache = new BuildFileTreeCache(
-        Preconditions.checkNotNull(buildFileTreeSupplier));
-    this.buildTargetParser = Preconditions.checkNotNull(buildTargetParser);
-    this.buildFileParserFactory = Preconditions.checkNotNull(buildFileParserFactory);
-    this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
+        buildFileTreeSupplier);
+    this.buildTargetParser = buildTargetParser;
+    this.buildFileParserFactory = buildFileParserFactory;
+    this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
     this.buildFileDependents = ArrayListMultimap.create();
     this.tempFilePatterns = tempFilePatterns;
     this.state = new CachedState();
@@ -564,9 +564,6 @@ public class Parser {
       ProjectBuildFileParser buildFileParser,
       ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException {
-    Preconditions.checkNotNull(buildFile);
-    Preconditions.checkNotNull(defaultIncludes);
-    Preconditions.checkNotNull(buildFileParser);
 
     if (!isCached(buildFile, defaultIncludes, environment)) {
       LOG.debug("Parsing %s file: %s", BuckConstant.BUILD_RULES_FILE_NAME, buildFile);
@@ -671,8 +668,6 @@ public class Parser {
       BuckEventBus buckEventBus,
       boolean enableProfiling)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    Preconditions.checkNotNull(filesystem);
-    Preconditions.checkNotNull(includes);
     ProjectFilesystem projectFilesystem = repository.getFilesystem();
     if (!projectFilesystem.getRootPath().equals(filesystem.getRootPath())) {
       throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
@@ -939,7 +934,7 @@ public class Parser {
      */
     private synchronized boolean invalidateCacheOnEnvironmentChange(
         ImmutableMap<String, String> environment) {
-      if (!Preconditions.checkNotNull(environment).equals(cacheEnvironment)) {
+      if (!environment.equals(cacheEnvironment)) {
         LOG.debug("Parser invalidating entire cache on environment change.");
         invalidateCache();
         this.cacheEnvironment = environment;
@@ -956,7 +951,7 @@ public class Parser {
      * @return true if the cache was invalidated, false if the cache is still valid.
      */
     private synchronized boolean invalidateCacheOnIncludeChange(Iterable<String> includes) {
-      List<String> includesList = Lists.newArrayList(Preconditions.checkNotNull(includes));
+      List<String> includesList = Lists.newArrayList(includes);
       if (!includesList.equals(this.cacheDefaultIncludes)) {
         LOG.debug("Parser invalidating entire cache on default include change.");
         invalidateCache();

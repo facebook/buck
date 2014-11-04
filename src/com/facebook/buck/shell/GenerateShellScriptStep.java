@@ -46,10 +46,10 @@ public class GenerateShellScriptStep implements Step {
       Path scriptToRun,
       Iterable<Path> resources,
       Path outputFile) {
-    this.basePath = Preconditions.checkNotNull(basePath);
-    this.scriptToRun = Preconditions.checkNotNull(scriptToRun);
-    this.resources = Preconditions.checkNotNull(resources);
-    this.outputFile = Preconditions.checkNotNull(outputFile);
+    this.basePath = basePath;
+    this.scriptToRun = scriptToRun;
+    this.resources = resources;
+    this.outputFile = outputFile;
   }
 
   @Override

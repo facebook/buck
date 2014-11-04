@@ -16,8 +16,6 @@
 
 package com.facebook.buck.python;
 
-import com.google.common.base.Preconditions;
-
 import java.nio.file.Path;
 
 public class PythonEnvironment {
@@ -25,8 +23,8 @@ public class PythonEnvironment {
   private final PythonVersion pythonVersion;
 
   public PythonEnvironment(Path pythonPath, PythonVersion pythonVersion) {
-    this.pythonPath = Preconditions.checkNotNull(pythonPath);
-    this.pythonVersion = Preconditions.checkNotNull(pythonVersion);
+    this.pythonPath = pythonPath;
+    this.pythonVersion = pythonVersion;
   }
 
   public Path getPythonPath() {

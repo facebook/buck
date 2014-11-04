@@ -20,7 +20,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -40,8 +39,8 @@ public class OCamlDepToolStep extends ShellStep {
       Path ocamlDepTool,
       ImmutableList<Path> input, ImmutableList<String> flags) {
     this.ocamlDepTool = ocamlDepTool;
-    this.flags = Preconditions.checkNotNull(flags);
-    this.input = Preconditions.checkNotNull(input);
+    this.flags = flags;
+    this.input = input;
   }
 
   @Override

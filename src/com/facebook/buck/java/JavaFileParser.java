@@ -61,7 +61,7 @@ public class JavaFileParser {
 
   private JavaFileParser(int jlsLevel, String javaVersion) {
     this.jlsLevel = jlsLevel;
-    this.javaVersion = Preconditions.checkNotNull(javaVersion);
+    this.javaVersion = javaVersion;
   }
 
   public static JavaFileParser createJavaFileParser(JavaCompilerEnvironment env) {

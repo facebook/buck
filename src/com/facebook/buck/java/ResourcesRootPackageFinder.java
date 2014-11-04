@@ -16,8 +16,6 @@
 
 package com.facebook.buck.java;
 
-import com.google.common.base.Preconditions;
-
 import java.nio.file.Path;
 
 public class ResourcesRootPackageFinder implements JavaPackageFinder {
@@ -26,8 +24,8 @@ public class ResourcesRootPackageFinder implements JavaPackageFinder {
   private final JavaPackageFinder fallbackFinder;
 
   public ResourcesRootPackageFinder(Path resourcesRoot, JavaPackageFinder fallbackFinder) {
-    this.resourcesRoot = Preconditions.checkNotNull(resourcesRoot);
-    this.fallbackFinder = Preconditions.checkNotNull(fallbackFinder);
+    this.resourcesRoot = resourcesRoot;
+    this.fallbackFinder = fallbackFinder;
   }
 
   @Override

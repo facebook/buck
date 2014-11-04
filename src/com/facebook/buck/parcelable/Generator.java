@@ -35,7 +35,7 @@ public class Generator {
   private final ParcelableClass clazz;
 
   public Generator(ParcelableClass clazz) {
-    this.clazz = Preconditions.checkNotNull(clazz);
+    this.clazz = clazz;
   }
 
   public static String generateFromFile(File file) throws IOException {

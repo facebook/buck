@@ -19,7 +19,6 @@ package com.facebook.buck.file;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -42,8 +41,8 @@ public class Downloader {
   private final Optional<String> mavenRepo;
 
   public Downloader(Optional<Proxy> proxy, Optional<String> mavenRepo) {
-    this.proxy = Preconditions.checkNotNull(proxy);
-    this.mavenRepo = Preconditions.checkNotNull(mavenRepo);
+    this.proxy = proxy;
+    this.mavenRepo = mavenRepo;
   }
 
   public void fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {

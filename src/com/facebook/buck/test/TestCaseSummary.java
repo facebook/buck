@@ -19,7 +19,6 @@ package com.facebook.buck.test;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.TimeFormat;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.util.List;
@@ -56,7 +55,7 @@ public class TestCaseSummary {
    * Creates a TestCaseSummary which is assumed to be not read from cached results
    */
   public TestCaseSummary(String testCaseName, List<TestResultSummary> testResults) {
-    this.testCaseName = Preconditions.checkNotNull(testCaseName);
+    this.testCaseName = testCaseName;
     this.testResults = ImmutableList.copyOf(testResults);
 
     boolean isSuccess = true;
@@ -97,7 +96,6 @@ public class TestCaseSummary {
 
   /** Creates a copy of {@code summary} with the specified value of {@code isCached}. */
   private TestCaseSummary(TestCaseSummary summary, boolean isCached) {
-    Preconditions.checkNotNull(summary);
     this.testCaseName = summary.testCaseName;
     this.testResults = summary.testResults;
     this.isSuccess = summary.isSuccess;

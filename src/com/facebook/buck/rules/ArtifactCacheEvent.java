@@ -38,8 +38,8 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   private final RuleKey ruleKey;
 
   protected ArtifactCacheEvent(Operation operation, RuleKey ruleKey) {
-    this.operation = Preconditions.checkNotNull(operation);
-    this.ruleKey = Preconditions.checkNotNull(ruleKey);
+    this.operation = operation;
+    this.ruleKey = ruleKey;
   }
 
   @Override
@@ -88,7 +88,6 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   public static Finished finished(Operation operation,
       RuleKey ruleKey,
       CacheResult cacheResult) {
-    Preconditions.checkNotNull(cacheResult);
     return new Finished(operation, ruleKey, Optional.of(cacheResult));
   }
 

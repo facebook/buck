@@ -41,9 +41,9 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       ProjectFilesystem projectFilesystem,
       Optional<String> targetNdkVersion,
       PropertyFinder propertyFinder) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.targetNdkVersion = Preconditions.checkNotNull(targetNdkVersion);
-    this.propertyFinder = Preconditions.checkNotNull(propertyFinder);
+    this.projectFilesystem = projectFilesystem;
+    this.targetNdkVersion = targetNdkVersion;
+    this.propertyFinder = propertyFinder;
 
     this.sdkSupplier =
         Suppliers.memoize(new Supplier<Optional<Path>>() {

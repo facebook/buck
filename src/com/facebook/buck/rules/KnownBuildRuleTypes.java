@@ -85,7 +85,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -283,7 +282,6 @@ public class KnownBuildRuleTypes {
     }
 
     public void register(Description<?> description) {
-      Preconditions.checkNotNull(description);
       BuildRuleType type = description.getBuildRuleType();
       types.put(type.getName(), type);
       descriptions.put(type, description);

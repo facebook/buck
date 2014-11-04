@@ -16,7 +16,6 @@
 
 package com.facebook.buck.dalvik.firstorder;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
@@ -34,8 +33,8 @@ public class FirstOrderHelper {
   private FirstOrderHelper(
       Iterable<Type> scenarioTypes,
       ImmutableSet.Builder<String> resultBuilder) {
-    this.scenarioTypes = Preconditions.checkNotNull(scenarioTypes);
-    this.resultBuilder = Preconditions.checkNotNull(resultBuilder);
+    this.scenarioTypes = scenarioTypes;
+    this.resultBuilder = resultBuilder;
     this.knownTypes = Maps.newHashMap();
   }
 
@@ -86,7 +85,7 @@ public class FirstOrderHelper {
 
     FirstOrderTypeInfo info = knownTypes.get(type);
     if (info != null) {
-      addTypeAndSupers(Preconditions.checkNotNull(info.superType));
+      addTypeAndSupers(info.superType);
 
       for (Type interfaceType : info.interfaceTypes) {
         addTypeAndSupers(interfaceType);

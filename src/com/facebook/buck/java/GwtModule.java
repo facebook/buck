@@ -27,7 +27,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -57,7 +56,7 @@ public class GwtModule extends AbstractBuildRule {
     this.outputFile = BuildTargets.getGenPath(
         target,
         "__gwt_module_%s__/" + target.getShortName() + ".jar");
-    this.filesForGwtModule = Preconditions.checkNotNull(filesForGwtModule);
+    this.filesForGwtModule = filesForGwtModule;
   }
 
   @Override

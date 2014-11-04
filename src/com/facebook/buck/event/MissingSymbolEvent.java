@@ -17,7 +17,6 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Preconditions;
 
 public class MissingSymbolEvent extends AbstractBuckEvent {
 
@@ -30,9 +29,9 @@ public class MissingSymbolEvent extends AbstractBuckEvent {
   private final SymbolType type;
 
   private MissingSymbolEvent(BuildTarget target, String symbol, SymbolType type) {
-    this.target = Preconditions.checkNotNull(target);
-    this.symbol = Preconditions.checkNotNull(symbol);
-    this.type = Preconditions.checkNotNull(type);
+    this.target = target;
+    this.symbol = symbol;
+    this.type = type;
   }
 
   public static MissingSymbolEvent create(

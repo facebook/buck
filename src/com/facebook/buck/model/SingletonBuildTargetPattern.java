@@ -16,7 +16,6 @@
 package com.facebook.buck.model;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 
 import javax.annotation.Nullable;
 
@@ -32,7 +31,6 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
    *     match the value returned from a {@link BuildTarget#getFullyQualifiedName()} call.
    */
   public SingletonBuildTargetPattern(String fullyQualifiedName) {
-    Preconditions.checkNotNull(fullyQualifiedName);
 
     int colon = fullyQualifiedName.lastIndexOf(':');
     target = BuildTarget

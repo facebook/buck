@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.io.CharStreams;
 
 import java.io.Closeable;
@@ -47,8 +46,8 @@ class ZipEntryJavaFileObject extends SimpleJavaFileObject implements Closeable {
 
   public ZipEntryJavaFileObject(ZipFile zipFile, ZipEntry zipEntry) {
     super(createURIFromEntry(zipEntry), JavaFileObject.Kind.SOURCE);
-    this.zipFile = Preconditions.checkNotNull(zipFile);
-    this.zipEntry = Preconditions.checkNotNull(zipEntry);
+    this.zipFile = zipFile;
+    this.zipEntry = zipEntry;
   }
 
   /**

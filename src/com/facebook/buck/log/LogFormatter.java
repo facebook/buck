@@ -17,7 +17,6 @@
 package com.facebook.buck.log;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 
 import java.text.SimpleDateFormat;
 
@@ -53,9 +52,7 @@ public class LogFormatter extends java.util.logging.Formatter {
       ConcurrentMap<Long, String> threadIdToCommandId,
       final Locale locale,
       final TimeZone timeZone) {
-    this.threadIdToCommandId = Preconditions.checkNotNull(threadIdToCommandId);
-    Preconditions.checkNotNull(locale);
-    Preconditions.checkNotNull(timeZone);
+    this.threadIdToCommandId = threadIdToCommandId;
     simpleDateFormat = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {

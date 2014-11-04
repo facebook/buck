@@ -195,13 +195,13 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
-    this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
-    this.postprocessClassesCommands = Preconditions.checkNotNull(postprocessClassesCommands);
+    this.proguardConfig = proguardConfig;
+    this.postprocessClassesCommands = postprocessClassesCommands;
     this.exportedDeps = exportedDeps;
     this.providedDeps = providedDeps;
-    this.additionalClasspathEntries = Preconditions.checkNotNull(additionalClasspathEntries);
-    this.javacOptions = Preconditions.checkNotNull(javacOptions);
-    this.resourcesRoot = Preconditions.checkNotNull(resourcesRoot);
+    this.additionalClasspathEntries = additionalClasspathEntries;
+    this.javacOptions = javacOptions;
+    this.resourcesRoot = resourcesRoot;
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));

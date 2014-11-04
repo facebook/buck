@@ -25,7 +25,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,9 +52,9 @@ public class ThriftLibrary extends AbstractBuildRule {
       SymlinkTree includeTreeRule,
       ImmutableMap<Path, SourcePath> includes) {
     super(params, resolver);
-    this.thriftDeps = Preconditions.checkNotNull(thriftDeps);
-    this.includeTreeRule = Preconditions.checkNotNull(includeTreeRule);
-    this.includes = Preconditions.checkNotNull(includes);
+    this.thriftDeps = thriftDeps;
+    this.includeTreeRule = includeTreeRule;
+    this.includes = includes;
   }
 
   @Override

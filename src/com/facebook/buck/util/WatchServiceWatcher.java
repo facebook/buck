@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 
@@ -46,9 +45,9 @@ public class WatchServiceWatcher implements ProjectFilesystemWatcher {
       ProjectFilesystem filesystem,
       EventBus fileChangeEventBus,
       WatchService watchService) throws IOException {
-    this.filesystem = Preconditions.checkNotNull(filesystem);
-    this.eventBus = Preconditions.checkNotNull(fileChangeEventBus);
-    this.watchService = Preconditions.checkNotNull(watchService);
+    this.filesystem = filesystem;
+    this.eventBus = fileChangeEventBus;
+    this.watchService = watchService;
     this.keys = Maps.newHashMap();
     registerAll(filesystem.getRootPath());
   }

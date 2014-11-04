@@ -24,7 +24,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
 
 import java.net.URI;
@@ -39,7 +38,7 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
       boolean isBuildTimeDownloadingOk,
       Downloader downloader) {
     this.isBuildTimeDownloadingOk = isBuildTimeDownloadingOk;
-    this.downloader = Preconditions.checkNotNull(downloader);
+    this.downloader = downloader;
   }
 
   @Override

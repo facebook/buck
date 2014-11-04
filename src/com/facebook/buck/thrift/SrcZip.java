@@ -26,7 +26,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.zip.ZipStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -44,8 +43,8 @@ public class SrcZip extends AbstractBuildRule {
       Path sourceZip,
       Path sourceDirectory) {
     super(params, resolver);
-    this.sourceZip = Preconditions.checkNotNull(sourceZip);
-    this.sourceDirectory = Preconditions.checkNotNull(sourceDirectory);
+    this.sourceZip = sourceZip;
+    this.sourceDirectory = sourceDirectory;
   }
 
   @Override

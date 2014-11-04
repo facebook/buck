@@ -21,7 +21,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
@@ -43,15 +42,15 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
     return new Started(
         targets.hashCode(),
         isRunAllTests,
-        Preconditions.checkNotNull(testSelectorList),
+        testSelectorList,
         shouldExplainTestSelectorList,
-        Preconditions.checkNotNull(targets));
+        targets);
   }
 
   public static Finished finished(
       ImmutableSet<String> targets,
       List<TestResults> completedResults) {
-    return new Finished(targets.hashCode(), Preconditions.checkNotNull(completedResults));
+    return new Finished(targets.hashCode(), completedResults);
   }
 
   @Override
@@ -80,7 +79,7 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
       this.runAllTests = runAllTests;
       this.testSelectorList = testSelectorList;
       this.shouldExplainTestSelectorList = shouldExplainTestSelectorList;
-      this.targetNames = ImmutableSet.copyOf(Preconditions.checkNotNull(targetNames));
+      this.targetNames = ImmutableSet.copyOf(targetNames);
     }
 
     public boolean isRunAllTests() {
@@ -116,7 +115,7 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
 
     public Finished(int secret, List<TestResults> completedResults) {
       super(secret);
-      this.completedResults = Preconditions.checkNotNull(completedResults);
+      this.completedResults = completedResults;
     }
 
     @Override

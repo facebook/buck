@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 
 import java.nio.file.Path;
@@ -29,7 +28,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
   private final TypeCoercer<T> elementTypeCoercer;
 
   CollectionTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
-    this.elementTypeCoercer = Preconditions.checkNotNull(elementTypeCoercer);
+    this.elementTypeCoercer = elementTypeCoercer;
   }
 
   @Override

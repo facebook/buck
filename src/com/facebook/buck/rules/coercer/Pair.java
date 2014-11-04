@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.google.common.base.Preconditions;
-
 import java.util.Objects;
 
 /**
@@ -30,8 +28,8 @@ public class Pair<FIRST, SECOND> {
   private SECOND second;
 
   public Pair(FIRST first, SECOND second) {
-    this.first = Preconditions.checkNotNull(first);
-    this.second = Preconditions.checkNotNull(second);
+    this.first = first;
+    this.second = second;
   }
 
   public FIRST getFirst() {

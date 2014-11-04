@@ -43,7 +43,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -75,11 +74,11 @@ public class PythonTestDescription implements Description<PythonTestDescription.
       PythonEnvironment pythonEnvironment,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.pathToPex = Preconditions.checkNotNull(pathToPex);
-    this.pathToPythonTestMain = Preconditions.checkNotNull(pathToPythonTestMain);
-    this.pythonEnvironment = Preconditions.checkNotNull(pythonEnvironment);
-    this.defaultCxxPlatform = Preconditions.checkNotNull(defaultCxxPlatform);
-    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
+    this.pathToPex = pathToPex;
+    this.pathToPythonTestMain = pathToPythonTestMain;
+    this.pythonEnvironment = pythonEnvironment;
+    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override

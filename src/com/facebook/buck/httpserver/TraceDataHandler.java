@@ -17,7 +17,6 @@
 package com.facebook.buck.httpserver;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.io.CharStreams;
 import com.google.common.net.MediaType;
 
@@ -49,7 +48,7 @@ class TraceDataHandler extends AbstractHandler {
   private final TracesHelper tracesHelper;
 
   TraceDataHandler(TracesHelper tracesHelper) {
-    this.tracesHelper = Preconditions.checkNotNull(tracesHelper);
+    this.tracesHelper = tracesHelper;
   }
 
   @Override

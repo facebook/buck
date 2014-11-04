@@ -25,7 +25,6 @@ import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.FutureCallback;
@@ -167,11 +166,11 @@ public class CassandraArtifactCache implements ArtifactCache {
       FileHashCache fileHashCache,
       final AstyanaxContext<Keyspace> context) {
     this.doStore = doStore;
-    this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
-    this.fileHashCache = Preconditions.checkNotNull(fileHashCache);
+    this.buckEventBus = buckEventBus;
+    this.fileHashCache = fileHashCache;
     this.numConnectionExceptionReports = new AtomicInteger(0);
     this.timeoutSeconds = timeoutSeconds;
-    this.context = Preconditions.checkNotNull(context);
+    this.context = context;
 
     ExecutorService connectionService = MoreExecutors.getExitingExecutorService(
         (ThreadPoolExecutor) Executors.newFixedThreadPool(1), 0, TimeUnit.SECONDS);
@@ -474,8 +473,8 @@ public class CassandraArtifactCache implements ArtifactCache {
     private final HashCode actual;
 
     public CassandraChecksumMismatchEvent(HashCode expected, HashCode actual) {
-      this.expected = Preconditions.checkNotNull(expected);
-      this.actual = Preconditions.checkNotNull(actual);
+      this.expected = expected;
+      this.actual = actual;
     }
 
     @Override

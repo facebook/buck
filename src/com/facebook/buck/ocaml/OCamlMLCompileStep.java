@@ -43,11 +43,11 @@ public class OCamlMLCompileStep extends ShellStep {
         Path input,
         ImmutableList<String> flags
     ) {
-      this.ocamlCompiler = Preconditions.checkNotNull(ocamlCompiler);
-      this.cCompiler = Preconditions.checkNotNull(cCompiler);
-      this.flags = Preconditions.checkNotNull(flags);
-      this.output = Preconditions.checkNotNull(output);
-      this.input = Preconditions.checkNotNull(input);
+      this.ocamlCompiler = ocamlCompiler;
+      this.cCompiler = cCompiler;
+      this.flags = flags;
+      this.output = output;
+      this.input = input;
     }
 
     public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {

@@ -106,13 +106,13 @@ public class ProjectBuildFileParser implements AutoCloseable {
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus) {
     this.projectRoot = projectFilesystem.getRootPath();
-    this.descriptions = Preconditions.checkNotNull(descriptions);
+    this.descriptions = descriptions;
     this.commonIncludes = ImmutableList.copyOf(commonIncludes);
-    this.pythonInterpreter = Preconditions.checkNotNull(pythonInterpreter);
+    this.pythonInterpreter = pythonInterpreter;
     this.pathToBuckPy = Optional.absent();
-    this.console = Preconditions.checkNotNull(console);
-    this.environment = Preconditions.checkNotNull(environment);
-    this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
+    this.console = console;
+    this.environment = environment;
+    this.buckEventBus = buckEventBus;
 
     // Default to server mode unless explicitly unset internally.
     setServerMode(true);

@@ -70,7 +70,7 @@ public class ThriftLibraryDescription
       ThriftBuckConfig thriftBuckConfig,
       ImmutableList<ThriftLanguageSpecificEnhancer> enhancers) {
 
-    this.thriftBuckConfig = Preconditions.checkNotNull(thriftBuckConfig);
+    this.thriftBuckConfig = thriftBuckConfig;
 
     // Now build up a map indexing them by their flavor.
     ImmutableMap.Builder<Flavor, ThriftLanguageSpecificEnhancer> enhancerMapBuilder =

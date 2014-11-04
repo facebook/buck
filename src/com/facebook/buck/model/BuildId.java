@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -43,7 +42,7 @@ public class BuildId implements Comparable<BuildId> {
   }
 
   public BuildId(String id) {
-    this.id = Preconditions.checkNotNull(id);
+    this.id = id;
   }
 
   @JsonCreator

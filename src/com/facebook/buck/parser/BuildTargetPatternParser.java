@@ -47,8 +47,6 @@ public class BuildTargetPatternParser {
       String buildTargetPattern,
       ParseContext parseContext) throws NoSuchBuildTargetException {
 
-    Preconditions.checkNotNull(buildTargetPattern);
-
     if (buildTargetPattern.equals(VISIBILITY_PUBLIC)) {
       if (parseContext.getType() != ParseContext.Type.VISIBILITY) {
         throw new BuildTargetParseException(
@@ -60,7 +58,6 @@ public class BuildTargetPatternParser {
 
     Preconditions.checkArgument(buildTargetPattern.startsWith(BUILD_RULE_PREFIX),
         String.format("'%s' must start with '//'", buildTargetPattern));
-    Preconditions.checkNotNull(parseContext);
 
     if (buildTargetPattern.endsWith(WILDCARD_BUILD_RULE_SUFFIX)) {
       if (parseContext.getType() != ParseContext.Type.VISIBILITY) {

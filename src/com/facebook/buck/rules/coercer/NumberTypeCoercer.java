@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
@@ -29,7 +28,7 @@ public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
   private final Class<T> type;
 
   NumberTypeCoercer(Class<T> type) {
-    this.type = Preconditions.checkNotNull(type);
+    this.type = type;
   }
 
   @Override

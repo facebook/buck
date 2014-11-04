@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -36,12 +35,10 @@ public class BuckPyFunction {
   private final ConstructorArgMarshaller argMarshaller;
 
   public BuckPyFunction(ConstructorArgMarshaller argMarshaller) {
-    this.argMarshaller = Preconditions.checkNotNull(argMarshaller);
+    this.argMarshaller = argMarshaller;
   }
 
   public String toPythonFunction(BuildRuleType type, Object dto) {
-    Preconditions.checkNotNull(type);
-    Preconditions.checkNotNull(dto);
 
     StringBuilder builder = new StringBuilder();
 

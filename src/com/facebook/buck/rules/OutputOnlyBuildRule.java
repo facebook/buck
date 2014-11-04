@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -40,7 +39,7 @@ public class OutputOnlyBuildRule extends AbstractBuildRule {
       SourcePathResolver resolver,
       Path pathToOutputFile) {
     super(buildRuleParams, resolver);
-    this.pathToOutputFile = Preconditions.checkNotNull(pathToOutputFile);
+    this.pathToOutputFile = pathToOutputFile;
   }
 
   @Override

@@ -34,13 +34,12 @@ public abstract class CustomZipOutputStream extends OutputStream {
   private boolean entryOpen;
 
   protected CustomZipOutputStream(OutputStream out) {
-    this.delegate = Preconditions.checkNotNull(out);
+    this.delegate = out;
     this.state = State.CLEAN;
   }
 
   public final void putNextEntry(ZipEntry entry) throws IOException {
     Preconditions.checkState(state != State.CLOSED, "Stream has been closed.");
-    Preconditions.checkNotNull(entry);
 
     state = State.OPEN;
     closeEntry();

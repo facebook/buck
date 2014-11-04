@@ -19,7 +19,6 @@ package com.facebook.buck.step.fs;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
@@ -31,8 +30,8 @@ public class SymlinkTreeStep implements Step {
   private final ImmutableMap<Path, Path> links;
 
   public SymlinkTreeStep(Path root, ImmutableMap<Path, Path> links) {
-    this.root = Preconditions.checkNotNull(root);
-    this.links = Preconditions.checkNotNull(links);
+    this.root = root;
+    this.links = links;
   }
 
   @Override

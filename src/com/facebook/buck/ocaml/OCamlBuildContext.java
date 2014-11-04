@@ -398,9 +398,9 @@ public class OCamlBuildContext {
         OCamlBuildContext context,
         OCamlBuckConfig config,
         SourcePathResolver resolver) {
-      this.context = Preconditions.checkNotNull(context);
-      this.resolver = Preconditions.checkNotNull(resolver);
-      context.config = Preconditions.checkNotNull(config);
+      this.context = context;
+      this.resolver = resolver;
+      context.config = config;
       context.ocamlDepTool = config.getOCamlDepTool().or(DEFAULT_OCAML_DEP_TOOL);
       context.ocamlCompiler = config.getOCamlCompiler().or(DEFAULT_OCAML_COMPILER);
       context.ocamlBytecodeCompiler = config.getOCamlBytecodeCompiler()
@@ -412,7 +412,7 @@ public class OCamlBuildContext {
     }
 
     Builder setFlags(ImmutableList<String> flags) {
-      context.flags = Preconditions.checkNotNull(flags);
+      context.flags = flags;
       return this;
     }
 
@@ -421,7 +421,6 @@ public class OCamlBuildContext {
           context.getGeneratedSourceDir(),
           "You should initialize directories before the call to setInput");
 
-      Preconditions.checkNotNull(input);
       FluentIterable<Path> inputPaths = FluentIterable.from(input)
           .transform(resolver.getPathFunction());
 
@@ -441,12 +440,12 @@ public class OCamlBuildContext {
     }
 
     Builder setIncludes(ImmutableList<String> includes) {
-      context.includes = Preconditions.checkNotNull(includes);
+      context.includes = includes;
       return this;
     }
 
     Builder setLinkableInput(NativeLinkableInput linkableInput) {
-      context.linkableInput = Preconditions.checkNotNull(linkableInput);
+      context.linkableInput = linkableInput;
       return this;
     }
 
@@ -457,7 +456,6 @@ public class OCamlBuildContext {
 
     Builder setUpDirectories(BuildTarget buildTarget, boolean isLibrary) {
       context.isLibrary = isLibrary;
-      Preconditions.checkNotNull(buildTarget);
       context.output = getOutputPath(buildTarget, isLibrary);
       context.bytecodeOutput = getBytecodeOutputPath(buildTarget, isLibrary);
       context.compileOutputDir = getCompileOutputDir(buildTarget, isLibrary);
@@ -467,27 +465,11 @@ public class OCamlBuildContext {
     }
 
     public Builder setCxxPreprocessorInput(CxxPreprocessorInput cxxPreprocessorInputFromDeps) {
-      context.cxxPreprocessorInput = Preconditions.checkNotNull(cxxPreprocessorInputFromDeps);
+      context.cxxPreprocessorInput = cxxPreprocessorInputFromDeps;
       return this;
     }
 
     OCamlBuildContext build() {
-      Preconditions.checkNotNull(context.getOcamlDepTool());
-      Preconditions.checkNotNull(context.getOcamlCompiler());
-      Preconditions.checkNotNull(context.getOcamlBytecodeCompiler());
-      Preconditions.checkNotNull(context.getYaccCompiler());
-      Preconditions.checkNotNull(context.getLexCompiler());
-      Preconditions.checkNotNull(context.getFlags());
-      Preconditions.checkNotNull(context.getInput());
-      Preconditions.checkNotNull(context.getIncludes());
-      Preconditions.checkNotNull(context.getBytecodeIncludes());
-      Preconditions.checkNotNull(context.getLinkableInput());
-      Preconditions.checkNotNull(context.getOCamlInput());
-      Preconditions.checkNotNull(context.getOutput());
-      Preconditions.checkNotNull(context.getBytecodeOutput());
-      Preconditions.checkNotNull(context.getCompileOutputDir());
-      Preconditions.checkNotNull(context.getCompileBytecodeOutputDir());
-      Preconditions.checkNotNull(context.getGeneratedSourceDir());
       return context;
     }
 

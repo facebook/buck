@@ -20,7 +20,6 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -44,9 +43,9 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
    */
   public SymlinkFilesIntoDirectoryStep(Path srcDir, Iterable<Path> entries, Path outDir) {
     super("symlinking files into " + outDir);
-    this.srcDir = Preconditions.checkNotNull(srcDir);
+    this.srcDir = srcDir;
     this.entries = ImmutableSet.copyOf(entries);
-    this.outDir = Preconditions.checkNotNull(outDir);
+    this.outDir = outDir;
   }
 
   @Override

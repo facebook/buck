@@ -18,7 +18,6 @@ package com.facebook.buck.step.fs;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -31,7 +30,7 @@ public class TouchStep extends ShellStep {
   private final Path fileToTouch;
 
   public TouchStep(Path fileToTouch) {
-    this.fileToTouch = Preconditions.checkNotNull(fileToTouch);
+    this.fileToTouch = fileToTouch;
   }
 
   @Override

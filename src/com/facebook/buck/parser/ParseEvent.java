@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -36,7 +35,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
   private final ImmutableList<BuildTarget> buildTargets;
 
   protected ParseEvent(Iterable<BuildTarget> buildTargets) {
-    this.buildTargets = ImmutableList.copyOf(Preconditions.checkNotNull(buildTargets));
+    this.buildTargets = ImmutableList.copyOf(buildTargets);
   }
 
   public ImmutableList<BuildTarget> getBuildTargets() {
@@ -96,7 +95,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
 
     protected Finished(Iterable<BuildTarget> buildTargets, Optional<TargetGraph> graph) {
       super(buildTargets);
-      this.graph = Preconditions.checkNotNull(graph);
+      this.graph = graph;
     }
 
     @Override

@@ -57,11 +57,6 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
       String baseName,
       String shortName,
       ImmutableSortedSet<Flavor> flavors) {
-    Preconditions.checkNotNull(repository);
-    Preconditions.checkNotNull(baseName);
-    // shortName may be the empty string when parsing visibility patterns.
-    Preconditions.checkNotNull(shortName);
-    Preconditions.checkNotNull(flavors);
 
     Preconditions.checkArgument(baseName.startsWith(BUILD_TARGET_PREFIX),
         "baseName must start with %s but was %s",

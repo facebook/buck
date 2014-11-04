@@ -29,7 +29,7 @@ public class DownloadProgressEvent extends AbstractBuckEvent {
   private final String size;
 
   public DownloadProgressEvent(URI uri, long size, long downloadedSoFar) {
-    this.uri = Preconditions.checkNotNull(uri);
+    this.uri = uri;
     this.size = size == -1 ? "unknown" : String.valueOf(size);
     Preconditions.checkArgument(downloadedSoFar > 0);
     this.downloadedSoFar = downloadedSoFar;

@@ -17,7 +17,6 @@
 package com.facebook.buck.model;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 
 import java.nio.file.Path;
@@ -59,7 +58,6 @@ public abstract class BuildFileTree {
    * @return base paths for targets
    */
   protected static Collection<Path> collectBasePaths(final Iterable<BuildTarget> targets) {
-    Preconditions.checkNotNull(targets);
 
     return FluentIterable.from(targets).transform(
         new Function<BuildTarget, Path>() {

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Preconditions;
-
 import javax.annotation.Nullable;
 
 /**
@@ -35,8 +33,8 @@ public class BuildResult {
 
   public BuildResult(BuildRuleSuccess.Type success, CacheResult cacheResult) {
     this.status = BuildRuleStatus.SUCCESS;
-    this.cacheResult = Preconditions.checkNotNull(cacheResult);
-    this.success = Preconditions.checkNotNull(success);
+    this.cacheResult = cacheResult;
+    this.success = success;
     this.failure = null;
   }
 
@@ -44,7 +42,7 @@ public class BuildResult {
     this.status = BuildRuleStatus.FAIL;
     this.cacheResult = CacheResult.MISS;
     this.success = null;
-    this.failure = Preconditions.checkNotNull(failure);
+    this.failure = failure;
   }
 
   BuildRuleStatus getStatus() {

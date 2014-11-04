@@ -40,7 +40,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
@@ -79,10 +78,10 @@ public class PrebuiltJar extends AbstractBuildRule
       Optional<SourcePath> gwtJar,
       Optional<String> javadocUrl) {
     super(params, resolver);
-    this.binaryJar = Preconditions.checkNotNull(binaryJar);
-    this.sourceJar = Preconditions.checkNotNull(sourceJar);
-    this.gwtJar = Preconditions.checkNotNull(gwtJar);
-    this.javadocUrl = Preconditions.checkNotNull(javadocUrl);
+    this.binaryJar = binaryJar;
+    this.sourceJar = sourceJar;
+    this.gwtJar = gwtJar;
+    this.javadocUrl = javadocUrl;
 
     transitiveClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
@@ -223,7 +222,7 @@ public class PrebuiltJar extends AbstractBuildRule
     private final BuildableContext buildableContext;
 
     private CalculateAbiStep(BuildableContext buildableContext) {
-      this.buildableContext = Preconditions.checkNotNull(buildableContext);
+      this.buildableContext = buildableContext;
     }
 
     @Override

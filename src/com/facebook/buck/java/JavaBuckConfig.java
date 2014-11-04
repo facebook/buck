@@ -23,7 +23,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +35,7 @@ public class JavaBuckConfig {
   private final BuckConfig delegate;
 
   public JavaBuckConfig(BuckConfig delegate) {
-    this.delegate = Preconditions.checkNotNull(delegate);
+    this.delegate = delegate;
   }
 
   public JavaCompilerEnvironment getJavaCompilerEnvironment(ProcessExecutor processExecutor)

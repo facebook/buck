@@ -21,7 +21,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 /**
  * Base class for events about build rules.
@@ -98,9 +97,9 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
         CacheResult cacheResult,
         Optional<BuildRuleSuccess.Type> successType) {
       super(rule);
-      this.status = Preconditions.checkNotNull(status);
-      this.cacheResult = Preconditions.checkNotNull(cacheResult);
-      this.successType = Preconditions.checkNotNull(successType);
+      this.status = status;
+      this.cacheResult = cacheResult;
+      this.successType = successType;
     }
 
     public BuildRuleStatus getStatus() {

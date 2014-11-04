@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -51,7 +50,7 @@ public class TestResults {
   public TestResults(BuildTarget source,
       List<TestCaseSummary> testCases,
       ImmutableSet<String> contacts) {
-    this.source = Preconditions.checkNotNull(source);
+    this.source = source;
     this.testCases = ImmutableList.copyOf(testCases);
     this.contacts = ImmutableSet.copyOf(contacts);
     boolean hasAssumptionViolations = false;

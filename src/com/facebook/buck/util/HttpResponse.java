@@ -15,14 +15,12 @@
  */
 package com.facebook.buck.util;
 
-import com.google.common.base.Preconditions;
-
 public class HttpResponse {
 
   private final String responseBody;
 
   public HttpResponse(String response) {
-    this.responseBody = Preconditions.checkNotNull(response);
+    this.responseBody = response;
   }
 
   public String getResponseBody() {

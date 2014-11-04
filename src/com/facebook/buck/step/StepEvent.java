@@ -20,7 +20,6 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 
 /**
  * Base class for events about steps.
@@ -31,8 +30,8 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
   private final String description;
 
   protected StepEvent(Step step, String description) {
-    this.step = Preconditions.checkNotNull(step);
-    this.description = Preconditions.checkNotNull(description);
+    this.step = step;
+    this.description = description;
   }
 
   public Step getStep() {

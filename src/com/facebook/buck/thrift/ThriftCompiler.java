@@ -27,7 +27,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -62,14 +61,14 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
       ImmutableList<Path> includeRoots,
       ImmutableMap<Path, SourcePath> includes) {
     super(params, resolver);
-    this.compiler = Preconditions.checkNotNull(compiler);
-    this.flags = Preconditions.checkNotNull(flags);
-    this.outputDir = Preconditions.checkNotNull(outputDir);
-    this.input = Preconditions.checkNotNull(input);
-    this.language = Preconditions.checkNotNull(language);
-    this.options = Preconditions.checkNotNull(options);
-    this.includeRoots = Preconditions.checkNotNull(includeRoots);
-    this.includes = Preconditions.checkNotNull(includes);
+    this.compiler = compiler;
+    this.flags = flags;
+    this.outputDir = outputDir;
+    this.input = input;
+    this.language = language;
+    this.options = options;
+    this.includeRoots = includeRoots;
+    this.includes = includes;
   }
 
   @Override

@@ -56,7 +56,7 @@ public class OverwritingZipOutputStream extends CustomZipOutputStream {
 
   public OverwritingZipOutputStream(Clock clock, OutputStream out) {
     super(out);
-    this.clock = Preconditions.checkNotNull(clock);
+    this.clock = clock;
 
     try {
       scratchDir = Files.createTempDirectory("overwritingzip").toFile();

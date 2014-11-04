@@ -20,7 +20,6 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -38,11 +37,10 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
       TypeCoercer<SourcePath> sourcePathTypeCoercer,
       TypeCoercer<Pair<SourcePath, String>> sourcePathWithFlagsTypeCoercer,
       TypeCoercer<String> stringTypeCoercer) {
-    this.sourcePathTypeCoercer = Preconditions.checkNotNull(sourcePathTypeCoercer);
-    this.sourcePathWithFlagsTypeCoercer = Preconditions.checkNotNull(
-        sourcePathWithFlagsTypeCoercer);
+    this.sourcePathTypeCoercer = sourcePathTypeCoercer;
+    this.sourcePathWithFlagsTypeCoercer = sourcePathWithFlagsTypeCoercer;
     this.sourceGroupTypeCoercer = new PairTypeCoercer<String, ImmutableList<AppleSource>>(
-        Preconditions.checkNotNull(stringTypeCoercer),
+        stringTypeCoercer,
         new ListTypeCoercer<AppleSource>(this));
   }
 

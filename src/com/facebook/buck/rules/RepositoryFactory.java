@@ -64,9 +64,9 @@ public class RepositoryFactory {
       Platform platform,
       Console console,
       Path canonicalRootPath) {
-    this.clientEnvironment = Preconditions.checkNotNull(clientEnvironment);
-    this.platform = Preconditions.checkNotNull(platform);
-    this.console = Preconditions.checkNotNull(console);
+    this.clientEnvironment = clientEnvironment;
+    this.platform = platform;
+    this.console = console;
     // Ideally we would do isRealPath() to make sure canonicalRootPath doesn't contain symlinks, but
     // since this requires IO it's the responsibility of the caller. Checking isAbsolute() is the
     // next best thing.
@@ -99,7 +99,6 @@ public class RepositoryFactory {
 
   public Repository getRepositoryByAbsolutePath(Path absolutePath)
       throws IOException, InterruptedException {
-    Preconditions.checkNotNull(absolutePath);
     Preconditions.checkArgument(absolutePath.isAbsolute());
 
     if (cachedRepositories.containsKey(absolutePath)) {

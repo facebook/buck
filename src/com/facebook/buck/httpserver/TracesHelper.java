@@ -46,7 +46,7 @@ public class TracesHelper {
   private final ProjectFilesystem projectFilesystem;
 
   TracesHelper(ProjectFilesystem projectFilesystem) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.projectFilesystem = projectFilesystem;
   }
 
   static class TraceAttributes {
@@ -61,7 +61,7 @@ public class TracesHelper {
     private final long lastModifiedTime;
 
     TraceAttributes(Optional<String> command, long lastModifiedTime) {
-      this.command = Preconditions.checkNotNull(command);
+      this.command = command;
       this.lastModifiedTime = lastModifiedTime;
     }
 
@@ -107,7 +107,6 @@ public class TracesHelper {
   }
 
   Iterable<InputStream> getInputsForTraces(String id) throws IOException {
-    Preconditions.checkNotNull(id);
     ImmutableList.Builder<InputStream> tracesBuilder = ImmutableList.builder();
     for (Path p : getPathsToTraces(id)) {
       tracesBuilder.add(projectFilesystem.getInputStreamForRelativePath(p));
@@ -180,7 +179,6 @@ public class TracesHelper {
    * the buck.py launcher has its own trace file).
    */
   private ImmutableCollection<Path> getPathsToTraces(String id) throws IOException {
-    Preconditions.checkNotNull(id);
     Preconditions.checkArgument(TracesHandlerDelegate.TRACE_ID_PATTERN.matcher(id).matches());
 
     ImmutableList.Builder<Path> tracesBuilder = ImmutableList.builder();

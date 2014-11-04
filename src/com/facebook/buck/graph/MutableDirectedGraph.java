@@ -72,7 +72,6 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
    * Creates a mutable copy of the specified graph.
    */
   public MutableDirectedGraph(MutableDirectedGraph<T> graph) {
-    Preconditions.checkNotNull(graph);
     this.nodes = Sets.newHashSet(graph.nodes);
     this.outgoingEdges = HashMultimap.create(graph.outgoingEdges);
     this.incomingEdges = HashMultimap.create(graph.incomingEdges);
@@ -90,14 +89,11 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
   /** @return whether the specified node is present in the graph */
   public boolean containsNode(T node) {
-    Preconditions.checkNotNull(node);
     return nodes.contains(node);
   }
 
   /** @return whether an edge from the source to the sink is present in the graph */
   public boolean containsEdge(T source, T sink) {
-    Preconditions.checkNotNull(source);
-    Preconditions.checkNotNull(sink);
     return outgoingEdges.containsEntry(source, sink);
   }
 
@@ -105,7 +101,6 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
    * Adds the specified node to the graph.
    */
   public boolean addNode(T node) {
-    Preconditions.checkNotNull(node);
     return nodes.add(node);
   }
 
@@ -113,7 +108,6 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
    * Removes the specified node from the graph.
    */
   public boolean removeNode(T node) {
-    Preconditions.checkNotNull(node);
     boolean isRemoved = nodes.remove(node);
     Set<T> nodesReachableFromTheSpecifiedNode = outgoingEdges.removeAll(node);
     for (T reachableNode : nodesReachableFromTheSpecifiedNode) {
@@ -127,8 +121,6 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
    * not already present.
    */
   public void addEdge(T source, T sink) {
-    Preconditions.checkNotNull(source);
-    Preconditions.checkNotNull(sink);
     nodes.add(source);
     nodes.add(sink);
     outgoingEdges.put(source, sink);
@@ -141,8 +133,6 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
    * {@code sink} as unconnected nodes in the graph.
    */
   public void removeEdge(T source, T sink) {
-    Preconditions.checkNotNull(source);
-    Preconditions.checkNotNull(sink);
     outgoingEdges.remove(source, sink);
     incomingEdges.remove(sink, source);
   }
@@ -158,7 +148,6 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
   }
 
   public boolean hasIncomingEdges(T node) {
-    Preconditions.checkNotNull(node);
     return this.incomingEdges.containsKey(node);
   }
 

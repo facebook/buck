@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.step.Step;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.EnumSet;
@@ -88,7 +87,7 @@ public class BuildRuleSuccess {
   }
 
   public BuildRuleSuccess(BuildRule rule, Type type) {
-    this.rule = Preconditions.checkNotNull(rule);
+    this.rule = rule;
     this.type = type;
   }
 

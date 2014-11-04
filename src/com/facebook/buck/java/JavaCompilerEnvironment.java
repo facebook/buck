@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
@@ -42,10 +41,10 @@ public class JavaCompilerEnvironment {
       Optional<JavacVersion> javacVersion,
       String sourceLevel,
       String targetLevel) {
-    this.javacPath = Preconditions.checkNotNull(javacPath);
-    this.javacVersion = Preconditions.checkNotNull(javacVersion);
-    this.sourceLevel = Preconditions.checkNotNull(sourceLevel);
-    this.targetLevel = Preconditions.checkNotNull(targetLevel);
+    this.javacPath = javacPath;
+    this.javacVersion = javacVersion;
+    this.sourceLevel = sourceLevel;
+    this.targetLevel = targetLevel;
   }
 
   public Optional<Path> getJavacPath() {

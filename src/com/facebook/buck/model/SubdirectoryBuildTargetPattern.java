@@ -33,7 +33,6 @@ public class SubdirectoryBuildTargetPattern implements BuildTargetPattern {
    *     call.
    */
   public SubdirectoryBuildTargetPattern(String basePathWithSlash) {
-    Preconditions.checkNotNull(basePathWithSlash);
     Preconditions.checkArgument(basePathWithSlash.isEmpty() || basePathWithSlash.endsWith("/"),
         "basePathWithSlash must either be the empty string or end with a slash");
     this.basePathWithSlash = basePathWithSlash;

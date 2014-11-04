@@ -19,7 +19,6 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -38,9 +37,9 @@ public class OCamlYaccStep extends ShellStep {
         Path output,
         Path input
     ) {
-      this.yaccCompiler = Preconditions.checkNotNull(yaccCompiler);
-      this.output = Preconditions.checkNotNull(output);
-      this.input = Preconditions.checkNotNull(input);
+      this.yaccCompiler = yaccCompiler;
+      this.output = output;
+      this.input = input;
     }
 
     public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {

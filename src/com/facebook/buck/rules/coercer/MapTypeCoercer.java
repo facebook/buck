@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
@@ -30,8 +29,8 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   private final TypeCoercer<V> valueTypeCoercer;
 
   MapTypeCoercer(TypeCoercer<K> keyTypeCoercer, TypeCoercer<V> valueTypeCoercer) {
-    this.keyTypeCoercer = Preconditions.checkNotNull(keyTypeCoercer);
-    this.valueTypeCoercer = Preconditions.checkNotNull(valueTypeCoercer);
+    this.keyTypeCoercer = keyTypeCoercer;
+    this.valueTypeCoercer = valueTypeCoercer;
   }
 
   @SuppressWarnings("unchecked")

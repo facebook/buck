@@ -27,7 +27,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -58,13 +57,13 @@ public class RemoteFile extends AbstractBuildRule {
       String out) {
     super(params, resolver);
     this.isBuildTimeDownloadingOk = isBuildTimeDownloadingOk;
-    this.uri = Preconditions.checkNotNull(uri);
-    this.sha1 = Preconditions.checkNotNull(sha1);
-    this.downloader = Preconditions.checkNotNull(downloader);
+    this.uri = uri;
+    this.sha1 = sha1;
+    this.downloader = downloader;
 
     output = BuildTargets.getGenPath(
         params.getBuildTarget(),
-        String.format("%%s/%s", Preconditions.checkNotNull(out)));
+        String.format("%%s/%s", out));
   }
 
   @Override

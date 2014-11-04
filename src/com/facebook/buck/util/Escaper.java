@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
@@ -136,7 +135,6 @@ public final class Escaper {
    *         a backslash; non-ASCII characters escaped as &#92;u
    */
   public static String escapeAsPythonString(String str) {
-    Preconditions.checkNotNull(str);
     StringBuilder builder = new StringBuilder();
     builder.append('"');
     for (Character ch : str.toCharArray()) {

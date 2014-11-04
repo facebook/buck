@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -38,7 +37,7 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
   protected final BuildTargetParser parser;
 
   public BuildTargetMacroExpander(BuildTargetParser parser) {
-    this.parser = Preconditions.checkNotNull(parser);
+    this.parser = parser;
   }
 
   protected abstract String expand(ProjectFilesystem filesystem, BuildRule rule)

@@ -161,7 +161,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
     private boolean processOnly;
 
     public Builder setOwnerTarget(BuildTarget owner) {
-      ownerTarget = Preconditions.checkNotNull(owner);
+      ownerTarget = owner;
       return this;
     }
 
@@ -186,7 +186,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
     }
 
     public Builder setProjectFilesystem(ProjectFilesystem filesystem) {
-      this.filesystem = Preconditions.checkNotNull(filesystem);
+      this.filesystem = filesystem;
       return this;
     }
 

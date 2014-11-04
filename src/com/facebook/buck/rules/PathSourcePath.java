@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Preconditions;
-
 import java.nio.file.Path;
 
 public class PathSourcePath extends AbstractSourcePath {
@@ -25,7 +23,7 @@ public class PathSourcePath extends AbstractSourcePath {
   private final Path relativePath;
 
   public PathSourcePath(Path relativePath) {
-    this.relativePath = Preconditions.checkNotNull(relativePath);
+    this.relativePath = relativePath;
   }
 
   @Override

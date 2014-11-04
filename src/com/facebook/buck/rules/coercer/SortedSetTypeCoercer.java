@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
@@ -34,7 +33,7 @@ public class SortedSetTypeCoercer<T extends Comparable<T>>
 
   SortedSetTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
     super(elementTypeCoercer);
-    this.elementTypeCoercer = Preconditions.checkNotNull(elementTypeCoercer);
+    this.elementTypeCoercer = elementTypeCoercer;
   }
 
   @SuppressWarnings("unchecked")

@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
@@ -40,8 +39,8 @@ public class BuildTargetSourcePath extends AbstractSourcePath {
   }
 
   private BuildTargetSourcePath(BuildTarget target, Optional<Path> path) {
-    this.target = Preconditions.checkNotNull(target);
-    this.resolvedPath = Preconditions.checkNotNull(path);
+    this.target = target;
+    this.resolvedPath = path;
   }
 
   public Optional<Path> getResolvedPath() {

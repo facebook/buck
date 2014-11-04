@@ -23,7 +23,6 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -57,9 +56,9 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns)
       throws NoSuchBuildTargetException {
-    this.description = Preconditions.checkNotNull(description);
-    this.constructorArg = Preconditions.checkNotNull(constructorArg);
-    this.ruleFactoryParams = Preconditions.checkNotNull(params);
+    this.description = description;
+    this.constructorArg = constructorArg;
+    this.ruleFactoryParams = params;
 
     final ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
     final ImmutableSortedSet.Builder<BuildTarget> extraDeps = ImmutableSortedSet.naturalOrder();
@@ -90,8 +89,8 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     this.extraDeps = ImmutableSortedSet.copyOf(Sets.difference(extraDeps.build(), declaredDeps));
     this.pathsReferenced = paths.build();
 
-    this.declaredDeps = Preconditions.checkNotNull(declaredDeps);
-    this.visibilityPatterns = Preconditions.checkNotNull(visibilityPatterns);
+    this.declaredDeps = declaredDeps;
+    this.visibilityPatterns = visibilityPatterns;
   }
 
   public Description<T> getDescription() {

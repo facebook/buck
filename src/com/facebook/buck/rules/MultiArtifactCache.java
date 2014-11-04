@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
@@ -32,7 +31,7 @@ public class MultiArtifactCache implements ArtifactCache {
   private final boolean isStoreSupported;
 
   public MultiArtifactCache(ImmutableList<ArtifactCache> artifactCaches) {
-    this.artifactCaches = Preconditions.checkNotNull(artifactCaches);
+    this.artifactCaches = artifactCaches;
 
     boolean isStoreSupported = false;
     for (ArtifactCache artifactCache : artifactCaches) {

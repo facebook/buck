@@ -16,8 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Preconditions;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
@@ -28,7 +26,7 @@ public abstract class ZipFileTraversal {
   private final File file;
 
   public ZipFileTraversal(File file) {
-    this.file = Preconditions.checkNotNull(file);
+    this.file = file;
   }
 
   public abstract void visit(ZipFile zipFile, ZipEntry zipEntry) throws IOException;

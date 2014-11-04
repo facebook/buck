@@ -30,7 +30,6 @@ public class DefaultImmutableDirectedAcyclicGraph<T> implements ImmutableDirecte
   private final ImmutableSetMultimap<T, T> incomingEdges;
 
   public DefaultImmutableDirectedAcyclicGraph(MutableDirectedGraph<T> graph) {
-    Preconditions.checkNotNull(graph);
     Preconditions.checkArgument(graph.isAcyclic());
     this.nodes = graph.createImmutableCopyOfNodes();
     this.outgoingEdges = graph.createImmutableCopyOfOutgoingEdges();
@@ -38,7 +37,6 @@ public class DefaultImmutableDirectedAcyclicGraph<T> implements ImmutableDirecte
   }
 
   public DefaultImmutableDirectedAcyclicGraph(DefaultImmutableDirectedAcyclicGraph<T> that) {
-    Preconditions.checkNotNull(that);
     this.nodes = that.nodes;
     this.outgoingEdges = that.outgoingEdges;
     this.incomingEdges = that.incomingEdges;

@@ -21,7 +21,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -48,12 +47,12 @@ public class OCamlCCompileStep extends ShellStep {
         Path input,
         ImmutableList<String> flags,
         ImmutableMap<Path, SourcePath> includes) {
-      this.cCompiler = Preconditions.checkNotNull(cCompiler);
-      this.ocamlCompiler = Preconditions.checkNotNull(ocamlCompiler);
-      this.output = Preconditions.checkNotNull(output);
-      this.input = Preconditions.checkNotNull(input);
-      this.flags = Preconditions.checkNotNull(flags);
-      this.includes = Preconditions.checkNotNull(includes);
+      this.cCompiler = cCompiler;
+      this.ocamlCompiler = ocamlCompiler;
+      this.output = output;
+      this.input = input;
+      this.flags = flags;
+      this.includes = includes;
     }
 
     RuleKey.Builder appendDetailsToRuleKey(SourcePathResolver resolver, RuleKey.Builder builder) {

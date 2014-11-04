@@ -67,8 +67,8 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
   public DefaultStepRunner(
       ExecutionContext executionContext,
       ListeningExecutorService listeningExecutorService) {
-    this.context = Preconditions.checkNotNull(executionContext);
-    this.listeningExecutorService = Preconditions.checkNotNull(listeningExecutorService);
+    this.context = executionContext;
+    this.listeningExecutorService = listeningExecutorService;
 
   }
 
@@ -85,7 +85,6 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
 
   protected void runStepInternal(final Step step, final Optional<BuildTarget> buildTarget)
       throws StepFailedException, InterruptedException {
-    Preconditions.checkNotNull(step);
 
     if (context.getVerbosity().shouldPrintCommand()) {
       context.getStdErr().println(step.getDescription(context));

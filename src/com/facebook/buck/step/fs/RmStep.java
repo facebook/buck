@@ -20,7 +20,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
@@ -40,7 +39,7 @@ public class RmStep implements Step {
   public RmStep(Path toDelete,
       boolean shouldForceDeletion,
       boolean shouldRecurse) {
-    this.toDelete = Preconditions.checkNotNull(toDelete);
+    this.toDelete = toDelete;
     this.shouldForceDeletion = shouldForceDeletion;
     this.shouldRecurse = shouldRecurse;
   }

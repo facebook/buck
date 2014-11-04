@@ -26,7 +26,6 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -50,10 +49,10 @@ public class OCamlDebugLauncherStep implements Step {
         Path bytecodeOutput,
         ImmutableList<OCamlLibrary> ocamlInput,
         ImmutableList<String> bytecodeIncludeFlags) {
-      this.ocamlDebug = Preconditions.checkNotNull(ocamlDebug);
-      this.bytecodeOutput = Preconditions.checkNotNull(bytecodeOutput);
-      this.ocamlInput = Preconditions.checkNotNull(ocamlInput);
-      this.bytecodeIncludeFlags = Preconditions.checkNotNull(bytecodeIncludeFlags);
+      this.ocamlDebug = ocamlDebug;
+      this.bytecodeOutput = bytecodeOutput;
+      this.ocamlInput = ocamlInput;
+      this.bytecodeIncludeFlags = bytecodeIncludeFlags;
     }
 
     public Path getOutput() {

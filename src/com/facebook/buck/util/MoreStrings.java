@@ -48,7 +48,6 @@ public final class MoreStrings {
   }
 
   public static String capitalize(String str) {
-    Preconditions.checkNotNull(str);
     if (!str.isEmpty()) {
       return str.substring(0, 1).toUpperCase() + str.substring(1);
     } else {
@@ -57,8 +56,6 @@ public final class MoreStrings {
   }
 
   public static int getLevenshteinDistance(String str1, String str2) {
-      Preconditions.checkNotNull(str1);
-      Preconditions.checkNotNull(str2);
 
       char[] arr1 = str1.toCharArray();
       char[] arr2 = str2.toCharArray();

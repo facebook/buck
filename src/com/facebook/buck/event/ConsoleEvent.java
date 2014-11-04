@@ -16,7 +16,6 @@
 package com.facebook.buck.event;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 
 import java.util.logging.Level;
 
@@ -31,8 +30,8 @@ public class ConsoleEvent extends AbstractBuckEvent {
   private final String message;
 
   protected ConsoleEvent(Level level, String message) {
-    this.level = Preconditions.checkNotNull(level);
-    this.message = Preconditions.checkNotNull(message);
+    this.level = level;
+    this.message = message;
   }
 
   public Level getLevel() {

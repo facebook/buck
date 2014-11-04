@@ -84,12 +84,12 @@ public class ConsoleHandler extends Handler {
       ConcurrentMap<Long, String> threadIdToCommandId,
       ConcurrentMap<String, OutputStreamWriter> commandIdToConsoleWriter,
       ConcurrentMap<String, Level> commandIdToLevel) {
-    this.defaultOutputStreamWriter = Preconditions.checkNotNull(defaultOutputStreamWriter);
-    setFormatter(Preconditions.checkNotNull(formatter));
-    setLevel(Preconditions.checkNotNull(level));
-    this.threadIdToCommandId = Preconditions.checkNotNull(threadIdToCommandId);
-    this.commandIdToConsoleWriter = Preconditions.checkNotNull(commandIdToConsoleWriter);
-    this.commandIdToLevel = Preconditions.checkNotNull(commandIdToLevel);
+    this.defaultOutputStreamWriter = defaultOutputStreamWriter;
+    setFormatter(formatter);
+    setLevel(level);
+    this.threadIdToCommandId = threadIdToCommandId;
+    this.commandIdToConsoleWriter = commandIdToConsoleWriter;
+    this.commandIdToLevel = commandIdToLevel;
   }
 
   /**
@@ -98,8 +98,6 @@ public class ConsoleHandler extends Handler {
    * {@link #unregisterOutputStream(String)} is called.
    */
   public synchronized void registerOutputStream(String commandId, OutputStream outputStream) {
-    Preconditions.checkNotNull(commandId);
-    Preconditions.checkNotNull(outputStream);
 
     flush();
     commandIdToConsoleWriter.put(commandId, utf8OutputStreamWriter(outputStream));
@@ -110,7 +108,6 @@ public class ConsoleHandler extends Handler {
    * written to the most recent {@link OutputStream} registered for {@code commandId}.
    */
   public synchronized void unregisterOutputStream(String commandId) {
-    Preconditions.checkNotNull(commandId);
 
     flush();
     OutputStreamWriter oldWriter = commandIdToConsoleWriter.remove(commandId);
@@ -125,8 +122,6 @@ public class ConsoleHandler extends Handler {
    * registered for {@code commandId}.
    */
   public synchronized void registerLogLevel(String commandId, Level logLevel) {
-    Preconditions.checkNotNull(commandId);
-    Preconditions.checkNotNull(logLevel);
 
     flush();
     commandIdToLevel.put(commandId, logLevel);
@@ -138,7 +133,6 @@ public class ConsoleHandler extends Handler {
    * registered for {@code commandId}.
    */
   public synchronized void unregisterLogLevel(String commandId) {
-    Preconditions.checkNotNull(commandId);
 
     flush();
     Level oldLevel = commandIdToLevel.remove(commandId);

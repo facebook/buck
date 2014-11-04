@@ -62,7 +62,7 @@ public class MorePaths {
    * @return The Path, made absolute and normalized.
    */
   public static Path absolutify(Path toMakeAbsolute) {
-    return Preconditions.checkNotNull(toMakeAbsolute).toAbsolutePath().normalize();
+    return toMakeAbsolute.toAbsolutePath().normalize();
   }
 
   /**
@@ -93,8 +93,6 @@ public class MorePaths {
    * returns incorrect result if path contains "." or "..").
    */
   public static Path relativize(Path path1, Path path2) {
-    Preconditions.checkNotNull(path1);
-    Preconditions.checkNotNull(path2);
     Path emptyPath = Paths.get("");
 
     Preconditions.checkArgument(

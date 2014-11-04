@@ -17,7 +17,6 @@
 package com.facebook.buck.httpserver;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.net.MediaType;
 import com.google.template.soy.SoyFileSet;
 import com.google.template.soy.data.SoyMapData;
@@ -57,7 +56,7 @@ class TemplateHandler extends AbstractHandler {
   private volatile SoyTofu tofu;
 
   protected TemplateHandler(TemplateHandlerDelegate templateBasedHandler) {
-    this.delegate = Preconditions.checkNotNull(templateBasedHandler);
+    this.delegate = templateBasedHandler;
   }
 
   /**

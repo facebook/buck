@@ -25,7 +25,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.OCamlSource;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -36,7 +35,7 @@ public class OCamlLibraryDescription implements Description<OCamlLibraryDescript
   private final OCamlBuckConfig ocamlBuckConfig;
 
   public OCamlLibraryDescription(OCamlBuckConfig ocamlBuckConfig) {
-    this.ocamlBuckConfig = Preconditions.checkNotNull(ocamlBuckConfig);
+    this.ocamlBuckConfig = ocamlBuckConfig;
   }
 
   @Override

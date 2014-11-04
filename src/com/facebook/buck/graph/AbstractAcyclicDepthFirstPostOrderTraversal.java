@@ -109,7 +109,7 @@ public abstract class AbstractAcyclicDepthFirstPostOrderTraversal<T> {
     private final T node;
     private final Iterator<T> children;
     Explorable(T node) throws IOException, InterruptedException {
-      this.node = Preconditions.checkNotNull(node);
+      this.node = node;
       this.children = findChildren(node);
     }
   }

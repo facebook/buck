@@ -31,7 +31,6 @@ public class CompositeStep implements Step, Iterable<Step> {
   private final ImmutableList<Step> steps;
 
   public CompositeStep(List<? extends Step> commands) {
-    Preconditions.checkNotNull(commands);
     Preconditions.checkArgument(!commands.isEmpty(), "Must have at least one command");
     this.steps = ImmutableList.copyOf(commands);
   }

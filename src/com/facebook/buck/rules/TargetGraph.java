@@ -26,7 +26,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -50,7 +49,7 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
       MutableDirectedGraph<TargetNode<?>> graph,
       ImmutableMap<BuildTarget, TargetNode<?>> unflavoredNodes) {
     super(graph);
-    this.unflavoredNodes = Preconditions.checkNotNull(unflavoredNodes);
+    this.unflavoredNodes = unflavoredNodes;
     actionGraphSupplier = createActionGraphSupplier();
   }
 

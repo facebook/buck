@@ -82,7 +82,7 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule,
     this.metaInfDirectory = metaInfDirectory;
     this.blacklist = blacklist;
 
-    this.directoryTraverser = Preconditions.checkNotNull(directoryTraverser);
+    this.directoryTraverser = directoryTraverser;
   }
 
   @Override

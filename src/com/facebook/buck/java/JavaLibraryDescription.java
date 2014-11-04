@@ -35,7 +35,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -52,7 +51,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   final JavaCompilerEnvironment javacEnv;
 
   public JavaLibraryDescription(JavaCompilerEnvironment javacEnv) {
-    this.javacEnv = Preconditions.checkNotNull(javacEnv);
+    this.javacEnv = javacEnv;
   }
 
   @Override

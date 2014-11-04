@@ -30,7 +30,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -58,10 +57,10 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
       PythonEnvironment pythonEnv,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.pathToPex = Preconditions.checkNotNull(pathToPex);
-    this.pythonEnvironment = Preconditions.checkNotNull(pythonEnv);
-    this.defaultCxxPlatform = Preconditions.checkNotNull(defaultCxxPlatform);
-    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
+    this.pathToPex = pathToPex;
+    this.pythonEnvironment = pythonEnv;
+    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override

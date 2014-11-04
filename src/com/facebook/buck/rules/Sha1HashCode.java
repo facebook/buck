@@ -53,7 +53,6 @@ public final class Sha1HashCode {
    * @param hash Must be a 40-character string from the alphabet [a-f0-9].
    */
   public Sha1HashCode(String hash) {
-    Preconditions.checkNotNull(hash);
     Preconditions.checkArgument(SHA1_PATTERN.matcher(hash).matches(),
         "Should be 40 lowercase hex chars: %s.",
         hash);
@@ -61,7 +60,6 @@ public final class Sha1HashCode {
   }
 
   public static Sha1HashCode fromHashCode(HashCode hashCode) {
-    Preconditions.checkNotNull(hashCode);
     return new Sha1HashCode(
         Hashing.sha1().newHasher().putBytes(hashCode.asBytes()).hash().toString());
   }

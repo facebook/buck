@@ -16,7 +16,6 @@
 
 package com.facebook.buck.event;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -37,9 +36,9 @@ public class TraceEvent extends AbstractBuckEvent {
       String name,
       ChromeTraceEvent.Phase phase,
       ImmutableMap<String, String> properties) {
-    this.name = Preconditions.checkNotNull(name);
-    this.phase = Preconditions.checkNotNull(phase);
-    this.properties = Preconditions.checkNotNull(properties);
+    this.name = name;
+    this.phase = phase;
+    this.properties = properties;
   }
 
   @Override

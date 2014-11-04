@@ -21,7 +21,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem.CopySourceMode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -57,9 +56,9 @@ public class CopyStep implements Step {
   private final CopySourceMode copySourceMode;
 
   private CopyStep(Path source, Path destination, CopySourceMode copySourceMode) {
-    this.source = Preconditions.checkNotNull(source);
-    this.destination = Preconditions.checkNotNull(destination);
-    this.copySourceMode = Preconditions.checkNotNull(copySourceMode);
+    this.source = source;
+    this.destination = destination;
+    this.copySourceMode = copySourceMode;
   }
 
   /**

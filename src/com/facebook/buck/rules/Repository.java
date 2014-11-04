@@ -59,12 +59,12 @@ public class Repository {
       BuckConfig buckConfig,
       RepositoryFactory repositoryFactory,
       AndroidDirectoryResolver androidDirectoryResolver) {
-    this.name = Preconditions.checkNotNull(name);
-    this.filesystem = Preconditions.checkNotNull(filesystem);
-    this.buildRuleTypes = Preconditions.checkNotNull(buildRuleTypes);
-    this.buckConfig = Preconditions.checkNotNull(buckConfig);
-    this.repositoryFactory = Preconditions.checkNotNull(repositoryFactory);
-    this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
+    this.name = name;
+    this.filesystem = filesystem;
+    this.buildRuleTypes = buildRuleTypes;
+    this.buckConfig = buckConfig;
+    this.repositoryFactory = repositoryFactory;
+    this.androidDirectoryResolver = androidDirectoryResolver;
 
     localToCanonicalRepoNamesMap = null;
   }

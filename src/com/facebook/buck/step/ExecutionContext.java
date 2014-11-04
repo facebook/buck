@@ -69,11 +69,11 @@ public class ExecutionContext {
       @Nullable ImmutableMap<String, String> environment,
       @Nullable JavaPackageFinder javaPackageFinder,
       @Nullable ObjectMapper objectMapper) {
-    this.verbosity = Preconditions.checkNotNull(console).getVerbosity();
+    this.verbosity = console.getVerbosity();
     this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.console = Preconditions.checkNotNull(console);
-    this.androidPlatformTarget = Preconditions.checkNotNull(androidPlatformTarget);
-    this.targetDevice = Preconditions.checkNotNull(targetDevice);
+    this.console = console;
+    this.androidPlatformTarget = androidPlatformTarget;
+    this.targetDevice = targetDevice;
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
     this.isDebugEnabled = isDebugEnabled;
@@ -270,22 +270,22 @@ public class ExecutionContext {
     }
 
     public Builder setProjectFilesystem(ProjectFilesystem projectFilesystem) {
-      this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+      this.projectFilesystem = projectFilesystem;
       return this;
     }
 
     public Builder setConsole(Console console) {
-      this.console = Preconditions.checkNotNull(console);
+      this.console = console;
       return this;
     }
 
     public Builder setAndroidPlatformTarget(Optional<AndroidPlatformTarget> androidPlatformTarget) {
-      this.androidPlatformTarget = Preconditions.checkNotNull(androidPlatformTarget);
+      this.androidPlatformTarget = androidPlatformTarget;
       return this;
     }
 
     public Builder setTargetDevice(Optional<TargetDevice> targetDevice) {
-      this.targetDevice = Preconditions.checkNotNull(targetDevice);
+      this.targetDevice = targetDevice;
       return this;
     }
 
@@ -308,17 +308,17 @@ public class ExecutionContext {
     }
 
     public Builder setEventBus(BuckEventBus eventBus) {
-      this.eventBus = Preconditions.checkNotNull(eventBus);
+      this.eventBus = eventBus;
       return this;
     }
 
     public Builder setPlatform(Platform platform) {
-      this.platform = Preconditions.checkNotNull(platform);
+      this.platform = platform;
       return this;
     }
 
     public Builder setEnvironment(ImmutableMap<String, String> environment) {
-      this.environment = Preconditions.checkNotNull(environment);
+      this.environment = environment;
       return this;
     }
 
@@ -328,7 +328,7 @@ public class ExecutionContext {
     }
 
     public Builder setObjectMapper(ObjectMapper objectMapper) {
-      this.objectMapper = Preconditions.checkNotNull(objectMapper);
+      this.objectMapper = objectMapper;
       return this;
     }
   }

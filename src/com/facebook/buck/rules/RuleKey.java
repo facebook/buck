@@ -62,7 +62,7 @@ public class RuleKey {
   private final HashCode hashCode;
 
   private RuleKey(HashCode hashCode) {
-    this.hashCode = Preconditions.checkNotNull(hashCode);
+    this.hashCode = hashCode;
   }
 
   /**
@@ -168,11 +168,11 @@ public class RuleKey {
         ImmutableSortedSet<BuildRule> deps,
         ImmutableSortedSet<BuildRule> exportedDeps,
         FileHashCache hashCache) {
-      this.resolver = Preconditions.checkNotNull(resolver);
-      this.deps = Preconditions.checkNotNull(deps);
-      this.exportedDeps = Preconditions.checkNotNull(exportedDeps);
+      this.resolver = resolver;
+      this.deps = deps;
+      this.exportedDeps = exportedDeps;
       this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
-      this.hashCache = Preconditions.checkNotNull(hashCache);
+      this.hashCache = hashCache;
       if (logger.isVerboseEnabled()) {
         this.logElms = Lists.newArrayList();
       }
@@ -281,8 +281,6 @@ public class RuleKey {
      *     instead of multiple {@link Path}s.
      */
     public Builder setInputs(String key, Iterator<Path> inputs) {
-      Preconditions.checkNotNull(key);
-      Preconditions.checkNotNull(inputs);
       setKey(key);
       while (inputs.hasNext()) {
         Path input = inputs.next();
@@ -450,8 +448,8 @@ public class RuleKey {
       private final RuleKey ruleKeyWithoutDeps;
 
       private RuleKeyPair(RuleKey totalRuleKey, RuleKey ruleKeyWithoutDeps) {
-        this.totalRuleKey = Preconditions.checkNotNull(totalRuleKey);
-        this.ruleKeyWithoutDeps = Preconditions.checkNotNull(ruleKeyWithoutDeps);
+        this.totalRuleKey = totalRuleKey;
+        this.ruleKeyWithoutDeps = ruleKeyWithoutDeps;
       }
 
       public RuleKey getTotalRuleKey() {

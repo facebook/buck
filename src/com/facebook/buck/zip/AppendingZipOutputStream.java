@@ -55,7 +55,7 @@ class AppendingZipOutputStream extends CustomZipOutputStream {
         OutputStream stream,
         boolean throwExceptionsOnDuplicate) {
     super(stream);
-    this.clock = Preconditions.checkNotNull(clock);
+    this.clock = clock;
     this.throwExceptionsOnDuplicate = throwExceptionsOnDuplicate;
   }
 

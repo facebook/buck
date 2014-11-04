@@ -21,7 +21,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -47,8 +46,8 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       CoverageReportFormat format) {
     this.sourceDirectories = ImmutableSet.copyOf(sourceDirectories);
     this.classesDirectories = ImmutableSet.copyOf(classesDirectories);
-    this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
-    this.format = Preconditions.checkNotNull(format);
+    this.outputDirectory = outputDirectory;
+    this.format = format;
   }
 
   @Override

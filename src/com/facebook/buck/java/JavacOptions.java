@@ -22,7 +22,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
@@ -52,11 +51,11 @@ public class JavacOptions {
       boolean verbose,
       Optional<String> bootclasspath,
       AnnotationProcessingData annotationProcessingData) {
-    this.javacEnv = Preconditions.checkNotNull(javacEnv);
+    this.javacEnv = javacEnv;
     this.debug = debug;
     this.verbose = verbose;
-    this.bootclasspath = Preconditions.checkNotNull(bootclasspath);
-    this.annotationProcessingData = Preconditions.checkNotNull(annotationProcessingData);
+    this.bootclasspath = bootclasspath;
+    this.annotationProcessingData = annotationProcessingData;
   }
 
   public JavaCompilerEnvironment getJavaCompilerEnvironment() {
@@ -73,7 +72,6 @@ public class JavacOptions {
   public void appendOptionsToList(ImmutableList.Builder<String> optionsBuilder,
       final Function<Path, Path> pathRelativizer,
       AnnotationProcessingDataDecorator decorator) {
-    Preconditions.checkNotNull(optionsBuilder);
 
     // Add some standard options.
     optionsBuilder.add("-source", javacEnv.getSourceLevel());

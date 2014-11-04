@@ -24,11 +24,6 @@ import java.nio.file.Paths;
 
 public class PathSourcePathTest {
 
-  @Test(expected = NullPointerException.class)
-  public void relativePathMustBeSet() {
-    new PathSourcePath(null);
-  }
-
   @Test
   public void shouldResolveFilesUsingTheBuildContextsFileSystem() {
     PathSourcePath path = new PathSourcePath(Paths.get("cheese"));

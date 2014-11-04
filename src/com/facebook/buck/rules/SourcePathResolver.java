@@ -41,7 +41,7 @@ public class SourcePathResolver {
   private final BuildRuleResolver ruleResolver;
 
   public SourcePathResolver(BuildRuleResolver ruleResolver) {
-    this.ruleResolver = Preconditions.checkNotNull(ruleResolver);
+    this.ruleResolver = ruleResolver;
   }
 
   public Path getPath(SourcePath sourcePath) {
@@ -154,8 +154,6 @@ public class SourcePathResolver {
   }
 
   private String getNameForRule(BuildRule rule) {
-    // This is called by the constructors before rule has been checked for nullity
-    Preconditions.checkNotNull(rule);
 
     // If this build rule implements `HasOutputName`, then return the output name
     // it provides.

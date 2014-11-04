@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -51,8 +50,8 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
   private final Type type;
 
   public ThriftPythonEnhancer(ThriftBuckConfig thriftBuckConfig, Type type) {
-    this.thriftBuckConfig = Preconditions.checkNotNull(thriftBuckConfig);
-    this.type = Preconditions.checkNotNull(type);
+    this.thriftBuckConfig = thriftBuckConfig;
+    this.type = type;
   }
 
   @Override

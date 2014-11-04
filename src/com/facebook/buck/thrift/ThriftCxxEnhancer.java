@@ -33,7 +33,6 @@ import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -56,7 +55,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       boolean cpp2) {
-    this.thriftBuckConfig = Preconditions.checkNotNull(thriftBuckConfig);
+    this.thriftBuckConfig = thriftBuckConfig;
     this.cxxLibraryDescription = new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms);
     this.cpp2 = cpp2;
   }
@@ -279,8 +278,8 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     public CxxHeadersAndSources(
         ImmutableMap<String, SourcePath> headers,
         ImmutableMap<String, SourcePath> sources) {
-      this.headers = Preconditions.checkNotNull(headers);
-      this.sources = Preconditions.checkNotNull(sources);
+      this.headers = headers;
+      this.sources = sources;
     }
 
     public ImmutableMap<String, SourcePath> getHeaders() {

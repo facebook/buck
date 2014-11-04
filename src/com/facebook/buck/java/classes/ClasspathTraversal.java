@@ -19,7 +19,6 @@ package com.facebook.buck.java.classes;
 import com.facebook.buck.util.DirectoryTraversal;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.ZipFileTraversal;
-import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -47,8 +46,8 @@ public abstract class ClasspathTraversal {
   private final ProjectFilesystem filesystem;
 
   public ClasspathTraversal(Collection<Path> paths, ProjectFilesystem filesystem) {
-    this.paths = Preconditions.checkNotNull(paths);
-    this.filesystem = Preconditions.checkNotNull(filesystem);
+    this.paths = paths;
+    this.filesystem = filesystem;
   }
 
   public abstract void visit(FileLike fileLike) throws IOException;
@@ -87,7 +86,7 @@ public abstract class ClasspathTraversal {
     private final File file;
 
     public ZipFileTraversalAdapter(File file) {
-      this.file = Preconditions.checkNotNull(file);
+      this.file = file;
     }
 
     @Override
@@ -138,7 +137,7 @@ public abstract class ClasspathTraversal {
     private final File file;
 
     public DirectoryTraversalAdapter(File file) {
-      this.file = Preconditions.checkNotNull(file);
+      this.file = file;
     }
 
     @Override
@@ -173,8 +172,8 @@ public abstract class ClasspathTraversal {
     public FileLikeInDirectory(File file, String relativePath) {
       // Currently, the only instances of FileLikeInDirectory appear to be the .class files
       // generated from an R.java in Android. The only exception is in unit tests.
-      this.file = Preconditions.checkNotNull(file);
-      this.relativePath = Preconditions.checkNotNull(relativePath);
+      this.file = file;
+      this.relativePath = relativePath;
     }
 
     @Override

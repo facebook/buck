@@ -38,7 +38,6 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -66,10 +65,10 @@ public class PythonTest extends AbstractBuildRule implements TestRule {
 
     super(params, resolver);
 
-    this.binary = Preconditions.checkNotNull(binary);
-    this.sourceUnderTest = Preconditions.checkNotNull(sourceUnderTest);
-    this.labels = Preconditions.checkNotNull(labels);
-    this.contacts = Preconditions.checkNotNull(contacts);
+    this.binary = binary;
+    this.sourceUnderTest = sourceUnderTest;
+    this.labels = labels;
+    this.contacts = contacts;
   }
 
   private Step getRunTestStep() {

@@ -218,7 +218,7 @@ public class BuildContext {
     }
 
     public Builder setActionGraph(ActionGraph actionGraph) {
-      this.actionGraph = Preconditions.checkNotNull(actionGraph);
+      this.actionGraph = actionGraph;
       return this;
     }
 

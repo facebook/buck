@@ -18,7 +18,6 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -62,8 +61,8 @@ public class JavacErrorParser {
           "^(?<file>.+):[0-9]+: error: package (?<class>\\S+) does not exist"));
 
   public JavacErrorParser(ProjectFilesystem filesystem, JavaPackageFinder javaPackageFinder) {
-    this.filesystem = Preconditions.checkNotNull(filesystem);
-    this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
+    this.filesystem = filesystem;
+    this.javaPackageFinder = javaPackageFinder;
   }
 
   public Optional<String> getMissingSymbolFromCompilerError(String error) {

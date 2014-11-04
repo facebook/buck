@@ -16,7 +16,6 @@
 
 package com.facebook.buck.event;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -27,8 +26,8 @@ public class TraceEventLogger implements AutoCloseable {
   private final String name;
 
   private TraceEventLogger(BuckEventBus eventBus, String name) {
-    this.eventBus = Preconditions.checkNotNull(eventBus);
-    this.name = Preconditions.checkNotNull(name);
+    this.eventBus = eventBus;
+    this.name = name;
   }
 
   public static TraceEventLogger start(BuckEventBus eventBus, String name) {

@@ -42,8 +42,8 @@ public class DirArtifactCache implements ArtifactCache {
 
   public DirArtifactCache(File cacheDir, boolean doStore, Optional<Long> maxCacheSizeBytes)
       throws IOException {
-    this.cacheDir = Preconditions.checkNotNull(cacheDir);
-    this.maxCacheSizeBytes = Preconditions.checkNotNull(maxCacheSizeBytes);
+    this.cacheDir = cacheDir;
+    this.maxCacheSizeBytes = maxCacheSizeBytes;
     this.doStore = doStore;
     Files.createDirectories(cacheDir.toPath());
   }

@@ -20,7 +20,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MorePaths;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -32,8 +31,8 @@ public class SymlinkFileStep implements Step {
   private final boolean useAbsolutePaths;
 
   public SymlinkFileStep(Path existingFile, Path desiredLink, boolean useAbsolutePaths) {
-    this.existingFile = Preconditions.checkNotNull(existingFile);
-    this.desiredLink = Preconditions.checkNotNull(desiredLink);
+    this.existingFile = existingFile;
+    this.desiredLink = desiredLink;
     this.useAbsolutePaths = useAbsolutePaths;
   }
 

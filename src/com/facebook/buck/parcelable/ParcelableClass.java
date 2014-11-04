@@ -69,7 +69,7 @@ public class ParcelableClass {
       }
     }
 
-    this.packageName = Preconditions.checkNotNull(packageName);
+    this.packageName = packageName;
     ImmutableSortedSet.Builder<String> importsBuilder = ImmutableSortedSet.<String>naturalOrder()
         .addAll(imports)
         .add("import android.os.Parcel;")
@@ -80,9 +80,9 @@ public class ParcelableClass {
       importsBuilder.add("import com.fasterxml.jackson.annotation.JsonProperty;");
     }
     this.imports = importsBuilder.build();
-    this.className = Preconditions.checkNotNull(className);
-    this.creatorClassName = Preconditions.checkNotNull(creatorClassName);
-    this.defaultFieldVisibility = Preconditions.checkNotNull(defaultFieldVisibility);
+    this.className = className;
+    this.creatorClassName = creatorClassName;
+    this.defaultFieldVisibility = defaultFieldVisibility;
 
     this.fields = fields;
 

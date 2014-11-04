@@ -23,7 +23,6 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -135,16 +134,16 @@ public class JUnitStep extends ShellStep {
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
     this.testClassNames = Iterables.unmodifiableIterable(testClassNames);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
-    this.directoryForTestResults = Preconditions.checkNotNull(directoryForTestResults);
-    this.tmpDirectory = Preconditions.checkNotNull(tmpDirectory);
+    this.directoryForTestResults = directoryForTestResults;
+    this.tmpDirectory = tmpDirectory;
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
     this.isDebugEnabled = isDebugEnabled;
     this.buildId = buildId;
-    this.testSelectorList = Preconditions.checkNotNull(testSelectorList);
+    this.testSelectorList = testSelectorList;
     this.isDryRun = isDryRun;
     this.type = type;
-    this.testRunnerClasspath = Preconditions.checkNotNull(testRunnerClasspath);
-    this.abiProcessorClasspath = Preconditions.checkNotNull(abiProcessorClasspath);
+    this.testRunnerClasspath = testRunnerClasspath;
+    this.abiProcessorClasspath = abiProcessorClasspath;
   }
 
   @Override

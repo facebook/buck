@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.google.common.annotations.Beta;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -46,13 +45,12 @@ public abstract class AbstractBuildRule implements BuildRule {
   @Nullable private volatile RuleKey.Builder.RuleKeyPair ruleKeyPair;
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
-    Preconditions.checkNotNull(buildRuleParams);
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
     this.deps = buildRuleParams.getDeps();
     this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
     this.buildRuleType = buildRuleParams.getBuildRuleType();
-    this.resolver = Preconditions.checkNotNull(resolver);
+    this.resolver = resolver;
   }
 
   @Override

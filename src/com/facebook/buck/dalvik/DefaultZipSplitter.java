@@ -68,10 +68,10 @@ public class DefaultZipSplitter implements ZipSplitter {
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
-    this.filesystem = Preconditions.checkNotNull(filesystem);
+    this.filesystem = filesystem;
     this.inFiles = ImmutableSet.copyOf(inFiles);
-    this.outPrimary = Preconditions.checkNotNull(outPrimary);
-    this.requiredInPrimaryZip = Preconditions.checkNotNull(requiredInPrimaryZip);
+    this.outPrimary = outPrimary;
+    this.requiredInPrimaryZip = requiredInPrimaryZip;
     this.dexSplitStrategy = dexSplitStrategy;
     this.secondaryDexWriter =
         new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);

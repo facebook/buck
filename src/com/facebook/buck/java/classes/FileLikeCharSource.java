@@ -18,7 +18,6 @@ package com.facebook.buck.java.classes;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Preconditions;
 import com.google.common.io.CharSource;
 
 import java.io.IOException;
@@ -29,7 +28,7 @@ public class FileLikeCharSource extends CharSource {
   private final FileLike fileLike;
 
   public FileLikeCharSource(FileLike fileLike) {
-    this.fileLike = Preconditions.checkNotNull(fileLike);
+    this.fileLike = fileLike;
   }
 
   @Override

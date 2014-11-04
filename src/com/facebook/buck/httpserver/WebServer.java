@@ -19,7 +19,6 @@ package com.facebook.buck.httpserver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
@@ -62,8 +61,8 @@ public class WebServer {
       int port,
       ProjectFilesystem projectFilesystem,
       String staticContentDirectory) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.staticContentDirectory = Preconditions.checkNotNull(staticContentDirectory);
+    this.projectFilesystem = projectFilesystem;
+    this.staticContentDirectory = staticContentDirectory;
     this.port = Optional.absent();
     this.server = new Server(port);
     this.streamingWebSocketServlet = new StreamingWebSocketServlet();

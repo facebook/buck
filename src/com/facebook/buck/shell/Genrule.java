@@ -40,7 +40,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -136,10 +135,10 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
       final Function<Path, Path> relativeToAbsolutePathFunction) {
     super(params, resolver);
     this.srcs = ImmutableList.copyOf(srcs);
-    this.macroExpander = Preconditions.checkNotNull(macroExpander);
-    this.cmd = Preconditions.checkNotNull(cmd);
-    this.bash = Preconditions.checkNotNull(bash);
-    this.cmdExe = Preconditions.checkNotNull(cmdExe);
+    this.macroExpander = macroExpander;
+    this.cmd = cmd;
+    this.bash = bash;
+    this.cmdExe = cmdExe;
     this.srcsToAbsolutePaths = FluentIterable
         .from(srcs)
         .transform(resolver.getPathFunction())
@@ -150,7 +149,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
           }
         });
 
-    this.out = Preconditions.checkNotNull(out);
+    this.out = out;
     BuildTarget target = params.getBuildTarget();
     this.pathToOutDirectory = Paths.get(
         BuckConstant.GEN_DIR,

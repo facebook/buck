@@ -70,8 +70,8 @@ public class EstimateLinearAllocStep implements Step, Supplier<Integer> {
   @VisibleForTesting
   EstimateLinearAllocStep(Path pathToJarOrClassesDirectory,
       LinearAllocEstimator linearAllocEstimator) {
-    this.pathToJarOrClassesDirectory = Preconditions.checkNotNull(pathToJarOrClassesDirectory);
-    this.linearAllocEstimator = Preconditions.checkNotNull(linearAllocEstimator);
+    this.pathToJarOrClassesDirectory = pathToJarOrClassesDirectory;
+    this.linearAllocEstimator = linearAllocEstimator;
   }
 
   @Override

@@ -275,8 +275,6 @@ public final class MoreFiles {
    */
   public static Optional<Path> searchPathsForExecutable(
       Path executableToFind, Collection<Path> pathsToSearch) {
-    Preconditions.checkNotNull(executableToFind);
-    Preconditions.checkNotNull(pathsToSearch);
     Preconditions.checkArgument(
         !executableToFind.isAbsolute(),
         "Path %s must be relative",

@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Objects;
@@ -38,14 +37,14 @@ public class XcodeRuleConfigurationLayer {
 
   public XcodeRuleConfigurationLayer(SourcePath path) {
     this.layerType = TYPE.FILE;
-    this.sourcePath = Optional.of(Preconditions.checkNotNull(path));
+    this.sourcePath = Optional.of(path);
     this.inlineSettings = Optional.absent();
   }
 
   public XcodeRuleConfigurationLayer(ImmutableMap<String, String> inlineSettings) {
     this.layerType = TYPE.INLINE_SETTINGS;
     this.sourcePath = Optional.absent();
-    this.inlineSettings = Optional.of(Preconditions.checkNotNull(inlineSettings));
+    this.inlineSettings = Optional.of(inlineSettings);
   }
 
   public TYPE getLayerType() {

@@ -73,18 +73,15 @@ public class HttpArtifactCache implements ArtifactCache {
       ProjectFilesystem projectFilesystem,
       BuckEventBus buckEventBus,
       FileHashCache fileHashCache) {
-    Preconditions.checkNotNull(hostname);
     Preconditions.checkArgument(0 <= port && port < 65536);
     Preconditions.checkArgument(1 <= timeoutSeconds);
-    Preconditions.checkNotNull(projectFilesystem);
-    Preconditions.checkNotNull(buckEventBus);
     this.hostname = hostname;
     this.port = port;
     this.timeoutSeconds = timeoutSeconds;
     this.doStore = doStore;
     this.projectFilesystem = projectFilesystem;
     this.buckEventBus = buckEventBus;
-    this.fileHashCache = Preconditions.checkNotNull(fileHashCache);
+    this.fileHashCache = fileHashCache;
     this.numConnectionExceptionReports = new AtomicInteger(0);
     this.urlStore = String.format(URL_TEMPLATE_STORE, hostname, port);
   }

@@ -22,7 +22,6 @@ import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -48,13 +47,13 @@ public class ThriftCompilerStep extends ShellStep {
       ImmutableSet<String> options,
       ImmutableList<Path> includes) {
 
-    this.compiler = Preconditions.checkNotNull(compiler);
-    this.flags = Preconditions.checkNotNull(flags);
-    this.outputDir = Preconditions.checkNotNull(outputDir);
-    this.input = Preconditions.checkNotNull(input);
-    this.language = Preconditions.checkNotNull(language);
-    this.options = Preconditions.checkNotNull(options);
-    this.includes = Preconditions.checkNotNull(includes);
+    this.compiler = compiler;
+    this.flags = flags;
+    this.outputDir = outputDir;
+    this.input = input;
+    this.language = language;
+    this.options = options;
+    this.includes = includes;
   }
 
   @Override

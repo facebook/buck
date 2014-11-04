@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import com.facebook.buck.log.Logger;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -36,7 +35,7 @@ public class PkillProcessManager implements ProcessManager {
   private final ProcessExecutor processExecutor;
 
   public PkillProcessManager(ProcessExecutor processExecutor) {
-    this.processExecutor = Preconditions.checkNotNull(processExecutor);
+    this.processExecutor = processExecutor;
   }
 
   @Override

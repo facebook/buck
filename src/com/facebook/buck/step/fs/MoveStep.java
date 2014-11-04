@@ -19,7 +19,6 @@ package com.facebook.buck.step.fs;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.nio.file.CopyOption;
@@ -32,9 +31,9 @@ public class MoveStep implements Step {
   private final CopyOption[] options;
 
   public MoveStep(Path source, Path destination, CopyOption... options) {
-    this.source = Preconditions.checkNotNull(source);
-    this.destination = Preconditions.checkNotNull(destination);
-    this.options = Preconditions.checkNotNull(options);
+    this.source = source;
+    this.destination = destination;
+    this.options = options;
   }
 
   @Override

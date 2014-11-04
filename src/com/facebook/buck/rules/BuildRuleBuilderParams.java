@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 
 public class BuildRuleBuilderParams {
 
@@ -26,8 +25,8 @@ public class BuildRuleBuilderParams {
 
   public BuildRuleBuilderParams(ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.ruleKeyBuilderFactory = Preconditions.checkNotNull(ruleKeyBuilderFactory);
+    this.projectFilesystem = projectFilesystem;
+    this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
   }
 
   public ProjectFilesystem getProjectFilesystem() {

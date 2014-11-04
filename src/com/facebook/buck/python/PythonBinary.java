@@ -57,10 +57,10 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
       Path main,
       PythonPackageComponents components) {
     super(params, resolver);
-    this.pathToPex = Preconditions.checkNotNull(pathToPex);
-    this.pythonEnvironment = Preconditions.checkNotNull(pythonEnvironment);
-    this.main = Preconditions.checkNotNull(main);
-    this.components = Preconditions.checkNotNull(components);
+    this.pathToPex = pathToPex;
+    this.pythonEnvironment = pythonEnvironment;
+    this.main = main;
+    this.components = components;
   }
 
   @Override

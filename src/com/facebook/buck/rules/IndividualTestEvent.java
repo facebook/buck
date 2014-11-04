@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.test.TestResults;
-import com.google.common.base.Preconditions;
 
 import java.util.Objects;
 
@@ -36,7 +35,7 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent {
   }
 
   public static Finished finished(Iterable<String> targets, TestResults results) {
-    return new Finished(targets.hashCode(), Preconditions.checkNotNull(results));
+    return new Finished(targets.hashCode(), results);
   }
 
   @Override
@@ -74,7 +73,7 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent {
     private Finished(int secret, TestResults results) {
       // You have no idea how much fun it is to write "super secret" in a private class.
       super(secret);
-      this.results = Preconditions.checkNotNull(results);
+      this.results = results;
     }
 
     public TestResults getResults() {

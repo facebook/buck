@@ -19,7 +19,6 @@ package com.facebook.buck.thrift;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -42,11 +41,11 @@ public class ThriftStep extends ShellStep {
       ImmutableSortedSet<Path> includePaths,
       ImmutableSortedSet<String> generators,
       Collection<String> commandLineArgs) {
-    this.src = Preconditions.checkNotNull(src);
-    this.outputDir = Preconditions.checkNotNull(outputDir);
-    this.outputLocation = Preconditions.checkNotNull(outputLocation);
-    this.includePaths = Preconditions.checkNotNull(includePaths);
-    this.generators = Preconditions.checkNotNull(generators);
+    this.src = src;
+    this.outputDir = outputDir;
+    this.outputLocation = outputLocation;
+    this.includePaths = includePaths;
+    this.generators = generators;
     this.commandLineArgs = ImmutableList.copyOf(commandLineArgs);
   }
 

@@ -99,13 +99,13 @@ public class GwtBinary extends AbstractBuildRule {
     this.outputFile = BuildTargets.getGenPath(
         buildTarget,
         "__gwt_binary_%s__/" + buildTarget.getShortName() + ".zip");
-    this.modules = Preconditions.checkNotNull(modules);
+    this.modules = modules;
     Preconditions.checkArgument(
         !modules.isEmpty(),
         "Must specify at least one module for %s.",
         buildTarget);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
-    this.style = Preconditions.checkNotNull(style);
+    this.style = style;
     this.draftCompile = draftCompile;
 
     // No need for bounds-checking this int because GWT does it internally: http://bit.ly/1kFN5M7.
@@ -118,8 +118,8 @@ public class GwtBinary extends AbstractBuildRule {
 
     this.strict = strict;
     this.experimentalArgs = ImmutableList.copyOf(experimentalArgs);
-    this.moduleDeps = Preconditions.checkNotNull(moduleDeps);
-    this.gwtModuleJars = Preconditions.checkNotNull(gwtModuleJars);
+    this.moduleDeps = moduleDeps;
+    this.gwtModuleJars = gwtModuleJars;
   }
 
   @Override

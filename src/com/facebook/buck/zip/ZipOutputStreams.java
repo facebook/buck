@@ -19,7 +19,6 @@ package com.facebook.buck.zip;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Preconditions;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -41,7 +40,6 @@ public class ZipOutputStreams {
    * @param zipFile The file to write to.
    */
   public static CustomZipOutputStream newOutputStream(File zipFile) {
-    Preconditions.checkNotNull(zipFile);
     try {
       return newOutputStream(new BufferedOutputStream(new FileOutputStream(zipFile)));
     } catch (FileNotFoundException e) {
@@ -69,7 +67,6 @@ public class ZipOutputStreams {
    */
   public static CustomZipOutputStream newOutputStream(File zipFile, HandleDuplicates mode)
       throws FileNotFoundException {
-    Preconditions.checkNotNull(zipFile);
 
     return newOutputStream(new BufferedOutputStream(new FileOutputStream(zipFile)), mode);
   }

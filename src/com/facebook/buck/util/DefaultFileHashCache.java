@@ -44,7 +44,7 @@ public class DefaultFileHashCache implements FileHashCache {
   final LoadingCache<Path, HashCode> loadingCache;
 
   public DefaultFileHashCache(ProjectFilesystem projectFilesystem) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.projectFilesystem = projectFilesystem;
 
     this.loadingCache = CacheBuilder.newBuilder()
         .build(new CacheLoader<Path, HashCode>() {

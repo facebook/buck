@@ -19,7 +19,6 @@ package com.facebook.buck.python;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
@@ -44,9 +43,9 @@ public class PythonPackageComponents {
       ImmutableMap<Path, SourcePath> modules,
       ImmutableMap<Path, SourcePath> resources,
       ImmutableMap<Path, SourcePath> nativeLibraries) {
-    this.modules = Preconditions.checkNotNull(modules);
-    this.resources = Preconditions.checkNotNull(resources);
-    this.nativeLibraries = Preconditions.checkNotNull(nativeLibraries);
+    this.modules = modules;
+    this.resources = resources;
+    this.nativeLibraries = nativeLibraries;
   }
 
   public ImmutableMap<Path, SourcePath> getModules() {
@@ -126,7 +125,7 @@ public class PythonPackageComponents {
     private final Map<Path, BuildTarget> nativeLibrarySources = new HashMap<>();
 
     public Builder(BuildTarget owner) {
-      this.owner = Preconditions.checkNotNull(owner);
+      this.owner = owner;
     }
 
     private HumanReadableException createDuplicateError(

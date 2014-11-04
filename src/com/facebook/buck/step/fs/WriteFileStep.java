@@ -20,7 +20,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.io.Files;
@@ -47,8 +46,8 @@ public class WriteFileStep implements Step {
   }
 
   public WriteFileStep(Supplier<String> content, Path outputPath) {
-    this.content = Preconditions.checkNotNull(content);
-    this.outputPath = Preconditions.checkNotNull(outputPath);
+    this.content = content;
+    this.outputPath = outputPath;
   }
 
   @Override

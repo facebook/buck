@@ -42,9 +42,4 @@ public class BuildRuleSuccessTest {
 
     verify(rule);
   }
-
-  @Test(expected = NullPointerException.class)
-  public void testConstructor() {
-    new BuildRuleSuccess(null, null);
-  }
 }

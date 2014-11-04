@@ -36,7 +36,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -118,7 +117,6 @@ public class GenruleDescription
       BuildTarget target,
       String paramValue,
       ImmutableSet.Builder<String> targets) {
-    Preconditions.checkNotNull(paramValue);
         try {
           targets.addAll(
               Iterables.transform(

@@ -19,14 +19,13 @@ package com.facebook.buck.thrift;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Preconditions;
 
 public class ThriftBuckConfig {
 
   private final BuckConfig delegate;
 
   public ThriftBuckConfig(BuckConfig delegate) {
-    this.delegate = Preconditions.checkNotNull(delegate);
+    this.delegate = delegate;
   }
 
   /**

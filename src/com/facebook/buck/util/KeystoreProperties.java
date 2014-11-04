@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 import java.io.IOException;
@@ -31,10 +30,10 @@ public class KeystoreProperties {
   private final String alias;
 
   public KeystoreProperties(Path keystore, String storepass, String keypass, String alias) {
-    this.keystore = Preconditions.checkNotNull(keystore);
-    this.storepass = Preconditions.checkNotNull(storepass);
-    this.keypass = Preconditions.checkNotNull(keypass);
-    this.alias = Preconditions.checkNotNull(alias);
+    this.keystore = keystore;
+    this.storepass = storepass;
+    this.keypass = keypass;
+    this.alias = alias;
   }
 
   public Path getKeystore() {

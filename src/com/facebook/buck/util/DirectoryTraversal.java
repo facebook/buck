@@ -39,8 +39,8 @@ public abstract class DirectoryTraversal {
 
   /** @param root must be a directory */
   public DirectoryTraversal(File root, ImmutableSet<Path> ignorePaths) {
-    this.root = Preconditions.checkNotNull(root);
-    this.ignorePaths = Preconditions.checkNotNull(ignorePaths);
+    this.root = root;
+    this.ignorePaths = ignorePaths;
   }
 
   public DirectoryTraversal(File root) {

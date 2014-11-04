@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 
@@ -32,7 +31,7 @@ public class Flavor implements Comparable<Flavor> {
   private final String flavor;
 
   public Flavor(String flavor) {
-    this.flavor = Preconditions.checkNotNull(flavor);
+    this.flavor = flavor;
   }
 
   @JsonCreator

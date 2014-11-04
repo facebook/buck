@@ -20,14 +20,13 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
-import com.google.common.base.Preconditions;
 
 public class EchoStep implements Step {
 
   private final String message;
 
   public EchoStep(String message) {
-    this.message = Preconditions.checkNotNull(message);
+    this.message = message;
   }
 
   @Override

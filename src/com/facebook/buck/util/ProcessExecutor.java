@@ -20,7 +20,6 @@ import com.facebook.buck.log.Logger;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -65,7 +64,6 @@ public class ProcessExecutor {
    * of the process.
    */
   public ProcessExecutor(Console console) {
-    Preconditions.checkNotNull(console);
     this.stdOutStream = console.getStdOut();
     this.stdErrStream = console.getStdErr();
     this.ansi = console.getAnsi();
@@ -105,7 +103,6 @@ public class ProcessExecutor {
    * Launches a {@link java.lang.Process} given {@link ProcessExecutorParams}.
    */
   private Process launchProcess(ProcessExecutorParams params) throws IOException {
-    Preconditions.checkNotNull(params);
 
     ProcessBuilder pb = new ProcessBuilder(params.getCommand());
     if (params.getDirectory().isPresent()) {
@@ -257,8 +254,8 @@ public class ProcessExecutor {
 
     public Result(int exitCode, Optional<String> stdout, Optional<String> stderr) {
       this.exitCode = exitCode;
-      this.stdout = Preconditions.checkNotNull(stdout);
-      this.stderr = Preconditions.checkNotNull(stderr);
+      this.stdout = stdout;
+      this.stderr = stderr;
     }
 
     public Result(int exitCode, String stdout, String stderr) {

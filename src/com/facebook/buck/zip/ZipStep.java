@@ -78,11 +78,11 @@ public class ZipStep implements Step {
       Path baseDir) {
     Preconditions.checkArgument(compressionLevel >= MIN_COMPRESSION_LEVEL &&
         compressionLevel <= MAX_COMPRESSION_LEVEL, "compressionLevel out of bounds.");
-    this.pathToZipFile = Preconditions.checkNotNull(pathToZipFile);
-    this.paths = ImmutableSet.copyOf(Preconditions.checkNotNull(paths));
+    this.pathToZipFile = pathToZipFile;
+    this.paths = ImmutableSet.copyOf(paths);
     this.junkPaths = junkPaths;
     this.compressionLevel = compressionLevel;
-    this.baseDir = Preconditions.checkNotNull(baseDir);
+    this.baseDir = baseDir;
   }
 
 

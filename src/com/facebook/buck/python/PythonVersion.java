@@ -16,14 +16,12 @@
 
 package com.facebook.buck.python;
 
-import com.google.common.base.Preconditions;
-
 public class PythonVersion {
 
   private final String version;
 
   public PythonVersion(String version) {
-    this.version = Preconditions.checkNotNull(version);
+    this.version = version;
   }
 
   @Override

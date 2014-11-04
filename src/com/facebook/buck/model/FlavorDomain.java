@@ -19,7 +19,6 @@ package com.facebook.buck.model;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -37,8 +36,8 @@ public class FlavorDomain<T> {
   private final ImmutableMap<Flavor, T> translation;
 
   public FlavorDomain(String name, ImmutableMap<Flavor, T> translation) {
-    this.name = Preconditions.checkNotNull(name);
-    this.translation = Preconditions.checkNotNull(translation);
+    this.name = name;
+    this.translation = translation;
   }
 
   public String getName() {

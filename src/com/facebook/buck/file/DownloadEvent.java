@@ -18,7 +18,6 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
-import com.google.common.base.Preconditions;
 
 import java.net.URI;
 
@@ -27,7 +26,7 @@ public abstract class DownloadEvent extends AbstractBuckEvent {
   protected URI uri;
 
   private DownloadEvent(URI uri) {
-    this.uri = Preconditions.checkNotNull(uri);
+    this.uri = uri;
   }
 
   @Override

@@ -21,7 +21,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -47,9 +46,9 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
 
     /** Creates a new field with the specified parameters. */
     public Field(String type, String name, String value) {
-      this.type = Preconditions.checkNotNull(type);
-      this.name = Preconditions.checkNotNull(name);
-      this.value = Preconditions.checkNotNull(value);
+      this.type = type;
+      this.name = name;
+      this.value = value;
     }
 
     /**
@@ -117,7 +116,7 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
   private final ImmutableMap<String, Field> nameToField;
 
   private BuildConfigFields(ImmutableMap<String, Field> entries) {
-    this.nameToField = Preconditions.checkNotNull(entries);
+    this.nameToField = entries;
   }
 
   public static BuildConfigFields fromFieldDeclarations(Iterable<String> declarations) {
@@ -148,7 +147,6 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
    *     same name, the entry from the {@code fields} parameter wins.
    */
   public BuildConfigFields putAll(BuildConfigFields fields) {
-    Preconditions.checkNotNull(fields);
 
     ImmutableMap.Builder<String, Field> nameToFieldBuilder = ImmutableMap.builder();
     nameToFieldBuilder.putAll(fields.nameToField);
@@ -173,7 +171,6 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
       BuildTarget source,
       String javaPackage,
       boolean useConstantExpressions) {
-    Preconditions.checkNotNull(javaPackage);
 
     StringBuilder builder = new StringBuilder();
     // By design, we drop the flavor from the BuildTarget (if present), so this debug text makes

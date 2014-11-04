@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Preconditions;
-
 public class BuildableProperties {
   public static final BuildableProperties NONE = new BuildableProperties();
 
@@ -46,7 +44,6 @@ public class BuildableProperties {
   private int code;
 
   public BuildableProperties(Kind primaryKind, Kind... kinds) {
-    Preconditions.checkNotNull(primaryKind);
     code = primaryKind.code;
     for (Kind kind : kinds) {
       code |= kind.code;

@@ -43,7 +43,7 @@ public abstract class AbstractBottomUpTraversal<T, V> {
   private final Map<T, AtomicInteger> effectiveOutDegreesOfExplorableNodes;
 
   public AbstractBottomUpTraversal(TraversableGraph<T> graph) {
-    this.graph = Preconditions.checkNotNull(graph);
+    this.graph = graph;
     this.visitedNodes = Sets.newHashSet();
     this.nodesToExplore = Lists.newLinkedList();
     this.effectiveOutDegreesOfExplorableNodes = Maps.newHashMap();

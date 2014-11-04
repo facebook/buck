@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Preconditions;
-
 public final class BuildRuleType {
   // Internal rule types. Denoted by leading trailing underscore.
   public static final BuildRuleType AAPT_PACKAGE = new BuildRuleType("_aapt_package");
@@ -38,7 +36,7 @@ public final class BuildRuleType {
    * @param name must match the name of a type of build rule used in a build file (eg. "genrule").
    */
   public BuildRuleType(String name)  {
-    this.name = Preconditions.checkNotNull(name).toLowerCase();
+    this.name = name.toLowerCase();
     this.isTestRule = name.endsWith("_test");
   }
 

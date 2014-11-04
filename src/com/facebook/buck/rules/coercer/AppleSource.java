@@ -63,7 +63,7 @@ public class AppleSource {
       @Nullable SourcePath sourcePath,
       @Nullable Pair<SourcePath, String> sourcePathWithFlags,
       @Nullable Pair<String, ImmutableList<AppleSource>> sourceGroup) {
-    this.type = Preconditions.checkNotNull(type);
+    this.type = type;
     switch (type) {
       case SOURCE_PATH:
         Preconditions.checkNotNull(sourcePath);

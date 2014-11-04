@@ -19,7 +19,6 @@ package com.facebook.buck.step.fs;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
-import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,7 +36,7 @@ public class MkdirStep implements Step {
   }
 
   public MkdirStep(Path pathRelativeToProjectRoot) {
-    this.pathRelativeToProjectRoot = Preconditions.checkNotNull(pathRelativeToProjectRoot);
+    this.pathRelativeToProjectRoot = pathRelativeToProjectRoot;
   }
 
   @Override

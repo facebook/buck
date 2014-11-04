@@ -22,7 +22,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -38,7 +37,7 @@ public class PythonBuckConfig {
   private final BuckConfig delegate;
 
   public PythonBuckConfig(BuckConfig config) {
-    this.delegate = Preconditions.checkNotNull(config);
+    this.delegate = config;
   }
 
   public PythonEnvironment getPythonEnvironment(ProcessExecutor processExecutor)

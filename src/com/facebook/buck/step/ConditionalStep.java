@@ -16,7 +16,6 @@
 
 package com.facebook.buck.step;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 
 /** {@link Step} that is run conditionally based on {@code Supplier&lt;Boolean> shouldRunStep}. */
@@ -26,8 +25,8 @@ public class ConditionalStep implements Step {
   private final Step step;
 
   public ConditionalStep(Supplier<Boolean> shouldRunStep, Step step) {
-    this.shouldRunStep = Preconditions.checkNotNull(shouldRunStep);
-    this.step = Preconditions.checkNotNull(step);
+    this.shouldRunStep = shouldRunStep;
+    this.step = step;
   }
 
   @Override

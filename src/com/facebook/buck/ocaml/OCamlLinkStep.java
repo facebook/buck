@@ -20,7 +20,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -52,12 +51,12 @@ public class OCamlLinkStep extends ShellStep {
         boolean isBytecode) {
       this.isLibrary = isLibrary;
       this.isBytecode = isBytecode;
-      this.ocamlCompiler = Preconditions.checkNotNull(ocamlCompiler);
-      this.cxxCompiler = Preconditions.checkNotNull(cxxCompiler);
-      this.flags = Preconditions.checkNotNull(flags);
-      this.output = Preconditions.checkNotNull(output);
-      this.depInput = Preconditions.checkNotNull(depInput);
-      this.input = Preconditions.checkNotNull(input);
+      this.ocamlCompiler = ocamlCompiler;
+      this.cxxCompiler = cxxCompiler;
+      this.flags = flags;
+      this.output = output;
+      this.depInput = depInput;
+      this.input = input;
     }
 
     public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {

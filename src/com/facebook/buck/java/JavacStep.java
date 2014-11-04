@@ -141,17 +141,17 @@ public abstract class JavacStep implements Step {
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules,
       Optional<Path> pathToSrcsList) {
-    this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
+    this.outputDirectory = outputDirectory;
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
     this.transitiveClasspathEntries = ImmutableSet.copyOf(transitiveClasspathEntries);
-    this.javacOptions = Preconditions.checkNotNull(javacOptions);
-    this.pathToOutputAbiFile = Preconditions.checkNotNull(pathToOutputAbiFile);
+    this.javacOptions = javacOptions;
+    this.pathToOutputAbiFile = pathToOutputAbiFile;
 
     this.declaredClasspathEntries = ImmutableSet.copyOf(declaredClasspathEntries);
-    this.invokingRule = Preconditions.checkNotNull(invokingRule);
-    this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
-    this.suggestBuildRules = Preconditions.checkNotNull(suggestBuildRules);
-    this.pathToSrcsList = Preconditions.checkNotNull(pathToSrcsList);
+    this.invokingRule = invokingRule;
+    this.buildDependencies = buildDependencies;
+    this.suggestBuildRules = suggestBuildRules;
+    this.pathToSrcsList = pathToSrcsList;
   }
 
   @Override

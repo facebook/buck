@@ -46,9 +46,9 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
       File outSecondaryDir,
       String secondaryPattern,
       ZipSplitter.CanaryStrategy canaryStrategy) {
-    this.outSecondaryDir = Preconditions.checkNotNull(outSecondaryDir);
-    this.secondaryPattern = Preconditions.checkNotNull(secondaryPattern);
-    this.canaryStrategy = Preconditions.checkNotNull(canaryStrategy);
+    this.outSecondaryDir = outSecondaryDir;
+    this.secondaryPattern = secondaryPattern;
+    this.canaryStrategy = canaryStrategy;
     this.secondaryFiles = ImmutableList.builder();
   }
 

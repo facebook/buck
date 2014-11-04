@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -67,10 +66,10 @@ public final class InputStreamConsumer implements Runnable {
       boolean flagOutputWrittenToStream,
       Optional<Handler> handler) {
     this.inputReader = new BufferedReader(reader);
-    this.printStream = Preconditions.checkNotNull(printStream);
-    this.ansi = Preconditions.checkNotNull(ansi);
+    this.printStream = printStream;
+    this.ansi = ansi;
     this.flagOutputWrittenToStream = flagOutputWrittenToStream;
-    this.handler = Preconditions.checkNotNull(handler);
+    this.handler = handler;
   }
 
   @Override

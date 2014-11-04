@@ -76,13 +76,13 @@ public class JavaSymbolFinder {
       BuckEventBus buckEventBus,
       Console console,
       ImmutableMap<String, String> environment) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.srcRootsFinder = Preconditions.checkNotNull(srcRootsFinder);
-    this.projectBuildFileParserFactory = Preconditions.checkNotNull(projectBuildFileParserFactory);
-    this.config = Preconditions.checkNotNull(config);
-    this.buckEventBus = Preconditions.checkNotNull(buckEventBus);
-    this.console = Preconditions.checkNotNull(console);
-    this.environment = Preconditions.checkNotNull(environment);
+    this.projectFilesystem = projectFilesystem;
+    this.srcRootsFinder = srcRootsFinder;
+    this.projectBuildFileParserFactory = projectBuildFileParserFactory;
+    this.config = config;
+    this.buckEventBus = buckEventBus;
+    this.console = console;
+    this.environment = environment;
   }
 
   /**

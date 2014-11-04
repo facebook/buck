@@ -18,7 +18,6 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -45,7 +44,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
   private final ProjectFilesystem projectFilesystem;
 
   public FilesystemBackedBuildFileTree(ProjectFilesystem projectFilesystem) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.projectFilesystem = projectFilesystem;
   }
 
   /**

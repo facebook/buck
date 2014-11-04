@@ -16,8 +16,6 @@
 
 package com.facebook.buck.util.concurrent;
 
-import com.google.common.base.Preconditions;
-
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -33,7 +31,7 @@ public class TimeSpan {
 
   public TimeSpan(long duration, TimeUnit unit) {
     this.duration = duration;
-    this.unit = Preconditions.checkNotNull(unit);
+    this.unit = unit;
   }
 
   public long getTimeSpanInMillis() {

@@ -73,7 +73,6 @@ public class BuckConstant {
   public static String oneTimeTestSubdirectory = null;
 
   public static void setOneTimeTestSubdirectory(String oneTimeTestSubdirectory) {
-    Preconditions.checkNotNull(oneTimeTestSubdirectory);
     Preconditions.checkState(!oneTimeTestSubdirectory.isEmpty(), "cannot be an empty string");
     BuckConstant.oneTimeTestSubdirectory = oneTimeTestSubdirectory;
   }

@@ -81,8 +81,6 @@ public class BuildTargets {
   public static BuildTarget createFlavoredBuildTarget(
       HasBuildTarget hasBuildTarget,
       Flavor flavor) {
-    Preconditions.checkNotNull(hasBuildTarget);
-    Preconditions.checkNotNull(flavor);
     BuildTarget buildTarget = hasBuildTarget.getBuildTarget();
     Preconditions.checkArgument(!buildTarget.isFlavored(),
         "Cannot add flavor %s to %s.",

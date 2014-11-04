@@ -24,7 +24,6 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Types;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
@@ -43,7 +42,7 @@ class ParamInfo<T> implements Comparable<ParamInfo<T>> {
   private final Field field;
 
   public ParamInfo(TypeCoercerFactory typeCoercerFactory, Field field) {
-    this.field = Preconditions.checkNotNull(field);
+    this.field = field;
     this.name = field.getName();
     Hint hint = field.getAnnotation(Hint.class);
     this.pythonName = determinePythonName(this.name, hint);

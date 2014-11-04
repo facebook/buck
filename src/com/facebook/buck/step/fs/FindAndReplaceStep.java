@@ -20,7 +20,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -37,9 +36,9 @@ public class FindAndReplaceStep implements Step {
   private final Function<String, String> replacer;
 
   public FindAndReplaceStep(Path input, Path output, Function<String, String> replacer) {
-    this.input = Preconditions.checkNotNull(input);
-    this.output = Preconditions.checkNotNull(output);
-    this.replacer = Preconditions.checkNotNull(replacer);
+    this.input = input;
+    this.output = output;
+    this.replacer = replacer;
   }
 
   public FindAndReplaceStep(Path input, Path output, final String pattern, final String replace) {

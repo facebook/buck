@@ -561,7 +561,6 @@ public class ProjectFilesystem {
    * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
    */
   public Optional<String> readFirstLine(Path pathRelativeToProjectRoot) {
-    Preconditions.checkNotNull(pathRelativeToProjectRoot);
     Path file = getPathForRelativePath(pathRelativeToProjectRoot);
     return readFirstLineFromFile(file);
   }

@@ -17,7 +17,6 @@
 package com.facebook.buck.graph;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 
@@ -35,10 +34,10 @@ public class Dot<T> {
       String graphName,
       Function<T, String> nodeToName,
       Appendable output) {
-    this.graph = Preconditions.checkNotNull(graph);
-    this.graphName = Preconditions.checkNotNull(graphName);
-    this.nodeToName = Preconditions.checkNotNull(nodeToName);
-    this.output = Preconditions.checkNotNull(output);
+    this.graph = graph;
+    this.graphName = graphName;
+    this.nodeToName = nodeToName;
+    this.output = output;
   }
 
   public void writeOutput() throws IOException {

@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -33,7 +32,7 @@ public class SrcRootsFinder {
   private final ProjectFilesystem projectFilesystem;
 
   public SrcRootsFinder(ProjectFilesystem projectFilesystem) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.projectFilesystem = projectFilesystem;
   }
 
   /**

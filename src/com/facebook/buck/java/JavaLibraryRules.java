@@ -25,7 +25,6 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
@@ -45,7 +44,6 @@ public class JavaLibraryRules {
   static void addAccumulateClassNamesStep(JavaLibrary javaLibrary,
       BuildableContext buildableContext,
       ImmutableList.Builder<Step> steps) {
-    Preconditions.checkNotNull(javaLibrary);
 
     Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(
         javaLibrary.getBuildTarget());

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.step;
 
-import com.google.common.base.Preconditions;
-
 /**
  * Abstract implementation of {@link Step} that takes the description as a constructor parameter
  * and requires only the implementation of {@link #execute(ExecutionContext)}. This facilitates the
@@ -28,7 +26,7 @@ public abstract class AbstractExecutionStep implements Step {
   private final String description;
 
   public AbstractExecutionStep(String description) {
-    this.description = Preconditions.checkNotNull(description);
+    this.description = description;
   }
 
   @Override

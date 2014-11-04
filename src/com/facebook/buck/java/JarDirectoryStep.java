@@ -19,7 +19,6 @@ package com.facebook.buck.java;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -81,7 +80,7 @@ public class JarDirectoryStep implements Step {
                           @Nullable Path manifestFile,
                           boolean mergeManifests,
                           Set<String> blacklist) {
-    this.pathToOutputFile = Preconditions.checkNotNull(pathToOutputFile);
+    this.pathToOutputFile = pathToOutputFile;
     this.entriesToJar = ImmutableSet.copyOf(entriesToJar);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;

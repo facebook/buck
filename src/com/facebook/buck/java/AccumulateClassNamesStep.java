@@ -68,9 +68,8 @@ public class AccumulateClassNamesStep implements Step {
    */
   public AccumulateClassNamesStep(Optional<Path> pathToJarOrClassesDirectory,
       Path whereClassNamesShouldBeWritten) {
-    this.pathToJarOrClassesDirectory = Preconditions.checkNotNull(pathToJarOrClassesDirectory);
-    this.whereClassNamesShouldBeWritten =
-        Preconditions.checkNotNull(whereClassNamesShouldBeWritten);
+    this.pathToJarOrClassesDirectory = pathToJarOrClassesDirectory;
+    this.whereClassNamesShouldBeWritten = whereClassNamesShouldBeWritten;
   }
 
   @Override

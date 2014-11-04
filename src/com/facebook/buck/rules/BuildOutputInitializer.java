@@ -36,8 +36,8 @@ public class BuildOutputInitializer<T> {
   public BuildOutputInitializer(
       BuildTarget buildTarget,
       InitializableFromDisk<T> initializableFromDisk) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
-    this.initializableFromDisk = Preconditions.checkNotNull(initializableFromDisk);
+    this.buildTarget = buildTarget;
+    this.initializableFromDisk = initializableFromDisk;
   }
 
   public T initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {

@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -34,7 +33,7 @@ public class XcodeRuleConfiguration {
   private final ImmutableList<XcodeRuleConfigurationLayer> layers;
 
   public XcodeRuleConfiguration(ImmutableList<XcodeRuleConfigurationLayer> layers) {
-    this.layers = Preconditions.checkNotNull(layers);
+    this.layers = layers;
   }
 
   public ImmutableList<XcodeRuleConfigurationLayer> getLayers() {

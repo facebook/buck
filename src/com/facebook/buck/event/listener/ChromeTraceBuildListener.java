@@ -43,7 +43,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -92,8 +91,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       final Locale locale,
       final TimeZone timeZone,
       int tracesToKeep) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.clock = Preconditions.checkNotNull(clock);
+    this.projectFilesystem = projectFilesystem;
+    this.clock = clock;
     this.dateFormat = new ThreadLocal<SimpleDateFormat>() {
       @Override
       protected SimpleDateFormat initialValue() {
@@ -161,7 +160,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Override
   public void outputTrace(BuildId buildId) {
-    Preconditions.checkNotNull(buildId);
     try {
       String filenameTime = dateFormat.get().format(new Date(clock.currentTimeMillis()));
       String tracePath = String.format("%s/build.%s.%s.trace",

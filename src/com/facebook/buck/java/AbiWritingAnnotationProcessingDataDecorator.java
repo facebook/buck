@@ -19,7 +19,6 @@ package com.facebook.buck.java;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.RuleKey;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
@@ -42,7 +41,7 @@ public class AbiWritingAnnotationProcessingDataDecorator
   private final File outputFile;
 
   public AbiWritingAnnotationProcessingDataDecorator(File outputFile) {
-    this.outputFile = Preconditions.checkNotNull(outputFile);
+    this.outputFile = outputFile;
   }
 
   @Override

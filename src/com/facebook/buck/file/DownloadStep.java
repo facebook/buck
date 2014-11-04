@@ -20,7 +20,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
@@ -39,10 +38,10 @@ public class DownloadStep implements Step {
   private final Downloader downloader;
 
   public DownloadStep(Downloader downloader, URI url, HashCode sha1, Path output) {
-    this.downloader = Preconditions.checkNotNull(downloader);
-    this.url = Preconditions.checkNotNull(url);
-    this.sha1 = Preconditions.checkNotNull(sha1);
-    this.output = Preconditions.checkNotNull(output);
+    this.downloader = downloader;
+    this.url = url;
+    this.sha1 = sha1;
+    this.output = output;
   }
 
   @Override

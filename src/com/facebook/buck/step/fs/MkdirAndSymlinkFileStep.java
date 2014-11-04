@@ -20,7 +20,6 @@ import com.facebook.buck.step.CompositeStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -37,8 +36,8 @@ public final class MkdirAndSymlinkFileStep extends CompositeStep {
     super(ImmutableList.of(
         new MkdirStep(target.getParent()),
         new SymlinkFileStep(source, target, /* useAbsolutePaths */ true)));
-    this.source = Preconditions.checkNotNull(source);
-    this.target = Preconditions.checkNotNull(target);
+    this.source = source;
+    this.target = target;
   }
 
   @VisibleForTesting

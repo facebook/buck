@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -58,8 +57,8 @@ public class ShBinary extends AbstractBuildRule
       SourcePath main,
       ImmutableSet<SourcePath> resources) {
     super(params, resolver);
-    this.main = Preconditions.checkNotNull(main);
-    this.resources = Preconditions.checkNotNull(resources);
+    this.main = main;
+    this.resources = resources;
 
     BuildTarget target = params.getBuildTarget();
     this.output = BuildTargets.getGenPath(

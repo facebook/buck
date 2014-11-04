@@ -34,7 +34,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.zip.ZipStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -57,7 +56,7 @@ public class JavaSourceJar extends AbstractBuildRule {
       SourcePathResolver resolver,
       ImmutableSortedSet<SourcePath> sources) {
     super(params, resolver);
-    this.sources = Preconditions.checkNotNull(sources);
+    this.sources = sources;
     BuildTarget target = params.getBuildTarget();
     this.output = BuildTargets.getGenPath(target, String.format("%%s%s", JavacStep.SRC_ZIP));
     this.temp = BuildTargets.getBinPath(target, "%s-srcs");

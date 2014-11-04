@@ -80,19 +80,19 @@ public class AndroidPlatformTarget {
       Path proguardConfig,
       Path optimizedProguardConfig,
       AndroidDirectoryResolver androidDirectoryResolver) {
-    this.name = Preconditions.checkNotNull(name);
-    this.androidJar = Preconditions.checkNotNull(androidJar);
+    this.name = name;
+    this.androidJar = androidJar;
     this.bootclasspathEntries = ImmutableList.copyOf(bootclasspathEntries);
-    this.aaptExecutable = Preconditions.checkNotNull(aaptExecutable);
-    this.adbExecutable = Preconditions.checkNotNull(adbExecutable);
-    this.aidlExecutable = Preconditions.checkNotNull(aidlExecutable);
-    this.zipalignExecutable = Preconditions.checkNotNull(zipalignExecutable);
-    this.dxExecutable = Preconditions.checkNotNull(dxExecutable);
-    this.androidFrameworkIdlFile = Preconditions.checkNotNull(androidFrameworkIdlFile);
-    this.proguardJar = Preconditions.checkNotNull(proguardJar);
-    this.proguardConfig = Preconditions.checkNotNull(proguardConfig);
-    this.optimizedProguardConfig = Preconditions.checkNotNull(optimizedProguardConfig);
-    this.androidDirectoryResolver = Preconditions.checkNotNull(androidDirectoryResolver);
+    this.aaptExecutable = aaptExecutable;
+    this.adbExecutable = adbExecutable;
+    this.aidlExecutable = aidlExecutable;
+    this.zipalignExecutable = zipalignExecutable;
+    this.dxExecutable = dxExecutable;
+    this.androidFrameworkIdlFile = androidFrameworkIdlFile;
+    this.proguardJar = proguardJar;
+    this.proguardConfig = proguardConfig;
+    this.optimizedProguardConfig = optimizedProguardConfig;
+    this.androidDirectoryResolver = androidDirectoryResolver;
   }
 
   public String getName() {
@@ -162,8 +162,6 @@ public class AndroidPlatformTarget {
       String platformId,
       AndroidDirectoryResolver androidDirectoryResolver,
       Optional<Path> aaptOverride) {
-    Preconditions.checkNotNull(platformId);
-    Preconditions.checkNotNull(androidDirectoryResolver);
 
     Matcher platformMatcher = PLATFORM_TARGET_PATTERN.matcher(platformId);
     if (platformMatcher.matches()) {

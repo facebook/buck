@@ -38,8 +38,8 @@ public class CommandThreadAssociation {
   CommandThreadAssociation(
       String commandId,
       ConcurrentMap<Long, String> threadIdToCommandId) {
-    this.commandId = Preconditions.checkNotNull(commandId);
-    this.threadIdToCommandId = Preconditions.checkNotNull(threadIdToCommandId);
+    this.commandId = commandId;
+    this.threadIdToCommandId = threadIdToCommandId;
     String oldCommandId = threadIdToCommandId.put(Thread.currentThread().getId(), commandId);
     // We better not have overwritten an old mapping.
     Preconditions.checkState(oldCommandId == null);

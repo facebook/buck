@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 
@@ -36,7 +35,7 @@ public class TargetNodePredicateSpec implements TargetNodeSpec {
   public TargetNodePredicateSpec(
       Predicate<TargetNode<?>> predicate,
       ImmutableSet<Path> ignoreDirs) {
-    this.predicate = Preconditions.checkNotNull(predicate);
+    this.predicate = predicate;
     this.buildFileSpec = BuildFileSpec.fromRecursivePath(Paths.get(""), ignoreDirs);
   }
 

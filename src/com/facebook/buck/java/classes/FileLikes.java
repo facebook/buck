@@ -16,8 +16,6 @@
 
 package com.facebook.buck.java.classes;
 
-import com.google.common.base.Preconditions;
-
 /**
  * Utilities for common operations when working with {@link FileLike}s.
  */
@@ -32,12 +30,10 @@ public class FileLikes {
   private FileLikes() {}
 
   public static boolean isClassFile(FileLike fileLike) {
-    Preconditions.checkNotNull(fileLike);
     return fileLike.getRelativePath().endsWith(CLASS_NAME_SUFFIX);
   }
 
   public static String getFileNameWithoutClassSuffix(FileLike fileLike) {
-    Preconditions.checkNotNull(fileLike);
     String name = fileLike.getRelativePath();
     return name.substring(0, name.length() - CLASS_NAME_SUFFIX.length());
   }

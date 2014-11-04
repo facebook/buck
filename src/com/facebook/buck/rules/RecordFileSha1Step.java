@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -31,9 +30,9 @@ public class RecordFileSha1Step implements Step {
   private final BuildableContext buildableContext;
 
   public RecordFileSha1Step(Path inputFile, String metadataKey, BuildableContext buildableContext) {
-    this.inputFile = Preconditions.checkNotNull(inputFile);
-    this.metadataKey = Preconditions.checkNotNull(metadataKey);
-    this.buildableContext = Preconditions.checkNotNull(buildableContext);
+    this.inputFile = inputFile;
+    this.metadataKey = metadataKey;
+    this.buildableContext = buildableContext;
   }
 
   @Override

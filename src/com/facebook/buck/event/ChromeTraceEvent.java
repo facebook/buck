@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
@@ -70,9 +69,9 @@ public class ChromeTraceEvent {
                           @JsonProperty("tid") long threadId,
                           @JsonProperty("ts") long microTime,
                           @JsonProperty("args") Map<String, String> args) {
-    this.category = Preconditions.checkNotNull(category);
-    this.name = Preconditions.checkNotNull(name);
-    this.phase = Preconditions.checkNotNull(phase);
+    this.category = category;
+    this.name = name;
+    this.phase = phase;
     this.processId = processId;
     this.threadId = threadId;
     this.microTime = microTime;
@@ -106,7 +105,7 @@ public class ChromeTraceEvent {
 
   @JsonProperty("args")
   public Map<String, String> getArgs() {
-    return Preconditions.checkNotNull(args);
+    return args;
   }
 
   @JsonProperty("cat")

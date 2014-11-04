@@ -29,7 +29,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -71,8 +70,8 @@ public class ExternalJavacStep extends JavacStep {
         suggestBuildRules,
         pathToSrcsList);
     this.pathToJavac = javacOptions.getJavaCompilerEnvironment().getJavacPath().get();
-    this.target = Preconditions.checkNotNull(target);
-    this.workingDirectory = Preconditions.checkNotNull(workingDirectory);
+    this.target = target;
+    this.workingDirectory = workingDirectory;
   }
 
   @Override

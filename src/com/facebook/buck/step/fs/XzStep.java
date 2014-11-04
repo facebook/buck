@@ -70,8 +70,8 @@ public class XzStep implements Step {
       int compressionLevel,
       boolean keep,
       int check) {
-    this.sourceFile = Preconditions.checkNotNull(sourceFile);
-    this.destinationFile = Preconditions.checkNotNull(destinationFile);
+    this.sourceFile = sourceFile;
+    this.destinationFile = destinationFile;
     Preconditions.checkArgument(compressionLevel >= LZMA2Options.PRESET_MIN &&
         compressionLevel <= LZMA2Options.PRESET_MAX, "compressionLevel out of bounds.");
     this.compressionLevel = compressionLevel;

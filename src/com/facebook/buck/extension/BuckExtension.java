@@ -76,8 +76,8 @@ public class BuckExtension extends AbstractBuildRule {
       ImmutableSortedSet<? extends SourcePath> srcs,
       ImmutableSortedSet<? extends SourcePath> resources) {
     super(params, resolver);
-    this.srcs = Preconditions.checkNotNull(srcs);
-    this.resources = Preconditions.checkNotNull(resources);
+    this.srcs = srcs;
+    this.resources = resources;
 
     BuildTarget target = params.getBuildTarget();
     this.output = BuildTargets.getGenPath(target, "%s-buck.jar");

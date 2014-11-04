@@ -17,7 +17,6 @@ package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.FileNotFoundException;
@@ -37,8 +36,8 @@ public class DefaultPropertyFinder implements PropertyFinder {
   public DefaultPropertyFinder(
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, String> environment) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.environment = Preconditions.checkNotNull(environment);
+    this.projectFilesystem = projectFilesystem;
+    this.environment = environment;
   }
 
   /**

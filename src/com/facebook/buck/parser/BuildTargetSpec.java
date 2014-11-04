@@ -19,7 +19,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -39,7 +38,7 @@ public class BuildTargetSpec implements TargetNodeSpec {
   private final BuildFileSpec buildFileSpec;
 
   public BuildTargetSpec(BuildTarget target) {
-    this.buildTarget = Preconditions.checkNotNull(target);
+    this.buildTarget = target;
     this.buildFileSpec = BuildFileSpec.fromBuildTarget(target);
   }
 

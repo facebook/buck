@@ -20,7 +20,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -33,9 +32,9 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       ProjectFilesystem projectFilesystem,
       String pythonInterpreter,
       ImmutableSet<Description<?>> descriptions) {
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.pythonInterpreter = Preconditions.checkNotNull(pythonInterpreter);
-    this.descriptions = Preconditions.checkNotNull(descriptions);
+    this.projectFilesystem = projectFilesystem;
+    this.pythonInterpreter = pythonInterpreter;
+    this.descriptions = descriptions;
   }
 
   @Override

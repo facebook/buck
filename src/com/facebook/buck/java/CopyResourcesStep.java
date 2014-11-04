@@ -62,11 +62,11 @@ public class CopyResourcesStep implements Step {
       Collection<? extends SourcePath> resources,
       Path outputDirectory,
       JavaPackageFinder javaPackageFinder) {
-    this.resolver = Preconditions.checkNotNull(resolver);
-    this.target = Preconditions.checkNotNull(target);
-    this.resources = Preconditions.checkNotNull(resources);
-    this.outputDirectory = Preconditions.checkNotNull(outputDirectory);
-    this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
+    this.resolver = resolver;
+    this.target = target;
+    this.resources = resources;
+    this.outputDirectory = outputDirectory;
+    this.javaPackageFinder = javaPackageFinder;
   }
 
   @Override

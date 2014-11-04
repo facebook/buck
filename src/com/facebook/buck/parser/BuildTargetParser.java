@@ -67,8 +67,6 @@ public class BuildTargetParser {
    *     file or only as fully-qualified names (as is the case for targets from the command line).
    */
   public BuildTarget parse(String buildTargetName, ParseContext parseContext) {
-    Preconditions.checkNotNull(buildTargetName);
-    Preconditions.checkNotNull(parseContext);
 
     for (String invalidSubstring : INVALID_BUILD_RULE_SUBSTRINGS) {
       if (buildTargetName.contains(invalidSubstring)) {
