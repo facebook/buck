@@ -137,7 +137,7 @@ java_library(
     '//src/com/facebook/buck/event:event',
     '//test/com/facebook/buck/android:android',
     '//test/com/facebook/buck/java:java',
-    '//test/com/facebook/buck/cli:',
+    '//test/com/facebook/buck/cli/...',
     '//test/com/facebook/buck/testutil/integration:integration',
   ],
 )

@@ -32,8 +32,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -131,26 +129,6 @@ public class JavacInMemoryStepIntegrationTest {
     assertTrue(srcsListFile.exists());
     assertTrue(srcsListFile.isFile());
     assertEquals("Example.java", Files.toString(srcsListFile, Charsets.UTF_8).trim());
-  }
-
-  /**
-   * There was a bug caused by adding annotation processors and setting the processorpath for javac.
-   * In that case, Buck's version of guava would leak into the classpath of the annotation processor
-   * causing it to fail to run and all heck breaking loose.
-   */
-  @Test
-  public void testShouldNotPolluteClasspathWhenProcessorPathIsSet()
-      throws IOException, InterruptedException {
-
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "old_guava",
-        tmp);
-    workspace.setUp();
-
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:example");
-
-    result.assertSuccess();
   }
 
   /**

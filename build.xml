@@ -570,13 +570,20 @@
     <fail if="hasFailingTests" />
   </target>
 
-  <target name="py-test" description="runs the Python tests" depends="buck-py-test, asset-catalogs-py-test, pathlib-py-test" />
+  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, asset-catalogs-py-test, pathlib-py-test" />
 
   <target name="buck-py-test" description="tests the BUCK parser">
     <exec executable="python" failonerror="true">
       <env key="PYTHONPATH" path="${pathlib.dir}" />
       <arg value="src/com/facebook/buck/parser/buck_test.py" />
     </exec>
+  </target>
+
+  <target name="class-loader-py-test" description="tests BUCK's class loader setup">
+      <exec executable="python" failonerror="true">
+          <env key="PYTHONPATH" path="${pathlib.dir}" />
+          <arg value="test/com/facebook/buck/cli/bootstrapper/class_loader_test.py" />
+      </exec>
   </target>
 
   <target name="asset-catalogs-py-test" description="tests the asset catalogs compiler">
