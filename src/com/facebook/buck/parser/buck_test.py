@@ -51,6 +51,7 @@ class TestBuck(unittest.TestCase):
                 includes=['*.java'],
                 excludes=[],
                 include_dotfiles=False,
+                allow_empty=False,
                 search_base=search_base))
 
     def test_glob_includes_sort(self):
@@ -63,6 +64,7 @@ class TestBuck(unittest.TestCase):
                 includes=['*.java'],
                 excludes=[],
                 include_dotfiles=False,
+                allow_empty=False,
                 search_base=search_base))
 
     def test_glob_includes_multi(self):
@@ -78,6 +80,7 @@ class TestBuck(unittest.TestCase):
                 includes=['bar/*.java', 'baz/*.java'],
                 excludes=[],
                 include_dotfiles=False,
+                allow_empty=False,
                 search_base=search_base))
 
     def test_glob_excludes_double_star(self):
@@ -92,6 +95,7 @@ class TestBuck(unittest.TestCase):
                 includes=['**/*.java'],
                 excludes=['**/*Test.java'],
                 include_dotfiles=False,
+                allow_empty=False,
                 search_base=search_base))
 
     def test_glob_excludes_multi(self):
@@ -107,6 +111,7 @@ class TestBuck(unittest.TestCase):
                 includes=['bar/*.java', 'baz/*.java'],
                 excludes=['*/[AC].java'],
                 include_dotfiles=False,
+                allow_empty=False,
                 search_base=search_base))
 
     def test_glob_excludes_relative(self):
@@ -121,6 +126,7 @@ class TestBuck(unittest.TestCase):
                 includes=['**/*.java'],
                 excludes=['bar/*.java'],
                 include_dotfiles=False,
+                allow_empty=False,
                 search_base=search_base))
 
     def test_glob_includes_skips_dotfiles(self):
@@ -133,6 +139,7 @@ class TestBuck(unittest.TestCase):
                 includes=['*.java'],
                 excludes=[],
                 include_dotfiles=False,
+                allow_empty=False,
                 search_base=search_base))
 
     def test_glob_includes_does_not_skip_dotfiles_if_include_dotfiles(self):
@@ -145,6 +152,7 @@ class TestBuck(unittest.TestCase):
                 includes=['*.java'],
                 excludes=[],
                 include_dotfiles=True,
+                allow_empty=False,
                 search_base=search_base))
 
     def test_glob_double_star_integration(self):
@@ -170,6 +178,7 @@ class TestBuck(unittest.TestCase):
                     includes=['b/a/**/*.java'],
                     excludes=['**/*Test.java'],
                     include_dotfiles=False,
+                    allow_empty=False,
                     search_base=Path(d)))
         finally:
             shutil.rmtree(d)
@@ -191,6 +200,32 @@ class TestBuck(unittest.TestCase):
             ('HAL', [1, 2, 3], {'abc': 789}),
             testLazy.invoke(name='HAL', deps=[1, 2, 3]))
 
+    def test_glob_errors_empty_results(self):
+        search_base = fake_path(
+            'foo',
+            glob_results={'*.java': []})
+        self.assertRaises(
+            AssertionError,
+            lambda:
+            glob_internal(
+                includes=['*.java'],
+                excludes=[],
+                include_dotfiles=False,
+                allow_empty=False,
+                search_base=search_base))
+
+    def test_glob_allows_empty_results_with_flag(self):
+        search_base = fake_path(
+            'foo',
+            glob_results={'*.java': []})
+        self.assertEqual(
+            [],
+            glob_internal(
+                includes=['*.java'],
+                excludes=[],
+                include_dotfiles=False,
+                allow_empty=True,
+                search_base=search_base))
 
 if __name__ == '__main__':
     unittest.main()

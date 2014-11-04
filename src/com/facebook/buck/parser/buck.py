@@ -116,15 +116,15 @@ def add_rule(rule, build_env):
 
 
 @provide_for_build
-def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
+def glob(includes, excludes=[], include_dotfiles=False, build_env=None, allow_empty=True):
     assert build_env.type == BuildContextType.BUILD_FILE, (
         "Cannot use `glob()` at the top-level of an included file.")
 
     search_base = Path(build_env.dirname)
-    return glob_internal(includes, excludes, include_dotfiles, search_base)
+    return glob_internal(includes, excludes, include_dotfiles, allow_empty, search_base)
 
 
-def glob_internal(includes, excludes, include_dotfiles, search_base):
+def glob_internal(includes, excludes, include_dotfiles, allow_empty, search_base):
     # Ensure the user passes lists of strings rather than just a string.
     assert not isinstance(includes, basestring), \
         "The first argument to glob() must be a list of strings."
@@ -158,7 +158,11 @@ def glob_internal(includes, excludes, include_dotfiles, search_base):
                 return True
         return False
 
-    return sorted(set([str(p) for p in includes_iterator() if not exclusion(p)]))
+    results = sorted(set([str(p) for p in includes_iterator() if not exclusion(p)]))
+    assert allow_empty or results, \
+        "glob() returned no results. If this is expected, use glob with allow_empty=True"
+
+    return results
 
 
 @provide_for_build
