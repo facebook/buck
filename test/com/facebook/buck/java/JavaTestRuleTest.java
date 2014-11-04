@@ -50,7 +50,7 @@ public class JavaTestRuleTest {
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, null);
     ImmutableList<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
 
-    ImmutableList<String> expected = ImmutableList.of("--one", "-Dbuck.device=emulator");
+    ImmutableList<String> expected = ImmutableList.of("--one", "-D\"buck.device\"=\"emulator\"");
     assertEquals(expected, amended);
   }
 
@@ -62,7 +62,7 @@ public class JavaTestRuleTest {
     TargetDevice device = new TargetDevice(TargetDevice.Type.REAL_DEVICE, null);
     ImmutableList<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
 
-    ImmutableList<String> expected = ImmutableList.of("--one", "-Dbuck.device=device");
+    ImmutableList<String> expected = ImmutableList.of("--one", "-D\"buck.device\"=\"device\"");
     assertEquals(expected, amended);
   }
 
@@ -75,7 +75,7 @@ public class JavaTestRuleTest {
     List<String> amended = rule.amendVmArgs(vmArgs, Optional.of(device));
 
     List<String> expected = ImmutableList.of(
-        "--one", "-Dbuck.device=emulator", "-Dbuck.device.id=123");
+        "--one", "-D\"buck.device\"=\"emulator\"", "-D\"buck.device.id\"=\"123\"");
     assertEquals(expected, amended);
   }
 

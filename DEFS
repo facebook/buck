@@ -91,7 +91,7 @@ def java_test(
       # (http://www.docjar.com/html/api/sun/misc/VM.java.html) saves the property
       # internally, but removes it from the set of system properties that are
       # publicly accessible.
-      '-Dsun.zip.disableMemoryMapping=true',
+      '-D"sun.zip.disableMemoryMapping"="true"',
     ] + vm_args,
     **kwargs
   )

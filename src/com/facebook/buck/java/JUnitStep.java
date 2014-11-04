@@ -156,18 +156,18 @@ public class JUnitStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("java");
-    args.add(String.format("-Djava.io.tmpdir=%s", tmpDirectory));
+    args.add(String.format("-D\"java.io.tmpdir\"=\"%s\"", tmpDirectory));
 
     // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
     // to find the ABI processor and test runner classes, so propagate these down via the
     // relevant properties.
     args.add(
         String.format(
-            "-Dbuck.abi_processor_classes=%s",
+            "-D\"buck.abi_processor_classes\"=\"%s\"",
             abiProcessorClasspath));
     args.add(
         String.format(
-            "-Dbuck.testrunner_classes=%s",
+            "-D\"buck.testrunner_classes\"=\"%s\"",
             testRunnerClasspath));
 
     if (isCodeCoverageEnabled) {
@@ -178,7 +178,7 @@ public class JUnitStep extends ShellStep {
     }
 
     // Include the buildId
-    args.add(String.format("-D%s=%s", BUILD_ID_PROPERTY, buildId));
+    args.add(String.format("-D\"%s\"=\"%s\"", BUILD_ID_PROPERTY, buildId));
 
     if (isDebugEnabled) {
       // This is the default config used by IntelliJ. By doing this, all a user

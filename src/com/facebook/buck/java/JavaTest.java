@@ -248,12 +248,12 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
 
     TargetDevice device = targetDevice.get();
     if (device.isEmulator()) {
-      vmArgsBuilder.add("-Dbuck.device=emulator");
+      vmArgsBuilder.add("-D\"buck.device\"=\"emulator\"");
     } else {
-      vmArgsBuilder.add("-Dbuck.device=device");
+      vmArgsBuilder.add("-D\"buck.device\"=\"device\"");
     }
     if (device.hasIdentifier()) {
-      vmArgsBuilder.add("-Dbuck.device.id=" + device.getIdentifier());
+      vmArgsBuilder.add("-D\"buck.device.id\"=\"" + device.getIdentifier() + '"');
     }
   }
 
