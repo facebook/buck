@@ -26,7 +26,7 @@ android_library(
 android_library(
   name = 'main-lib',
   srcs = [
-    'LogService.java',
+    'LogActivity.java',
     '//:value',
   ],
 )

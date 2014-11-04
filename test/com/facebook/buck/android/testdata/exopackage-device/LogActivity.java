@@ -16,25 +16,18 @@
 
 package exotest;
 
-import android.app.Service;
-import android.content.Intent;
+import android.app.Activity;
 import android.os.Build;
-import android.os.IBinder;
+import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
 
-public class LogService extends Service {
+public class LogActivity extends Activity {
 
   @Override
-  public IBinder onBind(Intent intent) {
-    return null;
-  }
-
-  @Override
-  public int onStartCommand(Intent intent, int flags, int startId) {
+  public void onCreate(Bundle bundle) {
     Log.i("EXOPACKAGE_TEST", "VALUE=" + Value.VALUE);
-    stopSelf();
-    return START_NOT_STICKY;
+    finish();
   }
 
   @Override

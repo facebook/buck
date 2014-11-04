@@ -14,10 +14,10 @@
       android:name='exotest.AppShell'
       android:debuggable='true'
     >
-    <service
-        android:name='exotest.LogService'
-        android:exported='true'
-      />
+    <activity
+        android:name='exotest.LogActivity'
+        android:exported='true' 
+    />
   </application>
 
 </manifest>
