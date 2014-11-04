@@ -34,12 +34,53 @@ android_binary(
 )
 
 android_binary(
-  name = 'app-exo',
+  name = 'app-dex-exo',
   manifest = 'AndroidManifest.xml',
   target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   use_split_dex = True,
-  exopackage = True,
+  exopackage_modes = ['secondary_dex'],
+  primary_dex_patterns = [
+    '/MyApplication^',
+  ],
+  deps = [
+    '//java/com/sample/app:app',
+    '//java/com/sample/lib:lib',
+    '//native/fakenative/jni:fakenative',
+    '//native/mybinary/jni:mybinary',
+    '//third-party:kiwi',
+  ],
+)
+
+android_binary(
+  name = 'app-native-exo',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:19',
+  keystore = '//keystores:debug',
+  use_split_dex = True,
+  exopackage_modes = ['native_library'],
+  primary_dex_patterns = [
+    '/MyApplication^',
+  ],
+  deps = [
+    '//java/com/sample/app:app',
+    '//java/com/sample/lib:lib',
+    '//native/fakenative/jni:fakenative',
+    '//native/mybinary/jni:mybinary',
+    '//third-party:kiwi',
+  ],
+)
+
+android_binary(
+  name = 'app-dex-native-exo',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:19',
+  keystore = '//keystores:debug',
+  use_split_dex = True,
+  exopackage_modes = [
+    'native_library',
+    'secondary_dex',
+  ],
   primary_dex_patterns = [
     '/MyApplication^',
   ],

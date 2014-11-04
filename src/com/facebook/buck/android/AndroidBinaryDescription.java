@@ -126,7 +126,14 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
           : ProGuardObfuscateStep.SdkProguardType.DEFAULT;
     }
 
-    DexSplitMode dexSplitMode = createDexSplitMode(args);
+    EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
+    if (args.exopackageModes.isPresent() && !args.exopackageModes.get().isEmpty()) {
+      exopackageModes = EnumSet.copyOf(args.exopackageModes.get());
+    } else if (args.exopackage.or(false)) {
+      exopackageModes = EnumSet.of(ExopackageMode.SECONDARY_DEX);
+    }
+
+    DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
     boolean allowNonExistentRule =
           false;
@@ -148,10 +155,6 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     ResourceCompressionMode compressionMode = getCompressionMode(args);
     ResourceFilter resourceFilter =
         new ResourceFilter(args.resourceFilter.or(ImmutableList.<String>of()));
-
-    EnumSet<ExopackageMode> exopackageModes = args.exopackage.or(false)
-        ? EnumSet.of(ExopackageMode.SECONDARY_DEX)
-        : EnumSet.noneOf(ExopackageMode.class);
 
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         params,
@@ -205,9 +208,9 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         result);
   }
 
-  private DexSplitMode createDexSplitMode(Arg args) {
+  private DexSplitMode createDexSplitMode(Arg args, EnumSet<ExopackageMode> exopackageModes) {
     // Exopackage builds default to JAR, otherwise, default to RAW.
-    DexStore defaultDexStore = args.exopackage.or(false)
+    DexStore defaultDexStore = ExopackageMode.enabledForSecondaryDexes(exopackageModes)
         ? DexStore.JAR
         : DexStore.RAW;
     DexSplitStrategy dexSplitStrategy = args.minimizePrimaryDexSize.or(false)
@@ -250,7 +253,9 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     public Optional<Boolean> useLinearAllocSplitDex;
     public Optional<Boolean> minimizePrimaryDexSize;
     public Optional<Boolean> disablePreDex;
+    // TODO(natthu): mark this as deprecated.
     public Optional<Boolean> exopackage;
+    public Optional<Set<ExopackageMode>> exopackageModes;
     public Optional<DexStore> dexCompression;
     public Optional<ProGuardObfuscateStep.SdkProguardType> androidSdkProguardConfig;
     public Optional<Boolean> useAndroidProguardConfigWithOptimizations;

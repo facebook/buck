@@ -41,7 +41,10 @@ import java.util.List;
 
 public class AndroidExopackageBinaryIntegrationTest {
 
-  private static final String EXOPACKAGE_TARGET = "//apps/multidex:app-exo";
+  private static final String DEX_EXOPACKAGE_TARGET = "//apps/multidex:app-dex-exo";
+  private static final String NATIVE_EXOPACKAGE_TARGET = "//apps/multidex:app-native-exo";
+  private static final String DEX_AND_NATIVE_EXOPACKAGE_TARGET =
+      "//apps/multidex:app-dex-native-exo";
 
   public static DebuggableTemporaryFolder projectFolderWithPrebuiltTargets =
       new DebuggableTemporaryFolder();
@@ -59,7 +62,11 @@ public class AndroidExopackageBinaryIntegrationTest {
         "android_project",
         projectFolderWithPrebuiltTargets);
     workspace.setUp();
-    workspace.runBuckBuild(EXOPACKAGE_TARGET).assertSuccess();
+    workspace.runBuckBuild(
+        DEX_EXOPACKAGE_TARGET,
+        NATIVE_EXOPACKAGE_TARGET,
+        DEX_AND_NATIVE_EXOPACKAGE_TARGET)
+        .assertSuccess();
   }
 
   @AfterClass
@@ -75,10 +82,10 @@ public class AndroidExopackageBinaryIntegrationTest {
   }
 
   @Test
-  public void testExopackageHasNoSecondary() throws IOException {
+  public void testDexExopackageHasNoSecondary() throws IOException {
     ZipInspector zipInspector = new ZipInspector(
         workspace.getFile(
-            "buck-out/gen/apps/multidex/app-exo.apk"));
+            "buck-out/gen/apps/multidex/app-dex-exo.apk"));
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/secondary-1.dex.jar");
     zipInspector.assertFileDoesNotExist("classes2.dex");
@@ -89,7 +96,7 @@ public class AndroidExopackageBinaryIntegrationTest {
     // It would be better if we could call getExopackageInfo on the app rule.
     Path secondaryDir = workspace.resolve(
         Paths.get(
-            "buck-out/bin/apps/multidex/_app-exo#dex_merge_output" +
+            "buck-out/bin/apps/multidex/_app-dex-exo#dex_merge_output" +
                 "/jarfiles/assets/secondary-program-dex-jars"));
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(secondaryDir)) {
@@ -111,16 +118,55 @@ public class AndroidExopackageBinaryIntegrationTest {
   }
 
   @Test
+  public void testNativeExopackageHasNoNativeLibraries() throws IOException {
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/multidex/app-native-exo.apk"));
+
+    zipInspector.assertFileExists("assets/secondary-program-dex-jars/metadata.txt");
+    zipInspector.assertFileExists("classes2.dex");
+
+    zipInspector.assertFileExists("classes.dex");
+
+    assertNativeLibrariesDontExist(zipInspector);
+  }
+
+  @Test
+  public void testAllExopackageHasNeitherSecondaryNorNativeLibraries() throws IOException {
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/multidex/app-dex-native-exo.apk"));
+
+    zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
+    zipInspector.assertFileDoesNotExist("classes2.dex");
+
+    zipInspector.assertFileExists("classes.dex");
+
+    assertNativeLibrariesDontExist(zipInspector);
+  }
+
+  private static void assertNativeLibrariesDontExist(ZipInspector zipInspector) {
+    zipInspector.assertFilesDoNotExist(
+        "lib/armeabi/libfakenative.so",
+        "lib/armeabi/libmybinary.so",
+        "lib/armeabi-v7a/libfakenative.so",
+        "lib/armeabi-v7a/libmybinary.so",
+        "lib/x86/libfakenative.so",
+        "lib/x86/libmybinary.so",
+        "lib/mips/libfakenative.so",
+        "lib/mips/libmybinary.so");
+  }
+
+  @Test
   public void testEditingStringForcesRebuild() throws IOException {
     workspace.replaceFileContents("res/com/sample/base/res/values/strings.xml", "Hello", "Bye");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
-    result.assertSuccess();
+    workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    buildLog.assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
   }
 
   @Test
@@ -128,12 +174,11 @@ public class AndroidExopackageBinaryIntegrationTest {
     workspace.replaceFileContents("res/com/sample/top/res/layout/top_layout.xml", "white", "black");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
-    result.assertSuccess();
+    workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    buildLog.assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
   }
 
   @Test
@@ -143,12 +188,11 @@ public class AndroidExopackageBinaryIntegrationTest {
         "res/com/sample/top/res/drawable/tiny_something.png");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
-    result.assertSuccess();
+    workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    buildLog.assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
   }
 
   @Test
@@ -156,12 +200,11 @@ public class AndroidExopackageBinaryIntegrationTest {
     workspace.replaceFileContents("res/com/sample/base/buck-assets/hilarity.txt", "banana", "kiwi");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
-    result.assertSuccess();
+    workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    buildLog.assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
   }
 
   @Test
@@ -170,12 +213,11 @@ public class AndroidExopackageBinaryIntegrationTest {
         "apps/multidex/AndroidManifest.xml", "versionCode=\"1\"", "versionCode=\"2\"");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
-    result.assertSuccess();
+    workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    buildLog.assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
   }
 
   @Test
@@ -201,12 +243,12 @@ public class AndroidExopackageBinaryIntegrationTest {
         "native/fakenative/jni/fakesystem.c", "exit(status)", "exit(1+status)");
 
     workspace.resetBuildLogFile();
-    workspace.runBuckCommand("build", EXOPACKAGE_TARGET).assertSuccess();
+    workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    workspace.getBuildLog().assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
     zipInspector = new ZipInspector(
         workspace.getFile(
-            "buck-out/gen/apps/multidex/app-exo.apk"));
+            "buck-out/gen/apps/multidex/app-dex-exo.apk"));
     zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
     zipInspector.assertFileDoesNotExist("assets/lib/armeabi/libfakenative.so");
 
@@ -218,12 +260,12 @@ public class AndroidExopackageBinaryIntegrationTest {
         "name = 'fakenative',\nis_asset=True,");
 
     workspace.resetBuildLogFile();
-    workspace.runBuckCommand("build", EXOPACKAGE_TARGET).assertSuccess();
+    workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    workspace.getBuildLog().assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
     zipInspector = new ZipInspector(
         workspace.getFile(
-            "buck-out/gen/apps/multidex/app-exo.apk"));
+            "buck-out/gen/apps/multidex/app-dex-exo.apk"));
     zipInspector.assertFileDoesNotExist("lib/armeabi/libfakenative.so");
     zipInspector.assertFileExists("assets/lib/armeabi/libfakenative.so");
 
@@ -235,14 +277,71 @@ public class AndroidExopackageBinaryIntegrationTest {
         "native/fakenative/jni/fakesystem.c", "exit(1+status)", "exit(2+status)");
 
     workspace.resetBuildLogFile();
-    workspace.runBuckCommand("build", EXOPACKAGE_TARGET).assertSuccess();
+    workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    workspace.getBuildLog().assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
     zipInspector = new ZipInspector(
         workspace.getFile(
-            "buck-out/gen/apps/multidex/app-exo.apk"));
+            "buck-out/gen/apps/multidex/app-dex-exo.apk"));
     zipInspector.assertFileDoesNotExist("lib/armeabi/libfakenative.so");
     zipInspector.assertFileExists("assets/lib/armeabi/libfakenative.so");
+  }
+
+  @Test
+  public void testEditingNativeGetsAbiHitForNativeExopackage()
+      throws IOException, InterruptedException {
+    // Sleep 1 second (plus another half to be super duper safe) to make sure that
+    // fakesystem.c gets a later timestamp than the fakesystem.o that was produced
+    // during the build in setUp.  If we don't do this, there's a chance that the
+    // ndk-build we run during the upcoming build will not rebuild it (on filesystems
+    // that have 1-second granularity for last modified).
+    // To verify this, create a Makefile with the following rule (don't forget to use a tab):
+    // out: in
+    //   cat $< > $@
+    // Run: echo foo > in ; make ; cat out ; echo bar > in ; make ; cat out
+    // On a filesystem with 1-second mtime granularity, the last "cat" should print "foo"
+    // (with very high probability).
+    Thread.sleep(1500);
+
+    // Change the binary and ensure that we re-run apkbuilder.
+    workspace.replaceFileContents(
+        "native/fakenative/jni/fakesystem.c", "exit(status)", "exit(1+status)");
+
+    workspace.resetBuildLogFile();
+    workspace.runBuckBuild(NATIVE_EXOPACKAGE_TARGET).assertSuccess();
+
+    workspace.getBuildLog().assertTargetHadMatchingDepsAbi(NATIVE_EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingNativeAndSecondaryDexFileGetsAbiHitForDexAndNativeExopackage()
+      throws IOException, InterruptedException {
+    // Sleep 1 second (plus another half to be super duper safe) to make sure that
+    // fakesystem.c gets a later timestamp than the fakesystem.o that was produced
+    // during the build in setUp.  If we don't do this, there's a chance that the
+    // ndk-build we run during the upcoming build will not rebuild it (on filesystems
+    // that have 1-second granularity for last modified).
+    // To verify this, create a Makefile with the following rule (don't forget to use a tab):
+    // out: in
+    //   cat $< > $@
+    // Run: echo foo > in ; make ; cat out ; echo bar > in ; make ; cat out
+    // On a filesystem with 1-second mtime granularity, the last "cat" should print "foo"
+    // (with very high probability).
+    Thread.sleep(1500);
+
+    // Change the binary and ensure that we re-run apkbuilder.
+    workspace.replaceFileContents(
+        "native/fakenative/jni/fakesystem.c", "exit(status)", "exit(1+status)");
+
+    workspace.replaceFileContents(
+        "java/com/sample/lib/Sample.java",
+        "package com",
+        "package\ncom");
+
+    workspace.resetBuildLogFile();
+    workspace.runBuckBuild(DEX_AND_NATIVE_EXOPACKAGE_TARGET).assertSuccess();
+
+    workspace.getBuildLog().assertTargetHadMatchingDepsAbi(DEX_AND_NATIVE_EXOPACKAGE_TARGET);
   }
 
   @Test
@@ -252,12 +351,11 @@ public class AndroidExopackageBinaryIntegrationTest {
         "third-party/kiwi-current.jar");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
-    result.assertSuccess();
+    workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    buildLog.assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
   }
 
   @Test
@@ -268,12 +366,11 @@ public class AndroidExopackageBinaryIntegrationTest {
         "my_alias\n");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
-    result.assertSuccess();
+    workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    buildLog.assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
   }
 
   @Test
@@ -284,13 +381,25 @@ public class AndroidExopackageBinaryIntegrationTest {
         "package\ncom");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
-    result.assertSuccess();
+    workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    buildLog.assertTargetBuiltLocally(EXOPACKAGE_TARGET);
+    buildLog.assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
   }
 
+  @Test
+  public void testEditingSecondaryDexClassForcesRebuildForNativeExopackage() throws IOException {
+    workspace.replaceFileContents(
+        "java/com/sample/lib/Sample.java",
+        "package com",
+        "package\ncom");
+
+    workspace.resetBuildLogFile();
+    workspace.runBuckBuild(NATIVE_EXOPACKAGE_TARGET).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetBuiltLocally(NATIVE_EXOPACKAGE_TARGET);
+  }
   @Test
   public void testEditingSecondaryDexClassGetsAbiHitForExopackage() throws IOException {
     workspace.replaceFileContents(
@@ -299,10 +408,23 @@ public class AndroidExopackageBinaryIntegrationTest {
         "package\ncom");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", EXOPACKAGE_TARGET);
-    result.assertSuccess();
+    workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    buildLog.assertTargetHadMatchingDepsAbi(EXOPACKAGE_TARGET);
+    buildLog.assertTargetHadMatchingDepsAbi(DEX_EXOPACKAGE_TARGET);
+  }
+
+  @Test
+  public void testEditingSecondaryDexClassGetsAbiHitForDexAndNativeExopackage() throws IOException {
+    workspace.replaceFileContents(
+        "java/com/sample/lib/Sample.java",
+        "package com",
+        "package\ncom");
+
+    workspace.resetBuildLogFile();
+    workspace.runBuckBuild(DEX_AND_NATIVE_EXOPACKAGE_TARGET).assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+
+    buildLog.assertTargetHadMatchingDepsAbi(DEX_AND_NATIVE_EXOPACKAGE_TARGET);
   }
 }

@@ -55,6 +55,12 @@ public class ZipInspector {
     assertFalse(zipFileEntries.contains(pathRelativeToRoot));
   }
 
+  public void assertFilesDoNotExist(String...pathsRelativeToRoot) {
+    for (String path : pathsRelativeToRoot) {
+      assertFileDoesNotExist(path);
+    }
+  }
+
   public ImmutableSet<String> getZipFileEntries() {
     return zipFileEntries;
   }
