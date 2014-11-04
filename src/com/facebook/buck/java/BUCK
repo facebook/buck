@@ -153,6 +153,7 @@ java_library(
     'JavacStep.java',
     'JavacStepUtil.java',
     'JUnitStep.java',
+    'NullJavacStep.java',
     'TestType.java',
     'ZipEntryJavaFileObject.java',
   ],
