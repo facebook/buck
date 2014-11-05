@@ -1,0 +1,28 @@
+android_library(
+  name = 'dep1',
+  srcs = glob(['src/**/*.java']),
+  deps = [
+    '//libs:guava',
+    '//libs:jsr305',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_test(
+  name = 'test',
+  srcs = glob(['test/**/*Test.java']),
+  deps = [
+    ':dep1',
+    '//libs:guava',
+    '//libs:junit',
+  ],
+)
+
+project_config(
+  src_target = ':dep1',
+  src_roots = [ 'src' ],
+  test_target = ':test',
+  test_roots = [ 'test' ],
+)

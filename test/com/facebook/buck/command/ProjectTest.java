@@ -37,6 +37,7 @@ import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -733,6 +734,10 @@ public class ProjectTest {
         basePathToAliasMap,
         javaPackageFinder,
         executionContext,
+        new InMemoryBuildFileTree(
+            Iterables.transform(
+                actionGraph.getNodes(),
+                BuildTarget.TO_TARGET)),
         projectFilesystem,
         /* pathToDefaultAndroidManifest */ Optional.<String>absent(),
         /* pathToPostProcessScript */ Optional.<String>absent(),

@@ -73,6 +73,17 @@ public class ProjectIntegrationTest {
         containsString("  ::  Please close and re-open IntelliJ."));
   }
 
+  @Test
+  public void testBuckProjectExcludesSubdirectories() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project2", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+  }
   /**
    * Verify that if we build a project by specifying a target, the resulting project only contains
    * the transitive deps of that target.  In this example, that means everything except

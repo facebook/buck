@@ -31,7 +31,7 @@ import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.InMemoryBuildFileTree;
+import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.AbstractDependencyVisitor;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AnnotationProcessingData;
@@ -58,7 +58,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -158,19 +157,39 @@ public class Project {
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter,
       ObjectMapper objectMapper) {
+    this(
+        resolver,
+        rules,
+        actionGraph,
+        basePathToAliasMap,
+        javaPackageFinder,
+        executionContext,
+        new FilesystemBackedBuildFileTree(projectFilesystem),
+        projectFilesystem,
+        pathToDefaultAndroidManifest,
+        pathToPostProcessScript,
+        pythonInterpreter,
+        objectMapper);
+  }
+
+  @VisibleForTesting
+  Project(
+      SourcePathResolver resolver,
+      ImmutableSet<ProjectConfig> rules,
+      ActionGraph actionGraph,
+      Map<Path, String> basePathToAliasMap,
+      JavaPackageFinder javaPackageFinder,
+      ExecutionContext executionContext,
+      BuildFileTree buildFileTree,
+      ProjectFilesystem projectFilesystem,
+      Optional<String> pathToDefaultAndroidManifest,
+      Optional<String> pathToPostProcessScript,
+      String pythonInterpreter,
+      ObjectMapper objectMapper) {
     this.resolver = resolver;
     this.rules = rules;
     this.actionGraph = actionGraph;
-    this.buildFileTree = new InMemoryBuildFileTree(
-        Iterables.transform(
-            actionGraph.getNodes(),
-            new Function<BuildRule, BuildTarget>() {
-              @Override
-              public BuildTarget apply(BuildRule input) {
-                return input.getBuildTarget();
-              }
-            }
-        ));
+    this.buildFileTree = buildFileTree;
     this.basePathToAliasMap = ImmutableMap.copyOf(basePathToAliasMap);
     this.javaPackageFinder = javaPackageFinder;
     this.executionContext = executionContext;
