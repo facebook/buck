@@ -23,11 +23,13 @@ import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Map;
 
 /**
- * A type coercer for a list of build configurations in Apple targets. Expects a list of
- * objects suitable to be coerced by {@link XcodeRuleConfigurationLayerTypeCoercer}. Each resulting
- * layer is going to be applied sequentially.
+ * A type coercer for a list of build configurations in Apple targets. Expects either a list of
+ * objects or a single object, suitable to be coerced by
+ * {@link XcodeRuleConfigurationLayerTypeCoercer}. Each resulting layer is going to be applied
+ * sequentially.
  */
 public class XcodeRuleConfigurationTypeCoercer implements TypeCoercer<XcodeRuleConfiguration> {
 
@@ -80,11 +82,19 @@ public class XcodeRuleConfigurationTypeCoercer implements TypeCoercer<XcodeRuleC
                 element));
       }
       return new XcodeRuleConfiguration(layers.build());
+    } else if (object instanceof Map) {
+      return new XcodeRuleConfiguration(
+          ImmutableList.of(
+              layerTypeCoercer.coerce(
+                  buildTargetParser,
+                  filesystem,
+                  pathRelativeToProjectRoot,
+                  object)));
     } else {
       throw CoerceFailedException.simple(
           object,
           getOutputClass(),
-          "input object should be a collection");
+          "input object should be a collection or a map");
     }
   }
 }
