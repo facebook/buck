@@ -44,7 +44,6 @@ public class AndroidPackageableCollector {
   private final ImmutableList.Builder<BuildTarget> resourcesWithAssets = ImmutableList.builder();
   private final ImmutableList.Builder<Path> resourceDirectories = ImmutableList.builder();
   private final ImmutableSet.Builder<Path> whitelistedStringDirectories = ImmutableSet.builder();
-  private final ImmutableSet.Builder<String> rDotJavaPackages = ImmutableSet.builder();
   private final ImmutableCollection.Builder<Supplier<String>> rDotJavaPackageSuppliers =
       ImmutableList.builder();
   private final ImmutableSet.Builder<BuildTarget> nativeLibsTargets = ImmutableSet.builder();
@@ -246,17 +245,14 @@ public class AndroidPackageableCollector {
       }
     }
 
-    final ImmutableSet<String> knownRDotJavaPackages = rDotJavaPackages.build();
     final ImmutableCollection<Supplier<String>> knownRDotJavaPackageSuppliers =
         rDotJavaPackageSuppliers.build();
-    boolean hasRDotJavaPackages = !knownRDotJavaPackages.isEmpty() ||
-        !knownRDotJavaPackageSuppliers.isEmpty();
+    boolean hasRDotJavaPackages = !knownRDotJavaPackageSuppliers.isEmpty();
     Supplier<ImmutableSet<String>> rDotJavaPackagesSupplier = Suppliers.memoize(
         new Supplier<ImmutableSet<String>>() {
           @Override
           public ImmutableSet<String> get() {
             ImmutableSet.Builder<String> allRDotJavaPackages = ImmutableSet.builder();
-            allRDotJavaPackages.addAll(knownRDotJavaPackages);
             for (Supplier<String> supplier : knownRDotJavaPackageSuppliers) {
               allRDotJavaPackages.add(supplier.get());
             }
