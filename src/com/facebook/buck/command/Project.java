@@ -376,7 +376,7 @@ public class Project {
         AndroidBinary androidBinary = (AndroidBinary) srcRule;
         AndroidPackageableCollection packageableCollection =
             androidBinary.getAndroidPackageableCollection();
-        noDxJarsBuilder.addAll(packageableCollection.noDxClasspathEntries);
+        noDxJarsBuilder.addAll(packageableCollection.noDxClasspathEntries());
       }
 
       Module module = createModuleForProjectConfig(projectConfig);
@@ -742,7 +742,7 @@ public class Project {
         AndroidPackageableCollection packageableCollection =
             androidBinary.getAndroidPackageableCollection();
         classpathEntriesToDex = Sets.newHashSet(Sets.intersection(noDxJars,
-            packageableCollection.classpathEntriesToDex));
+            packageableCollection.classpathEntriesToDex()));
       } else {
         classpathEntriesToDex = ImmutableSet.of();
       }

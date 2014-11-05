@@ -21,149 +21,115 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
+
+import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A collection of Android content that should be included in an Android package (apk or aar).
  */
-public class AndroidPackageableCollection {
+@Value.Immutable
+@Value.Nested
+public interface AndroidPackageableCollection {
 
-  public static class ResourceDetails {
+  @Value.Immutable
+  public abstract static class ResourceDetails {
 
     /**
      * A list of "res" directories that should be passed to the aapt command to build the APK,
      * sorted topologically.
      */
-    public final ImmutableList<Path> resourceDirectories;
+    public abstract ImmutableList<Path> resourceDirectories();
 
     /**
      * A set of "res" directories that contain "whitelisted" strings, i.e. the strings-as-assets
      * resource filter does not affect these directories.
      */
-    public final ImmutableSet<Path> whitelistedStringDirectories;
+    public abstract Set<Path> whitelistedStringDirectories();
 
     /**
      * A list of build targets belonging to {@link com.facebook.buck.android.AndroidResource}s with
      * non-empty "res" directory, sorted topologically. Note that these are {@link BuildTarget}s
      * to avoid introducing a circular dependency.
      */
-    public final ImmutableList<BuildTarget> resourcesWithNonEmptyResDir;
+    public abstract ImmutableList<BuildTarget> resourcesWithNonEmptyResDir();
 
     /**
      * Unlike {@link #resourcesWithNonEmptyResDir}, these resources only contain "assets".
      */
-    public final ImmutableList<BuildTarget> resourcesWithEmptyResButNonEmptyAssetsDir;
+    public abstract Set<BuildTarget> resourcesWithEmptyResButNonEmptyAssetsDir();
 
-    public ResourceDetails(
-        ImmutableList<Path> resourceDirectories,
-        ImmutableSet<Path> whitelistedStringDirectories,
-        ImmutableList<BuildTarget> resourcesWithNonEmptyResDir,
-        ImmutableList<BuildTarget> resourcesWithEmptyResButNonEmptyAssetsDir) {
-      this.resourceDirectories = resourceDirectories;
-      this.whitelistedStringDirectories = whitelistedStringDirectories;
-      this.resourcesWithNonEmptyResDir = resourcesWithNonEmptyResDir;
-      this.resourcesWithEmptyResButNonEmptyAssetsDir = resourcesWithEmptyResButNonEmptyAssetsDir;
-    }
-
+    @Value.Derived
     public boolean hasResources() {
-      return !resourceDirectories.isEmpty();
+      return !resourceDirectories().isEmpty();
     }
   }
 
-  public final ResourceDetails resourceDetails;
+  ImmutableAndroidPackageableCollection.ResourceDetails resourceDetails();
 
   /**
    * A set of build targets that produce native libraries.
    */
-  public final ImmutableSet<BuildTarget> nativeLibsTargets;
+  Set<BuildTarget> nativeLibsTargets();
 
   /**
    * Directories containing native libraries.
    */
-  public final ImmutableSet<Path> nativeLibsDirectories;
+  Set<Path> nativeLibsDirectories();
 
   /**
    * Directories containing native libraries to be used as assets.
    */
-  public final ImmutableSet<Path> nativeLibAssetsDirectories;
+  Set<Path> nativeLibAssetsDirectories();
 
   /**
    * Directories containing assets to be included directly in the apk,
    * under the "assets" directory.
    */
-  public final ImmutableSet<Path> assetsDirectories;
+  Set<Path> assetsDirectories();
 
   /**
    * AndroidManifest.xml files to be included in manifest merging.
    */
-  public final ImmutableSet<Path> manifestFiles;
+  Set<Path> manifestFiles();
 
   /**
    * Proguard configurations to include when running release builds.
    */
-  public final ImmutableSet<Path> proguardConfigs;
+  Set<Path> proguardConfigs();
 
   /**
    * Java classes (jars) to include in the package.
    */
-  public final ImmutableSet<Path> classpathEntriesToDex;
+  Set<Path> classpathEntriesToDex();
 
   /**
    * Java classes that were used during compilation, but don't got into the package.
    * This is only used by "buck project".  (It's existence is kind of contrary to
    * the purpose of this class, but we make exceptions for "buck project".)
    */
-  public final ImmutableSet<Path> noDxClasspathEntries;
+  Set<Path> noDxClasspathEntries();
 
-  public final ImmutableMap<String, BuildConfigFields> buildConfigs;
+  ImmutableMap<String, BuildConfigFields> buildConfigs();
 
   /**
    * Prebuild/third-party jars to be included in the package.  For apks, their resources will
    * be placed directly in the apk.
    */
-  public final ImmutableSet<Path> pathsToThirdPartyJars;
+  Set<Path> pathsToThirdPartyJars();
 
   /**
    * {@link com.facebook.buck.java.JavaLibrary} rules whose output will be dexed and included in
    * the package.
    */
-  public final ImmutableSet<BuildTarget> javaLibrariesToDex;
+  Set<BuildTarget> javaLibrariesToDex();
 
   /**
    * See {@link com.facebook.buck.java.JavaLibrary#getClassNamesToHashes()}
    */
-  public final Supplier<Map<String, HashCode>> classNamesToHashesSupplier;
-
-  AndroidPackageableCollection(
-      ResourceDetails resourceDetails,
-      ImmutableSet<BuildTarget> nativeLibsTargets,
-      ImmutableSet<Path> nativeLibsDirectories,
-      ImmutableSet<Path> nativeLibAssetsDirectories,
-      ImmutableSet<Path> assetsDirectories,
-      ImmutableSet<Path> manifestFiles,
-      ImmutableSet<Path> proguardConfigs,
-      ImmutableSet<Path> classpathEntriesToDex,
-      ImmutableSet<Path> noDxClasspathEntries,
-      ImmutableMap<String, BuildConfigFields> buildConfigs,
-      ImmutableSet<Path> pathsToThirdPartyJars,
-      ImmutableSet<BuildTarget> javaLibrariesToDex,
-      Supplier<Map<String, HashCode>> classNamesToHashesSupplier) {
-    this.resourceDetails = resourceDetails;
-    this.nativeLibsTargets = nativeLibsTargets;
-    this.nativeLibsDirectories = nativeLibsDirectories;
-    this.nativeLibAssetsDirectories = nativeLibAssetsDirectories;
-    this.assetsDirectories = assetsDirectories;
-    this.manifestFiles = manifestFiles;
-    this.proguardConfigs = proguardConfigs;
-    this.classpathEntriesToDex = classpathEntriesToDex;
-    this.noDxClasspathEntries = noDxClasspathEntries;
-    this.buildConfigs = buildConfigs;
-    this.pathsToThirdPartyJars = pathsToThirdPartyJars;
-    this.javaLibrariesToDex = javaLibrariesToDex;
-    this.classNamesToHashesSupplier = classNamesToHashesSupplier;
-  }
+  Supplier<Map<String, HashCode>> classNamesToHashesSupplier();
 }

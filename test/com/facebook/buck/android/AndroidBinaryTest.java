@@ -104,8 +104,8 @@ public class AndroidBinaryTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     androidBinary.addProguardCommands(
-        packageableCollection.classpathEntriesToDex,
-        packageableCollection.proguardConfigs,
+        packageableCollection.classpathEntriesToDex(),
+        packageableCollection.proguardConfigs(),
         commands,
         ImmutableList.<Path>of(),
         buildableContext);

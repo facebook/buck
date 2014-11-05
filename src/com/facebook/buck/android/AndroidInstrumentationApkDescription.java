@@ -92,11 +92,11 @@ public class AndroidInstrumentationApkDescription
     // TODO(natthu): Instrumentation APKs should also exclude native libraries and assets from the
     // apk under test.
     AndroidPackageableCollection.ResourceDetails resourceDetails =
-        apkUnderTest.getAndroidPackageableCollection().resourceDetails;
+        apkUnderTest.getAndroidPackageableCollection().resourceDetails();
     ImmutableSet<BuildTarget> resourcesToExclude = ImmutableSet.copyOf(
         Iterables.concat(
-            resourceDetails.resourcesWithNonEmptyResDir,
-            resourceDetails.resourcesWithEmptyResButNonEmptyAssetsDir));
+            resourceDetails.resourcesWithNonEmptyResDir(),
+            resourceDetails.resourcesWithEmptyResButNonEmptyAssetsDir()));
 
     Path primaryDexPath = AndroidBinary.getPrimaryDexPath(params.getBuildTarget());
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(

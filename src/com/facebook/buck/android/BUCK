@@ -16,7 +16,7 @@ PACKAGEABLE_SOURCES = [
   'AndroidPackageableCollection.java',
   'AndroidPackageableCollector.java',
 ]
-java_library(
+java_immutables_library(
   name = 'packageable',
   srcs = PACKAGEABLE_SOURCES,
   deps = [

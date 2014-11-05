@@ -360,7 +360,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     // Any inputs to apkbuilder must be reflected in the hash returned by getAbiKeyForDeps.
     ////
 
-    AndroidPackageableCollection packageableCollection =
+    ImmutableAndroidPackageableCollection packageableCollection =
         enhancementResult.packageableCollection();
     ImmutableSet<Path> nativeLibraryDirectories = ImmutableSet.of();
     if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
@@ -371,11 +371,11 @@ public class AndroidBinary extends AbstractBuildRule implements
 
     // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
     ImmutableSet<Path> nativeLibraryAsAssetDirectories;
-    if (!packageableCollection.nativeLibAssetsDirectories.isEmpty()) {
+    if (!packageableCollection.nativeLibAssetsDirectories().isEmpty()) {
       Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
       Path libSubdirectory = pathForNativeLibsAsAssets.resolve("assets").resolve("lib");
       steps.add(new MakeCleanDirectoryStep(libSubdirectory));
-      for (Path nativeLibDir : packageableCollection.nativeLibAssetsDirectories) {
+      for (Path nativeLibDir : packageableCollection.nativeLibAssetsDirectories()) {
         CopyNativeLibraries.copyNativeLibrary(nativeLibDir, libSubdirectory, cpuFilters, steps);
       }
       nativeLibraryAsAssetDirectories = ImmutableSet.of(pathForNativeLibsAsAssets);
@@ -403,7 +403,7 @@ public class AndroidBinary extends AbstractBuildRule implements
         allAssetDirectories,
         nativeLibraryDirectories,
         zipFiles.build(),
-        packageableCollection.pathsToThirdPartyJars,
+        packageableCollection.pathsToThirdPartyJars(),
         keystore.getPathToStore(),
         keystore.getPathToPropertiesFile(),
         /* debugMode */ false);
@@ -526,7 +526,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     if (packageType.isBuildWithObfuscation()) {
       classpathEntriesToDex = addProguardCommands(
           classpathEntriesToDex,
-          packageableCollection.proguardConfigs,
+          packageableCollection.proguardConfigs(),
           steps,
           resDirectories,
           buildableContext);
@@ -539,7 +539,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     if (classFilesHaveChanged) {
       classNamesToHashesSupplier = addAccumulateClassNamesStep(classpathEntriesToDex, steps);
     } else {
-      classNamesToHashesSupplier = packageableCollection.classNamesToHashesSupplier;
+      classNamesToHashesSupplier = packageableCollection.classNamesToHashesSupplier();
     }
 
     // Create the final DEX (or set of DEX files in the case of split dex).

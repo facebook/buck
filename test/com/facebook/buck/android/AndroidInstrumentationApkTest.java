@@ -130,10 +130,10 @@ public class AndroidInstrumentationApkTest {
             Paths.get("buck-out/gen/java/com/example/lib1.jar"),
             Paths.get("buck-out/gen/java/com/example/lib2.jar"),
             Paths.get("buck-out/gen/java/com/example/lib3.jar")),
-        androidBinary.getAndroidPackageableCollection().classpathEntriesToDex);
+        androidBinary.getAndroidPackageableCollection().classpathEntriesToDex());
     assertEquals(
         "//apps:instrumentation should have one JAR file to dex.",
         ImmutableSet.of(Paths.get("buck-out/gen/java/com/example/lib4.jar")),
-        androidInstrumentationApk.getAndroidPackageableCollection().classpathEntriesToDex);
+        androidInstrumentationApk.getAndroidPackageableCollection().classpathEntriesToDex());
   }
 }
