@@ -186,6 +186,7 @@ public class Parser {
   public static Parser createParser(
       final RepositoryFactory repositoryFactory,
       String pythonInterpreter,
+      boolean allowEmptyGlobs,
       ImmutableSet<Pattern> tempFilePatterns,
       RuleKeyBuilderFactory ruleKeyBuilderFactory)
       throws IOException, InterruptedException {
@@ -205,6 +206,7 @@ public class Parser {
         new DefaultProjectBuildFileParserFactory(
             rootRepository.getFilesystem(),
             pythonInterpreter,
+            allowEmptyGlobs,
             rootRepository.getAllDescriptions()),
         tempFilePatterns,
         ruleKeyBuilderFactory);

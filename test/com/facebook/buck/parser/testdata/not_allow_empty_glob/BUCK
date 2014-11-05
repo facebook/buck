@@ -1,0 +1,8 @@
+java_library(
+  name = 'root_module',
+  srcs = glob(['*.java']),
+)
+
+project_config(
+  src_target = ':root_module',
+)

@@ -111,6 +111,7 @@ public class BuckConfig {
   private static final String DEFAULT_HTTP_CACHE_PORT = "8080";
   private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "10";
   private static final String DEFAULT_MAX_TRACES = "25";
+  private static final String DEFAULT_ALLOW_EMPTY_GLOBS = "true";
 
   // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
   private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
@@ -574,6 +575,12 @@ public class BuckConfig {
 
   public int getMaxTraces() {
     return Integer.parseInt(getValue("log", "max_traces").or(DEFAULT_MAX_TRACES));
+  }
+
+  public boolean getAllowEmptyGlobs() {
+    return Boolean.parseBoolean(
+        getValue("build", "allow_empty_globs").or(DEFAULT_ALLOW_EMPTY_GLOBS)
+    );
   }
 
   public boolean getRestartAdbOnFailure() {

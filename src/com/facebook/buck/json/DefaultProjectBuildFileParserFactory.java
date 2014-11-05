@@ -26,14 +26,17 @@ import com.google.common.collect.ImmutableSet;
 public class DefaultProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
   private final ProjectFilesystem projectFilesystem;
   private final String pythonInterpreter;
+  private final boolean allowEmptyGlobs;
   private final ImmutableSet<Description<?>> descriptions;
 
   public DefaultProjectBuildFileParserFactory(
       ProjectFilesystem projectFilesystem,
       String pythonInterpreter,
+      boolean allowEmptyGlobs,
       ImmutableSet<Description<?>> descriptions) {
     this.projectFilesystem = projectFilesystem;
     this.pythonInterpreter = pythonInterpreter;
+    this.allowEmptyGlobs = allowEmptyGlobs;
     this.descriptions = descriptions;
   }
 
@@ -47,6 +50,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         projectFilesystem,
         commonIncludes,
         pythonInterpreter,
+        allowEmptyGlobs,
         descriptions,
         console,
         environment,

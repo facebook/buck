@@ -24,5 +24,11 @@ public class BuckTestConstant {
    */
   public static final String PYTHON_INTERPRETER = "python";
 
+  /**
+   * Determines whether tests should allow empty globs by default.
+   * Set to false to enforce that globs are populating as expected.
+   */
+  public static final boolean ALLOW_EMPTY_GLOBS = false;
+
   private BuckTestConstant() {}
 }

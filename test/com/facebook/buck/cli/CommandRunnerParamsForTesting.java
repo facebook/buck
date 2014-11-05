@@ -48,6 +48,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
       String pythonInterpreter,
+      boolean allowEmptyGlobs,
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
@@ -62,6 +63,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
         artifactCacheFactory,
         eventBus,
         pythonInterpreter,
+        allowEmptyGlobs,
         platform,
         environment,
         javaPackageFinder,
@@ -83,6 +85,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
         new NoopArtifactCache());
     private Console console = new TestConsole();
     private String pythonInterpreter = BuckTestConstant.PYTHON_INTERPRETER;
+    private boolean allowEmptyGlobs = BuckTestConstant.ALLOW_EMPTY_GLOBS;
     private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     private Platform platform = Platform.detect();
     private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
@@ -100,6 +103,7 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
           artifactCacheFactory,
           eventBus,
           pythonInterpreter,
+          allowEmptyGlobs,
           platform,
           environment,
           javaPackageFinder,

@@ -437,6 +437,17 @@ public class BuckConfigTest {
     assertEquals(42, config.getMaxTraces());
   }
 
+  @Test
+  public void testGetAllowEmptyGlobs() throws IOException {
+    assertTrue(new FakeBuckConfig().getAllowEmptyGlobs());
+
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[build]",
+        "allow_empty_globs = false"));
+    BuckConfig config = createWithDefaultFilesystem(reader, null);
+    assertFalse(config.getAllowEmptyGlobs());
+  }
+
 
   @Test
   public void testOverride() throws IOException {

@@ -206,6 +206,7 @@ public class AuditOwnerCommandTest {
         new InstanceArtifactCacheFactory(artifactCache),
         eventBus,
         buckConfig.getPythonInterpreter(),
+        buckConfig.getAllowEmptyGlobs(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),

@@ -70,6 +70,7 @@ public class JavaSymbolFinderIntegrationTest {
         new DefaultProjectBuildFileParserFactory(
             projectFilesystem,
             config.getPythonInterpreter(),
+            config.getAllowEmptyGlobs(),
             allDescriptions);
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     JavaSymbolFinder finder = new JavaSymbolFinder(

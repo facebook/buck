@@ -16,7 +16,9 @@
 
 package com.facebook.buck.parser;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import org.junit.rules.ExpectedException;
 
@@ -97,5 +99,41 @@ public class ParserIntegrationTest {
       return;
     }
     fail("An exception should have been thrown because of a circular dependency.");
+  }
+
+  /**
+   * If a .buckconfig is overridden to set allow_empty_glob to False, a glob call returning no
+   * results will cause the build to fail.
+   */
+  @Test
+  public void testNotAllowEmptyGlob() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "not_allow_empty_glob",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
+    result.assertFailure("buck build should fail on empty glob results when set in config");
+    assertThat(
+        "error message for failure to return results from glob is incorrect",
+        result.getStderr(),
+        containsString("glob() returned no results. If this is expected, set allow_empty_globs " +
+          "to true in Buck configuration"));
+  }
+
+  /**
+   * By default a glob call returning no results will not cause the build to fail.
+   */
+  @Test
+  public void testAllowEmptyGlob() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "allow_empty_glob",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
+    result.assertSuccess("buck build should ignore empty glob results by default");
   }
 }

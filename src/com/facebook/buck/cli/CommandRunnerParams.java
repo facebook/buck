@@ -77,6 +77,7 @@ class CommandRunnerParams {
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
       String pythonInterpreter,
+      boolean allowEmptyGlobs,
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
@@ -93,6 +94,7 @@ class CommandRunnerParams {
         Parser.createParser(
             repositoryFactory,
             pythonInterpreter,
+            allowEmptyGlobs,
             /* tempFilePatterns */ ImmutableSet.<Pattern>of(),
             new RuleKeyBuilderFactory() {
               @Override

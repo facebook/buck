@@ -49,11 +49,12 @@ class BuildFileContext(object):
 
     type = BuildContextType.BUILD_FILE
 
-    def __init__(self, base_path, dirname):
+    def __init__(self, base_path, dirname, allow_empty_globs):
         self.globals = {}
         self.includes = set()
         self.base_path = base_path
         self.dirname = dirname
+        self.allow_empty_globs = allow_empty_globs
         self.rules = {}
 
 
@@ -116,12 +117,17 @@ def add_rule(rule, build_env):
 
 
 @provide_for_build
-def glob(includes, excludes=[], include_dotfiles=False, build_env=None, allow_empty=True):
+def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
     assert build_env.type == BuildContextType.BUILD_FILE, (
         "Cannot use `glob()` at the top-level of an included file.")
 
     search_base = Path(build_env.dirname)
-    return glob_internal(includes, excludes, include_dotfiles, allow_empty, search_base)
+    return glob_internal(
+        includes,
+        excludes,
+        include_dotfiles,
+        build_env.allow_empty_globs,
+        search_base)
 
 
 def glob_internal(includes, excludes, include_dotfiles, allow_empty, search_base):
@@ -159,8 +165,9 @@ def glob_internal(includes, excludes, include_dotfiles, allow_empty, search_base
         return False
 
     results = sorted(set([str(p) for p in includes_iterator() if not exclusion(p)]))
-    assert allow_empty or results, \
-        "glob() returned no results. If this is expected, use glob with allow_empty=True"
+    assert allow_empty or results, (
+        "glob() returned no results. If this is expected, set allow_empty_globs to true in "
+        "Buck configuration")
 
     return results
 
@@ -202,12 +209,13 @@ def add_deps(name, deps=[], build_env=None):
 
 class BuildFileProcessor(object):
 
-    def __init__(self, project_root, implicit_includes=[]):
+    def __init__(self, project_root, allow_empty_globs, implicit_includes=[]):
         self._cache = {}
         self._build_env_stack = []
 
         self._project_root = project_root
         self._implicit_includes = implicit_includes
+        self._allow_empty_globs = allow_empty_globs
 
         lazy_functions = {}
         for func in BUILD_FUNCTIONS:
@@ -382,7 +390,7 @@ class BuildFileProcessor(object):
         len_suffix = -len('/' + BUILD_RULES_FILE_NAME)
         base_path = relative_path_to_build_file[:len_suffix]
         dirname = os.path.dirname(path)
-        build_env = BuildFileContext(base_path, dirname)
+        build_env = BuildFileContext(base_path, dirname, self._allow_empty_globs)
 
         return self._process(
             build_env,
@@ -427,6 +435,11 @@ def main():
         type='string',
         dest='project_root')
     parser.add_option(
+        '--allow_empty_globs',
+        action='store_true',
+        dest='allow_empty_globs',
+        help='Tells the parser not to raise an error when glob returns no results.')
+    parser.add_option(
         '--include',
         action='append',
         dest='include')
@@ -443,6 +456,7 @@ def main():
 
     buildFileProcessor = BuildFileProcessor(
         project_root,
+        options.allow_empty_globs,
         implicit_includes=options.include or [])
 
     for build_file in args:

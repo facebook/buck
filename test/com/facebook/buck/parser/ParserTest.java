@@ -152,6 +152,7 @@ public class ParserTest extends EasyMockSupport {
         new DefaultProjectBuildFileParserFactory(
             filesystem,
             BuckTestConstant.PYTHON_INTERPRETER,
+            BuckTestConstant.ALLOW_EMPTY_GLOBS,
             buildRuleTypes.getAllDescriptions());
     testParser = createParser(emptyBuildTargets(), testBuildFileParserFactory);
   }
@@ -1417,6 +1418,7 @@ public class ParserTest extends EasyMockSupport {
             projectFilesystem,
             ImmutableList.of("//java/com/facebook/defaultIncludeFile"),
             pythonInterpreter,
+            BuckTestConstant.ALLOW_EMPTY_GLOBS,
             buildRuleTypes.getAllDescriptions(),
             new TestConsole(),
             ImmutableMap.<String, String>of(),

@@ -92,6 +92,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
     ProjectBuildFileParserFactory factory = new DefaultProjectBuildFileParserFactory(
         projectFilesystem,
         options.getBuckConfig().getPythonInterpreter(),
+        options.getBuckConfig().getAllowEmptyGlobs(),
         // TODO(simons): When we land dynamic loading, this MUST change.
         getRepository().getAllDescriptions());
     try (ProjectBuildFileParser parser =

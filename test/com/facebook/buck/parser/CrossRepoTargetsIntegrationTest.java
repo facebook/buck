@@ -17,6 +17,7 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.json.BuildFileParseException;
@@ -67,10 +68,12 @@ public class CrossRepoTargetsIntegrationTest {
     Files.append(repositoriesSection, main.getFile(".buckconfig"), Charset.defaultCharset());
 
     RepositoryFactory repositoryFactory = new FakeRepositoryFactory(mainFolder.getRoot().toPath());
+    BuckConfig config = repositoryFactory.getRootRepository().getBuckConfig();
 
     Parser parser = Parser.createParser(
         repositoryFactory,
-        repositoryFactory.getRootRepository().getBuckConfig().getPythonInterpreter(),
+        config.getPythonInterpreter(),
+        config.getAllowEmptyGlobs(),
         ImmutableSet.<Pattern>of(),
         new FakeRuleKeyBuilderFactory());
 

@@ -136,6 +136,7 @@ public class TargetsCommandTest {
             new InstanceArtifactCacheFactory(artifactCache),
             eventBus,
             BuckTestConstant.PYTHON_INTERPRETER,
+            BuckTestConstant.ALLOW_EMPTY_GLOBS,
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
             new FakeJavaPackageFinder(),

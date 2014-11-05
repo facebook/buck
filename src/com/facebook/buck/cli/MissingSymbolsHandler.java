@@ -64,6 +64,7 @@ public class MissingSymbolsHandler {
         new DefaultProjectBuildFileParserFactory(
             projectFilesystem,
             config.getPythonInterpreter(),
+            config.getAllowEmptyGlobs(),
             descriptions);
     JavaSymbolFinder javaSymbolFinder = new JavaSymbolFinder(
         projectFilesystem,
