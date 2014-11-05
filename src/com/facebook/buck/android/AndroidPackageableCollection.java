@@ -47,17 +47,6 @@ public class AndroidPackageableCollection {
     public final ImmutableSet<Path> whitelistedStringDirectories;
 
     /**
-     * Package names of all the transitive android resources.
-     */
-    public final Supplier<ImmutableSet<String>> rDotJavaPackagesSupplier;
-
-    /**
-     * Whether the set returned by {@link #rDotJavaPackagesSupplier} will be empty. This can be
-     * queried before the {@link #rDotJavaPackagesSupplier} is determined.
-     */
-    public final boolean hasRDotJavaPackages;
-
-    /**
      * A list of build targets belonging to {@link com.facebook.buck.android.AndroidResource}s with
      * non-empty "res" directory, sorted topologically. Note that these are {@link BuildTarget}s
      * to avoid introducing a circular dependency.
@@ -72,16 +61,16 @@ public class AndroidPackageableCollection {
     public ResourceDetails(
         ImmutableList<Path> resourceDirectories,
         ImmutableSet<Path> whitelistedStringDirectories,
-        Supplier<ImmutableSet<String>> rDotJavaPackagesSupplier,
-        boolean hasRDotJavaPackages,
         ImmutableList<BuildTarget> resourcesWithNonEmptyResDir,
         ImmutableList<BuildTarget> resourcesWithEmptyResButNonEmptyAssetsDir) {
       this.resourceDirectories = resourceDirectories;
       this.whitelistedStringDirectories = whitelistedStringDirectories;
-      this.rDotJavaPackagesSupplier = rDotJavaPackagesSupplier;
-      this.hasRDotJavaPackages = hasRDotJavaPackages;
       this.resourcesWithNonEmptyResDir = resourcesWithNonEmptyResDir;
       this.resourcesWithEmptyResButNonEmptyAssetsDir = resourcesWithEmptyResButNonEmptyAssetsDir;
+    }
+
+    public boolean hasResources() {
+      return !resourceDirectories.isEmpty();
     }
   }
 

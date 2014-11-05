@@ -211,7 +211,7 @@ public class AndroidBinaryGraphEnhancer {
     }
 
     // TODO(natthu): Try to avoid re-building the collection by passing UberRDotJava directly.
-    if (packageableCollection.resourceDetails.hasRDotJavaPackages) {
+    if (packageableCollection.resourceDetails.hasResources()) {
       collector.addClasspathEntry(
           aaptPackageResources,
           aaptPackageResources.getPathToCompiledRDotJavaFiles());

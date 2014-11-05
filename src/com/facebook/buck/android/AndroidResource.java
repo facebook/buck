@@ -380,12 +380,9 @@ public class AndroidResource extends AbstractBuildRule
   public void addToCollector(AndroidPackageableCollector collector) {
     if (res != null) {
       if (hasWhitelistedStrings) {
-        collector.addStringWhitelistedResourceDirectory(
-            getBuildTarget(),
-            res,
-            rDotJavaPackageSupplier);
+        collector.addStringWhitelistedResourceDirectory(getBuildTarget(), res);
       } else {
-        collector.addResourceDirectory(getBuildTarget(), res, rDotJavaPackageSupplier);
+        collector.addResourceDirectory(getBuildTarget(), res);
       }
     }
     if (assets != null) {
