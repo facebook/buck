@@ -568,6 +568,9 @@ public class ProjectGenerator {
     }
 
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
+    defaultSettingsBuilder.put(
+        "REPO_ROOT",
+        projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
     defaultSettingsBuilder.put("PRODUCT_NAME", getProductName(buildTarget));
     if (bundle.isPresent()) {
       defaultSettingsBuilder.put("WRAPPER_EXTENSION", bundle.get().getExtensionString());

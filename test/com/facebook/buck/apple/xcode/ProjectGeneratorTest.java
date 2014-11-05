@@ -910,8 +910,8 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-      ImmutableSet.of(scriptNode, resourceNode, dynamicLibraryNode, bundleNode),
-      ImmutableSet.of(bundleTarget));
+        ImmutableSet.of(scriptNode, resourceNode, dynamicLibraryNode, bundleNode),
+        ImmutableSet.of(bundleTarget));
 
     projectGenerator.createXcodeProjects();
 
@@ -1412,6 +1412,43 @@ public class ProjectGeneratorTest {
     assertThat(configurations, hasKey("Conf1"));
     assertThat(configurations, hasKey("Conf2"));
     assertThat(configurations, hasKey("Conf3"));
+  }
+
+  @Test
+  public void generatedTargetConfigurationHasRepoRootSet() throws IOException {
+    SourcePath confFile = new PathSourcePath(EMPTY_XCCONFIG_PATH);
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "rule").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    new XcodeRuleConfiguration(
+                        ImmutableList.of(
+                            new XcodeRuleConfigurationLayer(confFile),
+                            new XcodeRuleConfigurationLayer(confFile))))))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(buildTarget),
+        ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
+    projectGenerator.createXcodeProjects();
+
+    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    Map<String, XCBuildConfiguration> configurations = generatedProject
+        .getTargets()
+        .get(0)
+        .getBuildConfigurationList()
+        .getBuildConfigurationsByName()
+        .asMap();
+    assertThat(configurations, hasKey("Debug"));
+    NSDictionary buildSettings = configurations.get("Debug").getBuildSettings();
+    assertThat(buildSettings, hasKey("REPO_ROOT"));
+    assertEquals(
+        new NSString(projectFilesystem.getRootPath().toAbsolutePath().normalize().toString()),
+        buildSettings.get("REPO_ROOT"));
   }
 
   @Test
