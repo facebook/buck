@@ -57,7 +57,8 @@ public class RepositoryFactoryTest {
     File subBuckConfig = subProjectFolder.newFile(".buckconfig");
     Files.write(subBuckConfigString.getBytes(), subBuckConfig);
 
-    RepositoryFactory factory = new FakeRepositoryFactory(mainProjectFolder.getRoot().toPath());
+    RepositoryFactory factory = new FakeRepositoryFactory(
+        mainProjectFolder.getRoot().toPath().toRealPath());
 
     Repository mainProjectRepo = factory.getRepositoryByCanonicalName(Optional.<String>absent());
     ImmutableMap<Optional<String>, Optional<String>> mainLocalToCanonicalMap =
