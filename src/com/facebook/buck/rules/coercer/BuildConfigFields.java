@@ -80,7 +80,7 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
   }
 
   private static final Pattern VARIABLE_DEFINITION_PATTERN = Pattern.compile(
-      "(?<type>[a-zA-Z_$][a-zA-Z0-9_.]+)" +
+      "(?<type>[a-zA-Z_$][a-zA-Z0-9_.<>]+)" +
       "\\s+" +
       "(?<name>[a-zA-Z_$][a-zA-Z0-9_$]+)" +
       "\\s*=\\s*" +

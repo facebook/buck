@@ -107,6 +107,14 @@ public final class Escaper {
   public static final Function<String, String> BASH_ESCAPER =
       escaper(Quoter.SINGLE, BASH_SPECIAL_CHARS);
 
+  public static final Function<String, String> JAVA_ESCAPER =
+      new Function<String, String>() {
+        @Override
+        public String apply(String input) {
+          return escapeAsJavaString(input);
+        }
+      };
+
   /**
    * Quotes a string to be passed to Bash, if necessary. Uses single quotes to prevent variable
    * expansion, `...` evaluation etc.

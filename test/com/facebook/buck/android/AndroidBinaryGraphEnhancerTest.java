@@ -253,7 +253,12 @@ public class AndroidBinaryGraphEnhancerTest {
         "IS_EXOPACKAGE defaults to false, but should now be true. DEBUG should still be true.",
         BuildConfigFields.fromFields(ImmutableList.of(
             new BuildConfigFields.Field("boolean", "DEBUG", "true"),
-            new BuildConfigFields.Field("boolean", "IS_EXOPACKAGE", "true"))),
+            new BuildConfigFields.Field("boolean", "IS_EXOPACKAGE", "true"),
+            new BuildConfigFields.Field(
+                "java.util.Set<String>",
+                "EXOPACKAGE_FLAGS",
+                "java.util.Collections.unmodifiableSet(new java.util.HashSet<>" +
+                    "(java.util.Arrays.asList(\"SECONDARY_DEX\")))"))),
         androidBuildConfig.getBuildConfigFields());
 
     ImmutableSortedSet<BuildRule> finalDeps = result.finalDeps();
