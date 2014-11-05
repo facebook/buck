@@ -48,4 +48,4 @@ buck uninstall //:exotest
 adb uninstall com.facebook.buck.android.agent
 
 # Celebrate!  (And show that we succeeded, because grep doesn't print error messages.)
-echo GREAT_SUCCESS
+echo -e '\E[42;37m'"\033[1mGREAT_SUCCESS\033[0m"
