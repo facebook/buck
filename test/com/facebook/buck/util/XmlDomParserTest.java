@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -54,7 +55,7 @@ public class XmlDomParserTest {
    * @throws IOException
    */
   @Test
-  public void testXmlDomParserClosesReader() throws IOException {
+  public void testXmlDomParserClosesReader() throws IOException, SAXException {
     StringReaderForCloseCheck reader = new StringReaderForCloseCheck(
         "<?xml version='1.0'?> <a><b><c></c></b></a>");
     assertFalse(reader.isClosed());

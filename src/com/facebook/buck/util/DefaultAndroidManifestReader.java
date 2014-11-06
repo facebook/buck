@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -80,7 +81,7 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
       launchableActivitiesExpression = xPath.compile(XPATH_LAUNCHER_ACTIVITIES);
       packageExpression = xPath.compile(XPATH_PACKAGE);
       versionCodeExpression = xPath.compile(XPATH_VERSION_CODE);
-    } catch (XPathExpressionException e) {
+    } catch (XPathExpressionException | SAXException e) {
       throw Throwables.propagate(e);
     }
   }

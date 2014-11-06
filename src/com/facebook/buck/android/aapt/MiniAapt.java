@@ -40,6 +40,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -288,7 +289,7 @@ public class MiniAapt implements Step {
   void processValuesFile(ProjectFilesystem filesystem, Path valuesFile)
       throws IOException, ResourceParseException {
     try (InputStream stream = filesystem.newFileInputStream(valuesFile)) {
-      Document dom = XmlDomParser.parse(stream);
+      Document dom = parseXml(valuesFile, stream);
       Element root = dom.getDocumentElement();
 
       for (Node node = root.getFirstChild(); node != null; node = node.getNextSibling()) {
@@ -374,7 +375,7 @@ public class MiniAapt implements Step {
       ImmutableSet.Builder<RDotTxtEntry> references)
       throws IOException, XPathExpressionException, ResourceParseException {
     try (InputStream stream = filesystem.newFileInputStream(xmlFile)) {
-      Document dom = XmlDomParser.parse(stream);
+      Document dom = parseXml(xmlFile, stream);
       NodeList nodesWithIds =
           (NodeList) ANDROID_ID_DEFINITION.evaluate(dom, XPathConstants.NODESET);
       for (int i = 0; i < nodesWithIds.getLength(); i++) {
@@ -411,6 +412,18 @@ public class MiniAapt implements Step {
 
         references.add(new FakeRDotTxtEntry(IdType.INT, rType, sanitizeName(name)));
       }
+    }
+  }
+
+  private static Document parseXml(Path filepath, InputStream inputStream)
+      throws IOException, ResourceParseException {
+    try {
+      return XmlDomParser.parse(inputStream);
+    } catch (SAXException e) {
+      throw new ResourceParseException(
+          "Error parsing xml file '%s': %s.",
+          filepath,
+          e.getMessage());
     }
   }
 

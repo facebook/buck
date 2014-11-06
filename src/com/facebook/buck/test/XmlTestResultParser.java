@@ -27,6 +27,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,14 +44,14 @@ public class XmlTestResultParser {
 
     try {
       return doParse(xmlFileContents);
-    } catch (NumberFormatException e) {
+    } catch (NumberFormatException | SAXException e) {
       // This is an attempt to track down an inexplicable error that we have observed in the wild.
       String message = createDetailedExceptionMessage(xmlFile, xmlFileContents);
       throw new RuntimeException(message, e);
     }
   }
 
-  private static TestCaseSummary doParse(String xml) throws IOException {
+  private static TestCaseSummary doParse(String xml) throws IOException, SAXException {
     Document doc = XmlDomParser.parse(new InputSource(new StringReader(xml)),
         /* namespaceAware */ true);
     Element root = doc.getDocumentElement();

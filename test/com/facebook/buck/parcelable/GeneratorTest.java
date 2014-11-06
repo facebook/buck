@@ -22,6 +22,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import org.junit.Test;
+import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +30,7 @@ import java.io.IOException;
 public class GeneratorTest {
 
   @Test
-  public void testGenerate() throws IOException {
+  public void testGenerate() throws IOException, SAXException {
     File parcelableDescriptor = new File("testdata/com/facebook/buck/parcelable/student.xml");
     String observed = Generator.generateFromFile(parcelableDescriptor);
     String expected = Files.toString(

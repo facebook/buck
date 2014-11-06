@@ -33,6 +33,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -66,7 +67,7 @@ public class RunWithAnnotationIntegrationTest {
   }
 
   @Test
-  public void testParametrizedTestRun4Cases() throws IOException {
+  public void testParametrizedTestRun4Cases() throws IOException, SAXException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "runwith", temporaryFolder);
     workspace.setUp();

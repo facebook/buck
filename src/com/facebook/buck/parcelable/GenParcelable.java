@@ -36,6 +36,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
+import org.xml.sax.SAXException;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -87,7 +89,7 @@ public class GenParcelable extends AbstractBuildRule {
             File outputPath = getOutputPathForParcelableClass(parcelableClass).toFile();
             Files.createParentDirs(outputPath);
             Files.write(generatedJava, outputPath, Charsets.UTF_8);
-          } catch (IOException e) {
+          } catch (IOException | SAXException e) {
             executionContext.logError(e, "Error creating parcelable from file: %s", src);
             return 1;
           }

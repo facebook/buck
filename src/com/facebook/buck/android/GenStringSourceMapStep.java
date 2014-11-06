@@ -28,6 +28,7 @@ import com.google.common.collect.Maps;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -154,7 +155,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
 
           NodeList arrayNodes = dom.getElementsByTagName("string-array");
           scrapeNodes(arrayNodes, stringsPath.toString(), nativeStrings);
-        } catch (IOException ex) {
+        } catch (IOException | SAXException ex) {
           context.logError(
               ex,
               "Failed to parse strings file: '%s'",

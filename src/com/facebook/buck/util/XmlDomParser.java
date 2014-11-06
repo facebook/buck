@@ -37,19 +37,20 @@ public class XmlDomParser {
   /** Utility class: do not instantiate. */
   private XmlDomParser() {}
 
-  public static Document parse(File xml) throws IOException {
+  public static Document parse(File xml) throws IOException, SAXException {
     return parse(Files.asByteSource(xml).openStream());
   }
 
-  public static Document parse(String xmlContents) throws IOException {
+  public static Document parse(String xmlContents) throws IOException, SAXException {
     return parse(new ByteArrayInputStream(xmlContents.getBytes()));
   }
 
-  public static Document parse(InputStream stream) throws IOException {
+  public static Document parse(InputStream stream) throws IOException, SAXException {
     return parse(new InputSource(stream), /* namespaceAware */ false);
   }
 
-  public static Document parse(InputSource xml, boolean namespaceAware) throws IOException {
+  public static Document parse(InputSource xml, boolean namespaceAware)
+      throws IOException, SAXException {
     DocumentBuilder docBuilder;
     try {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -61,13 +62,6 @@ public class XmlDomParser {
       throw Throwables.propagate(e);
     }
 
-    Document doc;
-    try {
-      doc = docBuilder.parse(xml);
-    } catch (SAXException e) {
-      throw Throwables.propagate(e);
-    }
-
-    return doc;
+    return docBuilder.parse(xml);
   }
 }

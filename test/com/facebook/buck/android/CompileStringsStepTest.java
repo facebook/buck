@@ -35,6 +35,7 @@ import com.google.common.io.Files;
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -142,7 +143,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testScrapeStringNodes() throws IOException {
+  public void testScrapeStringNodes() throws IOException, SAXException {
     String xmlInput =
           "<string name='name1'>Value1</string>" +
           "<string name='name2'>Value with space</string>" +
@@ -175,7 +176,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testScrapePluralsNodes() throws IOException {
+  public void testScrapePluralsNodes() throws IOException, SAXException {
     String xmlInput =
           "<plurals name='name1'>" +
             "<item quantity='zero'>%d people saw this</item>" +
@@ -215,7 +216,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testScrapeStringArrayNodes() throws IOException {
+  public void testScrapeStringArrayNodes() throws IOException, SAXException {
     String xmlInput =
           "<string-array name='name1'>" +
             "<item>Value11</item>" +

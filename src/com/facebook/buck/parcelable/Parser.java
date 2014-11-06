@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +36,7 @@ public class Parser {
   /** Utility class: do not instantiate. */
   private Parser() {}
 
-  public static ParcelableClass parse(File xml) throws IOException {
+  public static ParcelableClass parse(File xml) throws IOException, SAXException {
     Document doc = XmlDomParser.parse(xml);
 
     // packageName, className, creatorClass

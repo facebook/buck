@@ -33,6 +33,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -135,7 +136,7 @@ public class CompileStringsStep implements Step {
     for (String locale : filesByLocale.keySet()) {
       try {
         resourcesByLocale.put(locale, compileStringFiles(filesystem, filesByLocale.get(locale)));
-      } catch (IOException e) {
+      } catch (IOException | SAXException e) {
         context.logError(e, "Error parsing string file for locale: %s", locale);
         return 1;
       }
@@ -237,7 +238,7 @@ public class CompileStringsStep implements Step {
 
   private StringResources compileStringFiles(
       ProjectFilesystem filesystem,
-      Collection<Path> filepaths) throws IOException {
+      Collection<Path> filepaths) throws IOException, SAXException {
     TreeMap<Integer, String> stringsMap = Maps.newTreeMap();
     TreeMap<Integer, ImmutableMap<String, String>> pluralsMap = Maps.newTreeMap();
     TreeMultimap<Integer, String> arraysMap = TreeMultimap.create();
