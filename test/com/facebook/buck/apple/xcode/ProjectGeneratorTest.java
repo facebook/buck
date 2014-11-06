@@ -1127,7 +1127,7 @@ public class ProjectGeneratorTest {
     assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
-        target, ImmutableList.of("$BUILT_PRODUCTS_DIR/dynamic.dylib"));
+        target, ImmutableList.of("$BUILT_PRODUCTS_DIR/libdynamic.dylib"));
   }
 
   @Test

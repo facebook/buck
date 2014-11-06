@@ -581,6 +581,7 @@ public class ProjectGenerator {
     if (!bundle.isPresent() && appleBuildRule.getType().equals(AppleLibraryDescription.TYPE)) {
       defaultSettingsBuilder.put(
           "CONFIGURATION_BUILD_DIR", getObjectOutputPathForRule(appleBuildRule));
+      defaultSettingsBuilder.put("EXECUTABLE_PREFIX", "lib");
     }
 
     ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();

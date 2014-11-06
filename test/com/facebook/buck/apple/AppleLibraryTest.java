@@ -89,6 +89,7 @@ public class AppleLibraryTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     BuildRule buildRule = description.createBuildRule(params, new BuildRuleResolver(), arg);
 
-    assertEquals(Paths.get("buck-out/bin/foo/#dynamic/foo.dylib"), buildRule.getPathToOutputFile());
+    assertEquals(Paths.get("buck-out/bin/foo/#dynamic/libfoo.dylib"),
+        buildRule.getPathToOutputFile());
   }
 }

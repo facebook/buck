@@ -51,7 +51,7 @@ public class AppleLibrary extends AbstractAppleNativeTargetBuildRule {
 
   public static String getOutputFileNameFormat(boolean linkedDynamically) {
     if (linkedDynamically) {
-      return "%s.dylib";
+      return "lib%s.dylib";
     } else {
       return "lib%s.a";
     }
