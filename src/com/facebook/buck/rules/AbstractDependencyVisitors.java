@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.ImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 
 public class AbstractDependencyVisitors {
@@ -30,35 +31,36 @@ public class AbstractDependencyVisitors {
    * instanceOf T.
    *
    * @param inputs      initial dependencies from which to build transitive closure
-   * @param typeFilter  class to filter with on instanceOf, we need this because of
-   *                    the type erasure
+   * @param filter      predicate to determine whether a node should be included
+   * @param traverse    predicate to determine whether this node should be traversed
    * @param <T>         class to fitler on
    * @return            filtered BuildRule DAG of transitive dependencies
    *
    * @see com.facebook.buck.rules.BuildRule
    */
   public static <T> ImmutableDirectedAcyclicGraph<BuildRule> getBuildRuleDirectedGraphFilteredBy(
-      final Iterable<? extends BuildRule> inputs, final Class<T> typeFilter) {
+      final Iterable<? extends BuildRule> inputs,
+      final Predicate<Object> filter,
+      final Predicate<Object> traverse) {
+
     // Build up a graph of the inputs and their transitive dependencies, we'll use the graph
     // to topologically sort the dependencies.
     final MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<>();
     AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(inputs) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        if (typeFilter.isAssignableFrom(rule.getClass())) {
+        if (filter.apply(rule)) {
           graph.addNode(rule);
           for (BuildRule dep : rule.getDeps()) {
-            if (typeFilter.isAssignableFrom(dep.getClass())) {
+            if (traverse.apply(dep) && filter.apply(dep)) {
               graph.addEdge(rule, dep);
             }
           }
-          return rule.getDeps();
-        } else {
-          return ImmutableSet.of();
         }
+        return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
       }
     };
     visitor.start();
-    return new DefaultImmutableDirectedAcyclicGraph<BuildRule>(graph);
+    return new DefaultImmutableDirectedAcyclicGraph<>(graph);
   }
 }

@@ -323,7 +323,7 @@ public class KnownBuildRuleTypes {
     builder.register(new JavaLibraryDescription(javacEnv));
     builder.register(new JavaTestDescription(javacEnv));
     builder.register(new KeystoreDescription());
-    builder.register(new NdkLibraryDescription(ndkVersion));
+    builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
     builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
     builder.register(new OCamlLibraryDescription(ocamlBuckConfig));
     builder.register(new PrebuiltCxxLibraryDescription(cxxPlatforms));

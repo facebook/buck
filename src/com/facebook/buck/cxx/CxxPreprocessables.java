@@ -29,8 +29,9 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -74,10 +75,10 @@ public class CxxPreprocessables {
    * Find and return the {@link CxxPreprocessorInput} objects from {@link CxxPreprocessorDep}
    * found while traversing the dependencies starting from the {@link BuildRule} objects given.
    */
-  @VisibleForTesting
   public static CxxPreprocessorInput getTransitiveCxxPreprocessorInput(
       final CxxPlatform cxxPlatform,
-      Iterable<? extends BuildRule> inputs) {
+      Iterable<? extends BuildRule> inputs,
+      final Predicate<Object> traverse) {
 
     // We don't really care about the order we get back here, since headers shouldn't
     // conflict.  However, we want something that's deterministic, so sort by build
@@ -92,16 +93,23 @@ public class CxxPreprocessables {
           CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
           Preconditions.checkState(!deps.containsKey(rule.getBuildTarget()));
           deps.put(rule.getBuildTarget(), dep.getCxxPreprocessorInput(cxxPlatform));
-          return rule.getDeps();
-        } else {
-          return ImmutableSet.of();
         }
+        return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
       }
     };
     visitor.start();
 
     // Grab the cxx preprocessor inputs and return them.
     return CxxPreprocessorInput.concat(deps.values());
+  }
+
+  public static CxxPreprocessorInput getTransitiveCxxPreprocessorInput(
+      final CxxPlatform cxxPlatform,
+      Iterable<? extends BuildRule> inputs) {
+    return getTransitiveCxxPreprocessorInput(
+        cxxPlatform,
+        inputs,
+        Predicates.instanceOf(CxxPreprocessorDep.class));
   }
 
   /**

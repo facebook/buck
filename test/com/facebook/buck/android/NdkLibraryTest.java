@@ -117,7 +117,7 @@ public class NdkLibraryTest {
         "ndk_library() should invoke ndk-build on the given path with some -j value",
         ImmutableList.of(
             String.format(
-              "/ndk-r8b/ndk-build -j %d -C %s/ flag1 flag2 " +
+              "/ndk-r8b/ndk-build -j %d -C %s flag1 flag2 " +
               "APP_PROJECT_PATH=/foo/%s/%s/%s/ APP_BUILD_SCRIPT=/foo/%s/Android.mk " +
               "NDK_OUT=/foo/%s/%s/%s/ " +
               "NDK_LIBS_OUT=/foo/%s/%s/%s/libs " +

@@ -76,6 +76,7 @@ public class NdkLibraryBuilder {
       return new NdkLibrary(
           new FakeBuildRuleParamsBuilder(buildTarget).setType(NdkLibraryDescription.TYPE).build(),
           resolver,
+          buildTarget.getBasePath().resolve("Android.mk"),
           sources.build(),
           flags.build(),
           isAsset,

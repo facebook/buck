@@ -1,0 +1,13 @@
+cxx_library(
+  name = 'bar',
+  header_namespace = 'test',
+  headers = [
+    'bar.h',
+  ],
+  srcs = [
+    'bar.cpp',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

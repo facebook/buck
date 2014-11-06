@@ -69,7 +69,8 @@ public class NdkLibrary extends AbstractBuildRule
   private final boolean isAsset;
 
   /** The directory containing the Android.mk file to use. This value includes a trailing slash. */
-  private final String makefileDirectory;
+  private final Path root;
+  private final Path makefile;
   private final String lastPathComponent;
   private final Path buildArtifactsDirectory;
   private final Path genDirectory;
@@ -81,6 +82,7 @@ public class NdkLibrary extends AbstractBuildRule
   protected NdkLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      Path makefile,
       Set<SourcePath> sources,
       List<String> flags,
       boolean isAsset,
@@ -89,7 +91,8 @@ public class NdkLibrary extends AbstractBuildRule
     this.isAsset = isAsset;
 
     BuildTarget buildTarget = params.getBuildTarget();
-    this.makefileDirectory = buildTarget.getBasePathWithSlash();
+    this.root = buildTarget.getBasePath();
+    this.makefile = Preconditions.checkNotNull(makefile);
     this.lastPathComponent = "__lib" + buildTarget.getShortName();
     this.buildArtifactsDirectory = getBuildArtifactsDirectory(buildTarget, true /* isScratchDir */);
     this.genDirectory = getBuildArtifactsDirectory(buildTarget, false /* isScratchDir */);
@@ -127,7 +130,9 @@ public class NdkLibrary extends AbstractBuildRule
     // .so files are written to the libs/ subdirectory of the output directory.
     // All of them should be recorded via the BuildableContext.
     Path binDirectory = buildArtifactsDirectory.resolve("libs");
-    Step nkdBuildStep = new NdkBuildStep(makefileDirectory,
+    Step nkdBuildStep = new NdkBuildStep(
+        root,
+        makefile,
         buildArtifactsDirectory,
         binDirectory,
         flags);

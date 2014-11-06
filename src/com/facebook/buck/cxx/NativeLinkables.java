@@ -21,6 +21,7 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.rules.AbstractDependencyVisitors;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -51,14 +52,17 @@ public class NativeLinkables {
    * {@link com.facebook.buck.rules.BuildRule} roots.
    */
   public static NativeLinkableInput getTransitiveNativeLinkableInput(
-      CxxPlatform cxxPlatform,
+      final CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
-      NativeLinkable.Type depType,
+      final NativeLinkable.Type depType,
+      final Predicate<Object> traverse,
       boolean reverse) {
+
     final ImmutableDirectedAcyclicGraph<BuildRule> graph =
         AbstractDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
             inputs,
-            NativeLinkable.class);
+            Predicates.instanceOf(NativeLinkable.class),
+            traverse);
 
     // Collect and topologically sort our deps that contribute to the link.
     final ImmutableList<BuildRule> sorted = TopologicalSort.sort(
@@ -69,6 +73,19 @@ public class NativeLinkables {
             .from(reverse ? sorted.reverse() : sorted)
             .filter(NativeLinkable.class)
             .transform(getNativeLinkableInput(cxxPlatform, depType)));
+  }
+
+  public static NativeLinkableInput getTransitiveNativeLinkableInput(
+      final CxxPlatform cxxPlatform,
+      Iterable<? extends BuildRule> inputs,
+      final NativeLinkable.Type depType,
+      boolean reverse) {
+    return getTransitiveNativeLinkableInput(
+        cxxPlatform,
+        inputs,
+        depType,
+        Predicates.instanceOf(NativeLinkable.class),
+        reverse);
   }
 
 }

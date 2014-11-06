@@ -23,29 +23,27 @@ import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class NdkBuildStep extends ShellStep {
 
-  private final String makefileDirectory;
-  private final String makefilePath;
+  private final Path root;
+  private final Path makefile;
   private final Path buildArtifactsDirectory;
   private final Path binDirectory;
   private final ImmutableList<String> flags;
   private final int maxJobCount;
 
   public NdkBuildStep(
-      String makefileDirectory,
+      Path root,
+      Path makefile,
       Path buildArtifactsDirectory,
       Path binDirectory,
       Iterable<String> flags) {
-    this.makefileDirectory = makefileDirectory;
-    Preconditions.checkArgument(makefileDirectory.endsWith("/"));
-    this.makefilePath = this.makefileDirectory + "Android.mk";
+    this.root = root;
+    this.makefile = makefile;
     this.buildArtifactsDirectory = buildArtifactsDirectory;
     this.binDirectory = binDirectory;
     this.flags = ImmutableList.copyOf(flags);
@@ -77,7 +75,7 @@ public class NdkBuildStep extends ShellStep {
         "-j",
         Integer.toString(this.maxJobCount),
         "-C",
-        this.makefileDirectory);
+        this.root.toString());
 
     builder.addAll(this.flags);
 
@@ -85,7 +83,7 @@ public class NdkBuildStep extends ShellStep {
     Function<Path, Path> absolutifier = projectFilesystem.getAbsolutifier();
     builder.add(
         "APP_PROJECT_PATH=" + absolutifier.apply(buildArtifactsDirectory) + "/",
-        "APP_BUILD_SCRIPT=" + absolutifier.apply(Paths.get(makefilePath)),
+        "APP_BUILD_SCRIPT=" + absolutifier.apply(makefile),
         "NDK_OUT=" + absolutifier.apply(buildArtifactsDirectory) + "/",
         "NDK_LIBS_OUT=" + projectFilesystem.resolve(binDirectory),
         // Suppress the custom build step messages (e.g. "Compile++ ...").

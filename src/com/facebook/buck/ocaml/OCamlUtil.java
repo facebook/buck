@@ -83,7 +83,8 @@ public class OCamlUtil {
     final ImmutableDirectedAcyclicGraph<BuildRule> graph =
         AbstractDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
             inputs,
-            OCamlLibrary.class);
+            Predicates.instanceOf(OCamlLibrary.class),
+            Predicates.instanceOf(OCamlLibrary.class));
 
     final ImmutableList<BuildRule> sorted = TopologicalSort.sort(
         graph,
