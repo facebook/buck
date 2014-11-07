@@ -8,6 +8,7 @@ from buck_tool import BuckTool, Resource
 
 
 SERVER = Resource("buck_server")
+BOOTSTRAPPER = Resource("bootstrapper_classes")
 
 
 class BuckPackage(BuckTool):
@@ -45,6 +46,9 @@ class BuckPackage(BuckTool):
                 os.rename(outf.name, resource_path)
                 outf.delete = False
         return resource_path
+
+    def _get_bootstrap_classpath(self):
+        return self._get_resource(BOOTSTRAPPER)
 
     def _get_java_classpath(self):
         return self._get_resource(SERVER)

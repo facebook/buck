@@ -2,6 +2,6 @@ python_test(
   name = 'bootstrapper',
   srcs = glob(['*.py']),
   deps = [
-    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
   ],
 )

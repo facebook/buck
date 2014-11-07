@@ -133,6 +133,7 @@ java_library(
   ],
   resources = glob(['quickstart/**'], include_dotfiles=True),
   visibility = [
+    '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
     '//src/com/facebook/buck/event:dependencies-for-external-projects-inner',
     '//src/com/facebook/buck/event:event',
     '//test/com/facebook/buck/android:android',

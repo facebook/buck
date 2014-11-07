@@ -338,6 +338,9 @@ class BuckRepo(BuckTool):
             "-Dbuck.git_dirty={0}".format(int(self._is_dirty())),
         ]
 
+    def _get_bootstrap_classpath(self):
+        return self._join_buck_dir("build/bootstrapper/classes")
+
     def _get_java_classpath(self):
         return self._pathsep.join([self._join_buck_dir(p) for p in JAVA_CLASSPATHS])
 

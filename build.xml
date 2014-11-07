@@ -9,6 +9,8 @@
   <property name="testrunner.classes.dir" value="${build.dir}/testrunner/classes" />
   <property name="abi_processor.src.dir" value="${src.dir}/com/facebook/buck/java/abi/" />
   <property name="abi_processor.classes.dir" value="${build.dir}/abi_processor/classes" />
+  <property name="bootstrapper.src.dir" value="${src.dir}/com/facebook/buck/cli/bootstrapper/" />
+  <property name="bootstrapper.classes.dir" value="${build.dir}/bootstrapper/classes" />
   <property name="buck.path_to_buck_py" value="${basedir}/src/com/facebook/buck/parser/buck.py" />
   <property name="buck.path_to_compile_asset_catalogs_py" value="${basedir}/src/com/facebook/buck/apple/compile_asset_catalogs.py" />
   <property name="buck.path_to_compile_asset_catalogs_build_phase_sh" value="${basedir}/src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh" />
@@ -165,6 +167,17 @@
     </javac>
   </target>
 
+  <target name="compile-bootstrapper" depends="checkversion">
+    <mkdir dir="${bootstrapper.classes.dir}" />
+    <ecj srcdir="${bootstrapper.src.dir}"
+           destdir="${bootstrapper.classes.dir}"
+           >
+      <javac-params>
+          <include name="**/*.java"/>
+      </javac-params>
+    </ecj>
+  </target>
+
   <target name="javacc">
     <mkdir dir="${javacc.gensrc.dir}/com/facebook/buck/apple/xcode/xcconfig" />
     <javacc target="src/com/facebook/buck/apple/xcode/xcconfig/XcconfigParser.jj"
@@ -271,7 +284,7 @@
   </macrodef>
 
   <target name="compile"
-          depends="compile-testrunner, compile-abi-processor, javacc, dx, generate-immutables"
+          depends="compile-testrunner, compile-abi-processor, compile-bootstrapper, javacc, dx, generate-immutables"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
@@ -385,6 +398,7 @@
         -->
         <exclude name="com/facebook/buck/android/support/**" />
         <exclude name="com/facebook/buck/apple/xcode/xcconfig/**" />
+        <exclude name="com/facebook/buck/cli/bootstrapper/**" />
         <exclude name="com/facebook/buck/cli/quickstart/**" />
         <exclude name="com/facebook/buck/java/abi/AbiWriter.java" />
         <exclude name="com/facebook/buck/java/abi/Annotations.java" />

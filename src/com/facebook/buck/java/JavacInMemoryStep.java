@@ -290,8 +290,7 @@ public class JavacInMemoryStep extends JavacStep {
               }
             })
         .toArray(URL.class);
-    // Note the lack of a parent classloader.
-    processorBundle.classLoader = new URLClassLoader(urls, /* parent */ null);
+    processorBundle.classLoader = new URLClassLoader(urls, ToolProvider.getSystemToolClassLoader());
 
     Iterable<String> names = Splitter.on(",")
         .trimResults()

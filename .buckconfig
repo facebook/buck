@@ -3,7 +3,7 @@
     ; are folders that contain Java code.
     src_roots = src, test
 [alias]
-    buck = //src/com/facebook/buck/cli:cli
+    buck = //src/com/facebook/buck/cli/bootstrapper:bootstrapper
     buck-android-support = //src/com/facebook/buck/android/support:buck-android-support
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
 [buildfile]

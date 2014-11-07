@@ -152,6 +152,8 @@ class BuckTool(object):
             command.extend(self._get_java_args(buck_version_uid))
             command.append("-Djava.io.tmpdir={0}".format(self._tmp_dir))
             command.append("-classpath")
+            command.append(self._get_bootstrap_classpath())
+            command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
             command.append(self._get_java_classpath())
             command.append("com.facebook.buck.cli.Main")
             command.extend(sys.argv[1:])
@@ -182,6 +184,8 @@ class BuckTool(object):
             command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
             command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
             command.append("-classpath")
+            command.append(self._get_bootstrap_classpath())
+            command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
             command.append(self._get_java_classpath())
             command.append("com.martiansoftware.nailgun.NGServer")
             command.append("localhost:0")
@@ -316,6 +320,9 @@ class BuckTool(object):
     def _get_buck_version_uid(self):
         raise NotImplementedError()
 
+    def _get_bootstrap_classpath(self):
+        raise NotImplementedError()
+
     def _get_java_classpath(self):
         raise NotImplementedError()
 
@@ -327,7 +334,7 @@ class BuckTool(object):
         java_args.extend([
             "-Xmx1000m",
             "-Djava.awt.headless=true",
-            "-Djava.util.logging.config.class=com.facebook.buck.log.LogConfig",
+            "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
             "-Dbuck.test_util_no_tests_dir=true",
             "-Dbuck.version_uid={0}".format(version_uid),
             "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
