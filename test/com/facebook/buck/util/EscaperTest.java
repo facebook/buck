@@ -85,4 +85,13 @@ public class EscaperTest {
     assertEquals("simple", Escaper.escapeAsPowerShellString("simple"));
     assertEquals("`'hello` world`'", Escaper.escapeAsPowerShellString("'hello world'"));
   }
+
+  @Test
+  public void testEscapeMakefileValues() {
+    assertEquals("hello world", Escaper.escapeAsMakefileValueString("hello world"));
+    assertEquals("hello\\#world", Escaper.escapeAsMakefileValueString("hello#world"));
+    assertEquals("hello\\\\\\#world", Escaper.escapeAsMakefileValueString("hello\\#world"));
+    assertEquals("hello\\world", Escaper.escapeAsMakefileValueString("hello\\world"));
+  }
+
 }

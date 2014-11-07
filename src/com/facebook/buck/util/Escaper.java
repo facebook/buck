@@ -19,6 +19,7 @@ package com.facebook.buck.util;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
@@ -31,6 +32,15 @@ public final class Escaper {
         @Override
         public String apply(String input) {
           return escapeAsPowerShellString(input);
+        }
+      };
+
+  private static final char MAKEFILE_ESCAPE_CHAR = '\\';
+  public static final Function<String, String> MAKEFILE_VALUE_ESCAPER =
+      new Function<String, String>() {
+        @Override
+        public String apply(String input) {
+          return escapeAsMakefileValueString(input);
         }
       };
 
@@ -236,8 +246,49 @@ public final class Escaper {
     return builder.toString();
   }
 
+  private static boolean shouldEscapeMakefileString(
+      String escapees,
+      String blob,
+      int index) {
+
+    Preconditions.checkArgument(blob.length() > index);
+
+    for (int i = index; i < blob.length(); i++) {
+      if (escapees.indexOf(blob.charAt(i)) != -1) {
+        return true;
+      }
+      if (blob.charAt(i) != MAKEFILE_ESCAPE_CHAR) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private static String escapeAsMakefileString(String escapees, String str) {
+    StringBuilder builder = new StringBuilder();
+
+    for (int i = 0; i < str.length(); i++) {
+      if (shouldEscapeMakefileString(escapees, str, i)) {
+        builder.append(MAKEFILE_ESCAPE_CHAR);
+      }
+      builder.append(str.charAt(i));
+    }
+
+    return builder.toString().replace("$", "$$");
+  }
+
+  /**
+   * @return an escaped string suitable for use in a GNU makefile on the right side of a variable
+   *     assignment.
+   */
+  public static String escapeAsMakefileValueString(String str) {
+    return escapeAsMakefileString("#", str);
+  }
+
   @VisibleForTesting
   static String hex(char ch) {
     return Integer.toHexString(ch).toUpperCase();
   }
+
 }
