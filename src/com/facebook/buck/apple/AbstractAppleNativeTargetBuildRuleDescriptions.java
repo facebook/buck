@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -262,4 +263,16 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
       // Nothing to do: work is done in onNodeExplored.
     }
   }
+
+  public static Optional<Path> getPathToHeaderMap(
+      TargetNode<AppleNativeTargetDescriptionArg> targetNode,
+      HeaderMapType headerMapType) {
+    if (!targetNode.getConstructorArg().useBuckHeaderMaps.get()) {
+      return Optional.absent();
+    }
+
+    return Optional.of(
+        BuildTargets.getGenPath(targetNode.getBuildTarget(), "%s" + headerMapType.getSuffix()));
+  }
+
 }

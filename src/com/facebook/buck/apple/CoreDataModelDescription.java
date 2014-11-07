@@ -23,9 +23,11 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Files;
 
 import java.nio.file.Path;
 
@@ -35,6 +37,8 @@ import java.nio.file.Path;
  */
 public class CoreDataModelDescription implements Description<CoreDataModelDescription.Arg> {
   public static final BuildRuleType TYPE = new BuildRuleType("core_data_model");
+  private static final String CORE_DATA_MODEL_EXTENSION = "xcdatamodel";
+  private static final String VERSIONED_CORE_DATA_MODEL_EXTENSION = "xcdatamodeld";
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -55,7 +59,21 @@ public class CoreDataModelDescription implements Description<CoreDataModelDescri
     Supplier<ImmutableCollection<Path>> inputPathsSupplier = RuleUtils.subpathsOfPathsSupplier(
         projectFilesystem,
         ImmutableSet.of(args.path));
-    return new CoreDataModel(params, new SourcePathResolver(resolver), inputPathsSupplier, args);
+    String extension = Files.getFileExtension(args.path.getFileName().toString());
+    Preconditions.checkArgument(
+        CORE_DATA_MODEL_EXTENSION.equals(extension) ||
+            VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension));
+
+    return new CoreDataModel(
+        params,
+        new SourcePathResolver(resolver),
+        inputPathsSupplier,
+        args.path);
+  }
+
+  public static boolean isVersionedDataModel(Arg arg) {
+    return VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(
+        Files.getFileExtension(arg.path.getFileName().toString()));
   }
 
   @SuppressFieldNotInitialized

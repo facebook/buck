@@ -19,8 +19,8 @@ package com.facebook.buck.apple.xcode;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
-import com.facebook.buck.apple.AppleAssetCatalog;
-import com.facebook.buck.apple.AppleResource;
+import com.facebook.buck.apple.AppleAssetCatalogDescription;
+import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.HeaderVisibility;
@@ -41,8 +41,13 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
@@ -58,6 +63,7 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 /**
  * Configures a PBXProject by adding a PBXNativeTarget and its associated dependencies into a
@@ -76,6 +82,9 @@ public class NewNativeTargetProjectMutator {
     }
   }
 
+  private final TargetNodeToBuildRuleTransformer targetNodeToBuildRuleTransformer =
+      new TargetNodeToBuildRuleTransformer();
+  private final TargetGraph targetGraph;
   private final ExecutionContext executionContext;
   private final PathRelativizer pathRelativizer;
   private final SourcePathResolver sourcePathResolver;
@@ -91,17 +100,19 @@ public class NewNativeTargetProjectMutator {
   private boolean shouldGenerateCopyHeadersPhase = true;
   private ImmutableSet<String> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
-  private ImmutableSet<AppleResource> resources = ImmutableSet.of();
-  private ImmutableSet<AppleAssetCatalog> assetCatalogs = ImmutableSet.of();
+  private ImmutableSet<AppleResourceDescription.Arg> resources = ImmutableSet.of();
+  private ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogs = ImmutableSet.of();
   private Path assetCatalogBuildScript = Paths.get("");
-  private Iterable<Genrule> preBuildRunScriptPhases = ImmutableList.of();
-  private Iterable<Genrule> postBuildRunScriptPhases = ImmutableList.of();
+  private Iterable<TargetNode<?>> preBuildRunScriptPhases = ImmutableList.of();
+  private Iterable<TargetNode<?>> postBuildRunScriptPhases = ImmutableList.of();
 
   public NewNativeTargetProjectMutator(
+      TargetGraph targetGraph,
       ExecutionContext executionContext,
       PathRelativizer pathRelativizer,
       SourcePathResolver sourcePathResolver,
       BuildTarget buildTarget) {
+    this.targetGraph = targetGraph;
     this.executionContext = executionContext;
     this.pathRelativizer = pathRelativizer;
     this.sourcePathResolver = sourcePathResolver;
@@ -159,17 +170,18 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public NewNativeTargetProjectMutator setResources(ImmutableSet<AppleResource> resources) {
+  public NewNativeTargetProjectMutator setResources(
+      ImmutableSet<AppleResourceDescription.Arg> resources) {
     this.resources = resources;
     return this;
   }
 
-  public NewNativeTargetProjectMutator setPreBuildRunScriptPhases(Iterable<Genrule> phases) {
+  public NewNativeTargetProjectMutator setPreBuildRunScriptPhases(Iterable<TargetNode<?>> phases) {
     preBuildRunScriptPhases = phases;
     return this;
   }
 
-  public NewNativeTargetProjectMutator setPostBuildRunScriptPhases(Iterable<Genrule> phases) {
+  public NewNativeTargetProjectMutator setPostBuildRunScriptPhases(Iterable<TargetNode<?>> phases) {
     postBuildRunScriptPhases = phases;
     return this;
   }
@@ -180,13 +192,14 @@ public class NewNativeTargetProjectMutator {
    */
   public NewNativeTargetProjectMutator setAssetCatalogs(
       Path assetCatalogBuildScript,
-      ImmutableSet<AppleAssetCatalog> assetCatalogs) {
+      ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogs) {
     this.assetCatalogBuildScript = assetCatalogBuildScript;
     this.assetCatalogs = assetCatalogs;
     return this;
   }
 
-  public Result buildTargetAndAddToProject(PBXProject project) {
+  public Result buildTargetAndAddToProject(PBXProject project)
+      throws NoSuchBuildTargetException {
     PBXNativeTarget target = new PBXNativeTarget(targetName, productType);
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(targetName);
 
@@ -410,10 +423,10 @@ public class NewNativeTargetProjectMutator {
     PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
     PBXBuildPhase phase = new PBXResourcesBuildPhase();
     target.getBuildPhases().add(phase);
-    for (AppleResource resource : resources) {
+    for (AppleResourceDescription.Arg resource : resources) {
       Iterable<Path> paths = Iterables.concat(
-          sourcePathResolver.getAllPaths(resource.getFiles()),
-          resource.getDirs());
+          sourcePathResolver.getAllPaths(resource.files),
+          resource.dirs);
       for (Path path : paths) {
         PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
@@ -423,25 +436,23 @@ public class NewNativeTargetProjectMutator {
         phase.getFiles().add(buildFile);
       }
 
-      for (String virtualOutputPath : resource.getVariants().keySet()) {
-        ImmutableMap<String, SourcePath> contents =
-            Preconditions.checkNotNull(resource.getVariants().get(virtualOutputPath));
-
-        String variantName = Paths.get(virtualOutputPath).getFileName().toString();
+      for (Map.Entry<String, Map<String, SourcePath>> virtualOutputEntry :
+          resource.variants.get().entrySet()) {
+        String variantName = Paths.get(virtualOutputEntry.getKey()).getFileName().toString();
         PBXVariantGroup variantGroup =
             resourcesGroup.getOrCreateChildVariantGroupByName(variantName);
 
         PBXBuildFile buildFile = new PBXBuildFile(variantGroup);
         phase.getFiles().add(buildFile);
 
-        for (String childVirtualName : contents.keySet()) {
+        for (Map.Entry<String, SourcePath> childVirtualNameEntry :
+            virtualOutputEntry.getValue().entrySet()) {
           SourceTreePath sourceTreePath = new SourceTreePath(
               PBXReference.SourceTree.SOURCE_ROOT,
-              pathRelativizer.outputPathToSourcePath(
-                  Preconditions.checkNotNull(contents.get(childVirtualName))));
+              pathRelativizer.outputPathToSourcePath(childVirtualNameEntry.getValue()));
 
           variantGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
-              childVirtualName,
+              childVirtualNameEntry.getKey(),
               sourceTreePath);
         }
       }
@@ -464,8 +475,8 @@ public class NewNativeTargetProjectMutator {
     ImmutableList.Builder<String> commonAssetCatalogsBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> assetCatalogsToSplitIntoBundlesBuilder =
         ImmutableList.builder();
-    for (AppleAssetCatalog assetCatalog : assetCatalogs) {
-      for (Path dir : assetCatalog.getDirs()) {
+    for (AppleAssetCatalogDescription.Arg assetCatalog : assetCatalogs) {
+      for (Path dir : assetCatalog.dirs) {
         Path pathRelativeToProjectRoot = pathRelativizer.outputDirToRootRelative(dir);
 
         resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
@@ -514,10 +525,16 @@ public class NewNativeTargetProjectMutator {
     LOG.debug("Added asset catalog build phase %s", phase);
   }
 
-  private void addRunScriptBuildPhases(PBXNativeTarget target, Iterable<Genrule> rules) {
-    for (Genrule rule : rules) {
+  private void addRunScriptBuildPhases(
+      PBXNativeTarget target,
+      Iterable<TargetNode<?>> nodes) throws NoSuchBuildTargetException{
+    for (TargetNode<?> node : nodes) {
       // TODO(user): Check and validate dependencies of the script. If it depends on libraries etc.
       // we can't handle it currently.
+      Genrule rule = (Genrule) targetNodeToBuildRuleTransformer.transform(
+          targetGraph,
+          new BuildRuleResolver(),
+          node);
       PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
       target.getBuildPhases().add(shellScriptBuildPhase);
       for (Path path : rule.getSrcs()) {

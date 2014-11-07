@@ -29,12 +29,16 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -109,8 +113,21 @@ public class WorkspaceAndProjectGenerator {
 
     ImmutableSet<BuildRule> orderedBuildRules;
     if (workspaceBuildable.getSrcTarget().isPresent()) {
-      orderedBuildRules = AppleBuildRules.getSchemeBuildableRules(
-          workspaceBuildable.getSrcTarget().get());
+      final ActionGraph actionGraph = projectGraph.getActionGraph(
+          executionContext.getBuckEventBus());
+      orderedBuildRules = FluentIterable
+          .from(AppleBuildRules.getSchemeBuildableTargetNodes(
+                  projectGraph,
+                  projectGraph.get(workspaceBuildable.getSrcTarget().get().getBuildTarget())))
+          .transform(
+              new Function<TargetNode<?>, BuildRule>() {
+                @Override
+                public BuildRule apply(TargetNode<?> input) {
+                  return Preconditions.checkNotNull(
+                      actionGraph.findBuildRuleByTarget(input.getBuildTarget()));
+                }
+              })
+          .toSet();
     } else {
       orderedBuildRules = ImmutableSet.of();
     }
@@ -236,7 +253,7 @@ public class WorkspaceAndProjectGenerator {
     return workspacePath;
   }
 
-  private static void getOrderedTestRules(
+  private void getOrderedTestRules(
       ActionGraph actionGraph,
       ImmutableMultimap<BuildRule, AppleTest> sourceRuleToTestRules,
       ImmutableSet<BuildRule> orderedBuildRules,
@@ -287,15 +304,26 @@ public class WorkspaceAndProjectGenerator {
         }));
   }
 
-  private static void addTestRuleAndDependencies(
+  private void addTestRuleAndDependencies(
       BuildRule testBundleRule,
       ImmutableSet.Builder<BuildRule> recursiveTestRulesBuilder,
       ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder) {
-    Iterable<BuildRule> testBundleRuleDependencies =
-      AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
-          AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
-          testBundleRule,
-          Optional.<ImmutableSet<BuildRuleType>>absent());
+    final ActionGraph actionGraph = projectGraph.getActionGraph(executionContext.getBuckEventBus());
+    Iterable<BuildRule> testBundleRuleDependencies = FluentIterable
+        .from(AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                projectGraph,
+                AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+                projectGraph.get(testBundleRule.getBuildTarget()),
+                Optional.<ImmutableSet<BuildRuleType>>absent()))
+        .transform(
+            new Function<TargetNode<?>, BuildRule>() {
+              @Override
+              public BuildRule apply(TargetNode<?> input) {
+                return Preconditions.checkNotNull(
+                    actionGraph.findBuildRuleByTarget(input.getBuildTarget()));
+              }
+            })
+        .toSet();
     recursiveTestRulesBuilder.addAll(testBundleRuleDependencies);
     recursiveTestRulesBuilder.add(testBundleRule);
     orderedTestBundleRulesBuilder.add(testBundleRule);

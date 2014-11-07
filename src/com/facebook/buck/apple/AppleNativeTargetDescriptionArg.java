@@ -39,4 +39,8 @@ public class AppleNativeTargetDescriptionArg {
   public Optional<String> headerPathPrefix;
   public Optional<Boolean> useBuckHeaderMaps;
   public Optional<SourcePath> prefixHeader;
+
+  public boolean getUseBuckHeaderMaps() {
+    return useBuckHeaderMaps.or(false);
+  }
 }

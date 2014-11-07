@@ -23,11 +23,9 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 
 import java.nio.file.Path;
 
@@ -45,25 +43,18 @@ import javax.annotation.Nullable;
  * </pre>
  */
 public class CoreDataModel extends AbstractBuildRule {
-  private static final String CORE_DATA_MODEL_EXTENSION = "xcdatamodel";
-  private static final String VERSIONED_CORE_DATA_MODEL_EXTENSION = "xcdatamodeld";
 
   private final Supplier<ImmutableCollection<Path>> inputPathsSupplier;
   private final Path path;
-  private final String extension;
 
   CoreDataModel(
       BuildRuleParams params,
       SourcePathResolver resolver,
       Supplier<ImmutableCollection<Path>> inputPathsSupplier,
-      CoreDataModelDescription.Arg args) {
+      Path path) {
     super(params, resolver);
-    this.extension = Files.getFileExtension(args.path.getFileName().toString());
-    Preconditions.checkArgument(
-        CORE_DATA_MODEL_EXTENSION.equals(extension) ||
-        VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension));
     this.inputPathsSupplier = inputPathsSupplier;
-    this.path = args.path;
+    this.path = path;
   }
 
   /**
@@ -97,7 +88,4 @@ public class CoreDataModel extends AbstractBuildRule {
     return null;
   }
 
-  public boolean isVersioned() {
-    return VERSIONED_CORE_DATA_MODEL_EXTENSION.equals(extension);
-  }
 }

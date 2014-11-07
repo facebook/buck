@@ -66,5 +66,9 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
   public static class Arg {
     public Set<Path> dirs;
     public Optional<Boolean> copyToBundles;
+
+    public boolean getCopyToBundles() {
+      return copyToBundles.or(false);
+    }
   }
 }

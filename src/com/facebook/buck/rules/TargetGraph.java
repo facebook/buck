@@ -24,11 +24,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import javax.annotation.Nullable;
 
@@ -56,6 +59,17 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
   @Nullable
   public TargetNode<?> get(BuildTarget target) {
     return unflavoredNodes.get(target.getUnflavoredTarget());
+  }
+
+  public Iterable<TargetNode<?>> getAll(Iterable<BuildTarget> targets) {
+    return Iterables.transform(
+        targets,
+        new Function<BuildTarget, TargetNode<?>>() {
+          @Override
+          public TargetNode<?> apply(BuildTarget input) {
+            return Preconditions.checkNotNull(get(input));
+          }
+        });
   }
 
   private Supplier<ActionGraph> createActionGraphSupplier() {

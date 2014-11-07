@@ -195,4 +195,24 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
   public int compareTo(TargetNode<?> o) {
     return getBuildTarget().compareTo(o.getBuildTarget());
   }
+
+  @Override
+  public final boolean equals(Object obj) {
+    if (!(obj instanceof TargetNode<?>)) {
+      return false;
+    }
+    TargetNode<?> that = (TargetNode<?>) obj;
+    return this.getBuildTarget().equals(that.getBuildTarget());
+  }
+
+  @Override
+  public final int hashCode() {
+    return getBuildTarget().hashCode();
+  }
+
+  @Override
+  public final String toString() {
+    return getBuildTarget().getFullyQualifiedName();
+  }
+
 }

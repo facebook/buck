@@ -19,7 +19,6 @@ package com.facebook.buck.apple.xcode;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasSingletonPhaseWithEntries;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
-import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createBuildRuleWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.getSingletonPhaseByType;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -35,9 +34,7 @@ import static org.junit.Assert.assertTrue;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
-import com.facebook.buck.apple.AppleAssetCatalog;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
-import com.facebook.buck.apple.AppleResource;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
@@ -51,23 +48,21 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.google.common.base.Function;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import org.junit.Before;
@@ -95,9 +90,10 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
-  public void shouldCreateTargetAndTargetGroup() {
+  public void shouldCreateTargetAndTargetGroup() throws NoSuchBuildTargetException {
     BuildTarget testBuildTarget = BuildTarget.builder("//foo", "test").build();
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
+        TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of()),
         executionContext,
         pathRelativizer,
         sourcePathResolver,
@@ -115,7 +111,7 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
-  public void testSourceGroups() {
+  public void testSourceGroups() throws NoSuchBuildTargetException {
     BuildTarget testBuildTarget = BuildTarget.builder("//foo", "lib").build();
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
 
@@ -155,7 +151,7 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
-  public void testLibraryHeaderGroups() {
+  public void testLibraryHeaderGroups() throws NoSuchBuildTargetException {
     BuildTarget testBuildTarget = BuildTarget.builder("//foo", "lib").build();
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
 
@@ -225,7 +221,7 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
-  public void testSuppressCopyHeaderOption() {
+  public void testSuppressCopyHeaderOption() throws NoSuchBuildTargetException {
     Iterable<GroupedSource> sources = ImmutableList.of(
         GroupedSource.ofSourcePath(new TestSourcePath("foo.h")));
 
@@ -260,7 +256,7 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
-  public void testFrameworkBuildPhase() {
+  public void testFrameworkBuildPhase() throws NoSuchBuildTargetException {
     BuildTarget testBuildTarget = BuildTarget.builder("//foo", "binary").build();
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
     mutator.setFrameworks(ImmutableSet.of("$SDKROOT/Foo.framework"));
@@ -279,21 +275,15 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
-  public void testResourcesBuildPhase() {
+  public void testResourcesBuildPhase() throws NoSuchBuildTargetException {
     BuildTarget testBuildTarget = BuildTarget.builder("//foo", "binary").build();
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
 
     AppleResourceDescription appleResourceDescription = new AppleResourceDescription();
     AppleResourceDescription.Arg arg = createDescriptionArgWithDefaults(appleResourceDescription);
     arg.files = ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png"));
-    AppleResource resource = appleResourceDescription.createBuildRule(
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "resources").build())
-            .setType(AppleResourceDescription.TYPE)
-            .build(),
-        buildRuleResolver,
-        arg);
 
-    mutator.setResources(ImmutableSet.of(resource));
+    mutator.setResources(ImmutableSet.of(arg));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
 
@@ -304,59 +294,39 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
-  public void assetCatalogsBuildPhaseBuildsBothCommonAndBundledAssetCatalogs() {
-    AppleAssetCatalog assetCatalog1 = (AppleAssetCatalog) createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "asset_catalog1").build(),
-        buildRuleResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        new AppleAssetCatalogDescription(),
-        new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
-          @Override
-          public AppleAssetCatalogDescription.Arg apply(AppleAssetCatalogDescription.Arg input) {
-            input.dirs = ImmutableSet.of(Paths.get("AssetCatalog1.xcassets"));
-            return input;
-          }
-        });
-    buildRuleResolver.addToIndex(assetCatalog1);
+  public void assetCatalogsBuildPhaseBuildsBothCommonAndBundledAssetCatalogs()
+      throws NoSuchBuildTargetException {
+    AppleAssetCatalogDescription.Arg arg1 = new AppleAssetCatalogDescription.Arg();
+    arg1.dirs = ImmutableSet.of(Paths.get("AssetCatalog1.xcassets"));
+    arg1.copyToBundles = Optional.of(false);
 
-    AppleAssetCatalog assetCatalog2 = (AppleAssetCatalog) createBuildRuleWithDefaults(
-        BuildTarget.builder("//foo", "asset_catalog2").build(),
-        buildRuleResolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        new AppleAssetCatalogDescription(),
-        new Function<AppleAssetCatalogDescription.Arg, AppleAssetCatalogDescription.Arg>() {
-          @Override
-          public AppleAssetCatalogDescription.Arg apply(AppleAssetCatalogDescription.Arg input) {
-            input.dirs = ImmutableSet.of(Paths.get("AssetCatalog2.xcassets"));
-            input.copyToBundles = Optional.of(Boolean.TRUE);
-            return input;
-          }
-        });
-    buildRuleResolver.addToIndex(assetCatalog2);
+    AppleAssetCatalogDescription.Arg arg2 = new AppleAssetCatalogDescription.Arg();
+    arg2.dirs = ImmutableSet.of(Paths.get("AssetCatalog2.xcassets"));
+    arg2.copyToBundles = Optional.of(true);
 
     BuildTarget testBuildTarget = BuildTarget.builder("//foo", "binary").build();
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
     mutator.setAssetCatalogs(
         Paths.get("compile_asset_catalogs"),
-        ImmutableSet.of(assetCatalog1, assetCatalog2));
+        ImmutableSet.of(arg1, arg2));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
     assertTrue(hasShellScriptPhaseToCompileCommonAndSplitAssetCatalogs(result.target));
   }
 
   @Test
-  public void testScriptBuildPhase() {
+  public void testScriptBuildPhase() throws NoSuchBuildTargetException{
     BuildTarget testBuildTarget = BuildTarget.builder("//foo", "library").build();
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
 
-    Genrule genrule = (Genrule) GenruleBuilder
+    TargetNode<?> genruleNode = GenruleBuilder
         .newGenruleBuilder(BuildTarget.builder("//foo", "script").build())
         .setSrcs(ImmutableList.<SourcePath>of(new TestSourcePath("script/input.png")))
         .setBash("echo \"hello world!\"")
         .setOut("helloworld.txt")
-        .build(buildRuleResolver);
+        .build();
 
-    mutator.setPostBuildRunScriptPhases(ImmutableList.of(genrule));
+    mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(genruleNode));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
 
@@ -374,6 +344,7 @@ public class NewNativeTargetProjectMutatorTest {
 
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults(BuildTarget target) {
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
+        TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of()),
         executionContext,
         pathRelativizer,
         sourcePathResolver,

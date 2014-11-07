@@ -55,6 +55,10 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
     private HeaderMapType(String suffix) {
       this.suffix = suffix;
     }
+
+    public String getSuffix() {
+      return suffix;
+    }
   }
 
   private final ImmutableSortedMap<String, XcodeRuleConfiguration> configurations;

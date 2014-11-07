@@ -64,5 +64,15 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public Optional<ImmutableMap<String, SourcePath>> headers;
     public Optional<ImmutableMap<AppleBundleDestination, SourcePath>> files;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+
+    public String getExtensionString() {
+      return extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
+    }
+
+    public boolean isTestBundle() {
+      return extension.isLeft() &&
+          AppleBuildRules.isXcodeTargetTestBundleExtension(extension.getLeft());
+    }
+
   }
 }

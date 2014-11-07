@@ -29,6 +29,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -133,41 +136,30 @@ public class AppleBuildRulesTest {
 
   @Test
   public void testRecursiveTargetsIncludesBundleBinaryFromOutsideBundle() throws Exception {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    BuildRuleParams libraryParams =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg libraryArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
-    BuildRule libraryRule =
-        appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg);
-    resolver.addToIndex(libraryRule);
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .build();
 
-    BuildRule bundleRule = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "bundle").build(),
-        resolver,
-        appleBundleDescription,
-        libraryRule,
-        AppleBundleExtension.XCTEST);
-    resolver.addToIndex(bundleRule);
+    BuildTarget bundleTarget = BuildTarget.builder("//foo", "bundle").build();
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setBinary(libraryTarget)
+        .build();
 
-    BuildRuleParams rootParams =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "root").build())
-            .setDeps(ImmutableSortedSet.of(bundleRule, libraryRule))
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg rootArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
-    BuildRule rootRule =
-        appleLibraryDescription.createBuildRule(rootParams, resolver, rootArg);
-    resolver.addToIndex(rootRule);
+    BuildTarget rootTarget = BuildTarget.builder("//foo", "root").build();
+    TargetNode<?> rootNode = AppleLibraryBuilder
+        .createBuilder(rootTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget, bundleTarget)))
+        .build();
 
-    Iterable<BuildRule> rules = AppleBuildRules.getRecursiveRuleDependenciesOfTypes(
-        AppleBuildRules.RecursiveRuleDependenciesMode.BUILDING,
-        rootRule,
+    Iterable<TargetNode<?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+        TargetGraphFactory.newInstance(ImmutableSet.of(libraryNode, bundleNode, rootNode)),
+        AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+        rootNode,
         Optional.<ImmutableSet<BuildRuleType>>absent());
 
-    assertTrue(Iterables.elementsEqual(ImmutableSortedSet.of(bundleRule, libraryRule), rules));
+    assertTrue(Iterables.elementsEqual(ImmutableSortedSet.of(libraryNode, bundleNode), rules));
   }
 }

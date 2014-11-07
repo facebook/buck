@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
@@ -106,6 +107,10 @@ public class AppleLibraryDescription implements
         pathResolver,
         args,
         targetSources,
-        params.getBuildTarget().getFlavors().contains(DYNAMIC_LIBRARY));
+        isDynamicLibraryTarget(params.getBuildTarget()));
+  }
+
+  public static boolean isDynamicLibraryTarget(BuildTarget target) {
+    return target.getFlavors().contains(DYNAMIC_LIBRARY);
   }
 }

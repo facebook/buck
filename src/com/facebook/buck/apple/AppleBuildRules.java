@@ -20,7 +20,11 @@ import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -90,7 +94,7 @@ public final class AppleBuildRules {
     return isXcodeTargetTestBundleExtension(appleBundleRule.getExtensionValue().get());
   }
 
-  public enum RecursiveRuleDependenciesMode {
+  public enum RecursiveDependenciesMode {
     /**
      * Will traverse all rules that are built.
      */
@@ -105,45 +109,73 @@ public final class AppleBuildRules {
     LINKING,
   }
 
-  public static Iterable<BuildRule> getRecursiveRuleDependenciesOfType(
-      final RecursiveRuleDependenciesMode mode, final BuildRule rule, BuildRuleType... types) {
-    return getRecursiveRuleDependenciesOfTypes(mode, rule, Optional.of(ImmutableSet.copyOf(types)));
+  @SuppressWarnings("unchecked")
+  public static <T> Iterable<TargetNode<T>> getRecursiveTargetNodeDependenciesOfType(
+      TargetGraph targetGraph,
+      RecursiveDependenciesMode mode,
+      TargetNode<?> targetNode,
+      BuildRuleType type) {
+    return Iterables.transform(
+        getRecursiveTargetNodeDependenciesOfTypes(targetGraph, mode, targetNode, type),
+        new Function<TargetNode<?>, TargetNode<T>>() {
+          @Override
+          public TargetNode<T> apply(TargetNode<?> input) {
+            return (TargetNode<T>) input;
+          }
+        });
   }
 
-  public static Iterable<BuildRule> getRecursiveRuleDependenciesOfTypes(
-      final RecursiveRuleDependenciesMode mode,
-      final BuildRule rule,
+  public static Iterable<TargetNode<?>> getRecursiveTargetNodeDependenciesOfTypes(
+      TargetGraph targetGraph,
+      RecursiveDependenciesMode mode,
+      TargetNode<?> targetNode,
+      BuildRuleType... types) {
+    return getRecursiveTargetNodeDependenciesOfTypes(
+        targetGraph,
+        mode,
+        targetNode,
+        Optional.of(ImmutableSet.copyOf(types)));
+  }
+
+  public static Iterable<TargetNode<?>> getRecursiveTargetNodeDependenciesOfTypes(
+      final TargetGraph targetGraph,
+      final RecursiveDependenciesMode mode,
+      final TargetNode<?> targetNode,
       final Optional<ImmutableSet<BuildRuleType>> types) {
-    final ImmutableList.Builder<BuildRule> filteredRules = ImmutableList.builder();
-    AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule> traversal =
-        new AbstractAcyclicDepthFirstPostOrderTraversal<BuildRule>() {
+    final ImmutableList.Builder<TargetNode<?>> filteredRules = ImmutableList.builder();
+    AbstractAcyclicDepthFirstPostOrderTraversal<TargetNode<?>> traversal =
+        new AbstractAcyclicDepthFirstPostOrderTraversal<TargetNode<?>>() {
           @Override
-          protected Iterator<BuildRule> findChildren(BuildRule node) throws IOException {
-            ImmutableSortedSet<BuildRule> defaultDeps = node.getDeps();
+          protected Iterator<TargetNode<?>> findChildren(TargetNode<?> node) throws IOException {
+            ImmutableSortedSet<TargetNode<?>> defaultDeps = ImmutableSortedSet.copyOf(
+                targetGraph.getAll(node.getDeps()));
 
             if (node.getType().equals(AppleBundleDescription.TYPE)) {
-              AppleBundle bundle = (AppleBundle) node;
+              AppleBundleDescription.Arg arg =
+                  (AppleBundleDescription.Arg) node.getConstructorArg();
 
-              ImmutableSortedSet.Builder<BuildRule> editedDeps = ImmutableSortedSet.naturalOrder();
-              for (BuildRule rule : defaultDeps) {
-                if (rule != bundle.getBinary()) {
+              ImmutableSortedSet.Builder<TargetNode<?>> editedDeps =
+                  ImmutableSortedSet.naturalOrder();
+              for (TargetNode<?> rule : defaultDeps) {
+                if (!rule.getBuildTarget().equals(arg.binary)) {
                   editedDeps.add(rule);
                 } else {
-                  editedDeps.addAll(bundle.getBinary().getDeps());
+                  editedDeps.addAll(
+                      targetGraph.getAll(
+                          Preconditions.checkNotNull(targetGraph.get(arg.binary)).getDeps()));
                 }
               }
 
               defaultDeps = editedDeps.build();
             }
 
-            ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
+            ImmutableSortedSet<TargetNode<?>> deps = ImmutableSortedSet.of();
 
-            if (node != rule) {
+            if (node != targetNode) {
               switch (mode) {
                 case LINKING:
                   if (node.getType().equals(AppleLibraryDescription.TYPE)) {
-                    AppleLibrary library = (AppleLibrary) node;
-                    if (library.getLinkedDynamically()) {
+                    if (AppleLibraryDescription.isDynamicLibraryTarget(node.getBuildTarget())) {
                       deps = ImmutableSortedSet.of();
                     } else {
                       deps = defaultDeps;
@@ -172,18 +204,19 @@ public final class AppleBuildRules {
           }
 
           @Override
-          protected void onNodeExplored(BuildRule node) {
-            if (node != rule && (!types.isPresent() || types.get().contains(node.getType()))) {
+          protected void onNodeExplored(TargetNode<?> node) {
+            if (node != targetNode &&
+                (!types.isPresent() || types.get().contains(node.getType()))) {
               filteredRules.add(node);
             }
           }
 
           @Override
-          protected void onTraversalComplete(Iterable<BuildRule> nodesInExplorationOrder) {
+          protected void onTraversalComplete(Iterable<TargetNode<?>> nodesInExplorationOrder) {
           }
         };
     try {
-      traversal.traverse(ImmutableList.of(rule));
+      traversal.traverse(ImmutableList.of(targetNode));
     } catch (AbstractAcyclicDepthFirstPostOrderTraversal.CycleException | IOException |
         InterruptedException e) {
       // actual load failures and cycle exceptions should have been caught at an earlier stage
@@ -192,20 +225,23 @@ public final class AppleBuildRules {
     return filteredRules.build();
   }
 
-  public static ImmutableSet<BuildRule> getSchemeBuildableRules(BuildRule primaryRule) {
-    final Iterable<BuildRule> buildRulesIterable = Iterables.concat(
-        getRecursiveRuleDependenciesOfTypes(
-            RecursiveRuleDependenciesMode.BUILDING,
-            primaryRule,
+  public static ImmutableSet<TargetNode<?>> getSchemeBuildableTargetNodes(
+      TargetGraph targetGraph,
+      TargetNode<?> targetNode) {
+    Iterable<TargetNode<?>> targetNodes = Iterables.concat(
+        getRecursiveTargetNodeDependenciesOfTypes(
+            targetGraph,
+            RecursiveDependenciesMode.BUILDING,
+            targetNode,
             Optional.<ImmutableSet<BuildRuleType>>absent()),
-        ImmutableSet.of(primaryRule));
+        ImmutableSet.of(targetNode));
 
     return ImmutableSet.copyOf(
         Iterables.filter(
-            buildRulesIterable,
-            new Predicate<BuildRule>() {
+            targetNodes,
+            new Predicate<TargetNode<?>>() {
               @Override
-              public boolean apply(BuildRule input) {
+              public boolean apply(TargetNode<?> input) {
                 return isXcodeTargetBuildRuleType(input.getType());
               }
             }));
