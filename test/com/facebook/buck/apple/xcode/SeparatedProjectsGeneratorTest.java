@@ -225,7 +225,8 @@ public class SeparatedProjectsGeneratorTest {
     PBXTarget pbxTarget = assertTargetExistsAndReturnTarget(project, "bin");
     assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         pbxTarget,
-        ImmutableList.of("$BUILT_PRODUCTS_DIR/libsomedep.a"));
+        ImmutableList.of(
+            "$BUILT_PRODUCTS_DIR/F4XWK3DTMV3WQZLSMU5HG33NMVSGK4A/libsomedep.a"));
   }
 
   @Test

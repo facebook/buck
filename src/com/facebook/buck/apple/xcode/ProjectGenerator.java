@@ -406,10 +406,8 @@ public class ProjectGenerator {
         targetGraph,
         AppleBuildRules.RecursiveDependenciesMode.COPYING,
         targetNode,
-        AppleLibraryDescription.TYPE,
-        AppleBinaryDescription.TYPE,
-        AppleBundleDescription.TYPE);
-    generateCopyFilesBuildPhases(project, target, copiedRules);
+        Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES));
+    generateCopyFilesBuildPhases(target, copiedRules);
 
     LOG.debug("Generated iOS bundle target %s", target);
     return target;
@@ -511,9 +509,8 @@ public class ProjectGenerator {
       gidsToTargetNames.put(targetGid.get(), thisTargetName);
     }
 
-    BuildTarget buildTarget = bundle.isPresent()
-        ? bundle.get().getBuildTarget()
-        : targetNode.getBuildTarget();
+    TargetNode<?> buildTargetNode = bundle.isPresent() ? bundle.get() : targetNode;
+    BuildTarget buildTarget = buildTargetNode.getBuildTarget();
 
     String productName = getProductName(buildTarget);
     TargetSources sources = TargetSources.ofAppleSources(
@@ -617,8 +614,17 @@ public class ProjectGenerator {
     defaultSettingsBuilder.put(
         "PUBLIC_HEADERS_FOLDER_PATH",
         getHeaderOutputPath(targetNode.getConstructorArg().headerPathPrefix));
+    // We use BUILT_PRODUCTS_DIR as the root for the everything being built. Target-
+    // specific output is placed within CONFIGURATION_BUILD_DIR, inside BUILT_PRODUCTS_DIR.
+    // That allows Copy Files build phases to reference files in the CONFIGURATION_BUILD_DIR
+    // of other targets by using paths relative to the target-independent BUILT_PRODUCTS_DIR.
+    defaultSettingsBuilder.put(
+        "BUILT_PRODUCTS_DIR",
+        // $EFFECTIVE_PLATFORM_NAME starts with a dash, so this expands to something like:
+        // $SYMROOT/Debug-iphonesimulator
+        Joiner.on('/').join("$SYMROOT", "$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"));
+    defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", getTargetOutputPath(buildTargetNode));
     if (!bundle.isPresent() && targetNode.getType().equals(AppleLibraryDescription.TYPE)) {
-      defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", getObjectOutputPath(targetNode));
       defaultSettingsBuilder.put("EXECUTABLE_PREFIX", "lib");
     }
 
@@ -1049,7 +1055,6 @@ public class ProjectGenerator {
   }
 
   private void generateCopyFilesBuildPhases(
-      PBXProject project,
       PBXNativeTarget target,
       Iterable<TargetNode<?>> copiedNodes) {
 
@@ -1071,10 +1076,7 @@ public class ProjectGenerator {
       PBXCopyFilesBuildPhase copyFilesBuildPhase = new PBXCopyFilesBuildPhase(destination, "");
       target.getBuildPhases().add(copyFilesBuildPhase);
       for (TargetNode<?> targetNode : ruleByDestination.get(destination)) {
-        PBXFileReference fileReference = project
-            .getMainGroup()
-            .getOrCreateChildGroupByName("Dependencies")
-            .getOrCreateFileReferenceBySourceTreePath(getProductsSourceTreePath(targetNode));
+        PBXFileReference fileReference = getLibraryFileReference(targetNode);
         copyFilesBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
       }
     }
@@ -1170,10 +1172,8 @@ public class ProjectGenerator {
   }
 
   private String getHeaderOutputPath(Optional<String> headerPathPrefix) {
-    // This is appended to $(CONFIGURATION_BUILD_DIR), so we need to get reference the parent
-    // directory to get $(SYMROOT)
+    // This is automatically appended to $CONFIGURATION_BUILD_DIR.
     return Joiner.on('/').join(
-        "..",
         "Headers",
         headerPathPrefix.or("$TARGET_NAME"));
   }
@@ -1191,61 +1191,84 @@ public class ProjectGenerator {
     return pathRelativizer.outputDirToRootRelative(filePath.get()).toString();
   }
 
-  private String getHeaderSearchPath(TargetNode<AppleNativeTargetDescriptionArg> targetNode) {
-    if (targetNode.getType().equals(AppleLibraryDescription.TYPE)) {
-      return Joiner.on('/').join(
-          "$SYMROOT",
-          BaseEncoding
-              .base32()
-              .omitPadding()
-              .encode(targetNode.getBuildTarget().getFullyQualifiedName().getBytes()),
-          "Headers");
+  private String getHeaderSearchPath(TargetNode<?> targetNode) {
+    return Joiner.on('/').join(
+        getTargetOutputPath(targetNode),
+        "Headers");
+  }
+
+  private String getBuiltProductsRelativeTargetOutputPath(TargetNode<?> targetNode) {
+    if (targetNode.getType().equals(AppleBinaryDescription.TYPE) ||
+        (targetNode.getType().equals(AppleBundleDescription.TYPE) &&
+        (!((AppleBundleDescription.Arg)
+            targetNode.getConstructorArg()).getExtensionValue().isPresent() ||
+        (!((AppleBundleDescription.Arg)
+            targetNode.getConstructorArg()).getExtensionValue().get().equals(
+            AppleBundleExtension.FRAMEWORK))))) {
+      // TODO(grp): These should be inside the path below. Right now, that causes issues with
+      // bundle loader paths hardcoded in .xcconfig files that don't expect the full target path.
+      // It also causes issues where Xcode doesn't know where to look for a final .app to run it.
+      return ".";
     } else {
-      throw new RuntimeException("Unexpected type: " + targetNode.getType());
+      return BaseEncoding
+          .base32()
+          .omitPadding()
+          .encode(targetNode.getBuildTarget().getFullyQualifiedName().getBytes());
     }
   }
 
-  private String getObjectOutputPath(TargetNode<AppleNativeTargetDescriptionArg> targetNode) {
-    if (targetNode.getType().equals(AppleLibraryDescription.TYPE)) {
-      return Joiner.on('/').join(
-          "$SYMROOT",
-          BaseEncoding
-              .base32()
-              .omitPadding()
-              .encode(targetNode.getBuildTarget().getFullyQualifiedName().getBytes()),
-          // $EFFECTIVE_PLATFORM_NAME starts with a dash, so this expands to something like:
-          // Debug-iphonesimulator
-          "$CONFIGURATION$EFFECTIVE_PLATFORM_NAME");
-    } else {
-      throw new RuntimeException("Unexpected type: " + targetNode.getType());
-    }
+  private String getTargetOutputPath(TargetNode<?> targetNode) {
+    return Joiner.on('/').join(
+        "$BUILT_PRODUCTS_DIR",
+        getBuiltProductsRelativeTargetOutputPath(targetNode));
   }
 
   private static boolean hasBuckHeaderMaps(TargetNode<AppleNativeTargetDescriptionArg> targetNode) {
     return targetNode.getConstructorArg().getUseBuckHeaderMaps();
   }
 
+  @SuppressWarnings("unchecked")
+  private static Optional<TargetNode<AppleNativeTargetDescriptionArg>>
+      getLibraryNode(TargetGraph targetGraph, TargetNode<?> targetNode) {
+    Optional<TargetNode<AppleNativeTargetDescriptionArg>> library = Optional.absent();
+    if (targetNode.getType().equals(AppleLibraryDescription.TYPE)) {
+      library = Optional.of((TargetNode<AppleNativeTargetDescriptionArg>) targetNode);
+    } else if (targetNode.getType().equals(AppleBundleDescription.TYPE)) {
+      TargetNode<AppleBundleDescription.Arg> bundle =
+          (TargetNode<AppleBundleDescription.Arg>) targetNode;
+      Optional<AppleBundleExtension> extension =
+          bundle.getConstructorArg().getExtensionValue();
+      if (extension.isPresent() && extension.get() == AppleBundleExtension.FRAMEWORK) {
+        library = Optional.of(Preconditions.checkNotNull(
+            (TargetNode<AppleNativeTargetDescriptionArg>) targetGraph.get(
+                bundle.getConstructorArg().binary)));
+      }
+    }
+    return library;
+  }
+
   private ImmutableSet<String> collectRecursiveHeaderSearchPaths(
       TargetNode<AppleNativeTargetDescriptionArg> targetNode) {
     return FluentIterable
         .from(
-            AppleBuildRules.
-                <AppleNativeTargetDescriptionArg>getRecursiveTargetNodeDependenciesOfType(
-                    targetGraph,
-                    AppleBuildRules.RecursiveDependenciesMode.BUILDING,
-                    targetNode,
-                    AppleLibraryDescription.TYPE))
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                targetGraph,
+                AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+                targetNode,
+                Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES)))
         .filter(
-            new Predicate<TargetNode<AppleNativeTargetDescriptionArg>>() {
+            new Predicate<TargetNode<?>>() {
               @Override
-              public boolean apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
-                return !hasBuckHeaderMaps(input);
+              public boolean apply(TargetNode<?> input) {
+                Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
+                    getLibraryNode(targetGraph, input);
+                return library.isPresent() && !hasBuckHeaderMaps(library.get());
               }
             })
         .transform(
-            new Function<TargetNode<AppleNativeTargetDescriptionArg>, String>() {
+            new Function<TargetNode<?>, String>() {
               @Override
-              public String apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
+              public String apply(TargetNode<?> input) {
                 return getHeaderSearchPath(input);
               }
             })
@@ -1261,14 +1284,16 @@ public class ProjectGenerator {
           getHeaderMapRelativePath(targetNode, HeaderMapType.TARGET_HEADER_MAP));
     }
 
-    for (TargetNode<AppleNativeTargetDescriptionArg> input :
-        AppleBuildRules.<AppleNativeTargetDescriptionArg>getRecursiveTargetNodeDependenciesOfType(
+    for (TargetNode<?> input :
+        AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
             targetGraph,
             AppleBuildRules.RecursiveDependenciesMode.BUILDING,
             targetNode,
-            AppleLibraryDescription.TYPE)) {
-      if (hasBuckHeaderMaps(input)) {
-        builder.add(getHeaderMapRelativePath(input, HeaderMapType.PUBLIC_HEADER_MAP));
+            Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))) {
+      Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
+          getLibraryNode(targetGraph, input);
+      if (library.isPresent() && hasBuckHeaderMaps(library.get())) {
+        builder.add(getHeaderMapRelativePath(library.get(), HeaderMapType.PUBLIC_HEADER_MAP));
       }
     }
 
@@ -1300,7 +1325,7 @@ public class ProjectGenerator {
             new Function<TargetNode<AppleNativeTargetDescriptionArg>, String>() {
               @Override
               public String apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
-                return getObjectOutputPath(input);
+                return getTargetOutputPath(input);
               }
             })
         .toSet();
@@ -1310,34 +1335,45 @@ public class ProjectGenerator {
     return FluentIterable
         .from(
             AppleBuildRules
-                .<AppleNativeTargetDescriptionArg>getRecursiveTargetNodeDependenciesOfType(
+                .<AppleBundleDescription.Arg>getRecursiveTargetNodeDependenciesOfType(
                     targetGraph,
                     AppleBuildRules.RecursiveDependenciesMode.LINKING,
                     targetNode,
-                    AppleLibraryDescription.TYPE))
-        .transform(
-            new Function<TargetNode<AppleNativeTargetDescriptionArg>, String>() {
+                    AppleBundleDescription.TYPE))
+        .filter(
+            new Predicate<TargetNode<AppleBundleDescription.Arg>>() {
               @Override
-              public String apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
-                return getObjectOutputPath(input);
+              public boolean apply(TargetNode<AppleBundleDescription.Arg> input) {
+                return getLibraryNode(targetGraph, input).isPresent();
               }
             })
+        .transform(
+          new Function<TargetNode<AppleBundleDescription.Arg>, String>() {
+            @Override
+            public String apply(TargetNode<AppleBundleDescription.Arg> input) {
+              return getTargetOutputPath(input);
+            }
+          })
         .toSet();
   }
 
-  @SuppressWarnings("unchecked")
   private void collectRecursiveFrameworkDependencies(
       TargetNode<?> targetNode,
       ImmutableSet.Builder<String> frameworksBuilder) {
     for (TargetNode<?> dependency :
-           AppleBuildRules.getRecursiveTargetNodeDependenciesOfType(
+           AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                targetGraph,
                AppleBuildRules.RecursiveDependenciesMode.LINKING,
                targetNode,
-               AppleLibraryDescription.TYPE)) {
-      TargetNode<AppleNativeTargetDescriptionArg> libraryDependency =
-          (TargetNode<AppleNativeTargetDescriptionArg>) dependency;
-      frameworksBuilder.addAll(libraryDependency.getConstructorArg().frameworks.get());
+               Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))) {
+      Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
+          getLibraryNode(targetGraph, dependency);
+      // Dynamically linked dependencies don't require including their frameworks in dependencies.
+      if (library.isPresent() &&
+          !AppleLibraryDescription.isDynamicLibraryTarget(library.get().getBuildTarget())) {
+        frameworksBuilder.addAll(
+            library.get().getConstructorArg().frameworks.get());
+      }
     }
   }
 
@@ -1348,23 +1384,14 @@ public class ProjectGenerator {
                 targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 targetNode,
-                AppleLibraryDescription.TYPE,
-                AppleBundleDescription.TYPE))
+                Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES)))
         .filter(
             new Predicate<TargetNode<?>>() {
               @Override
               public boolean apply(TargetNode<?> input) {
-                if (input.getType().equals(AppleBundleDescription.TYPE)) {
-                  AppleBundleDescription.Arg arg =
-                      (AppleBundleDescription.Arg) input.getConstructorArg();
-                  return arg.extension.isLeft() &&
-                      arg.extension.getLeft() == AppleBundleExtension.FRAMEWORK;
-                } else {
-                  return true;
-                }
+                return getLibraryNode(targetGraph, input).isPresent();
               }
-            }
-        )
+            })
         .transform(
             new Function<TargetNode<?>, PBXFileReference>() {
               @Override
@@ -1394,25 +1421,23 @@ public class ProjectGenerator {
       throw new RuntimeException("Unexpected type: " + targetNode.getType());
     }
 
+    String productOutputRelativePath = Joiner.on('/')
+        .join(getBuiltProductsRelativeTargetOutputPath(targetNode), productOutputName);
+
     return new SourceTreePath(
         PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-        Paths.get(productOutputName));
+        Paths.get(productOutputRelativePath));
   }
 
   private PBXFileReference getLibraryFileReference(TargetNode<?> targetNode) {
     if (targetNode.getType().equals(AppleLibraryDescription.TYPE) ||
         targetNode.getType().equals(AppleBundleDescription.TYPE)) {
-      if (isBuiltByCurrentProject(targetNode.getBuildTarget())) {
-        PBXNativeTarget target = (PBXNativeTarget) targetNodeToProjectTarget
-            .getUnchecked(targetNode)
-            .get();
-        return Preconditions.checkNotNull(target.getProductReference());
-      } else {
-        SourceTreePath productsPath = getProductsSourceTreePath(targetNode);
-        return project.getMainGroup()
-            .getOrCreateChildGroupByName("Frameworks")
-            .getOrCreateFileReferenceBySourceTreePath(productsPath);
-      }
+      // Don't re-use the productReference from other targets in this project.
+      // File references set as a productReference don't work with custom paths.
+      SourceTreePath productsPath = getProductsSourceTreePath(targetNode);
+      return project.getMainGroup()
+          .getOrCreateChildGroupByName("Frameworks")
+          .getOrCreateFileReferenceBySourceTreePath(productsPath);
     } else {
       throw new RuntimeException("Unexpected type: " + targetNode.getType());
     }

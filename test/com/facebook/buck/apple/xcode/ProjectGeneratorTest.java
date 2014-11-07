@@ -411,10 +411,13 @@ public class ProjectGeneratorTest {
         new NSString("../Foo/Foo-Prefix.pch"),
         settings.get("GCC_PREFIX_HEADER"));
     assertEquals(
-        new NSString("$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+        new NSString("$SYMROOT/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+        settings.get("BUILT_PRODUCTS_DIR"));
+    assertEquals(
+        new NSString("$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ"),
         settings.get("CONFIGURATION_BUILD_DIR"));
     assertEquals(
-        new NSString("../Headers/MyHeaderPathPrefix"),
+        new NSString("Headers/MyHeaderPathPrefix"),
         settings.get("PUBLIC_HEADERS_FOLDER_PATH"));
   }
 
@@ -458,10 +461,13 @@ public class ProjectGeneratorTest {
         .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
     NSDictionary settings = configuration.getBuildSettings();
     assertEquals(
-        new NSString("$SYMROOT/F4XWQ2J2NRUWEI3EPFXGC3LJMM/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+        new NSString("$SYMROOT/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+        settings.get("BUILT_PRODUCTS_DIR"));
+    assertEquals(
+        new NSString("$BUILT_PRODUCTS_DIR/F4XWQ2J2NRUWEI3EPFXGC3LJMM"),
         settings.get("CONFIGURATION_BUILD_DIR"));
     assertEquals(
-        new NSString("../Headers/MyHeaderPathPrefix"),
+        new NSString("Headers/MyHeaderPathPrefix"),
         settings.get("PUBLIC_HEADERS_FOLDER_PATH"));
   }
 
@@ -506,7 +512,10 @@ public class ProjectGeneratorTest {
         .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
     NSDictionary settings = configuration.getBuildSettings();
     assertEquals(
-        new NSString("$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+        new NSString("$SYMROOT/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+        settings.get("BUILT_PRODUCTS_DIR"));
+    assertEquals(
+        new NSString("$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ"),
         settings.get("CONFIGURATION_BUILD_DIR"));
     assertEquals(
         new NSString("FooHeaders"),
@@ -579,18 +588,17 @@ public class ProjectGeneratorTest {
     NSDictionary settings = configuration.getBuildSettings();
     assertEquals(
         new NSString("$(inherited) " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/Headers"),
+            "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers"),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) "),
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+            "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ"),
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
-        new NSString("$(inherited) " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+        new NSString("$(inherited) "),
         settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
@@ -671,18 +679,17 @@ public class ProjectGeneratorTest {
     NSDictionary settings = configuration.getBuildSettings();
     assertEquals(
         new NSString("headers " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/Headers"),
+            "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers"),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("user_headers "),
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("libraries " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+            "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ"),
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
-        new NSString("frameworks " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+        new NSString("frameworks "),
         settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
@@ -762,21 +769,19 @@ public class ProjectGeneratorTest {
     NSDictionary settings = configuration.getBuildSettings();
     assertEquals(
         new NSString("$(inherited) " +
-            "$SYMROOT/F4XWEYLSHJWGSYQ/Headers " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/Headers"),
+            "$BUILT_PRODUCTS_DIR/F4XWEYLSHJWGSYQ/Headers " +
+            "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers"),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) "),
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         new NSString("$(inherited) " +
-            "$SYMROOT/F4XWEYLSHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+            "$BUILT_PRODUCTS_DIR/F4XWEYLSHJWGSYQ " +
+            "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ"),
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
-        new NSString("$(inherited) " +
-            "$SYMROOT/F4XWEYLSHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME " +
-            "$SYMROOT/F4XWM33PHJWGSYQ/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"),
+        new NSString("$(inherited) "),
         settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
@@ -870,7 +875,7 @@ public class ProjectGeneratorTest {
         ImmutableList.of(
             "$SDKROOT/Foo.framework",
             // Propagated library from deps.
-            "$BUILT_PRODUCTS_DIR/libdep.a"));
+            "$BUILT_PRODUCTS_DIR/F4XWIZLQHJSGK4A/libdep.a"));
 
     // this test does not have a dependency on any asset catalogs, so verify no build phase for them
     // exists.
@@ -1127,7 +1132,9 @@ public class ProjectGeneratorTest {
     assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
-        target, ImmutableList.of("$BUILT_PRODUCTS_DIR/libdynamic.dylib"));
+        target,
+        ImmutableList.of(
+            "$BUILT_PRODUCTS_DIR/F4XWIZLQHJSHS3TBNVUWGI3EPFXGC3LJMM/libdynamic.dylib"));
   }
 
   @Test
@@ -1185,7 +1192,8 @@ public class ProjectGeneratorTest {
     assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
-        target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
+        target,
+        ImmutableList.of("$BUILT_PRODUCTS_DIR/F4XWIZLQHJTHEYLNMV3W64TL/framework.framework"));
   }
 
   @Test
@@ -1254,7 +1262,8 @@ public class ProjectGeneratorTest {
     assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
-        target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
+        target,
+        ImmutableList.of("$BUILT_PRODUCTS_DIR/F4XWIZLQHJTHEYLNMV3W64TL/framework.framework"));
   }
 
   @Test

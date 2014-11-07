@@ -65,6 +65,11 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public Optional<ImmutableMap<AppleBundleDestination, SourcePath>> files;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
 
+    public Optional<AppleBundleExtension> getExtensionValue() {
+      return extension.isLeft() ?
+          Optional.of(extension.getLeft()) : Optional.<AppleBundleExtension>absent();
+    }
+
     public String getExtensionString() {
       return extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
     }

@@ -47,7 +47,7 @@ public final class AppleBuildRules {
   // Utility class not to be instantiated.
   private AppleBuildRules() { }
 
-  private static final ImmutableSet<BuildRuleType> XCODE_TARGET_BUILD_RULE_TYPES =
+  public static final ImmutableSet<BuildRuleType> XCODE_TARGET_BUILD_RULE_TYPES =
       ImmutableSet.of(
           AppleLibraryDescription.TYPE,
           AppleBinaryDescription.TYPE,
