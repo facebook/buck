@@ -49,15 +49,12 @@ public class JUnitStepTest {
     String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
     Set<String> testClassNames = ImmutableSet.of(testClass1, testClass2);
 
-    String vmArg1 = "-D\"name1\"=\"value1\"";
-    String vmArg2 = "-D\"name1\"=\"value2\"";
+    String vmArg1 = "-Dname1=value1";
+    String vmArg2 = "-Dname1=value2";
     List<String> vmArgs = ImmutableList.of(vmArg1, vmArg2);
 
     BuildId pretendBuildId = new BuildId("pretend-build-id");
-    String buildIdArg = String.format(
-        "-D\"%s\"=\"%s\"",
-        JUnitStep.BUILD_ID_PROPERTY,
-        pretendBuildId);
+    String buildIdArg = String.format("-D%s=%s", JUnitStep.BUILD_ID_PROPERTY, pretendBuildId);
 
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
     Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
@@ -90,9 +87,9 @@ public class JUnitStepTest {
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "java",
-            "-D\"java.io.tmpdir\"=\"" + directoryForTemp + '"',
-            "-D\"buck.abi_processor_classes\"=\"" + abiProcessorClasspath + '"',
-            "-D\"buck.testrunner_classes\"=\"" + testRunnerClasspath + '"',
+            "-Djava.io.tmpdir=" + directoryForTemp,
+            "-Dbuck.abi_processor_classes=" + abiProcessorClasspath,
+            "-Dbuck.testrunner_classes=" + testRunnerClasspath,
             buildIdArg,
             vmArg1,
             vmArg2,
@@ -121,15 +118,12 @@ public class JUnitStepTest {
     String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
     Set<String> testClassNames = ImmutableSet.of(testClass1, testClass2);
 
-    String vmArg1 = "-D\"name1\"=\"value1\"";
-    String vmArg2 = "-D\"name1\"=\"value2\"";
+    String vmArg1 = "-Dname1=value1";
+    String vmArg2 = "-Dname1=value2";
     List<String> vmArgs = ImmutableList.of(vmArg1, vmArg2);
 
     BuildId pretendBuildId = new BuildId("pretend-build-id");
-    String buildIdArg = String.format(
-        "-D\"%s\"=\"%s\"",
-        JUnitStep.BUILD_ID_PROPERTY,
-        pretendBuildId);
+    String buildIdArg = String.format("-D%s=%s", JUnitStep.BUILD_ID_PROPERTY, pretendBuildId);
 
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
     Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
@@ -165,9 +159,9 @@ public class JUnitStepTest {
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "java",
-            "-D\"java.io.tmpdir\"=\"" + directoryForTemp + '"',
-            "-D\"buck.abi_processor_classes\"=\"" + abiProcessorClasspath + '"',
-            "-D\"buck.testrunner_classes\"=\"" + testRunnerClasspath + '"',
+            "-Djava.io.tmpdir=" + directoryForTemp,
+            "-Dbuck.abi_processor_classes=" + abiProcessorClasspath,
+            "-Dbuck.testrunner_classes=" + testRunnerClasspath,
             buildIdArg,
             "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005",
             vmArg1,
