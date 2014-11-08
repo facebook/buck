@@ -17,17 +17,14 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
 import java.nio.file.Path;
-import java.util.Map;
 
 /**
  * The components that get contributed to a top-level run of the C++ preprocessor.
@@ -39,7 +36,7 @@ public class CxxPreprocessorInput {
 
   private final ImmutableMultimap<CxxSource.Type, String> preprocessorFlags;
 
-  private final ImmutableMap<Path, SourcePath> includes;
+  private final ImmutableCxxHeaders includes;
 
   // Normal include directories where headers are found.
   private final ImmutableList<Path> includeRoots;
@@ -50,7 +47,7 @@ public class CxxPreprocessorInput {
   private CxxPreprocessorInput(
       ImmutableSet<BuildTarget> rules,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
-      ImmutableMap<Path, SourcePath> includes,
+      ImmutableCxxHeaders includes,
       ImmutableList<Path> includeRoots,
       ImmutableList<Path> systemIncludeRoots) {
     this.rules = rules;
@@ -66,7 +63,7 @@ public class CxxPreprocessorInput {
   public static class Builder {
     private ImmutableSet<BuildTarget> rules = ImmutableSet.of();
     private ImmutableMultimap<CxxSource.Type, String> preprocessorFlags = ImmutableMultimap.of();
-    private ImmutableMap<Path, SourcePath> includes = ImmutableMap.of();
+    private ImmutableCxxHeaders includes = ImmutableCxxHeaders.builder().build();
     private ImmutableList<Path> includeRoots = ImmutableList.of();
     private ImmutableList<Path> systemIncludeRoots = ImmutableList.of();
 
@@ -89,8 +86,8 @@ public class CxxPreprocessorInput {
       return this;
     }
 
-    public Builder setIncludes(Map<Path, SourcePath> includes) {
-      this.includes = ImmutableMap.copyOf(includes);
+    public Builder setIncludes(ImmutableCxxHeaders includes) {
+      this.includes = includes;
       return this;
     }
 
@@ -115,14 +112,15 @@ public class CxxPreprocessorInput {
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();
     ImmutableMultimap.Builder<CxxSource.Type, String> preprocessorFlags =
       ImmutableMultimap.builder();
-    ImmutableMap.Builder<Path, SourcePath> includes = ImmutableMap.builder();
+    ImmutableCxxHeaders.Builder includes = ImmutableCxxHeaders.builder();
     ImmutableList.Builder<Path> includeRoots = ImmutableList.builder();
     ImmutableList.Builder<Path> systemIncludeRoots = ImmutableList.builder();
 
     for (CxxPreprocessorInput input : inputs) {
       rules.addAll(input.getRules());
       preprocessorFlags.putAll(input.getPreprocessorFlags());
-      includes.putAll(input.getIncludes());
+      includes.putAllNameToPathMap(input.getIncludes().nameToPathMap());
+      includes.putAllFullNameToPathMap(input.getIncludes().fullNameToPathMap());
       includeRoots.addAll(input.getIncludeRoots());
       systemIncludeRoots.addAll(input.getSystemIncludeRoots());
     }
@@ -143,7 +141,7 @@ public class CxxPreprocessorInput {
     return preprocessorFlags;
   }
 
-  public ImmutableMap<Path, SourcePath> getIncludes() {
+  public CxxHeaders getIncludes() {
     return includes;
   }
 

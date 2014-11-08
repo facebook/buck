@@ -16,8 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -25,12 +27,15 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class CxxBinaryIntegrationTest {
 
@@ -391,6 +396,65 @@ public class CxxBinaryIntegrationTest {
         this, "header_namespace", tmp);
     workspace.setUp();
     workspace.runBuckCommand("build", "//:test").assertSuccess();
+  }
+
+  @Test
+  public void resolveHeadersBehindSymlinkTreesInPreprocessedOutput() throws IOException {
+    BuckConfig buckConfig = new FakeBuckConfig();
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "resolved", tmp);
+    workspace.setUp();
+
+    workspace.writeContentsToPath("", "lib2.h");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:bin");
+    workspace.runBuckCommand("build", target.toString()).assertSuccess();
+
+    // Verify that the preprocessed source contains no references to the symlink tree used to
+    // setup the headers.
+    BuildTarget ppTarget =
+        CxxPreprocessables.createPreprocessBuildTarget(
+            target,
+            cxxPlatform.asFlavor(),
+            CxxSource.Type.CXX,
+            /* pic */ false,
+            "bin.cpp");
+    Path output =
+        CxxPreprocessables.getPreprocessOutputPath(
+            ppTarget,
+            CxxSource.Type.CXX,
+            "bin.cpp");
+    String contents = workspace.getFileContents(output.toString());
+    assertThat(contents, Matchers.not(Matchers.containsString(BuckConstant.BIN_DIR)));
+    assertThat(contents, Matchers.not(Matchers.containsString(BuckConstant.GEN_DIR)));
+    assertThat(contents, Matchers.containsString("# 1 \"bin.h"));
+    assertThat(contents, Matchers.containsString("# 1 \"lib1.h"));
+    assertThat(contents, Matchers.containsString("# 1 \"lib2.h"));
+  }
+
+  @Test
+  public void resolveHeadersBehindSymlinkTreesInError() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "resolved", tmp);
+    workspace.setUp();
+
+    workspace.writeContentsToPath("#invalid_pragma", "lib2.h");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:bin");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", target.toString());
+    result.assertFailure();
+
+    // Verify that the preprocessed source contains no references to the symlink tree used to
+    // setup the headers.
+    String error = result.getStderr();
+    assertThat(error, Matchers.not(Matchers.containsString(BuckConstant.BIN_DIR)));
+    assertThat(error, Matchers.not(Matchers.containsString(BuckConstant.GEN_DIR)));
+    assertThat(error, Matchers.containsString("In file included from lib1.h:1"));
+    assertThat(error, Matchers.containsString("from bin.h:1"));
+    assertThat(error, Matchers.containsString("from bin.cpp:1:"));
+    assertThat(error, Matchers.containsString("lib2.h:1:2: error: invalid preprocessing"));
   }
 
 }

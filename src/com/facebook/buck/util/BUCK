@@ -88,6 +88,7 @@ java_library(
     ':constants',
     ':exceptions',
     ':io',
+    '//third-party/java/aosp:aosp',
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson-core',
     '//third-party/java/jackson:jackson-databind',

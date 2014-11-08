@@ -21,6 +21,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -158,7 +159,7 @@ public class OCamlBuildStep implements Step {
             outputPath,
             cSrc,
             cCompileFlags.build(),
-            cxxPreprocessorInput.getIncludes()));
+              ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().nameToPathMap())));
       int compileExitCode = compileStep.execute(context);
       if (compileExitCode != 0) {
         return compileExitCode;

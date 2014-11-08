@@ -155,6 +155,10 @@ public class ProjectFilesystem {
     return getRootPath().resolve(path).toAbsolutePath().normalize();
   }
 
+  public Path resolve(String path) {
+    return getRootPath().resolve(path).toAbsolutePath().normalize();
+  }
+
   /**
    * @return A {@link Function} that applies {@link #resolve(Path)} to its parameter.
    */

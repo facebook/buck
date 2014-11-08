@@ -329,8 +329,7 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
-      SymlinkTree headerSymlinkTree,
-      ImmutableMap<Path, SourcePath> headers) {
+      SymlinkTree headerSymlinkTree) {
 
     // Write the compile rules for all C/C++ sources in this rule.
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
@@ -344,7 +343,11 @@ public class CxxDescriptionEnhancer {
             CxxPreprocessorInput.builder()
                 .setRules(ImmutableSet.of(headerSymlinkTree.getBuildTarget()))
                 .setPreprocessorFlags(preprocessorFlags)
-                .setIncludes(headers)
+                .setIncludes(
+                    ImmutableCxxHeaders.builder()
+                        .putAllNameToPathMap(headerSymlinkTree.getLinks())
+                        .putAllFullNameToPathMap(headerSymlinkTree.getFullLinks())
+                        .build())
                 .setIncludeRoots(ImmutableList.of(headerSymlinkTree.getRoot()))
                 .build(),
             cxxPreprocessorInputFromDeps));
@@ -460,18 +463,17 @@ public class CxxDescriptionEnhancer {
         params,
         resolver,
         cxxPlatform.asFlavor(),
-        headers);
+        ImmutableMap.<Path, SourcePath>builder()
+            .putAll(headers)
+            .putAll(lexYaccSources.getCxxHeaders())
+            .build());
     CxxPreprocessorInput cxxPreprocessorInput = combineCxxPreprocessorInput(
         params,
         cxxPlatform,
         CxxPreprocessorFlags.fromArgs(
             args.preprocessorFlags,
             args.langPreprocessorFlags),
-        headerSymlinkTree,
-        ImmutableMap.<Path, SourcePath>builder()
-            .putAll(headers)
-            .putAll(lexYaccSources.getCxxHeaders())
-            .build());
+        headerSymlinkTree);
 
     // The complete list of input sources.
     ImmutableMap<String, CxxSource> sources =

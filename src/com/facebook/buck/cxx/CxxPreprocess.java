@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 /**
  * A build rule which preprocesses a C/C++ source.
@@ -43,7 +44,7 @@ public class CxxPreprocess extends AbstractBuildRule {
   private final SourcePath input;
   private final ImmutableList<Path> includeRoots;
   private final ImmutableList<Path> systemIncludeRoots;
-  private final ImmutableMap<Path, SourcePath> includes;
+  private final CxxHeaders includes;
 
   public CxxPreprocess(
       BuildRuleParams params,
@@ -54,7 +55,7 @@ public class CxxPreprocess extends AbstractBuildRule {
       SourcePath input,
       ImmutableList<Path> includeRoots,
       ImmutableList<Path> systemIncludeRoots,
-      ImmutableMap<Path, SourcePath> includes) {
+      CxxHeaders includes) {
     super(params, resolver);
     this.preprocessor = preprocessor;
     this.flags = flags;
@@ -81,8 +82,8 @@ public class CxxPreprocess extends AbstractBuildRule {
     // We do this here, rather than returning them from `getInputsToCompareToOutput` so
     // that we can match the contents hash up with where it was laid out in the include
     // search path, and therefore can accurately capture header file renames.
-    for (Path path : ImmutableSortedSet.copyOf(includes.keySet())) {
-      SourcePath source = includes.get(path);
+    for (Path path : ImmutableSortedSet.copyOf(includes.nameToPathMap().keySet())) {
+      SourcePath source = includes.nameToPathMap().get(path);
       builder.setInput("include(" + path + ")", getResolver().getPath(source));
     }
 
@@ -94,6 +95,14 @@ public class CxxPreprocess extends AbstractBuildRule {
       BuildContext context,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
+
+    // Resolve the map of symlinks to real paths to hand off the preprocess step.
+    ImmutableMap.Builder<Path, Path> replacementPathsBuilder = ImmutableMap.builder();
+    for (Map.Entry<Path, SourcePath> entry : includes.fullNameToPathMap().entrySet()) {
+      replacementPathsBuilder.put(entry.getKey(), getResolver().getPath(entry.getValue()));
+    }
+    ImmutableMap<Path, Path> replacementPaths = replacementPathsBuilder.build();
+
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
         new CxxPreprocessStep(
@@ -102,7 +111,8 @@ public class CxxPreprocess extends AbstractBuildRule {
             output,
             getResolver().getPath(input),
             includeRoots,
-            systemIncludeRoots));
+            systemIncludeRoots,
+            replacementPaths));
   }
 
   @Override
@@ -134,7 +144,7 @@ public class CxxPreprocess extends AbstractBuildRule {
     return systemIncludeRoots;
   }
 
-  public ImmutableMap<Path, SourcePath> getIncludes() {
+  public CxxHeaders getIncludes() {
     return includes;
   }
 

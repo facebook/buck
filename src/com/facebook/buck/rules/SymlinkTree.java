@@ -36,6 +36,7 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
 
   private final Path root;
   private final ImmutableMap<Path, SourcePath> links;
+  private final ImmutableMap<Path, SourcePath> fullLinks;
 
   public SymlinkTree(
       BuildRuleParams params,
@@ -45,6 +46,12 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
     super(params, resolver);
     this.root = root;
     this.links = links;
+
+    ImmutableMap.Builder<Path, SourcePath> fullLinks = ImmutableMap.builder();
+    for (ImmutableMap.Entry<Path, SourcePath> entry : links.entrySet()) {
+      fullLinks.put(root.resolve(entry.getKey()), entry.getValue());
+    }
+    this.fullLinks = fullLinks.build();
   }
 
   /**
@@ -119,6 +126,14 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
 
   public Path getRoot() {
     return root;
+  }
+
+  public ImmutableMap<Path, SourcePath> getLinks() {
+    return links;
+  }
+
+  public ImmutableMap<Path, SourcePath> getFullLinks() {
+    return fullLinks;
   }
 
 }

@@ -48,8 +48,10 @@ public class CxxPreprocessTest {
       ImmutableList.of("-fsanitize=address");
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
   private static final SourcePath DEFAULT_INPUT = new TestSourcePath("test.cpp");
-  private static final ImmutableMap<Path, SourcePath> DEFAULT_INCLUDES =
-      ImmutableMap.<Path, SourcePath>of(Paths.get("test.h"), new TestSourcePath("foo/test.h"));
+  private static final ImmutableCxxHeaders DEFAULT_INCLUDES =
+      ImmutableCxxHeaders.builder()
+          .putNameToPathMap(Paths.get("test.h"), new TestSourcePath("foo/test.h"))
+          .build();
   private static final ImmutableList<Path> DEFAULT_INCLUDE_ROOTS = ImmutableList.of(
       Paths.get("foo/bar"),
       Paths.get("test"));

@@ -43,7 +43,6 @@ public class CxxLibrary extends AbstractCxxLibrary {
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
   private final ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags;
-  private final ImmutableMap<Path, SourcePath> headers;
   private final boolean linkWhole;
   private final Optional<String> soname;
 
@@ -52,14 +51,12 @@ public class CxxLibrary extends AbstractCxxLibrary {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      ImmutableMap<Path, SourcePath> headers,
       boolean linkWhole,
       Optional<String> soname) {
     super(params, pathResolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
-    this.headers = headers;
     this.linkWhole = linkWhole;
     this.soname = soname;
   }
@@ -76,7 +73,11 @@ public class CxxLibrary extends AbstractCxxLibrary {
     return CxxPreprocessorInput.builder()
         .setRules(ImmutableSet.of(symlinkTree.getBuildTarget()))
         .setPreprocessorFlags(exportedPreprocessorFlags)
-        .setIncludes(headers)
+        .setIncludes(
+            ImmutableCxxHeaders.builder()
+                .putAllNameToPathMap(symlinkTree.getLinks())
+                .putAllFullNameToPathMap(symlinkTree.getFullLinks())
+                .build())
         .setIncludeRoots(ImmutableList.of(symlinkTree.getRoot()))
         .build();
   }

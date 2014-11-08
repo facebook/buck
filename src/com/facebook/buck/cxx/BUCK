@@ -16,7 +16,7 @@ java_library(
   ]
 )
 
-java_library(
+java_immutables_library(
   name = 'rules',
   srcs = glob(['*.java'], excludes=PLATFORM_SRCS),
   deps = [

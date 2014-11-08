@@ -209,15 +209,6 @@ public class CxxLibraryDescription implements
       ImmutableMap<String, CxxSource> sources,
       boolean pic) {
 
-    SymlinkTree headerSymlinkTree =
-        requireHeaderSymlinkTree(
-            params,
-            ruleResolver,
-            pathResolver,
-            cxxPlatform,
-            lexSources,
-            yaccSources,
-            headers);
     CxxHeaderSourceSpec lexYaccSources =
         requireLexYaccSources(
             params,
@@ -227,16 +218,25 @@ public class CxxLibraryDescription implements
             lexSources,
             yaccSources);
 
+    SymlinkTree headerSymlinkTree =
+        requireHeaderSymlinkTree(
+            params,
+            ruleResolver,
+            pathResolver,
+            cxxPlatform,
+            lexSources,
+            yaccSources,
+            ImmutableMap.<Path, SourcePath>builder()
+                .putAll(headers)
+                .putAll(lexYaccSources.getCxxHeaders())
+                .build());
+
     CxxPreprocessorInput cxxPreprocessorInputFromDependencies =
         CxxDescriptionEnhancer.combineCxxPreprocessorInput(
             params,
             cxxPlatform,
             preprocessorFlags,
-            headerSymlinkTree,
-            ImmutableMap.<Path, SourcePath>builder()
-                .putAll(headers)
-                .putAll(lexYaccSources.getCxxHeaders())
-                .build());
+            headerSymlinkTree);
 
     ImmutableMap<String, CxxSource> allSources =
         ImmutableMap.<String, CxxSource>builder()
@@ -525,7 +525,6 @@ public class CxxLibraryDescription implements
         CxxPreprocessorFlags.fromArgs(
             args.propagatedPpFlags,
             args.propagatedLangPpFlags),
-        CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
         args.linkWhole.or(false),
         args.soname);
   }

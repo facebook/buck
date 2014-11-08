@@ -230,6 +230,8 @@ public class CxxLibraryDescriptionTest {
         .build();
     CxxLibrary rule = (CxxLibrary) description.createBuildRule(params, resolver, arg);
 
+    Path headerRoot =
+        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target, cxxPlatform.asFlavor());
     assertEquals(
         CxxPreprocessorInput.builder()
             .setRules(
@@ -238,11 +240,20 @@ public class CxxLibraryDescriptionTest {
                         target,
                         cxxPlatform.asFlavor())))
             .setIncludes(
-                ImmutableMap.<Path, SourcePath>of(
-                    Paths.get(headerName),
-                    new TestSourcePath(headerName),
-                    Paths.get(genHeaderName),
-                    new BuildTargetSourcePath(genHeader.getBuildTarget())))
+                ImmutableCxxHeaders.builder()
+                    .putNameToPathMap(
+                        Paths.get(headerName),
+                        new TestSourcePath(headerName))
+                    .putNameToPathMap(
+                        Paths.get(genHeaderName),
+                        new BuildTargetSourcePath(genHeader.getBuildTarget()))
+                    .putFullNameToPathMap(
+                        headerRoot.resolve(headerName),
+                        new TestSourcePath(headerName))
+                    .putFullNameToPathMap(
+                        headerRoot.resolve(genHeaderName),
+                        new BuildTargetSourcePath(genHeader.getBuildTarget()))
+                    .build())
             .setIncludeRoots(
                 ImmutableList.of(
                     CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
@@ -556,6 +567,8 @@ public class CxxLibraryDescriptionTest {
     CxxLibrary rule = (CxxLibrary) description.createBuildRule(params, resolver, arg);
 
     // Verify the C/C++ preprocessor input is setup correctly.
+    Path headerRoot =
+        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target, cxxPlatform.asFlavor());
     assertEquals(
         CxxPreprocessorInput.builder()
             .setRules(
@@ -564,9 +577,14 @@ public class CxxLibraryDescriptionTest {
                         target,
                         cxxPlatform.asFlavor())))
             .setIncludes(
-                ImmutableMap.<Path, SourcePath>of(
-                    Paths.get(genHeaderName),
-                    new BuildTargetSourcePath(genHeader.getBuildTarget())))
+                ImmutableCxxHeaders.builder()
+                    .putNameToPathMap(
+                        Paths.get(genHeaderName),
+                        new BuildTargetSourcePath(genHeader.getBuildTarget()))
+                    .putFullNameToPathMap(
+                        headerRoot.resolve(genHeaderName),
+                        new BuildTargetSourcePath(genHeader.getBuildTarget()))
+                    .build())
             .setIncludeRoots(
                 ImmutableList.of(
                     CxxDescriptionEnhancer.getHeaderSymlinkTreePath(

@@ -1,0 +1,37 @@
+cxx_library(
+  name = 'lib2',
+  header_namespace = 'resolved',
+  headers = [
+    'lib2.h',
+  ],
+  srcs = [
+    'lib2.cpp',
+  ],
+)
+
+cxx_library(
+  name = 'lib1',
+  header_namespace = 'resolved',
+  headers = [
+    'lib1.h',
+  ],
+  deps = [
+    ':lib2',
+  ],
+  srcs = [
+    'lib1.cpp',
+  ],
+)
+
+cxx_binary(
+  name='bin',
+  srcs=[
+    'bin.cpp',
+  ],
+  headers=[
+    'bin.h',
+  ],
+  deps = [
+    ':lib1',
+  ],
+)
