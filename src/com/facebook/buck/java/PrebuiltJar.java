@@ -20,7 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
-import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
@@ -36,9 +36,8 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -50,6 +49,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 public class PrebuiltJar extends AbstractBuildRule
@@ -62,7 +62,6 @@ public class PrebuiltJar extends AbstractBuildRule
   private final Optional<SourcePath> sourceJar;
   private final Optional<SourcePath> gwtJar;
   private final Optional<String> javadocUrl;
-  private final Path abiJar;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       transitiveClasspathEntriesSupplier;
 
@@ -83,8 +82,6 @@ public class PrebuiltJar extends AbstractBuildRule
     this.sourceJar = sourceJar;
     this.gwtJar = gwtJar;
     this.javadocUrl = javadocUrl;
-
-    this.abiJar = BuildTargets.getGenPath(getBuildTarget(), "%s-abi.jar");
 
     transitiveClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
@@ -202,9 +199,7 @@ public class PrebuiltJar extends AbstractBuildRule
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Create a step to compute the ABI key.
-    steps.add(new MkdirStep(abiJar.getParent()));
-    steps.add(new RmStep(abiJar, true));
-    steps.add(new CalculateAbiStep(buildableContext, getResolver().getPath(binaryJar), abiJar));
+    steps.add(new CalculateAbiStep(buildableContext));
 
     JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
 
@@ -220,6 +215,45 @@ public class PrebuiltJar extends AbstractBuildRule
   public void addToCollector(AndroidPackageableCollector collector) {
     collector.addClasspathEntry(this, getResolver().getPath(getBinaryJar()));
     collector.addPathToThirdPartyJar(getBuildTarget(), getResolver().getPath(getBinaryJar()));
+  }
+
+  class CalculateAbiStep implements Step {
+
+    private final BuildableContext buildableContext;
+
+    private CalculateAbiStep(BuildableContext buildableContext) {
+      this.buildableContext = buildableContext;
+    }
+
+    @Override
+    public int execute(ExecutionContext context) {
+      // TODO(simons): Because binaryJar could be a generated file, it may not be bit-for-bit
+      // identical when generated across machines. Therefore, we should calculate its ABI based on
+      // the contents of its .class files rather than just hashing its contents.
+      String fileSha1;
+      try {
+        fileSha1 = context.getProjectFilesystem().computeSha1(getResolver().getPath(binaryJar));
+      } catch (IOException e) {
+        context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
+        return 1;
+      }
+
+      Sha1HashCode abiKey = new Sha1HashCode(fileSha1);
+      buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
+
+      return 0;
+    }
+
+    @Override
+    public String getShortName() {
+      return "calculate_abi";
+    }
+
+    @Override
+    public String getDescription(ExecutionContext context) {
+      return String.format("%s %s", getShortName(), binaryJar);
+    }
+
   }
 
   @Override

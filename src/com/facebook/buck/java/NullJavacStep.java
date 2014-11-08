@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.java.abi.AbiWriterProtocol;
-
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -30,10 +29,6 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-/**
- * A {@link JavacStep} that doesn't do any building, but adheres to the contract of the class. One
- * handy feature of this class is that it returns the empty abi key.
- */
 public class NullJavacStep extends JavacStep {
 
   private static final Sha1HashCode EMPTY_KEY = new Sha1HashCode(AbiWriterProtocol.EMPTY_ABI_KEY);

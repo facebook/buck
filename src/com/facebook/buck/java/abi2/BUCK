@@ -7,7 +7,6 @@ java_library(
     '//third-party/java/jsr:jsr305',
   ],
   visibility = [
-    '//src/com/facebook/buck/java:steps',
     '//test/com/facebook/buck/java/abi2:abi2',
   ],
 )
