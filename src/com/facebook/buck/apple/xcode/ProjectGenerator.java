@@ -1576,15 +1576,17 @@ public class ProjectGenerator {
 
       ConfigInXcodeLayout config = configEntry.getValue();
 
-      PBXGroup configurationsGroup = project.getMainGroup().getOrCreateChildGroupByName(
-          "Configurations");
-      PBXFileReference fileReference =
-          configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
-              new SourceTreePath(
-                  PBXReference.SourceTree.SOURCE_ROOT,
-                  pathRelativizer.outputDirToRootRelative(
-                      resolver.getPath(config.projectLevelConfigFile.get()).normalize())));
-      outputConfig.setBaseConfigurationReference(fileReference);
+      if (config.projectLevelConfigFile.isPresent()) {
+        PBXGroup configurationsGroup = project.getMainGroup().getOrCreateChildGroupByName(
+            "Configurations");
+        PBXFileReference fileReference =
+            configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.SOURCE_ROOT,
+                    pathRelativizer.outputDirToRootRelative(
+                        resolver.getPath(config.projectLevelConfigFile.get()).normalize())));
+        outputConfig.setBaseConfigurationReference(fileReference);
+      }
 
       NSDictionary inlineSettings = new NSDictionary();
       for (Map.Entry<String, String> entry : config.projectLevelInlineSettings.entrySet()) {
@@ -1608,6 +1610,23 @@ public class ProjectGenerator {
     ConfigInXcodeLayout extractedLayers = null;
     ImmutableList<XcodeRuleConfigurationLayer> layers = configuration.getLayers();
     switch (layers.size()) {
+      case 1:
+        if (layers.get(0).getLayerType() == XcodeRuleConfigurationLayer.TYPE.FILE) {
+          extractedLayers = new ConfigInXcodeLayout(
+              buildTarget,
+              Optional.<SourcePath>absent(),
+              ImmutableMap.<String, String>of(),
+              layers.get(0).getSourcePath(),
+              ImmutableMap.<String, String>of());
+        } else {
+          extractedLayers = new ConfigInXcodeLayout(
+              buildTarget,
+              Optional.<SourcePath>absent(),
+              ImmutableMap.<String, String>of(),
+              Optional.<SourcePath>absent(),
+              layers.get(0).getInlineSettings().or(ImmutableMap.<String, String>of()));
+        }
+        break;
       case 2:
         if (layers.get(0).getLayerType() == XcodeRuleConfigurationLayer.TYPE.FILE &&
             layers.get(1).getLayerType() == XcodeRuleConfigurationLayer.TYPE.FILE) {

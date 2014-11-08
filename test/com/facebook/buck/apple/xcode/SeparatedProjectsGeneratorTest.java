@@ -400,6 +400,8 @@ public class SeparatedProjectsGeneratorTest {
                     new XcodeRuleConfiguration(
                         ImmutableList.of(
                             new XcodeRuleConfigurationLayer(
+                                ImmutableMap.<String, String>of()),
+                            new XcodeRuleConfigurationLayer(
                                 new PathSourcePath(Paths.get("target.xcconfig"))))))))
         .build();
 
