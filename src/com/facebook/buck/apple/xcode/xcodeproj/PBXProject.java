@@ -94,7 +94,7 @@ public class PBXProject extends PBXContainer {
     s.addField("compatibilityVersion", compatibilityVersion);
 
     NSDictionary d = new NSDictionary();
-    d.put("LastUpgradeCheck", "0600");
+    d.put("LastUpgradeCheck", "9999");
 
     s.addField("attributes", d);
   }

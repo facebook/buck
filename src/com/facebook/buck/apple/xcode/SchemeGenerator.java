@@ -333,7 +333,7 @@ class SchemeGenerator {
     doc.setXmlVersion("1.0");
 
     Element rootElem = doc.getDocumentElement();
-    rootElem.setAttribute("LastUpgradeVersion", "0500");
+    rootElem.setAttribute("LastUpgradeVersion", "9999");
     rootElem.setAttribute("version", "1.7");
 
     Optional<XCScheme.BuildAction> buildAction = scheme.getBuildAction();
