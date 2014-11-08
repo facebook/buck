@@ -66,6 +66,8 @@ public class GenerateCodeCoverageReportStepTest {
 
     ImmutableList.Builder<String> shellCommandBuilder = ImmutableList.builder();
 
+    System.setProperty("buck.report_generator_jar", "/absolute/path/to/report/generator/jar");
+
     shellCommandBuilder.add(
         "java",
         String.format("-Djacoco.output.dir=%s", outputDirectory),
@@ -81,8 +83,7 @@ public class GenerateCodeCoverageReportStepTest {
             String.format("%s:%s",
                 "/absolute/path/to/parentDirectory1/src",
                 "/absolute/path/to/parentDirectory2/src")),
-        "-jar", GenerateCodeCoverageReportStep.BUCK_HOME +
-            "/buck-out/gen/src/com/facebook/buck/java/report-generator.jar");
+        "-jar", "/absolute/path/to/report/generator/jar");
 
     List<String> expectedShellCommand = shellCommandBuilder.build();
 

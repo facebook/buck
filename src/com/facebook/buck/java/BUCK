@@ -16,6 +16,9 @@ java_binary(
   deps = [
     ':coverage',
   ],
+  visibility = [
+    '//programs:bucklib',
+  ]
 )
 
 java_library(

@@ -128,7 +128,7 @@
 
   <!-- Default target so that a command line build can
        do more than one thing. -->
-  <target name="default" depends="compile, dx, client" />
+  <target name="default" depends="compile, dx, client, report-generator-jar" />
 
   <!-- Convenience target to generate files needed by IntelliJ IDE -->
   <target name="intellij" depends="javacc, javacc-tests" />
@@ -475,7 +475,9 @@
     </exec>
   </target>
 
-  <target name="jar"
+  <target name="jar" depends="buck-jar, report-generator-jar"/>
+
+  <target name="buck-jar"
           depends="compile"
           description="build buck.jar"
           >
@@ -488,6 +490,20 @@
       <fileset dir="${classes.dir}" />
       <manifest>
         <attribute name="Main-Class" value="com.facebook.buck.cli.Main" />
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="report-generator-jar" depends="compile">
+    <jar destfile="${build.dir}/report-generator.jar">
+      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.core-0.7.2.201409121644.jar"/>
+      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.7.2.201409121644.jar"/>
+      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/asm/asm-debug-all-5.0.3.jar"/>
+      <fileset dir="${classes.dir}">
+          <include name="com/facebook/buck/java/ReportGenerator.class"/>
+      </fileset>
+      <manifest>
+        <attribute name="Main-Class" value="com.facebook.buck.java.ReportGenerator" />
       </manifest>
     </jar>
   </target>

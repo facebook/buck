@@ -19,7 +19,6 @@ package com.facebook.buck.java;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.CoverageReportFormat;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -29,10 +28,6 @@ import java.nio.file.Path;
 import java.util.Set;
 
 public class GenerateCodeCoverageReportStep extends ShellStep {
-
-  @VisibleForTesting
-  static final String BUCK_HOME =
-      System.getProperty("buck.buck_dir", System.getProperty("user.dir"));
 
   private final Set<String> sourceDirectories;
   private final Set<Path> classesDirectories;
@@ -74,7 +69,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
 
     // Generate report from JaCoCo exec file using 'ReportGenerator.java'
 
-    args.add("-jar", BUCK_HOME + "/buck-out/gen/src/com/facebook/buck/java/report-generator.jar");
+    args.add("-jar", System.getProperty("buck.report_generator_jar"));
 
     return args.build();
   }
