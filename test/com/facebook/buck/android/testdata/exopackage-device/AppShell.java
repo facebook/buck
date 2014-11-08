@@ -20,6 +20,6 @@ import com.facebook.buck.android.support.exopackage.ExopackageApplication;
 
 public class AppShell extends ExopackageApplication {
     public AppShell() {
-        super(/* isExopackage */ true);
+        super(3); // bitmask, the result of SECONDARY_DEX(1) | NATIVE_LIBRARY(2).
     }
 }

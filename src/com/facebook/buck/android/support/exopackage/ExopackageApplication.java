@@ -29,32 +29,49 @@ import android.content.Context;
  */
 public abstract class ExopackageApplication<T extends ApplicationLike> extends Application {
 
+  private static final int SECONDARY_DEX_MASK = 1;
+  private static final int NATIVE_LIBRARY_MASK = 2;
+
   private final String delegateClassName;
-  private final boolean isExopackage;
+  private final int exopackageFlags;
   private T delegate;
 
   /**
-   * @param isExopackage True iff this is an exopackage build.  This should usually be
-   * {@code BuildConfig.IS_EXOPACKAGE}.
+   * @param exopackageFlags Bitmask used to determine which exopackage feature is enabled in the
+   * current build. This should usually be {@code BuildConfig.EXOPACKAGE_FLAGS}.
    */
-  protected ExopackageApplication(boolean isExopackage) {
-    this(DefaultApplicationLike.class.getName(), isExopackage);
+  protected ExopackageApplication(int exopackageFlags) {
+    this(DefaultApplicationLike.class.getName(), exopackageFlags);
   }
 
   /**
    * @param delegateClassName The fully-qualified name of the {@link ApplicationLike} class
    * that will act as the delegate for application lifecycle callbacks.
-   * @param isExopackage True iff this is an exopackage build.  This should usually be
-   * {@code BuildConfig.IS_EXOPACKAGE}.
+   * @param exopackageFlags Bitmask used to determine which exopackage feature is enabled in the
+   * current build. This should usually be {@code BuildConfig.EXOPACKAGE_FLAGS}.
    */
-  protected ExopackageApplication(String delegateClassName, boolean isExopackage) {
+  protected ExopackageApplication(
+      String delegateClassName,
+      int exopackageFlags) {
     this.delegateClassName = delegateClassName;
-    this.isExopackage = isExopackage;
+    this.exopackageFlags = exopackageFlags;
+  }
+
+  private boolean isExopackageEnabledForSecodaryDex() {
+    return (exopackageFlags & SECONDARY_DEX_MASK) != 0;
+  }
+
+  private boolean isExopackageEnabledForNativeLibraries() {
+    return (exopackageFlags & NATIVE_LIBRARY_MASK) != 0;
   }
 
   private T createDelegate() {
-    if (isExopackage) {
+    if (isExopackageEnabledForSecodaryDex()) {
       ExopackageDexLoader.loadExopackageJars(this);
+    }
+
+    if (isExopackageEnabledForNativeLibraries()) {
+      ExopackageSoLoader.init(this);
     }
 
     try {
