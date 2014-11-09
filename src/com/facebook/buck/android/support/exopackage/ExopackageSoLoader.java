@@ -45,13 +45,16 @@ public class ExopackageSoLoader {
 
   public static void init(Context context) {
     if (initialized) {
+      Log.d(TAG, "init() already called, so nothing to do.");
       return;
     }
     try {
       collectLibraries(context, Build.CPU_ABI, cpuAbi1Libraries);
       collectLibraries(context, Build.CPU_ABI2, cpuAbi2Libraries);
       initialized = true;
+      Log.i(TAG, "Finished initializing.");
     } catch (IOException e) {
+      Log.e(TAG, "There was an error initializing: ", e);
       cpuAbi1Libraries.clear();
       cpuAbi2Libraries.clear();
       return;
@@ -69,11 +72,13 @@ public class ExopackageSoLoader {
 
     File metadataFile = new File(abiDirectory + "/metadata.txt");
     if (!metadataFile.exists()) {
+      Log.d(TAG, "Could not find metadata file: " + metadataFile.getAbsolutePath());
       return;
     }
 
     BufferedReader reader = null;
     try {
+      Log.d(TAG, "Reading metadata file: " + metadataFile.getAbsolutePath());
       reader = new BufferedReader(new FileReader(metadataFile.getAbsolutePath()));
       String line = null;
       while ((line = reader.readLine()) != null) {
@@ -87,6 +92,7 @@ public class ExopackageSoLoader {
           continue;
         }
 
+        Log.v(TAG, "Processing line: " + line);
         libraries.put(line.substring(0, index), abiDirectory + "/" + line.substring(index + 1));
       }
     } finally {
@@ -102,9 +108,12 @@ public class ExopackageSoLoader {
       path = cpuAbi2Libraries.get(library);
     }
     if (path == null) {
+      Log.e(TAG, "Could not load library " + library);
       return;
     }
 
+    Log.d(TAG, "Attempting to load library: " + path);
     System.load(path);
+    Log.d(TAG, "Successfully loaded library: " + path);
   }
 }
