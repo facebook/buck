@@ -101,13 +101,13 @@ public class CxxPreprocessStep implements Step {
 
     return new Function<String, String>() {
 
-      private final Pattern LINE_MARKER =
+      private final Pattern lineMarkers =
           Pattern.compile("^# (?<num>\\d+) \"(?<path>[^\"]+)\"(?<rest>.*)?$");
 
       @Override
       public String apply(String line) {
         if (line.startsWith("# ")) {
-          Matcher m = LINE_MARKER.matcher(line);
+          Matcher m = lineMarkers.matcher(line);
           if (m.find()) {
             Path path = Paths.get(m.group("path"));
             Path replacement = replacementPaths.get(path);
@@ -131,7 +131,7 @@ public class CxxPreprocessStep implements Step {
 
     return new Function<String, String>() {
 
-      private final ImmutableList<Pattern> PATTERNS =
+      private final ImmutableList<Pattern> patterns =
           ImmutableList.of(
               Pattern.compile(
                   "(?<=^(?:In file included |\\s+)from )" +
@@ -142,7 +142,7 @@ public class CxxPreprocessStep implements Step {
 
       @Override
       public String apply(String line) {
-        for (Pattern pattern : PATTERNS) {
+        for (Pattern pattern : patterns) {
           Matcher m = pattern.matcher(line);
           if (m.find()) {
             Path path = Paths.get(m.group("path"));
