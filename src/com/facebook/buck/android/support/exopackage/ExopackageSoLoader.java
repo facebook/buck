@@ -96,7 +96,7 @@ public class ExopackageSoLoader {
     }
   }
 
-  public static void loadLibary(String library) {
+  public static void loadLibrary(String library) {
     String path = cpuAbi1Libraries.get(library);
     if (path == null) {
       path = cpuAbi2Libraries.get(library);
