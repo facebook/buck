@@ -199,7 +199,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               FluentIterable.from(cxxPreprocessorInput.getIncludeRoots())
                   .transform(params.getPathAbsolutifier())
                   .transform(Functions.toStringFunction())));
-      String local_cflags = Joiner.on(' ').join(escapeForMakefile(params, ppflags));
+      String localCflags = Joiner.on(' ').join(escapeForMakefile(params, ppflags));
 
       // Collect the native linkable input for all C/C++ library deps.  We search *through* other
       // NDK library rules.
@@ -219,17 +219,17 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
       // Add in the transitive native linkable flags contributed by C/C++ library rules into the
       // NDK build.
-      String local_ldlibs =
+      String localLdlibs =
           Joiner.on(' ').join(escapeForMakefile(params, nativeLinkableInput.getArgs()));
 
       // Write the relevant lines to the generated makefile.
-      if (!local_cflags.isEmpty() || !local_ldlibs.isEmpty()) {
+      if (!localCflags.isEmpty() || !localLdlibs.isEmpty()) {
         outputLinesBuilder.add(String.format("ifeq ($(TARGET_ARCH_ABI),%s)", targetArchAbi));
-        if (!local_cflags.isEmpty()) {
-          outputLinesBuilder.add("DEP_CFLAGS=" + local_cflags);
+        if (!localCflags.isEmpty()) {
+          outputLinesBuilder.add("DEP_CFLAGS=" + localCflags);
         }
-        if (!local_ldlibs.isEmpty()) {
-          outputLinesBuilder.add("DEP_LDLIBS=" + local_ldlibs);
+        if (!localLdlibs.isEmpty()) {
+          outputLinesBuilder.add("DEP_LDLIBS=" + localLdlibs);
         }
         outputLinesBuilder.add("endif");
         outputLinesBuilder.add("");
