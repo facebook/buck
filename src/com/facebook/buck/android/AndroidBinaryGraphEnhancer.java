@@ -270,7 +270,14 @@ public class AndroidBinaryGraphEnhancer {
     ImmutableMap.Builder<Map.Entry<TargetCpuType, String>, SourcePath> nativeLinkableLibsBuilder =
         ImmutableMap.builder();
     for (AndroidNativeLinkable nativeLinkable : packageableCollection.nativeLinkables()) {
-      for (TargetCpuType targetCpuType : cpuFilters) {
+
+      // TODO(agallagher): We currently treat an empty set of filters to mean to allow everything.
+      // We should fix this by assigning a default list of CPU filters in the descriptions, but
+      // until we doIf the set of filters is empty, just build for all available platforms.
+      ImmutableSet<TargetCpuType> filters =
+          cpuFilters.isEmpty() ? nativePlatforms.keySet() : cpuFilters;
+
+      for (TargetCpuType targetCpuType : filters) {
         CxxPlatform cxxPlatform = nativePlatforms.get(targetCpuType);
         ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(cxxPlatform);
         for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {

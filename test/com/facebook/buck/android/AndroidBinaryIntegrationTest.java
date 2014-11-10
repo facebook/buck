@@ -169,4 +169,16 @@ public class AndroidBinaryIntegrationTest {
     zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
   }
 
+  @Test
+  public void testCxxLibraryDepWithNoFilters() throws IOException {
+    workspace.runBuckCommand("build", "//apps/sample:app_cxx_lib_dep_no_filters").assertSuccess();
+
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/sample/app_cxx_lib_dep_no_filters.apk"));
+    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
+  }
+
 }
