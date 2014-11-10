@@ -126,6 +126,9 @@ public class NdkCxxPlatform implements CxxPlatform {
    */
   private static ImmutableList<String> getCommonFlags() {
     return ImmutableList.of(
+        // Enable default warnings and turn them into errors.
+        "-Wall",
+        "-Werror",
         // NDK builds enable stack protector and debug symbols by default.
         "-fstack-protector",
         "-g");
