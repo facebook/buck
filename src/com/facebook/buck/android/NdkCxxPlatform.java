@@ -121,6 +121,9 @@ public class NdkCxxPlatform implements CxxPlatform {
         .resolve(tool));
   }
 
+  /**
+   * Flags to be used when either preprocessing or compiling C or C++ sources.
+   */
   private static ImmutableList<String> getCommonFlags() {
     return ImmutableList.of(
         // NDK builds enable stack protector and debug symbols by default.
@@ -128,14 +131,37 @@ public class NdkCxxPlatform implements CxxPlatform {
         "-g");
   }
 
+  /**
+   * Flags to be used when either preprocessing or compiling C sources.
+   */
+  private static ImmutableList<String> getCommonCFlags() {
+    return ImmutableList.of(
+        // Default to the newer C11 standard.  This is *not* a default set in the NDK.
+        // Since this flag can be used multiple times, and because the compiler just uses
+        // whichever standard was specified last, cxx_library rules can override this from
+        // their BUCK-file definitions.
+        "-std=gnu11");
+  }
+
+  /**
+   * Flags to be used when either preprocessing or compiling C++ sources.
+   */
   private static ImmutableList<String> getCommonCxxFlags() {
     return ImmutableList.of(
+        // Default to the newer C++11 standard.  This is *not* a default set in the NDK.
+        // Since this flag can be used multiple times, and because the compiler just uses
+        // whichever standard was specified last, cxx_library rules can override this from
+        // their BUCK-file definitions.
+        "-std=gnu++11",
         // By default, Android builds disable exceptions and runtime type identification.
         "-fno-exceptions",
         "-fno-rtti");
   }
 
-  private static ImmutableList<String> getCommonCppflags() {
+  /**
+   * Flags to be used when preprocessing C or C++ sources.
+   */
+  private static ImmutableList<String> getCommonPreprocessorFlags() {
     return ImmutableList.of(
         // Disable searching for headers provided by the system.  This limits headers to just
         // those provided by the NDK and any library dependencies.
@@ -191,7 +217,8 @@ public class NdkCxxPlatform implements CxxPlatform {
       Host host) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.compilerFlags)
-        .addAll(getCommonCppflags())
+        .addAll(getCommonPreprocessorFlags())
+        .addAll(getCommonCFlags())
         .addAll(getCommonFlags())
         .addAll(getCommonIncludes(ndkRoot, targetConfiguration, host))
         .build();
@@ -203,7 +230,7 @@ public class NdkCxxPlatform implements CxxPlatform {
       Host host) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.compilerFlags)
-        .addAll(getCommonCppflags())
+        .addAll(getCommonPreprocessorFlags())
         .addAll(getCommonCxxFlags())
         .addAll(getCommonFlags())
         .add("-Wno-literal-suffix")
@@ -229,7 +256,10 @@ public class NdkCxxPlatform implements CxxPlatform {
         .build();
   }
 
-  private static ImmutableList<String> getCommonCflags() {
+  /**
+   * Flags used when compiling either C or C++ sources.
+   */
+  private static ImmutableList<String> getCommonCompilerFlags() {
     return ImmutableList.of(
         // Default compiler flags provided by the NDK build makefiles.
         "-ffunction-sections",
@@ -243,7 +273,7 @@ public class NdkCxxPlatform implements CxxPlatform {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.compilerFlags)
         .addAll(getCommonFlags())
-        .addAll(getCommonCflags())
+        .addAll(getCommonCompilerFlags())
         .build();
   }
 
@@ -253,7 +283,7 @@ public class NdkCxxPlatform implements CxxPlatform {
         .addAll(targetConfiguration.compilerFlags)
         .addAll(getCommonCxxFlags())
         .addAll(getCommonFlags())
-        .addAll(getCommonCflags())
+        .addAll(getCommonCompilerFlags())
         .build();
   }
 
