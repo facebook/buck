@@ -339,7 +339,7 @@ public class ProjectGenerator {
     Preconditions.checkState(
         isBuiltByCurrentProject(targetNode.getBuildTarget()),
         "should not generate rule if it shouldn't be built by current project");
-    Optional<PBXTarget> result;
+    Optional<PBXTarget> result = Optional.absent();
     if (targetNode.getType().equals(AppleLibraryDescription.TYPE)) {
       result = Optional.<PBXTarget>of(
           generateAppleLibraryTarget(
@@ -370,8 +370,25 @@ public class ProjectGenerator {
       } else {
         throw new HumanReadableException("Test bundle should be a bundle: " + bundle);
       }
-    } else {
-      result = Optional.absent();
+    } else if (targetNode.getType().equals(AppleResourceDescription.TYPE)) {
+      // Check that the resource target node is referencing valid files or directories.
+      TargetNode<AppleResourceDescription.Arg> resource =
+          (TargetNode<AppleResourceDescription.Arg>) targetNode;
+      AppleResourceDescription.Arg arg = resource.getConstructorArg();
+      for (Path dir : arg.dirs) {
+        if (!projectFilesystem.isDirectory(dir)) {
+          throw new HumanReadableException(
+              "%s specified in the dirs parameter of %s is not a directory",
+              dir.toString(), resource.toString());
+        }
+      }
+      for (SourcePath file : arg.files) {
+        if (!projectFilesystem.isFile(resolver.getPath(file))) {
+          throw new HumanReadableException(
+              "%s specified in the files parameter of %s is not a regular file",
+              file.toString(), resource.toString());
+        }
+      }
     }
 
     return result;

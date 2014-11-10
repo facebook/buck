@@ -133,6 +133,15 @@ public class ProjectGeneratorTest {
     projectFilesystem.writeContentsToPath(
         "",
         EMPTY_XCCONFIG_PATH);
+
+    // Add files and directories used to test resources.
+    projectFilesystem.createParentDirs(Paths.get("foodir", "foo.png"));
+    projectFilesystem.writeContentsToPath(
+        "",
+        Paths.get("foodir", "foo.png"));
+    projectFilesystem.writeContentsToPath(
+        "",
+        Paths.get("bar.png"));
   }
 
   @Test
@@ -882,7 +891,7 @@ public class ProjectGeneratorTest {
     BuildTarget resourceTarget = BuildTarget.builder("//foo", "resource").build();
     TargetNode<?> resourceNode = AppleResourceBuilder
         .createBuilder(resourceTarget)
-        .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png")))
+        .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("bar.png")))
         .setDirs(ImmutableSet.<Path>of())
         .build();
 
@@ -1281,7 +1290,7 @@ public class ProjectGeneratorTest {
     BuildTarget resourceTarget = BuildTarget.builder("//foo", "res").build();
     TargetNode<?> resourceNode = AppleResourceBuilder
         .createBuilder(resourceTarget)
-        .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png")))
+        .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("bar.png")))
         .setDirs(ImmutableSet.of(Paths.get("foodir")))
         .build();
 
@@ -1312,7 +1321,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(
         generatedProject,
         "//foo:bundle");
-    assertHasSingletonResourcesPhaseWithEntries(target, "foo.png", "foodir");
+    assertHasSingletonResourcesPhaseWithEntries(target, "bar.png", "foodir");
   }
 
   @Test
@@ -1640,6 +1649,62 @@ public class ProjectGeneratorTest {
         equalTo(49152L));
   }
 
+  @Test
+  public void nonexistentResourceDirectoryShouldThrow() throws IOException {
+    ImmutableSet<TargetNode<?>> nodes = setupSimpleLibraryWithResources(
+        ImmutableSet.<SourcePath>of(),
+        ImmutableSet.<Path>of(Paths.get("nonexistent-directory")));
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "nonexistent-directory specified in the dirs parameter of //foo:res is not a directory");
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(nodes);
+    projectGenerator.createXcodeProjects();
+  }
+
+  @Test
+  public void nonexistentResourceFileShouldThrow() throws IOException {
+    ImmutableSet<TargetNode<?>> nodes = setupSimpleLibraryWithResources(
+        ImmutableSet.<SourcePath>of(new TestSourcePath("nonexistent-file.png")),
+        ImmutableSet.<Path>of());
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "nonexistent-file.png specified in the files parameter of //foo:res is not a regular file");
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(nodes);
+    projectGenerator.createXcodeProjects();
+  }
+
+  @Test
+  public void usingFileAsResourceDirectoryShouldThrow() throws IOException {
+    ImmutableSet<TargetNode<?>> nodes = setupSimpleLibraryWithResources(
+        ImmutableSet.<SourcePath>of(),
+        ImmutableSet.<Path>of(Paths.get("bar.png")));
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "bar.png specified in the dirs parameter of //foo:res is not a directory");
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(nodes);
+    projectGenerator.createXcodeProjects();
+  }
+
+  @Test
+  public void usingDirectoryAsResourceFileShouldThrow() throws IOException {
+    ImmutableSet<TargetNode<?>> nodes = setupSimpleLibraryWithResources(
+        ImmutableSet.<SourcePath>of(new TestSourcePath("foodir")),
+        ImmutableSet.<Path>of());
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "foodir specified in the files parameter of //foo:res is not a regular file");
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(nodes);
+    projectGenerator.createXcodeProjects();
+  }
+
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Iterable<TargetNode<?>> nodes) {
     return createProjectGeneratorForCombinedProject(
@@ -1663,6 +1728,25 @@ public class ProjectGeneratorTest {
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         projectGeneratorOptions);
+  }
+
+  private ImmutableSet<TargetNode<?>> setupSimpleLibraryWithResources(
+      ImmutableSet<SourcePath> resourceFiles,
+      ImmutableSet<Path> resourceDirectories) {
+    BuildTarget resourceTarget = BuildTarget.builder("//foo", "res").build();
+    TargetNode<?> resourceNode = AppleResourceBuilder
+        .createBuilder(resourceTarget)
+        .setFiles(resourceFiles)
+        .setDirs(resourceDirectories)
+        .build();
+
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "foo").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .build();
+
+    return ImmutableSet.of(resourceNode, libraryNode);
   }
 
   private String assertFileRefIsRelativeAndResolvePath(PBXReference fileRef) {
