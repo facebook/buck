@@ -219,17 +219,17 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
       // Add in the transitive native linkable flags contributed by C/C++ library rules into the
       // NDK build.
-      String localLdlibs =
+      String localLdflags =
           Joiner.on(' ').join(escapeForMakefile(params, nativeLinkableInput.getArgs()));
 
       // Write the relevant lines to the generated makefile.
-      if (!localCflags.isEmpty() || !localLdlibs.isEmpty()) {
+      if (!localCflags.isEmpty() || !localLdflags.isEmpty()) {
         outputLinesBuilder.add(String.format("ifeq ($(TARGET_ARCH_ABI),%s)", targetArchAbi));
         if (!localCflags.isEmpty()) {
           outputLinesBuilder.add("DEP_CFLAGS=" + localCflags);
         }
-        if (!localLdlibs.isEmpty()) {
-          outputLinesBuilder.add("DEP_LDLIBS=" + localLdlibs);
+        if (!localLdflags.isEmpty()) {
+          outputLinesBuilder.add("DEP_LDFLAGS=" + localLdflags);
         }
         outputLinesBuilder.add("endif");
         outputLinesBuilder.add("");
