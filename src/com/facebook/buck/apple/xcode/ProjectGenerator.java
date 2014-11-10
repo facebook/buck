@@ -498,10 +498,7 @@ public class ProjectGenerator {
       // If not, remember it so we don't use it again.
       String thisTargetName = targetNode.getBuildTarget().getFullyQualifiedName();
       String conflictingTargetName = gidsToTargetNames.get(targetGid.get());
-      // TODO(user): generateBinaryTarget should not be executed multiple times for the same
-      // rule, but it happens for combined project generation. Figure out why, fix it and remove the
-      // second part of the condition.
-      if (conflictingTargetName != null && !conflictingTargetName.equals(thisTargetName)) {
+      if (conflictingTargetName != null) {
         throw new HumanReadableException(
             "Targets %s and %s have the same hardcoded GID (%s)",
             thisTargetName, conflictingTargetName, targetGid.get());
