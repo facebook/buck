@@ -54,6 +54,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -74,6 +75,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -136,8 +138,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testProjectStructureForEmptyProject() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<TargetNode<?>>of());
 
     projectGenerator.createXcodeProjects();
 
@@ -164,8 +165,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget));
+        ImmutableSet.<TargetNode<?>>of(node));
 
     projectGenerator.createXcodeProjects();
 
@@ -193,8 +193,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget));
+        ImmutableSet.<TargetNode<?>>of(node));
 
     projectGenerator.createXcodeProjects();
   }
@@ -225,8 +224,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget));
+        ImmutableSet.<TargetNode<?>>of(node));
 
     projectGenerator.createXcodeProjects();
 
@@ -328,8 +326,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget));
+        ImmutableSet.<TargetNode<?>>of(node));
 
     projectGenerator.createXcodeProjects();
 
@@ -392,7 +389,6 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
     projectGenerator.createXcodeProjects();
@@ -445,7 +441,6 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
     projectGenerator.createXcodeProjects();
@@ -496,7 +491,6 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
     projectGenerator.createXcodeProjects();
@@ -573,7 +567,6 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(libraryNode, testLibraryNode, testBundleNode, testNode),
-        ImmutableSet.of(testNode.getBuildTarget()),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
     projectGenerator.createXcodeProjects();
@@ -664,7 +657,6 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(libraryNode, testLibraryNode, testBundleNode, testNode),
-        ImmutableSet.of(testTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
     projectGenerator.createXcodeProjects();
@@ -754,7 +746,6 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(libraryDepNode, libraryNode, testLibraryNode, testBundleNode, testNode),
-        ImmutableSet.of(testTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
 
     projectGenerator.createXcodeProjects();
@@ -808,8 +799,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(dynamicLibraryNode, xctestNode, testNode),
-        ImmutableSet.of(testTarget));
+        ImmutableSet.of(dynamicLibraryNode, xctestNode, testNode));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -856,8 +846,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(depNode, binaryNode),
-        ImmutableSet.of(binaryTarget));
+        ImmutableSet.of(depNode, binaryNode));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -915,8 +904,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(scriptNode, resourceNode, dynamicLibraryNode, bundleNode),
-        ImmutableSet.of(bundleTarget));
+        ImmutableSet.of(scriptNode, resourceNode, dynamicLibraryNode, bundleNode));
 
     projectGenerator.createXcodeProjects();
 
@@ -977,7 +965,6 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(dynamicLibraryNode, node),
-        ImmutableSet.of(buildTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
     projectGenerator.createXcodeProjects();
 
@@ -1013,8 +1000,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(modelNode, libraryNode),
-        ImmutableSet.of(libraryTarget));
+        ImmutableSet.of(modelNode, libraryNode));
 
     projectGenerator.createXcodeProjects();
 
@@ -1046,12 +1032,12 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget));
+        ImmutableSet.<TargetNode<?>>of(node));
 
     projectGenerator.createXcodeProjects();
 
-    assertEquals(buildTarget, Iterables.getOnlyElement(
+    assertEquals(
+        buildTarget, Iterables.getOnlyElement(
             projectGenerator.getBuildTargetToGeneratedTargetMap().keySet()));
 
     PBXTarget target = Iterables.getOnlyElement(
@@ -1070,8 +1056,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget));
+        ImmutableSet.<TargetNode<?>>of(node));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1122,8 +1107,7 @@ public class ProjectGeneratorTest {
             dependentStaticLibraryNode,
             dependentDynamicLibraryNode,
             libraryNode,
-            bundleNode),
-        ImmutableSet.of(bundleTarget));
+            bundleNode));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1182,8 +1166,7 @@ public class ProjectGeneratorTest {
             dependentDynamicLibraryNode,
             dependentFrameworkNode,
             libraryNode,
-            bundleNode),
-        ImmutableSet.of(bundleTarget));
+            bundleNode));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1252,8 +1235,7 @@ public class ProjectGeneratorTest {
             dependentDynamicLibraryNode,
             dependentFrameworkNode,
             libraryNode,
-            bundleNode),
-        ImmutableSet.of(bundleTarget));
+            bundleNode));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1284,8 +1266,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(libraryNode, bundleNode),
-        ImmutableSet.of(bundleTarget));
+        ImmutableSet.of(libraryNode, bundleNode));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1324,8 +1305,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(resourceNode, libraryNode, bundleLibraryNode, bundleNode),
-        ImmutableSet.of(bundleTarget));
+        ImmutableSet.of(resourceNode, libraryNode, bundleLibraryNode, bundleNode));
     projectGenerator.createXcodeProjects();
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
@@ -1363,8 +1343,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(assetCatalogNode, libraryNode, bundleLibraryNode, bundleNode),
-        ImmutableSet.of(bundleTarget));
+        ImmutableSet.of(assetCatalogNode, libraryNode, bundleLibraryNode, bundleNode));
     projectGenerator.createXcodeProjects();
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
@@ -1411,8 +1390,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(node1, node2),
-        ImmutableSet.of(buildTarget1, buildTarget2));
+        ImmutableSet.of(node1, node2));
     projectGenerator.createXcodeProjects();
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
@@ -1441,7 +1419,6 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget),
         ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
     projectGenerator.createXcodeProjects();
 
@@ -1477,8 +1454,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget));
+        ImmutableSet.<TargetNode<?>>of(node));
     projectGenerator.createXcodeProjects();
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
@@ -1503,16 +1479,14 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget));
+        ImmutableSet.<TargetNode<?>>of(node));
     projectGenerator.createXcodeProjects();
   }
 
   @Test
   public void testGeneratedProjectIsNotReadOnlyIfOptionNotSpecified() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<TargetNode<?>>of());
 
     projectGenerator.createXcodeProjects();
 
@@ -1523,7 +1497,6 @@ public class ProjectGeneratorTest {
   public void testGeneratedProjectIsReadOnlyIfOptionSpecified() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.<TargetNode<?>>of(),
-        ImmutableSet.<BuildTarget>of(),
         ImmutableSet.of(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES));
 
     projectGenerator.createXcodeProjects();
@@ -1556,8 +1529,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget));
+        ImmutableSet.<TargetNode<?>>of(node));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1581,8 +1553,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(fooNode, barNode),
-        ImmutableSet.of(fooTarget, barTarget));
+        ImmutableSet.of(fooNode, barNode));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
@@ -1614,8 +1585,7 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(fooNode, barNode),
-        ImmutableSet.of(fooTarget, barTarget));
+        ImmutableSet.of(fooNode, barNode));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -1627,8 +1597,7 @@ public class ProjectGeneratorTest {
   @Test
   public void projectIsRewrittenIfContentsHaveChanged() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<TargetNode<?>>of());
 
     clock.setCurrentTimeMillis(49152);
     projectGenerator.createXcodeProjects();
@@ -1641,8 +1610,7 @@ public class ProjectGeneratorTest {
         .createBuilder(buildTarget)
         .build();
     ProjectGenerator projectGenerator2 = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node),
-        ImmutableSet.of(buildTarget));
+        ImmutableSet.<TargetNode<?>>of(node));
 
     clock.setCurrentTimeMillis(64738);
     projectGenerator2.createXcodeProjects();
@@ -1654,8 +1622,7 @@ public class ProjectGeneratorTest {
   @Test
   public void projectIsNotRewrittenIfContentsHaveNotChanged() throws IOException {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<TargetNode<?>>of());
 
     clock.setCurrentTimeMillis(49152);
     projectGenerator.createXcodeProjects();
@@ -1664,8 +1631,7 @@ public class ProjectGeneratorTest {
         equalTo(49152L));
 
     ProjectGenerator projectGenerator2 = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<TargetNode<?>>of());
 
     clock.setCurrentTimeMillis(64738);
     projectGenerator2.createXcodeProjects();
@@ -1675,18 +1641,20 @@ public class ProjectGeneratorTest {
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
-      Iterable<TargetNode<?>> nodes,
-      ImmutableSet<BuildTarget> initialBuildTargets) {
+      Iterable<TargetNode<?>> nodes) {
     return createProjectGeneratorForCombinedProject(
         nodes,
-        initialBuildTargets,
         ImmutableSet.<ProjectGenerator.Option>of());
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Iterable<TargetNode<?>> nodes,
-      ImmutableSet<BuildTarget> initialBuildTargets,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
+    ImmutableSet<BuildTarget> initialBuildTargets = FluentIterable
+        .from(nodes)
+        .transform(HasBuildTarget.TO_TARGET)
+        .toSet();
+
     return new ProjectGenerator(
         TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes)),
         initialBuildTargets,
