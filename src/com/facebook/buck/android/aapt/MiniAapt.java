@@ -164,6 +164,14 @@ public class MiniAapt implements Step {
       for (RDotTxtEntry entry : sortedResources) {
         writer.printf("%s %s %s %s\n", entry.idType, entry.type, entry.name, entry.idValue);
       }
+      for (Path depRTxt : pathsToSymblolsOfDeps) {
+          Iterable<String> lines = FluentIterable.from(filesystem.readLines(depRTxt))
+              .filter(MoreStrings.NON_EMPTY)
+              .toList();
+          for (String line : lines) {
+            writer.println(line);
+          }
+       }
     } catch (IOException e) {
       context.logError(e, "Error writing file: %s", pathToTextSymbolsFile);
       return 1;
