@@ -1,11 +1,12 @@
 #!/bin/sh
 
-# Resolve symlinks if necessary, otherwise madness will follow. 
+# Resolve symlinks if necessary, otherwise madness will follow.
 # On a GNU system, we could use "-f" to follow all symlinks. BSD based
 # systems don't have this flag. *sigh*
-BUCK_PATH="`readlink $0`"
-if [ -z "$BUCK_PATH" ]; then
-  BUCK_PATH="$0"
-fi
+BUCK_PATH="$0"
+while [ -h "$BUCK_PATH" ]; do
+  BUCK_PATH=$(readlink "$BUCK_PATH")
+done
+BUCK_DIR=$(dirname "$BUCK_PATH")
 
-exec python "$(dirname $BUCK_PATH)/../programs/buck.py" "$@"
+exec python "$BUCK_DIR"/../programs/buck.py "$@"
