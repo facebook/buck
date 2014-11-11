@@ -275,6 +275,7 @@ public class NdkCxxPlatform implements CxxPlatform {
       TargetConfiguration targetConfiguration) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.compilerFlags)
+        .addAll(getCommonCFlags())
         .addAll(getCommonFlags())
         .addAll(getCommonCompilerFlags())
         .build();
