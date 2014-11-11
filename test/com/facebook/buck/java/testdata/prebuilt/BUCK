@@ -1,0 +1,4 @@
+prebuilt_jar(
+  name = 'jar',
+  binary_jar = 'junit.jar',
+)

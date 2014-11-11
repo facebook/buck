@@ -146,6 +146,7 @@ java_library(
   name = 'steps',
   srcs = [
     'AccumulateClassNamesStep.java',
+    'CalculateAbiStep.java',
     'CopyResourcesStep.java',
     'ExternalJavacStep.java',
     'GenerateCodeCoverageReportStep.java',
@@ -168,6 +169,7 @@ java_library(
     '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/dalvik:dalvik_stats_tool',
     '//src/com/facebook/buck/java/abi:protocol',
+    '//src/com/facebook/buck/java/abi2:abi2',
     '//src/com/facebook/buck/java/classes:classes',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/log:log',

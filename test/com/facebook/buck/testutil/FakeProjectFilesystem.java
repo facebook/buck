@@ -121,11 +121,20 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   private final Clock clock;
 
   public FakeProjectFilesystem() {
-    this(new FakeClock(0));
+    this(new FakeClock(0), Paths.get(".").toFile());
+  }
+
+  // We accept a File here since that's what's returned by TemporaryFolder.
+  public FakeProjectFilesystem(File root) {
+    this(new FakeClock(0), root);
   }
 
   public FakeProjectFilesystem(Clock clock) {
-    super(Paths.get("."));
+    this(clock, Paths.get(".").toFile());
+  }
+
+  public FakeProjectFilesystem(Clock clock, File root) {
+    super(root.toPath());
     fileContents = Maps.newHashMap();
     fileAttributes = Maps.newHashMap();
     fileLastModifiedTimes = Maps.newHashMap();
