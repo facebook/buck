@@ -1,2 +1,8 @@
 #!/bin/sh
+
+BUCK_PATH="`readlink $0`"
+if [ -z "$BUCK_PATH" ]; then
+  BUCK_PATH="$0"
+fi
+
 exec python "$(dirname $0)"/../programs/buckd.py "$@"

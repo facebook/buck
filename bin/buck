@@ -1,2 +1,11 @@
 #!/bin/sh
-exec python "$(dirname $0)"/../programs/buck.py "$@"
+
+# Resolve symlinks if necessary, otherwise madness will follow. 
+# On a GNU system, we could use "-f" to follow all symlinks. BSD based
+# systems don't have this flag. *sigh*
+BUCK_PATH="`readlink $0`"
+if [ -z "$BUCK_PATH" ]; then
+  BUCK_PATH="$0"
+fi
+
+exec python "$(dirname $BUCK_PATH)/../programs/buck.py" "$@"
