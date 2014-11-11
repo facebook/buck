@@ -16,6 +16,10 @@
 
 package com.facebook.buck.java.abi2;
 
+import static org.objectweb.asm.ClassReader.SKIP_CODE;
+import static org.objectweb.asm.ClassReader.SKIP_DEBUG;
+import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
@@ -60,7 +64,7 @@ public class StubJar {
             ClassReader classReader = new ClassReader(stream);
             ClassMirror visitor = new ClassMirror(fileName);
             classes.add(visitor);
-            classReader.accept(visitor, ClassReader.SKIP_DEBUG);
+            classReader.accept(visitor, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
           }
         });
 
