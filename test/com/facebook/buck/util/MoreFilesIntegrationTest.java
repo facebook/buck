@@ -37,6 +37,8 @@ public class MoreFilesIntegrationTest {
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
+  @org.junit.Ignore
+
   public void testCopyTestdataDirectoryWithSymlinks() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "more_files", tmp);
