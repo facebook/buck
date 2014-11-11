@@ -337,7 +337,6 @@ public class AndroidBinaryGraphEnhancer {
     }
 
     return ImmutableEnhancementResult.builder()
-        .filteredResourcesProvider(filteredResourcesProvider)
         .packageableCollection(packageableCollection)
         .aaptPackageResources(aaptPackageResources)
         .copyNativeLibraries(copyNativeLibraries)
@@ -508,7 +507,6 @@ public class AndroidBinaryGraphEnhancer {
 
   @Value.Immutable
   static interface EnhancementResult {
-    FilteredResourcesProvider filteredResourcesProvider();
     ImmutableAndroidPackageableCollection packageableCollection();
     AaptPackageResources aaptPackageResources();
     Optional<CopyNativeLibraries> copyNativeLibraries();

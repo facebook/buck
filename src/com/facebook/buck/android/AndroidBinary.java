@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
+import com.facebook.buck.android.AndroidBinaryGraphEnhancer.EnhancementResult;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.AccumulateClassNamesStep;
@@ -183,7 +184,7 @@ public class AndroidBinary extends AbstractBuildRule implements
   private final Function<String, String> macroExpander;
   private final Optional<String> preprocessJavaClassesBash;
   protected final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
-  protected final AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult;
+  protected final EnhancementResult enhancementResult;
 
   /**
    * @param target the Android platform version to target, e.g., "Google Inc.:Google APIs:16". You
@@ -212,7 +213,7 @@ public class AndroidBinary extends AbstractBuildRule implements
       Function<String, String> macroExpander,
       Optional<String> preprocessJavaClassesBash,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
-      AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult) {
+      EnhancementResult enhancementResult) {
     super(params, resolver);
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
@@ -316,10 +317,6 @@ public class AndroidBinary extends AbstractBuildRule implements
   public ResourceFilter getResourceFilter() {
     return resourceFilter;
   }
-  @VisibleForTesting
-  FilteredResourcesProvider getFilteredResourcesProvider() {
-    return enhancementResult.filteredResourcesProvider();
-  }
 
   public Function<String, String> getMacroExpander() {
     return macroExpander;
@@ -331,6 +328,11 @@ public class AndroidBinary extends AbstractBuildRule implements
 
   public Optional<Integer> getOptimizationPasses() {
     return optimizationPasses;
+  }
+
+  @VisibleForTesting
+  EnhancementResult getEnhancementResult() {
+    return enhancementResult;
   }
 
   /** The APK at this path is the final one that points to an APK that a user should install. */

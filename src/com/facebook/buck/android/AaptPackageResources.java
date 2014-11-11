@@ -537,4 +537,9 @@ public class AaptPackageResources extends AbstractBuildRule
   static Path getPathToGeneratedRDotJavaSrcFiles(BuildTarget buildTarget) {
     return BuildTargets.getBinPath(buildTarget, "__%s_rdotjava_src__");
   }
+
+  @VisibleForTesting
+  FilteredResourcesProvider getFilteredResourcesProvider() {
+    return filteredResourcesProvider;
+  }
 }

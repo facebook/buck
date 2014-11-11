@@ -250,7 +250,8 @@ public class AndroidBinaryTest {
     Path proguardDir = rule.getProguardOutputFromInputClasspath(
         BIN_PATH.resolve("first-party/orca/lib-base/lib__lib-base__classes"));
     assertEquals(GEN_PATH.resolve("__fbandroid_with_dash_debug_fbsign#aapt_package__proguard__")
-            .resolve(BIN_PATH.resolve(
+            .resolve(
+                BIN_PATH.resolve(
                     "first-party/orca/lib-base/lib__lib-base__classes-obfuscated.jar")),
         proguardDir);
   }
@@ -316,9 +317,12 @@ public class AndroidBinaryTest {
     AndroidBinary buildRule = (AndroidBinary) builder.build(resolver);
     ImmutableList<Path> resourceDirectories = ImmutableList.of(Paths.get("one"), Paths.get("two"));
 
-    assertTrue(buildRule.getFilteredResourcesProvider() instanceof ResourcesFilter);
+    FilteredResourcesProvider resourcesProvider = buildRule.getEnhancementResult()
+        .aaptPackageResources()
+        .getFilteredResourcesProvider();
+    assertTrue(resourcesProvider instanceof ResourcesFilter);
     ImmutableList.Builder<Path> filteredDirs = ImmutableList.builder();
-    ((ResourcesFilter) buildRule.getFilteredResourcesProvider())
+    ((ResourcesFilter) resourcesProvider)
         .createFilterResourcesStep(
             resourceDirectories,
                 /* whitelistedStringsDir */ ImmutableSet.<Path>of(),
