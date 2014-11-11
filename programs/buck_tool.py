@@ -12,12 +12,6 @@ import time
 from timing import monotonic_time_nanos
 from tracing import Tracing
 
-# We use pty to launch buckd. For now, we don't support buckd on Windows, which is fortunate
-# because it turns out pty doesn't work on Windows either. Oh! Happy happenstance!
-if platform.system() != 'Windows':
-    import pty
-
-
 MAX_BUCKD_RUN_COUNT = 64
 BUCKD_CLIENT_TIMEOUT_MILLIS = 60000
 GC_MAX_PAUSE_TARGET = 15000
@@ -168,6 +162,7 @@ class BuckTool(object):
                 buck_version_uid = self._get_buck_version_uid()
             # Override self._tmp_dir to a long lived directory.
             buckd_tmp_dir = self._buck_project.create_buckd_tmp_dir()
+            ngserver_output_path = os.path.join(buckd_tmp_dir, 'ngserver-out')
 
             '''
             Use SoftRefLRUPolicyMSPerMB for immediate GC of javac output.
@@ -184,6 +179,8 @@ class BuckTool(object):
             command.append("-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET))
             command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
             command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
+            command.append("-Dcom.martiansoftware.nailgun.NGServer.outputPath={0}".format(
+                ngserver_output_path))
             command.append("-classpath")
             command.append(self._get_bootstrap_classpath())
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
@@ -191,15 +188,6 @@ class BuckTool(object):
             command.append("com.martiansoftware.nailgun.NGServer")
             command.append("localhost:0")
             command.append("{0}".format(BUCKD_CLIENT_TIMEOUT_MILLIS))
-
-            '''
-            We want to launch the buckd process in such a way that it finds the
-            terminal as a tty while being able to read its output. We also want to
-            shut up any nailgun output. If we simply redirect stdout/stderr to a
-            file, the super console no longer works on subsequent invocations of
-            buck. So use a pseudo-terminal to interact with it.
-            '''
-            master, slave = pty.openpty()
 
             '''
             Change the process group of the child buckd process so that when this
@@ -211,18 +199,23 @@ class BuckTool(object):
             process = subprocess.Popen(
                 command,
                 cwd=self._buck_project.root,
-                stdout=slave,
-                stderr=slave,
                 preexec_fn=preexec_func)
-            stdout = os.fdopen(master)
 
+            buckd_port = None
             for i in range(100):
-                line = stdout.readline().strip()
-                match = BUCKD_LOG_FILE_PATTERN.match(line)
-                if match:
-                    buckd_port = match.group(1)
+                if buckd_port:
                     break
-                time.sleep(0.1)
+                try:
+                    with open(ngserver_output_path) as f:
+                        for line in f:
+                            match = BUCKD_LOG_FILE_PATTERN.match(line)
+                            if match:
+                                buckd_port = match.group(1)
+                                break
+                except IOError as e:
+                    pass
+                finally:
+                    time.sleep(0.1)
             else:
                 print(
                     "nailgun server did not respond after 10s. Aborting buckd.",
