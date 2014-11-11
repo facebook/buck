@@ -26,7 +26,7 @@ import java.util.Map;
 
 /**
  * Json format for Chrome Trace events that can be viewed in chrome://tracing.
- * https://code.google.com/p/trace-viewer/wiki/TraceEventFormat
+ * See https://github.com/google/trace-viewer for more information.
  */
 @JsonInclude(Include.NON_NULL)
 public class ChromeTraceEvent {
