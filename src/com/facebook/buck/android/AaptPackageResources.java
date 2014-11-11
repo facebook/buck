@@ -259,12 +259,21 @@ public class AaptPackageResources extends AbstractBuildRule
     Path rDotTxtDir = getPathToRDotTxtDir();
     steps.add(new MakeCleanDirectoryStep(rDotTxtDir));
 
+    Optional<Path> pathToGeneratedProguardConfig = Optional.absent();
+    if (packageType.isBuildWithObfuscation()) {
+      Path proguardConfigDir = getPathToGeneratedProguardConfigDir();
+      steps.add(new MakeCleanDirectoryStep(proguardConfigDir));
+      pathToGeneratedProguardConfig = Optional.of(proguardConfigDir.resolve("proguard.txt"));
+      buildableContext.recordArtifactsInDirectory(proguardConfigDir);
+    }
+
     steps.add(new AaptStep(
         getAndroidManifestXml(),
         filteredResourcesProvider.getResDirectories(),
         assetsDirectory,
         getResourceApkPath(),
         rDotTxtDir,
+        pathToGeneratedProguardConfig,
         packageType.isCrunchPngFiles()));
 
     if (!filteredResourcesProvider.getResDirectories().isEmpty()) {
@@ -505,6 +514,23 @@ public class AaptPackageResources extends AbstractBuildRule
 
   private Path getPathForNativeStringInfoDirectory() {
     return BuildTargets.getBinPath(getBuildTarget(), "__%s_string_source_map__");
+  }
+
+  /**
+   * This is the path to the directory for generated files related to ProGuard. Ultimately, it
+   * should include:
+   * <ul>
+   *   <li>proguard.txt
+   *   <li>dump.txt
+   *   <li>seeds.txt
+   *   <li>usage.txt
+   *   <li>mapping.txt
+   *   <li>obfuscated.jar
+   * </ul>
+   * @return path to directory (will not include trailing slash)
+   */
+  public Path getPathToGeneratedProguardConfigDir() {
+    return BuildTargets.getGenPath(getBuildTarget(), "__%s__proguard__");
   }
 
   @VisibleForTesting

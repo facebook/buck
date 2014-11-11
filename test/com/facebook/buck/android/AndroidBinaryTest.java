@@ -35,7 +35,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -107,12 +106,12 @@ public class AndroidBinaryTest {
         packageableCollection.classpathEntriesToDex(),
         packageableCollection.proguardConfigs(),
         commands,
-        ImmutableList.<Path>of(),
         buildableContext);
 
     ImmutableSet<Path> expectedRecordedArtifacts = ImmutableSet.of(
-        Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/configuration.txt"),
-        Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/mapping.txt"));
+        GEN_PATH.resolve(
+            "java/src/com/facebook/base/__apk#aapt_package__proguard__/configuration.txt"),
+        GEN_PATH.resolve("java/src/com/facebook/base/__apk#aapt_package__proguard__/mapping.txt"));
 
     assertEquals(expectedRecordedArtifacts, buildableContext.getRecordedArtifacts());
 
@@ -120,36 +119,21 @@ public class AndroidBinaryTest {
 
     ImmutableList.Builder<Step> expectedSteps = ImmutableList.builder();
 
-    MakeCleanDirectoryStep expectedClean =
-        new MakeCleanDirectoryStep(
-            Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"));
-    expectedSteps.add(expectedClean);
-
-    GenProGuardConfigStep expectedGenProguard =
-        new GenProGuardConfigStep(
-            Paths.get("buck-out/bin/java/src/com/facebook/base/" +
-                "__manifest_apk#aapt_package__/AndroidManifest.xml"),
-            ImmutableList.<Path>of(),
-            Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"));
-    expectedSteps.add(expectedGenProguard);
-
     ProGuardObfuscateStep.create(
         Optional.<Path>absent(),
         "1024M",
-        Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk/proguard.txt"),
+        GEN_PATH.resolve("java/src/com/facebook/base/__apk#aapt_package__proguard__/proguard.txt"),
         ImmutableSet.<Path>of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
         Optional.<Integer>absent(),
         ImmutableMap.of(
-            Paths.get(
-                "buck-out/gen/java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar"),
-            Paths.get(
-                "buck-out/gen/java/src/com/facebook/base/.proguard/apk/buck-out/gen/" +
+            GEN_PATH.resolve("java/src/com/facebook/base/lib__libraryOne__output/libraryOne.jar"),
+            GEN_PATH.resolve(
+                "java/src/com/facebook/base/__apk#aapt_package__proguard__/buck-out/gen/" +
                 "java/src/com/facebook/base/lib__libraryOne__output/libraryOne-obfuscated.jar")),
         ImmutableSet.of(
-            Paths.get(
-              "buck-out/gen/java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar")),
-        Paths.get("buck-out/gen/java/src/com/facebook/base/.proguard/apk"),
+            GEN_PATH.resolve("java/src/com/facebook/base/lib__libraryTwo__output/libraryTwo.jar")),
+        GEN_PATH.resolve("java/src/com/facebook/base/__apk#aapt_package__proguard__"),
         buildableContext,
         expectedSteps);
 
@@ -265,8 +249,9 @@ public class AndroidBinaryTest {
 
     Path proguardDir = rule.getProguardOutputFromInputClasspath(
         BIN_PATH.resolve("first-party/orca/lib-base/lib__lib-base__classes"));
-    assertEquals(GEN_PATH.resolve(".proguard/fbandroid_with_dash_debug_fbsign").resolve(
-        BIN_PATH.resolve("first-party/orca/lib-base/lib__lib-base__classes-obfuscated.jar")),
+    assertEquals(GEN_PATH.resolve("__fbandroid_with_dash_debug_fbsign#aapt_package__proguard__")
+            .resolve(BIN_PATH.resolve(
+                    "first-party/orca/lib-base/lib__lib-base__classes-obfuscated.jar")),
         proguardDir);
   }
 

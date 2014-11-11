@@ -45,6 +45,7 @@ public class AaptStep extends ShellStep {
   private final Optional<Path> assetsDirectory;
   private final Path pathToOutputApkFile;
   private final Path pathToRDotTxtDir;
+  private final Optional<Path> pathToGeneratedProguardConfig;
 
   @SuppressWarnings("unused")
   private final boolean isCrunchPngFiles;
@@ -55,12 +56,14 @@ public class AaptStep extends ShellStep {
       Optional<Path> assetsDirectory,
       Path pathToOutputApkFile,
       Path pathToRDotTxtDir,
+      Optional<Path> pathToGeneratedProguardConfig,
       boolean isCrunchPngFiles) {
     this.androidManifest = androidManifest;
     this.resDirectories = resDirectories;
     this.assetsDirectory = assetsDirectory;
     this.pathToOutputApkFile = pathToOutputApkFile;
     this.pathToRDotTxtDir = pathToRDotTxtDir;
+    this.pathToGeneratedProguardConfig = pathToGeneratedProguardConfig;
     this.isCrunchPngFiles = isCrunchPngFiles;
   }
 
@@ -79,6 +82,10 @@ public class AaptStep extends ShellStep {
 
     // Force overwrite of existing files.
     builder.add("-f");
+
+    if (pathToGeneratedProguardConfig.isPresent()) {
+      builder.add("-G", pathToGeneratedProguardConfig.get().toString());
+    }
 
     /*
      * In practice, it appears that if --no-crunch is used, resources will occasionally appear
