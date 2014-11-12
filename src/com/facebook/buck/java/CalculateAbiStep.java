@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.java.abi2.StubJar;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.BuildableContext;
@@ -43,18 +44,11 @@ class CalculateAbiStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    // TODO(simons): Because binaryJar could be a generated file, it may not be bit-for-bit
-    // identical when generated across machines. Therefore, we should calculate its ABI based on
-    // the contents of its .class files rather than just hashing its contents.
     String fileSha1;
     try {
-      Path binJar = context.getProjectFilesystem().resolve(binaryJar);
-      Path out = context.getProjectFilesystem().resolve(abiJar);
-
-      new StubJar(binJar).writeTo(out);
+      Path out = getPathToHash(context, buildableContext);
 
       fileSha1 = context.getProjectFilesystem().computeSha1(out);
-      buildableContext.recordArtifact(out);
     } catch (IOException e) {
       context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
       return 1;
@@ -66,6 +60,27 @@ class CalculateAbiStep implements Step {
     return 0;
   }
 
+  private Path getPathToHash(
+      ExecutionContext context,
+      BuildableContext buildableContext) throws IOException {
+    Path binJar = context.getProjectFilesystem().resolve(binaryJar);
+
+    try {
+      Path out = context.getProjectFilesystem().resolve(abiJar);
+
+      new StubJar(binJar).writeTo(out);
+      buildableContext.recordArtifact(out);
+      return out;
+    } catch (IllegalArgumentException e) {
+      // Thrown when ASM chokes on an input file. Fall back to the input jar, but warn the user.
+      context.postEvent(
+          ConsoleEvent.warning(
+              "Unable to create abi jar from %s. Falling back to hashing that jar",
+              binaryJar));
+      return binJar;
+    }
+  }
+
   @Override
   public String getShortName() {
     return "calculate_abi";
@@ -75,5 +90,4 @@ class CalculateAbiStep implements Step {
   public String getDescription(ExecutionContext context) {
     return String.format("%s %s", getShortName(), binaryJar);
   }
-
 }
