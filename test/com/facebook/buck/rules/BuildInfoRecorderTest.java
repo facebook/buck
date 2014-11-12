@@ -30,11 +30,18 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class BuildInfoRecorderTest {
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   private static final String RULE_KEY = Strings.repeat("a", 40);
   private static final String RULE_KEY_WITHOUT_DEPS = Strings.repeat("b", 40);
@@ -79,6 +86,21 @@ public class BuildInfoRecorderTest {
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key3", "value3");
     assertOnDiskBuildInfoDoesNotHaveMetadata(onDiskBuildInfo, "key1");
     assertOnDiskBuildInfoDoesNotHaveMetadata(onDiskBuildInfo, "key2");
+  }
+
+  @Test
+  public void testCannotRecordArtifactWithAbsolutePath() {
+    Path absPath = Paths.get("/some/absolute/path.txt");
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(String.format(
+            BuildInfoRecorder.ABSOLUTE_PATH_ERROR_FORMAT,
+            BUILD_TARGET,
+            absPath));
+
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
+    buildInfoRecorder.recordArtifact(absPath);
   }
 
   private static void assertOnDiskBuildInfoHasMetadata(
