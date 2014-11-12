@@ -53,6 +53,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -763,6 +764,10 @@ public class ProjectGenerator {
       }
 
       if (options.contains(Option.REFERENCE_EXISTING_XCCONFIGS)) {
+        Iterable<Map.Entry<String, String>> entries = Iterables.concat(
+            layers.targetLevelInlineSettings.entrySet(),
+            combinedOverrideConfigs.entrySet());
+
         if (layers.targetLevelConfigFile.isPresent()) {
           PBXFileReference fileReference =
               configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
@@ -771,16 +776,48 @@ public class ProjectGenerator {
                       pathRelativizer.outputPathToSourcePath(
                           layers.targetLevelConfigFile.get())));
           outputConfiguration.setBaseConfigurationReference(fileReference);
-        }
 
-        NSDictionary inlineSettings = new NSDictionary();
-        Iterable<Map.Entry<String, String>> entries = Iterables.concat(
-            layers.targetLevelInlineSettings.entrySet(),
-            combinedOverrideConfigs.entrySet());
-        for (Map.Entry<String, String> entry : entries) {
-          inlineSettings.put(entry.getKey(), entry.getValue());
+          NSDictionary inlineSettings = new NSDictionary();
+          for (Map.Entry<String, String> entry : entries) {
+            inlineSettings.put(entry.getKey(), entry.getValue());
+          }
+          outputConfiguration.setBuildSettings(inlineSettings);
+        } else {
+          Path xcconfigPath = BuildTargets.getGenPath(buildTarget, "%s.xcconfig");
+          projectFilesystem.mkdirs(xcconfigPath.getParent());
+
+          StringBuilder stringBuilder = new StringBuilder();
+          for (Map.Entry<String, String> entry : entries) {
+            stringBuilder.append(entry.getKey());
+            stringBuilder.append(" = ");
+            stringBuilder.append(entry.getValue());
+            stringBuilder.append('\n');
+          }
+          String xcconfigContents = stringBuilder.toString();
+
+          if (MorePaths.fileContentsDiffer(
+              new ByteArrayInputStream(xcconfigContents.getBytes(Charsets.UTF_8)),
+              xcconfigPath,
+              projectFilesystem)) {
+            if (shouldGenerateReadOnlyFiles()) {
+              projectFilesystem.writeContentsToPath(
+                  xcconfigContents,
+                  xcconfigPath,
+                  READ_ONLY_FILE_ATTRIBUTE);
+            } else {
+              projectFilesystem.writeContentsToPath(
+                  xcconfigContents,
+                  xcconfigPath);
+            }
+          }
+
+          PBXFileReference fileReference =
+              configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
+                  new SourceTreePath(
+                      PBXReference.SourceTree.SOURCE_ROOT,
+                      pathRelativizer.outputDirToRootRelative(xcconfigPath)));
+          outputConfiguration.setBaseConfigurationReference(fileReference);
         }
-        outputConfiguration.setBuildSettings(inlineSettings);
       } else {
         Path outputConfigurationDirectory = outputDirectory.resolve("Configurations");
         projectFilesystem.mkdirs(outputConfigurationDirectory);

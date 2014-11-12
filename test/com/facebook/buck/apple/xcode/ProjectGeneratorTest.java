@@ -526,6 +526,60 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testConfigurationSerializationWithoutExistingXcconfig() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    new XcodeRuleConfiguration(
+                        ImmutableList.of(
+                            new XcodeRuleConfigurationLayer(
+                                ImmutableMap.of("CUSTOM_SETTING", "VALUE")))))))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.STATIC_LIBRARY));
+
+    assertHasConfigurations(target, "Debug");
+    XCBuildConfiguration configuration = target
+        .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
+    assertEquals(configuration.getBuildSettings().count(), 0);
+
+    PBXFileReference xcconfigReference = configuration.getBaseConfigurationReference();
+    assertEquals(xcconfigReference.getPath(), "../buck-out/gen/foo/lib.xcconfig");
+
+    Path xcconfigPath = Paths.get("buck-out/gen/foo/lib.xcconfig");
+    String contents = projectFilesystem.readFileIfItExists(xcconfigPath).get();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    for (String line : contents.split("\n")) {
+        String[] parts = line.split(" = ");
+        builder.put(parts[0], parts[1]);
+    }
+    ImmutableMap<String, String> settings = builder.build();
+    assertEquals(
+        "$SYMROOT/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME",
+        settings.get("BUILT_PRODUCTS_DIR"));
+    assertEquals(
+        "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
+        settings.get("CONFIGURATION_BUILD_DIR"));
+    assertEquals(
+        "VALUE",
+        settings.get("CUSTOM_SETTING"));
+  }
+
+  @Test
   public void testAppleLibraryDependentsSearchHeadersAndLibraries() throws IOException {
     Path rawXcconfigFile = Paths.get("Test.xcconfig");
     SourcePath xcconfigFile = new PathSourcePath(rawXcconfigFile);
