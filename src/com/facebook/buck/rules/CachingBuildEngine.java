@@ -187,7 +187,13 @@ public class CachingBuildEngine implements BuildEngine {
               if (result.getStatus() == BuildRuleStatus.SUCCESS) {
                 try {
                   recordBuildRuleSuccess(result);
-                } catch (InterruptedException e) {
+                } catch (InterruptedException | RuntimeException e) {
+                  // StepRunner#addCallback doesn't return a future which means that when we add a
+                  // callback to the step runner in CachingBuildEngine#build, there is no way to
+                  // have the exception thrown in the callback to be forwarded to the future we
+                  // return from it.
+                  // For now, we'll just catch the RuntimeException.
+                  // TODO(simons, t5597862): Consider modifying StepRunner#addCallback
                   result = new BuildResult(e);
                 }
               }
