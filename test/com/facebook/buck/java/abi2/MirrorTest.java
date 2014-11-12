@@ -23,14 +23,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Joiner;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 
 import org.junit.Before;
@@ -52,6 +52,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
@@ -73,12 +74,14 @@ public class MirrorTest {
   @Rule
   public TemporaryFolder temp = new TemporaryFolder();
 
+  private ProjectFilesystem filesystem;
   private Path stubJar;
 
   @Before
   public void createStubJar() throws IOException {
     File out = temp.newFolder();
-    stubJar = out.toPath().resolve("stub.jar").toAbsolutePath();
+    filesystem = new ProjectFilesystem(out.toPath());
+    stubJar = Paths.get("stub.jar");
   }
 
   @Test
@@ -88,7 +91,7 @@ public class MirrorTest {
         "A.java",
         "package com.example.buck; public class A {}");
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     // Verify that the stub jar works by compiling some code that depends on A.
     compileToJar(
@@ -104,7 +107,7 @@ public class MirrorTest {
         "A.java",
         "package com.example.buck; @Deprecated public class A {}");
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     // Examine the jar to see if the "A" class is deprecated.
     ClassNode classNode = readClass(stubJar, "com/example/buck/A.class");
@@ -123,7 +126,7 @@ public class MirrorTest {
             "  public void eatCake() {}",
             "}")));
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     // Verify that both methods are present and given in alphabetical order.
     ClassNode classNode = readClass(stubJar, "com/example/buck/A.class");
@@ -155,7 +158,7 @@ public class MirrorTest {
     String classSig = original.signature;
     MethodNode originalGet = findMethod(original, "get");
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
     assertEquals(classSig, stubbed.signature);
@@ -180,7 +183,7 @@ public class MirrorTest {
                 "}"
             )));
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
     for (MethodNode method : stubbed.methods) {
@@ -201,7 +204,7 @@ public class MirrorTest {
                 "}"
             )));
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
     FieldNode field = stubbed.fields.get(0);
@@ -222,7 +225,7 @@ public class MirrorTest {
                 "}"
             )));
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
     assertEquals(0, stubbed.fields.size());
@@ -240,7 +243,7 @@ public class MirrorTest {
                 "  public T theField;",
                 "}")));
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     ClassNode original = readClass(jar, "com/example/buck/A.class");
     ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
@@ -264,7 +267,7 @@ public class MirrorTest {
                 "  public <X extends Comparable<T>> X compareWith(T other) { return null; }",
                 "}")));
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     ClassNode original = readClass(jar, "com/example/buck/A.class");
     ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
@@ -296,7 +299,7 @@ public class MirrorTest {
                 "  public void cheese(String key) {}",
                 "}")));
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
     MethodNode method = findMethod(stubbed, "cheese");
@@ -320,7 +323,7 @@ public class MirrorTest {
                 "  public String name;",
                 "}")));
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
     FieldNode field = findField(stubbed, "name");
@@ -343,7 +346,7 @@ public class MirrorTest {
                 "  public void peynir(@Foo String very, int tasty) {}",
                 "}")));
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
     MethodNode method = findMethod(stubbed, "peynir");
@@ -368,7 +371,7 @@ public class MirrorTest {
                 "}"
             )));
 
-    new StubJar(jar).writeTo(stubJar);
+    new StubJar(jar).writeTo(filesystem, stubJar);
 
     ClassNode original = readClass(jar, "com/example/buck/A$B.class");
     ClassNode stubbed = readClass(stubJar, "com/example/buck/A$B.class");
@@ -398,9 +401,8 @@ public class MirrorTest {
                 "}"
             )));
 
-    new StubJar(jar).writeTo(stubJar);
-    HashCode originalHash =
-        com.google.common.io.Files.asByteSource(stubJar.toFile()).hash(Hashing.sha1());
+    new StubJar(jar).writeTo(filesystem, stubJar);
+    String originalHash = filesystem.computeSha1(stubJar);
 
     Path jar2 = compileToJar(
         EMPTY_CLASSPATH,
@@ -415,10 +417,9 @@ public class MirrorTest {
                 "  public int other = 32;",
                 "}"
             )));
-    Files.delete(stubJar);
-    new StubJar(jar2).writeTo(stubJar);
-    HashCode secondHash =
-        com.google.common.io.Files.asByteSource(stubJar.toFile()).hash(Hashing.sha1());
+    filesystem.deleteFileAtPath(stubJar);
+    new StubJar(jar2).writeTo(filesystem, stubJar);
+    String secondHash = filesystem.computeSha1(stubJar);
 
     assertEquals(originalHash, secondHash);
   }
@@ -443,7 +444,8 @@ public class MirrorTest {
 
     if (!classpath.isEmpty()) {
       args.add("-classpath");
-      args.add(Joiner.on(File.pathSeparator).join(classpath));
+      args.add(Joiner.on(File.pathSeparator).join(FluentIterable.from(classpath)
+                  .transform(filesystem.getAbsolutifier())));
     }
 
     JavaCompiler.CompilationTask compilation =
@@ -494,7 +496,7 @@ public class MirrorTest {
     Path classDir = temp.newFolder().toPath();
     Unzip.extractZipFile(jar, classDir, true);
 
-    new StubJar(classDir).writeTo(stubJar);
+    new StubJar(classDir).writeTo(filesystem, stubJar);
 
     // Verify that both methods are present and given in alphabetical order.
     ClassNode classNode = readClass(stubJar, "com/example/buck/A.class");
@@ -505,7 +507,7 @@ public class MirrorTest {
   }
 
   private ClassNode readClass(Path pathToJar, String className) throws IOException {
-    try (ZipFile zip = new ZipFile(pathToJar.toFile())) {
+    try (ZipFile zip = new ZipFile(filesystem.getFileForRelativePath(pathToJar))) {
       ZipEntry entry = zip.getEntry(className);
       try (InputStream entryStream = zip.getInputStream(entry)) {
         ClassReader reader = new ClassReader(entryStream);

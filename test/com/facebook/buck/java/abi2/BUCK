@@ -3,6 +3,7 @@ java_test(
   srcs = glob(['*.java']),
   deps = [
     '//src/com/facebook/buck/java/abi2:abi2',
+    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/zip:unzip',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//third-party/java/asm:asm',

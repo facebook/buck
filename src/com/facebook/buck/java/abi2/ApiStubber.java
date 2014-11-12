@@ -17,6 +17,8 @@
 package com.facebook.buck.java.abi2;
 
 
+import com.facebook.buck.util.ProjectFilesystem;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,6 +33,6 @@ public class ApiStubber {
     Path source = Paths.get(args[0]);
     Path destination = Paths.get(args[1]);
 
-    new StubJar(source).writeTo(destination);
+    new StubJar(source).writeTo(new ProjectFilesystem(Paths.get("")), destination);
   }
 }

@@ -2,6 +2,7 @@ java_library(
   name = 'abi2',
   srcs = glob(['*.java'], excludes = ['ApiStubber.java']),
   deps = [
+    '//src/com/facebook/buck/util:io',
     '//third-party/java/asm:asm',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',

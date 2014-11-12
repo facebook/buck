@@ -20,16 +20,15 @@ import static org.objectweb.asm.ClassReader.SKIP_CODE;
 import static org.objectweb.asm.ClassReader.SKIP_DEBUG;
 import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
 
+import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
 import org.objectweb.asm.ClassReader;
 
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.jar.JarOutputStream;
@@ -44,11 +43,11 @@ public class StubJar {
     this.classes = Sets.newTreeSet();
   }
 
-  public void writeTo(Path path) throws IOException {
-    Preconditions.checkState(!Files.exists(path), "Output file already exists: %s)", path);
+  public void writeTo(ProjectFilesystem filesystem, Path path) throws IOException {
+    Preconditions.checkState(!filesystem.exists(path), "Output file already exists: %s)", path);
 
-    if (!Files.exists(path.getParent())) {
-      Files.createDirectories(path.getParent());
+    if (path.getParent() != null && !filesystem.exists(path.getParent())) {
+      filesystem.createParentDirs(path);
     }
 
     Walker walker = Walkers.getWalkerFor(toMirror);
@@ -69,9 +68,8 @@ public class StubJar {
         });
 
     try (
-        FileOutputStream fos = new FileOutputStream(path.toFile());
-        BufferedOutputStream bos = new BufferedOutputStream(fos);
-        JarOutputStream jar = new JarOutputStream(bos)) {
+        OutputStream fos = filesystem.newFileOutputStream(path);
+        JarOutputStream jar = new JarOutputStream(fos)) {
       for (ClassMirror aClass : classes) {
         aClass.writeTo(jar);
       }

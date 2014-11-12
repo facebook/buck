@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.ProjectFilesystem;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -63,14 +64,13 @@ class CalculateAbiStep implements Step {
   private Path getPathToHash(
       ExecutionContext context,
       BuildableContext buildableContext) throws IOException {
-    Path binJar = context.getProjectFilesystem().resolve(binaryJar);
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
+    Path binJar = filesystem.resolve(binaryJar);
 
     try {
-      Path out = context.getProjectFilesystem().resolve(abiJar);
-
-      new StubJar(binJar).writeTo(out);
-      buildableContext.recordArtifact(out);
-      return out;
+      new StubJar(binJar).writeTo(filesystem, abiJar);
+      buildableContext.recordArtifact(abiJar);
+      return abiJar;
     } catch (IllegalArgumentException e) {
       // Thrown when ASM chokes on an input file. Fall back to the input jar, but warn the user.
       context.postEvent(
