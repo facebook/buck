@@ -558,9 +558,9 @@ public class ProjectGeneratorTest {
     assertEquals(configuration.getBuildSettings().count(), 0);
 
     PBXFileReference xcconfigReference = configuration.getBaseConfigurationReference();
-    assertEquals(xcconfigReference.getPath(), "../buck-out/gen/foo/lib.xcconfig");
+    assertEquals(xcconfigReference.getPath(), "../buck-out/gen/foo/lib-Debug.xcconfig");
 
-    Path xcconfigPath = Paths.get("buck-out/gen/foo/lib.xcconfig");
+    Path xcconfigPath = Paths.get("buck-out/gen/foo/lib-Debug.xcconfig");
     String contents = projectFilesystem.readFileIfItExists(xcconfigPath).get();
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     for (String line : contents.split("\n")) {

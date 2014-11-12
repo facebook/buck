@@ -783,7 +783,8 @@ public class ProjectGenerator {
           }
           outputConfiguration.setBuildSettings(inlineSettings);
         } else {
-          Path xcconfigPath = BuildTargets.getGenPath(buildTarget, "%s.xcconfig");
+          Path xcconfigPath = BuildTargets.getGenPath(buildTarget, "%s-" +
+              configurationEntry.getKey() + ".xcconfig");
           projectFilesystem.mkdirs(xcconfigPath.getParent());
 
           StringBuilder stringBuilder = new StringBuilder();
