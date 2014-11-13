@@ -25,6 +25,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -45,6 +47,7 @@ public class CxxPreprocess extends AbstractBuildRule {
   private final ImmutableList<Path> includeRoots;
   private final ImmutableList<Path> systemIncludeRoots;
   private final CxxHeaders includes;
+  private final Optional<DebugPathSanitizer> sanitizer;
 
   public CxxPreprocess(
       BuildRuleParams params,
@@ -55,7 +58,8 @@ public class CxxPreprocess extends AbstractBuildRule {
       SourcePath input,
       ImmutableList<Path> includeRoots,
       ImmutableList<Path> systemIncludeRoots,
-      CxxHeaders includes) {
+      CxxHeaders includes,
+      Optional<DebugPathSanitizer> sanitizer) {
     super(params, resolver);
     this.preprocessor = preprocessor;
     this.flags = flags;
@@ -64,6 +68,7 @@ public class CxxPreprocess extends AbstractBuildRule {
     this.includeRoots = includeRoots;
     this.systemIncludeRoots = systemIncludeRoots;
     this.includes = includes;
+    this.sanitizer = sanitizer;
   }
 
   @Override
@@ -75,8 +80,17 @@ public class CxxPreprocess extends AbstractBuildRule {
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder
         .setInput("preprocessor", preprocessor)
-        .set("flags", flags)
         .set("output", output.toString());
+
+    // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
+    // from contributing to the rule key.
+    ImmutableList<String> flags = this.flags;
+    if (sanitizer.isPresent()) {
+      flags = FluentIterable.from(flags)
+          .transform(sanitizer.get().sanitize(Optional.<Path>absent(), /* expandPaths */ false))
+          .toList();
+    }
+    builder.set("flags", flags);
 
     // Hash the layout of each potentially included C/C++ header file and it's contents.
     // We do this here, rather than returning them from `getInputsToCompareToOutput` so
@@ -112,7 +126,8 @@ public class CxxPreprocess extends AbstractBuildRule {
             getResolver().getPath(input),
             includeRoots,
             systemIncludeRoots,
-            replacementPaths));
+            replacementPaths,
+            sanitizer));
   }
 
   @Override

@@ -32,6 +32,7 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -46,6 +47,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CxxDescriptionEnhancer {
 
@@ -577,6 +580,37 @@ public class CxxDescriptionEnhancer {
         node,
         String.format("%s not in target graph", params.getBuildTarget()));
     return requireBuildRule(params, ruleResolver, node, flavors);
+  }
+
+  /**
+   * @return a {@link Function} object which transforms path names from the output of a compiler
+   *     or preprocessor using {@code pathProcessor}.
+   */
+  public static Function<String, String> createErrorMessagePathProcessor(
+      final Function<String, String> pathProcessor) {
+    return new Function<String, String>() {
+
+      private final ImmutableList<Pattern> patterns =
+          ImmutableList.of(
+              Pattern.compile(
+                  "(?<=^(?:In file included |\\s+)from )" +
+                  "(?<path>[^:]+)" +
+                  "(?=[:,](?:\\d+[:,](?:\\d+[:,])?)?$)"),
+              Pattern.compile(
+                  "^(?<path>[^:]+)(?=:(?:\\d+:(?:\\d+:)?)? )"));
+
+      @Override
+      public String apply(String line) {
+        for (Pattern pattern : patterns) {
+          Matcher m = pattern.matcher(line);
+          if (m.find()) {
+            return m.replaceAll(pathProcessor.apply(m.group("path")));
+          }
+        }
+        return line;
+      }
+
+    };
   }
 
 }

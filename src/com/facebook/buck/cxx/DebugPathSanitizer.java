@@ -23,9 +23,11 @@ import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
@@ -34,6 +36,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 /**
  * Encapsulates all the logic to sanitize debug paths in native code.  Currently, this just
@@ -48,6 +51,7 @@ public class DebugPathSanitizer {
   private final int pathSize;
   private final char separator;
   private final Path compilationDirectory;
+  private final ImmutableBiMap<Path, Path> other;
 
   /**
    * @param pathSize fix paths to this size for in-place replacements.
@@ -57,10 +61,12 @@ public class DebugPathSanitizer {
   public DebugPathSanitizer(
       int pathSize,
       char separator,
-      Path compilationDirectory) {
+      Path compilationDirectory,
+      ImmutableBiMap<Path, Path> other) {
     this.pathSize = pathSize;
     this.separator = separator;
     this.compilationDirectory = compilationDirectory;
+    this.other = other;
   }
 
   /**
@@ -70,17 +76,34 @@ public class DebugPathSanitizer {
   public DebugPathSanitizer(
       int pathSize,
       char separator,
-      String compilationDirectory) {
-    this(pathSize, separator, Paths.get(getReplacementString(compilationDirectory, pathSize)));
+      String compilationDirectory,
+      ImmutableBiMap<Path, String> other) {
+    this(
+        pathSize,
+        separator,
+        getExpandedName(compilationDirectory, pathSize),
+        getExpandedNames(other, pathSize));
+  }
+
+  private static ImmutableBiMap<Path, Path> getExpandedNames(
+      ImmutableBiMap<Path, String> paths,
+      int size) {
+    ImmutableBiMap.Builder<Path, Path> replacements = ImmutableBiMap.builder();
+    for (Map.Entry<Path, String> entry : paths.entrySet()) {
+      replacements.put(
+          entry.getKey(),
+          getExpandedName(entry.getValue(), size));
+    }
+    return replacements.build();
   }
 
   /**
    * @return a string formed by padding {@code name} on either side with 'X' characters to length
    *     {@code size}, suitable to replace paths embedded in the debug section of a binary.
    */
-  private static String getReplacementString(String name, int size) {
+  private static Path getExpandedName(String name, int size) {
     Preconditions.checkArgument(size >= name.length());
-    return Strings.padEnd(name, size, 'X');
+    return Paths.get(Strings.padEnd(name, size, 'X'));
   }
 
   /**
@@ -92,8 +115,56 @@ public class DebugPathSanitizer {
     return Strings.padEnd(path.toString(), pathSize, separator);
   }
 
+  private ImmutableBiMap<Path, Path> getAllPaths(Optional<Path> workingDir) {
+    ImmutableBiMap.Builder<Path, Path> builder = ImmutableBiMap.builder();
+    if (workingDir.isPresent()) {
+      builder.put(workingDir.get(), compilationDirectory);
+    }
+    builder.putAll(other);
+    return builder.build();
+  }
+
   public String getCompilationDirectory() {
     return getExpandedPath(compilationDirectory);
+  }
+
+  public Function<String, String> sanitize(
+      final Optional<Path> workingDir,
+      final boolean expandPaths) {
+    return new Function<String, String>() {
+      @Override
+      public String apply(String input) {
+        return DebugPathSanitizer.this.sanitize(workingDir, input, expandPaths);
+      }
+    };
+  }
+
+  public Function<String, String> sanitize(Optional<Path> workingDir) {
+    return sanitize(workingDir, /* expandPaths */ true);
+  }
+
+  /**
+   * @param workingDir the current working directory, if applicable.
+   * @param contents the string to sanitize.
+   * @param expandPaths whether to pad sanitized paths to {@code pathSize}.
+   * @return a string with all matching paths replaced with their sanitized versions.
+   */
+  public String sanitize(Optional<Path> workingDir, String contents, boolean expandPaths) {
+    for (Map.Entry<Path, Path> entry : getAllPaths(workingDir).entrySet()) {
+      contents = contents.replace(entry.getKey().toString(), getExpandedPath(entry.getValue()));
+    }
+    return contents;
+  }
+
+  public String sanitize(Optional<Path> workingDir, String contents) {
+    return sanitize(workingDir, contents, /* expandPaths */ true);
+  }
+
+  public String restore(Optional<Path> workingDir, String contents) {
+    for (Map.Entry<Path, Path> entry : getAllPaths(workingDir).entrySet()) {
+      contents = contents.replace(getExpandedPath(entry.getValue()), entry.getKey().toString());
+    }
+    return contents;
   }
 
   /**

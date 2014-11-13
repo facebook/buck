@@ -202,7 +202,7 @@ public class CxxCompilableEnhancer {
         args.build(),
         getCompileOutputPath(target, name),
         source.getPath(),
-        Optional.<DebugPathSanitizer>absent());
+        platform.getDebugPathSanitizer());
   }
 
   /**

@@ -18,15 +18,14 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -34,10 +33,6 @@ public class CxxCompileStepTest {
 
   @Test
   public void cxxLinkStepUsesCorrectCommand() {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
 
     // Setup some dummy values for inputs to the CxxCompileStep
     Path compiler = Paths.get("compiler");
@@ -62,8 +57,85 @@ public class CxxCompileStepTest {
         .add("-o", output.toString())
         .add(input.toString())
         .build();
-    ImmutableList<String> actual = cxxCompileStep.getShellCommand(context);
+    ImmutableList<String> actual = cxxCompileStep.getCommand();
     assertEquals(expected, actual);
+  }
+
+  @Test
+  public void errorProcessor() {
+
+    // Setup some dummy values for inputs to the CxxCompileStep
+    Path compiler = Paths.get("compiler");
+    ImmutableList<String> flags =
+        ImmutableList.of("-fsanitize=address");
+    Path output = Paths.get("test.o");
+    Path input = Paths.get("test.cpp");
+
+    String sanitized = "hello////////////world.h";
+    String unsanitized = "buck-out/foo#bar/world.h";
+
+    Path compilationDirectory = Paths.get("compDir");
+    Path sanitizedDir = Paths.get("hello");
+    Path unsanitizedDir = Paths.get("buck-out/foo#bar");
+    DebugPathSanitizer sanitizer = new DebugPathSanitizer(
+        unsanitizedDir.toString().length(),
+        File.separatorChar,
+        compilationDirectory,
+        ImmutableBiMap.of(unsanitizedDir, sanitizedDir));
+
+    // Create our CxxCompileStep to test.
+    CxxCompileStep cxxCompileStep = new CxxCompileStep(
+        compiler,
+        flags,
+        output,
+        input,
+        Optional.of(sanitizer));
+
+    Function<String, String> processor =
+        cxxCompileStep.createErrorLineProcessor(compilationDirectory);
+
+    // Fixup lines in included traces.
+    assertEquals(
+        String.format("In file included from %s:", unsanitized),
+        processor.apply(String.format("In file included from %s:", sanitized)));
+    assertEquals(
+        String.format("In file included from %s:3:2:", unsanitized),
+        processor.apply(String.format("In file included from %s:3:2:", sanitized)));
+    assertEquals(
+        String.format("In file included from %s,", unsanitized),
+        processor.apply(String.format("In file included from %s,", sanitized)));
+    assertEquals(
+        String.format("In file included from %s:7,", unsanitized),
+        processor.apply(String.format("In file included from %s:7,", sanitized)));
+    assertEquals(
+        String.format("   from %s:", unsanitized),
+        processor.apply(String.format("   from %s:", sanitized)));
+    assertEquals(
+        String.format("   from %s:3:2:", unsanitized),
+        processor.apply(String.format("   from %s:3:2:", sanitized)));
+    assertEquals(
+        String.format("   from %s,", unsanitized),
+        processor.apply(String.format("   from %s,", sanitized)));
+    assertEquals(
+        String.format("   from %s:7,", unsanitized),
+        processor.apply(String.format("   from %s:7,", sanitized)));
+
+    // Fixup lines in error messages.
+    assertEquals(
+        String.format("%s: something bad", unsanitized),
+        processor.apply(String.format("%s: something bad", sanitized)));
+    assertEquals(
+        String.format("%s:4: something bad", unsanitized),
+        processor.apply(String.format("%s:4: something bad", sanitized)));
+    assertEquals(
+        String.format("%s:4:2: something bad", unsanitized),
+        processor.apply(String.format("%s:4:2: something bad", sanitized)));
+
+    // test.h isn't in the replacement map, so shouldn't be replaced.
+    assertEquals("In file included from test.h:", processor.apply("In file included from test.h:"));
+
+    // Don't modify lines without headers.
+    assertEquals(" error message!", processor.apply(" error message!"));
   }
 
 }

@@ -303,7 +303,8 @@ public class CxxPreprocessables {
         source.getPath(),
         preprocessorInput.getIncludeRoots(),
         preprocessorInput.getSystemIncludeRoots(),
-        preprocessorInput.getIncludes());
+        preprocessorInput.getIncludes(),
+        cxxPlatform.getDebugPathSanitizer());
     resolver.addToIndex(cxxPreprocess);
 
     // Return the output name and source pair.

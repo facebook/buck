@@ -21,12 +21,15 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import org.junit.Test;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -57,7 +60,8 @@ public class CxxPreprocessStepTest {
         input,
         includes,
         systemIncludes,
-        replacementPaths);
+        replacementPaths,
+        Optional.<DebugPathSanitizer>absent());
 
     // Verify it uses the expected command.
     ImmutableList<String> expected = ImmutableList.<String>builder()
@@ -81,17 +85,27 @@ public class CxxPreprocessStepTest {
   @Test
   public void outputProcessor() {
     Path original = Paths.get("buck-out/foo#bar/world.h");
-    Path replacement = Paths.get("hello/world.h");
+    ImmutableMap<Path, Path> replacementPaths =
+        ImmutableMap.of(original, Paths.get("hello/////world.h"));
+    Path finalPath = Paths.get("SANITIZED/world.h");
 
+    DebugPathSanitizer sanitizer = new DebugPathSanitizer(
+        9,
+        File.separatorChar,
+        "PWD",
+        ImmutableBiMap.of(Paths.get("hello"), "SANITIZED"));
     Function<String, String> processor =
-        CxxPreprocessStep.createOutputLineProcessor(ImmutableMap.of(original, replacement));
+        CxxPreprocessStep.createOutputLineProcessor(
+            Paths.get("PWD"),
+            replacementPaths,
+            Optional.of(sanitizer));
 
     // Fixup line marker lines properly.
     assertEquals(
-        String.format("# 12 \"%s\"", replacement),
+        String.format("# 12 \"%s\"", finalPath),
         processor.apply(String.format("# 12 \"%s\"", original)));
     assertEquals(
-        String.format("# 12 \"%s\" 2 1", replacement),
+        String.format("# 12 \"%s\" 2 1", finalPath),
         processor.apply(String.format("# 12 \"%s\" 2 1", original)));
 
     // test.h isn't in the replacement map, so shouldn't be replaced.
@@ -106,8 +120,28 @@ public class CxxPreprocessStepTest {
     Path original = Paths.get("buck-out/foo#bar/world.h");
     Path replacement = Paths.get("hello/world.h");
 
-    Function<String, String> processor =
-        CxxPreprocessStep.createErrorLineProcessor(ImmutableMap.of(original, replacement));
+    // Setup some dummy values for inputs to the CxxPreprocessStep
+    Path compiler = Paths.get("compiler");
+    ImmutableList<String> flags =
+        ImmutableList.of("-Dtest=blah");
+    Path output = Paths.get("test.ii");
+    Path input = Paths.get("test.cpp");
+    ImmutableList<Path> includes = ImmutableList.of();
+    ImmutableList<Path> systemIncludes = ImmutableList.of();
+    ImmutableMap<Path, Path> replacementPaths = ImmutableMap.of(original, replacement);
+
+    // Create our CxxPreprocessStep to test.
+    CxxPreprocessStep cxxPreprocessStep = new CxxPreprocessStep(
+        compiler,
+        flags,
+        output,
+        input,
+        includes,
+        systemIncludes,
+        replacementPaths,
+        Optional.<DebugPathSanitizer>absent());
+
+    Function<String, String> processor = cxxPreprocessStep.createErrorLineProcessor();
 
     // Fixup lines in included traces.
     assertEquals(

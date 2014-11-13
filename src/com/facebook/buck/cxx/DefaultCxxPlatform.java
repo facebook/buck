@@ -25,8 +25,10 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -76,6 +78,14 @@ public class DefaultCxxPlatform implements CxxPlatform {
 
   private final Platform platform;
   private final BuckConfig delegate;
+
+  private final Optional<DebugPathSanitizer> debugPathSanitizer =
+      Optional.of(
+          new DebugPathSanitizer(
+              250,
+              File.separatorChar,
+              Paths.get("."),
+              ImmutableBiMap.<Path, Path>of()));
 
   public DefaultCxxPlatform(Platform platform, BuckConfig delegate) {
     this.platform = platform;
@@ -264,6 +274,11 @@ public class DefaultCxxPlatform implements CxxPlatform {
       default:
         return "so";
     }
+  }
+
+  @Override
+  public Optional<DebugPathSanitizer> getDebugPathSanitizer() {
+    return debugPathSanitizer;
   }
 
   @Override

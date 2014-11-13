@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DarwinLinker;
+import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.model.BuildTarget;
@@ -28,8 +29,10 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -66,6 +69,8 @@ public class AppleCxxPlatform implements CxxPlatform {
   private final ImmutableList<String> ldflags;
   private final SourcePath ar;
   private final ImmutableList<String> arflags;
+
+  private final Optional<DebugPathSanitizer> debugPathSanitizer;
 
   public AppleCxxPlatform(
       String name,
@@ -116,6 +121,14 @@ public class AppleCxxPlatform implements CxxPlatform {
 
     this.ar = getTool("ar", toolSearchPaths);
     this.arflags = ImmutableList.of(); // TODO
+
+    this.debugPathSanitizer =
+        Optional.of(
+            new DebugPathSanitizer(
+                250,
+                File.separatorChar,
+                Paths.get("."),
+                ImmutableBiMap.<Path, Path>of()));
   }
 
   private static SourcePath getTool(
@@ -254,6 +267,11 @@ public class AppleCxxPlatform implements CxxPlatform {
   @Override
   public String getSharedLibraryExtension() {
     return "dylib";
+  }
+
+  @Override
+  public Optional<DebugPathSanitizer> getDebugPathSanitizer() {
+    return debugPathSanitizer;
   }
 
   @Override

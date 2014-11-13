@@ -1,15 +1,22 @@
 PLATFORM_SRCS = [
+  'ByteBufferReplacer.java',
   'CxxPlatform.java',
-  'Linker.java',
+  'DebugPathSanitizer.java',
+  'DebugSection.java',
+  'DebugSectionFinder.java',
+  'DebugSectionProperty.java',
   'GnuLinker.java',
+  'Linker.java',
 ]
 java_library(
   name = 'platform',
   srcs = PLATFORM_SRCS,
   deps = [
+    '//src/com/facebook/buck/cxx/elf:elf',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:util',
     '//third-party/java/guava:guava',
   ],
   visibility = [

@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTarget;
@@ -25,11 +26,15 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Interprets an Android NDK as a {@link CxxPlatform}, enabling our Android support to use
@@ -64,6 +69,8 @@ public class NdkCxxPlatform implements CxxPlatform {
   private final ImmutableList<String> ldflags;
   private final SourcePath ar;
   private final ImmutableList<String> arflags;
+
+  private final Optional<DebugPathSanitizer> debugPathSanitizer;
 
   public NdkCxxPlatform(
       String name,
@@ -104,6 +111,14 @@ public class NdkCxxPlatform implements CxxPlatform {
 
     this.ar = getTool(ndkRoot, targetConfiguration, host, "ar");
     this.arflags = ImmutableList.of();
+
+    this.debugPathSanitizer =
+        Optional.of(
+            new DebugPathSanitizer(
+                250,
+                File.separatorChar,
+                Paths.get("."),
+                ImmutableBiMap.of(ndkRoot, Paths.get("./."))));
   }
 
   private static SourcePath getTool(
@@ -427,6 +442,11 @@ public class NdkCxxPlatform implements CxxPlatform {
   @Override
   public String getSharedLibraryExtension() {
     return "so";
+  }
+
+  @Override
+  public Optional<DebugPathSanitizer> getDebugPathSanitizer() {
+    return debugPathSanitizer;
   }
 
   @Override

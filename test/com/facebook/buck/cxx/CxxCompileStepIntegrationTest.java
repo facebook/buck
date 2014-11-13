@@ -30,6 +30,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
@@ -60,7 +61,8 @@ public class CxxCompileStepIntegrationTest {
     DebugPathSanitizer sanitizer = new DebugPathSanitizer(
         200,
         File.separatorChar,
-        compDir);
+        compDir,
+        ImmutableBiMap.<Path, Path>of());
 
     // Build an archive step.
     CxxCompileStep step = new CxxCompileStep(

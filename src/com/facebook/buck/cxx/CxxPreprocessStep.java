@@ -19,20 +19,19 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.LineProcessorThread;
+import com.facebook.buck.util.FunctionLineProcessorThread;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -54,6 +53,7 @@ public class CxxPreprocessStep implements Step {
   private final ImmutableList<Path> includes;
   private final ImmutableList<Path> systemIncludes;
   private final ImmutableMap<Path, Path> replacementPaths;
+  private final Optional<DebugPathSanitizer> sanitizer;
 
   public CxxPreprocessStep(
       Path preprocessor,
@@ -62,7 +62,8 @@ public class CxxPreprocessStep implements Step {
       Path input,
       ImmutableList<Path> includes,
       ImmutableList<Path> systemIncludes,
-      ImmutableMap<Path, Path> replacementPaths) {
+      ImmutableMap<Path, Path> replacementPaths,
+      Optional<DebugPathSanitizer> sanitizer) {
     this.preprocessor = preprocessor;
     this.flags = flags;
     this.output = output;
@@ -70,6 +71,7 @@ public class CxxPreprocessStep implements Step {
     this.includes = includes;
     this.systemIncludes = systemIncludes;
     this.replacementPaths = replacementPaths;
+    this.sanitizer = sanitizer;
   }
 
   @Override
@@ -97,7 +99,9 @@ public class CxxPreprocessStep implements Step {
 
   @VisibleForTesting
   protected static Function<String, String> createOutputLineProcessor(
-      final ImmutableMap<Path, Path> replacementPaths) {
+      final Path workingDir,
+      final ImmutableMap<Path, Path> replacementPaths,
+      final Optional<DebugPathSanitizer> sanitizer) {
 
     return new Function<String, String>() {
 
@@ -109,12 +113,22 @@ public class CxxPreprocessStep implements Step {
         if (line.startsWith("# ")) {
           Matcher m = lineMarkers.matcher(line);
           if (m.find()) {
-            Path path = Paths.get(m.group("path"));
-            Path replacement = replacementPaths.get(path);
-            if (replacement != null) {
+            String originalPath = m.group("path");
+            String replacementPath = originalPath;
+
+            replacementPath = Optional
+                .fromNullable(replacementPaths.get(Paths.get(replacementPath)))
+                .transform(Functions.toStringFunction())
+                .or(replacementPath);
+
+            if (sanitizer.isPresent()) {
+              replacementPath = sanitizer.get().sanitize(Optional.of(workingDir), replacementPath);
+            }
+
+            if (!originalPath.equals(replacementPath)) {
               String num = m.group("num");
               String rest = m.group("rest");
-              return "# " + num + " \"" + replacement + "\"" + rest;
+              return "# " + num + " \"" + replacementPath + "\"" + rest;
             }
           }
         }
@@ -124,38 +138,16 @@ public class CxxPreprocessStep implements Step {
     };
   }
 
-
   @VisibleForTesting
-  protected static Function<String, String> createErrorLineProcessor(
-      final ImmutableMap<Path, Path> replacementPaths) {
-
-    return new Function<String, String>() {
-
-      private final ImmutableList<Pattern> patterns =
-          ImmutableList.of(
-              Pattern.compile(
-                  "(?<=^(?:In file included |\\s+)from )" +
-                  "(?<path>[^:]+)" +
-                  "(?=[:,](?:\\d+[:,](?:\\d+[:,])?)?$)"),
-              Pattern.compile(
-                  "^(?<path>[^:]+)(?=:(?:\\d+:(?:\\d+:)?)? )"));
-
-      @Override
-      public String apply(String line) {
-        for (Pattern pattern : patterns) {
-          Matcher m = pattern.matcher(line);
-          if (m.find()) {
-            Path path = Paths.get(m.group("path"));
-            Path replacement = replacementPaths.get(path);
-            if (replacement != null) {
-              return m.replaceAll(replacement.toString());
-            }
+  protected Function<String, String> createErrorLineProcessor() {
+    return CxxDescriptionEnhancer.createErrorMessagePathProcessor(
+        new Function<String, String>() {
+          @Override
+          public String apply(String path) {
+            Path replacement = replacementPaths.get(Paths.get(path));
+            return replacement != null ? replacement.toString() : path;
           }
-        }
-        return line;
-      }
-
-    };
+        });
   }
 
   @Override
@@ -181,16 +173,19 @@ public class CxxPreprocessStep implements Step {
       // Open the temp file to write the intermediate output to and also fire up managed threads
       // to process the stdout and stderr lines from the preprocess command.
       try (OutputStream output = Files.newOutputStream(outputTempPath);
-           FunctionProcessor outputProcessor =
-               new FunctionProcessor(
+           FunctionLineProcessorThread outputProcessor =
+               new FunctionLineProcessorThread(
                    process.getInputStream(),
                    output,
-                   createOutputLineProcessor(replacementPaths));
-           FunctionProcessor errorProcessor =
-               new FunctionProcessor(
+                   createOutputLineProcessor(
+                       context.getProjectDirectoryRoot(),
+                       replacementPaths,
+                       sanitizer));
+           FunctionLineProcessorThread errorProcessor =
+               new FunctionLineProcessorThread(
                    process.getErrorStream(),
                    error,
-                   createErrorLineProcessor(replacementPaths))) {
+                   createErrorLineProcessor())) {
         outputProcessor.start();
         errorProcessor.start();
       }
@@ -229,25 +224,6 @@ public class CxxPreprocessStep implements Step {
     return Joiner.on(' ').join(
         FluentIterable.from(getCommand())
             .transform(Escaper.BASH_ESCAPER));
-  }
-
-  private static class FunctionProcessor extends LineProcessorThread {
-
-    private final Function<String, String> processor;
-
-    private FunctionProcessor(
-        InputStream inputStream,
-        OutputStream outputStream,
-        Function<String, String> processor) {
-      super(inputStream, outputStream);
-      this.processor = Preconditions.checkNotNull(processor);
-    }
-
-    @Override
-    public String process(String line) {
-      return processor.apply(line);
-    }
-
   }
 
 }

@@ -93,31 +93,37 @@ public class DebugSectionFinderTest {
     assertDebugSections(
         Optional.of(
             ImmutableMap.of(
+                ".debug_line", ImmutableSet.of(STRINGS),
                 ".debug_str", ImmutableSet.of(STRINGS))),
         workspace.resolve("elf-dwarf2.o"));
     assertDebugSections(
         Optional.of(
             ImmutableMap.of(
+                ".debug_line", ImmutableSet.of(STRINGS),
                 ".debug_str", ImmutableSet.of(STRINGS))),
         workspace.resolve("elf-dwarf3.o"));
     assertDebugSections(
         Optional.of(
             ImmutableMap.of(
+                ".debug_line", ImmutableSet.of(STRINGS),
                 ".debug_str", ImmutableSet.of(STRINGS))),
         workspace.resolve("elf-dwarf4.o"));
     assertDebugSections(
         Optional.of(
             ImmutableMap.of(
+                ".zdebug_line", ImmutableSet.of(STRINGS, COMPRESSED),
                 ".zdebug_str", ImmutableSet.of(STRINGS, COMPRESSED))),
         workspace.resolve("elf-dwarf2-compressed.o"));
     assertDebugSections(
         Optional.of(
             ImmutableMap.of(
+                ".zdebug_line", ImmutableSet.of(STRINGS, COMPRESSED),
                 ".zdebug_str", ImmutableSet.of(STRINGS, COMPRESSED))),
         workspace.resolve("elf-dwarf3-compressed.o"));
     assertDebugSections(
         Optional.of(
             ImmutableMap.of(
+                ".zdebug_line", ImmutableSet.of(STRINGS, COMPRESSED),
                 ".zdebug_str", ImmutableSet.of(STRINGS, COMPRESSED))),
         workspace.resolve("elf-dwarf4-compressed.o"));
 
