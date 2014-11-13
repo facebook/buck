@@ -89,7 +89,7 @@ public class CrossRepoTargetsIntegrationTest {
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         /* enableProfiling */ false)
-        .getActionGraph(eventBus);
+        .getActionGraph();
 
     BuildRule mainRule = graph.findBuildRuleByTarget(mainTarget);
     assertEquals(mainTarget, mainRule.getBuildTarget());

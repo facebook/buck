@@ -37,8 +37,6 @@ import com.facebook.buck.apple.XcodeProjectConfigBuilder;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TargetNode;
@@ -68,7 +66,6 @@ import java.nio.file.Paths;
 
 public class SeparatedProjectsGeneratorTest {
   private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-  private final BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
   private final ExecutionContext executionContext = TestExecutionContext.newInstance();
 
   @Rule
@@ -83,7 +80,6 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        buckEventBus,
         TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of(node)),
         executionContext,
         ImmutableSet.of(target),
@@ -99,7 +95,6 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        buckEventBus,
         TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of()),
         executionContext,
         ImmutableSet.of(target),
@@ -123,7 +118,6 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        buckEventBus,
         TargetGraphFactory.newInstance(ImmutableSet.of(libraryNode, configNode)),
         executionContext,
         ImmutableSet.of(configTarget),
@@ -167,7 +161,6 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        buckEventBus,
         TargetGraphFactory.newInstance(ImmutableSet.of(depNode, node, configNode)),
         executionContext,
         ImmutableSet.of(configTarget),
@@ -213,7 +206,6 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        buckEventBus,
         TargetGraphFactory.newInstance(
             ImmutableSet.of(depNode, dynamicLibraryNode, node, configNode)),
         executionContext,
@@ -254,7 +246,6 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        buckEventBus,
         TargetGraphFactory.newInstance(ImmutableSet.of(node, configNode)),
         executionContext,
         ImmutableSet.of(configTarget),
@@ -343,7 +334,6 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        buckEventBus,
         TargetGraphFactory.newInstance(ImmutableSet.of(node1, node2, configNode)),
         executionContext,
         ImmutableSet.of(configTarget),
@@ -415,7 +405,6 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        buckEventBus,
         TargetGraphFactory.newInstance(ImmutableSet.of(node, configNode)),
         executionContext,
         ImmutableSet.of(configTarget),
@@ -457,7 +446,6 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        buckEventBus,
         TargetGraphFactory.newInstance(
             ImmutableSet.of(libraryNode, binaryDepNode, binaryNode, nativeNode, configNode)),
         executionContext,
@@ -499,7 +487,6 @@ public class SeparatedProjectsGeneratorTest {
 
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
-        buckEventBus,
         TargetGraphFactory.newInstance(
             ImmutableSet.of(fooNode1, fooConfigNode, barNode2, barConfigNode)),
         executionContext,

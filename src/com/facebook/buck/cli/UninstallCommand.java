@@ -67,7 +67,7 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
           getBuckEventBus(),
           console,
           environment,
-          options.getEnableProfiling()).getActionGraph(getBuckEventBus());
+          options.getEnableProfiling()).getActionGraph();
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

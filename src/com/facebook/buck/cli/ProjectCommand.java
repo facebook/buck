@@ -153,7 +153,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ActionGraph actionGraph;
 
     try {
-      actionGraph = createTargetGraphs(options).getProjectGraph().getActionGraph(getBuckEventBus());
+      actionGraph = createTargetGraphs(options).getProjectGraph().getActionGraph();
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -288,7 +288,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     ExecutionContext executionContext = createExecutionContext(
         options,
-        targetGraphs.getProjectGraph().getActionGraph(getBuckEventBus()));
+        targetGraphs.getProjectGraph().getActionGraph());
 
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (options.getReadOnly()) {
@@ -320,7 +320,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       for (BuildTarget workspaceConfig : targets) {
         BuildRule workspaceRule =
             Preconditions.checkNotNull(
-                targetGraphs.getMainGraph().getActionGraph(getBuckEventBus()).findBuildRuleByTarget(
+                targetGraphs.getMainGraph().getActionGraph().findBuildRuleByTarget(
                     workspaceConfig));
         if (!(workspaceRule instanceof XcodeWorkspaceConfig)) {
           throw new HumanReadableException(
@@ -332,7 +332,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           testBuildRules = targetGraphs
               .getTestGraph()
               .get()
-              .getActionGraph(getBuckEventBus())
+              .getActionGraph()
               .getNodes();
         } else {
           testBuildRules = Collections.emptySet();
@@ -364,7 +364,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
       SeparatedProjectsGenerator projectGenerator = new SeparatedProjectsGenerator(
           getProjectFilesystem(),
-          getBuckEventBus(),
           targetGraphs.getProjectGraph(),
           executionContext,
           targets,
@@ -672,8 +671,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ImmutableSet.Builder<BuildTarget> rootsBuilder = ImmutableSet.builder();
     rootsBuilder.addAll(additionalRoots);
 
-    ActionGraph actionGraph = targetGraph.getActionGraph(getBuckEventBus());
-    ActionGraph candidateActionGraph = candidateGraph.getActionGraph(getBuckEventBus());
+    ActionGraph actionGraph = targetGraph.getActionGraph();
+    ActionGraph candidateActionGraph = candidateGraph.getActionGraph();
 
     for (BuildTarget buildTarget : candidateTargets) {
       BuildRule buildRule = candidateActionGraph.findBuildRuleByTarget(buildTarget);

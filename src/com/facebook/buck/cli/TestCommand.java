@@ -300,7 +300,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         environment,
         options.getEnableProfiling());
 
-    ActionGraph graph = targetGraph.getActionGraph(getBuckEventBus());
+    ActionGraph graph = targetGraph.getActionGraph();
 
     // Look up all of the test rules in the action graph.
     Iterable<TestRule> testRules = Iterables.filter(graph.getNodes(), TestRule.class);

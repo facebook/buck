@@ -207,7 +207,7 @@ public class ProjectGenerator {
     this.resolver = new SourcePathResolver(
         new BuildRuleResolver(
             ImmutableSet.copyOf(
-                targetGraph.getActionGraph(executionContext.getBuckEventBus()).getNodes())));
+                targetGraph.getActionGraph().getNodes())));
     this.targetGraph = targetGraph;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectFilesystem = projectFilesystem;

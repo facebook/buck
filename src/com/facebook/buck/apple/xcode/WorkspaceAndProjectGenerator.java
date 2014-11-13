@@ -113,8 +113,7 @@ public class WorkspaceAndProjectGenerator {
 
     ImmutableSet<BuildRule> orderedBuildRules;
     if (workspaceBuildable.getSrcTarget().isPresent()) {
-      final ActionGraph actionGraph = projectGraph.getActionGraph(
-          executionContext.getBuckEventBus());
+      final ActionGraph actionGraph = projectGraph.getActionGraph();
       orderedBuildRules = FluentIterable
           .from(AppleBuildRules.getSchemeBuildableTargetNodes(
                   projectGraph,
@@ -139,7 +138,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder = ImmutableSet.builder();
 
       getOrderedTestRules(
-          projectGraph.getActionGraph(executionContext.getBuckEventBus()),
+          projectGraph.getActionGraph(),
           sourceRuleToTestRules,
           orderedBuildRules,
           extraTestBundleRules,
@@ -160,7 +159,7 @@ public class WorkspaceAndProjectGenerator {
     if (combinedProject) {
       ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
       for (XcodeProjectConfig xcodeProjectConfig : Iterables.filter(
-          projectGraph.getActionGraph(executionContext.getBuckEventBus()).getNodes(),
+          projectGraph.getActionGraph().getNodes(),
           XcodeProjectConfig.class)) {
         if (Sets.intersection(rulesInRequiredProjects, xcodeProjectConfig.getRules()).isEmpty()) {
           continue;
@@ -191,7 +190,7 @@ public class WorkspaceAndProjectGenerator {
       }
     } else {
       for (XcodeProjectConfig xcodeProjectConfig : Iterables.filter(
-          projectGraph.getActionGraph(executionContext.getBuckEventBus()).getNodes(),
+          projectGraph.getActionGraph().getNodes(),
           XcodeProjectConfig.class)) {
         if (Sets.intersection(rulesInRequiredProjects, xcodeProjectConfig.getRules()).isEmpty()) {
           continue;
@@ -308,7 +307,7 @@ public class WorkspaceAndProjectGenerator {
       BuildRule testBundleRule,
       ImmutableSet.Builder<BuildRule> recursiveTestRulesBuilder,
       ImmutableSet.Builder<BuildRule> orderedTestBundleRulesBuilder) {
-    final ActionGraph actionGraph = projectGraph.getActionGraph(executionContext.getBuckEventBus());
+    final ActionGraph actionGraph = projectGraph.getActionGraph();
     Iterable<BuildRule> testBundleRuleDependencies = FluentIterable
         .from(AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 projectGraph,

@@ -275,8 +275,6 @@ public class TargetsCommandTest {
 
   @Test
   public void testGetMachingBuildTargets() throws CmdLineException, IOException {
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-
     BuildTarget prebuiltJarTarget = BuildTargetFactory.newInstance("//empty:empty");
     TargetNode<?> prebuiltJarNode = PrebuiltJarBuilder
         .createBuilder(prebuiltJarTarget)
@@ -303,7 +301,7 @@ public class TargetsCommandTest {
         javaTestNode);
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-    ActionGraph actionGraph = targetGraph.getActionGraph(eventBus);
+    ActionGraph actionGraph = targetGraph.getActionGraph();
     ImmutableSet<BuildRuleType> buildRuleTypes = ImmutableSet.of();
 
     ImmutableSet<Path> referencedFiles;
@@ -317,8 +315,7 @@ public class TargetsCommandTest {
                 targetGraph,
                 buildRuleTypes,
                 referencedFiles,
-                Optional.<ImmutableSet<BuildTarget>>absent(),
-                eventBus));
+                Optional.<ImmutableSet<BuildTarget>>absent()));
     assertTrue(matchingBuildRules.isEmpty());
 
     // Only test-android-library target depends on the referenced file.
@@ -330,8 +327,7 @@ public class TargetsCommandTest {
                 targetGraph,
                 buildRuleTypes,
                 referencedFiles,
-                Optional.<ImmutableSet<BuildTarget>>absent(),
-                eventBus));
+                Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library"),
         matchingBuildRules.keySet());
@@ -346,8 +342,7 @@ public class TargetsCommandTest {
                 targetGraph,
                 buildRuleTypes,
                 referencedFiles,
-                Optional.<ImmutableSet<BuildTarget>>absent(),
-                eventBus));
+                Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
         matchingBuildRules.keySet());
@@ -361,8 +356,7 @@ public class TargetsCommandTest {
                 targetGraph,
                 buildRuleTypes,
                 referencedFiles,
-                Optional.<ImmutableSet<BuildTarget>>absent(),
-                eventBus));
+                Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
         matchingBuildRules.keySet());
@@ -378,8 +372,7 @@ public class TargetsCommandTest {
                 targetGraph,
                 buildRuleTypes,
                 referencedFiles,
-                Optional.<ImmutableSet<BuildTarget>>absent(),
-                eventBus));
+                Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library"),
         matchingBuildRules.keySet());
@@ -392,8 +385,7 @@ public class TargetsCommandTest {
                 targetGraph,
                 buildRuleTypes,
                 ImmutableSet.<Path>of(),
-                Optional.<ImmutableSet<BuildTarget>>absent(),
-                eventBus));
+                Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
         ImmutableSet.of(
             "//javatest:test-java-library",
@@ -409,8 +401,7 @@ public class TargetsCommandTest {
                 targetGraph,
                 ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE),
                 ImmutableSet.<Path>of(),
-                Optional.<ImmutableSet<BuildTarget>>absent(),
-                eventBus));
+                Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
         ImmutableSet.of(
             "//javatest:test-java-library",
@@ -427,8 +418,7 @@ public class TargetsCommandTest {
                 ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE),
                 ImmutableSet.<Path>of(),
                 Optional.of(
-                    ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
-                eventBus));
+                    ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library")))));
     assertEquals(
         ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
 
@@ -441,8 +431,7 @@ public class TargetsCommandTest {
                 ImmutableSet.<BuildRuleType>of(),
                 ImmutableSet.<Path>of(),
                 Optional.of(
-                    ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
-                eventBus));
+                    ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library")))));
     assertEquals(
         ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
 
@@ -456,8 +445,7 @@ public class TargetsCommandTest {
                 ImmutableSet.<BuildRuleType>of(),
                 ImmutableSet.of(Paths.get("javatest/TestJavaLibrary.java")),
                 Optional.of(
-                    ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
-                eventBus));
+                    ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library")))));
     assertEquals(
         ImmutableSet.<String>of(), matchingBuildRules.keySet());
 

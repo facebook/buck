@@ -237,7 +237,7 @@ public class ParserTest extends EasyMockSupport {
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         /* enableProfiling */ false);
-    ActionGraph actionGraph = targetGraph.getActionGraph(eventBus);
+    ActionGraph actionGraph = targetGraph.getActionGraph();
     BuildRule fooRule = actionGraph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
     BuildRule barRule = actionGraph.findBuildRuleByTarget(barTarget);
@@ -989,7 +989,7 @@ public class ParserTest extends EasyMockSupport {
         eventBus,
         new TestConsole(),
         ImmutableMap.<String, String>of(),
-        /* enableProfiling */ false).getActionGraph(eventBus);
+        /* enableProfiling */ false).getActionGraph();
 
     BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
@@ -1244,7 +1244,7 @@ public class ParserTest extends EasyMockSupport {
           new TestConsole(),
           ImmutableMap.<String, String>of(),
           /* enableProfiling */ false)
-          .getActionGraph(eventBus);
+          .getActionGraph();
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(ImmutableList.of(Paths.get("foo/Bar.java")), libRule.getInputs());
@@ -1267,7 +1267,7 @@ public class ParserTest extends EasyMockSupport {
           new TestConsole(),
           ImmutableMap.<String, String>of(),
           /* enableProfiling */ false)
-             .getActionGraph(eventBus);
+             .getActionGraph();
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(ImmutableList.of(Paths.get("foo/Bar.java")), libRule.getInputs());
     }
@@ -1283,7 +1283,7 @@ public class ParserTest extends EasyMockSupport {
           new TestConsole(),
           ImmutableMap.<String, String>of(),
           /* enableProfiling */ false)
-            .getActionGraph(eventBus);
+            .getActionGraph();
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
           ImmutableList.of(Paths.get("foo/Bar.java"), Paths.get("foo/Baz.java")),
@@ -1322,7 +1322,7 @@ public class ParserTest extends EasyMockSupport {
           eventBus,
           new TestConsole(),
           ImmutableMap.<String, String>of(),
-          /* enableProfiling */ false).getActionGraph(eventBus);
+          /* enableProfiling */ false).getActionGraph();
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
@@ -1347,7 +1347,7 @@ public class ParserTest extends EasyMockSupport {
           new TestConsole(),
           ImmutableMap.<String, String>of(),
           /* enableProfiling */ false)
-              .getActionGraph(eventBus);
+              .getActionGraph();
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
           ImmutableList.of(Paths.get("foo/Bar.java"), Paths.get("foo/Baz.java")),
@@ -1365,7 +1365,7 @@ public class ParserTest extends EasyMockSupport {
           new TestConsole(),
           ImmutableMap.<String, String>of(),
           /* enableProfiling */ false)
-              .getActionGraph(eventBus);
+              .getActionGraph();
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
           ImmutableList.of(Paths.get("foo/Bar.java")),

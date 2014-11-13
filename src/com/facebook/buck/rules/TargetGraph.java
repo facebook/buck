@@ -26,6 +26,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -43,17 +44,21 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
 
   public static final TargetGraph EMPTY = new TargetGraph(
       new MutableDirectedGraph<TargetNode<?>>(),
-      ImmutableMap.<BuildTarget, TargetNode<?>>of());
+      ImmutableMap.<BuildTarget, TargetNode<?>>of(),
+      Optional.<BuckEventBus>absent());
 
   private final ImmutableMap<BuildTarget, TargetNode<?>> unflavoredNodes;
   private final Supplier<ActionGraph> actionGraphSupplier;
+  private final Optional<BuckEventBus> buckEventBus;
 
   public TargetGraph(
       MutableDirectedGraph<TargetNode<?>> graph,
-      ImmutableMap<BuildTarget, TargetNode<?>> unflavoredNodes) {
+      ImmutableMap<BuildTarget, TargetNode<?>> unflavoredNodes,
+      Optional<BuckEventBus> buckEventBus) {
     super(graph);
     this.unflavoredNodes = unflavoredNodes;
     actionGraphSupplier = createActionGraphSupplier();
+    this.buckEventBus = buckEventBus;
   }
 
   @Nullable
@@ -149,13 +154,17 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
         });
   }
 
-  public ActionGraph getActionGraph(BuckEventBus eventBus) {
+  public ActionGraph getActionGraph() {
     Iterable<BuildTarget> buildTargets = FluentIterable.from(getNodesWithNoIncomingEdges())
         .transform(HasBuildTarget.TO_TARGET);
 
-    eventBus.post(ActionGraphEvent.started(buildTargets));
+    if (buckEventBus.isPresent()) {
+      buckEventBus.get().post(ActionGraphEvent.started(buildTargets));
+    }
     ActionGraph actionGraph = actionGraphSupplier.get();
-    eventBus.post(ActionGraphEvent.finished(buildTargets));
+    if (buckEventBus.isPresent()) {
+      buckEventBus.get().post(ActionGraphEvent.finished(buildTargets));
+    }
 
     return actionGraph;
   }

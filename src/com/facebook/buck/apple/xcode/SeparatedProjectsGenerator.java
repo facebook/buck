@@ -18,7 +18,6 @@ package com.facebook.buck.apple.xcode;
 
 import com.facebook.buck.apple.XcodeProjectConfig;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.TargetGraph;
@@ -40,7 +39,6 @@ import javax.annotation.Nullable;
  */
 public class SeparatedProjectsGenerator {
   private final ProjectFilesystem projectFilesystem;
-  private final BuckEventBus buckEventBus;
   private final TargetGraph targetGraph;
   private final ExecutionContext executionContext;
   private final ImmutableSet<BuildTarget> projectConfigTargets;
@@ -55,13 +53,11 @@ public class SeparatedProjectsGenerator {
 
   public SeparatedProjectsGenerator(
       ProjectFilesystem projectFilesystem,
-      BuckEventBus buckEventBus,
       TargetGraph targetGraph,
       ExecutionContext executionContext,
       ImmutableSet<BuildTarget> projectConfigTargets,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
     this.projectFilesystem = projectFilesystem;
-    this.buckEventBus = buckEventBus;
     this.targetGraph = targetGraph;
     this.executionContext = executionContext;
     this.projectConfigTargets = projectConfigTargets;
@@ -72,7 +68,7 @@ public class SeparatedProjectsGenerator {
       .build();
 
     for (BuildTarget target : projectConfigTargets) {
-      BuildRule rule = this.targetGraph.getActionGraph(buckEventBus).findBuildRuleByTarget(target);
+      BuildRule rule = this.targetGraph.getActionGraph().findBuildRuleByTarget(target);
       if (rule == null) {
         throw new HumanReadableException(
             "target not found: " + target.toString());
@@ -92,7 +88,7 @@ public class SeparatedProjectsGenerator {
     ImmutableMap.Builder<BuildTarget, ProjectGenerator> projectGeneratorsBuilder =
         ImmutableMap.builder();
     for (BuildTarget target : projectConfigTargets) {
-      BuildRule rule = targetGraph.getActionGraph(buckEventBus).findBuildRuleByTarget(target);
+      BuildRule rule = targetGraph.getActionGraph().findBuildRuleByTarget(target);
       XcodeProjectConfig buildable =
           (XcodeProjectConfig) Preconditions.checkNotNull(rule);
 

@@ -95,7 +95,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
   int printJsonInputs(TargetGraph graph) throws IOException {
     final Multimap<String, String> targetInputs = TreeMultimap.create();
 
-    new AbstractBottomUpTraversal<BuildRule, Void>(graph.getActionGraph(getBuckEventBus())) {
+    new AbstractBottomUpTraversal<BuildRule, Void>(graph.getActionGraph()) {
 
       @Override
       public void visit(BuildRule rule) {
@@ -124,7 +124,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
     // Traverse the TargetGraph and print out all of the inputs used to produce each TargetNode.
     // Keep track of the inputs that have been displayed to ensure that they are not displayed more
     // than once.
-    new AbstractBottomUpTraversal<BuildRule, Void>(graph.getActionGraph(getBuckEventBus())) {
+    new AbstractBottomUpTraversal<BuildRule, Void>(graph.getActionGraph()) {
 
       final Set<Path> inputs = Sets.newHashSet();
 

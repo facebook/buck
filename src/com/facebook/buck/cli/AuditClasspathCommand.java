@@ -122,7 +122,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
 
   @VisibleForTesting
   int printClasspath(TargetGraph targetGraph, ImmutableSet<BuildTarget> targets) {
-    ActionGraph graph = targetGraph.getActionGraph(getBuckEventBus());
+    ActionGraph graph = targetGraph.getActionGraph();
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
     for (BuildTarget target : targets) {
@@ -146,7 +146,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   @VisibleForTesting
   int printJsonClasspath(TargetGraph targetGraph, ImmutableSet<BuildTarget> targets)
       throws IOException {
-    ActionGraph graph = targetGraph.getActionGraph(getBuckEventBus());
+    ActionGraph graph = targetGraph.getActionGraph();
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {

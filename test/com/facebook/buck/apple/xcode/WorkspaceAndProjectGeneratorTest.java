@@ -274,7 +274,7 @@ public class WorkspaceAndProjectGeneratorTest {
         quxProjectNode,
         workspaceNode);
 
-    actionGraph = targetGraph.getActionGraph(executionContext.getBuckEventBus());
+    actionGraph = targetGraph.getActionGraph();
     workspaceConfig = (XcodeWorkspaceConfig) actionGraph.findBuildRuleByTarget(workspaceTarget);
   }
 

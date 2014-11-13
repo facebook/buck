@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
@@ -138,15 +137,14 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       matchingBuildRules = ImmutableSortedMap.of();
     } else {
       matchingBuildRules = getMatchingBuildRules(
-          graph.getActionGraph(getBuckEventBus()),
+          graph.getActionGraph(),
           new TargetsCommandPredicate(
               graph,
               buildRuleTypesBuilder.build(),
               referencedFiles.relativePathsUnderProjectRoot,
               matchingBuildTargets.isEmpty() ?
                   Optional.<ImmutableSet<BuildTarget>>absent() :
-                  Optional.of(matchingBuildTargets),
-              getBuckEventBus()));
+                  Optional.of(matchingBuildTargets)));
     }
 
     // Print out matching targets in alphabetical order.
@@ -392,9 +390,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         TargetGraph targetGraph,
         ImmutableSet<BuildRuleType> buildRuleTypes,
         ImmutableSet<Path> referencedInputs,
-        Optional<ImmutableSet<BuildTarget>> matchingTargets,
-        BuckEventBus eventBus) {
-      this.graph = targetGraph.getActionGraph(eventBus);
+        Optional<ImmutableSet<BuildTarget>> matchingTargets) {
+      this.graph = targetGraph.getActionGraph();
       this.buildRuleTypes = buildRuleTypes;
       this.matchingTargets = matchingTargets;
 
