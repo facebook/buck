@@ -14,23 +14,27 @@
  * under the License.
  */
 
-package com.facebook.buck.java.abi2;
+package com.facebook.buck.java.abi;
 
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.FieldNode;
+import com.google.common.base.Preconditions;
 
-/**
- * Represents a field within a class being stubbed. This is essentially a {@link FieldNode} with the
- * difference being that it implements {@link java.lang.Comparable}.
- */
-class FieldMirror extends FieldNode implements Comparable<FieldMirror> {
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-  public FieldMirror(int access, String name, String desc, String signature, Object value) {
-    super(Opcodes.ASM5, access, name, desc, signature, value);
+class Walkers {
+
+  private Walkers() {
+    // Helper class
   }
 
-  @Override
-  public int compareTo(FieldMirror o) {
-    return desc.compareTo(o.desc);
+  public static Walker getWalkerFor(Path path) {
+    Preconditions.checkNotNull(path);
+
+    if (Files.isDirectory(path)) {
+      return new DirectoryWalker(path);
+    } else {
+      return new ZipWalker(path);
+    }
   }
 }
+

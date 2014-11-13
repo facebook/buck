@@ -14,7 +14,6 @@ python_library(
     'log4j_config_file': '//config:log4j.properties',
 
     'testrunner_classes': '//src/com/facebook/buck/junit:junit-bin-fixed',
-    'abi_processor_classes': '//src/com/facebook/buck/java/abi:abi-bin',
     'bootstrapper_classes': '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
     'path_to_asm_jar': '//third-party/java/asm:asm',
     'logging_config_file': '//config:logging.properties',

@@ -14,11 +14,25 @@
  * under the License.
  */
 
-package com.facebook.buck.java.abi2;
+package com.facebook.buck.java.abi;
+
+
+import com.facebook.buck.util.ProjectFilesystem;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-interface Walker {
+public class ApiStubber {
 
-  public void walk(FileAction onFile) throws IOException;
+  private ApiStubber() {
+    // Command line utility.
+  }
+
+  public static void main(String[] args) throws IOException {
+    Path source = Paths.get(args[0]);
+    Path destination = Paths.get(args[1]);
+
+    new StubJar(source).writeTo(new ProjectFilesystem(Paths.get("")), destination);
+  }
 }

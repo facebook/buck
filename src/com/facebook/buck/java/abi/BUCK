@@ -6,20 +6,13 @@ java_library(
   name = 'abi',
   srcs = glob(['*.java'], excludes = PROTOCOL_SRCS),
   deps = [
-    #  **************************************************************************************
-    #  *                                                                                    *
-    #  * A baleful and most grievous warning to the foolish mortal who chooses to mess with *
-    #  * these deps. If the blink tag worked, we'd use it here.                             *
-    #  *                                                                                    *
-    #  **************************************************************************************
-    #
-    # Note, we deliberately keep the list of dependencies empty in order to keep the code in
-    # the JavacInMemoryStep from becoming prone to classpath collisions. Please don't amend them.
-    ':protocol',
+    '//src/com/facebook/buck/util:io',
+    '//third-party/java/asm:asm',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
   visibility = [
-    # This build target is run is a standalone annotation processor, so it should be visible only to
-    # its tests.
+    '//src/com/facebook/buck/java:steps',
     '//test/com/facebook/buck/java/abi:abi'
   ],
 )
@@ -27,16 +20,6 @@ java_library(
 java_library(
   name = 'protocol',
   srcs = PROTOCOL_SRCS,
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
-java_binary(
-  name = 'abi-bin',
-  deps = [
-    ':abi',
-  ],
   visibility = [
     'PUBLIC',
   ],

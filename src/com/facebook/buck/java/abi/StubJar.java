@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.java.abi2;
+package com.facebook.buck.java.abi;
 
 import static org.objectweb.asm.ClassReader.SKIP_CODE;
 import static org.objectweb.asm.ClassReader.SKIP_DEBUG;

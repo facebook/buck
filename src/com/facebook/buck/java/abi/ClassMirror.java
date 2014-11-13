@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.java.abi2;
+package com.facebook.buck.java.abi;
 
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;

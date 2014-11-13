@@ -7,8 +7,6 @@
   <property name="third-party.dir" value="${basedir}/third-party" />
   <property name="build.dir" value="${basedir}/build" />
   <property name="testrunner.classes.dir" value="${build.dir}/testrunner/classes" />
-  <property name="abi_processor.src.dir" value="${src.dir}/com/facebook/buck/java/abi/" />
-  <property name="abi_processor.classes.dir" value="${build.dir}/abi_processor/classes" />
   <property name="bootstrapper.src.dir" value="${src.dir}/com/facebook/buck/cli/bootstrapper/" />
   <property name="bootstrapper.classes.dir" value="${build.dir}/bootstrapper/classes" />
   <property name="buck.path_to_buck_py" value="${basedir}/src/com/facebook/buck/parser/buck.py" />
@@ -154,19 +152,6 @@
     </javac>
   </target>
 
-  <target name="compile-abi-processor" depends="checkversion">
-    <mkdir dir="${abi_processor.classes.dir}" />
-    <javac srcdir="${abi_processor.src.dir}"
-           destdir="${abi_processor.classes.dir}"
-           debug="on"
-           includeAntRuntime="no"
-           >
-      <compilerarg value="-Xlint:rawtypes" />
-      <compilerarg value="-Xlint:unchecked" />
-      <compilerarg value="-Xlint:serial" />
-    </javac>
-  </target>
-
   <target name="compile-bootstrapper" depends="checkversion">
     <mkdir dir="${bootstrapper.classes.dir}" />
     <ecj srcdir="${bootstrapper.src.dir}"
@@ -211,19 +196,6 @@
       <exclude name="com/facebook/buck/android/support/**" />
       <exclude name="com/facebook/buck/apple/xcode/xcconfig/**" />
       <exclude name="com/facebook/buck/cli/quickstart/**" />
-      <exclude name="com/facebook/buck/java/abi/AbiWriter.java" />
-      <exclude name="com/facebook/buck/java/abi/Annotations.java" />
-      <exclude name="com/facebook/buck/java/abi/ConstructorSummary.java" />
-      <exclude name="com/facebook/buck/java/abi/EmptySummary.java" />
-      <exclude name="com/facebook/buck/java/abi/EnumConstantSummary.java" />
-      <exclude name="com/facebook/buck/java/abi/FieldSummary.java" />
-      <exclude name="com/facebook/buck/java/abi/Joiner.java" />
-      <exclude name="com/facebook/buck/java/abi/MethodSummary.java" />
-      <exclude name="com/facebook/buck/java/abi/Modifiers.java" />
-      <exclude name="com/facebook/buck/java/abi/Parameters.java" />
-      <exclude name="com/facebook/buck/java/abi/Renderable.java" />
-      <exclude name="com/facebook/buck/java/abi/RenderableTypes.java" />
-      <exclude name="com/facebook/buck/java/abi/TypeSummary.java" />
       <exclude name="com/facebook/buck/junit/**" />
       <compilerarg value="-processorpath" />
       <compilerarg value="${immutables-value-standalone.jar}" />
@@ -284,7 +256,7 @@
   </macrodef>
 
   <target name="compile"
-          depends="compile-testrunner, compile-abi-processor, compile-bootstrapper, javacc, dx, generate-immutables"
+          depends="compile-testrunner, compile-bootstrapper, javacc, dx, generate-immutables"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
@@ -400,19 +372,6 @@
         <exclude name="com/facebook/buck/apple/xcode/xcconfig/**" />
         <exclude name="com/facebook/buck/cli/bootstrapper/**" />
         <exclude name="com/facebook/buck/cli/quickstart/**" />
-        <exclude name="com/facebook/buck/java/abi/AbiWriter.java" />
-        <exclude name="com/facebook/buck/java/abi/Annotations.java" />
-        <exclude name="com/facebook/buck/java/abi/ConstructorSummary.java" />
-        <exclude name="com/facebook/buck/java/abi/EmptySummary.java" />
-        <exclude name="com/facebook/buck/java/abi/EnumConstantSummary.java" />
-        <exclude name="com/facebook/buck/java/abi/FieldSummary.java" />
-        <exclude name="com/facebook/buck/java/abi/Joiner.java" />
-        <exclude name="com/facebook/buck/java/abi/MethodSummary.java" />
-        <exclude name="com/facebook/buck/java/abi/Modifiers.java" />
-        <exclude name="com/facebook/buck/java/abi/Parameters.java" />
-        <exclude name="com/facebook/buck/java/abi/Renderable.java" />
-        <exclude name="com/facebook/buck/java/abi/RenderableTypes.java" />
-        <exclude name="com/facebook/buck/java/abi/TypeSummary.java" />
         <exclude name="com/facebook/buck/junit/**" />
         <src path="${immutables.gensrc.dir}" />
       </javac-params>
@@ -521,7 +480,6 @@
 
     <pathelement location="${testclasses.dir}" />
     <pathelement location="${test.dir}" />
-    <pathelement location="${abi_processor.classes.dir}" />
     <pathelement location="${testrunner.classes.dir}" />
     <pathelement location="${immutables.gensrc.dir}" />
     <pathelement location="${immutables.gensrc.test.dir}" />

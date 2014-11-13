@@ -14,27 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.java.abi2;
+package com.facebook.buck.java.abi;
 
-import com.google.common.base.Preconditions;
+import java.io.IOException;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+interface Walker {
 
-class Walkers {
-
-  private Walkers() {
-    // Helper class
-  }
-
-  public static Walker getWalkerFor(Path path) {
-    Preconditions.checkNotNull(path);
-
-    if (Files.isDirectory(path)) {
-      return new DirectoryWalker(path);
-    } else {
-      return new ZipWalker(path);
-    }
-  }
+  public void walk(FileAction onFile) throws IOException;
 }
-

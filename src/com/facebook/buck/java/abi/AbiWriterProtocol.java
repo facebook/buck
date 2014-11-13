@@ -17,7 +17,7 @@
 package com.facebook.buck.java.abi;
 
 /**
- * Shared information between {@link com.facebook.buck.java.abi2.StubJar} and its callers.
+ * Shared information between {@link StubJar} and its callers.
  */
 public class AbiWriterProtocol {
 

@@ -14,25 +14,23 @@
  * under the License.
  */
 
-package com.facebook.buck.java.abi2;
+package com.facebook.buck.java.abi;
 
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.FieldNode;
 
-import com.facebook.buck.util.ProjectFilesystem;
+/**
+ * Represents a field within a class being stubbed. This is essentially a {@link FieldNode} with the
+ * difference being that it implements {@link java.lang.Comparable}.
+ */
+class FieldMirror extends FieldNode implements Comparable<FieldMirror> {
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-public class ApiStubber {
-
-  private ApiStubber() {
-    // Command line utility.
+  public FieldMirror(int access, String name, String desc, String signature, Object value) {
+    super(Opcodes.ASM5, access, name, desc, signature, value);
   }
 
-  public static void main(String[] args) throws IOException {
-    Path source = Paths.get(args[0]);
-    Path destination = Paths.get(args[1]);
-
-    new StubJar(source).writeTo(new ProjectFilesystem(Paths.get("")), destination);
+  @Override
+  public int compareTo(FieldMirror o) {
+    return desc.compareTo(o.desc);
   }
 }

@@ -17,7 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.java.abi2.StubJar;
+import com.facebook.buck.java.abi.StubJar;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Sha1HashCode;
