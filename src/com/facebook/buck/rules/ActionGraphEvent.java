@@ -19,9 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
-import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 
 
 /**
@@ -30,15 +27,9 @@ import com.google.common.base.Objects;
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class ActionGraphEvent extends AbstractBuckEvent implements LeafEvent {
 
-  private final Iterable<BuildTarget> buildTargets;
-
-  protected ActionGraphEvent(Iterable<BuildTarget> buildTargets) {
-    this.buildTargets = buildTargets;
-  }
-
   @Override
   protected String getValueString() {
-    return Joiner.on(", ").join(buildTargets);
+    return "";
   }
 
   @Override
@@ -46,32 +37,19 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent implements Leaf
     return "build_action_graph";
   }
 
-  @Override
-  public int hashCode() {
-    return buildTargets.hashCode();
+  public static Started started() {
+    return new Started();
   }
 
-  protected boolean isSimilar(ActionGraphEvent other) {
-    return Objects.equal(buildTargets, other.buildTargets);
-  }
-
-  public static Started started(Iterable<BuildTarget> buildTargets) {
-    return new Started(buildTargets);
-  }
-
-  public static Finished finished(Iterable<BuildTarget> buildTargets) {
-    return new Finished(buildTargets);
+  public static Finished finished() {
+    return new Finished();
   }
 
   public static class Started extends ActionGraphEvent {
 
-    protected Started(Iterable<BuildTarget> buildTargets) {
-      super(buildTargets);
-    }
-
     @Override
     public boolean isRelatedTo(BuckEvent event) {
-      return event instanceof ActionGraphEvent.Finished && isSimilar((ActionGraphEvent) event);
+      return event instanceof ActionGraphEvent.Finished;
     }
 
     @Override
@@ -82,13 +60,9 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent implements Leaf
 
   public static class Finished extends ActionGraphEvent {
 
-    protected Finished(Iterable<BuildTarget> buildTargets) {
-      super(buildTargets);
-    }
-
     @Override
     public boolean isRelatedTo(BuckEvent event) {
-      return event instanceof ActionGraphEvent.Started && isSimilar((ActionGraphEvent) event);
+      return event instanceof ActionGraphEvent.Started;
     }
 
     @Override

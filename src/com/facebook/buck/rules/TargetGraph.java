@@ -21,7 +21,6 @@ import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
@@ -29,7 +28,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -83,6 +81,10 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
         new Supplier<ActionGraph>() {
           @Override
           public ActionGraph get() {
+            if (buckEventBus.isPresent()) {
+              buckEventBus.get().post(ActionGraphEvent.started());
+            }
+
             final BuildRuleResolver ruleResolver = new BuildRuleResolver();
             final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
 
@@ -149,24 +151,16 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
                   }
                 };
             bottomUpTraversal.traverse();
-            return bottomUpTraversal.getResult();
+            ActionGraph result = bottomUpTraversal.getResult();
+            if (buckEventBus.isPresent()) {
+              buckEventBus.get().post(ActionGraphEvent.finished());
+            }
+            return result;
           }
         });
   }
 
   public ActionGraph getActionGraph() {
-    Iterable<BuildTarget> buildTargets = FluentIterable.from(getNodesWithNoIncomingEdges())
-        .transform(HasBuildTarget.TO_TARGET);
-
-    if (buckEventBus.isPresent()) {
-      buckEventBus.get().post(ActionGraphEvent.started(buildTargets));
-    }
-    ActionGraph actionGraph = actionGraphSupplier.get();
-    if (buckEventBus.isPresent()) {
-      buckEventBus.get().post(ActionGraphEvent.finished(buildTargets));
-    }
-
-    return actionGraph;
+    return actionGraphSupplier.get();
   }
-
 }

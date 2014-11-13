@@ -144,7 +144,7 @@ public class SuperConsoleEventBusListenerTest {
         300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     rawEventBus.post(
         configureTestEventAtTime(
-            ActionGraphEvent.finished(buildTargets),
+            ActionGraphEvent.finished(),
             400L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
