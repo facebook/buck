@@ -19,22 +19,18 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.Unzip;
-import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -52,7 +48,6 @@ public class ExternalJavacStep extends JavacStep {
       Set<Path> transitiveClasspathEntries,
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
-      Optional<Path> pathToOutputAbiFile,
       Optional<BuildTarget> invokingRule,
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules,
@@ -64,7 +59,6 @@ public class ExternalJavacStep extends JavacStep {
         transitiveClasspathEntries,
         declaredClasspathEntries,
         javacOptions,
-        pathToOutputAbiFile,
         invokingRule,
         buildDependencies,
         suggestBuildRules,
@@ -140,7 +134,6 @@ public class ExternalJavacStep extends JavacStep {
     env.put("BUCK_INVOKING_RULE", (invokingRule.isPresent() ? invokingRule.get().toString() : ""));
     env.put("BUCK_TARGET", target.toString());
     env.put("BUCK_DIRECTORY_ROOT", context.getProjectDirectoryRoot().toString());
-    env.put("BUCK_OUTPUT_ABI_FILE", pathToOutputAbiFile.or(new File("").toPath()).toString());
 
     processBuilder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
     // Run the command
@@ -153,24 +146,7 @@ public class ExternalJavacStep extends JavacStep {
       return exitCode;
     }
 
-    if (exitCode != 0) {
-      return exitCode;
-    }
-
-    // Read ABI key
-    if (abiKeyFile != null) {
-      try {
-        String firstLine = Files.readFirstLine(abiKeyFile, Charsets.UTF_8);
-        if (firstLine != null) {
-          // TODO(user) make sure command is considered in hash
-          abiKey = new Sha1HashCode(firstLine);
-        }
-      } catch (IOException e) {
-        e.printStackTrace(context.getStdErr());
-        return 1;
-      }
-    }
-    return 0;
+    return exitCode;
   }
 
   private ImmutableList<Path> getExpandedSourcePaths(ExecutionContext context)

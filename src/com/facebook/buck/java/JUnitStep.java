@@ -60,7 +60,6 @@ public class JUnitStep extends ShellStep {
   private final Path directoryForTestResults;
   private final Path tmpDirectory;
   private final Path testRunnerClasspath;
-  private final Path abiProcessorClasspath;
   private final boolean isCodeCoverageEnabled;
   private final boolean isDebugEnabled;
   private final BuildId buildId;
@@ -112,8 +111,7 @@ public class JUnitStep extends ShellStep {
         testSelectorList,
         isDryRun,
         type,
-        TESTRUNNER_CLASSES,
-        AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH);
+        TESTRUNNER_CLASSES);
   }
 
   @VisibleForTesting
@@ -129,8 +127,7 @@ public class JUnitStep extends ShellStep {
       TestSelectorList testSelectorList,
       boolean isDryRun,
       TestType type,
-      Path testRunnerClasspath,
-      Path abiProcessorClasspath) {
+      Path testRunnerClasspath) {
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
     this.testClassNames = Iterables.unmodifiableIterable(testClassNames);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
@@ -143,7 +140,6 @@ public class JUnitStep extends ShellStep {
     this.isDryRun = isDryRun;
     this.type = type;
     this.testRunnerClasspath = testRunnerClasspath;
-    this.abiProcessorClasspath = abiProcessorClasspath;
   }
 
   @Override
@@ -158,12 +154,7 @@ public class JUnitStep extends ShellStep {
     args.add(String.format("-Djava.io.tmpdir=%s", tmpDirectory));
 
     // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
-    // to find the ABI processor and test runner classes, so propagate these down via the
-    // relevant properties.
-    args.add(
-        String.format(
-            "-Dbuck.abi_processor_classes=%s",
-            abiProcessorClasspath));
+    // to find the test runner classes, so propagate these down via the relevant properties.
     args.add(
         String.format(
             "-Dbuck.testrunner_classes=%s",

@@ -76,7 +76,6 @@ public class ExternalJavacTest extends EasyMockSupport {
                       /* sourceLevel */ "6",
                       /* targetLevel */ "6"))
               .build(),
-          /* pathToOutputAbiFile */ Optional.<Path>absent(),
           /* invokingRule */ Optional.<BuildTarget>absent(),
           /* buildDependencies */ buildDependencies,
           /* suggestBuildRules */ Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),

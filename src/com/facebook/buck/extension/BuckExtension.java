@@ -67,7 +67,6 @@ public class BuckExtension extends AbstractBuildRule {
   private final ImmutableSortedSet<? extends SourcePath> srcs;
   private final ImmutableSortedSet<? extends SourcePath> resources;
   private final Path output;
-  private final Path abi;
   private final Path working;
 
   public BuckExtension(
@@ -81,7 +80,6 @@ public class BuckExtension extends AbstractBuildRule {
 
     BuildTarget target = params.getBuildTarget();
     this.output = BuildTargets.getGenPath(target, "%s-buck.jar");
-    this.abi = BuildTargets.getGenPath(target, "%s-buck.abi");
     this.working = BuildTargets.getBinPath(target, "__%s__");
   }
 
@@ -114,7 +112,6 @@ public class BuckExtension extends AbstractBuildRule {
             /* transitive classpath */ ImmutableSortedSet.<Path>of(),
             declaredClasspath,
             javacOptions,
-            Optional.of(abi),
             Optional.of(getBuildTarget()),
             BuildDependencies.FIRST_ORDER_ONLY,
             Optional.<JavacStep.SuggestBuildRules>absent(),

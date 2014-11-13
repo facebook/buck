@@ -21,7 +21,5 @@ for i in "$@"; do
 done
 
 echo $CLASS_OUT >> log
-echo $ABI_OUT >> log
 
 echo "fakeClass" > "$CLASS_OUT/Example.class"
-echo "0000000000000000000000000000000000000000" > $ABI_OUT

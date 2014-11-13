@@ -17,14 +17,11 @@
 package com.facebook.buck.java.abi;
 
 /**
- * Shared information between {@link AbiWriter} and its callers.
+ * Shared information between {@link com.facebook.buck.java.abi2.StubJar} and its callers.
  */
 public class AbiWriterProtocol {
 
   private AbiWriterProtocol() {}
-
-  public static final String ABI_ANNOTATION_PROCESSOR_CLASS_NAME =
-      "com.facebook.buck.java.abi.AbiWriter";
 
   public static final String PARAM_ABI_OUTPUT_FILE =
       "buck.output_abi_file";
@@ -32,5 +29,5 @@ public class AbiWriterProtocol {
   /**
    * The integrity of this value is verified by {@code com.facebook.buck.java.abi.AbiWriterTest}.
    */
-  public static final String EMPTY_ABI_KEY = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
+  public static final String EMPTY_ABI_KEY = "b04f3ee8f5e43fa3b162981b50bb72fe1acabb33";
 }

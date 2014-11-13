@@ -28,13 +28,13 @@ import com.facebook.buck.util.ProjectFilesystem;
 import java.io.IOException;
 import java.nio.file.Path;
 
-class CalculateAbiStep implements Step {
+public class CalculateAbiStep implements Step {
 
   private final BuildableContext buildableContext;
   private final Path binaryJar;
   private final Path abiJar;
 
-  CalculateAbiStep(
+  public CalculateAbiStep(
       BuildableContext buildableContext,
       Path binaryJar,
       Path abiJar) {

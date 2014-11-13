@@ -53,14 +53,6 @@ public class AbiWriterTest {
   @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Test
-  public void abiKeyForEmptySourcesIsStable() {
-    assertEquals(
-        "The ABI key used when a java_library() has no srcs should be constant across platforms.",
-        AbiWriterProtocol.EMPTY_ABI_KEY,
-        AbiWriter.computeAbiKey(ImmutableSortedSet.<String>of()));
-  }
-
-  @Test
   public void willCaptureClassName() throws IOException {
     String summary = compile("A.java", Joiner.on("\n").join(
         "package com.facebook.buck.example;",
@@ -569,25 +561,6 @@ public class AbiWriterTest {
             "package com.facebook.buck.example;"));
 
     assertFalse(compiled.isPresent());
-  }
-
-  @Test
-  public void emptySummariesLeadToAnEmptyAbiKeyBeingMade() throws IOException {
-    File outDir = temp.newFolder();
-    File onlyDocs = new File(outDir, "package-info.java");
-    SortedSet<String> summaries = generateSummary(
-        outDir,
-        new FileAndSource(onlyDocs,
-            Joiner.on("\n").join(
-                "/** This is a package */",
-                "package com.facebook.buck.example;")),
-        ImmutableSet.<File>of());
-
-    assertTrue(summaries.isEmpty());
-
-    String computed = AbiWriter.computeAbiKey(summaries);
-
-    assertEquals(AbiWriterProtocol.EMPTY_ABI_KEY, computed);
   }
 
   @Test

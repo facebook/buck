@@ -44,18 +44,16 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.BashStep;
-import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -247,10 +245,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    * @param javacOptions javac configuration.
    * @param suggestBuildRules Function to convert from missing symbols to the suggested rules.
    * @param commands List of steps to add to.
-   * @return a {@link Supplier} that will return the ABI for this rule after javac is executed.
    */
   @VisibleForTesting
-  Supplier<Sha1HashCode> createCommandsForJavac(
+  void createCommandsForJavac(
       Path outputDirectory,
       ImmutableSet<Path> transitiveClasspathEntries,
       ImmutableSet<Path> declaredClasspathEntries,
@@ -278,7 +275,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             transitiveClasspathEntries,
             declaredClasspathEntries,
             javacOptions,
-            Optional.of(getPathToAbiOutputFile()),
             Optional.of(target),
             buildDependencies,
             suggestBuildRules,
@@ -292,28 +288,13 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             transitiveClasspathEntries,
             declaredClasspathEntries,
             javacOptions,
-            Optional.of(getPathToAbiOutputFile()),
             Optional.of(target),
             buildDependencies,
             suggestBuildRules,
             Optional.of(pathToSrcsList));
       }
       commands.add(javacStep);
-    } else {
-      javacStep = new NullJavacStep(
-          outputDirectory,
-          javacOptions,
-          Optional.of(target),
-          buildDependencies,
-          suggestBuildRules);
     }
-    // Create a supplier that extracts the ABI key from javac after it executes.
-    return Suppliers.memoize(new Supplier<Sha1HashCode>() {
-      @Override
-      public Sha1HashCode get() {
-        return createTotalAbiKey(Preconditions.checkNotNull(javacStep.getAbiKey()));
-      }
-    });
   }
 
   /**
@@ -338,10 +319,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   private Path getPathToAbiOutputDir() {
     return BuildTargets.getGenPath(getBuildTarget(), "lib__%s__abi");
-  }
-
-  private Path getPathToAbiOutputFile() {
-    return getPathToAbiOutputDir().resolve("abi");
   }
 
   private static Path getOutputJarDirPath(BuildTarget target) {
@@ -537,7 +514,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
-    Path outputDirectory = getClassesDir(getBuildTarget());
+    BuildTarget target = getBuildTarget();
+    Path outputDirectory = getClassesDir(target);
     steps.add(new MakeCleanDirectoryStep(outputDirectory));
 
     Optional<JavacInMemoryStep.SuggestBuildRules> suggestBuildRule =
@@ -570,7 +548,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         .build();
 
     // This adds the javac command, along with any supporting commands.
-    Supplier<Sha1HashCode> abiKeySupplier = createCommandsForJavac(
+    createCommandsForJavac(
         outputDirectory,
         transitive,
         declared,
@@ -578,7 +556,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         context.getBuildDependencies(),
         suggestBuildRule,
         steps,
-        getBuildTarget());
+        target);
 
     addPostprocessClassesCommands(steps, postprocessClassesCommands, outputDirectory);
 
@@ -590,49 +568,42 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     steps.add(
         new CopyResourcesStep(
             getResolver(),
-            getBuildTarget(),
+            target,
             resources,
             outputDirectory,
             finder));
 
+    steps.add(new MakeCleanDirectoryStep(getOutputJarDirPath(target)));
+
+    Path abiJar = getOutputJarDirPath(target)
+        .resolve(String.format("%s-abi.jar", target.getShortName()));
+    steps.add(new MkdirStep(abiJar.getParent()));
+
     if (outputJar.isPresent()) {
-      steps.add(new MakeCleanDirectoryStep(getOutputJarDirPath(getBuildTarget())));
+      Path output = outputJar.get();
+
       steps.add(new JarDirectoryStep(
-          outputJar.get(),
+              output,
           Collections.singleton(outputDirectory),
           /* mainClass */ null,
           /* manifestFile */ null));
-      buildableContext.recordArtifact(outputJar.get());
+      buildableContext.recordArtifact(output);
+
+      // Calculate the ABI.
+
+      steps.add(new CalculateAbiStep(buildableContext, output, abiJar));
+    } else {
+      Path scratch = BuildTargets.getBinPath(
+          target,
+          String.format("%%s/%s-temp-abi.jar", target.getShortName()));
+      steps.add(new MakeCleanDirectoryStep(scratch.getParent()));
+      steps.add(new TouchStep(scratch));
+      steps.add(new CalculateAbiStep(buildableContext, scratch, abiJar));
     }
-
-    Preconditions.checkNotNull(abiKeySupplier,
-        "abiKeySupplier must be set so that getAbiKey() will " +
-        "return a non-null value if this rule builds successfully.");
-
-    addStepsToRecordAbiToDisk(steps, abiKeySupplier, buildableContext);
 
     JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
 
     return steps.build();
-  }
-
-  /**
-   * Assuming the build has completed successfully, the ABI should have been computed, and it should
-   * be stored for subsequent builds.
-   */
-  private void addStepsToRecordAbiToDisk(ImmutableList.Builder<Step> commands,
-      final Supplier<Sha1HashCode> abiKeySupplier,
-      final BuildableContext buildableContext) {
-    // Note that the parent directories for all of the files written by these steps should already
-    // have been created by a previous step. Therefore, there is no reason to add a MkdirStep here.
-    commands.add(new AbstractExecutionStep("recording ABI metadata") {
-      @Override
-      public int execute(ExecutionContext context) {
-        Sha1HashCode abiKey = abiKeySupplier.get();
-        buildableContext.addMetadata(ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
-        return 0;
-      }
-    });
   }
 
   /**

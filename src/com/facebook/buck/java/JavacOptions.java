@@ -101,27 +101,11 @@ public class JavacOptions {
         optionsBuilder.add("-s").add(pathRelativizer.apply(generateTo).toString());
       }
 
-      // Create a path relativizer that relativizes all processor paths, except for
-      // AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH, which will already be
-      // an absolute path.
-      Function<Path, Path> pathRelativizerThatOmitsAbiProcessor =
-          new Function<Path, Path>() {
-        @Override
-        public Path apply(Path searchPathElement) {
-          if (AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH.equals(
-              searchPathElement)) {
-            return searchPathElement;
-          } else {
-            return pathRelativizer.apply(searchPathElement);
-          }
-        }
-      };
-
       // Specify processorpath to search for processors.
       optionsBuilder.add("-processorpath",
           Joiner.on(File.pathSeparator).join(
               FluentIterable.from(annotationProcessingData.getSearchPathElements())
-                  .transform(pathRelativizerThatOmitsAbiProcessor)
+                  .transform(pathRelativizer)
                   .transform(Functions.toStringFunction())));
 
       // Specify names of processors.

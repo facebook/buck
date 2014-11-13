@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.CalculateAbiStep;
 import com.facebook.buck.java.HasJavaAbi;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
@@ -33,14 +34,11 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -63,9 +61,6 @@ public class DummyRDotJava extends AbstractBuildRule
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final JavacOptions javacOptions;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
-
-  @VisibleForTesting
-  static final String METADATA_KEY_FOR_ABI_KEY = "DUMMY_R_DOT_JAVA_ABI_KEY";
 
   public DummyRDotJava(
       BuildRuleParams params,
@@ -124,30 +119,20 @@ public class DummyRDotJava extends AbstractBuildRule
 
     Path pathToAbiOutputDir = getPathToAbiOutputDir(getBuildTarget());
     steps.add(new MakeCleanDirectoryStep(pathToAbiOutputDir));
-    Path pathToAbiOutputFile = pathToAbiOutputDir.resolve("abi");
+    Path pathToAbiOutputFile = pathToAbiOutputDir.resolve("abi.jar");
 
     // Compile the .java files.
     final JavacStep javacStep =
         RDotJava.createJavacStepForDummyRDotJavaFiles(
             javaSourceFilePaths,
             rDotJavaClassesFolder,
-            Optional.of(pathToAbiOutputFile),
             javacOptions,
             getBuildTarget());
     steps.add(javacStep);
-
-    steps.add(new AbstractExecutionStep("record_abi_key") {
-      @Override
-      public int execute(ExecutionContext context) {
-        Sha1HashCode abiKey = javacStep.getAbiKey();
-        Preconditions.checkNotNull(abiKey,
-            "Javac step must create a non-null ABI key for this rule.");
-        buildableContext.addMetadata(METADATA_KEY_FOR_ABI_KEY, abiKey.getHash());
-        return 0;
-      }
-    });
-
     buildableContext.recordArtifactsInDirectory(rDotJavaClassesFolder);
+
+    steps.add(new CalculateAbiStep(buildableContext, rDotJavaClassesFolder, pathToAbiOutputFile));
+
     return steps.build();
   }
 
@@ -194,7 +179,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    Optional<Sha1HashCode> abiKey = onDiskBuildInfo.getHash(METADATA_KEY_FOR_ABI_KEY);
+    Optional<Sha1HashCode> abiKey = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA);
     if (!abiKey.isPresent()) {
       throw new IllegalStateException(String.format(
           "Should not be initializing %s from disk if ABI key is not written",

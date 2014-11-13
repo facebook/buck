@@ -61,7 +61,6 @@ public class JUnitStepTest {
     boolean isCodeCoverageEnabled = false;
     boolean isDebugEnabled = false;
     Path testRunnerClasspath = Paths.get("build/classes/junit");
-    Path abiProcessorClasspath = Paths.get("build/classes/abi");
 
     JUnitStep junit = new JUnitStep(
         classpathEntries,
@@ -75,8 +74,7 @@ public class JUnitStepTest {
         TestSelectorList.empty(),
         /* isDryRun */ false,
         TestType.JUNIT,
-        testRunnerClasspath,
-        abiProcessorClasspath);
+        testRunnerClasspath);
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.ALL);
@@ -88,7 +86,6 @@ public class JUnitStepTest {
         ImmutableList.of(
             "java",
             "-Djava.io.tmpdir=" + directoryForTemp,
-            "-Dbuck.abi_processor_classes=" + abiProcessorClasspath,
             "-Dbuck.testrunner_classes=" + testRunnerClasspath,
             buildIdArg,
             vmArg1,
@@ -130,7 +127,6 @@ public class JUnitStepTest {
     boolean isCodeCoverageEnabled = false;
     boolean isDebugEnabled = true;
     Path testRunnerClasspath = Paths.get("build/classes/junit");
-    Path abiProcessorClasspath = Paths.get("build/classes/abi");
 
     JUnitStep junit = new JUnitStep(
         classpathEntries,
@@ -144,9 +140,7 @@ public class JUnitStepTest {
         TestSelectorList.empty(),
         /* isDryRun */ false,
         TestType.JUNIT,
-        testRunnerClasspath,
-        abiProcessorClasspath);
-
+        testRunnerClasspath);
 
     TestConsole console = new TestConsole();
     console.setVerbosity(Verbosity.ALL);
@@ -160,7 +154,6 @@ public class JUnitStepTest {
         ImmutableList.of(
             "java",
             "-Djava.io.tmpdir=" + directoryForTemp,
-            "-Dbuck.abi_processor_classes=" + abiProcessorClasspath,
             "-Dbuck.testrunner_classes=" + testRunnerClasspath,
             buildIdArg,
             "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005",

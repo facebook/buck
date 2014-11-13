@@ -85,7 +85,6 @@ public class JavacInMemoryStepTest extends EasyMockSupport {
             ImmutableSet.of(Paths.get("bar.jar"), Paths.get("foo.jar")),
           /* declaredClasspathEntries */ ImmutableSet.of(Paths.get("foo.jar")),
           /* JavacOptions */ JavacOptions.DEFAULTS,
-          /* pathToOutputAbiFile */ Optional.<Path>absent(),
           /* invokingRule */ Optional.<BuildTarget>absent(),
           /* buildDependencies */ buildDependencies,
           /* suggestBuildRules */ Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),

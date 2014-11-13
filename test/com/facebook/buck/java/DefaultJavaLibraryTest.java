@@ -45,8 +45,8 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -245,7 +245,7 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "Expected '-processor MyProcessor' parameters",
         parameters.indexOf("-processor") + 1,
-        parameters.indexOf("MyProcessor," + AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME));
+        parameters.indexOf("MyProcessor"));
     assertEquals(
         "Expected '-s " + annotationScenarioGenPath + "' parameters",
         parameters.indexOf("-s") + 1,
@@ -453,7 +453,7 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         "Expected '-processor MyProcessor' parameters",
         parameters.indexOf("-processor") + 1,
-        parameters.indexOf("MyProcessor," + AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME));
+        parameters.indexOf("MyProcessor"));
     assertEquals(
         "Expected '-s " + annotationScenarioGenPath + "' parameters",
         parameters.indexOf("-s") + 1,
@@ -722,9 +722,13 @@ public class DefaultJavaLibraryTest {
         .build(ruleResolver);
 
     // Verify getAbiKeyForDeps() for the two //:consumer_XXX rules.
+
+    // This differs from the EMPTY_ABI_KEY in that the value of that comes from the SHA1 of an empty
+    // jar file, whereas this is constructed from the empty set of values.
+    Sha1HashCode noAbiDeps = new Sha1HashCode(Hashing.sha1().newHasher().hash().toString());
     assertEquals(
         "The ABI of the deps of //:consumer_no_export should be the empty ABI.",
-        new Sha1HashCode(AbiWriterProtocol.EMPTY_ABI_KEY),
+        noAbiDeps,
         ((AbiRule) consumerNoExport).getAbiKeyForDeps());
     assertThat(
         "Although //:consumer_no_export and //:consumer_with_export have the same deps, " +

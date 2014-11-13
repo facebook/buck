@@ -50,7 +50,6 @@ public class RDotJava {
     return createJavacStepForDummyRDotJavaFiles(
         javaSourceFilePaths,
         outputDirectory,
-        /* pathToOutputAbiFile */ Optional.<Path>absent(),
         javacOptions,
         buildTarget);
   }
@@ -58,7 +57,6 @@ public class RDotJava {
   static JavacStep createJavacStepForDummyRDotJavaFiles(
       Set<Path> javaSourceFilePaths,
       Path outputDirectory,
-      Optional<Path> pathToOutputAbiFile,
       JavacOptions javacOptions,
       BuildTarget buildTarget) {
 
@@ -70,7 +68,6 @@ public class RDotJava {
         JavacOptions.builder(JavacOptions.DEFAULTS)
             .setJavaCompilerEnvironment(javacOptions.getJavaCompilerEnvironment())
             .build(),
-        pathToOutputAbiFile,
         Optional.<BuildTarget>absent(),
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),

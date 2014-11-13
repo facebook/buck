@@ -18,16 +18,13 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -64,21 +61,13 @@ public class JavacInMemoryStepIntegrationTest {
     JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = createExecutionContext();
     String pathToOutputDir = new File(tmp.getRoot(), "out").getAbsolutePath();
-    String pathToAbiFile = new File(tmp.getRoot(), "abi").getAbsolutePath();
     assertEquals(
         String.format("javac -source %s -target %s -g " +
-            "-processorpath %s " +
-            "-processor %s " +
-            "-A%s=%s " +
             "-d %s " +
             "-classpath '' " +
             "@" + pathToSrcsList.toString(),
             JavaCompilerEnvironment.TARGETED_JAVA_VERSION,
             JavaCompilerEnvironment.TARGETED_JAVA_VERSION,
-            AbiWritingAnnotationProcessingDataDecorator.ABI_PROCESSOR_CLASSPATH,
-            AbiWriterProtocol.ABI_ANNOTATION_PROCESSOR_CLASS_NAME,
-            AbiWriterProtocol.PARAM_ABI_OUTPUT_FILE,
-            pathToAbiFile,
             pathToOutputDir),
         javac.getDescription(executionContext));
   }
@@ -87,35 +76,6 @@ public class JavacInMemoryStepIntegrationTest {
   public void testGetShortName() throws IOException {
     JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
     assertEquals("javac", javac.getShortName());
-  }
-
-  @Test
-  public void testGetAbiKeyOnSuccessfulCompile() throws IOException, InterruptedException {
-    JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
-    ExecutionContext executionContext = createExecutionContext();
-    int exitCode = javac.execute(executionContext);
-    assertEquals("javac should exit with code 0.", exitCode, 0);
-    assertEquals(new Sha1HashCode("65386ff045e932d8ba6444043132c140f76a4613"), javac.getAbiKey());
-  }
-
-  @Test
-  public void testGetAbiKeyOnFailedCompile() throws IOException, InterruptedException {
-    JavacInMemoryStep javac = createJavac(/* withSyntaxError */ true);
-    ExecutionContext executionContext = createExecutionContext();
-    int exitCode = javac.execute(executionContext);
-    assertEquals("javac should exit with code 1 due to sytnax error.", exitCode, 1);
-    assertEquals("ABI key will not be available when compilation fails.", null, javac.getAbiKey());
-  }
-
-  @Test
-  public void testGetAbiKeyThrowsIfNotBuilt() throws IOException {
-    JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
-    try {
-      javac.getAbiKey();
-      fail("Should have thrown IllegalStateException.");
-    } catch (IllegalStateException e) {
-      assertEquals("Must execute step before requesting AbiKey.", e.getMessage());
-    }
   }
 
   @Test
@@ -177,14 +137,12 @@ public class JavacInMemoryStepIntegrationTest {
 
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());
-    Path pathToOutputAbiFile = Paths.get("abi");
     return new JavacInMemoryStep(
         pathToOutputDirectory,
         javaSourceFilePaths,
         /* transitive classpathEntries */ ImmutableSet.<Path>of(),
         /* declated classpathEntries */ ImmutableSet.<Path>of(),
         JavacOptions.builder().build(),
-        Optional.of(pathToOutputAbiFile),
         Optional.<BuildTarget>absent(),
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
