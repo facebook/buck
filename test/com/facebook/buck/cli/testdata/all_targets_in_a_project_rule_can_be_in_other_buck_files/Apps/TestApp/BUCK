@@ -1,16 +1,6 @@
 EMPTY_CONFIGS = {
-  'Debug': (
-    '../../Configurations/Empty.xcconfig',
-    {},
-    '../../Configurations/Empty.xcconfig',
-    {},
-  ),
-  'Release': (
-    '../../Configurations/Empty.xcconfig',
-    {},
-    '../../Configurations/Empty.xcconfig',
-    {},
-  ),
+  'Debug': {},
+  'Release': {},
 }
 
 apple_binary(

@@ -21,9 +21,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
-import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -38,7 +38,7 @@ public class AppleLibraryBuilder extends AbstractNodeBuilder<AppleNativeTargetDe
   }
 
   public AppleLibraryBuilder setConfigs(
-      Optional<ImmutableSortedMap<String, XcodeRuleConfiguration>> configs) {
+      Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs) {
     arg.configs = configs;
     return this;
   }

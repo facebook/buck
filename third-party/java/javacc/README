@@ -1,6 +1,0 @@
-URL: https://java.net/projects/javacc/
-Version: 6.0
-
-To update:
-Download the jar and source jars, and rename them to `javacc.jar` and `javacc-sources.jar`.  The
-name of the binary is important, otherwise the ant build will not work.

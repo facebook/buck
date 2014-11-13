@@ -1,16 +1,6 @@
 EMPTY_CONFIGS = {
-  'Debug': (
-    '',
-    {},
-    '',
-    {},
-  ),
-  'Release': (
-    '',
-    {},
-    '',
-    {},
-  ),
+  'Debug': {},
+  'Release': {},
 }
 
 apple_binary(

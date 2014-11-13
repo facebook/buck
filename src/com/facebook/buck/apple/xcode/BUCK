@@ -14,7 +14,6 @@ java_library(
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/apple:rules',
-    '//src/com/facebook/buck/apple/xcode/xcconfig:xcconfig',
     '//src/com/facebook/buck/apple/clang:headermap',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/event:event',

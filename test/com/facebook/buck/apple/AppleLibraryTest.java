@@ -27,10 +27,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
-import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -50,7 +50,7 @@ public class AppleLibraryTest {
         ImmutableList.of(
             AppleSource.ofSourcePath(new TestSourcePath("some_source.m")),
             AppleSource.ofSourcePath(new TestSourcePath("some_header.h"))));
-    arg.configs = Optional.of(ImmutableSortedMap.<String, XcodeRuleConfiguration>of());
+    arg.configs = Optional.of(ImmutableSortedMap.<String, ImmutableMap<String, String>>of());
     arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();
@@ -75,7 +75,7 @@ public class AppleLibraryTest {
   public void getDynamicFlavorOutputName() {
     AppleNativeTargetDescriptionArg arg = description.createUnpopulatedConstructorArg();
     arg.srcs = Optional.of(ImmutableList.<AppleSource>of());
-    arg.configs = Optional.of(ImmutableSortedMap.<String, XcodeRuleConfiguration>of());
+    arg.configs = Optional.of(ImmutableSortedMap.<String, ImmutableMap<String, String>>of());
     arg.frameworks = Optional.of(ImmutableSortedSet.<String>of());
     arg.deps = Optional.absent();
     arg.gid = Optional.absent();

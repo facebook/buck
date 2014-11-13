@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry excluding="**/BUCK|com/facebook/buck/cli/quickstart/**|com/facebook/buck/android/support/" kind="src" path="src"/>
-	<classpathentry kind="src" path="build/testjavacc"/>
-	<classpathentry kind="src" path="build/javacc"/>
 	<classpathentry excluding="**/BUCK" kind="src" path="third-party/java/aosp/src"/>
 	<classpathentry excluding="**/BUCK|**/testdata/**" kind="src" path="test"/>
 	<classpathentry kind="src" path="third-party/java/dx-from-kitkat/src"/>

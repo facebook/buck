@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.XcodeRuleConfiguration;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
@@ -61,7 +60,7 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
     }
   }
 
-  private final ImmutableSortedMap<String, XcodeRuleConfiguration> configurations;
+  private final ImmutableSortedMap<String, ImmutableMap<String, String>> configurations;
   private final ImmutableList<GroupedSource> srcs;
   private final ImmutableSortedMap<SourcePath, String> perFileFlags;
   private final ImmutableSortedSet<String> frameworks;
@@ -97,8 +96,6 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
     SrcsAndGroupNames srcsAndGroupNames = collectSrcsAndGroupNames();
     return builder
         .set("configurationsKeys", configurations.keySet())
-        // TODO(mbolin): Include configurationsValues. Requires finding a way to encode an
-        // XcodeRuleConfiguration in a RuleKey.Builder.
         // .set("configurationsValues", configurations.values())
         .setSourcePaths("srcsSourcePaths", srcsAndGroupNames.srcs)
         .set("srcsGroupNames", srcsAndGroupNames.groupNames)
@@ -147,7 +144,7 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
   /**
    * Returns a set of Xcode configuration rules.
    */
-  public ImmutableMap<String, XcodeRuleConfiguration> getConfigurations() {
+  public ImmutableMap<String, ImmutableMap<String, String>> getConfigurations() {
     return configurations;
   }
 

@@ -67,8 +67,6 @@ public class TypeCoercerFactory {
 
   private final TypeCoercer<OCamlSource> ocamlSourceTypeCoercer;
 
-  private final TypeCoercer<XcodeRuleConfigurationLayer> xcodeRuleConfigurationLayerTypeCoercer;
-
   private final TypeCoercer<?>[] nonContainerTypeCoercers;
 
   public TypeCoercerFactory() {
@@ -79,9 +77,6 @@ public class TypeCoercerFactory {
             new PairTypeCoercer<>(sourcePathTypeCoercer, stringTypeCoercer),
             stringTypeCoercer);
     ocamlSourceTypeCoercer = new OCamlSourceTypeCoercer(sourcePathTypeCoercer);
-    xcodeRuleConfigurationLayerTypeCoercer = new XcodeRuleConfigurationLayerTypeCoercer(
-        sourcePathTypeCoercer,
-        new MapTypeCoercer<>(stringTypeCoercer, stringTypeCoercer));
     nonContainerTypeCoercers = new TypeCoercer<?>[] {
         // special classes
         labelTypeCoercer,
@@ -105,8 +100,6 @@ public class TypeCoercerFactory {
         // other simple
         appleSourceTypeCoercer,
         ocamlSourceTypeCoercer,
-        xcodeRuleConfigurationLayerTypeCoercer,
-        new XcodeRuleConfigurationTypeCoercer(xcodeRuleConfigurationLayerTypeCoercer),
         new AppleBundleDestinationTypeCoercer(stringTypeCoercer),
         new BuildConfigFieldsTypeCoercer(),
         new UriTypeCoercer(),

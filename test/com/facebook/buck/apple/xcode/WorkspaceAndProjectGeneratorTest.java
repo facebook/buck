@@ -285,7 +285,7 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         executionContext,
         workspaceConfig,
-        ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS),
+        ImmutableSet.<ProjectGenerator.Option>of(),
         AppleBuildRules.getSourceRuleToTestRulesMap(actionGraph.getNodes()),
         ImmutableSet.<BuildRule>of(),
         false);
@@ -344,7 +344,7 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         executionContext,
         workspaceConfig,
-        ImmutableSet.of(ProjectGenerator.Option.REFERENCE_EXISTING_XCCONFIGS),
+        ImmutableSet.<ProjectGenerator.Option>of(),
         AppleBuildRules.getSourceRuleToTestRulesMap(actionGraph.getNodes()),
         ImmutableSet.<BuildRule>of(),
         true);
