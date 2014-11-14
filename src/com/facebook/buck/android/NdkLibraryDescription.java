@@ -226,10 +226,10 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       if (!localCflags.isEmpty() || !localLdflags.isEmpty()) {
         outputLinesBuilder.add(String.format("ifeq ($(TARGET_ARCH_ABI),%s)", targetArchAbi));
         if (!localCflags.isEmpty()) {
-          outputLinesBuilder.add("DEP_CFLAGS=" + localCflags);
+          outputLinesBuilder.add("BUCK_DEP_CFLAGS=" + localCflags);
         }
         if (!localLdflags.isEmpty()) {
-          outputLinesBuilder.add("DEP_LDFLAGS=" + localLdflags);
+          outputLinesBuilder.add("BUCK_DEP_LDFLAGS=" + localLdflags);
         }
         outputLinesBuilder.add("endif");
         outputLinesBuilder.add("");
