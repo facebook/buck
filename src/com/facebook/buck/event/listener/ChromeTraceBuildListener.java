@@ -25,6 +25,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.PathListing;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
@@ -43,10 +44,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 
@@ -55,7 +53,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -67,8 +64,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class ChromeTraceBuildListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(ChromeTraceBuildListener.class);
-  private static final String TRACE_FILE_PATTERN =
-    "build\\.[a-z\\d\\-\\.]*\\.trace";
 
   private final ProjectFilesystem projectFilesystem;
   private final Clock clock;
@@ -123,38 +118,20 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       return;
     }
 
-    try {
-      ImmutableList<Path> pathsSortedByModified = FluentIterable.
-          from(projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR)).
-          filter(new Predicate<Path>() {
-            @Override
-            public boolean apply(Path input) {
-              return input.getFileName().toString().matches(TRACE_FILE_PATTERN);
-            }
-          }).
-          toSortedList(new Comparator<Path>() {
-            @Override
-            public int compare(Path a, Path b) {
-              try {
-                return Long.signum(
-                    projectFilesystem.getLastModifiedTime(b) -
-                    projectFilesystem.getLastModifiedTime(a));
-              } catch (IOException e) {
-                throw Throwables.propagate(e);
-              }
-            }
-          });
+    Path traceDirectory = projectFilesystem.getPathForRelativePath(BuckConstant.BUCK_TRACE_DIR);
 
-      if (pathsSortedByModified.size() > tracesToKeep) {
-        ImmutableList<Path> pathsToRemove =
-            pathsSortedByModified.subList(tracesToKeep, pathsSortedByModified.size());
-        LOG.debug("Deleting old traces: %s", pathsToRemove);
-        for (Path path : pathsToRemove) {
-          projectFilesystem.deleteFileAtPath(path);
-        }
+    try {
+      for (Path path : PathListing.listMatchingPathsWithFilters(
+               traceDirectory,
+               "build.*.trace",
+               PathListing.MODIFIED_TIME_DESC,
+               PathListing.FilterMode.EXCLUDE,
+               Optional.of(tracesToKeep),
+               Optional.<Long>absent())) {
+        projectFilesystem.deleteFileAtPath(path);
       }
     } catch (IOException e) {
-      LOG.error(e, "Couldn't delete old traces from %s", BuckConstant.BUCK_TRACE_DIR);
+      LOG.error(e, "Couldn't list paths in trace directory %s", traceDirectory);
     }
   }
 
