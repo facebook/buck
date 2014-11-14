@@ -18,7 +18,6 @@ package com.facebook.buck.httpserver;
 
 import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.template.soy.data.SoyListData;
 import com.google.template.soy.data.SoyMapData;
@@ -27,6 +26,7 @@ import org.eclipse.jetty.server.Request;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,8 +62,7 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
 
   @VisibleForTesting
   SoyListData getTraces() throws IOException {
-    ImmutableCollection<Path> traceFiles = tracesHelper.listTraceFilesByLastModified();
-
+    Collection<Path> traceFiles = tracesHelper.listTraceFilesByLastModified();
     SoyListData traces = new SoyListData();
     for (Path path : traceFiles) {
       String name = path.getFileName().toString();

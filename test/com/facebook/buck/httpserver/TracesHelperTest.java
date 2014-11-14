@@ -27,7 +27,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -138,7 +138,7 @@ public class TracesHelperTest {
 
     TracesHelper helper = new TracesHelper(projectFilesystem);
     assertEquals(
-        ImmutableList.of(
+        ImmutableSet.of(
             BuckConstant.BUCK_TRACE_DIR.resolve("build.5.trace"),
             BuckConstant.BUCK_TRACE_DIR.resolve("build.4.trace"),
             BuckConstant.BUCK_TRACE_DIR.resolve("build.3b.trace"),

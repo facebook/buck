@@ -21,10 +21,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -36,6 +33,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -80,30 +78,6 @@ public class TracesHelper {
         return "";
       }
     }
-  }
-
-  ImmutableCollection<Path> listTraceFilesByLastModified() throws IOException {
-    Ordering<Path> lastModifiedOrdering = new Ordering<Path>() {
-        @Override
-        public int compare(Path left, Path right) {
-          try {
-            long rightModTime = projectFilesystem.getLastModifiedTime(right);
-            long leftModTime = projectFilesystem.getLastModifiedTime(left);
-            // We want descending order, so we compare right to left instead of left to right.
-            int result = Long.signum(rightModTime - leftModTime);
-            if (result != 0) {
-              return result;
-            } else {
-              return right.compareTo(left);
-            }
-          } catch (IOException e) {
-            throw Throwables.propagate(e);
-          }
-        }
-    };
-
-    return lastModifiedOrdering.immutableSortedCopy(
-        projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR));
   }
 
   Iterable<InputStream> getInputsForTraces(String id) throws IOException {
@@ -172,24 +146,27 @@ public class TracesHelper {
     return name.startsWith(testPrefix) && name.endsWith(testSuffix);
   }
 
+  Collection<Path> listTraceFilesByLastModified() throws IOException {
+    return projectFilesystem.getSortedMatchingDirectoryContents(
+        BuckConstant.BUCK_TRACE_DIR,
+        "build.*.trace",
+        projectFilesystem.orderByLastModifiedTimeDesc());
+  }
+
   /**
    * Returns a collection of paths containing traces for the specified build ID.
    *
    * A given build might have more than one trace file (for example,
    * the buck.py launcher has its own trace file).
    */
-  private ImmutableCollection<Path> getPathsToTraces(String id) throws IOException {
+  private Collection<Path> getPathsToTraces(String id) throws IOException {
     Preconditions.checkArgument(TracesHandlerDelegate.TRACE_ID_PATTERN.matcher(id).matches());
 
-    ImmutableList.Builder<Path> tracesBuilder = ImmutableList.builder();
-    for (Path path : projectFilesystem.getDirectoryContents(BuckConstant.BUCK_TRACE_DIR)) {
-      String name = path.getFileName().toString();
-      if (name.endsWith("." + id + ".trace")) {
-        tracesBuilder.add(path);
-      }
-    }
+    Collection<Path> traces = projectFilesystem.getSortedMatchingDirectoryContents(
+        BuckConstant.BUCK_TRACE_DIR,
+        "*" + id + "*.trace",
+        projectFilesystem.orderByLastModifiedTimeDesc());
 
-    ImmutableList<Path> traces = tracesBuilder.build();
     if (traces.isEmpty()) {
       throw new HumanReadableException("Could not find a build trace with id %s.", id);
     } else {
