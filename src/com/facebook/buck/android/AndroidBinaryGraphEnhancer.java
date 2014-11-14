@@ -38,7 +38,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -374,11 +373,9 @@ public class AndroidBinaryGraphEnhancer {
             BuildConfigs.IS_EXO_CONSTANT,
             String.valueOf(!exopackageModes.isEmpty())),
         new BuildConfigFields.Field(
-            "java.util.Set<String>",
+            "int",
             BuildConfigs.EXOPACKAGE_FLAGS,
-            BuildConfigs.getHashSetWith(FluentIterable.from(exopackageModes)
-                    .transform(Functions.toStringFunction())
-                    .toSet()))));
+            String.valueOf(ExopackageMode.toBitmask(exopackageModes)))));
     for (Map.Entry<String, BuildConfigFields> entry :
         packageableCollection.buildConfigs().entrySet()) {
       // Merge the user-defined constants with the APK-specific overrides.

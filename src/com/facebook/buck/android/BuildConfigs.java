@@ -18,11 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.util.Escaper;
-import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Utilities for generating a {@code BuildConfig.java} file for Android.
@@ -42,16 +38,9 @@ public class BuildConfigs {
   public static final String IS_EXO_CONSTANT = "IS_EXOPACKAGE";
 
   /**
-   * Name of a global variable that includes the exopackage configuration as a set of {@link String}
-   * flags. This will be empty if {@link #IS_EXO_CONSTANT} is {@code false}.
+   * Name of a global variable that includes the exopackage configuration as a bitmask.
    */
   public static final String EXOPACKAGE_FLAGS = "EXOPACKAGE_FLAGS";
-
-  private static final BuildConfigFields.Field DEFAULT_EXOPACKAGE_FLAGS_FIELD =
-      new BuildConfigFields.Field(
-          "java.util.Set<String>",
-          EXOPACKAGE_FLAGS,
-          getHashSetWith(ImmutableSet.<String>of()));
 
   /** @see #getDefaultBuildConfigFields() */
   private static final BuildConfigFields DEFAULT_BUILD_CONFIG_CONSTANTS =
@@ -61,22 +50,10 @@ public class BuildConfigs {
               // IS_EXOPACKAGE is a value we use internally for checking whether exopackage is being
               // used.
               new BuildConfigFields.Field("boolean", IS_EXO_CONSTANT, "false"),
-              DEFAULT_EXOPACKAGE_FLAGS_FIELD));
+              new BuildConfigFields.Field("int", EXOPACKAGE_FLAGS, "0")));
 
   /** Utility class: do not instantiate. */
   private BuildConfigs() {}
-
-  public static String getHashSetWith(ImmutableSet<String> values) {
-    if (values.isEmpty()) {
-      return "java.util.Collections.<String>emptySet()";
-    }
-    String initFormat = "java.util.Collections.unmodifiableSet(" +
-        "new java.util.HashSet<>(java.util.Arrays.asList(%s)))";
-
-    String commaSeparatedValues = Joiner.on(',')
-        .join(FluentIterable.from(values).transform(Escaper.JAVA_ESCAPER));
-    return String.format(initFormat, commaSeparatedValues);
-  }
 
   /**
    * Returns a list of fields (with values) that every {@code BuildConfig.java} should

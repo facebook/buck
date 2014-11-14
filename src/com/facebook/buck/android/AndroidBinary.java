@@ -138,8 +138,15 @@ public class AndroidBinary extends AbstractBuildRule implements
   }
 
   static enum ExopackageMode {
-    SECONDARY_DEX,
-    NATIVE_LIBRARY;
+    SECONDARY_DEX(1),
+    NATIVE_LIBRARY(2),
+    ;
+
+    private final int code;
+
+    private ExopackageMode(int code) {
+      this.code = code;
+    }
 
     public static boolean enabledForSecondaryDexes(EnumSet<ExopackageMode> modes) {
       return modes.contains(SECONDARY_DEX);
@@ -147,6 +154,14 @@ public class AndroidBinary extends AbstractBuildRule implements
 
     public static boolean enabledForNativeLibraries(EnumSet<ExopackageMode> modes) {
       return modes.contains(NATIVE_LIBRARY);
+    }
+
+    public static int toBitmask(EnumSet<ExopackageMode> modes) {
+      int bitmask = 0;
+      for (ExopackageMode mode : modes) {
+        bitmask |= mode.code;
+      }
+      return bitmask;
     }
   }
 

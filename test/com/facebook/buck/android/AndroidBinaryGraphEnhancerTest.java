@@ -258,11 +258,7 @@ public class AndroidBinaryGraphEnhancerTest {
         BuildConfigFields.fromFields(ImmutableList.of(
             new BuildConfigFields.Field("boolean", "DEBUG", "true"),
             new BuildConfigFields.Field("boolean", "IS_EXOPACKAGE", "true"),
-            new BuildConfigFields.Field(
-                "java.util.Set<String>",
-                "EXOPACKAGE_FLAGS",
-                "java.util.Collections.unmodifiableSet(new java.util.HashSet<>" +
-                    "(java.util.Arrays.asList(\"SECONDARY_DEX\")))"))),
+            new BuildConfigFields.Field("int", "EXOPACKAGE_FLAGS", "1"))),
         androidBuildConfig.getBuildConfigFields());
 
     ImmutableSortedSet<BuildRule> finalDeps = result.finalDeps();
