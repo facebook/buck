@@ -142,29 +142,6 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
   }
 
   /**
-   * Returns a set of Xcode configuration rules.
-   */
-  public ImmutableMap<String, ImmutableMap<String, String>> getConfigurations() {
-    return configurations;
-  }
-
-  /**
-   * Returns a list of sources, potentially grouped for display in Xcode.
-   */
-  public ImmutableList<GroupedSource> getSrcs() {
-    return srcs;
-  }
-
-  /**
-   * @return A map where each entry is a mapping from a source file to a space-delimited string that
-   *     serves as a list of per-file build flags for that file, e.g., {@code "-fobjc-arc"} or
-   *     {@code "-fobjc-arc -DOS_OBJECT_USE_OBJC=0"}.
-   */
-  public ImmutableMap<SourcePath, String> getPerFileFlags() {
-    return perFileFlags;
-  }
-
-  /**
    * Returns the set of frameworks to link with the target.
    */
   public ImmutableSortedSet<String> getFrameworks() {
@@ -179,19 +156,9 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
   }
 
   /**
-   * @return An optional prefix to be used instead of the target name when exposing library headers.
-   */
-  public Optional<String> getHeaderPathPrefix() { return headerPathPrefix; }
-
-  /**
    * @return A boolean whether Buck should generate header maps for this project.
    */
   public boolean getUseBuckHeaderMaps() { return useBuckHeaderMaps; }
-
-  /** @return A {@code .pch} to pass to {@code -include}. */
-  public Optional<SourcePath> getPrefixHeader() {
-    return prefixHeader;
-  }
 
   public Optional<Path> getPathToHeaderMap(HeaderMapType headerMapType) {
     if (!getUseBuckHeaderMaps()) {

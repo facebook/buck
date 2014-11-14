@@ -40,10 +40,6 @@ public class AppleLibrary extends AbstractAppleNativeTargetBuildRule {
         .set("linkedDynamically", linkedDynamically);
   }
 
-  public boolean getLinkedDynamically() {
-    return linkedDynamically;
-  }
-
   @Override
   protected String getOutputFileNameFormat() {
     return getOutputFileNameFormat(linkedDynamically);
