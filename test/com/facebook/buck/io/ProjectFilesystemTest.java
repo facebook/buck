@@ -55,6 +55,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -535,5 +536,24 @@ public class ProjectFilesystemTest {
   @Test
   public void testIsSymLinkReturnsFalseForNotExistent() throws IOException {
     assertFalse(filesystem.isSymLink(Paths.get("foo")));
+  }
+
+  @Test
+  public void testSortedDirectoryContents() throws IOException {
+    tmp.newFolder("foo");
+    Path a = tmp.newFile("foo/a.txt").toPath();
+    java.nio.file.Files.setLastModifiedTime(a, FileTime.fromMillis(1000));
+    Path b = tmp.newFile("foo/b.txt").toPath();
+    java.nio.file.Files.setLastModifiedTime(b, FileTime.fromMillis(2000));
+    Path c = tmp.newFile("foo/c.txt").toPath();
+    java.nio.file.Files.setLastModifiedTime(c, FileTime.fromMillis(3000));
+    tmp.newFile("foo/non-matching");
+
+    assertEquals(
+        ImmutableSet.of(c, b, a),
+        filesystem.getSortedMatchingDirectoryContents(
+            Paths.get("foo"),
+            "*.txt",
+            filesystem.orderByLastModifiedTimeDesc()));
   }
 }

@@ -30,6 +30,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -47,15 +48,18 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.CopyOption;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -231,6 +235,25 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
           }
         })
         .toList();
+  }
+
+  @Override
+  public ImmutableSortedSet<Path> getSortedMatchingDirectoryContents(
+      final Path pathRelativeToProjectRoot,
+      String globPattern,
+      Comparator<Path> orderPathsBy)
+    throws IOException {
+    Preconditions.checkState(isDirectory(pathRelativeToProjectRoot));
+    final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + globPattern);
+    return FluentIterable.from(fileContents.keySet()).filter(
+        new Predicate<Path>() {
+          @Override
+          public boolean apply(Path input) {
+            return input.getParent().equals(pathRelativeToProjectRoot) &&
+                pathMatcher.matches(input.getFileName());
+          }
+        })
+        .toSortedSet(orderPathsBy);
   }
 
   @Override

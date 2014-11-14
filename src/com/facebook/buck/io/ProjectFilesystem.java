@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.io.PathListing;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
@@ -27,11 +28,13 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -71,6 +74,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -386,6 +390,45 @@ public class ProjectFilesystem {
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
       return ImmutableList.copyOf(stream);
     }
+  }
+
+  /**
+   * Returns a Comparator which orders files by last modified time in descending
+   * order.
+   */
+  public Comparator<Path> orderByLastModifiedTimeDesc() {
+    return new Comparator<Path>() {
+      @Override
+      public int compare(Path left, Path right) {
+        try {
+          // We want descending order, so we compare right to left instead of left to right.
+          int result = Long.signum(getLastModifiedTime(right) - getLastModifiedTime(left));
+          if (result != 0) {
+            return result;
+          } else {
+            return right.compareTo(left);
+          }
+        } catch (IOException e) {
+          throw Throwables.propagate(e);
+        }
+      }
+    };
+  }
+
+  /**
+   * Returns the files inside {@code pathRelativeToProjectRoot} which match
+   * {@code globPattern}, ordered by the specified comparator.
+   */
+  public ImmutableSortedSet<Path> getSortedMatchingDirectoryContents(
+      Path pathRelativeToProjectRoot,
+      String globPattern,
+      Comparator<Path> orderPathsBy)
+    throws IOException {
+    Path path = getPathForRelativePath(pathRelativeToProjectRoot);
+    return PathListing.listMatchingPaths(
+        path,
+        globPattern,
+        orderPathsBy);
   }
 
   public long getLastModifiedTime(Path pathRelativeToProjectRoot) throws IOException {
