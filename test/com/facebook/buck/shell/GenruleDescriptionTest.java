@@ -23,6 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
@@ -45,7 +46,8 @@ import java.util.Map;
 public class GenruleDescriptionTest {
 
   @Test
-  public void testImplicitDepsAreAddedCorrectly() throws NoSuchBuildTargetException {
+  public void testImplicitDepsAreAddedCorrectly()
+      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
     Description<GenruleDescription.Arg> genruleDescription = new GenruleDescription();
     Map<String, Object> instance = ImmutableMap.<String, Object>of(
         "srcs", ImmutableList.of(":baz", "//biz:baz"),
@@ -56,7 +58,9 @@ public class GenruleDescriptionTest {
         projectFilesystem,
         new BuildTargetParser(),
         BuildTargetFactory.newInstance("//foo:bar"),
-        new FakeRuleKeyBuilderFactory());
+        new FakeRuleKeyBuilderFactory(),
+        new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
+        /* enforeBuckBoundaryCheck */ true);
     ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller();
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns = ImmutableSet.builder();

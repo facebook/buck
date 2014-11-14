@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.ParseContext;
@@ -28,17 +29,23 @@ public final class BuildRuleFactoryParams {
   public final BuildTarget target;
   private final ParseContext buildFileParseContext;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
+  private final BuildFileTree buildFileTree;
+  private final boolean enforceBuckPackageBoundary;
 
   public BuildRuleFactoryParams(
       ProjectFilesystem filesystem,
       BuildTargetParser buildTargetParser,
       BuildTarget target,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
+      RuleKeyBuilderFactory ruleKeyBuilderFactory,
+      BuildFileTree buildFileTree,
+      boolean enforceBuckPackageBoundary) {
     this.filesystem = filesystem;
     this.buildTargetParser = buildTargetParser;
     this.target = target;
     this.buildFileParseContext = ParseContext.forBaseName(target.getBaseName());
     this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
+    this.buildFileTree = buildFileTree;
+    this.enforceBuckPackageBoundary = enforceBuckPackageBoundary;
   }
 
   public BuildTarget resolveBuildTarget(String target) {
@@ -53,4 +60,11 @@ public final class BuildRuleFactoryParams {
     return ruleKeyBuilderFactory;
   }
 
+  public BuildFileTree getBuildFileTree() {
+    return buildFileTree;
+  }
+
+  public boolean enforceBuckPackageBoundary() {
+    return enforceBuckPackageBoundary;
+  }
 }

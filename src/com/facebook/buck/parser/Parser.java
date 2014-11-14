@@ -117,6 +117,8 @@ public class Parser {
    */
   private final ListMultimap<Path, Path> buildFileDependents;
 
+  private final boolean enforceBuckPackageBoundary;
+
   /**
    * A BuckEvent used to record the parse start time, which should include the WatchEvent
    * processing that occurs before the BuildTargets required to build a full ParseStart event are
@@ -187,6 +189,7 @@ public class Parser {
       final RepositoryFactory repositoryFactory,
       String pythonInterpreter,
       boolean allowEmptyGlobs,
+      boolean enforceBuckPackageBoundary,
       ImmutableSet<Pattern> tempFilePatterns,
       RuleKeyBuilderFactory ruleKeyBuilderFactory)
       throws IOException, InterruptedException {
@@ -209,7 +212,8 @@ public class Parser {
             allowEmptyGlobs,
             rootRepository.getAllDescriptions()),
         tempFilePatterns,
-        ruleKeyBuilderFactory);
+        ruleKeyBuilderFactory,
+        enforceBuckPackageBoundary);
   }
 
   /**
@@ -222,15 +226,16 @@ public class Parser {
       BuildTargetParser buildTargetParser,
       ProjectBuildFileParserFactory buildFileParserFactory,
       ImmutableSet<Pattern> tempFilePatterns,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory)
+      RuleKeyBuilderFactory ruleKeyBuilderFactory,
+      boolean enforceBuckPackageBoundary)
       throws IOException, InterruptedException {
     this.repositoryFactory = repositoryFactory;
     this.repository = repositoryFactory.getRootRepository();
-    this.buildFileTreeCache = new BuildFileTreeCache(
-        buildFileTreeSupplier);
+    this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
     this.buildTargetParser = buildTargetParser;
     this.buildFileParserFactory = buildFileParserFactory;
     this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
+    this.enforceBuckPackageBoundary = enforceBuckPackageBoundary;
     this.buildFileDependents = ArrayListMultimap.create();
     this.tempFilePatterns = tempFilePatterns;
     this.state = new CachedState();
@@ -1085,7 +1090,9 @@ public class Parser {
             // Although we store the rule by its unflavoured name, when we construct it, we need the
             // flavour.
             buildTarget,
-            ruleKeyBuilderFactory);
+            ruleKeyBuilderFactory,
+            buildFileTreeCache.get(),
+            enforceBuckPackageBoundary);
         Object constructorArg = description.createUnpopulatedConstructorArg();
         TargetNode<?> targetNode;
         try {
@@ -1104,7 +1111,7 @@ public class Parser {
               factoryParams,
               declaredDeps.build(),
               visibilityPatterns.build());
-        } catch (NoSuchBuildTargetException e) {
+        } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
           throw new HumanReadableException(e);
         } catch (ConstructorArgMarshalException e) {
           throw new HumanReadableException("%s: %s", buildTarget, e.getMessage());

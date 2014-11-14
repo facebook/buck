@@ -17,8 +17,10 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Factory for creating a {@link BuildRuleFactoryParams} that does not check whether the file
@@ -35,6 +37,8 @@ public final class NonCheckingBuildRuleFactoryParams {
         new FakeProjectFilesystem(),
         buildTargetParser,
         target,
-        new FakeRuleKeyBuilderFactory());
+        new FakeRuleKeyBuilderFactory(),
+        new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
+        /* enforceBuckPackageBoundary */ false);
   }
 }

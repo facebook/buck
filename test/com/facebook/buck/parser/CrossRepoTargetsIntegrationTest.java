@@ -74,6 +74,7 @@ public class CrossRepoTargetsIntegrationTest {
         repositoryFactory,
         config.getPythonInterpreter(),
         config.getAllowEmptyGlobs(),
+        config.enforceBuckPackageBoundary(),
         ImmutableSet.<Pattern>of(),
         new FakeRuleKeyBuilderFactory());
 

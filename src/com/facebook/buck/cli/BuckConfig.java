@@ -819,6 +819,10 @@ public class BuckConfig {
     return getValue("ndk", "ndk_version");
   }
 
+  public boolean enforceBuckPackageBoundary() {
+    return getBooleanValue("project", "check_package_boundary", true);
+  }
+
   public Optional<String> getValue(String sectionName, String propertyName) {
     ImmutableMap<String, String> properties = this.getEntriesForSection(sectionName);
     return Optional.fromNullable(properties.get(propertyName));

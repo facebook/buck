@@ -46,7 +46,7 @@ public class TargetNodeTest {
 
   @Test
   public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
-      throws NoSuchBuildTargetException {
+      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
     Description<Arg> description = new TestDescription();
     BuildRuleFactoryParams buildRuleFactoryParams = buildRuleFactoryParams();
     TargetNode<Arg> targetNode = new TargetNode<>(
@@ -68,7 +68,8 @@ public class TargetNodeTest {
   }
 
   @Test
-  public void testDepsAndPathsAreCollected() throws NoSuchBuildTargetException {
+  public void testDepsAndPathsAreCollected()
+      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
     Description<Arg> description = new TestDescription();
     BuildRuleFactoryParams buildRuleFactoryParams = buildRuleFactoryParams();
     ImmutableList<String> depsStrings = ImmutableList.of(

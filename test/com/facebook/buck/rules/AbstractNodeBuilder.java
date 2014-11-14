@@ -74,7 +74,7 @@ public abstract class AbstractNodeBuilder<A> {
           factoryParams,
           getDepsFromArg(),
           ImmutableSet.<BuildTargetPattern>of());
-    } catch (NoSuchBuildTargetException e) {
+    } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
       throw Throwables.propagate(e);
     }
   }

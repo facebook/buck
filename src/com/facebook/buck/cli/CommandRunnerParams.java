@@ -95,6 +95,7 @@ class CommandRunnerParams {
             repositoryFactory,
             pythonInterpreter,
             allowEmptyGlobs,
+            /* enforceBuckPackageBoundary */ true,
             /* tempFilePatterns */ ImmutableSet.<Pattern>of(),
             new RuleKeyBuilderFactory() {
               @Override

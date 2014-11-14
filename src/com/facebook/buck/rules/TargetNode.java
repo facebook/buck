@@ -16,12 +16,14 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -55,7 +57,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       BuildRuleFactoryParams params,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns)
-      throws NoSuchBuildTargetException {
+      throws NoSuchBuildTargetException, InvalidSourcePathInputException {
     this.description = description;
     this.constructorArg = constructorArg;
     this.ruleFactoryParams = params;
@@ -87,7 +89,9 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     }
 
     this.extraDeps = ImmutableSortedSet.copyOf(Sets.difference(extraDeps.build(), declaredDeps));
-    this.pathsReferenced = paths.build();
+    this.pathsReferenced = ruleFactoryParams.enforceBuckPackageBoundary()
+        ? verifyPaths(paths.build())
+        : paths.build();
 
     this.declaredDeps = declaredDeps;
     this.visibilityPatterns = visibilityPatterns;
@@ -187,6 +191,33 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     }
   }
 
+  private ImmutableSet<Path> verifyPaths(ImmutableSet<Path> paths)
+      throws InvalidSourcePathInputException {
+    Path basePath = getBuildTarget().getBasePath();
+    BuildFileTree buildFileTree = ruleFactoryParams.getBuildFileTree();
+
+    for (Path path : paths) {
+      if (!basePath.toString().isEmpty() && !path.startsWith(basePath)) {
+        throw new InvalidSourcePathInputException(
+            "'%s' in '%s' refers to a parent directory.",
+            basePath.relativize(path),
+            getBuildTarget());
+      }
+
+      Path ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
+      if (!ancestor.equals(basePath)) {
+        throw new InvalidSourcePathInputException(
+            "'%s' in '%s' crosses a buck package boundary. Find the nearest BUCK file in the " +
+                "directory that contains this file and refer to the rule referencing the desired" +
+                "file.",
+            path,
+            getBuildTarget());
+      }
+    }
+
+    return paths;
+  }
+
   private boolean isPossiblyATarget(String param) {
     return param.startsWith(":") || param.startsWith(BuildTarget.BUILD_TARGET_PREFIX);
   }
@@ -215,4 +246,17 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     return getBuildTarget().getFullyQualifiedName();
   }
 
+  @SuppressWarnings("serial")
+  public static class InvalidSourcePathInputException extends Exception
+      implements ExceptionWithHumanReadableMessage{
+
+    private InvalidSourcePathInputException(String message, Object...objects) {
+      super(String.format(message, objects));
+    }
+
+    @Override
+    public String getHumanReadableErrorMessage() {
+      return getMessage();
+    }
+  }
 }

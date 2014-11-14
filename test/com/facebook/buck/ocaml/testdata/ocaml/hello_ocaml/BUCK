@@ -14,12 +14,12 @@ ocaml_binary(
 ocaml_library(
     name = 'ocamllib',
     srcs = [
-        '../ocamllib/m1.ml',
-        '../ocamllib/m1.mli',
-        '../ocamllib/m2.ml',
-        '../ocamllib/m3.ml',
-        '../ocamllib/mmain.mli',
-        '../ocamllib/mmain.ml',
+        'ocamllib/m1.ml',
+        'ocamllib/m1.mli',
+        'ocamllib/m2.ml',
+        'ocamllib/m3.ml',
+        'ocamllib/mmain.mli',
+        'ocamllib/mmain.ml',
         #INSERT_POINT
     ],
     visibility = [

@@ -178,6 +178,7 @@ public final class Main {
           repositoryFactory,
           repository.getBuckConfig().getPythonInterpreter(),
           repository.getBuckConfig().getAllowEmptyGlobs(),
+          repository.getBuckConfig().enforceBuckPackageBoundary(),
           repository.getBuckConfig().getTempFilePatterns(),
           createRuleKeyBuilderFactory(hashCache));
 
@@ -624,6 +625,7 @@ public final class Main {
             repositoryFactory,
             rootRepository.getBuckConfig().getPythonInterpreter(),
             rootRepository.getBuckConfig().getAllowEmptyGlobs(),
+            rootRepository.getBuckConfig().enforceBuckPackageBoundary(),
             rootRepository.getBuckConfig().getTempFilePatterns(),
             createRuleKeyBuilderFactory(fileHashCache));
       }

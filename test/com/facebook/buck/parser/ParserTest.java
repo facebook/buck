@@ -204,7 +204,8 @@ public class ParserTest extends EasyMockSupport {
         buildTargetParser,
         buildFileParserFactory,
         tempFilePatterns,
-        new FakeRuleKeyBuilderFactory());
+        new FakeRuleKeyBuilderFactory(),
+        /* enforceBuckPackageBoundary */ true);
 
     try {
       parser.parseRawRulesInternal(rules);

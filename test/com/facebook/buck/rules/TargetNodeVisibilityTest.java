@@ -45,7 +45,8 @@ public class TargetNodeVisibilityTest {
   private static final ImmutableSet<BuildTargetPattern> noVisibilityPatterns = ImmutableSet.of();
 
   @Test
-  public void testVisibilityPublic() throws NoSuchBuildTargetException {
+  public void testVisibilityPublic()
+      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
     TargetNode<?> publicTargetNode = createTargetNode(
         publicTarget,
         ImmutableSet.of(BuildTargetPattern.MATCH_ALL));
@@ -57,7 +58,8 @@ public class TargetNodeVisibilityTest {
   }
 
   @Test
-  public void testVisibilityNonPublic() throws NoSuchBuildTargetException {
+  public void testVisibilityNonPublic()
+      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(
         nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
@@ -84,7 +86,8 @@ public class TargetNodeVisibilityTest {
   }
 
   @Test
-  public void testVisibilityNonPublicFailure() throws NoSuchBuildTargetException {
+  public void testVisibilityNonPublicFailure()
+      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(
         nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
@@ -102,7 +105,8 @@ public class TargetNodeVisibilityTest {
   }
 
   @Test
-  public void testVisibilityMix() throws NoSuchBuildTargetException {
+  public void testVisibilityMix()
+      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(
         nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
@@ -129,7 +133,8 @@ public class TargetNodeVisibilityTest {
   }
 
   @Test
-  public void testVisibilityMixFailure() throws NoSuchBuildTargetException {
+  public void testVisibilityMixFailure()
+      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
     TargetNode<?> nonPublicTargetNode1 = createTargetNode(
         nonPublicTarget1,
         ImmutableSet.<BuildTargetPattern>of(
@@ -159,7 +164,8 @@ public class TargetNodeVisibilityTest {
   }
 
   @Test
-  public void testVisibilityForDirectory() throws NoSuchBuildTargetException {
+  public void testVisibilityForDirectory()
+      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
     BuildTarget libTarget = BuildTarget.builder("//lib", "lib").build();
     BuildTarget targetInSpecifiedDirectory =
         BuildTarget.builder("//src/com/facebook", "test").build();
@@ -222,7 +228,8 @@ public class TargetNodeVisibilityTest {
 
   private static TargetNode<?> createTargetNode(
       BuildTarget buildTarget,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns) throws NoSuchBuildTargetException {
+      ImmutableSet<BuildTargetPattern> visibilityPatterns)
+      throws NoSuchBuildTargetException, TargetNode.InvalidSourcePathInputException {
     Description<FakeDescription.FakeArg> description = new FakeDescription();
     FakeDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
     BuildRuleFactoryParams params =

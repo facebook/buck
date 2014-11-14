@@ -125,7 +125,7 @@ public class OCamlIntegrationTest {
     workspace.resetBuildLogFile();
 
     // Update the source file.
-    workspace.replaceFileContents("ocamllib/m1.ml", "print me", "print Me");
+    workspace.replaceFileContents("hello_ocaml/ocamllib/m1.ml", "print me", "print Me");
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
@@ -137,7 +137,7 @@ public class OCamlIntegrationTest {
     workspace.resetBuildLogFile();
 
     // Update the source file.
-    workspace.replaceFileContents("hello_ocaml/BUCK", "#INSERT_POINT", "'../ocamllib/dummy.ml',");
+    workspace.replaceFileContents("hello_ocaml/BUCK", "#INSERT_POINT", "'ocamllib/dummy.ml',");
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();

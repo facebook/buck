@@ -113,7 +113,7 @@ public class AuditOwnerCommandTest {
           params,
           ImmutableSet.<BuildTarget>of(),
           ImmutableSet.<BuildTargetPattern>of());
-    } catch (NoSuchBuildTargetException e) {
+    } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
       throw new RuntimeException(e);
     }
   }

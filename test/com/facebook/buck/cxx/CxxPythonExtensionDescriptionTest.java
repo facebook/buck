@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonPackageComponents;
@@ -78,7 +79,9 @@ public class CxxPythonExtensionDescriptionTest {
         new FakeProjectFilesystem(),
         new BuildTargetParser(),
         target,
-        new FakeRuleKeyBuilderFactory());
+        new FakeRuleKeyBuilderFactory(),
+        new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
+        /* enforceBuckPackageBoundary */ true);
     try {
       return new TargetNode<>(
           description,
@@ -86,7 +89,7 @@ public class CxxPythonExtensionDescriptionTest {
           params,
           ImmutableSet.<BuildTarget>of(),
           ImmutableSet.<BuildTargetPattern>of());
-    } catch (NoSuchBuildTargetException e) {
+    } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
       throw Throwables.propagate(e);
     }
   }
