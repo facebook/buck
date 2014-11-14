@@ -238,6 +238,9 @@
 
     <ecj>
       <javac-params>
+        <!-- //src/com/facebook/buck/io:io -->
+        <include name="com/facebook/buck/io/PathListing.java" />
+
         <!-- //src/com/facebook/buck/log:log -->
         <include name="com/facebook/buck/log/CommandThreadAssociation.java" />
         <include name="com/facebook/buck/log/CommandThreadFactory.java" />

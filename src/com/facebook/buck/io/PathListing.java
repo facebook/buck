@@ -1,0 +1,165 @@
+/*
+ * Copyright 2014-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.io;
+
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import java.util.Comparator;
+
+/**
+ * Utility class to list files which match a pattern, applying ordering
+ * and filtering.
+ */
+public class PathListing {
+  // Utility class, do not instantiate.
+  private PathListing() { }
+
+  /**
+   * Whether to include files which match the filter, or exclude them.
+   */
+  public enum FilterMode {
+      INCLUDE,
+      EXCLUDE,
+  }
+
+  /**
+   * Orders paths from newest to oldest. In case of a tie, uses Path comparison.
+   */
+  public static final Comparator<Path> MODIFIED_TIME_DESC =
+    new Comparator<Path>() {
+      @Override
+      public int compare(Path p1, Path p2) {
+        try {
+          // Note that we want newer files first, so we flip the order.
+          int result = Files.getLastModifiedTime(p2).compareTo(
+              Files.getLastModifiedTime(p1));
+          if (result == 0) {
+            // In case the modification times are identical, use path comparison.
+            result = p2.compareTo(p1);
+          }
+          return result;
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
+
+  /**
+   * Lists matching paths in the specified order.
+   */
+  public static ImmutableSortedSet<Path> listMatchingPaths(
+      Path pathToGlob,
+      String globPattern,
+      Comparator<Path> orderPathsBy) throws IOException {
+    return listMatchingPathsWithFilters(
+        pathToGlob,
+        globPattern,
+        orderPathsBy,
+        FilterMode.INCLUDE,
+        Optional.<Integer>absent(),
+        Optional.<Long>absent());
+  }
+
+  /**
+   * Lists paths in the specified order, optionally including or
+   * excluding any paths which bring the number of files over {@code maxNumPaths}
+   * or over {@code totalSizeFilter} bytes in size.
+   */
+  public static ImmutableSortedSet<Path> listMatchingPathsWithFilters(
+      Path pathToGlob,
+      String globPattern,
+      Comparator<Path> orderPathsBy,
+      FilterMode filterMode,
+      Optional<Integer> maxPathsFilter,
+      Optional<Long> totalSizeFilter)
+      throws IOException {
+    ImmutableSortedSet<Path> paths;
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(pathToGlob, globPattern)) {
+      paths = ImmutableSortedSet.copyOf(orderPathsBy, stream);
+    }
+    paths = applyNumPathsFilter(paths, filterMode, maxPathsFilter);
+    paths = applyTotalSizeFilter(paths, filterMode, totalSizeFilter);
+    return paths;
+  }
+
+  private static ImmutableSortedSet<Path> applyNumPathsFilter(
+      ImmutableSortedSet<Path> paths,
+      FilterMode filterMode,
+      Optional<Integer> maxPathsFilter) {
+    if (maxPathsFilter.isPresent()) {
+      int limitIndex = Math.min(maxPathsFilter.get(), paths.size());
+      paths = subSet(paths, filterMode, limitIndex);
+    }
+    return paths;
+  }
+
+  private static ImmutableSortedSet<Path> applyTotalSizeFilter(
+      ImmutableSortedSet<Path> paths,
+      FilterMode filterMode,
+      Optional<Long> totalSizeFilter)
+      throws IOException {
+    if (totalSizeFilter.isPresent()) {
+      int limitIndex = 0;
+      long totalSize = 0;
+      for (Path path : paths) {
+        totalSize += Files.size(path);
+        if (totalSize < totalSizeFilter.get()) {
+          limitIndex++;
+        } else {
+          break;
+        }
+      }
+      paths = subSet(paths, filterMode, limitIndex);
+    }
+    return paths;
+  }
+
+  private static ImmutableSortedSet<Path> subSet(
+      ImmutableSortedSet<Path> paths,
+      FilterMode filterMode,
+      int limitIndex) {
+    // This doesn't copy the contents of the ImmutableSortedSet. We use it
+    // as a simple way to get O(1) access to the set's contents, as otherwise
+    // we would have to iterate to find the Nth element.
+    ImmutableList<Path> pathsList = paths.asList();
+    boolean fullSet = limitIndex == paths.size();
+    switch (filterMode) {
+      case INCLUDE:
+        // Make sure we don't call pathsList.get(pathsList.size()).
+        if (!fullSet) {
+          paths = paths.headSet(pathsList.get(limitIndex));
+        }
+        break;
+      case EXCLUDE:
+        if (fullSet) {
+          // Make sure we don't call pathsList.get(pathsList.size()).
+          paths = ImmutableSortedSet.<Path>of();
+        } else {
+          paths = paths.tailSet(pathsList.get(limitIndex));
+        }
+        break;
+    }
+    return paths;
+  }
+}
