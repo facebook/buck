@@ -1,0 +1,10 @@
+java_library(
+  name = 'elf',
+  srcs = glob(['*.java']),
+  deps = [
+    '//third-party/java/guava:guava',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
