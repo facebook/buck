@@ -324,12 +324,46 @@ public class ExopackageInstaller {
         metadataLines.add(String.format("%s native-%s.so", libname, entry.getKey()));
       }
 
+      createSymlinks(abi, libraries);
+
       installFiles(
           "native_library",
           ImmutableMap.copyOf(filesToInstallByHash),
-          Joiner.on('\n').join(metadataLines.build()),
+          /* metadataContents */ "success",
           "native-%s.so",
           NATIVE_LIBS_DIR.resolve(abi));
+
+    }
+
+    /**
+     * Create symlinks of the form "lib<name>.so" to the native libraries. We want to do this while
+     * minimizing the number of adb shell commands, hence creating chunks of source/target pairs.
+     */
+    private void createSymlinks(String abi, ImmutableMap<String, Path> libraries) throws Exception {
+      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "create_symlinks_native")) {
+        int maxSize = MAX_ADB_COMMAND_SIZE - AdbHelper.ECHO_COMMAND_SUFFIX.length();
+        Path abiDir = dataRoot.resolve(NATIVE_LIBS_DIR).resolve(abi);
+        String commandPrefix = String.format("cd %s", abiDir.toString());
+
+        String command = commandPrefix;
+        for (Map.Entry<String, Path> entry : libraries.entrySet()) {
+          String target = entry.getValue().getFileName().toString();
+          String source = String.format("native-%s.so", entry.getKey());
+          String nextToken = String.format(" && ln -s %s %s", source, target);
+
+          if (command.length() + nextToken.length() > maxSize) {
+            LOG.debug("Executing symlink command: " + command);
+            AdbHelper.executeCommandWithErrorChecking(device, command);
+            command = commandPrefix + nextToken;
+          } else {
+            command += nextToken;
+          }
+        }
+
+        if (!command.equals(commandPrefix)) {
+          AdbHelper.executeCommandWithErrorChecking(device, command);
+        }
+      }
     }
 
     /**
@@ -797,9 +831,8 @@ public class ExopackageInstaller {
       ImmutableSet<String> requiredHashes,
       ImmutableSet.Builder<String> foundHashes,
       ImmutableSet.Builder<String> toDelete) {
-    for (String line : Splitter.on("\r\n").split(output)) {
-      if (line.equals("metadata.txt") || line.startsWith(AgentUtil.TEMP_PREFIX)) {
-        toDelete.add(line);
+    for (String line : Splitter.on("\r\n").omitEmptyStrings().split(output)) {
+      if (line.equals("lock")) {
         continue;
       }
 
@@ -810,6 +843,8 @@ public class ExopackageInstaller {
         } else {
           toDelete.add(line);
         }
+      } else {
+        toDelete.add(line);
       }
     }
   }

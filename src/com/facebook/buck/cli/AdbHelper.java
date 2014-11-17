@@ -86,6 +86,8 @@ public class AdbHelper {
   public static final long INSTALL_TIMEOUT = 2 * 60 * 1000; // 2 min
   public static final long GETPROP_TIMEOUT = 2 * 1000; // 2 seconds
 
+  public static final String ECHO_COMMAND_SUFFIX = " ; echo -n :$?";
+
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
   private final ExecutionContext context;
@@ -454,7 +456,7 @@ public class AdbHelper {
       ShellCommandUnresponsiveException,
       IOException {
     CollectingOutputReceiver receiver = new CollectingOutputReceiver();
-    device.executeShellCommand(command + " ; echo -n :$?", receiver);
+    device.executeShellCommand(command + ECHO_COMMAND_SUFFIX, receiver);
     String realOutput = checkReceiverOutput(command, receiver);
     return realOutput;
   }
