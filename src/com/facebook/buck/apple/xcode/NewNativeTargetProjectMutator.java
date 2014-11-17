@@ -87,6 +87,7 @@ public class NewNativeTargetProjectMutator {
   private final TargetGraph targetGraph;
   private final ExecutionContext executionContext;
   private final PathRelativizer pathRelativizer;
+  private final BuildRuleResolver buildRuleResolver;
   private final SourcePathResolver sourcePathResolver;
   private final BuildTarget buildTarget;
 
@@ -110,11 +111,13 @@ public class NewNativeTargetProjectMutator {
       TargetGraph targetGraph,
       ExecutionContext executionContext,
       PathRelativizer pathRelativizer,
+      BuildRuleResolver buildRuleResolver,
       SourcePathResolver sourcePathResolver,
       BuildTarget buildTarget) {
     this.targetGraph = targetGraph;
     this.executionContext = executionContext;
     this.pathRelativizer = pathRelativizer;
+    this.buildRuleResolver = buildRuleResolver;
     this.sourcePathResolver = sourcePathResolver;
     this.buildTarget = buildTarget;
     this.targetName = buildTarget.getFullyQualifiedName();
@@ -533,7 +536,7 @@ public class NewNativeTargetProjectMutator {
       // we can't handle it currently.
       Genrule rule = (Genrule) targetNodeToBuildRuleTransformer.transform(
           targetGraph,
-          new BuildRuleResolver(),
+          buildRuleResolver,
           node);
       PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
       target.getBuildPhases().add(shellScriptBuildPhase);

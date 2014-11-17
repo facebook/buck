@@ -146,6 +146,7 @@ public class ProjectGenerator {
           PosixFilePermission.GROUP_READ,
           PosixFilePermission.OTHERS_READ));
 
+  private final BuildRuleResolver buildRuleResolver;
   private final SourcePathResolver sourcePathResolver;
   private final TargetGraph targetGraph;
   private final ProjectFilesystem projectFilesystem;
@@ -184,10 +185,11 @@ public class ProjectGenerator {
       Path outputDirectory,
       String projectName,
       Set<Option> options) {
-    this.sourcePathResolver = new SourcePathResolver(
+    this.buildRuleResolver =
         new BuildRuleResolver(
             ImmutableSet.copyOf(
-                targetGraph.getActionGraph().getNodes())));
+                targetGraph.getActionGraph().getNodes()));
+    this.sourcePathResolver = new SourcePathResolver(this.buildRuleResolver);
     this.targetGraph = targetGraph;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectFilesystem = projectFilesystem;
@@ -516,6 +518,7 @@ public class ProjectGenerator {
         targetGraph,
         executionContext,
         pathRelativizer,
+        buildRuleResolver,
         sourcePathResolver,
         buildTarget);
     mutator

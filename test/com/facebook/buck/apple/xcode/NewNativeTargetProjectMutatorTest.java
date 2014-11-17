@@ -63,6 +63,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import org.junit.Before;
@@ -96,6 +97,7 @@ public class NewNativeTargetProjectMutatorTest {
         TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of()),
         executionContext,
         pathRelativizer,
+        buildRuleResolver,
         sourcePathResolver,
         testBuildTarget);
     mutator
@@ -342,11 +344,49 @@ public class NewNativeTargetProjectMutatorTest {
         phase.getShellScript());
   }
 
+  @Test
+  public void testScriptBuildPhaseWithGenruleDep() throws NoSuchBuildTargetException{
+    BuildTarget testBuildTarget = BuildTarget.builder("//foo", "library").build();
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+
+    BuildTarget depBuildTarget = BuildTarget.builder("//foo", "dep").build();
+    // This has the side effect of adding the dependency to the BuildRuleResolver map.
+    GenruleBuilder
+        .newGenruleBuilder(depBuildTarget)
+        .setBash("echo \"hello dep!\"")
+        .setOut("dep.txt")
+        .build(buildRuleResolver);
+
+    TargetNode<?> genruleNode = GenruleBuilder
+        .newGenruleBuilder(BuildTarget.builder("//foo", "script").build())
+        .setSrcs(ImmutableList.<SourcePath>of(new TestSourcePath("script/input.png")))
+        .setBash("echo \"hello world!\"")
+        .setOut("helloworld.txt")
+        .setDeps(ImmutableSortedSet.of(depBuildTarget))
+        .build();
+
+    mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(genruleNode));
+    NewNativeTargetProjectMutator.Result result =
+        mutator.buildTargetAndAddToProject(generatedProject);
+
+    PBXShellScriptBuildPhase phase =
+        getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
+    assertEquals(
+        "Should set input paths correctly",
+        "../script/input.png",
+        Iterables.getOnlyElement(phase.getInputPaths()));
+    assertEquals(
+        "should set script correctly",
+        "/bin/bash -e -c 'echo \"hello world!\"'",
+        phase.getShellScript());
+  }
+
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults(BuildTarget target) {
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of()),
         executionContext,
         pathRelativizer,
+        buildRuleResolver,
         sourcePathResolver,
         target);
     mutator
