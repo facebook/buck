@@ -16,7 +16,6 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.io.PathListing;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
