@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.io;
 
 import com.google.common.collect.ImmutableMap;
 

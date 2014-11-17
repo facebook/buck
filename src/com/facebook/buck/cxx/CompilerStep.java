@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import java.util.Collection;
 
 /**

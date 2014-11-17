@@ -19,9 +19,9 @@ package com.facebook.buck.timing;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.util.concurrent.TimeUnit;
-
 import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
 
 public class IncrementingFakeClockTest {
   @Test

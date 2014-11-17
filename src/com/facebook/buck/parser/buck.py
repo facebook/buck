@@ -1,19 +1,14 @@
 from __future__ import with_statement
 
 import __future__
-import copy
-import fnmatch
 import functools
-import glob as glob_module
 import imp
 import inspect
-import itertools
 import json
 from pathlib import Path
 import optparse
 import os
 import os.path
-import re
 import sys
 
 

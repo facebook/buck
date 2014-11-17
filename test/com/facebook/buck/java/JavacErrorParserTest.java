@@ -18,7 +18,7 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 

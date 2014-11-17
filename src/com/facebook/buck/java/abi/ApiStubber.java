@@ -17,7 +17,7 @@
 package com.facebook.buck.java.abi;
 
 
-import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.io.ProjectFilesystem;
 
 import java.io.IOException;
 import java.nio.file.Path;

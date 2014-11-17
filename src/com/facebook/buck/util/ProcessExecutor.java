@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.log.Logger;
-
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;

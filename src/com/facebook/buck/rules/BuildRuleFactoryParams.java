@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.util.ProjectFilesystem;
 
 public final class BuildRuleFactoryParams {
 

@@ -31,8 +31,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.testutil.Zip;
-import com.facebook.buck.util.MorePosixFilePermissions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;

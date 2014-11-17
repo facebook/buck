@@ -14,17 +14,19 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.io;
 
 import java.io.IOException;
 
-public class DefaultDirectoryTraverser implements DirectoryTraverser {
+public interface DirectoryTraverser {
 
-  public DefaultDirectoryTraverser() {}
-
-  @Override
-  public void traverse(DirectoryTraversal traversal) throws IOException {
-    traversal.traverse();
-  }
+  /**
+   * Takes a {@link DirectoryTraversal} and ensures that
+   * {@link DirectoryTraversal#visit(java.io.File, String)} is invoked, as appropriate. Normally,
+   * this is handled by invoking the traversal's {@link DirectoryTraversal#traverse()} method,
+   * though this extra level of abstraction makes it possible to inject different behavior for unit
+   * tests.
+   */
+  public void traverse(DirectoryTraversal traversal) throws IOException;
 
 }

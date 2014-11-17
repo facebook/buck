@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.io;
 
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;

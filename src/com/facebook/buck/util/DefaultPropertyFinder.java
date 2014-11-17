@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.util;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;

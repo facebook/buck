@@ -5,9 +5,9 @@ java_test(
     '//src/com/facebook/buck/java/classes:classes',
   ],
   deps = [
+    '//src/com/facebook/buck/java/classes:classes',
+    '//src/com/facebook/buck/io:io',
     '//third-party/java/guava:guava',
     '//third-party/java/junit:junit',
-    '//src/com/facebook/buck/java/classes:classes',
-    '//src/com/facebook/buck/util:io',
   ],
 )

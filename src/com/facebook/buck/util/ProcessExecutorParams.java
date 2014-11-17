@@ -18,11 +18,9 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

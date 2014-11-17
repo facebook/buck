@@ -2,14 +2,14 @@ java_library(
   name='macros',
   srcs=glob(['*.java']),
   deps=[
-    '//third-party/java/guava:guava',
+    '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:rule_pattern',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:util',
+    '//third-party/java/guava:guava',
   ],
   visibility=[
     'PUBLIC',

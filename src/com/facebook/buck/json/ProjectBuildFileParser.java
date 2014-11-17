@@ -19,6 +19,7 @@ package com.facebook.buck.json;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
@@ -26,7 +27,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.NamedTemporaryFile;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Threads;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;

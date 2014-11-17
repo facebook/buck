@@ -19,10 +19,10 @@ package com.facebook.buck.dalvik;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.dalvik.EstimateLinearAllocStep.LinearAllocEstimator;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.classes.FileLike;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 

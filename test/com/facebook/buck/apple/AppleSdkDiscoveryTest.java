@@ -20,10 +20,10 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Test;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import org.junit.Test;
 
 /**
  * Unit tests for {@link AppleSdkDiscovery}.

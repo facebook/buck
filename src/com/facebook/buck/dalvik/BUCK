@@ -39,13 +39,13 @@ java_library(
   ],
   deps = [
     ':dalvik_stats_tool',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
+    '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java/classes:classes',
     '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/zip:stream',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
   visibility = [
     'PUBLIC',
@@ -61,8 +61,8 @@ java_library(
     ':dalvik_stats_tool',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
+    '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java/classes:classes',
-    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/step:step',
   ],
   visibility = [

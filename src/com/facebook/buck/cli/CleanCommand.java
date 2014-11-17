@@ -18,9 +18,9 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Project;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Joiner;
 
 import org.kohsuke.args4j.CmdLineException;

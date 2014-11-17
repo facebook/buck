@@ -16,6 +16,8 @@
 
 import static javax.lang.model.SourceVersion.RELEASE_7;
 
+import com.google.common.io.Closeables;
+
 import java.io.Closeable;
 import java.io.StringReader;
 import java.util.Set;
@@ -25,8 +27,6 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.element.TypeElement;
-
-import com.google.common.io.Closeables;
 
 /**
  * Simple annotation processor that does nothing.

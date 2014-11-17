@@ -16,15 +16,15 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
-import java.io.IOException;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import org.junit.Test;
+
+import java.io.IOException;
 
 public class PkillProcessManagerTest {
 

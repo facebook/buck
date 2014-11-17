@@ -16,8 +16,8 @@
 
 package com.facebook.buck.java.classes;
 
-import com.facebook.buck.util.DirectoryTraversal;
-import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.io.DirectoryTraversal;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.io.Files;
 

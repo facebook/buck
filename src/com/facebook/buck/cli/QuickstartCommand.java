@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.util.MoreFiles;
+import com.facebook.buck.io.MoreFiles;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.Files;
 

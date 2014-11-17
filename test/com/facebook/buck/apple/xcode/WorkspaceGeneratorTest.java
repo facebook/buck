@@ -20,9 +20,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasXPath;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.SettableFakeClock;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;

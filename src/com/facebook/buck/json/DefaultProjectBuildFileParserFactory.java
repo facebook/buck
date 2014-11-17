@@ -17,9 +17,9 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 

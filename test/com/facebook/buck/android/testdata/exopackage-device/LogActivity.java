@@ -19,7 +19,6 @@ package exotest;
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Process;
 import android.util.Log;
 
 public class LogActivity extends Activity {

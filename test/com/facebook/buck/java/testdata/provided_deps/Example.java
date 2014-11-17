@@ -17,6 +17,7 @@
 package com.facebook.buck.example;
 
 import com.google.common.collect.Sets;
+
 import org.junit.Test;
 
 public class Example {

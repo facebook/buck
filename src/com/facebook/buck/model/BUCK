@@ -2,9 +2,9 @@ java_library(
   name = 'model',
   srcs = glob(['*.java']),
   deps = [
+    '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson-annotations',

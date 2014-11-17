@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
+
 import java.io.PrintStream;
 
 /**

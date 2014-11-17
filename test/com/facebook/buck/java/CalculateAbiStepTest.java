@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
@@ -26,7 +27,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;

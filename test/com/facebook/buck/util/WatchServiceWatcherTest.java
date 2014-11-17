@@ -28,6 +28,7 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 

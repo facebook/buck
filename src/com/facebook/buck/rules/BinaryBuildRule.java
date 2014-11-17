@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 
 public interface BinaryBuildRule {

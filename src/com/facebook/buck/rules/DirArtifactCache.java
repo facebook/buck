@@ -18,8 +18,8 @@ package com.facebook.buck.rules;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.MoreFiles;
 import com.facebook.buck.util.collect.ArrayIterable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;

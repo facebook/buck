@@ -19,13 +19,13 @@ package com.facebook.buck.java;
 import static java.util.jar.Attributes.Name.IMPLEMENTATION_VERSION;
 import static java.util.jar.Attributes.Name.MANIFEST_VERSION;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.Zip;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.collect.ImmutableMap;

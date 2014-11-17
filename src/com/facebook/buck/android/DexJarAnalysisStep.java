@@ -15,13 +15,14 @@
  */
 package com.facebook.buck.android;
 
-import java.util.zip.ZipFile;
-import java.util.zip.ZipEntry;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
-import java.nio.file.Path;
+import com.facebook.buck.step.Step;
+
 import java.io.IOException;
-import com.facebook.buck.util.ProjectFilesystem;
+import java.nio.file.Path;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * This step writes the size of a .dex.jar file and the uncompressed size of its contained

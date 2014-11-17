@@ -2,7 +2,6 @@ from buck import glob_internal, LazyBuildEnvPartial
 from pathlib import Path, PurePosixPath
 import os
 import shutil
-import sys
 import tempfile
 import unittest
 

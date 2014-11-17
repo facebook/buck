@@ -18,13 +18,13 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.DefaultDirectoryTraverser;
+import com.facebook.buck.io.DirectoryTraversal;
+import com.facebook.buck.io.DirectoryTraverser;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.timing.Clock;
-import com.facebook.buck.util.DefaultDirectoryTraverser;
-import com.facebook.buck.util.DirectoryTraversal;
-import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;

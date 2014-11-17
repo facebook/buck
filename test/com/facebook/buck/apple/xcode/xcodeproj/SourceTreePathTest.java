@@ -16,8 +16,9 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
-import org.junit.Test;
 import static org.junit.Assert.assertNotEquals;
+
+import org.junit.Test;
 
 import java.nio.file.Paths;
 

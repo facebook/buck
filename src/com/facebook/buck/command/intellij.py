@@ -1,8 +1,6 @@
 import errno
-import fnmatch
 import json
 import os
-import re
 import subprocess
 import sys
 

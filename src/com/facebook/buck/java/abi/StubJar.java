@@ -20,7 +20,7 @@ import static org.objectweb.asm.ClassReader.SKIP_CODE;
 import static org.objectweb.asm.ClassReader.SKIP_DEBUG;
 import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
 
-import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 

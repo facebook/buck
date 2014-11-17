@@ -16,7 +16,7 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;

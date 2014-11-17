@@ -32,8 +32,6 @@
 
 package com.facebook.buck.log;
 
-import java.util.IllegalFormatException;
-
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
@@ -41,6 +39,8 @@ import static java.util.logging.Level.FINER;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
+
+import java.util.IllegalFormatException;
 
 import javax.annotation.Nullable;
 

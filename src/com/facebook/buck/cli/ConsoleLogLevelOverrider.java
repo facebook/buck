@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.log.ConsoleHandler;
 import com.facebook.buck.util.Verbosity;
-
 import com.google.common.base.Optional;
 
 import java.util.logging.Level;

@@ -17,12 +17,12 @@
 package com.facebook.buck.java;
 
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;

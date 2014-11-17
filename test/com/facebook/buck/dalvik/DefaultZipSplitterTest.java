@@ -18,7 +18,7 @@ package com.facebook.buck.dalvik;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;

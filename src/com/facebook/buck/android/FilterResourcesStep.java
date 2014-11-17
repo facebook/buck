@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -27,7 +28,6 @@ import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.facebook.buck.util.Filters;
 import com.facebook.buck.util.Filters.Density;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

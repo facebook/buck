@@ -21,6 +21,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.FakeOutputStream;
 
+import org.junit.Test;
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,8 +30,6 @@ import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-
-import org.junit.Test;
 
 /**
  * Unit tests for {@link ConsoleHandler}.

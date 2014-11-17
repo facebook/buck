@@ -19,8 +19,8 @@ package com.facebook.buck.log;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
-import java.util.concurrent.ConcurrentMap;
 import java.util.Collections;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * An association between the current thread and a given command.

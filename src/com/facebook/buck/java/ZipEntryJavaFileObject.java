@@ -28,12 +28,11 @@ import java.net.URISyntaxException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
-
-import javax.annotation.Nullable;
 
 class ZipEntryJavaFileObject extends SimpleJavaFileObject implements Closeable {
 

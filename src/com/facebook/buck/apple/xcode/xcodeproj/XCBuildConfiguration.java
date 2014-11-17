@@ -16,9 +16,9 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
-import javax.annotation.Nullable;
-
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
+
+import javax.annotation.Nullable;
 
 /**
  * Build configuration containing a file reference ton an xcconfig file and additional inline

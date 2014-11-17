@@ -18,11 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
-import com.facebook.buck.util.ProjectFilesystem;
 
 import java.nio.file.Paths;
 

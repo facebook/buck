@@ -19,8 +19,8 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import com.facebook.buck.java.ResourcesRootPackageFinder;
 import com.facebook.buck.java.FakeJavaPackageFinder;
+import com.facebook.buck.java.ResourcesRootPackageFinder;
 
 import org.junit.Test;
 

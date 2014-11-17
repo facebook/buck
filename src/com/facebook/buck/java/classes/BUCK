@@ -4,7 +4,7 @@ java_library(
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
-    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/util:util',
   ],
   visibility = [

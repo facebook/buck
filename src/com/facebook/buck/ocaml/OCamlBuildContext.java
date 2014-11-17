@@ -16,8 +16,8 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;

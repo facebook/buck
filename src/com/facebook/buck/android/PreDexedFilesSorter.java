@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.android.SmartDexingStep.DexInputHashesProvider;
 
 import com.facebook.buck.dalvik.CanaryFactory;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.classes.FileLike;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -26,7 +27,6 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;

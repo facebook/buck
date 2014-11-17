@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.DirectoryTraverser;
+import com.facebook.buck.io.DirectoryTraversers;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.DirectoryTraverser;
-import com.facebook.buck.util.DirectoryTraversers;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;

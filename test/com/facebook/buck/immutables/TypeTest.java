@@ -16,10 +16,10 @@
 
 package com.facebook.buck.immutables;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 

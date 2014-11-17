@@ -24,10 +24,10 @@ java_library(
   srcs = [ 'Unzip.java' ],
   deps = [
     ':stream',
+    '//src/com/facebook/buck/io:io',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/commons-compress:commons-compress',
-    '//src/com/facebook/buck/util:io',
   ],
   visibility = [ 'PUBLIC' ],
 )
@@ -38,15 +38,15 @@ java_library(
   deps = [
     ':stream',
     ':unzip',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',
     '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/io:io',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
   visibility = [
     '//src/com/facebook/buck/android/...',

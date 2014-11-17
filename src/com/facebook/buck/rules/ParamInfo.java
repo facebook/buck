@@ -16,11 +16,11 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.util.Types;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Optional;
@@ -119,7 +119,7 @@ class ParamInfo<T> implements Comparable<ParamInfo<T>> {
 
   /**
    * Sets a single property of the {@code dto}, coercing types as necessary.
-   * @param filesystem {@link com.facebook.buck.util.ProjectFilesystem} used to ensure
+   * @param filesystem {@link com.facebook.buck.io.ProjectFilesystem} used to ensure
    *        {@link java.nio.file.Path}s exist.
    * @param pathRelativeToProjectRoot The path relative to the project root that this DTO is for.
    * @param dto The constructor DTO on which the value should be set.

@@ -11,13 +11,12 @@ java_library(
   ],
   deps = [
     ':xcode',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/apple/clang:headermap',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
@@ -29,9 +28,10 @@ java_library(
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//third-party/java/dd-plist:dd-plist',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
   visibility = [
     'PUBLIC',
@@ -46,11 +46,11 @@ java_library(
     'XCScheme.java',
   ] + glob(['util/*.java', 'xcodeproj/*.java']),
   deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-    '//third-party/java/dd-plist:dd-plist',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/log:log',
+    '//third-party/java/dd-plist:dd-plist',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
   visibility = [
     'PUBLIC'

@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
-import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Optional;
 
 import org.junit.Before;

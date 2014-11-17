@@ -18,13 +18,13 @@ package com.facebook.buck.log;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Test;
+
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.util.Locale;
-import java.util.TimeZone;
-
-import org.junit.Test;
 
 /**
  * Unit tests for {@link LogFormatter}.

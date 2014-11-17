@@ -26,8 +26,8 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.FileHashCache;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.hash.HashCode;
 
 import org.junit.Before;

@@ -16,11 +16,9 @@
 
 package com.example;
 
-import org.junit.Test;
-
 import com.example.library.LibraryClass;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 public class LameTest {
 

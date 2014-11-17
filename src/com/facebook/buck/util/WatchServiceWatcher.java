@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 

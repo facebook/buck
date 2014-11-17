@@ -16,6 +16,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.DxStep.Option;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -25,7 +26,6 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;

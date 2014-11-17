@@ -16,8 +16,8 @@
 
 package com.facebook.buck.zip;
 
-import com.facebook.buck.util.MoreFiles;
-import com.facebook.buck.util.MorePosixFilePermissions;
+import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.MorePosixFilePermissions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 

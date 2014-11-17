@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.io;
 
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.CustomZipEntry;
@@ -696,8 +696,9 @@ public class ProjectFilesystem {
         Path full = getPathForRelativePath(path);
         File file = full.toFile();
         if (file.canExecute()) {
-          entry.setExternalAttributes(MorePosixFilePermissions.toMode(
-              EnumSet.of(PosixFilePermission.OWNER_EXECUTE)) << 16);
+          entry.setExternalAttributes(
+              MorePosixFilePermissions.toMode(
+                  EnumSet.of(PosixFilePermission.OWNER_EXECUTE)) << 16);
         }
 
         zip.putNextEntry(entry);

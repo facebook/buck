@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.util.ProjectFilesystem;
 
 import java.nio.file.Path;
 

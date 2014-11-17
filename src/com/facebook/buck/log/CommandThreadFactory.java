@@ -17,11 +17,10 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.util.concurrent.MoreExecutors;
-
 import com.google.common.annotations.VisibleForTesting;
 
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ThreadFactory;
 
 import javax.annotation.Nullable;
 

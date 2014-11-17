@@ -1,0 +1,14 @@
+java_library(
+  name = 'io',
+  srcs = glob(['*.java']),
+  deps = [
+    # This library is widely used throughout Buck. Please keep
+    # the number of dependencies to an absolute minimum.
+    '//src/com/facebook/buck/util:constants',
+    '//src/com/facebook/buck/util/environment:platform',
+    '//src/com/facebook/buck/zip:stream',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+  ],
+  visibility = [ 'PUBLIC' ],
+)

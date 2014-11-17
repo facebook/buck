@@ -21,9 +21,9 @@ import com.google.common.collect.ImmutableMap;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.text.DecimalFormat;
 
 public enum SizeUnit {
   BYTES(0, "B"),

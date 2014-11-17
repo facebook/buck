@@ -16,12 +16,12 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 
 import java.io.IOException;

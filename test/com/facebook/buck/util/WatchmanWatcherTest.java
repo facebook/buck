@@ -30,9 +30,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;

@@ -23,9 +23,10 @@ import java.nio.file.Path;
  * An injectable service for interacting with the host filesystem via paths outside the project
  * root.
  *
- * @see ProjectFilesystem if you want to interact with the filesystem relative to the project root.
+ * @see com.facebook.buck.io.ProjectFilesystem if you want to interact with the filesystem relative
+ *    to the project root.
  */
-public class HostFilesystem {
+class HostFilesystem {
   public boolean isDirectory(Path path) {
     return Files.isDirectory(path);
   }

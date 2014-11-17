@@ -2,12 +2,12 @@ java_library(
   name = 'aapt',
   srcs = glob(['*.java']),
   deps = [
-    '//third-party/java/guava:guava',
     '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//third-party/java/guava:guava',
   ],
   visibility = ['PUBLIC'],
 )

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.util.ProjectFilesystem;
 
 import java.nio.file.Path;
 

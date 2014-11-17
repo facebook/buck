@@ -16,11 +16,11 @@
 
 package com.example.activity;
 
-import android.app.Activity;
-import android.os.Bundle;
-
 import com.example.R;
 import com.example.Utils;
+
+import android.app.Activity;
+import android.os.Bundle;
 
 public class ExampleActivity extends Activity {
 

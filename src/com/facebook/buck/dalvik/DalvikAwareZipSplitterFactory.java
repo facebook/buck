@@ -16,7 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
-import com.facebook.buck.util.ProjectFilesystem;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Predicate;
 
 import java.io.File;

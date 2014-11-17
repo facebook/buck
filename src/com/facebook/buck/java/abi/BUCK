@@ -4,9 +4,9 @@ PROTOCOL_SRCS = [
 
 java_library(
   name = 'abi',
-  srcs = glob(['*.java'], excludes = PROTOCOL_SRCS),
+  srcs = glob(['*.java'], excludes = PROTOCOL_SRCS + ['ApiStubber.java']),
   deps = [
-    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/io:io',
     '//third-party/java/asm:asm',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
@@ -22,5 +22,22 @@ java_library(
   srcs = PROTOCOL_SRCS,
   visibility = [
     'PUBLIC',
+  ],
+)
+
+java_binary(
+  name = 'api-stubber',
+  main_class = 'com.facebook.buck.abi.ApiStubber',
+  deps = [
+    ':lib-api-stubber',
+  ],
+)
+
+java_library(
+  name = 'lib-api-stubber',
+  srcs = [ 'ApiStubber.java' ],
+  deps = [
+    ':abi',
+     '//src/com/facebook/buck/io:io',
   ],
 )

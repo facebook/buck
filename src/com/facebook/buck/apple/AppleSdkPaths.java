@@ -16,9 +16,9 @@
 
 package com.facebook.buck.apple;
 
-import java.nio.file.Path;
-
 import org.immutables.value.Value;
+
+import java.nio.file.Path;
 
 /**
  * Paths to Apple SDK directories under an installation of Xcode.

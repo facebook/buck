@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.io;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
@@ -22,9 +22,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.util.ProjectFilesystem.CopySourceMode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -62,7 +62,7 @@ import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.Set;
 
-/** Unit test for {@link ProjectFilesystem}. */
+/** Unit test for {@link com.facebook.buck.io.ProjectFilesystem}. */
 public class ProjectFilesystemTest {
 
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
@@ -183,7 +183,9 @@ public class ProjectFilesystemTest {
     String content = "Hello, World!";
     byte[] bytes = content.getBytes();
     filesystem.writeBytesToPath(bytes, Paths.get("hello.txt"));
-    assertEquals(content, Files.toString(new File(tmp.getRoot(), "hello.txt"), Charsets.UTF_8));
+    assertEquals(
+        content,
+        Files.toString(new File(tmp.getRoot(), "hello.txt"), Charsets.UTF_8));
   }
 
   @Test
@@ -268,7 +270,9 @@ public class ProjectFilesystemTest {
     Files.write(content, file, Charsets.UTF_8);
 
     filesystem.copyFile(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt"));
-    assertEquals(content, Files.toString(new File(tmp.getRoot(), "foo/baz.txt"), Charsets.UTF_8));
+    assertEquals(
+        content,
+        Files.toString(new File(tmp.getRoot(), "foo/baz.txt"), Charsets.UTF_8));
   }
 
   @Test
@@ -286,7 +290,9 @@ public class ProjectFilesystemTest {
     WatchEvent<Path> modifyEvent = WatchEvents.createPathEvent(
         file,
         StandardWatchEventKinds.ENTRY_MODIFY);
-    assertEquals(file.toAbsolutePath().toString(), filesystem.createContextString(modifyEvent));
+    assertEquals(
+        file.toAbsolutePath().toString(),
+        filesystem.createContextString(modifyEvent));
   }
 
   @Test
@@ -342,7 +348,7 @@ public class ProjectFilesystemTest {
     final ImmutableList.Builder<String> fileNames = ImmutableList.builder();
 
     Path pathRelativeToProjectRoot = Paths.get(
-        "test/com/facebook/buck/util/testdata/directory_traversal_ignore_paths");
+        "test/com/facebook/buck/io/testdata/directory_traversal_ignore_paths");
     projectFilesystem.walkRelativeFileTree(
         pathRelativeToProjectRoot,
         new SimpleFileVisitor<Path>() {
@@ -353,7 +359,8 @@ public class ProjectFilesystemTest {
           }
         });
 
-    assertThat(fileNames.build(), containsInAnyOrder(
+    assertThat(
+        fileNames.build(), containsInAnyOrder(
             "file",
             "a_file",
             "b_file",
@@ -402,13 +409,15 @@ public class ProjectFilesystemTest {
     tmp.newFolder("dir1/dir2");
     tmp.newFile("dir1/dir2/file3");
 
-    assertThat(filesystem.getFilesUnderPath(
+    assertThat(
+        filesystem.getFilesUnderPath(
             Paths.get("dir1"),
             Predicates.<Path>alwaysTrue(),
             EnumSet.noneOf(FileVisitOption.class)),
         containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
 
-    assertThat(filesystem.getFilesUnderPath(
+    assertThat(
+        filesystem.getFilesUnderPath(
             Paths.get("dir1"),
             Predicates.equalTo(Paths.get("dir1/dir2/file3")),
             EnumSet.noneOf(FileVisitOption.class)),
@@ -418,7 +427,8 @@ public class ProjectFilesystemTest {
         filesystem.getFilesUnderPath(Paths.get("dir1")),
         containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
 
-    assertThat(filesystem.getFilesUnderPath(
+    assertThat(
+        filesystem.getFilesUnderPath(
             Paths.get("dir1"),
             Predicates.equalTo(Paths.get("dir1/file2"))),
         containsInAnyOrder(Paths.get("dir1/file2")));
@@ -485,7 +495,9 @@ public class ProjectFilesystemTest {
         output);
 
     ZipInspector zipInspector = new ZipInspector(output);
-    assertEquals(ImmutableSet.of("foo/bar.txt", "foo/baz.txt"), zipInspector.getZipFileEntries());
+    assertEquals(
+        ImmutableSet.of("foo/bar.txt", "foo/baz.txt"),
+        zipInspector.getZipFileEntries());
   }
 
   @Test

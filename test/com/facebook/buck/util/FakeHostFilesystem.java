@@ -16,13 +16,14 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.io.MorePaths;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.util.Arrays;
 
-public class FakeHostFilesystem extends HostFilesystem {
+class FakeHostFilesystem extends HostFilesystem {
 
   private final ImmutableSet<Path> knownDirectories;
 

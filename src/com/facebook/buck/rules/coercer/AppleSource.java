@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.SourcePath;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 

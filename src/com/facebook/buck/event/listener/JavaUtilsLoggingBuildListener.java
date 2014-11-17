@@ -17,12 +17,12 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Throwables;
 import com.google.common.eventbus.Subscribe;
 

@@ -19,8 +19,8 @@ package com.facebook.buck.java.abi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ProjectFilesystem;
 
 import org.junit.Before;
 import org.junit.Rule;

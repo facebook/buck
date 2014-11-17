@@ -17,8 +17,8 @@
 package com.facebook.buck.log;
 
 import java.io.OutputStreamWriter;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 
 /**

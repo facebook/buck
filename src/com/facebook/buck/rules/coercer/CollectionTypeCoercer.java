@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
 
 import java.nio.file.Path;

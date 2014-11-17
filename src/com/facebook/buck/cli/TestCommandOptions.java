@@ -16,10 +16,10 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;

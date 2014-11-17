@@ -19,17 +19,14 @@ package com.facebook.buck.apple;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
-
 import com.facebook.buck.log.Logger;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.io.BufferedInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-
+import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;

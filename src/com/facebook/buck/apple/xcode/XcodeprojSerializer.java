@@ -20,9 +20,9 @@ import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXObject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
+import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 
 import java.util.List;

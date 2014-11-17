@@ -16,10 +16,10 @@
 
 package com.facebook.buck.cxx;
 
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.everyItem;
+import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;

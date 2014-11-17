@@ -17,12 +17,11 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
-
 import com.facebook.buck.step.StepEvent;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
@@ -32,8 +31,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 /**
  * Log handler to bridge BuckEventBus events to java.util.logging records.

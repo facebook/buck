@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.ComputeExopackageDepsAbi.BuildOutput;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -33,7 +34,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;

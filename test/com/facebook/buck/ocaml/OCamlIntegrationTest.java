@@ -16,8 +16,8 @@
 
 package com.facebook.buck.ocaml;
 
-import static com.facebook.buck.ocaml.OCamlRuleBuilder.createStaticLibraryBuildTarget;
 import static com.facebook.buck.ocaml.OCamlRuleBuilder.createOCamlLinkTarget;
+import static com.facebook.buck.ocaml.OCamlRuleBuilder.createStaticLibraryBuildTarget;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

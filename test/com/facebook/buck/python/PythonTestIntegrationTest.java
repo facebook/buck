@@ -16,8 +16,8 @@
 
 package com.facebook.buck.python;
 
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;

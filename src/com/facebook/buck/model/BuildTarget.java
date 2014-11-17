@@ -16,8 +16,8 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.MorePaths;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

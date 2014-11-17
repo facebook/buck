@@ -16,9 +16,10 @@
 
 package com.facebook.sample2;
 
+import com.sample2.R;
+
 import android.app.Activity;
 import android.os.Bundle;
-import com.sample2.R;
 
 public class Sample extends Activity {
   @Override

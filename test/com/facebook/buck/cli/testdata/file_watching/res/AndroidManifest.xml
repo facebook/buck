@@ -12,4 +12,4 @@
   R.java files:
   https://our.intern.facebook.com/intern/tasks/?t=1820834
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example" />
+<manifest package="com.example"/>

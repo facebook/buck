@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.log.ConsoleHandler;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 

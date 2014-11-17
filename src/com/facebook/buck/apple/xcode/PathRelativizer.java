@@ -16,10 +16,10 @@
 
 package com.facebook.buck.apple.xcode;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MorePaths;
 
 import java.nio.file.Path;
 

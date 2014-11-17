@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Predicate;
 
 import java.io.IOException;

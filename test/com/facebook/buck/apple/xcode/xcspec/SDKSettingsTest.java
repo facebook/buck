@@ -19,6 +19,7 @@ package com.facebook.buck.apple.xcode.xcspec;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
+
 import org.junit.Test;
 
 import java.io.InputStream;
