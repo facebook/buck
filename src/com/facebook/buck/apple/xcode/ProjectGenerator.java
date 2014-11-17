@@ -146,7 +146,7 @@ public class ProjectGenerator {
           PosixFilePermission.GROUP_READ,
           PosixFilePermission.OTHERS_READ));
 
-  private final SourcePathResolver resolver;
+  private final SourcePathResolver sourcePathResolver;
   private final TargetGraph targetGraph;
   private final ProjectFilesystem projectFilesystem;
   private final ExecutionContext executionContext;
@@ -184,7 +184,7 @@ public class ProjectGenerator {
       Path outputDirectory,
       String projectName,
       Set<Option> options) {
-    this.resolver = new SourcePathResolver(
+    this.sourcePathResolver = new SourcePathResolver(
         new BuildRuleResolver(
             ImmutableSet.copyOf(
                 targetGraph.getActionGraph().getNodes())));
@@ -200,7 +200,7 @@ public class ProjectGenerator {
     this.pathRelativizer = new PathRelativizer(
         projectFilesystem.getRootPath(),
         outputDirectory,
-        resolver);
+        sourcePathResolver);
 
     LOG.debug(
         "Output directory %s, profile fs root path %s, repo root relative to output dir %s",
@@ -364,7 +364,7 @@ public class ProjectGenerator {
         }
       }
       for (SourcePath file : arg.files) {
-        if (!projectFilesystem.isFile(resolver.getPath(file))) {
+        if (!projectFilesystem.isFile(sourcePathResolver.getPath(file))) {
           throw new HumanReadableException(
               "%s specified in the files parameter of %s is not a regular file",
               file.toString(), resource.toString());
@@ -382,7 +382,8 @@ public class ProjectGenerator {
       throws IOException {
     Optional<Path> infoPlistPath;
     if (targetNode.getConstructorArg().infoPlist.isPresent()) {
-      infoPlistPath = Optional.of(resolver.getPath(targetNode.getConstructorArg().infoPlist.get()));
+      infoPlistPath = Optional.of(
+          sourcePathResolver.getPath(targetNode.getConstructorArg().infoPlist.get()));
     } else {
       infoPlistPath = Optional.absent();
     }
@@ -509,13 +510,13 @@ public class ProjectGenerator {
 
     String productName = getProductName(buildTarget);
     TargetSources sources = TargetSources.ofAppleSources(
-        resolver,
+        sourcePathResolver,
         targetNode.getConstructorArg().srcs.get());
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         targetGraph,
         executionContext,
         pathRelativizer,
-        resolver,
+        sourcePathResolver,
         buildTarget);
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
@@ -588,7 +589,7 @@ public class ProjectGenerator {
     }
     Optional<SourcePath> prefixHeaderOptional = targetNode.getConstructorArg().prefixHeader;
     if (prefixHeaderOptional.isPresent()) {
-        Path prefixHeaderRelative = resolver.getPath(prefixHeaderOptional.get());
+        Path prefixHeaderRelative = sourcePathResolver.getPath(prefixHeaderOptional.get());
         Path prefixHeaderPath = pathRelativizer.outputDirToRootRelative(prefixHeaderRelative);
         extraSettingsBuilder.put("GCC_PREFIX_HEADER", prefixHeaderPath.toString());
     }
@@ -833,7 +834,7 @@ public class ProjectGenerator {
     for (GroupedSource groupedSource : groupedSources) {
       switch (groupedSource.getType()) {
         case SOURCE_PATH:
-          if (resolver.isSourcePathExtensionInSet(
+          if (sourcePathResolver.isSourcePathExtensionInSet(
               groupedSource.getSourcePath(),
               FileExtensions.CLANG_HEADERS)) {
             addSourcePathToHeaderMaps(
@@ -885,10 +886,10 @@ public class ProjectGenerator {
     if (headerFlags != null) {
       visibility = HeaderVisibility.fromString(headerFlags);
     }
-    String fileName = resolver.getPath(headerPath).getFileName().toString();
+    String fileName = sourcePathResolver.getPath(headerPath).getFileName().toString();
     String prefixedFileName = prefix.resolve(fileName).toString();
     Path value =
-        projectFilesystem.getPathForRelativePath(resolver.getPath(headerPath))
+        projectFilesystem.getPathForRelativePath(sourcePathResolver.getPath(headerPath))
             .toAbsolutePath().normalize();
 
     // Add an entry Prefix/File.h -> AbsolutePathTo/File.h
