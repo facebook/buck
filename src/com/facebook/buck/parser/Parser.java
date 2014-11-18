@@ -435,7 +435,6 @@ public class Parser {
       BuckEventBus buckEventBus) throws IOException, InterruptedException {
 
     final MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    final Map<BuildTarget, TargetNode<?>> nodes = Maps.newHashMap();
 
     AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
         new AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget>() {
@@ -491,7 +490,6 @@ public class Parser {
             TargetNode<?> targetNode = getTargetNode(buildTarget);
             Preconditions.checkNotNull(targetNode, "No target node found for %s", buildTarget);
             graph.addNode(targetNode);
-            nodes.put(targetNode.getBuildTarget().getUnflavoredTarget(), targetNode);
             for (BuildTarget target : targetNode.getDeps()) {
               graph.addEdge(targetNode, getTargetNode(target));
             }
@@ -508,7 +506,7 @@ public class Parser {
       throw new HumanReadableException(e.getMessage());
     }
 
-    return new TargetGraph(graph, ImmutableMap.copyOf(nodes), Optional.of(buckEventBus));
+    return new TargetGraph(graph, Optional.of(buckEventBus));
   }
 
   /**

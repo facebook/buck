@@ -32,6 +32,9 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -43,7 +46,6 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
 
   public static final TargetGraph EMPTY = new TargetGraph(
       new MutableDirectedGraph<TargetNode<?>>(),
-      ImmutableMap.<BuildTarget, TargetNode<?>>of(),
       Optional.<BuckEventBus>absent());
 
   private final ImmutableMap<BuildTarget, TargetNode<?>> unflavoredNodes;
@@ -52,10 +54,13 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
 
   public TargetGraph(
       MutableDirectedGraph<TargetNode<?>> graph,
-      ImmutableMap<BuildTarget, TargetNode<?>> unflavoredNodes,
       Optional<BuckEventBus> buckEventBus) {
     super(graph);
-    this.unflavoredNodes = unflavoredNodes;
+    Map<BuildTarget, TargetNode<?>> map = Maps.newHashMap();
+    for (TargetNode<?> node : graph.getNodes()) {
+      map.put(node.getBuildTarget().getUnflavoredTarget(), node);
+    }
+    this.unflavoredNodes = ImmutableMap.copyOf(map);
     actionGraphSupplier = createActionGraphSupplier();
     this.buckEventBus = buckEventBus;
   }

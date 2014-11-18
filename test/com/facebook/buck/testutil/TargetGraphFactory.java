@@ -25,9 +25,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-
-import java.util.Map;
 
 public class TargetGraphFactory {
 
@@ -35,10 +32,8 @@ public class TargetGraphFactory {
 
   public static TargetGraph newInstance(ImmutableSet<TargetNode<?>> nodes) {
     ImmutableMap.Builder<BuildTarget, TargetNode<?>> builder = ImmutableMap.builder();
-    Map<BuildTarget, TargetNode<?>> unflavoredMap = Maps.newHashMap();
     for (TargetNode<?> node : nodes) {
       builder.put(node.getBuildTarget(), node);
-      unflavoredMap.put(node.getBuildTarget().getUnflavoredTarget(), node);
     }
     ImmutableMap<BuildTarget, TargetNode<?>> map = builder.build();
 
@@ -51,7 +46,6 @@ public class TargetGraphFactory {
     }
     return new TargetGraph(
         graph,
-        ImmutableMap.copyOf(unflavoredMap),
         Optional.<BuckEventBus>absent());
   }
 
