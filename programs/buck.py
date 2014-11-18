@@ -44,7 +44,7 @@ if __name__ == "__main__":
     try:
         sys.exit(main(sys.argv))
     except RestartBuck:
-        os.execvp(sys.argv[0], sys.argv)
+        os.execvp(os.path.join(os.path.dirname(THIS_DIR), 'bin', 'buck'), sys.argv)
     except (BuckToolException, NoBuckConfigFoundException) as e:
         print(str(e), file=sys.stderr)
         sys.exit(1)
