@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
@@ -123,7 +124,7 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
                   }
 
                   private void addGraphEnhancedDeps(BuildRule rule) {
-                    new AbstractDependencyVisitor(rule) {
+                    new AbstractBreadthFirstTraversal<BuildRule>(rule) {
                       @Override
                       public ImmutableSet<BuildRule> visit(BuildRule rule) {
                         ImmutableSet.Builder<BuildRule> depsToVisit = null;

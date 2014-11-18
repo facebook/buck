@@ -33,7 +33,7 @@ import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
-import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
@@ -810,7 +810,7 @@ public class Project {
       @Nullable final BuildRule srcTarget) {
 
     final Path basePathForRule = rule.getBuildTarget().getBasePath();
-    new AbstractDependencyVisitor(rule, true /* excludeRoot */) {
+    new AbstractBreadthFirstTraversal<BuildRule>(rule.getDeps()) {
 
       private final LinkedHashSet<DependentModule> librariesToAdd = Sets.newLinkedHashSet();
       private final LinkedHashSet<DependentModule> modulesToAdd = Sets.newLinkedHashSet();

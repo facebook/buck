@@ -16,14 +16,15 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.ImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 
-public class AbstractDependencyVisitors {
-  private AbstractDependencyVisitors() {
+public class BuildRuleDependencyVisitors {
+  private BuildRuleDependencyVisitors() {
   }
 
   /**
@@ -46,21 +47,26 @@ public class AbstractDependencyVisitors {
     // Build up a graph of the inputs and their transitive dependencies, we'll use the graph
     // to topologically sort the dependencies.
     final MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<>();
-    AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(inputs) {
-      @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        if (filter.apply(rule)) {
-          graph.addNode(rule);
-          for (BuildRule dep : rule.getDeps()) {
-            if (traverse.apply(dep) && filter.apply(dep)) {
-              graph.addEdge(rule, dep);
+    AbstractBreadthFirstTraversal<BuildRule> visitor =
+        new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
+          @Override
+          public ImmutableSet<BuildRule> visit(BuildRule rule) {
+            if (filter.apply(rule)) {
+              graph.addNode(rule);
+              for (BuildRule dep : rule.getDeps()) {
+                if (traverse.apply(dep) && filter.apply(dep)) {
+                  graph.addEdge(rule, dep);
+                }
+              }
             }
+            return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
           }
-        }
-        return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
-      }
-    };
+        };
     visitor.start();
     return new DefaultImmutableDirectedAcyclicGraph<>(graph);
+  }
+
+  public static ImmutableSet<BuildRule> maybeVisitAllDeps(BuildRule rule, boolean visitDeps) {
+    return visitDeps ? rule.getDeps() : ImmutableSet.<BuildRule>of();
   }
 }

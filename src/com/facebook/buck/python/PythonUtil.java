@@ -19,7 +19,7 @@ package com.facebook.buck.python;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
@@ -105,7 +105,7 @@ public class PythonUtil {
 
     // Walk all our transitive deps to build our complete package that we'll
     // turn into an executable.
-    new AbstractDependencyVisitor(params.getDeps()) {
+    new AbstractBreadthFirstTraversal<BuildRule>(params.getDeps()) {
       @Override
       public ImmutableSortedSet<BuildRule> visit(BuildRule rule) {
         // We only process and recurse on instances of PythonPackagable.

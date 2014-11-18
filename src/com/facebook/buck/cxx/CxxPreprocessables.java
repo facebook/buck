@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -86,17 +86,18 @@ public class CxxPreprocessables {
     final Map<BuildTarget, CxxPreprocessorInput> deps = Maps.newTreeMap();
 
     // Build up the map of all C/C++ preprocessable dependencies.
-    AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(inputs) {
-      @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        if (rule instanceof CxxPreprocessorDep) {
-          CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
-          Preconditions.checkState(!deps.containsKey(rule.getBuildTarget()));
-          deps.put(rule.getBuildTarget(), dep.getCxxPreprocessorInput(cxxPlatform));
-        }
-        return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
-      }
-    };
+    AbstractBreadthFirstTraversal<BuildRule> visitor =
+        new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
+          @Override
+          public ImmutableSet<BuildRule> visit(BuildRule rule) {
+            if (rule instanceof CxxPreprocessorDep) {
+              CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
+              Preconditions.checkState(!deps.containsKey(rule.getBuildTarget()));
+              deps.put(rule.getBuildTarget(), dep.getCxxPreprocessorInput(cxxPlatform));
+            }
+            return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
+          }
+        };
     visitor.start();
 
     // Grab the cxx preprocessor inputs and return them.

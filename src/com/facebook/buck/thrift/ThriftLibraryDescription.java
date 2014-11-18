@@ -23,7 +23,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -128,7 +128,7 @@ public class ThriftLibraryDescription
     final ImmutableSortedSet.Builder<ThriftLibrary> depsBuilder = ImmutableSortedSet.naturalOrder();
 
     // Build up a graph of the inputs and their transitive dependencies.
-    new AbstractDependencyVisitor(inputs) {
+    new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
         ThriftLibrary thriftRule = (ThriftLibrary) rule;

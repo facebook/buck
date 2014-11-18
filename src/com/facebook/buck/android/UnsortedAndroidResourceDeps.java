@@ -18,8 +18,9 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
-import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -66,29 +67,31 @@ public class UnsortedAndroidResourceDeps {
 
     // This visitor finds all AndroidResourceRules that are reachable from the specified rules via
     // rules with types in the TRAVERSABLE_TYPES collection.
-    AbstractDependencyVisitor visitor = new AbstractDependencyVisitor(rules) {
+    AbstractBreadthFirstTraversal<BuildRule> visitor =
+        new AbstractBreadthFirstTraversal<BuildRule>(rules) {
 
-      @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        HasAndroidResourceDeps androidResourceRule = null;
-        if (rule instanceof HasAndroidResourceDeps) {
-          androidResourceRule = (HasAndroidResourceDeps) rule;
-        }
-        if (androidResourceRule != null && androidResourceRule.getRes() != null) {
-          androidResources.add(androidResourceRule);
-        }
+          @Override
+          public ImmutableSet<BuildRule> visit(BuildRule rule) {
+            HasAndroidResourceDeps androidResourceRule = null;
+            if (rule instanceof HasAndroidResourceDeps) {
+              androidResourceRule = (HasAndroidResourceDeps) rule;
+            }
+            if (androidResourceRule != null && androidResourceRule.getRes() != null) {
+              androidResources.add(androidResourceRule);
+            }
 
-        // Only certain types of rules should be considered as part of this traversal.
-        BuildRuleType type = rule.getType();
-        ImmutableSet<BuildRule> depsToVisit = maybeVisitAllDeps(rule,
-            TRAVERSABLE_TYPES.contains(type));
-        if (callback.isPresent()) {
-          callback.get().onRuleVisited(rule, depsToVisit);
-        }
-        return depsToVisit;
-      }
+            // Only certain types of rules should be considered as part of this traversal.
+            BuildRuleType type = rule.getType();
+            ImmutableSet<BuildRule> depsToVisit = BuildRuleDependencyVisitors.maybeVisitAllDeps(
+                rule,
+                TRAVERSABLE_TYPES.contains(type));
+            if (callback.isPresent()) {
+              callback.get().onRuleVisited(rule, depsToVisit);
+            }
+            return depsToVisit;
+          }
 
-    };
+        };
     visitor.start();
 
     return new UnsortedAndroidResourceDeps(androidResources.build());

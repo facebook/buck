@@ -18,8 +18,9 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
-import com.facebook.buck.rules.AbstractDependencyVisitor;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableSet;
@@ -41,7 +42,7 @@ public class AndroidTransitiveDependencyGraph {
 
     final ImmutableSet.Builder<SourcePath> manifestFiles = ImmutableSet.builder();
 
-    new AbstractDependencyVisitor(rulesToTraverseForTransitiveDeps) {
+    new AbstractBreadthFirstTraversal<BuildRule>(rulesToTraverseForTransitiveDeps) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
         if (rule instanceof AndroidResource) {
@@ -54,7 +55,9 @@ public class AndroidTransitiveDependencyGraph {
           AndroidLibrary androidLibraryRule = (AndroidLibrary) rule;
           Optionals.addIfPresent(androidLibraryRule.getManifestFile(), manifestFiles);
         }
-        return maybeVisitAllDeps(rule, rule.getProperties().is(LIBRARY));
+        return BuildRuleDependencyVisitors.maybeVisitAllDeps(
+            rule,
+            rule.getProperties().is(LIBRARY));
       }
     }.start();
 

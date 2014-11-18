@@ -2,6 +2,7 @@ java_library(
   name = 'gwt',
   srcs = glob(['*.java']),
   deps = [
+    '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java:classhash',
     '//src/com/facebook/buck/java:rules',
