@@ -16,17 +16,25 @@
 
 package com.facebook.buck.ocaml;
 
+import static com.facebook.buck.ocaml.OCamlBuildContext.DEFAULT_OCAML_BYTECODE_COMPILER;
+import static com.facebook.buck.ocaml.OCamlBuildContext.DEFAULT_OCAML_COMPILER;
+import static com.facebook.buck.ocaml.OCamlBuildContext.DEFAULT_OCAML_DEP_TOOL;
+import static com.facebook.buck.ocaml.OCamlBuildContext.DEFAULT_OCAML_LEX_COMPILER;
+import static com.facebook.buck.ocaml.OCamlBuildContext.DEFAULT_OCAML_YACC_COMPILER;
 import static com.facebook.buck.ocaml.OCamlRuleBuilder.createOCamlLinkTarget;
 import static com.facebook.buck.ocaml.OCamlRuleBuilder.createStaticLibraryBuildTarget;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxCompilableEnhancer;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.DefaultCxxPlatform;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -34,6 +42,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
@@ -49,12 +58,25 @@ public class OCamlIntegrationTest {
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Before
-  public void beforeMethod() {
-    org.junit.Assume.assumeTrue(Files.exists(OCamlBuildContext.DEFAULT_OCAML_COMPILER));
-    org.junit.Assume.assumeTrue(Files.exists(OCamlBuildContext.DEFAULT_OCAML_BYTECODE_COMPILER));
-    org.junit.Assume.assumeTrue(Files.exists(OCamlBuildContext.DEFAULT_OCAML_DEP_TOOL));
-    org.junit.Assume.assumeTrue(Files.exists(OCamlBuildContext.DEFAULT_OCAML_YACC_COMPILER));
-    org.junit.Assume.assumeTrue(Files.exists(OCamlBuildContext.DEFAULT_OCAML_LEX_COMPILER));
+  public void checkOCamlIsConfigured() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "ocaml", tmp);
+    workspace.setUp();
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRootPath());
+    BuckConfig buckConfig = BuckConfig.createDefaultBuckConfig(
+        filesystem,
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
+
+    OCamlBuckConfig oCamlBuckConfig = new OCamlBuckConfig(Platform.detect(), buckConfig);
+
+    assumeTrue(Files.exists(oCamlBuckConfig.getOCamlCompiler().or(DEFAULT_OCAML_COMPILER)));
+    assumeTrue(Files.exists(oCamlBuckConfig.getOCamlBytecodeCompiler().or(
+                DEFAULT_OCAML_BYTECODE_COMPILER)));
+    assumeTrue(Files.exists(oCamlBuckConfig.getOCamlDepTool().or(DEFAULT_OCAML_DEP_TOOL)));
+    assumeTrue(Files.exists(oCamlBuckConfig.getYaccCompiler().or(DEFAULT_OCAML_YACC_COMPILER)));
+    assumeTrue(Files.exists(oCamlBuckConfig.getLexCompiler().or(DEFAULT_OCAML_LEX_COMPILER)));
   }
 
   @Test

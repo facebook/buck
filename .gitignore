@@ -15,6 +15,9 @@ local.properties
 *.pyc
 *py.class
 
+# buckconfig in Ocaml test project directory to override compiler paths.
+test/com/facebook/buck/ocaml/testdata/ocaml/.buckconfig
+
 # Eclipse
 /.settings/
 /.apt_generated/
