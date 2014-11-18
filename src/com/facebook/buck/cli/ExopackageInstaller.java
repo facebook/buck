@@ -95,7 +95,8 @@ public class ExopackageInstaller {
   @VisibleForTesting
   static final Pattern DEX_FILE_PATTERN = Pattern.compile("secondary-([0-9a-f]+)\\.[\\w.-]*");
 
-  private static final Pattern NATIVE_LIB_PATTERN = Pattern.compile("native-([0-9a-f]+\\.so)");
+  @VisibleForTesting
+  static final Pattern NATIVE_LIB_PATTERN = Pattern.compile("native-([0-9a-f]+)\\.so");
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;

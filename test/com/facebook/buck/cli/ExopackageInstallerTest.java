@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.cli.ExopackageInstaller.NATIVE_LIB_PATTERN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -33,6 +34,7 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Matcher;
 
 @SuppressWarnings("PMD.AddEmptyString")
 public class ExopackageInstallerTest {
@@ -205,5 +207,22 @@ public class ExopackageInstallerTest {
         Paths.get("metadata.txt"),
         baseDir,
         filesystem);
+  }
+
+
+  @Test
+  public void testNativeLibFilesPattern() {
+    assertEquals("123abc", matchAndGetHash("native-123abc.so"));
+    assertEquals(null, matchAndGetHash("native-123abcz.so"));
+    assertEquals(null, matchAndGetHash("native-.so"));
+    assertEquals(null, matchAndGetHash("secondary-123abc.so"));
+  }
+
+  private String matchAndGetHash(String filename) {
+    Matcher m = NATIVE_LIB_PATTERN.matcher(filename);
+    if (m.matches()) {
+      return m.group(1);
+    }
+    return null;
   }
 }
