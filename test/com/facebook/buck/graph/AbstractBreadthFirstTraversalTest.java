@@ -145,6 +145,7 @@ public class AbstractBreadthFirstTraversalTest {
       return deps;
     }
 
+    @Override
     public int compareTo(FakeNode other) {
       return this.name.compareTo(other.name);
     }
