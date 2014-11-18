@@ -36,12 +36,6 @@ public class DefaultImmutableDirectedAcyclicGraph<T> implements ImmutableDirecte
     this.incomingEdges = graph.createImmutableCopyOfIncomingEdges();
   }
 
-  public DefaultImmutableDirectedAcyclicGraph(DefaultImmutableDirectedAcyclicGraph<T> that) {
-    this.nodes = that.nodes;
-    this.outgoingEdges = that.outgoingEdges;
-    this.incomingEdges = that.incomingEdges;
-  }
-
   @Override
   public ImmutableSet<T> getOutgoingNodesFor(T source) {
     return outgoingEdges.get(source);
