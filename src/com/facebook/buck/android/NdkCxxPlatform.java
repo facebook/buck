@@ -425,6 +425,11 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   @Override
+  public String getSharedLibraryExtension() {
+    return "so";
+  }
+
+  @Override
   public BuildTarget getGtestDep() {
     throw new HumanReadableException("gtest is not supported on %s platform", getName());
   }

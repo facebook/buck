@@ -96,7 +96,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     if (type == Type.SHARED) {
       Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
           getBuildTarget(),
-          cxxPlatform.asFlavor());
+          cxxPlatform);
       libraryRule = CxxDescriptionEnhancer.requireBuildRule(
           params,
           ruleResolver,
@@ -129,7 +129,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
   @Override
   public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
     String sharedLibrarySoname =
-        soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(getBuildTarget()));
+        soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(getBuildTarget(), cxxPlatform));
     BuildRule sharedLibraryBuildRule = CxxDescriptionEnhancer.requireBuildRule(
         params,
         ruleResolver,
@@ -156,7 +156,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     String sharedLibrarySoname =
-        soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(getBuildTarget()));
+        soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(getBuildTarget(), cxxPlatform));
     BuildRule sharedLibraryBuildRule = CxxDescriptionEnhancer.requireBuildRule(
         params,
         ruleResolver,

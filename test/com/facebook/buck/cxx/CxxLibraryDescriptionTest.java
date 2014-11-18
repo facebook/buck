@@ -811,7 +811,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(
-            Paths.get(CxxDescriptionEnhancer.getSharedLibrarySoname(target)),
+            Paths.get(CxxDescriptionEnhancer.getSharedLibrarySoname(target, cxxPlatform)),
             new BuildTargetSourcePath(sharedRule.getBuildTarget())));
     assertEquals(
         expectedPythonPackageComponents,

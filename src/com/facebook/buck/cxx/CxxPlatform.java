@@ -62,6 +62,8 @@ public interface CxxPlatform {
   SourcePath getYacc();
   ImmutableList<String> getYaccFlags();
 
+  String getSharedLibraryExtension();
+
   BuildTarget getGtestDep();
 
   BuildTarget getBoostTestDep();

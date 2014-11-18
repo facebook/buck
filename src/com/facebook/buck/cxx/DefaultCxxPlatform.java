@@ -254,6 +254,19 @@ public class DefaultCxxPlatform implements CxxPlatform {
   }
 
   @Override
+  public String getSharedLibraryExtension() {
+    switch (platform) {
+      case MACOS:
+        return "dylib";
+      case WINDOWS:
+        return "dll";
+      // $CASES-OMITTED$
+      default:
+        return "so";
+    }
+  }
+
+  @Override
   public BuildTarget getGtestDep() {
     return delegate.getRequiredBuildTarget("cxx", "gtest_dep");
   }

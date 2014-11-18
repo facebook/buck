@@ -352,10 +352,11 @@ public class CxxLibraryDescription implements
             params.getBuildTarget(),
             cxxPlatform.asFlavor());
     String sharedLibrarySoname =
-        soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(params.getBuildTarget()));
+        soname.or(
+            CxxDescriptionEnhancer.getSharedLibrarySoname(params.getBuildTarget(), cxxPlatform));
     Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
         params.getBuildTarget(),
-        cxxPlatform.asFlavor());
+        cxxPlatform);
     CxxLink sharedLibraryBuildRule =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             cxxPlatform,

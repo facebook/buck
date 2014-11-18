@@ -32,6 +32,8 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -409,19 +411,27 @@ public class CxxDescriptionEnhancer {
         .resolve(name);
   }
 
-  public static String getSharedLibrarySoname(BuildTarget target) {
-    return String.format(
-        "lib%s_%s.so",
-        target.getBaseName().substring(2).replace('/', '_'),
-        target.getShortNameOnly());
+  public static String getSharedLibrarySoname(BuildTarget target, CxxPlatform platform) {
+    String libName =
+        Joiner.on('_').join(
+            ImmutableList.builder()
+                .addAll(
+                    FluentIterable.from(target.getBasePath())
+                        .transform(Functions.toStringFunction())
+                        .filter(Predicates.not(Predicates.equalTo(""))))
+                .add(target.getShortNameOnly())
+                .build());
+    String extension = platform.getSharedLibraryExtension();
+    return String.format("lib%s.%s", libName, extension);
   }
 
   public static Path getSharedLibraryPath(
       BuildTarget target,
-      Flavor platform) {
-    String name = String.format("lib%s.so", target.getShortNameOnly());
+      CxxPlatform platform) {
+    String extension = platform.getSharedLibraryExtension();
+    String name = String.format("lib%s.%s", target.getShortNameOnly(), extension);
     return BuildTargets.getBinPath(
-        createSharedLibraryBuildTarget(target, platform),
+        createSharedLibraryBuildTarget(target, platform.asFlavor()),
         "%s/" + name);
   }
 
