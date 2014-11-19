@@ -166,4 +166,30 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
   public ActionGraph getActionGraph() {
     return actionGraphSupplier.get();
   }
+
+  /**
+   * Get the subgraph of the the current graph containing the passed in roots and all of their
+   * transitive dependencies as nodes. Edges between the included nodes are preserved.
+   *
+   * @param roots An iterable containing the roots of the new subgraph.
+   * @return A subgraph of the current graph.
+   */
+  public TargetGraph getSubgraph(Iterable<? extends TargetNode<?>> roots) {
+    final MutableDirectedGraph<TargetNode<?>> subgraph = new MutableDirectedGraph<>();
+
+    new AbstractBreadthFirstTraversal<TargetNode<?>>(roots) {
+      @Override
+      public ImmutableSet<TargetNode<?>> visit(TargetNode<?> node) {
+        subgraph.addNode(node);
+        ImmutableSet<TargetNode<?>> dependencies =
+            ImmutableSet.copyOf(getAll(node.getDeps()));
+        for (TargetNode<?> dependency : dependencies) {
+          subgraph.addEdge(node, dependency);
+        }
+        return dependencies;
+      }
+    }.start();
+
+    return new TargetGraph(subgraph, buckEventBus);
+  }
 }
