@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.NoopBuildRule;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -91,12 +92,10 @@ public class AppleLibraryDescription implements
       return flavoredRule.get();
     }
 
-    return new AppleLibrary(
+    // We don't support building Apple targets natively yet
+    return new NoopBuildRule(
         params,
-        pathResolver,
-        args,
-        targetSources,
-        isDynamicLibraryTarget(params.getBuildTarget()));
+        pathResolver);
   }
 
   public static boolean isDynamicLibraryTarget(BuildTarget target) {
