@@ -84,6 +84,8 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
           pathResolver,
           targetSources);
       return Optional.of(compilationDatabase);
+    } else if (target.getFlavors().contains(HEADERS)) {
+      return Optional.of(createHeadersFlavor(params, pathResolver, args));
     } else {
       return Optional.absent();
     }

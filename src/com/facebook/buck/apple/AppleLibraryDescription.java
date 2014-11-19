@@ -91,12 +91,6 @@ public class AppleLibraryDescription implements
       return flavoredRule.get();
     }
 
-    if (params.getBuildTarget().getFlavors().contains(
-        AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS)) {
-      return AbstractAppleNativeTargetBuildRuleDescriptions
-          .createHeadersFlavor(params, pathResolver, args);
-    }
-
     return new AppleLibrary(
         params,
         pathResolver,

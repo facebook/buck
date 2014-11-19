@@ -87,12 +87,6 @@ public class AppleBinaryDescription
       return flavoredRule.get();
     }
 
-    if (params.getBuildTarget().getFlavors().contains(
-        AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS)) {
-      return AbstractAppleNativeTargetBuildRuleDescriptions
-          .createHeadersFlavor(params, pathResolver, args);
-    }
-
     return new AppleBinary(
         params,
         pathResolver,
