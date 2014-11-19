@@ -22,7 +22,6 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.event.BuckEvent;
@@ -31,6 +30,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigerator;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -134,7 +134,8 @@ public class ParserTest extends EasyMockSupport {
     Files.write(
         "include_defs('//java/com/facebook/includedByBuildFile')\n" +
         "java_library(name = 'foo')\n" +
-        "java_library(name = 'bar')\n",
+        "java_library(name = 'bar')\n" +
+        "genrule(name = 'baz', out = '')\n",
         testBuildFile.toFile(),
         Charsets.UTF_8);
 
@@ -263,20 +264,18 @@ public class ParserTest extends EasyMockSupport {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, razTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
-    try {
-      testParser.buildTargetGraphForBuildTargets(
-          buildTargets,
-          defaultIncludes,
-          BuckEventBusFactory.newInstance(),
-          new TestConsole(),
-          ImmutableMap.<String, String>of(),
-          /* enableProfiling */ false);
-      fail("HumanReadableException should be thrown");
-    } catch (HumanReadableException e) {
-      assertEquals("No rule found when resolving target //java/com/facebook:raz in build file " +
-                   "//java/com/facebook/BUCK",
-          e.getHumanReadableErrorMessage());
-    }
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "No rule found when resolving target //java/com/facebook:raz in build file " +
+            "//java/com/facebook/BUCK");
+
+    testParser.buildTargetGraphForBuildTargets(
+        buildTargets,
+        defaultIncludes,
+        BuckEventBusFactory.newInstance(),
+        new TestConsole(),
+        ImmutableMap.<String, String>of(),
+        /* enableProfiling */ false);
   }
 
   @Test
@@ -285,20 +284,38 @@ public class ParserTest extends EasyMockSupport {
     BuildTarget flavored = BuildTarget.builder("//java/com/facebook", "foo")
         .addFlavor("doesNotExist")
         .build();
-    try {
-      testParser.buildTargetGraphForBuildTargets(
-          ImmutableSortedSet.of(flavored),
-          ImmutableList.<String>of(),
-          BuckEventBusFactory.newInstance(),
-          new TestConsole(),
-          ImmutableMap.<String, String>of(),
-          /* enableProfiling */ false);
-    } catch (HumanReadableException e) {
-      assertEquals(
-          "Unrecognized flavor in target //java/com/facebook:foo#doesNotExist while parsing " +
-              "//java/com/facebook/BUCK.",
-          e.getHumanReadableErrorMessage());
-    }
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "Unrecognized flavor in target //java/com/facebook:foo#doesNotExist while parsing " +
+            "//java/com/facebook/BUCK.");
+    testParser.buildTargetGraphForBuildTargets(
+        ImmutableSortedSet.of(flavored),
+        ImmutableList.<String>of(),
+        BuckEventBusFactory.newInstance(),
+        new TestConsole(),
+        ImmutableMap.<String, String>of(),
+        /* enableProfiling */ false);
+  }
+
+  @Test
+  public void shouldThrowAnExceptionWhenAFlavorIsAskedOfATargetThatDoesntSupportFlavors()
+    throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
+    BuildTarget flavored = BuildTarget.builder("//java/com/facebook", "baz")
+        .addFlavor(JavaLibrary.SRC_JAR)
+        .build();
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "Unrecognized flavor in target //java/com/facebook:baz#src while parsing " +
+            "//java/com/facebook/BUCK.");
+    testParser.buildTargetGraphForBuildTargets(
+        ImmutableSortedSet.of(flavored),
+        ImmutableList.<String>of(),
+        BuckEventBusFactory.newInstance(),
+        new TestConsole(),
+        ImmutableMap.<String, String>of(),
+        /* enableProfiling */ false);
   }
 
   @Test
@@ -329,13 +346,13 @@ public class ParserTest extends EasyMockSupport {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
-  testParser.buildTargetGraphForBuildTargets(
-      buildTargets,
-      defaultIncludes,
-      BuckEventBusFactory.newInstance(),
-      new TestConsole(),
-      ImmutableMap.<String, String>of(),
-      /* enableProfiling */ false);
+    testParser.buildTargetGraphForBuildTargets(
+        buildTargets,
+        defaultIncludes,
+        BuckEventBusFactory.newInstance(),
+        new TestConsole(),
+        ImmutableMap.<String, String>of(),
+        /* enableProfiling */ false);
   }
 
   @Test
@@ -352,7 +369,8 @@ public class ParserTest extends EasyMockSupport {
 
     ImmutableSet<BuildTarget> expectedTargets = ImmutableSet.of(
         BuildTarget.builder("//java/com/facebook", "foo").build(),
-        BuildTarget.builder("//java/com/facebook", "bar").build());
+        BuildTarget.builder("//java/com/facebook", "bar").build(),
+        BuildTarget.builder("//java/com/facebook", "baz").build());
     assertEquals("Should have returned all rules.", expectedTargets, targets);
   }
 
@@ -482,8 +500,10 @@ public class ParserTest extends EasyMockSupport {
 
 
   // TODO(jimp/devjasta): clean up the horrible ProjectBuildFileParserFactory mess.
-  private void parseBuildFile(Path buildFile, Parser parser,
-                              ProjectBuildFileParserFactory buildFileParserFactory)
+  private void parseBuildFile(
+      Path buildFile,
+      Parser parser,
+      ProjectBuildFileParserFactory buildFileParserFactory)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     try (ProjectBuildFileParser projectBuildFileParser = buildFileParserFactory.createParser(
         /* commonIncludes */ Lists.<String>newArrayList(),

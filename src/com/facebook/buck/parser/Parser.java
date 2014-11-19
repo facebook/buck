@@ -1074,8 +1074,9 @@ public class Parser {
               unflavored.getBuildFilePath());
         }
 
-        if ((description instanceof Flavored) &&
-            !((Flavored) description).hasFlavors(buildTarget.getFlavors())) {
+        if (buildTarget.isFlavored() &&
+            (!(description instanceof Flavored) ||
+            !((Flavored) description).hasFlavors(buildTarget.getFlavors()))) {
           throw new HumanReadableException("Unrecognized flavor in target %s while parsing %s%s.",
               buildTarget,
               BuildTarget.BUILD_TARGET_PREFIX,
