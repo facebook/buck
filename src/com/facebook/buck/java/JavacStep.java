@@ -42,8 +42,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nullable;
-
 /**
  * Command used to compile java libraries with a variety of ways to handle dependencies.
  * <p>
@@ -66,7 +64,6 @@ public abstract class JavacStep implements Step {
 
   protected final JavacOptions javacOptions;
 
-  @Nullable
   protected final ImmutableSet<Path> transitiveClasspathEntries;
 
   protected final ImmutableSet<Path> declaredClasspathEntries;

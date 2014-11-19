@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 /**
  * Unit test for {@link AbstractAcyclicDepthFirstPostOrderTraversal}.
  */
@@ -178,6 +180,7 @@ public class AbstractAcyclicDepthFirstPostOrderTraversalTest {
 
     private final Multimap<String, String> graph;
     private final List<String> exploredNodes = Lists.newArrayList();
+    @Nullable
     private ImmutableList<String> paramToNodesInExplorationOrder;
     private int numFindChildrenCalls;
 

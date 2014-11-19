@@ -17,6 +17,7 @@
 package com.facebook.buck.testutil;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchEvent.Kind;
@@ -57,7 +58,7 @@ public class WatchEvents {
 
       @Override
       public Object context() {
-        return null;
+        return Paths.get("null");
       }
     };
   }

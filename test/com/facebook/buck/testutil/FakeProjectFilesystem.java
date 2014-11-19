@@ -66,22 +66,27 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 // TODO(natthu): Implement methods that throw UnsupportedOperationException.
 public class FakeProjectFilesystem extends ProjectFilesystem {
 
   private static final BasicFileAttributes DEFAULT_FILE_ATTRIBUTES =
       new BasicFileAttributes() {
         @Override
+        @Nullable
         public FileTime lastModifiedTime() {
           return null;
         }
 
         @Override
+        @Nullable
         public FileTime lastAccessTime() {
           return null;
         }
 
         @Override
+        @Nullable
         public FileTime creationTime() {
           return null;
         }
@@ -112,6 +117,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
         }
 
         @Override
+        @Nullable
         public Object fileKey() {
           return null;
         }
@@ -156,7 +162,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   private byte[] getFileBytes(Path path) {
-    return fileContents.get(path.normalize());
+    return Preconditions.checkNotNull(fileContents.get(path.normalize()));
   }
 
   private void rmFile(Path path) {
@@ -166,7 +172,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   public ImmutableSet<FileAttribute<?>> getFileAttributesAtPath(Path path) {
-    return fileAttributes.get(path);
+    return Preconditions.checkNotNull(fileAttributes.get(path));
   }
 
   @Override
@@ -272,7 +278,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     if (!exists(normalizedPath)) {
       throw new NoSuchFileException(path.toString());
     }
-    return fileLastModifiedTimes.get(normalizedPath).toMillis();
+    return Preconditions.checkNotNull(fileLastModifiedTimes.get(normalizedPath)).toMillis();
   }
 
   @Override

@@ -102,7 +102,7 @@ public final class MoreAsserts {
   public static <T extends Iterable<?>> void assertIterablesEquals(
       Iterable<?> expected,
       Iterable<?> observed) {
-    assertIterablesEquals(null /* userMessage */, expected, observed);
+    assertIterablesEquals("" /* userMessage */, expected, observed);
   }
 
   /**

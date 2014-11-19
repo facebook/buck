@@ -75,7 +75,7 @@ public class NdkCxxPlatform implements CxxPlatform {
     Preconditions.checkArgument(
         platform.equals(Platform.MACOS) || platform.equals(Platform.LINUX),
         "NDKCxxPlatform can only currently run on MacOS or Linux.");
-    Host host = BUILD_PLATFORMS.get(platform);
+    Host host = Preconditions.checkNotNull(BUILD_PLATFORMS.get(platform));
 
     this.name = Preconditions.checkNotNull(name);
     this.flavor = Preconditions.checkNotNull(flavor);

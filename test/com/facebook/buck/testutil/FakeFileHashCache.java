@@ -17,6 +17,7 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.util.FileHashCache;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
@@ -54,7 +55,7 @@ public class FakeFileHashCache implements FileHashCache {
 
   @Override
   public HashCode get(Path path) {
-    return pathsToHashes.get(path);
+    return Preconditions.checkNotNull(pathsToHashes.get(path));
   }
 
 }
