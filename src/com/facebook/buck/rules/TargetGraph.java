@@ -32,9 +32,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -48,7 +45,7 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
       new MutableDirectedGraph<TargetNode<?>>(),
       Optional.<BuckEventBus>absent());
 
-  private final ImmutableMap<BuildTarget, TargetNode<?>> unflavoredNodes;
+  private final ImmutableMap<BuildTarget, TargetNode<?>> targetsToNodes;
   private final Supplier<ActionGraph> actionGraphSupplier;
   private final Optional<BuckEventBus> buckEventBus;
 
@@ -56,18 +53,18 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
       MutableDirectedGraph<TargetNode<?>> graph,
       Optional<BuckEventBus> buckEventBus) {
     super(graph);
-    Map<BuildTarget, TargetNode<?>> map = Maps.newHashMap();
+    ImmutableMap.Builder<BuildTarget, TargetNode<?>> builder = ImmutableMap.builder();
     for (TargetNode<?> node : graph.getNodes()) {
-      map.put(node.getBuildTarget().getUnflavoredTarget(), node);
+      builder.put(node.getBuildTarget(), node);
     }
-    this.unflavoredNodes = ImmutableMap.copyOf(map);
+    this.targetsToNodes = builder.build();
     actionGraphSupplier = createActionGraphSupplier();
     this.buckEventBus = buckEventBus;
   }
 
   @Nullable
   public TargetNode<?> get(BuildTarget target) {
-    return unflavoredNodes.get(target.getUnflavoredTarget());
+    return targetsToNodes.get(target);
   }
 
   public Iterable<TargetNode<?>> getAll(Iterable<BuildTarget> targets) {
