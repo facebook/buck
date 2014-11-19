@@ -26,7 +26,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -39,7 +38,6 @@ public class GenruleDepsIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
-  @Ignore("t2721181")
   @Test
   public void testUpdatingJarBuildByGenruleAffectDependentRebuild() throws IOException {
     final Charset charsetForTest = Charsets.UTF_8;
@@ -55,7 +53,7 @@ public class GenruleDepsIntegrationTest {
     File testFile = workspace.getFile("resource.base.txt");
     Files.write("Different text", testFile, charsetForTest);
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test");
-    result2.assertFailure();
+    result2.assertTestFailure();
     assertThat("`buck test` should fail because testBasicAssertion() failed.",
         result2.getStderr(),
         containsString("FAILURE testBasicAssertion"));
