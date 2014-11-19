@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -55,11 +56,16 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg implements HasSourceUnderTest {
     public BuildTarget testBundle;
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+
+    @Override
+    public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
+      return sourceUnderTest.get();
+    }
   }
 }

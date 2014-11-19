@@ -21,6 +21,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -194,11 +195,16 @@ public class CxxTestDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public class Arg extends CxxBinaryDescription.Arg {
+  public class Arg extends CxxBinaryDescription.Arg implements HasSourceUnderTest {
     public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<CxxTestType> framework;
+
+    @Override
+    public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
+      return sourceUnderTest.get();
+    }
   }
 
 }

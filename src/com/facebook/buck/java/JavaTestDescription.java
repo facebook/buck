@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -112,11 +113,16 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends JavaLibraryDescription.Arg {
+  public static class Arg extends JavaLibraryDescription.Arg implements HasSourceUnderTest {
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<ImmutableList<String>> vmArgs;
     public Optional<TestType> testType;
+
+    @Override
+    public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
+      return sourceUnderTest.get();
+    }
   }
 }

@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -272,10 +273,15 @@ public class PythonTestDescription implements Description<PythonTestDescription.
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends PythonLibraryDescription.Arg {
+  public static class Arg extends PythonLibraryDescription.Arg implements HasSourceUnderTest {
     public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
+
+    @Override
+    public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
+      return sourceUnderTest.get();
+    }
   }
 
 }
