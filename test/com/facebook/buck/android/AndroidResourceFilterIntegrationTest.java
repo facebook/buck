@@ -66,7 +66,7 @@ public class AndroidResourceFilterIntegrationTest {
         resolver,
         Optional.<Path>absent()).getAaptExecutable();
     String buildToolsVersion = aapt.getParent().getFileName().toString();
-    isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") != -1;
+    isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") >= 0;
   }
 
   @Before
