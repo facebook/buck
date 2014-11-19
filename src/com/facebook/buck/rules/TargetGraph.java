@@ -67,6 +67,15 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
     return targetsToNodes.get(target);
   }
 
+  public Function<BuildTarget, TargetNode<?>> get() {
+    return new Function<BuildTarget, TargetNode<?>>() {
+      @Override
+      public TargetNode<?> apply(BuildTarget input) {
+        return Preconditions.checkNotNull(get(input));
+      }
+    };
+  }
+
   public Iterable<TargetNode<?>> getAll(Iterable<BuildTarget> targets) {
     return Iterables.transform(
         targets,
@@ -105,7 +114,17 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
                     } catch (NoSuchBuildTargetException e) {
                       throw new HumanReadableException(e);
                     }
-                    ruleResolver.addToIndex(rule);
+
+                    // Check whether a rule with this build target already exists. This is possible
+                    // if we create a new build rule during graph enhancement, and the user asks to
+                    // build the same build rule.
+                    Optional<BuildRule> existingRule =
+                        ruleResolver.getRuleOptional(node.getBuildTarget());
+                    Preconditions.checkState(
+                        !existingRule.isPresent() || existingRule.get().equals(rule));
+                    if (!existingRule.isPresent()) {
+                      ruleResolver.addToIndex(rule);
+                    }
                     actionGraph.addNode(rule);
 
                     for (BuildRule buildRule : rule.getDeps()) {

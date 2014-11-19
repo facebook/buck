@@ -91,15 +91,10 @@ public class AppleLibraryDescription implements
       return flavoredRule.get();
     }
 
-    // When creating an unflavored AppleLibrary, ensure that the #headers flavor is created, as
-    // well.
-    BuildRule headersRule = AbstractAppleNativeTargetBuildRuleDescriptions
-        .createHeadersFlavorIfNotAlreadyPresent(params, resolver, args);
     if (params.getBuildTarget().getFlavors().contains(
         AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS)) {
-      return headersRule;
-    } else if (!resolver.getRuleOptional(headersRule.getBuildTarget()).isPresent()) {
-      resolver.addToIndex(headersRule);
+      return AbstractAppleNativeTargetBuildRuleDescriptions
+          .createHeadersFlavor(params, pathResolver, args);
     }
 
     return new AppleLibrary(

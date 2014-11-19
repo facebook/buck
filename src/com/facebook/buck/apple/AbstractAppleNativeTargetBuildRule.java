@@ -43,23 +43,6 @@ import java.nio.file.Paths;
  */
 public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRule {
 
-  public static enum HeaderMapType {
-    PUBLIC_HEADER_MAP("-public-headers.hmap"),
-    TARGET_HEADER_MAP("-target-headers.hmap"),
-    TARGET_USER_HEADER_MAP("-target-user-headers.hmap"),
-    ;
-
-    private final String suffix;
-
-    private HeaderMapType(String suffix) {
-      this.suffix = suffix;
-    }
-
-    public String getSuffix() {
-      return suffix;
-    }
-  }
-
   private final ImmutableSortedMap<String, ImmutableMap<String, String>> configurations;
   private final ImmutableList<GroupedSource> srcs;
   private final ImmutableSortedMap<SourcePath, String> perFileFlags;
@@ -146,26 +129,6 @@ public abstract class AbstractAppleNativeTargetBuildRule extends AbstractBuildRu
    */
   public ImmutableSortedSet<String> getFrameworks() {
     return frameworks;
-  }
-
-  /**
-   * Returns an optional GID to be used for the target, if present.
-   */
-  public Optional<String> getGid() {
-    return gid;
-  }
-
-  /**
-   * @return A boolean whether Buck should generate header maps for this project.
-   */
-  public boolean getUseBuckHeaderMaps() { return useBuckHeaderMaps; }
-
-  public Optional<Path> getPathToHeaderMap(HeaderMapType headerMapType) {
-    if (!getUseBuckHeaderMaps()) {
-      return Optional.absent();
-    }
-
-    return Optional.of(BuildTargets.getGenPath(getBuildTarget(), "%s" + headerMapType.suffix));
   }
 
   @Override

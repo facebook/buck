@@ -16,12 +16,12 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule.HeaderMapType;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -29,7 +29,9 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -94,9 +96,9 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
    * present in the specified {@code resolver}. (This could happen if another rule has already
    * requested the {@code #headers} flavor for this rule.)
    */
-  static BuildRule createHeadersFlavorIfNotAlreadyPresent(
+  static BuildRule createHeadersFlavor(
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      SourcePathResolver resolver,
       AppleNativeTargetDescriptionArg args) {
     BuildTarget targetForOriginalRule = params.getBuildTarget();
     if (targetForOriginalRule.isFlavored()) {
@@ -106,31 +108,27 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
         targetForOriginalRule,
         AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS);
 
-    Optional<BuildRule> headersRuleOption = resolver.getRuleOptional(headersTarget);
-    if (headersRuleOption.isPresent()) {
-      return headersRuleOption.get();
-    }
-
     BuildRuleParams headerRuleParams = params.copyWithChanges(
         HEADERS_RULE_TYPE,
         headersTarget,
         /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(),
         params.getExtraDeps());
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    TargetSources targetSources = TargetSources.ofAppleSources(pathResolver, args.srcs.get());
+    TargetSources targetSources = TargetSources.ofAppleSources(resolver, args.srcs.get());
     ImmutableSortedMap<SourcePath, String> perFileFlags = targetSources.perFileFlags;
     boolean useBuckHeaderMaps = args.useBuckHeaderMaps.or(Boolean.FALSE);
-    SymlinkTree headersRule = createCopyPublicHeadersAction(
+    return createSymlinkTree(
         headerRuleParams,
-        pathResolver,
+        resolver,
         perFileFlags,
         useBuckHeaderMaps);
-
-    return headersRule;
   }
 
-  private static SymlinkTree createCopyPublicHeadersAction(
+  public static Path getPathToHeaders(BuildTarget buildTarget) {
+    return BuildTargets.getBinPath(buildTarget, "__%s_public_headers__");
+  }
+
+  private static SymlinkTree createSymlinkTree(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
       ImmutableSortedMap<SourcePath, String> perFileFlags,
@@ -165,7 +163,7 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
     BuildRuleParams headerParams = params.copyWithDeps(
         /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(),
         params.getExtraDeps());
-    Path root = BuildTargets.getBinPath(headerParams.getBuildTarget(), "__%s_public_headers__");
+    Path root = getPathToHeaders(params.getBuildTarget());
     return new SymlinkTree(headerParams, pathResolver, root, ImmutableMap.copyOf(headersToCopy));
   }
 
@@ -180,10 +178,14 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
       AppleConfig appleConfig,
       SourcePathResolver pathResolver,
       TargetSources targetSources) {
-    CompilationDatabaseTraversal traversal = new CompilationDatabaseTraversal(buildRuleResolver);
-    Iterable<AbstractAppleNativeTargetBuildRule> startNodes = FluentIterable
-        .from(params.getDeclaredDeps())
-        .filter(AbstractAppleNativeTargetBuildRule.class);
+    CompilationDatabaseTraversal traversal = new CompilationDatabaseTraversal(
+        params.getTargetGraph(),
+        buildRuleResolver);
+    Iterable<TargetNode<AppleNativeTargetDescriptionArg>> startNodes = filterAppleNativeTargetNodes(
+        FluentIterable
+            .from(params.getDeclaredDeps())
+            .transform(HasBuildTarget.TO_TARGET)
+            .transform(params.getTargetGraph().get()));
     try {
       traversal.traverse(startNodes);
     } catch (CycleException | IOException | InterruptedException e) {
@@ -204,40 +206,67 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
         args.prefixHeader);
   }
 
-  private static class CompilationDatabaseTraversal
-      extends AbstractAcyclicDepthFirstPostOrderTraversal<AbstractAppleNativeTargetBuildRule> {
+  private static FluentIterable<TargetNode<AppleNativeTargetDescriptionArg>>
+      filterAppleNativeTargetNodes(FluentIterable<TargetNode<?>> fluentIterable) {
+    return fluentIterable
+        .filter(
+            new Predicate<TargetNode<?>>() {
+              @Override
+              public boolean apply(TargetNode<?> input) {
+                return ImmutableSet
+                    .of(AppleBinaryDescription.TYPE, AppleLibraryDescription.TYPE)
+                    .contains(input.getType());
+              }
+            })
+        .transform(
+            new Function<TargetNode<?>, TargetNode<AppleNativeTargetDescriptionArg>>() {
+              @Override
+              @SuppressWarnings("unchecked")
+              public TargetNode<AppleNativeTargetDescriptionArg> apply(TargetNode<?> input) {
+                return (TargetNode<AppleNativeTargetDescriptionArg>) input;
+              }
+            });
+  }
 
+  private static class CompilationDatabaseTraversal
+      extends AbstractAcyclicDepthFirstPostOrderTraversal<
+      TargetNode<AppleNativeTargetDescriptionArg>> {
+
+    private final TargetGraph targetGraph;
     private final BuildRuleResolver buildRuleResolver;
     private final ImmutableSet.Builder<Path> includePaths;
     private final ImmutableSortedSet.Builder<BuildRule> deps;
 
-    private CompilationDatabaseTraversal(BuildRuleResolver buildRuleResolver) {
+    private CompilationDatabaseTraversal(
+        TargetGraph targetGraph,
+        BuildRuleResolver buildRuleResolver) {
+      this.targetGraph = targetGraph;
       this.buildRuleResolver = buildRuleResolver;
       this.includePaths = ImmutableSet.builder();
       this.deps = ImmutableSortedSet.naturalOrder();
     }
 
     @Override
-    protected Iterator<AbstractAppleNativeTargetBuildRule> findChildren(
-        AbstractAppleNativeTargetBuildRule rule)
+    protected Iterator<TargetNode<AppleNativeTargetDescriptionArg>> findChildren(
+        TargetNode<AppleNativeTargetDescriptionArg> node)
         throws IOException, InterruptedException {
-      return FluentIterable.from(rule.getDeps()).filter(AbstractAppleNativeTargetBuildRule.class)
-          .iterator();
+      return filterAppleNativeTargetNodes(
+          FluentIterable.from(node.getDeclaredDeps()).transform(targetGraph.get())).iterator();
     }
 
     @Override
-    protected void onNodeExplored(AbstractAppleNativeTargetBuildRule rule)
+    protected void onNodeExplored(TargetNode<AppleNativeTargetDescriptionArg> node)
         throws IOException, InterruptedException {
-      if (rule.getUseBuckHeaderMaps()) {
+      if (node.getConstructorArg().getUseBuckHeaderMaps()) {
         // TODO(user): Currently, header maps are created by `buck project`. Eventually they
         // should become build dependencies. When that happens, rule should be added to this.deps.
-        Path headerMap = rule.getPathToHeaderMap(HeaderMapType.PUBLIC_HEADER_MAP).get();
+        Path headerMap = getPathToHeaderMap(node, HeaderMapType.PUBLIC_HEADER_MAP).get();
         includePaths.add(headerMap);
       } else {
-        // In this case, we need the #headers flavor of rule so the path to its public headers
-        // directory can be included. First, we perform a defensive check to make sure that rule is
-        // an unflavored rule because it may not be safe to request the #headers of a flavored rule.
-        BuildTarget buildTarget = rule.getBuildTarget();
+        // In this case, we need the #headers flavor of node so the path to its public headers
+        // directory can be included. First, we perform a defensive check to make sure that node is
+        // an unflavored node because it may not be safe to request the #headers of a flavored node.
+        BuildTarget buildTarget = node.getBuildTarget();
         if (buildTarget.isFlavored()) {
           return;
         }
@@ -246,7 +275,23 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
         BuildTarget targetForHeaders = BuildTargets.createFlavoredBuildTarget(
             buildTarget,
             AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS);
-        SymlinkTree headersRule = (SymlinkTree) buildRuleResolver.getRule(targetForHeaders);
+        Optional<BuildRule> buildRule = buildRuleResolver.getRuleOptional(targetForHeaders);
+        if (!buildRule.isPresent()) {
+          BuildRule newBuildRule = node.getDescription().createBuildRule(
+              new BuildRuleParams(
+                  targetForHeaders,
+                  ImmutableSortedSet.<BuildRule>of(),
+                  ImmutableSortedSet.<BuildRule>of(),
+                  node.getRuleFactoryParams().getProjectFilesystem(),
+                  node.getRuleFactoryParams().getRuleKeyBuilderFactory(),
+                  node.getType(),
+                  targetGraph),
+              buildRuleResolver,
+              node.getConstructorArg());
+          buildRuleResolver.addToIndex(newBuildRule);
+          buildRule = Optional.of(newBuildRule);
+        }
+        SymlinkTree headersRule = (SymlinkTree) buildRule.get();
 
         // Finally, we make sure the rule has public headers before adding it to includePaths.
         Optional<Path> headersDirectory = headersRule.getRootOfSymlinksDirectory();
@@ -259,7 +304,7 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
 
     @Override
     protected void onTraversalComplete(
-        Iterable<AbstractAppleNativeTargetBuildRule> nodesInExplorationOrder) {
+        Iterable<TargetNode<AppleNativeTargetDescriptionArg>> nodesInExplorationOrder) {
       // Nothing to do: work is done in onNodeExplored.
     }
   }
