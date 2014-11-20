@@ -107,29 +107,25 @@ public class CompilationDatabaseIntegrationTest {
         fileToEntry,
         /* additionalFrameworks */ ImmutableList.<String>of(),
         /* includes */ ImmutableList.<String>of(),
-        iquoteArg,
-        /* isPublicHeader */ true);
+        iquoteArg);
     assertFlags(
         "Libraries/EXExample/EXExample/EXExampleModel.m",
         fileToEntry,
         /* additionalFrameworks */ ImmutableList.<String>of(),
         /* includes */ ImmutableList.<String>of(),
-        iquoteArg,
-        /* isPublicHeader */ false);
+        iquoteArg);
     assertFlags(
         "Libraries/EXExample/EXExample/Categories/NSString+Palindrome.h",
         fileToEntry,
         /* additionalFrameworks */ ImmutableList.<String>of(),
         /* includes */ ImmutableList.<String>of(),
-        iquoteArg,
-        /* isPublicHeader */ false);
+        iquoteArg);
     assertFlags(
         "Libraries/EXExample/EXExample/Categories/NSString+Palindrome.m",
         fileToEntry,
         /* additionalFrameworks */ ImmutableList.<String>of(),
         /* includes */ ImmutableList.<String>of(),
-        iquoteArg,
-        /* isPublicHeader */ false);
+        iquoteArg);
 
     // Verify the header map specified as the iquote argument.
     HeaderMap headerMap = HeaderMap.loadFromFile(workspace.getFile(iquoteArg));
@@ -178,22 +174,19 @@ public class CompilationDatabaseIntegrationTest {
         fileToEntry,
         ImmutableList.of("/System/Library/Frameworks/UIKit.framework"),
         ImmutableList.of(pathToHeaders),
-        iquoteArg,
-        /* isPublicHeader */ false);
+        iquoteArg);
     assertFlags(
         "Apps/Weather/Weather/EXViewController.m",
         fileToEntry,
         ImmutableList.of("/System/Library/Frameworks/UIKit.framework"),
         ImmutableList.of(pathToHeaders),
-        iquoteArg,
-        /* isPublicHeader */ false);
+        iquoteArg);
     assertFlags(
         "Apps/Weather/Weather/main.m",
         fileToEntry,
         ImmutableList.of("/System/Library/Frameworks/UIKit.framework"),
         ImmutableList.of(pathToHeaders),
-        iquoteArg,
-        /* isPublicHeader */ false);
+        iquoteArg);
   }
 
   private void assertFlags(
@@ -201,8 +194,7 @@ public class CompilationDatabaseIntegrationTest {
       Map<String, JsonSerializableDatabaseEntry> fileToEntry,
       Iterable<String> additionalFrameworks,
       Iterable<String> includes,
-      String iquoteArg,
-      boolean isPublicHeader) throws IOException {
+      String iquoteArg) throws IOException {
     String key = tmp.getRootPath().resolve(fileName).toRealPath().toString();
     JsonSerializableDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
@@ -249,9 +241,6 @@ public class CompilationDatabaseIntegrationTest {
         iquoteArg,
         "-c",
         entry.file));
-    if (isPublicHeader) {
-      commandArgs.add("public");
-    }
     MoreAsserts.assertIterablesEquals(commandArgs, ImmutableList.copyOf(entry.command.split(" ")));
   }
 }

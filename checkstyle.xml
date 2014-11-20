@@ -185,7 +185,7 @@ page at http://checkstyle.sourceforge.net/config.html -->
 
       <property name="ignorePattern"
           value="${com.puppycrawl.tools.checkstyle.checks.sizes.LineLength.ignorePattern}"
-          default="^(package .*;\s*)|(import .*;\s*)|( *[\*\/]* *https?://.*)|( *[\*\/]*.*\{@\w+.*\}.*)$"/>
+          default="^(package .*;\s*)|(import .*;\s*)|( *[\*\/]* *(https?|file)://.*)|( *[\*\/]*.*\{@\w+.*\}.*)$"/>
     </module>
 
     <module name="LeftCurly">

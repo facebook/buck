@@ -237,8 +237,7 @@ public class CompilationDatabaseTest {
                 "-include",
                 "/Users/user/src/foo/bar.pch",
                 "-c",
-                root + "/foo/Hello.h",
-                "public")));
+                root + "/foo/Hello.h")));
     Iterable<JsonSerializableDatabaseEntry> observedEntries = generateCompilationCommandsStep
         .createEntries(context);
     MoreAsserts.assertIterablesEquals(expectedEntries, observedEntries);
@@ -249,7 +248,7 @@ public class CompilationDatabaseTest {
     testSourcePathResolver = new SourcePathResolver(testBuildRuleResolver);
     Pair<SourcePath, String> publicHeader = new Pair<SourcePath, String>(
         new TestSourcePath("foo/Hello.h"),
-        "public");
+        "public"); // Note that "public" should not be included in the clang flags.
     Collection<AppleSource> appleSources = ImmutableList.of(
         AppleSource.ofSourcePathWithFlags(publicHeader),
         AppleSource.ofSourcePath(new TestSourcePath("foo/Hello.m")));
