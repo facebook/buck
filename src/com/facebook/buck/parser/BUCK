@@ -10,7 +10,6 @@ java_library(
     'TargetNodeSpec.java',
   ],
   deps = [
-    ':project',
     ':rule_pattern',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/json:json',
@@ -33,23 +32,6 @@ java_library(
   visibility = [
     'PUBLIC',
   ],
-)
-
-java_library(
-  name = 'project',
-  # TODO(simons): Find a proper home for these.
-  srcs = [
-    'AssociatedRulePredicate.java',
-  ],
-  deps = [
-    ':rule_pattern',
-    '//third-party/java/guava:guava',
-    '//src/com/facebook/buck/graph:graph',
-    '//src/com/facebook/buck/model:model',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/rules:rules',
-  ],
-  visibility = ['PUBLIC'],
 )
 
 java_library(

@@ -52,31 +52,34 @@ public class XcodeWorkspaceConfigDescription
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) {
-    // Start out with the default action config names..
-    Map<SchemeActionType, String> newActionConfigNames = new HashMap<>(
-        SchemeActionType.DEFAULT_CONFIG_NAMES);
-    // And override them with any provided in the "action_config_names" map.
-    newActionConfigNames.putAll(args.actionConfigNames.get());
-
     return new XcodeWorkspaceConfig(
         params,
         new SourcePathResolver(resolver),
         args.srcTarget.transform(resolver.getRuleFunction()),
         resolver.getAllRules(args.extraTests.get()),
         getWorkspaceNameFromArg(args),
-        ImmutableMap.copyOf(newActionConfigNames));
+        getActionConfigNamesFromArg(args));
   }
 
-  private String getWorkspaceNameFromArg(XcodeWorkspaceConfigDescription.Arg arg) {
+  public static String getWorkspaceNameFromArg(Arg arg) {
     if (arg.workspaceName.isPresent()) {
       return arg.workspaceName.get();
     } else if (arg.srcTarget.isPresent()) {
       return arg.srcTarget.get().getShortName();
     } else {
       throw new HumanReadableException(
-          "Either workspace_name or src_target is required for rule %s",
-          this);
+          "Either workspace_name or src_target is required for xcode_workspace_config");
     }
+  }
+
+  public static ImmutableMap<SchemeActionType, String> getActionConfigNamesFromArg(Arg arg) {
+    // Start out with the default action config names..
+    Map<SchemeActionType, String> newActionConfigNames = new HashMap<>(
+        SchemeActionType.DEFAULT_CONFIG_NAMES);
+    // And override them with any provided in the "action_config_names" map.
+    newActionConfigNames.putAll(arg.actionConfigNames.get());
+
+    return ImmutableMap.copyOf(newActionConfigNames);
   }
 
   @SuppressFieldNotInitialized

@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
@@ -74,6 +75,13 @@ public final class AppleBuildRules {
   }
 
   /**
+   * Whether the target node type is a test target.
+   */
+  public static boolean isXcodeTargetTestTargetNode(TargetNode<?> targetNode) {
+    return XCODE_TARGET_BUILD_RULE_TEST_TYPES.contains(targetNode.getType());
+  }
+
+  /**
    * Whether the bundle extension is a test bundle extension.
    */
   public static boolean isXcodeTargetTestBundleExtension(AppleBundleExtension extension) {
@@ -81,17 +89,18 @@ public final class AppleBuildRules {
   }
 
   /**
-   * Whether the rule is an AppleBundle rule containing a known test bundle extension.
+   * Whether the target node represents an AppleBundle rule with a known test bundle extension.
    */
-  public static boolean isXcodeTargetTestBundleBuildRule(BuildRule rule) {
-    if (!(rule instanceof AppleBundle)) {
+  public static boolean isXcodeTargetTestBundleTargetNode(TargetNode<?> node) {
+    if (node.getType() != AppleBundleDescription.TYPE) {
       return false;
     }
-    AppleBundle appleBundleRule = (AppleBundle) rule;
-    if (!appleBundleRule.getExtensionValue().isPresent()) {
+    AppleBundleDescription.Arg appleBundleConstructorArg =
+        (AppleBundleDescription.Arg) node.getConstructorArg();
+    if (!appleBundleConstructorArg.getExtensionValue().isPresent()) {
       return false;
     }
-    return isXcodeTargetTestBundleExtension(appleBundleRule.getExtensionValue().get());
+    return isXcodeTargetTestBundleExtension(appleBundleConstructorArg.getExtensionValue().get());
   }
 
   public static String getOutputFileNameFormatForLibrary(boolean linkedDynamically) {
@@ -259,20 +268,23 @@ public final class AppleBuildRules {
    * Builds the multimap of (source rule: [test rule 1, test rule 2, ...])
    * for the set of test rules covering each source rule.
    */
-  public static ImmutableMultimap<BuildRule, AppleTest> getSourceRuleToTestRulesMap(
-      Iterable<BuildRule> testRules) {
-    ImmutableMultimap.Builder<BuildRule, AppleTest> sourceRuleToTestRulesBuilder =
-      ImmutableMultimap.builder();
-    for (BuildRule rule : testRules) {
-      if (!isXcodeTargetTestBuildRule(rule)) {
-        LOG.verbose("Skipping rule %s (not xcode target test)", rule);
+  public static ImmutableMultimap<BuildTarget, TargetNode<?>> getSourceTargetToTestNodesMap(
+      Iterable<TargetNode<?>> testTargets) {
+    ImmutableMultimap.Builder<BuildTarget, TargetNode<?>>
+        sourceNodeToTestNodesBuilder = ImmutableMultimap.builder();
+    for (TargetNode<?> targetNode : testTargets) {
+      if (!isXcodeTargetTestTargetNode(targetNode)) {
+        LOG.verbose("Skipping target node %s (not xcode target test)", targetNode);
         continue;
       }
-      AppleTest testRule = (AppleTest) rule;
-      for (BuildRule sourceRule : testRule.getSourceUnderTest()) {
-        sourceRuleToTestRulesBuilder.put(sourceRule, testRule);
+      AppleTestDescription.Arg testDescriptionArg =
+          (AppleTestDescription.Arg) targetNode.getConstructorArg();
+      if (testDescriptionArg.sourceUnderTest.isPresent()) {
+        for (BuildTarget sourceTarget : testDescriptionArg.sourceUnderTest.get()) {
+          sourceNodeToTestNodesBuilder.put(sourceTarget, targetNode);
+        }
       }
     }
-    return sourceRuleToTestRulesBuilder.build();
+    return sourceNodeToTestNodesBuilder.build();
   }
 }

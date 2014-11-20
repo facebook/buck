@@ -14,16 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.rules;
 
-import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.BuildRule;
-
-/**
- * Matches build rules based on their association with actions in the given action graph.
- */
-public interface AssociatedRulePredicate {
-  public boolean isMatch(
-      BuildRule buildRule,
-      ActionGraph actionGraph);
+public interface AssociatedTargetNodePredicate {
+  public boolean apply(
+      TargetNode<?> targetNode,
+      TargetGraph targetGraph);
 }
