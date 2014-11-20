@@ -18,6 +18,8 @@ package com.facebook.buck.apple;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.util.Set;
+
 /**
  * File extensions used in Apple targets.
  */
@@ -28,9 +30,26 @@ public final class FileExtensions {
 
   /**
    * Source files compiled with Clang.
+   * <p>
+   * This list is derived from
+   * file:///Applications/Xcode.app/Contents/PlugIns/Xcode3Core.ideplugin/Contents/Frameworks/DevToolsCore.framework/Versions/A/Resources/StandardFileTypes.xcspec
    */
-  public static final ImmutableSet<String> CLANG_SOURCES =
-    ImmutableSet.of("c", "cc", "cpp", "cxx", "m", "mm", "C", "cp", "CPP", "c++");
+  public static final Set<String> CLANG_SOURCES = ImmutableSet.of(
+      "c",
+      "i",
+      "m",
+      "mi",
+      "cp",
+      "cpp",
+      "cc",
+      "cxx",
+      "c++",
+      "tcc",
+      "C",
+      "ii",
+      "mm",
+      "M",
+      "mii");
 
   /**
    * Header files for the above source file types.

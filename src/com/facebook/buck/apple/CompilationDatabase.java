@@ -59,7 +59,6 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -70,26 +69,6 @@ public class CompilationDatabase extends AbstractBuildRule {
 
   public static final Flavor COMPILATION_DATABASE = new Flavor("compilation-database");
 
-  /**
-   * This list is derived from
-   * file:///Applications/Xcode.app/Contents/PlugIns/Xcode3Core.ideplugin/Contents/Frameworks/DevToolsCore.framework/Versions/A/Resources/StandardFileTypes.xcspec
-   */
-  private static final Set<String> CLANG_SOURCE_FILE_EXTENSIONS = ImmutableSet.of(
-      "c",
-      "i",
-      "m",
-      "mi",
-      "cp",
-      "cpp",
-      "cc",
-      "cxx",
-      "c++",
-      "tcc",
-      "C",
-      "ii",
-      "mm",
-      "M",
-      "mii");
 
   private final AppleConfig appleConfig;
   private final TargetSources targetSources;
@@ -297,7 +276,7 @@ public class CompilationDatabase extends AbstractBuildRule {
         // Currently, perFileFlags is a single string rather than a list, so we concatenate it
         // to the end of the command string without escaping or splitting.
         String perFileFlags = Strings.nullToEmpty(targetSources.perFileFlags.get(srcPath));
-        if (!perFileFlags.isEmpty() && CLANG_SOURCE_FILE_EXTENSIONS.contains(
+        if (!perFileFlags.isEmpty() && FileExtensions.CLANG_SOURCES.contains(
             Files.getFileExtension(fileToCompile))) {
           commandArgs.add(perFileFlags);
         }
