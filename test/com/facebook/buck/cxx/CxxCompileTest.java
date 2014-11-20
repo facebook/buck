@@ -53,6 +53,7 @@ public class CxxCompileTest {
               "name",
               Paths.get("path/to/a/plugin.so"),
               ImmutableList.of("-abcde")));
+  private static final Optional<DebugPathSanitizer> DEBUG_PATH_SANITIZER = Optional.absent();
 
   private RuleKey.Builder.RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
@@ -93,7 +94,8 @@ public class CxxCompileTest {
             DEFAULT_PLUGIN,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
+            DEFAULT_INPUT,
+            DEBUG_PATH_SANITIZER));
 
     // Verify that changing the compiler causes a rulekey change.
     RuleKey.Builder.RuleKeyPair compilerChange = generateRuleKey(
@@ -106,7 +108,8 @@ public class CxxCompileTest {
             DEFAULT_PLUGIN,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
+            DEFAULT_INPUT,
+            DEBUG_PATH_SANITIZER));
     assertNotEquals(defaultRuleKey, compilerChange);
 
     // Verify that changing the flags causes a rulekey change.
@@ -120,7 +123,8 @@ public class CxxCompileTest {
             DEFAULT_PLUGIN,
             ImmutableList.of("-different"),
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
+            DEFAULT_INPUT,
+            DEBUG_PATH_SANITIZER));
     assertNotEquals(defaultRuleKey, flagsChange);
 
     // Verify that changing the input causes a rulekey change.
@@ -134,7 +138,8 @@ public class CxxCompileTest {
             DEFAULT_PLUGIN,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
-            new TestSourcePath("different")));
+            new TestSourcePath("different"),
+            DEBUG_PATH_SANITIZER));
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that not using a plugin changes the key
@@ -148,7 +153,8 @@ public class CxxCompileTest {
             Optional.<CxxCompile.Plugin>absent(),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
+            DEFAULT_INPUT,
+            DEBUG_PATH_SANITIZER));
     assertNotEquals(defaultRuleKey, pluginAbsentChange);
 
     // Verify that changing the plugin path changes the key
@@ -165,7 +171,8 @@ public class CxxCompileTest {
                     DEFAULT_PLUGIN.get().getFlags())),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
+            DEFAULT_INPUT,
+            DEBUG_PATH_SANITIZER));
     assertNotEquals(defaultRuleKey, pluginPathChange);
 
     // Verify that changing the plugin flags change the key
@@ -182,7 +189,8 @@ public class CxxCompileTest {
                     ImmutableList.of("-abcde", "-aeiou"))),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
+            DEFAULT_INPUT,
+            DEBUG_PATH_SANITIZER));
     assertNotEquals(defaultRuleKey, pluginFlagsChange);
 
     // Verify that changing the plugin name changes the key
@@ -199,7 +207,8 @@ public class CxxCompileTest {
                     DEFAULT_PLUGIN.get().getFlags())),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUT));
+            DEFAULT_INPUT,
+            DEBUG_PATH_SANITIZER));
     assertNotEquals(defaultRuleKey, pluginNameChange);
   }
 

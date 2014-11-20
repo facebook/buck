@@ -43,6 +43,7 @@ public class CxxCompile extends AbstractBuildRule {
   private final ImmutableList<String> flags;
   private final Path output;
   private final SourcePath input;
+  private final Optional<DebugPathSanitizer> sanitizer;
 
   public CxxCompile(
       BuildRuleParams params,
@@ -51,13 +52,15 @@ public class CxxCompile extends AbstractBuildRule {
       Optional<Plugin> plugin,
       ImmutableList<String> flags,
       Path output,
-      SourcePath input) {
+      SourcePath input,
+      Optional<DebugPathSanitizer> sanitizer) {
     super(params, resolver);
     this.compiler = compiler;
     this.flags = flags;
     this.plugin = plugin;
     this.output = output;
     this.input = input;
+    this.sanitizer = sanitizer;
   }
 
   @Override
@@ -71,6 +74,10 @@ public class CxxCompile extends AbstractBuildRule {
         .setInput("compiler", compiler)
         .set("flags", flags)
         .set("output", output.toString());
+
+    if (sanitizer.isPresent()) {
+      builder.set("compilationDirectory", sanitizer.get().getCompilationDirectory());
+    }
 
     if (plugin.isPresent()) {
       Plugin p = plugin.get();
@@ -101,7 +108,8 @@ public class CxxCompile extends AbstractBuildRule {
             getResolver().getPath(compiler),
             allFlags,
             output,
-            getResolver().getPath(input)));
+            getResolver().getPath(input),
+            sanitizer));
   }
 
   @Override
