@@ -124,7 +124,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       for (Path path : PathListing.listMatchingPathsWithFilters(
                traceDirectory,
                "build.*.trace",
-               PathListing.MODIFIED_TIME_DESC,
+               PathListing.GET_PATH_MODIFIED_TIME,
                PathListing.FilterMode.EXCLUDE,
                Optional.of(tracesToKeep),
                Optional.<Long>absent())) {

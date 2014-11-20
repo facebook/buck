@@ -65,7 +65,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
             Optional.<Integer>absent(), // maxPathsFilter
             Optional.<Long>absent()), // maxSizeFilter
@@ -78,7 +78,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
             Optional.<Integer>absent(), // maxPathsFilter
             Optional.<Long>absent()), // maxSizeFilter
@@ -92,7 +92,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
             Optional.of(0), // maxPathsFilter
             Optional.<Long>absent()), // maxSizeFilter
@@ -106,7 +106,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
             Optional.of(0), // maxPathsFilter
             Optional.<Long>absent()), // maxSizeFilter
@@ -120,7 +120,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
             Optional.of(1), // maxPathsFilter
             Optional.<Long>absent()), // maxSizeFilter
@@ -134,7 +134,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
             Optional.of(1), // maxPathsFilter
             Optional.<Long>absent()), // maxSizeFilter
@@ -148,7 +148,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
             Optional.of(Integer.MAX_VALUE), // maxPathsFilter
             Optional.<Long>absent()), // maxSizeFilter
@@ -162,7 +162,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
             Optional.of(Integer.MAX_VALUE), // maxPathsFilter
             Optional.<Long>absent()), // maxSizeFilter
@@ -176,7 +176,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
             Optional.<Integer>absent(), // maxPathsFilter
             Optional.of(0L)), // maxSizeFilter
@@ -190,7 +190,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
             Optional.<Integer>absent(), // maxPathsFilter
             Optional.of(0L)), // maxSizeFilter
@@ -204,7 +204,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
             Optional.<Integer>absent(), // maxPathsFilter
             Optional.of(10L)), // maxSizeFilter
@@ -218,7 +218,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
             Optional.<Integer>absent(), // maxPathsFilter
             Optional.of(10L)), // maxSizeFilter
@@ -232,7 +232,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
             Optional.<Integer>absent(), // maxPathsFilter
             Optional.of(Long.MAX_VALUE)), // maxSizeFilter
@@ -246,7 +246,7 @@ public class PathListingTest {
         PathListing.listMatchingPathsWithFilters(
             tmpDir.getRoot().toPath(),
             "*",
-            PathListing.MODIFIED_TIME_DESC,
+            PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
             Optional.<Integer>absent(), // maxPathsFilter
             Optional.of(Long.MAX_VALUE)), // maxSizeFilter

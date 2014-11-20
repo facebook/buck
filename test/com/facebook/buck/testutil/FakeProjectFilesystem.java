@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -32,6 +33,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
@@ -59,7 +61,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -246,9 +247,8 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   @Override
   public ImmutableSortedSet<Path> getSortedMatchingDirectoryContents(
       final Path pathRelativeToProjectRoot,
-      String globPattern,
-      Comparator<Path> orderPathsBy)
-    throws IOException {
+      String globPattern)
+      throws IOException {
     Preconditions.checkState(isDirectory(pathRelativeToProjectRoot));
     final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + globPattern);
     return FluentIterable.from(fileContents.keySet()).filter(
@@ -259,7 +259,20 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
                 pathMatcher.matches(input.getFileName());
           }
         })
-        .toSortedSet(orderPathsBy);
+        .toSortedSet(Ordering
+            .natural()
+            .onResultOf(new Function<Path, FileTime>() {
+                @Override
+                public FileTime apply(Path path) {
+                  try {
+                    return getLastModifiedTimeFetcher().getLastModifiedTime(path);
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                }
+            })
+            .compound(Ordering.natural())
+            .reverse());
   }
 
   @Override

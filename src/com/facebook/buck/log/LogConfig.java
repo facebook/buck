@@ -128,7 +128,7 @@ public class LogConfig {
     for (Path path : PathListing.listMatchingPathsWithFilters(
              BuckConstant.LOG_PATH,
              "buck-*.log*",
-             PathListing.MODIFIED_TIME_DESC,
+             PathListing.GET_PATH_MODIFIED_TIME,
              PathListing.FilterMode.EXCLUDE,
              Optional.<Integer>absent(),
              Optional.of(MAX_LOG_SIZE))) {

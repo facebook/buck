@@ -16,16 +16,19 @@
 
 package com.facebook.buck.io;
 
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 
 import java.io.IOException;
+import java.nio.file.attribute.FileTime;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-
-import java.util.Comparator;
 
 /**
  * Utility class to list files which match a pattern, applying ordering
@@ -44,60 +47,80 @@ public class PathListing {
   }
 
   /**
-   * Orders paths from newest to oldest. In case of a tie, uses Path comparison.
+   * Fetches last-modified time from a path.
    */
-  public static final Comparator<Path> MODIFIED_TIME_DESC =
-    new Comparator<Path>() {
-      @Override
-      public int compare(Path p1, Path p2) {
-        try {
-          // Note that we want newer files first, so we flip the order.
-          int result = Files.getLastModifiedTime(p2).compareTo(
-              Files.getLastModifiedTime(p1));
-          if (result == 0) {
-            // In case the modification times are identical, use path comparison.
-            result = p2.compareTo(p1);
-          }
-          return result;
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-      }
-    };
+  public interface PathModifiedTimeFetcher {
+    FileTime getLastModifiedTime(Path path) throws IOException;
+  }
 
   /**
-   * Lists matching paths in the specified order.
+   * Uses {@code Files.getLastModifiedTime()} to get the last modified time
+   * for a Path.
+   */
+  public static final PathModifiedTimeFetcher GET_PATH_MODIFIED_TIME =
+      new PathModifiedTimeFetcher() {
+          @Override
+          public FileTime getLastModifiedTime(Path path) throws IOException {
+            return Files.getLastModifiedTime(path);
+          }
+      };
+
+  /**
+   * Lists matching paths in descending modified time order.
    */
   public static ImmutableSortedSet<Path> listMatchingPaths(
       Path pathToGlob,
       String globPattern,
-      Comparator<Path> orderPathsBy) throws IOException {
+      PathModifiedTimeFetcher pathModifiedTimeFetcher) throws IOException {
     return listMatchingPathsWithFilters(
         pathToGlob,
         globPattern,
-        orderPathsBy,
+        pathModifiedTimeFetcher,
         FilterMode.INCLUDE,
         Optional.<Integer>absent(),
         Optional.<Long>absent());
   }
 
   /**
-   * Lists paths in the specified order, optionally including or
+   * Lists paths in descending modified time order,
    * excluding any paths which bring the number of files over {@code maxNumPaths}
    * or over {@code totalSizeFilter} bytes in size.
    */
   public static ImmutableSortedSet<Path> listMatchingPathsWithFilters(
       Path pathToGlob,
       String globPattern,
-      Comparator<Path> orderPathsBy,
+      PathModifiedTimeFetcher pathModifiedTimeFetcher,
       FilterMode filterMode,
       Optional<Integer> maxPathsFilter,
       Optional<Long> totalSizeFilter)
       throws IOException {
-    ImmutableSortedSet<Path> paths;
+
+    // Fetch the modification time of each path and build a map of
+    // (path => modification time) pairs.
+    ImmutableMap.Builder<Path, FileTime> pathFileTimesBuilder = ImmutableMap.builder();
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(pathToGlob, globPattern)) {
-      paths = ImmutableSortedSet.copyOf(orderPathsBy, stream);
+      for (Path path : stream) {
+        try {
+          pathFileTimesBuilder.put(path, pathModifiedTimeFetcher.getLastModifiedTime(path));
+        } catch (NoSuchFileException e) {
+          // Ignore the path.
+          continue;
+        }
+      }
     }
+    ImmutableMap<Path, FileTime> pathFileTimes = pathFileTimesBuilder.build();
+
+    ImmutableSortedSet<Path> paths = ImmutableSortedSet.copyOf(
+        Ordering
+            .natural()
+            // Order the keys of the map (the paths) by their values (the file modification times).
+            .onResultOf(Functions.forMap(pathFileTimes))
+            // If two keys of the map have the same value, fall back to key order.
+            .compound(Ordering.natural())
+            // Use descending order.
+            .reverse(),
+        pathFileTimes.keySet());
+
     paths = applyNumPathsFilter(paths, filterMode, maxPathsFilter);
     paths = applyTotalSizeFilter(paths, filterMode, totalSizeFilter);
     return paths;

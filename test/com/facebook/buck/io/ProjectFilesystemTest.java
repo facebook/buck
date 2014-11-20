@@ -553,7 +553,6 @@ public class ProjectFilesystemTest {
         ImmutableSet.of(c, b, a),
         filesystem.getSortedMatchingDirectoryContents(
             Paths.get("foo"),
-            "*.txt",
-            filesystem.orderByLastModifiedTimeDesc()));
+            "*.txt"));
   }
 }

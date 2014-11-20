@@ -149,8 +149,7 @@ public class TracesHelper {
   Collection<Path> listTraceFilesByLastModified() throws IOException {
     return projectFilesystem.getSortedMatchingDirectoryContents(
         BuckConstant.BUCK_TRACE_DIR,
-        "build.*.trace",
-        projectFilesystem.orderByLastModifiedTimeDesc());
+        "build.*.trace");
   }
 
   /**
@@ -164,8 +163,7 @@ public class TracesHelper {
 
     Collection<Path> traces = projectFilesystem.getSortedMatchingDirectoryContents(
         BuckConstant.BUCK_TRACE_DIR,
-        "*" + id + "*.trace",
-        projectFilesystem.orderByLastModifiedTimeDesc());
+        "*" + id + "*.trace");
 
     if (traces.isEmpty()) {
       throw new HumanReadableException("Could not find a build trace with id %s.", id);
