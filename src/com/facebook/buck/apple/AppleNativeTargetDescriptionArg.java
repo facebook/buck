@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
- * Arguments common to Apple targets.
+ * Arguments common to {@link com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule} subclasses
  */
 @SuppressFieldNotInitialized
 public class AppleNativeTargetDescriptionArg {

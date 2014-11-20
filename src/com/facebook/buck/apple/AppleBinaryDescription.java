@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.NoopBuildRule;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
@@ -88,9 +87,10 @@ public class AppleBinaryDescription
       return flavoredRule.get();
     }
 
-    // We don't support building Apple targets natively yet
-    return new NoopBuildRule(
+    return new AppleBinary(
         params,
-        pathResolver);
+        pathResolver,
+        args,
+        targetSources);
   }
 }
