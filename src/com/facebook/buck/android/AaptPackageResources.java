@@ -530,7 +530,7 @@ public class AaptPackageResources extends AbstractBuildRule
    * @return path to directory (will not include trailing slash)
    */
   public Path getPathToGeneratedProguardConfigDir() {
-    return BuildTargets.getGenPath(getBuildTarget(), "__%s__proguard__");
+    return BuildTargets.getGenPath(getBuildTarget(), "__%s__proguard__").resolve(".proguard");
   }
 
   @VisibleForTesting
