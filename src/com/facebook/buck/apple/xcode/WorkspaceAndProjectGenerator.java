@@ -68,7 +68,6 @@ public class WorkspaceAndProjectGenerator {
       TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceTargetNode,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       Multimap<BuildTarget, TargetNode<?>> sourceTargetToTestNodes,
-      Iterable<TargetNode<?>> extraTestBundleTargetNodes,
       boolean combinedProject) {
     this.projectFilesystem = projectFilesystem;
     this.projectGraph = projectGraph;
@@ -76,9 +75,11 @@ public class WorkspaceAndProjectGenerator {
     this.workspaceTargetNode = workspaceTargetNode;
     this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
     this.sourceTargetToTestNodes = ImmutableMultimap.copyOf(sourceTargetToTestNodes);
-    this.extraTestBundleTargetNodes = ImmutableSet.copyOf(extraTestBundleTargetNodes);
     this.combinedProject = combinedProject;
     this.combinedProjectGenerator = Optional.absent();
+    extraTestBundleTargetNodes = ImmutableSet.copyOf(
+        projectGraph.getAll(
+            workspaceTargetNode.getConstructorArg().extraTests.get()));
   }
 
   @VisibleForTesting

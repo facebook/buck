@@ -56,13 +56,13 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -91,30 +91,37 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
   private static final String XCODE_PROCESS_NAME = "Xcode";
 
-  private static class TargetGraphs {
-    private final TargetGraph mainGraph;
-    private final Optional<TargetGraph> testGraph;
-    private final TargetGraph projectGraph;
+  private static class TargetGraphAndTargets {
+    private final TargetGraph targetGraph;
+    private final ImmutableSet<TargetNode<?>> projectRoots;
+    private final ImmutableSet<TargetNode<?>> associatedTests;
+    private final ImmutableSet<TargetNode<?>> associatedProjects;
 
-    public TargetGraphs(
-        TargetGraph mainGraph,
-        Optional<TargetGraph> testGraph,
-        TargetGraph projectGraph) {
-      this.mainGraph = mainGraph;
-      this.testGraph = testGraph;
-      this.projectGraph = projectGraph;
+    public TargetGraphAndTargets(
+        TargetGraph targetGraph,
+        ImmutableSet<TargetNode<?>> projectRoots,
+        ImmutableSet<TargetNode<?>> associatedTests,
+        ImmutableSet<TargetNode<?>> associatedProjects) {
+      this.targetGraph = targetGraph;
+      this.projectRoots = projectRoots;
+      this.associatedTests = associatedTests;
+      this.associatedProjects = associatedProjects;
     }
 
-    public TargetGraph getMainGraph() {
-      return mainGraph;
+    public TargetGraph getTargetGraph() {
+      return targetGraph;
     }
 
-    public Optional<TargetGraph> getTestGraph() {
-      return testGraph;
+    public ImmutableSet<TargetNode<?>> getProjectRoots() {
+      return projectRoots;
     }
 
-    public TargetGraph getProjectGraph() {
-      return projectGraph;
+    public ImmutableSet<TargetNode<?>> getAssociatedTests() {
+      return associatedTests;
+    }
+
+    public ImmutableSet<TargetNode<?>> getAssociatedProjects() {
+      return associatedProjects;
     }
   }
 
@@ -151,7 +158,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ActionGraph actionGraph;
 
     try {
-      actionGraph = createTargetGraphs(options).getProjectGraph().getActionGraph();
+      actionGraph = createTargetGraph(options).getTargetGraph().getActionGraph();
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -268,9 +275,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       throws IOException, InterruptedException {
     checkForAndKillXcodeIfRunning(options.getIdePrompt());
 
-    TargetGraphs targetGraphs;
+    TargetGraphAndTargets targetGraphAndTargets;
     try {
-      targetGraphs = createTargetGraphs(options);
+      targetGraphAndTargets = createTargetGraph(options);
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -286,7 +293,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     ExecutionContext executionContext = createExecutionContext(
         options,
-        targetGraphs.getProjectGraph().getActionGraph());
+        targetGraphAndTargets.getTargetGraph().getActionGraph());
 
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (options.getReadOnly()) {
@@ -304,9 +311,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       }
       ImmutableSet<BuildTarget> targets;
       if (passedInTargetsSet.isEmpty()) {
-        targets = getAllTargetsOfType(
-            targetGraphs.getMainGraph().getNodes(),
-            XcodeWorkspaceConfigDescription.TYPE);
+        targets = FluentIterable
+            .from(targetGraphAndTargets.getProjectRoots())
+            .transform(HasBuildTarget.TO_TARGET)
+            .toSet();
       } else {
         targets = passedInTargetsSet;
       }
@@ -317,31 +325,20 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
       for (BuildTarget workspaceTarget : targets) {
         TargetNode<?> workspaceNode =
-            targetGraphs.getMainGraph().get(workspaceTarget);
+            targetGraphAndTargets.getTargetGraph().get(workspaceTarget);
         if (workspaceNode.getType() != XcodeWorkspaceConfigDescription.TYPE) {
           throw new HumanReadableException(
               "%s must be a xcode_workspace_config",
               workspaceTarget);
         }
-        XcodeWorkspaceConfigDescription.Arg workspaceArg =
-            (XcodeWorkspaceConfigDescription.Arg) workspaceNode.getConstructorArg();
-        Iterable<TargetNode<?>> testTargetNodes;
-        if (targetGraphs.getTestGraph().isPresent()) {
-          testTargetNodes = targetGraphs
-              .getTestGraph()
-              .get()
-              .getNodes();
-        } else {
-          testTargetNodes = Collections.emptySet();
-        }
+        ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
         WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
             getProjectFilesystem(),
-            targetGraphs.getProjectGraph(),
+            targetGraphAndTargets.getTargetGraph(),
             executionContext,
             castToXcodeWorkspaceTargetNode(workspaceNode),
             optionsBuilder.build(),
             AppleBuildRules.getSourceTargetToTestNodesMap(testTargetNodes),
-            targetGraphs.getMainGraph().getAll(workspaceArg.extraTests.get()),
             combinedProject);
         generator.generateWorkspaceAndDependentProjects(projectGenerators);
       }
@@ -351,16 +348,17 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
       ImmutableSet<BuildTarget> targets;
       if (passedInTargetsSet.isEmpty()) {
-        targets = getAllTargetsOfType(
-            targetGraphs.getProjectGraph().getNodes(),
-            XcodeProjectConfigDescription.TYPE);
+        targets = FluentIterable
+            .from(targetGraphAndTargets.getAssociatedProjects())
+            .transform(HasBuildTarget.TO_TARGET)
+            .toSet();
       } else {
         targets = passedInTargetsSet;
       }
 
       SeparatedProjectsGenerator projectGenerator = new SeparatedProjectsGenerator(
           getProjectFilesystem(),
-          targetGraphs.getProjectGraph(),
+          targetGraphAndTargets.getTargetGraph(),
           executionContext,
           targets,
           optionsBuilder.build());
@@ -433,18 +431,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       (result.get().isEmpty() || result.get().toLowerCase(Locale.US).startsWith("y"));
   }
 
-  private static ImmutableSet<BuildTarget> getAllTargetsOfType(
-      Iterable<TargetNode<?>> nodes,
-      BuildRuleType type) {
-    ImmutableSet.Builder<BuildTarget> targetsBuilder = ImmutableSet.builder();
-    for (TargetNode<?> node : nodes) {
-      if (node.getType() == type) {
-        targetsBuilder.add(node.getBuildTarget());
-      }
-    }
-    return targetsBuilder.build();
-  }
-
   private ImmutableSet<BuildTarget> getRootsFromOptionsWithPredicate(
       ProjectCommandOptions options,
       Predicate<TargetNode<?>> rootsPredicate)
@@ -463,7 +449,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         options.getEnableProfiling());
   }
 
-  private TargetGraphs createTargetGraphs(final ProjectCommandOptions options)
+  private TargetGraphAndTargets createTargetGraph(final ProjectCommandOptions options)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     Predicate<TargetNode<?>> projectRootsPredicate;
     Predicate<TargetNode<?>> projectPredicate;
@@ -573,20 +559,15 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     // Create the main graph. This contains all the targets in the project slice, or all the valid
     // project roots if a project slice is not specified, and their transitive dependencies.
-    ImmutableSet<BuildTarget> mainRoots = getRootsFromOptionsWithPredicate(
-        options,
-        projectRootsPredicate);
-    TargetGraph mainGraph = getParser().buildTargetGraphForBuildTargets(
-        mainRoots,
-        options.getDefaultIncludes(),
-        getBuckEventBus(),
-        console,
-        environment,
-        options.getEnableProfiling());
+    ImmutableSet<TargetNode<?>> projectRoots = ImmutableSet.copyOf(
+        fullGraph.getAll(
+            getRootsFromOptionsWithPredicate(
+                options,
+                projectRootsPredicate)));
 
     // Optionally create the test graph. This contains all the tests that cover targets in the main
     // graph, all the transitive dependencies of those tests, and all the targets in the main graph.
-    Optional<TargetGraph> testGraph = Optional.absent();
+    ImmutableSet<TargetNode<?>> associatedTests = ImmutableSet.of();
     if (options.isWithTests()) {
       Predicate<TargetNode<?>> testPredicate = new Predicate<TargetNode<?>>() {
         @Override
@@ -617,85 +598,55 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         }
       };
 
-      testGraph = Optional.of(
-          getAssociatedTargetGraph(
-              mainGraph,
-              mainRoots,
-              fullGraph,
-              testPredicate,
-              associatedTestsPredicate,
-              options));
+      associatedTests = getAssociatedTargetNodes(
+          fullGraph,
+          projectRoots,
+          testPredicate,
+          associatedTestsPredicate);
     }
 
-    // Create the project graph. This contains all the projects that reference the targets in the
-    // main graph, or the test graph if present, and all the transitive dependencies of those
-    // projects.
-    TargetGraph projectGraph = getAssociatedTargetGraph(
-        testGraph.or(mainGraph),
-        /* additionalRoots */ ImmutableSet.<BuildTarget>of(),
+    ImmutableSet<TargetNode<?>> associatedProjects = getAssociatedTargetNodes(
         fullGraph,
+        Iterables.concat(projectRoots, associatedTests),
         projectPredicate,
-        associatedProjectPredicate,
-        options);
+        associatedProjectPredicate);
 
-    return new TargetGraphs(
-        mainGraph,
-        testGraph,
-        projectGraph);
-  }
+    TargetGraph targetGraph = fullGraph.getSubgraph(
+        Iterables.concat(projectRoots, associatedTests, associatedProjects));
 
-  private static ImmutableSet<BuildTarget> filterTargetsFromGraph(
-      TargetGraph graph,
-      Predicate<TargetNode<?>> predicate) {
-    return FluentIterable
-        .from(graph.getNodes())
-        .filter(predicate)
-        .transform(HasBuildTarget.TO_TARGET)
-        .toSet();
+    return new TargetGraphAndTargets(
+        targetGraph,
+        projectRoots,
+        associatedTests,
+        associatedProjects);
   }
 
   /**
-   * @param targetGraph The TargetGraph the nodes of the new TargetGraph are related to.
-   * @param additionalRoots Additional roots to be used to create the new TargetGraph.
    * @param fullGraph A TargetGraph containing all nodes that could be related.
+   * @param subgraphRoots Target nodes forming the roots of the subgraph to which the returned nodes
+   *                      are related.
    * @param predicate A predicate that all related nodes pass. Unrelated nodes can pass it as well.
    * @param associatedTargetNodePredicate A predicate to determine whether a node is related or not.
-   * @return A TargetGraph with nodes related to the given {@code targetGraph}.
+   * @return A set of nodes related to {@code subgraphRoots} or their dependencies.
    */
-  private TargetGraph getAssociatedTargetGraph(
-      TargetGraph targetGraph,
-      ImmutableSet<BuildTarget> additionalRoots,
+  private ImmutableSet<TargetNode<?>> getAssociatedTargetNodes(
       TargetGraph fullGraph,
-      Predicate<TargetNode<?>> predicate,
-      AssociatedTargetNodePredicate associatedTargetNodePredicate,
-      ProjectCommandOptions options)
+      Iterable<TargetNode<?>> subgraphRoots,
+      final Predicate<TargetNode<?>> predicate,
+      final AssociatedTargetNodePredicate associatedTargetNodePredicate)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
-    ImmutableSet<BuildTarget> candidateTargets = filterTargetsFromGraph(fullGraph, predicate);
-    TargetGraph candidateGraph = getParser().buildTargetGraphForBuildTargets(
-        candidateTargets,
-        options.getDefaultIncludes(),
-        getBuckEventBus(),
-        console,
-        environment,
-        options.getEnableProfiling());
+    final TargetGraph subgraph = fullGraph.getSubgraph(subgraphRoots);
 
-    ImmutableSet.Builder<BuildTarget> rootsBuilder = ImmutableSet.builder();
-    rootsBuilder.addAll(additionalRoots);
-
-    for (BuildTarget buildTarget : candidateTargets) {
-      TargetNode<?> targetNode = candidateGraph.get(buildTarget);
-      if (associatedTargetNodePredicate.apply(targetNode, targetGraph)) {
-        rootsBuilder.add(buildTarget);
-      }
-    }
-
-    return getParser().buildTargetGraphForBuildTargets(
-        rootsBuilder.build(),
-        options.getDefaultIncludes(),
-        getBuckEventBus(),
-        console,
-        environment,
-        options.getEnableProfiling());
+    return FluentIterable
+        .from(fullGraph.getNodes())
+        .filter(
+            new Predicate<TargetNode<?>>() {
+              @Override
+              public boolean apply(TargetNode<?> node) {
+                return predicate.apply(node) && associatedTargetNodePredicate.apply(node, subgraph);
+              }
+            })
+        .toSet();
   }
 
   @Override

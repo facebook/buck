@@ -281,7 +281,6 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode,
         ImmutableSet.<ProjectGenerator.Option>of(),
         AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
-        ImmutableSet.<TargetNode<?>>of(),
         false);
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -340,7 +339,6 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode,
         ImmutableSet.<ProjectGenerator.Option>of(),
         AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
-        ImmutableSet.<TargetNode<?>>of(),
         true);
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
