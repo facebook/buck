@@ -21,6 +21,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.apple.AppleBundleBuilder;
+import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleLibraryBuilder;
+import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.cli.TargetsCommand.TargetsCommandPredicate;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -51,6 +55,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
+import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.AppleSource;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -449,5 +456,121 @@ public class TargetsCommandTest {
     assertEquals(
         ImmutableSet.<String>of(), matchingBuildRules.keySet());
 
+  }
+
+  @Test
+  public void testGetMatchingAppleLibraryBuildTarget() throws CmdLineException, IOException {
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo/foo.m")))))
+        .build();
+
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(libraryNode);
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
+    ActionGraph actionGraph = targetGraph.getActionGraph();
+
+    // No target depends on the referenced file.
+    SortedMap<String, BuildRule> matchingBuildRules =
+        targetsCommand.getMatchingBuildRules(
+            actionGraph,
+            new TargetsCommandPredicate(
+                targetGraph,
+                ImmutableSet.<BuildRuleType>of(),
+                ImmutableSet.of(Paths.get("foo/bar.m")),
+                Optional.<ImmutableSet<BuildTarget>>absent()));
+    assertTrue(matchingBuildRules.isEmpty());
+
+    // The AppleLibrary matches the referenced file.
+    matchingBuildRules =
+        targetsCommand.getMatchingBuildRules(
+            actionGraph,
+            new TargetsCommandPredicate(
+                targetGraph,
+                ImmutableSet.<BuildRuleType>of(),
+                ImmutableSet.of(Paths.get("foo/foo.m")),
+                Optional.<ImmutableSet<BuildTarget>>absent()));
+    assertEquals(
+        ImmutableSet.of("//foo:lib"),
+        matchingBuildRules.keySet());
+  }
+
+  @Test
+  public void testGetMatchingAppleTestBuildTarget() throws CmdLineException, IOException {
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo/foo.m")))))
+        .build();
+
+    BuildTarget testLibraryTarget = BuildTarget.builder("//foo", "testlib").build();
+    TargetNode<?> testLibraryNode = AppleLibraryBuilder
+        .createBuilder(testLibraryTarget)
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo/testfoo.m")))))
+        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .build();
+
+    BuildTarget testBundleTarget = BuildTarget.builder("//foo", "xctest").build();
+    TargetNode<?> testBundleNode = AppleBundleBuilder
+        .createBuilder(testBundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setBinary(testLibraryTarget)
+        .build();
+
+    BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setTestBundle(testBundleTarget)
+        .build();
+
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(
+        libraryNode, testLibraryNode, testBundleNode, testNode);
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
+    ActionGraph actionGraph = targetGraph.getActionGraph();
+
+    // No target depends on the referenced file.
+    SortedMap<String, BuildRule> matchingBuildRules =
+        targetsCommand.getMatchingBuildRules(
+            actionGraph,
+            new TargetsCommandPredicate(
+                targetGraph,
+                ImmutableSet.<BuildRuleType>of(),
+                ImmutableSet.of(Paths.get("foo/bar.m")),
+                Optional.<ImmutableSet<BuildTarget>>absent()));
+    assertTrue(matchingBuildRules.isEmpty());
+
+    // Both AppleLibrary nodes, AppleBundle, and AppleTest match the referenced file.
+    matchingBuildRules =
+        targetsCommand.getMatchingBuildRules(
+            actionGraph,
+            new TargetsCommandPredicate(
+                targetGraph,
+                ImmutableSet.<BuildRuleType>of(),
+                ImmutableSet.of(Paths.get("foo/foo.m")),
+                Optional.<ImmutableSet<BuildTarget>>absent()));
+    assertEquals(
+        ImmutableSet.of("//foo:lib", "//foo:testlib", "//foo:xctest", "//foo:test"),
+        matchingBuildRules.keySet());
+
+    // The test AppleLibrary, AppleBundle and AppleTest match the referenced file.
+    matchingBuildRules =
+        targetsCommand.getMatchingBuildRules(
+            actionGraph,
+            new TargetsCommandPredicate(
+                targetGraph,
+                ImmutableSet.<BuildRuleType>of(),
+                ImmutableSet.of(Paths.get("foo/testfoo.m")),
+                Optional.<ImmutableSet<BuildTarget>>absent()));
+    assertEquals(
+        ImmutableSet.of("//foo:testlib", "//foo:xctest", "//foo:test"),
+        matchingBuildRules.keySet());
   }
 }
