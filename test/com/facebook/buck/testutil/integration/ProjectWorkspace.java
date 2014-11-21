@@ -304,6 +304,10 @@ public class ProjectWorkspace {
     return destPath.resolve(pathRelativeToWorkspaceRoot);
   }
 
+  public Path resolve(String pathRelativeToWorkspaceRoot) {
+    return destPath.resolve(pathRelativeToWorkspaceRoot);
+  }
+
   public void resetBuildLogFile() throws IOException {
     writeContentsToPath("", PATH_TO_BUILD_LOG);
   }

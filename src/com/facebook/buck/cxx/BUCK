@@ -24,6 +24,7 @@ java_immutables_library(
     ':platform',
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/cxx/elf:elf',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/model:model',
