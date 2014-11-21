@@ -36,12 +36,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -278,7 +278,7 @@ public class ExopackageInstaller {
         throw new RuntimeException("adb returned empty result for ro.product.cpu.abi property.");
       }
 
-      ImmutableMap<String, Path> allLibraries = getAllLibraries();
+      ImmutableMultimap<String, Path> allLibraries = getAllLibraries();
 
       ImmutableMap<String, Path> abi1Libraries =
           getRequiredLibrariesForAbi(allLibraries, abi1, ImmutableSet.<String>of());
@@ -314,15 +314,6 @@ public class ExopackageInstaller {
 
       Map<String, Path> filesToInstallByHash =
           Maps.filterKeys(libraries, Predicates.not(Predicates.in(presentHashes)));
-
-      ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
-      for (Map.Entry<String, Path> entry : libraries.entrySet()) {
-        String filename = entry.getValue().getFileName().toString();
-        Preconditions.checkState(filename.startsWith("lib") && filename.endsWith(".so"));
-        String libname = filename.substring(3, filename.length() - 3);
-
-        metadataLines.add(String.format("%s native-%s.so", libname, entry.getKey()));
-      }
 
       createSymlinks(abi, libraries);
 
@@ -495,10 +486,16 @@ public class ExopackageInstaller {
 
     private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
       ExopackageInfo.DexInfo dexInfo = exopackageInfo.dexInfo().get();
-      return parseExopackageInfoMetadata(
+      ImmutableMultimap<String, Path> multimap = parseExopackageInfoMetadata(
           dexInfo.metadata(),
           dexInfo.directory(),
           projectFilesystem);
+      // Convert multimap to a map, because every key should have only one value.
+      ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
+      for (Map.Entry<String, Path> entry : multimap.entries()) {
+        builder.put(entry);
+      }
+      return builder.build();
     }
 
     private ImmutableSet<String> prepareSecondaryDexDir(ImmutableSet<String> requiredHashes)
@@ -676,7 +673,7 @@ public class ExopackageInstaller {
     }
   }
 
-  private ImmutableMap<String, Path> getAllLibraries() throws IOException {
+  private ImmutableMultimap<String, Path> getAllLibraries() throws IOException {
     ExopackageInfo.NativeLibsInfo nativeLibsInfo = exopackageInfo.nativeLibsInfo().get();
     return parseExopackageInfoMetadata(
         nativeLibsInfo.metadata(),
@@ -685,7 +682,7 @@ public class ExopackageInstaller {
   }
 
   private ImmutableMap<String, Path> getRequiredLibrariesForAbi(
-      ImmutableMap<String, Path> allLibraries,
+      ImmutableMultimap<String, Path> allLibraries,
       String abi,
       ImmutableSet<String> ignoreLibraries) throws IOException {
     return filterLibrariesForAbi(
@@ -697,23 +694,21 @@ public class ExopackageInstaller {
 
   @VisibleForTesting
   static ImmutableMap<String, Path> filterLibrariesForAbi(
-      final Path nativeLibsDir,
-      ImmutableMap<String, Path> allLibraries,
-      final String abi,
-      final ImmutableSet<String> ignoreLibraries) {
-    return ImmutableMap.copyOf(
-        Maps.filterValues(
-            allLibraries,
-            new Predicate<Path>() {
-              @Override
-              public boolean apply(Path input) {
-                Path relativePath = nativeLibsDir.relativize(input);
-                Preconditions.checkState(relativePath.getNameCount() == 2);
-                String libAbi = relativePath.getParent().toString();
-                String libName = relativePath.getFileName().toString();
-                return libAbi.equals(abi) && !ignoreLibraries.contains(libName);
-              }
-            }));
+      Path nativeLibsDir,
+      ImmutableMultimap<String, Path> allLibraries,
+      String abi,
+      ImmutableSet<String> ignoreLibraries) {
+    ImmutableMap.Builder<String, Path> filteredLibraries = ImmutableMap.builder();
+    for (Map.Entry<String, Path> entry : allLibraries.entries()) {
+      Path relativePath = nativeLibsDir.relativize(entry.getValue());
+      Preconditions.checkState(relativePath.getNameCount() == 2);
+      String libAbi = relativePath.getParent().toString();
+      String libName = relativePath.getFileName().toString();
+      if (libAbi.equals(abi) && !ignoreLibraries.contains(libName)) {
+        filteredLibraries.put(entry);
+      }
+    }
+    return filteredLibraries.build();
   }
 
   /**
@@ -721,15 +716,15 @@ public class ExopackageInstaller {
    * "file_path_without_spaces file_hash ...." i.e. it parses the first two columns of each line
    * and ignores the rest of it.
    *
-   * @return  A map from the file hash to its path, which equals the raw path resolved against
+   * @return  A multi map from the file hash to its path, which equals the raw path resolved against
    *     {@code resolvePathAgainst}.
    */
   @VisibleForTesting
-  static ImmutableMap<String, Path> parseExopackageInfoMetadata(
+  static ImmutableMultimap<String, Path> parseExopackageInfoMetadata(
       Path metadataTxt,
       Path resolvePathAgainst,
       ProjectFilesystem filesystem) throws IOException {
-    ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
+    ImmutableMultimap.Builder<String, Path> builder = ImmutableMultimap.builder();
     for (String line : filesystem.readLines(metadataTxt)) {
       List<String> parts = Splitter.on(' ').splitToList(line);
       if (parts.size() < 2) {
