@@ -416,10 +416,14 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
                 "Xcode is running. Generated projects might be lost or corrupted if Xcode " +
                 "currently has them open."));
       }
-      console.getStdOut().print(
-          "To disable this prompt in the future, add the following to .buckconfig.local: \n\n" +
+      console.getStdOut().format(
+          "To disable this prompt in the future, add the following to %s: \n\n" +
           "[project]\n" +
-          "  ide_prompt = false\n\n");
+          "  ide_prompt = false\n\n",
+          getProjectFilesystem()
+              .getRootPath()
+              .resolve(BuckConfig.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME)
+              .toAbsolutePath());
     } else {
       LOG.debug(
           "Xcode is running, but cannot prompt to kill it (enabled %s, can prompt %s)",

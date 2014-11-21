@@ -89,7 +89,7 @@ import javax.annotation.concurrent.Immutable;
 public class BuckConfig {
 
   private static final String DEFAULT_BUCK_CONFIG_FILE_NAME = ".buckconfig";
-  private static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
+  public static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
 
   private static final String ALIAS_SECTION_HEADER = "alias";
 
