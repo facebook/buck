@@ -463,7 +463,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   private TargetGraphAndTargets createTargetGraph(final ProjectCommandOptions options)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     Predicate<TargetNode<?>> projectRootsPredicate;
-    Predicate<TargetNode<?>> projectPredicate;
     AssociatedTargetNodePredicate associatedProjectPredicate;
 
     // Prepare the predicates to create the project graph based on the IDE.
@@ -475,7 +474,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             return input.getType() == ProjectConfigDescription.TYPE;
           }
         };
-        projectPredicate = projectRootsPredicate;
         associatedProjectPredicate = new AssociatedTargetNodePredicate() {
           @Override
           public boolean apply(TargetNode<?> targetNode, TargetGraph targetGraph) {
@@ -523,12 +521,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
               }
             }
             return true;
-          }
-        };
-        projectPredicate = new Predicate<TargetNode<?>>() {
-          @Override
-          public boolean apply(TargetNode<?> input) {
-            return input.getType() == XcodeProjectConfigDescription.TYPE;
           }
         };
         associatedProjectPredicate = new AssociatedTargetNodePredicate() {
@@ -581,16 +573,12 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     // graph, all the transitive dependencies of those tests, and all the targets in the main graph.
     ImmutableSet<TargetNode<?>> associatedTests = ImmutableSet.of();
     if (options.isWithTests()) {
-      Predicate<TargetNode<?>> testPredicate = new Predicate<TargetNode<?>>() {
-        @Override
-        public boolean apply(TargetNode<?> input) {
-          return input.getType().isTestRule();
-        }
-      };
-
       AssociatedTargetNodePredicate associatedTestsPredicate = new AssociatedTargetNodePredicate() {
         @Override
         public boolean apply(TargetNode<?> targetNode, TargetGraph targetGraph) {
+          if (!targetNode.getType().isTestRule()) {
+            return false;
+          }
           ImmutableSortedSet<BuildTarget> sourceUnderTest;
           if (targetNode.getConstructorArg() instanceof HasSourceUnderTest) {
             HasSourceUnderTest argWithSourceUnderTest =
@@ -613,14 +601,12 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       associatedTests = getAssociatedTargetNodes(
           fullGraph,
           projectRoots,
-          testPredicate,
           associatedTestsPredicate);
     }
 
     ImmutableSet<TargetNode<?>> associatedProjects = getAssociatedTargetNodes(
         fullGraph,
         Iterables.concat(projectRoots, associatedTests),
-        projectPredicate,
         associatedProjectPredicate);
 
     TargetGraph targetGraph = fullGraph.getSubgraph(
@@ -638,14 +624,12 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    * @param fullGraph A TargetGraph containing all nodes that could be related.
    * @param subgraphRoots Target nodes forming the roots of the subgraph to which the returned nodes
    *                      are related.
-   * @param predicate A predicate that all related nodes pass. Unrelated nodes can pass it as well.
    * @param associatedTargetNodePredicate A predicate to determine whether a node is related or not.
    * @return A set of nodes related to {@code subgraphRoots} or their dependencies.
    */
   private ImmutableSet<TargetNode<?>> getAssociatedTargetNodes(
       TargetGraph fullGraph,
       Iterable<TargetNode<?>> subgraphRoots,
-      final Predicate<TargetNode<?>> predicate,
       final AssociatedTargetNodePredicate associatedTargetNodePredicate)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     final TargetGraph subgraph = fullGraph.getSubgraph(subgraphRoots);
@@ -656,7 +640,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             new Predicate<TargetNode<?>>() {
               @Override
               public boolean apply(TargetNode<?> node) {
-                return predicate.apply(node) && associatedTargetNodePredicate.apply(node, subgraph);
+                return associatedTargetNodePredicate.apply(node, subgraph);
               }
             })
         .toSet();
