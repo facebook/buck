@@ -93,16 +93,19 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
   private static class TargetGraphAndTargets {
     private final TargetGraph targetGraph;
+    private final TargetGraph fullGraph;
     private final ImmutableSet<TargetNode<?>> projectRoots;
     private final ImmutableSet<TargetNode<?>> associatedTests;
     private final ImmutableSet<TargetNode<?>> associatedProjects;
 
     public TargetGraphAndTargets(
         TargetGraph targetGraph,
+        TargetGraph fullGraph,
         ImmutableSet<TargetNode<?>> projectRoots,
         ImmutableSet<TargetNode<?>> associatedTests,
         ImmutableSet<TargetNode<?>> associatedProjects) {
       this.targetGraph = targetGraph;
+      this.fullGraph = fullGraph;
       this.projectRoots = projectRoots;
       this.associatedTests = associatedTests;
       this.associatedProjects = associatedProjects;
@@ -110,6 +113,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     public TargetGraph getTargetGraph() {
       return targetGraph;
+    }
+
+    public TargetGraph getFullGraph() {
+      return fullGraph;
     }
 
     public ImmutableSet<TargetNode<?>> getProjectRoots() {
@@ -155,10 +162,13 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       throws IOException, InterruptedException {
     // Create an ActionGraph that only contains targets that can be represented as IDE
     // configuration files.
+    TargetGraph fullGraph;
     ActionGraph actionGraph;
 
     try {
-      actionGraph = createTargetGraph(options).getTargetGraph().getActionGraph();
+      TargetGraphAndTargets targetGraphAndTargets = createTargetGraph(options);
+      fullGraph = targetGraphAndTargets.getFullGraph();
+      actionGraph = targetGraphAndTargets.getTargetGraph().getActionGraph();
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -214,7 +224,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       List<String> additionalInitialTargets = ImmutableList.of();
       if (options.shouldProcessAnnotations()) {
         try {
-          additionalInitialTargets = getAnnotationProcessingTargets(options);
+          additionalInitialTargets = getAnnotationProcessingTargets(fullGraph, options);
         } catch (BuildTargetException | BuildFileParseException e) {
           throw new HumanReadableException(e);
         }
@@ -257,9 +267,12 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return 0;
   }
 
-  ImmutableList<String> getAnnotationProcessingTargets(ProjectCommandOptions options)
+  ImmutableList<String> getAnnotationProcessingTargets(
+      TargetGraph fullGraph,
+      ProjectCommandOptions options)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
     ImmutableSet<BuildTarget> buildTargets = getRootsFromOptionsWithPredicate(
+        fullGraph,
         options,
         ANNOTATION_PREDICATE);
     return FluentIterable
@@ -432,6 +445,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   }
 
   private ImmutableSet<BuildTarget> getRootsFromOptionsWithPredicate(
+      TargetGraph fullGraph,
       ProjectCommandOptions options,
       Predicate<TargetNode<?>> rootsPredicate)
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
@@ -439,14 +453,11 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     if (!argumentsAsBuildTargets.isEmpty()) {
       return getBuildTargets(argumentsAsBuildTargets);
     }
-    return getParser().filterAllTargetsInProject(
-        getProjectFilesystem(),
-        options.getDefaultIncludes(),
-        rootsPredicate,
-        console,
-        environment,
-        getBuckEventBus(),
-        options.getEnableProfiling());
+    return FluentIterable
+        .from(fullGraph.getNodes())
+        .filter(rootsPredicate)
+        .transform(HasBuildTarget.TO_TARGET)
+        .toSet();
   }
 
   private TargetGraphAndTargets createTargetGraph(final ProjectCommandOptions options)
@@ -562,6 +573,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ImmutableSet<TargetNode<?>> projectRoots = ImmutableSet.copyOf(
         fullGraph.getAll(
             getRootsFromOptionsWithPredicate(
+                fullGraph,
                 options,
                 projectRootsPredicate)));
 
@@ -616,6 +628,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     return new TargetGraphAndTargets(
         targetGraph,
+        fullGraph,
         projectRoots,
         associatedTests,
         associatedProjects);
