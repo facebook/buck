@@ -54,6 +54,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -336,6 +337,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       }
       LOG.debug("Generating workspace for config targets %s", targets);
       Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
+      ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
+      ImmutableMultimap<BuildTarget, TargetNode<?>> sourceTargetToTestNodes =
+          AppleBuildRules.getSourceTargetToTestNodesMap(testTargetNodes);
       for (BuildTarget workspaceTarget : targets) {
         TargetNode<?> workspaceNode =
             targetGraphAndTargets.getTargetGraph().get(workspaceTarget);
@@ -344,14 +348,13 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
               "%s must be a xcode_workspace_config",
               workspaceTarget);
         }
-        ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
         WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
             getProjectFilesystem(),
             targetGraphAndTargets.getTargetGraph(),
             executionContext,
             castToXcodeWorkspaceTargetNode(workspaceNode),
             optionsBuilder.build(),
-            AppleBuildRules.getSourceTargetToTestNodesMap(testTargetNodes),
+            sourceTargetToTestNodes,
             combinedProject);
         generator.generateWorkspaceAndDependentProjects(projectGenerators);
       }
