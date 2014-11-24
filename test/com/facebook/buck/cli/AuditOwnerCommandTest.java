@@ -61,7 +61,6 @@ import org.kohsuke.args4j.CmdLineException;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -438,78 +437,6 @@ public class AuditOwnerCommandTest {
     assertTrue(report.owners.containsKey(targetNode2));
     assertEquals(targetNode1.getInputs(), report.owners.get(targetNode1));
     assertEquals(targetNode2.getInputs(), report.owners.get(targetNode2));
-  }
-
-  @Test
-  public void verifyBuckFileIsFoundWhenAvailable() throws IOException, InterruptedException {
-    final Path root = Paths.get("root");
-    final Path buckFile = Paths.get("root/BUCK");
-
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
-      private ImmutableSet<Path> existingFiles = ImmutableSet.of(
-          buckFile,
-          Paths.get("root/.buckconfig"),
-          Paths.get("root/sub/Test.java"));
-
-      @Override
-      public boolean exists(Path path) {
-        return existingFiles.contains(path);
-      }
-
-      @Override
-      public Path resolve(Path path) {
-        if (path.equals(Paths.get(".buckconfig"))) {
-          return Paths.get("root/.buckconfig");
-        }
-        return path;
-      }
-
-      @Override
-      public boolean isDirectory(Path path, LinkOption... linkOptions) {
-        return path.equals(root) || path.equals(Paths.get("root/sub"));
-      }
-
-      @Override
-      public Path getRootPath() {
-        return root;
-      }
-    };
-
-    AuditOwnerCommand command = createAuditOwnerCommand(filesystem);
-    assertEquals(
-        buckFile,
-        command.findBuckFileFor(Paths.get("root/.buckconfig")));
-    assertEquals(
-        buckFile,
-        command.findBuckFileFor(Paths.get(".buckconfig")));
-    assertEquals(
-        buckFile,
-        command.findBuckFileFor(Paths.get("root/sub/Test.java")));
-  }
-
-  @Test
-  public void verifyBuckFileIsNullWhenNotFound() throws IOException, InterruptedException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem() {
-      @Override
-      public boolean exists(Path path) {
-        return path.equals(Paths.get("root/.buckconfig"));
-      }
-
-      @Override
-      public boolean isDirectory(Path path, LinkOption... linkOptions) {
-        return path.equals(getRootPath());
-      }
-
-      @Override
-      public Path getRootPath() {
-        return Paths.get("root");
-      }
-    };
-
-    AuditOwnerCommand command = createAuditOwnerCommand(filesystem);
-    assertEquals(
-        null,
-        command.findBuckFileFor(Paths.get("root/.buckconfig")));
   }
 
 }

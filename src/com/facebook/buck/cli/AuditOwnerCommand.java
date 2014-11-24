@@ -19,13 +19,16 @@ package com.facebook.buck.cli;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -48,8 +51,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 /**
  * Outputs targets that own a specified list of files.
  */
@@ -58,8 +59,11 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   private static final String FILE_INDENT = "    ";
   private static final int BUILD_TARGET_ERROR = 13;
 
+  private final BuildFileTree buildFileTree;
+
   public AuditOwnerCommand(CommandRunnerParams params) {
     super(params);
+    buildFileTree = new FilesystemBackedBuildFileTree(getProjectFilesystem());
   }
 
   @VisibleForTesting
@@ -112,8 +116,8 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
 
     for (Path filePath : options.getArgumentsAsPaths(getProjectFilesystem().getRootPath())) {
-      Path buckFile = findBuckFileFor(filePath);
-      if (buckFile == null) {
+      Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(filePath);
+      if (!basePath.isPresent()) {
         report = report.updatedWith(
           new OwnersReport(
               ImmutableSetMultimap.<TargetNode<?>, Path>of(),
@@ -122,7 +126,9 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
               Sets.<String>newHashSet()));
         continue;
       }
-      Preconditions.checkNotNull(buckFile);
+
+      Path buckFile = basePath.get().resolve(BuckConstant.BUILD_RULES_FILE_NAME);
+      Preconditions.checkState(getProjectFilesystem().exists(buckFile));
 
       // Get the target base name.
       Path targetBasePath = MorePaths.relativize(
@@ -228,28 +234,6 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     }
 
     return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
-  }
-
-  @VisibleForTesting
-  @Nullable
-  Path findBuckFileFor(Path file) {
-    ProjectFilesystem filesystem = getProjectFilesystem();
-    Path dir = filesystem.resolve(file);
-
-    if (!filesystem.isDirectory(dir)) {
-      dir = dir.getParent();
-    }
-
-    Path projectRoot = filesystem.getRootPath();
-    while (dir != null && !dir.equals(projectRoot.getParent())) {
-      Path buck = dir.resolve(BuckConstant.BUILD_RULES_FILE_NAME);
-      if (getProjectFilesystem().exists(buck)) {
-        return buck;
-      }
-      dir = dir.getParent();
-    }
-
-    return null;
   }
 
   private void printReport(AuditOwnerOptions options, OwnersReport report) throws IOException {
