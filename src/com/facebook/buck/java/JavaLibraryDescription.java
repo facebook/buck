@@ -45,7 +45,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     FlavorableDescription<JavaLibraryDescription.Arg>, Flavored {
 
   public static final BuildRuleType TYPE = new BuildRuleType("java_library");
-  public static final String ANNOTATION_PROCESSORS = "annotation_processors";
 
   @VisibleForTesting
   final JavaCompilerEnvironment javacEnv;
