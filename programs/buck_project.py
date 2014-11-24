@@ -1,5 +1,4 @@
 from __future__ import print_function
-import json
 import os
 import subprocess
 import tempfile
@@ -7,7 +6,6 @@ import textwrap
 import shutil
 import sys
 
-from buck_repo import check_output, which
 from tracing import Tracing
 
 
@@ -87,14 +85,6 @@ class BuckProject:
         with Tracing('BuckProject.clean_up_buckd'):
             if os.path.exists(self.buckd_dir):
                 shutil.rmtree(self.buckd_dir)
-            if which('watchman'):
-                trigger_list_output = check_output(
-                    ['watchman', 'trigger-list', self.root])
-                trigger_list = json.loads(trigger_list_output.decode())
-                if not trigger_list.get('triggers'):
-                    subprocess.call(
-                        ['watchman', 'watch-del', self.root],
-                        stdout=open(os.devnull, 'w'))
 
     def create_buckd_tmp_dir(self):
         if self.buckd_tmp_dir is not None:
