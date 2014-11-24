@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
@@ -97,11 +98,14 @@ public class FilesystemBackedBuildFileTreeTest {
         ImmutableSet.copyOf(subChildren));
 
     assertEquals(Paths.get("src/com/example"),
-        buildFiles.getBasePathOfAncestorTarget(Paths.get("src/com/example/foo")));
+        buildFiles.getBasePathOfAncestorTarget(
+            Paths.get("src/com/example/foo")).get());
     assertEquals(Paths.get("src/com/example"),
-        buildFiles.getBasePathOfAncestorTarget(Paths.get("src/com/example/some/bar")));
+        buildFiles.getBasePathOfAncestorTarget(
+            Paths.get("src/com/example/some/bar")).get());
     assertEquals(Paths.get("src/com/example/some/directory"),
-        buildFiles.getBasePathOfAncestorTarget(Paths.get("src/com/example/some/directory/baz")));
+        buildFiles.getBasePathOfAncestorTarget(
+            Paths.get("src/com/example/some/directory/baz")).get());
   }
 
   @Test
@@ -124,7 +128,34 @@ public class FilesystemBackedBuildFileTreeTest {
         buildFiles.getChildPaths(BuildTarget.builder("//foo", "foo").build());
     assertEquals(ImmutableSet.of(Paths.get("baz")), children);
 
-    Path ancestor = buildFiles.getBasePathOfAncestorTarget(Paths.get("foo/bar/xyzzy"));
+    Path ancestor = buildFiles.getBasePathOfAncestorTarget(Paths.get("foo/bar/xyzzy")).get();
     assertEquals(Paths.get("foo"), ancestor);
+  }
+
+  @Test
+  public void rootBasePath() throws IOException {
+    Path root = tmp.getRoot().toPath();
+    java.nio.file.Files.createFile(root.resolve("BUCK"));
+    java.nio.file.Files.createDirectory(root.resolve("foo"));
+    java.nio.file.Files.createFile(root.resolve("foo/BUCK"));
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(root);
+    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem);
+
+    Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(Paths.get("bar/baz"));
+    assertEquals(Optional.of(Paths.get("")), ancestor);
+  }
+
+  @Test
+  public void missingBasePath() throws IOException {
+    Path root = tmp.getRoot().toPath();
+    java.nio.file.Files.createDirectory(root.resolve("foo"));
+    java.nio.file.Files.createFile(root.resolve("foo/BUCK"));
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(root);
+    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem);
+
+    Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(Paths.get("bar/baz"));
+    assertEquals(Optional.<Path>absent(), ancestor);
   }
 }

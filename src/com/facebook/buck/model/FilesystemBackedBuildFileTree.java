@@ -18,6 +18,7 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -88,13 +89,13 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
    * path.
    */
   @Override
-  public Path getBasePathOfAncestorTarget(Path filePath) {
+  public Optional<Path> getBasePathOfAncestorTarget(Path filePath) {
     while (filePath != null) {
       // If filePath names a directory with a build file, filePath is a base path.
       // If filePath or any of its parents are in ignoredPaths, we should keep looking.
       if (projectFilesystem.isFile(filePath.resolve(BuckConstant.BUILD_RULES_FILE_NAME)) &&
           !projectFilesystem.isIgnored(filePath)) {
-        return filePath;
+        return Optional.of(filePath);
       }
 
       // If filePath is root, we're done looking.
@@ -106,7 +107,14 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
       filePath = filePath.getParent();
     }
 
-    // filePath does not fall under any build file; return empty Path.
-    return Paths.get("");
+    // No build file found in any directory, check the project root
+    Path rootBuckFile = Paths.get(BuckConstant.BUILD_RULES_FILE_NAME);
+    if (projectFilesystem.isFile(rootBuckFile) &&
+        !projectFilesystem.isIgnored(rootBuckFile)) {
+      return Optional.of(Paths.get(""));
+    }
+
+    // filePath does not fall under any build file
+    return Optional.absent();
   }
 }

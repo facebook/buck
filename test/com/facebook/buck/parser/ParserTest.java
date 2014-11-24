@@ -1241,17 +1241,18 @@ public class ParserTest extends EasyMockSupport {
 
     tempDir.newFolder("bar");
     tempDir.newFile("bar/Bar.java");
+    tempDir.newFolder("foo");
     Path rootPath = tempDir.getRoot().toPath();
-    java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo"), rootPath.resolve("bar"));
+    java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
-    File testBuckFile = tempDir.newFile(BuckConstant.BUILD_RULES_FILE_NAME);
+    Path testBuckFile = rootPath.resolve("foo").resolve(BuckConstant.BUILD_RULES_FILE_NAME);
     Files.write(
-        "java_library(name = 'lib', srcs=glob(['foo/*.java']))\n",
-        testBuckFile,
+        "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n",
+        testBuckFile.toFile(),
         Charsets.UTF_8);
 
     // Fetch //:lib to put it in cache.
-    BuildTarget libTarget = BuildTarget.builder("//", "lib").build();
+    BuildTarget libTarget = BuildTarget.builder("//foo", "lib").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
@@ -1268,7 +1269,7 @@ public class ParserTest extends EasyMockSupport {
           .getActionGraph();
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
-      assertEquals(ImmutableList.of(Paths.get("foo/Bar.java")), libRule.getInputs());
+      assertEquals(ImmutableList.of(Paths.get("foo/bar/Bar.java")), libRule.getInputs());
     }
 
     tempDir.newFile("bar/Baz.java");
@@ -1290,7 +1291,7 @@ public class ParserTest extends EasyMockSupport {
           /* enableProfiling */ false)
              .getActionGraph();
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
-      assertEquals(ImmutableList.of(Paths.get("foo/Bar.java")), libRule.getInputs());
+      assertEquals(ImmutableList.of(Paths.get("foo/bar/Bar.java")), libRule.getInputs());
     }
 
     // Now tell the parser to forget about build files with inputs under symlinks.
@@ -1307,7 +1308,7 @@ public class ParserTest extends EasyMockSupport {
             .getActionGraph();
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
-          ImmutableList.of(Paths.get("foo/Bar.java"), Paths.get("foo/Baz.java")),
+          ImmutableList.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
           libRule.getInputs());
     }
   }
@@ -1319,18 +1320,19 @@ public class ParserTest extends EasyMockSupport {
 
     tempDir.newFolder("bar");
     tempDir.newFile("bar/Bar.java");
+    tempDir.newFolder("foo");
     File bazSourceFile = tempDir.newFile("bar/Baz.java");
     Path rootPath = tempDir.getRoot().toPath();
-    java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo"), rootPath.resolve("bar"));
+    java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
-    File testBuckFile = tempDir.newFile(BuckConstant.BUILD_RULES_FILE_NAME);
+    Path testBuckFile = rootPath.resolve("foo").resolve(BuckConstant.BUILD_RULES_FILE_NAME);
     Files.write(
-        "java_library(name = 'lib', srcs=glob(['foo/*.java']))\n",
-        testBuckFile,
+        "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n",
+        testBuckFile.toFile(),
         Charsets.UTF_8);
 
     // Fetch //:lib to put it in cache.
-    BuildTarget libTarget = BuildTarget.builder("//", "lib").build();
+    BuildTarget libTarget = BuildTarget.builder("//foo", "lib").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 
@@ -1347,7 +1349,7 @@ public class ParserTest extends EasyMockSupport {
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
-          ImmutableList.of(Paths.get("foo/Bar.java"), Paths.get("foo/Baz.java")),
+          ImmutableList.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
           libRule.getInputs());
     }
 
@@ -1371,7 +1373,7 @@ public class ParserTest extends EasyMockSupport {
               .getActionGraph();
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
-          ImmutableList.of(Paths.get("foo/Bar.java"), Paths.get("foo/Baz.java")),
+          ImmutableList.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
           libRule.getInputs());
     }
 
@@ -1389,7 +1391,7 @@ public class ParserTest extends EasyMockSupport {
               .getActionGraph();
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
-          ImmutableList.of(Paths.get("foo/Bar.java")),
+          ImmutableList.of(Paths.get("foo/bar/Bar.java")),
           libRule.getInputs());
     }
   }

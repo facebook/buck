@@ -406,7 +406,10 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         basePathOfTargets = Sets.newHashSet();
         dependentTargets = Sets.newHashSet();
         for (Path input : referencedInputs) {
-          basePathOfTargets.add(tree.getBasePathOfAncestorTarget(input));
+          Optional<Path> path = tree.getBasePathOfAncestorTarget(input);
+          if (path.isPresent()) {
+            basePathOfTargets.add(path.get());
+          }
         }
       } else {
         basePathOfTargets = ImmutableSet.of();

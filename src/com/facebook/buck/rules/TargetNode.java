@@ -25,6 +25,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -204,8 +205,8 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
             getBuildTarget());
       }
 
-      Path ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
-      if (!ancestor.equals(basePath)) {
+      Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
+      if (!ancestor.isPresent() || !ancestor.get().equals(basePath)) {
         throw new InvalidSourcePathInputException(
             "'%s' in '%s' crosses a buck package boundary. Find the nearest BUCK file in the " +
                 "directory that contains this file and refer to the rule referencing the desired" +

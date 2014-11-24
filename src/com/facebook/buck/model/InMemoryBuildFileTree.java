@@ -18,6 +18,7 @@ package com.facebook.buck.model;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.FluentIterable;
@@ -88,13 +89,13 @@ public class InMemoryBuildFileTree extends BuildFileTree {
   }
 
   @Override
-  public Path getBasePathOfAncestorTarget(Path filePath) {
+  public Optional<Path> getBasePathOfAncestorTarget(Path filePath) {
     Node node = new Node(filePath);
     Node parent = findParent(node, basePathToNodeIndex);
     if (parent != null) {
-      return parent.basePath;
+      return Optional.of(parent.basePath);
     } else {
-      return Paths.get("");
+      return Optional.absent();
     }
   }
 

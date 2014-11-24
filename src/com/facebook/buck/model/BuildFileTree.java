@@ -17,6 +17,7 @@
 package com.facebook.buck.model;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 
 import java.nio.file.Path;
@@ -44,12 +45,12 @@ public abstract class BuildFileTree {
 
   /**
    * Returns the base path for a given path. The base path is the nearest directory at or
-   * above filePath that contains a build file. If no base directory is found, returns null.
+   * above filePath that contains a build file.
    *
    * @param filePath the path whose base path to find.
-   * @return the base path, or null if no base path is found.
+   * @return the base path if there is one.
    */
-  public abstract Path getBasePathOfAncestorTarget(Path filePath);
+  public abstract Optional<Path> getBasePathOfAncestorTarget(Path filePath);
 
   /**
    * Returns the base paths for zero or more targets.

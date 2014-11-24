@@ -777,11 +777,13 @@ public class Parser {
    *             within the build file to find and invalidate.
    */
   private synchronized void invalidateContainingBuildFile(Path path) throws IOException {
-    String packageBuildFilePath =
-        buildFileTreeCache.get().getBasePathOfAncestorTarget(path).toString();
+    Optional<Path> packageBuildFile = buildFileTreeCache.get().getBasePathOfAncestorTarget(path);
+    if (!packageBuildFile.isPresent()) {
+      return;
+    }
     state.invalidateDependents(
-        repository.getFilesystem().getFileForRelativePath(
-            packageBuildFilePath + '/' + BuckConstant.BUILD_RULES_FILE_NAME).toPath());
+        repository.getFilesystem().getPathForRelativePath(
+            packageBuildFile.get().resolve(BuckConstant.BUILD_RULES_FILE_NAME)));
   }
 
   private boolean isPathCreateOrDeleteEvent(WatchEvent<?> event) {
