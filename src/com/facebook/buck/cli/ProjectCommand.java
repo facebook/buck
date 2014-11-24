@@ -341,8 +341,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       ImmutableMultimap<BuildTarget, TargetNode<?>> sourceTargetToTestNodes =
           AppleBuildRules.getSourceTargetToTestNodesMap(testTargetNodes);
       for (BuildTarget workspaceTarget : targets) {
-        TargetNode<?> workspaceNode =
-            targetGraphAndTargets.getTargetGraph().get(workspaceTarget);
+        TargetNode<?> workspaceNode = Preconditions.checkNotNull(
+            targetGraphAndTargets.getTargetGraph().get(workspaceTarget));
         if (workspaceNode.getType() != XcodeWorkspaceConfigDescription.TYPE) {
           throw new HumanReadableException(
               "%s must be a xcode_workspace_config",
