@@ -401,6 +401,7 @@ public class AndroidBinaryGraphEnhancer {
           totalBuildConfigValues,
           buildConfigValuesFile,
           /* useConstantExpressions */ true,
+          javacOptions,
           ruleResolver);
       ruleResolver.addToIndex(buildConfigJavaLibrary);
 

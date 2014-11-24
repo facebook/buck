@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -24,7 +25,6 @@ import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyM
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacVersion;
-import com.facebook.buck.java.PopularAndroidJavaCompilerEnvironment;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -51,7 +51,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
-        JavacOptions.DEFAULTS,
+        DEFAULT_JAVAC_OPTIONS,
         ResourceDependencyMode.FIRST_ORDER);
     Optional<DummyRDotJava> result = graphEnhancer.createBuildableForAndroidResources(
         new BuildRuleResolver(),
@@ -86,7 +86,7 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
-        JavacOptions.DEFAULTS,
+        DEFAULT_JAVAC_OPTIONS,
         ResourceDependencyMode.FIRST_ORDER);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
         ruleResolver,
@@ -135,16 +135,14 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
-        JavacOptions.builder(JavacOptions.DEFAULTS)
-            .setJavaCompilerEnvironment(
-                new JavaCompilerEnvironment(
-                    Optional.of(Paths.get("javac")),
-                    Optional.of(new JavacVersion("1.7")),
-                    PopularAndroidJavaCompilerEnvironment.TARGETED_JAVA_VERSION,
-                    PopularAndroidJavaCompilerEnvironment.TARGETED_JAVA_VERSION))
-            .build(),
-        ResourceDependencyMode.FIRST_ORDER);
-    Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
+        JavacOptions.builder().setJavaCompilerEnvironment(
+            new JavaCompilerEnvironment(
+                Optional.of(Paths.get("javac")),
+                Optional.of(new JavacVersion("1.7")),
+                "7",
+                "7")).build(),
+    ResourceDependencyMode.FIRST_ORDER);
+        Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static com.facebook.buck.util.BuckConstant.BIN_DIR;
 import static com.facebook.buck.util.BuckConstant.BIN_PATH;
 import static org.junit.Assert.assertEquals;
@@ -24,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
-import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -77,7 +77,7 @@ public class AaptPackageResourcesTest {
         ImmutableSet.<Path>of(),
         PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
-        JavacOptions.DEFAULTS,
+        DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false);
 
@@ -140,7 +140,7 @@ public class AaptPackageResourcesTest {
         ImmutableSet.<Path>of(),
         PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
-        JavacOptions.DEFAULTS,
+        DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false);
 
@@ -202,7 +202,7 @@ public class AaptPackageResourcesTest {
         ImmutableSet.<Path>of(),
         PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
-        JavacOptions.DEFAULTS,
+        DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false);
 

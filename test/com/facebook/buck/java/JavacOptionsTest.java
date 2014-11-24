@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_ENV;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -32,7 +33,9 @@ public class JavacOptionsTest {
 
   @Test
   public void buildsAreDebugByDefault() {
-    JavacOptions options = JavacOptions.builder().build();
+    JavacOptions options = JavacOptions.builder()
+        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
+        .build();
 
     assertOptionsContains(options, "-g");
   }
@@ -40,6 +43,7 @@ public class JavacOptionsTest {
   @Test
   public void productionBuildsCanBeEnabled() {
     JavacOptions options = JavacOptions.builder()
+        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
         .setProductionBuild()
         .build();
 
@@ -48,7 +52,9 @@ public class JavacOptionsTest {
 
   @Test
   public void testDoesNotSetBootclasspathByDefault() {
-    JavacOptions options = JavacOptions.builder().build();
+    JavacOptions options = JavacOptions.builder()
+        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
+        .build();
 
     assertOptionsDoesNotContain(options, "-bootclasspath");
   }
@@ -56,6 +62,7 @@ public class JavacOptionsTest {
   @Test
   public void canSetBootclasspath() {
     JavacOptions options = JavacOptions.builder()
+        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
         .setBootclasspath("foo:bar")
         .build();
 
@@ -70,6 +77,7 @@ public class JavacOptionsTest {
         .build();
 
     JavacOptions options = JavacOptions.builder()
+        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
         .setAnnotationProcessingData(params)
         .build();
 
@@ -84,6 +92,7 @@ public class JavacOptionsTest {
         .build();
 
     JavacOptions options = JavacOptions.builder()
+        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
         .setAnnotationProcessingData(params)
         .build();
 

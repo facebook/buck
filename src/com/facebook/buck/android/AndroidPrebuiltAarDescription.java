@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -42,6 +43,11 @@ public class AndroidPrebuiltAarDescription
     implements Description<AndroidPrebuiltAarDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("android_prebuilt_aar");
+  private final JavacOptions javacOptions;
+
+  public AndroidPrebuiltAarDescription(JavacOptions javacOptions) {
+    this.javacOptions = javacOptions;
+  }
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -58,7 +64,7 @@ public class AndroidPrebuiltAarDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return AndroidPrebuiltAarGraphEnhancer.enhance(params, args.aar, resolver);
+    return AndroidPrebuiltAarGraphEnhancer.enhance(params, args.aar, resolver, javacOptions);
   }
 
   @SuppressFieldNotInitialized

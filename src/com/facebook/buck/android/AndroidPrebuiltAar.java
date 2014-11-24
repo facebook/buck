@@ -41,7 +41,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
       SourcePathResolver resolver,
       Path proguardConfig,
       PrebuiltJar prebuiltJar,
-      AndroidResource androidResource) {
+      AndroidResource androidResource,
+      JavacOptions javacOptions) {
     super(
         androidLibraryParams,
         resolver,
@@ -52,7 +53,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
         ImmutableSortedSet.<BuildRule>of(prebuiltJar),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        JavacOptions.DEFAULTS,
+        javacOptions,
         /* resourcesRoot */ Optional.<Path>absent(),
         /* manifestFile */ Optional.<SourcePath>absent(),
         /* isPrebuiltAar */ true);

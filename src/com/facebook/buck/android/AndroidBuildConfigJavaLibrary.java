@@ -47,6 +47,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary
   AndroidBuildConfigJavaLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      JavacOptions javacOptions,
       AndroidBuildConfig androidBuildConfig) {
     super(
         params,
@@ -59,7 +60,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        JavacOptions.DEFAULTS,
+        javacOptions,
         /* resourcesRoot */ Optional.<Path>absent());
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(

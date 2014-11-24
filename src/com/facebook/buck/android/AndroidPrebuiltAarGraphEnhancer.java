@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.java.JarDirectoryStepHelper;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.model.BuildTarget;
@@ -83,7 +84,8 @@ class AndroidPrebuiltAarGraphEnhancer {
   static AndroidPrebuiltAar enhance(
       BuildRuleParams originalBuildRuleParams,
       SourcePath aarFile,
-      BuildRuleResolver ruleResolver) {
+      BuildRuleResolver ruleResolver,
+      JavacOptions javacOptions) {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     // unzip_aar
@@ -173,7 +175,8 @@ class AndroidPrebuiltAarGraphEnhancer {
         pathResolver,
         unzipAar.getProguardConfig(),
         prebuiltJar,
-        androidResource);
+        androidResource,
+        javacOptions);
   }
 
   private static class UnzipAar extends AbstractBuildRule {

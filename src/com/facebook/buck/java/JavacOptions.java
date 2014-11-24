@@ -22,6 +22,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
@@ -36,9 +37,6 @@ import javax.annotation.Nullable;
  */
 public class JavacOptions {
 
-  // Fields are initialized in order. We need the default java target level to have been set.
-  public static final JavacOptions DEFAULTS = JavacOptions.builder().build();
-
   private final JavaCompilerEnvironment javacEnv;
   private final boolean debug;
   private final boolean verbose;
@@ -51,7 +49,7 @@ public class JavacOptions {
       boolean verbose,
       Optional<String> bootclasspath,
       AnnotationProcessingData annotationProcessingData) {
-    this.javacEnv = javacEnv;
+    this.javacEnv = Preconditions.checkNotNull(javacEnv);
     this.debug = debug;
     this.verbose = verbose;
     this.bootclasspath = bootclasspath;
@@ -144,6 +142,8 @@ public class JavacOptions {
   }
 
   public static Builder builder(JavacOptions options) {
+    Preconditions.checkNotNull(options);
+
     Builder builder = builder();
 
     builder.setVerboseOutput(options.verbose);
@@ -164,7 +164,8 @@ public class JavacOptions {
     private boolean verbose = false;
     private Optional<String> bootclasspath = Optional.absent();
     private AnnotationProcessingData annotationProcessingData = AnnotationProcessingData.EMPTY;
-    private JavaCompilerEnvironment javacEnv = JavaCompilerEnvironment.DEFAULT;
+    @Nullable
+    private JavaCompilerEnvironment javacEnv;
 
     private Builder() {
     }
@@ -196,7 +197,7 @@ public class JavacOptions {
 
     public JavacOptions build() {
       return new JavacOptions(
-          javacEnv,
+          Preconditions.checkNotNull(javacEnv),
           debug,
           verbose,
           bootclasspath,

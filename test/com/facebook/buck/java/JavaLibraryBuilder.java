@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_ENV;
+
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
@@ -27,7 +29,7 @@ import java.nio.file.Path;
 public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescription.Arg> {
 
   protected JavaLibraryBuilder(BuildTarget target) {
-    super(new JavaLibraryDescription(JavaCompilerEnvironment.DEFAULT), target);
+    super(new JavaLibraryDescription(DEFAULT_JAVAC_ENV), target);
   }
 
   public static JavaLibraryBuilder createBuilder(BuildTarget target) {

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -121,7 +122,8 @@ public class AndroidInstrumentationApkTest {
         .setExtraDeps(ImmutableSortedSet.<BuildRule>of(androidBinary))
         .build();
     AndroidInstrumentationApk androidInstrumentationApk = (AndroidInstrumentationApk)
-        new AndroidInstrumentationApkDescription(new ProGuardConfig(new FakeBuckConfig()))
+        new AndroidInstrumentationApkDescription(
+            new ProGuardConfig(new FakeBuckConfig()), DEFAULT_JAVAC_OPTIONS)
             .createBuildRule(params, ruleResolver, arg);
 
     assertEquals(

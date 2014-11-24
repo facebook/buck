@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -52,11 +53,9 @@ public class AndroidLibraryGraphEnhancer {
         .addFlavor(DUMMY_R_DOT_JAVA_FLAVOR)
         .build();
     this.originalBuildRuleParams = buildRuleParams;
-    // Override javacoptions because DummyRDotJava doesn't require annotation processing
-    // params data and more importantly, because javacoptions' rule key is not available when
-    // DummyRDotJava is built.
-    this.javacOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
-        .setJavaCompilerEnvironment(javacOptions.getJavaCompilerEnvironment())
+    // Override javacoptions because DummyRDotJava doesn't require annotation processing.
+    this.javacOptions = JavacOptions.builder(javacOptions)
+        .setAnnotationProcessingData(AnnotationProcessingData.EMPTY)
         .build();
     this.resourceDependencyMode = resourceDependencyMode;
   }

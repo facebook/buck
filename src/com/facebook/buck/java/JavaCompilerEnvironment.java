@@ -24,12 +24,6 @@ public class JavaCompilerEnvironment {
 
   // Default combined source and target level.
   public static final String TARGETED_JAVA_VERSION = "7";
-  public static final JavaCompilerEnvironment DEFAULT =
-      new JavaCompilerEnvironment(
-          Optional.<Path> absent(),
-          Optional.<JavacVersion> absent(),
-          TARGETED_JAVA_VERSION,
-          TARGETED_JAVA_VERSION);
 
   private final Optional<Path> javacPath;
   private final Optional<JavacVersion> javacVersion;

@@ -17,9 +17,9 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.android.AndroidResource.BuildOutput;
+import static com.facebook.buck.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.BuildContext;
@@ -82,7 +82,7 @@ public class DummyRDotJavaTest {
         ImmutableSet.of(
             (HasAndroidResourceDeps) resourceRule1,
             (HasAndroidResourceDeps) resourceRule2),
-        JavacOptions.DEFAULTS);
+        ANDROID_JAVAC_OPTIONS);
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(EasyMock.createMock(BuildContext.class),
@@ -127,7 +127,7 @@ public class DummyRDotJavaTest {
             .build(),
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSet.<HasAndroidResourceDeps>of(),
-        JavacOptions.DEFAULTS);
+        ANDROID_JAVAC_OPTIONS);
     assertEquals(Paths.get("buck-out/bin/java/com/example/__library_rdotjava_bin__"),
         dummyRDotJava.getRDotJavaBinFolder());
   }
@@ -138,7 +138,7 @@ public class DummyRDotJavaTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule")).build(),
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSet.<HasAndroidResourceDeps>of(),
-        JavacOptions.DEFAULTS);
+        ANDROID_JAVAC_OPTIONS);
 
     FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
     String keyHash = Strings.repeat("a", 40);
@@ -159,7 +159,7 @@ public class DummyRDotJavaTest {
     return RDotJava.createJavacStepForDummyRDotJavaFiles(
         javaSourceFiles,
         Paths.get(rDotJavaClassesFolder),
-        /* javacOptions */ JavacOptions.DEFAULTS,
+        ANDROID_JAVAC_OPTIONS,
         /* buildTarget */ null)
         .getDescription(TestExecutionContext.newInstance());
   }

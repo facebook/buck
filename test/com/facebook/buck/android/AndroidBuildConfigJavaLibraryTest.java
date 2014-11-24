@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
@@ -42,13 +43,14 @@ public class AndroidBuildConfigJavaLibraryTest {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
         .createBuildRule(
-          params,
-          "com.example.buck",
+            params,
+            "com.example.buck",
           /* values */ BuildConfigFields.fromFieldDeclarations(
-              Collections.singleton("String foo = \"bar\"")),
+                Collections.singleton("String foo = \"bar\"")),
           /* valuesFile */ Optional.<SourcePath>absent(),
           /* useConstantExpressions */ false,
-          buildRuleResolver);
+            DEFAULT_JAVAC_OPTIONS,
+            buildRuleResolver);
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
     buildConfigJavaLibrary.addToCollector(collector);
@@ -56,8 +58,9 @@ public class AndroidBuildConfigJavaLibraryTest {
     assertEquals(
         ImmutableMap.of(
             "com.example.buck",
-            BuildConfigFields.fromFields(ImmutableList.of(
-                new BuildConfigFields.Field("String", "foo", "\"bar\"")))),
+            BuildConfigFields.fromFields(
+                ImmutableList.of(
+                    new BuildConfigFields.Field("String", "foo", "\"bar\"")))),
         collection.buildConfigs());
   }
 
@@ -69,12 +72,13 @@ public class AndroidBuildConfigJavaLibraryTest {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
         .createBuildRule(
-          params,
-          "com.example.buck",
+            params,
+            "com.example.buck",
           /* values */ fields,
           /* valuesFile */ Optional.<SourcePath>absent(),
           /* useConstantExpressions */ false,
-          buildRuleResolver);
+            DEFAULT_JAVAC_OPTIONS,
+            buildRuleResolver);
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());
     assertEquals(fields, buildConfig.getBuildConfigFields());

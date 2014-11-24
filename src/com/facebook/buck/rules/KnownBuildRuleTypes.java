@@ -286,7 +286,7 @@ public class KnownBuildRuleTypes {
 
     Builder builder = builder();
 
-    JavacOptions androidBinaryOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
+    JavacOptions androidBinaryOptions = JavacOptions.builder()
         .setJavaCompilerEnvironment(javacEnv)
         .build();
     builder.register(
@@ -294,11 +294,13 @@ public class KnownBuildRuleTypes {
             androidBinaryOptions,
             proGuardConfig,
             ndkCxxPlatforms));
-    builder.register(new AndroidBuildConfigDescription());
-    builder.register(new AndroidInstrumentationApkDescription(proGuardConfig));
+    builder.register(new AndroidBuildConfigDescription(androidBinaryOptions));
+    builder.register(new AndroidInstrumentationApkDescription(
+            proGuardConfig,
+            androidBinaryOptions));
     builder.register(new AndroidLibraryDescription(javacEnv));
     builder.register(new AndroidManifestDescription());
-    builder.register(new AndroidPrebuiltAarDescription());
+    builder.register(new AndroidPrebuiltAarDescription(androidBinaryOptions));
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.replay;
@@ -32,7 +33,6 @@ import com.facebook.buck.android.AndroidBinaryGraphEnhancer.EnhancementResult;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.java.JavaLibraryBuilder;
-import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -119,7 +119,7 @@ public class AndroidBinaryGraphEnhancerTest {
         DexSplitMode.NO_SPLIT,
         buildRulesToExcludeFromDex,
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
-        JavacOptions.DEFAULTS,
+        ANDROID_JAVAC_OPTIONS,
         EnumSet.noneOf(ExopackageMode.class),
         createStrictMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
@@ -139,23 +139,22 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableSet.<Path>of(),
         AndroidBinary.PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of(),
-        JavacOptions.DEFAULTS,
+        ANDROID_JAVAC_OPTIONS,
         false,
         false);
     ruleResolver.addToIndex(aaptPackageResources);
 
-    AndroidPackageableCollection collection =
-        new AndroidPackageableCollector(
+    ImmutableAndroidPackageableCollection collection = new AndroidPackageableCollector(
             /* collectionRoot */ apkTarget,
-            ImmutableSet.of(javaDep2BuildTarget),
+        ImmutableSet.of(javaDep2BuildTarget),
             /* resourcesToExclude */ ImmutableSet.<BuildTarget>of())
-            .addClasspathEntry(
-                ((HasJavaClassHashes) javaDep1), Paths.get("ignored"))
-            .addClasspathEntry(
-                ((HasJavaClassHashes) javaDep2), Paths.get("ignored"))
-            .addClasspathEntry(
-                ((HasJavaClassHashes) javaLib), Paths.get("ignored"))
-            .build();
+        .addClasspathEntry(
+            ((HasJavaClassHashes) javaDep1), Paths.get("ignored"))
+        .addClasspathEntry(
+            ((HasJavaClassHashes) javaDep2), Paths.get("ignored"))
+        .addClasspathEntry(
+            ((HasJavaClassHashes) javaLib), Paths.get("ignored"))
+        .build();
 
 
     BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(
@@ -203,6 +202,7 @@ public class AndroidBinaryGraphEnhancerTest {
           /* values */ BuildConfigFields.empty(),
           /* valuesFile */ Optional.<SourcePath>absent(),
           /* useConstantExpressions */ false,
+          ANDROID_JAVAC_OPTIONS,
           ruleResolver);
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
@@ -226,7 +226,7 @@ public class AndroidBinaryGraphEnhancerTest {
         DexSplitMode.NO_SPLIT,
         /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
-        JavacOptions.DEFAULTS,
+        ANDROID_JAVAC_OPTIONS,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         keystore,
         /* buildConfigValues */ BuildConfigFields.empty(),

@@ -68,7 +68,7 @@ public class ExternalJavacTest extends EasyMockSupport {
           /* transitiveClasspathEntries */
             ImmutableSet.of(Paths.get("bar.jar"), Paths.get("foo.jar")),
           /* declaredClasspathEntries */ ImmutableSet.of(Paths.get("foo.jar")),
-          JavacOptions.builder(JavacOptions.DEFAULTS)
+          JavacOptions.builder()
               .setJavaCompilerEnvironment(
                   new JavaCompilerEnvironment(
                       Optional.of(Paths.get("fakeJavac")),

@@ -16,10 +16,11 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_ENV;
+
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
@@ -38,7 +39,7 @@ public class DefaultKnownBuildRuleTypes {
     return KnownBuildRuleTypes.createInstance(
         config,
         new FakeAndroidDirectoryResolver(),
-        JavaCompilerEnvironment.DEFAULT,
+        DEFAULT_JAVAC_ENV,
         new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")));
   }
 

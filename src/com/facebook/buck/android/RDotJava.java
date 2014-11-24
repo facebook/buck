@@ -21,6 +21,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.java.JavacStepUtil;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
@@ -65,8 +66,8 @@ public class RDotJava {
         javaSourceFilePaths,
         ImmutableSet.<Path>of(),
         /* classpathEntries */ ImmutableSet.<Path>of(),
-        JavacOptions.builder(JavacOptions.DEFAULTS)
-            .setJavaCompilerEnvironment(javacOptions.getJavaCompilerEnvironment())
+        JavacOptions.builder(javacOptions)
+            .setAnnotationProcessingData(AnnotationProcessingData.EMPTY)
             .build(),
         Optional.<BuildTarget>absent(),
         BuildDependencies.FIRST_ORDER_ONLY,

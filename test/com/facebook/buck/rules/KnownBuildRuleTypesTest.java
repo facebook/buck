@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_ENV;
 import static com.facebook.buck.java.JavaCompilerEnvironment.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -142,7 +143,7 @@ public class KnownBuildRuleTypesTest {
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
         new FakeAndroidDirectoryResolver(),
-        JavaCompilerEnvironment.DEFAULT,
+        DEFAULT_JAVAC_ENV,
         DUMMY_PYTHON_ENVIRONMENT).build();
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
     assertEquals(Optional.<String> absent(), libraryRule.getJavac());
@@ -275,7 +276,7 @@ public class KnownBuildRuleTypesTest {
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
         new FakeAndroidDirectoryResolver(),
-        JavaCompilerEnvironment.DEFAULT,
+        DEFAULT_JAVAC_ENV,
         new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7"))).build();
     AndroidLibraryDescription description =
         (AndroidLibraryDescription) buildRuleTypes.getDescription(AndroidLibraryDescription.TYPE);
@@ -359,7 +360,7 @@ public class KnownBuildRuleTypesTest {
     KnownBuildRuleTypes knownBuildRuleTypes1 = KnownBuildRuleTypes.createInstance(
         new FakeBuckConfig(),
         new FakeAndroidDirectoryResolver(),
-        JavaCompilerEnvironment.DEFAULT,
+        DEFAULT_JAVAC_ENV,
         DUMMY_PYTHON_ENVIRONMENT);
 
     final File javac = temporaryFolder.newFile();
@@ -370,7 +371,7 @@ public class KnownBuildRuleTypesTest {
     KnownBuildRuleTypes knownBuildRuleTypes2 = KnownBuildRuleTypes.createInstance(
         buckConfig,
         new FakeAndroidDirectoryResolver(),
-        JavaCompilerEnvironment.DEFAULT,
+        DEFAULT_JAVAC_ENV,
         DUMMY_PYTHON_ENVIRONMENT);
 
     assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);

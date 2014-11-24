@@ -54,9 +54,13 @@ public class AndroidInstrumentationApkDescription
   public static final BuildRuleType TYPE = new BuildRuleType("android_instrumentation_apk");
 
   private final ProGuardConfig proGuardConfig;
+  private final JavacOptions javacOptions;
 
-  public AndroidInstrumentationApkDescription(ProGuardConfig proGuardConfig) {
+  public AndroidInstrumentationApkDescription(
+      ProGuardConfig proGuardConfig,
+      JavacOptions androidJavacOptions) {
     this.proGuardConfig = proGuardConfig;
+    this.javacOptions = androidJavacOptions;
   }
 
   @Override
@@ -115,7 +119,7 @@ public class AndroidInstrumentationApkDescription
         DexSplitMode.NO_SPLIT,
         FluentIterable.from(rulesToExcludeFromDex).transform(TO_TARGET).toSet(),
         resourcesToExclude,
-        JavacOptions.DEFAULTS,
+        javacOptions,
         EnumSet.noneOf(ExopackageMode.class),
         apkUnderTest.getKeystore(),
         /* buildConfigValues */ BuildConfigFields.empty(),

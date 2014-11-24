@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_ENV;
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static com.facebook.buck.java.JavaCompilerEnvironment.TARGETED_JAVA_VERSION;
 import static com.facebook.buck.util.BuckConstant.BIN_PATH;
 import static org.easymock.EasyMock.createNiceMock;
@@ -967,7 +969,7 @@ public class DefaultJavaLibraryTest {
         exportedDeps,
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        JavacOptions.DEFAULTS,
+        DEFAULT_JAVAC_OPTIONS,
         /* resourcesRoot */ Optional.<Path>absent()) {
       @Override
       public Sha1HashCode getAbiKey() {
@@ -1148,7 +1150,7 @@ public class DefaultJavaLibraryTest {
         buildable.getPathToOutputFile(),
         ImmutableSet.copyOf(buildable.getTransitiveClasspathEntries().values()),
         ImmutableSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
-        JavacOptions.DEFAULTS,
+        DEFAULT_JAVAC_OPTIONS,
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacStep.SuggestBuildRules>absent(),
         stepsBuilder,
@@ -1170,7 +1172,7 @@ public class DefaultJavaLibraryTest {
         .build(ruleResolver);
 
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    JavacOptions javacOptions = JavacOptions.builder(JavacOptions.DEFAULTS)
+    JavacOptions javacOptions = JavacOptions.builder()
         .setJavaCompilerEnvironment(
             new JavaCompilerEnvironment(
                 Optional.of(Paths.get("javac")),
@@ -1396,7 +1398,9 @@ public class DefaultJavaLibraryTest {
       tmp.newFile(src);
 
       AnnotationProcessingParams params = annotationProcessingParamsBuilder.build();
-      JavacOptions.Builder options = JavacOptions.builder().setAnnotationProcessingData(params);
+      JavacOptions.Builder options = JavacOptions.builder()
+          .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
+          .setAnnotationProcessingData(params);
 
       BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
           .setProjectFilesystem(projectFilesystem)
