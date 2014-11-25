@@ -52,7 +52,8 @@ public final class AppleBuildRules {
       ImmutableSet.of(
           AppleLibraryDescription.TYPE,
           AppleBinaryDescription.TYPE,
-          AppleBundleDescription.TYPE);
+          AppleBundleDescription.TYPE,
+          AppleTestDescription.TYPE);
 
   private static final ImmutableSet<BuildRuleType> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
       ImmutableSet.of(AppleTestDescription.TYPE);
@@ -92,15 +93,7 @@ public final class AppleBuildRules {
    * Whether the target node represents an AppleBundle rule with a known test bundle extension.
    */
   public static boolean isXcodeTargetTestBundleTargetNode(TargetNode<?> node) {
-    if (node.getType() != AppleBundleDescription.TYPE) {
-      return false;
-    }
-    AppleBundleDescription.Arg appleBundleConstructorArg =
-        (AppleBundleDescription.Arg) node.getConstructorArg();
-    if (!appleBundleConstructorArg.getExtensionValue().isPresent()) {
-      return false;
-    }
-    return isXcodeTargetTestBundleExtension(appleBundleConstructorArg.getExtensionValue().get());
+    return node.getType() == AppleTestDescription.TYPE;
   }
 
   public static String getOutputFileNameFormatForLibrary(boolean linkedDynamically) {

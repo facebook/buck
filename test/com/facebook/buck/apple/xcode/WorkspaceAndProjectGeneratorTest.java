@@ -25,7 +25,6 @@ import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
-import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.XcodeProjectConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
@@ -135,71 +134,26 @@ public class WorkspaceAndProjectGeneratorTest {
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
         .build();
 
-    BuildTarget bazTestLibTarget = BuildTarget
-        .builder("//baz", "testlib")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-        .build();
-    TargetNode<?> bazTestLibNode = AppleLibraryBuilder
-        .createBuilder(bazTestLibTarget)
-        .build();
-
-    BuildTarget bazTestBundleTarget = BuildTarget.builder("//baz", "xctest").build();
-    TargetNode<?> bazTestBundleNode = AppleBundleBuilder
-        .createBuilder(bazTestBundleTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setBinary(bazTestLibTarget)
-        .build();
-
-    BuildTarget bazTestTarget = BuildTarget.builder("//baz", "test").build();
+    BuildTarget bazTestTarget = BuildTarget.builder("//baz", "xctest").build();
     TargetNode<?> bazTestNode = AppleTestBuilder
         .createBuilder(bazTestTarget)
-        .setTestBundle(bazTestBundleTarget)
         .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .build();
 
-    BuildTarget fooTestLibTarget = BuildTarget
-        .builder("//foo", "lib-testlib")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-        .build();
-    TargetNode<?> fooTestLibNode = AppleLibraryBuilder
-        .createBuilder(fooTestLibTarget)
+    BuildTarget fooTestTarget = BuildTarget.builder("//foo", "lib-xctest").build();
+    TargetNode<?> fooTestNode = AppleTestBuilder
+        .createBuilder(fooTestTarget)
+        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
         .build();
 
-    BuildTarget fooTestBundleTarget = BuildTarget.builder("//foo", "lib-xctest").build();
-    TargetNode<?> fooTestBundleNode = AppleBundleBuilder
-        .createBuilder(fooTestBundleTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setBinary(fooTestLibTarget)
-        .build();
-
-    BuildTarget fooTestTarget = BuildTarget.builder("//foo", "lib-test").build();
-    TargetNode<?> fooTestNode = AppleTestBuilder
-        .createBuilder(fooTestTarget)
-        .setTestBundle(fooTestBundleTarget)
-        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
-        .build();
-
-    BuildTarget fooBinTestLibTarget = BuildTarget
-        .builder("//foo", "bin-testlib")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-        .build();
-    TargetNode<?> fooBinTestLibNode = AppleLibraryBuilder
-        .createBuilder(fooBinTestLibTarget)
-        .build();
-
-    BuildTarget fooBinTestBundleTarget = BuildTarget.builder("//foo", "bin-xctest").build();
-    TargetNode<?> fooBinTestBundleNode = AppleBundleBuilder
-        .createBuilder(fooBinTestBundleTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setBinary(fooBinTestLibTarget)
-        .build();
-
-    BuildTarget fooBinTestTarget = BuildTarget.builder("//foo", "bin-test").build();
+    BuildTarget fooBinTestTarget = BuildTarget.builder("//foo", "bin-xctest").build();
     TargetNode<?> fooBinTestNode = AppleTestBuilder
         .createBuilder(fooBinTestTarget)
-        .setTestBundle(fooBinTestBundleTarget)
         .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(fooBinTarget)))
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .build();
 
     BuildTarget quxBinTarget = BuildTarget.builder("//qux", "bin").build();
@@ -217,10 +171,8 @@ public class WorkspaceAndProjectGeneratorTest {
                 fooLibTarget,
                 fooBinBinaryTarget,
                 fooBinTarget,
-                fooTestLibTarget,
-                fooTestBundleTarget,
-                fooBinTestLibTarget,
-                fooBinTestBundleTarget))
+                fooBinTestTarget,
+                fooTestTarget))
         .build();
 
     BuildTarget barProjectTarget = BuildTarget.builder("//bar", "bar").build();
@@ -234,11 +186,7 @@ public class WorkspaceAndProjectGeneratorTest {
     bazProjectNode = XcodeProjectConfigBuilder
         .createBuilder(bazProjectTarget)
         .setProjectName("baz")
-        .setRules(
-            ImmutableSortedSet.of(
-                bazLibTarget,
-                bazTestLibTarget,
-                bazTestBundleTarget))
+        .setRules(ImmutableSortedSet.of(bazLibTarget))
         .build();
 
     BuildTarget quxProjectTarget = BuildTarget.builder("//qux", "qux").build();
@@ -261,14 +209,8 @@ public class WorkspaceAndProjectGeneratorTest {
         fooBinBinaryNode,
         fooBinNode,
         bazLibNode,
-        bazTestLibNode,
-        bazTestBundleNode,
         bazTestNode,
-        fooTestLibNode,
-        fooTestBundleNode,
         fooTestNode,
-        fooBinTestLibNode,
-        fooBinTestBundleNode,
         fooBinTestNode,
         quxBinNode,
         fooProjectNode,

@@ -57,7 +57,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg implements HasAppleBundleFields {
     public Either<AppleBundleExtension, String> extension;
     public BuildTarget binary;
     public Optional<SourcePath> infoPlist;
@@ -65,19 +65,14 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public Optional<ImmutableMap<AppleBundleDestination, SourcePath>> files;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
 
-    public Optional<AppleBundleExtension> getExtensionValue() {
-      return extension.isLeft() ?
-          Optional.of(extension.getLeft()) : Optional.<AppleBundleExtension>absent();
+    @Override
+    public Either<AppleBundleExtension, String> getExtension() {
+      return extension;
     }
 
-    public String getExtensionString() {
-      return extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
+    @Override
+    public Optional<SourcePath> getInfoPlist() {
+      return infoPlist;
     }
-
-    public boolean isTestBundle() {
-      return extension.isLeft() &&
-          AppleBuildRules.isXcodeTargetTestBundleExtension(extension.getLeft());
-    }
-
   }
 }

@@ -307,7 +307,7 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
   }
 
   public static Optional<Path> getPathToHeaderMap(
-      TargetNode<AppleNativeTargetDescriptionArg> targetNode,
+      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       HeaderMapType headerMapType) {
     if (!targetNode.getConstructorArg().useBuckHeaderMaps.get()) {
       return Optional.absent();

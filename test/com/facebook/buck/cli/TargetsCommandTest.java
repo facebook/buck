@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
@@ -515,34 +514,17 @@ public class TargetsCommandTest {
                 ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo/foo.m")))))
         .build();
 
-    BuildTarget testLibraryTarget = BuildTarget
-        .builder("//foo", "testlib")
-        .addFlavor("shared")
-        .addFlavor("default")
-        .build();
-    TargetNode<?> testLibraryNode = AppleLibraryBuilder
-        .createBuilder(testLibraryTarget)
+    BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
                 ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo/testfoo.m")))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
-    BuildTarget testBundleTarget = BuildTarget.builder("//foo", "xctest").build();
-    TargetNode<?> testBundleNode = AppleBundleBuilder
-        .createBuilder(testBundleTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setBinary(testLibraryTarget)
-        .build();
-
-    BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
-    TargetNode<?> testNode = AppleTestBuilder
-        .createBuilder(testTarget)
-        .setTestBundle(testBundleTarget)
-        .build();
-
-    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(
-        libraryNode, testLibraryNode, testBundleNode, testNode);
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(libraryNode, testNode);
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     ActionGraph actionGraph = targetGraph.getActionGraph();
@@ -572,8 +554,8 @@ public class TargetsCommandTest {
             "//foo:lib#compile-pic-foo-m-o,default",
             "//foo:lib#default,preprocess-pic-foo-m-mi",
             "//foo:lib#default,shared",
-            "//foo:test",
-            "//foo:testlib#default,shared",
+            "//foo:xctest#apple-test-bundle",
+            "//foo:xctest#apple-test-library,default,dynamic,shared",
             "//foo:xctest"),
         matchingBuildRules.keySet());
 
@@ -588,10 +570,10 @@ public class TargetsCommandTest {
                 Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
         ImmutableSet.of(
-            "//foo:test",
-            "//foo:testlib#compile-pic-testfoo-m-o,default",
-            "//foo:testlib#default,preprocess-pic-testfoo-m-mi",
-            "//foo:testlib#default,shared",
+            "//foo:xctest#apple-test-bundle",
+            "//foo:xctest#apple-test-library,compile-pic-testfoo-m-o,default,dynamic",
+            "//foo:xctest#apple-test-library,default,dynamic,preprocess-pic-testfoo-m-mi",
+            "//foo:xctest#apple-test-library,default,dynamic,shared",
             "//foo:xctest"),
         matchingBuildRules.keySet());
   }

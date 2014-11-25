@@ -21,8 +21,12 @@ apple_bundle(
   extension = 'app',
 )
 
-apple_library(
-  name = 'TestAppTestsLibrary',
+apple_test(
+  name = 'TestAppTests',
+  source_under_test = [
+    ':TestApp',
+  ],
+  extension = 'octest',
   configs = EMPTY_CONFIGS,
   srcs = [],
   frameworks = [],
@@ -33,27 +37,12 @@ apple_library(
   ],
 )
 
-apple_bundle(
-  name = 'TestAppTests',
-  extension = 'octest',
-  deps = [':TestAppTestsLibrary#dynamic'],
-  binary = ':TestAppTestsLibrary#dynamic',
-)
-
-apple_test(
-  name = 'TestAppTestsTest',
-  test_bundle = ':TestAppTests',
-  source_under_test = [
-    ':TestApp',
-  ],
-)
-
 xcode_project_config(
   name = 'project',
   project_name = 'TestApp',
   rules = [
     ':TestApp',
-    ':TestAppTestsTest',
+    ':TestAppTests',
   ],
 )
 

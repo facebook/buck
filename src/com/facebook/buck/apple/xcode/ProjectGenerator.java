@@ -33,6 +33,7 @@ import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.GroupedSource;
+import com.facebook.buck.apple.HasAppleBundleFields;
 import com.facebook.buck.apple.HeaderMapType;
 import com.facebook.buck.apple.HeaderVisibility;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
@@ -261,12 +262,6 @@ public class ProjectGenerator {
           // Trigger the loading cache to call the generateProjectTarget function.
           Optional<PBXTarget> target = targetNodeToProjectTarget.getUnchecked(targetNode);
           if (target.isPresent()) {
-            // TODO(grp, t4964329): SchemeGenerator should look for the AppleTest rule itself.
-            if (targetNode.getType().equals(AppleTestDescription.TYPE)) {
-              AppleTestDescription.Arg arg =
-                  (AppleTestDescription.Arg) targetNode.getConstructorArg();
-              targetNode = targetGraph.get(arg.testBundle);
-            }
             targetNodeToGeneratedProjectTargetBuilder.put(targetNode, target.get());
           }
         } else {
@@ -332,25 +327,22 @@ public class ProjectGenerator {
               project,
               (TargetNode<AppleNativeTargetDescriptionArg>) targetNode));
     } else if (targetNode.getType().equals(AppleBundleDescription.TYPE)) {
+      TargetNode<AppleBundleDescription.Arg> bundleTargetNode =
+          (TargetNode<AppleBundleDescription.Arg>) targetNode;
       result = Optional.<PBXTarget>of(
           generateAppleBundleTarget(
               project,
-              (TargetNode<AppleBundleDescription.Arg>) targetNode));
+              bundleTargetNode,
+              (TargetNode<AppleNativeTargetDescriptionArg>) Preconditions.checkNotNull(
+                  targetGraph.get(bundleTargetNode.getConstructorArg().binary))));
     } else if (targetNode.getType().equals(AppleTestDescription.TYPE)) {
-      AppleTestDescription.Arg arg = (AppleTestDescription.Arg) targetNode.getConstructorArg();
-      TargetNode<AppleBundleDescription.Arg> bundle =
-          (TargetNode<AppleBundleDescription.Arg>) Preconditions.checkNotNull(
-              targetGraph.get(arg.testBundle));
-      if (bundle.getType().equals(AppleBundleDescription.TYPE)) {
-        if (bundle.getConstructorArg().isTestBundle()) {
-          result = Optional.<PBXTarget>of(generateAppleBundleTarget(project, bundle));
-        } else {
-          throw new HumanReadableException(
-              "Incorrect extension: " + bundle.getConstructorArg().extension.getRight());
-        }
-      } else {
-        throw new HumanReadableException("Test bundle should be a bundle: " + bundle);
-      }
+      TargetNode<AppleTestDescription.Arg> testTargetNode =
+          (TargetNode<AppleTestDescription.Arg>) targetNode;
+      result = Optional.<PBXTarget>of(
+          generateAppleBundleTarget(
+              project,
+              testTargetNode,
+              testTargetNode));
     } else if (targetNode.getType().equals(AppleResourceDescription.TYPE)) {
       // Check that the resource target node is referencing valid files or directories.
       TargetNode<AppleResourceDescription.Arg> resource =
@@ -375,15 +367,15 @@ public class ProjectGenerator {
     return result;
   }
 
-  @SuppressWarnings("unchecked")
-  private PBXNativeTarget generateAppleBundleTarget(
+  PBXNativeTarget generateAppleBundleTarget(
       PBXProject project,
-      TargetNode<AppleBundleDescription.Arg> targetNode)
+      TargetNode<? extends HasAppleBundleFields> targetNode,
+      TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode)
       throws IOException {
     Optional<Path> infoPlistPath;
-    if (targetNode.getConstructorArg().infoPlist.isPresent()) {
+    if (targetNode.getConstructorArg().getInfoPlist().isPresent()) {
       infoPlistPath = Optional.of(
-          sourcePathResolver.getPath(targetNode.getConstructorArg().infoPlist.get()));
+          sourcePathResolver.getPath(targetNode.getConstructorArg().getInfoPlist().get()));
     } else {
       infoPlistPath = Optional.absent();
     }
@@ -391,10 +383,9 @@ public class ProjectGenerator {
     PBXNativeTarget target = generateBinaryTarget(
         project,
         Optional.of(targetNode),
-        (TargetNode<AppleNativeTargetDescriptionArg>) Preconditions.checkNotNull(
-            targetGraph.get(targetNode.getConstructorArg().binary)),
-        bundleToTargetProductType(targetNode),
-        "%s." + targetNode.getConstructorArg().getExtensionString(),
+        binaryNode,
+        bundleToTargetProductType(targetNode, binaryNode),
+        "%s." + getExtensionString(targetNode.getConstructorArg()),
         infoPlistPath,
         /* includeFrameworks */ true,
         collectRecursiveResources(targetNode),
@@ -457,7 +448,7 @@ public class ProjectGenerator {
 
   private void writeHeaderMap(
       HeaderMap headerMap,
-      TargetNode<AppleNativeTargetDescriptionArg> targetNode,
+      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       HeaderMapType headerMapType)
       throws IOException {
     if (headerMap.getNumEntries() == 0) {
@@ -482,8 +473,8 @@ public class ProjectGenerator {
 
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
-      Optional<TargetNode<AppleBundleDescription.Arg>> bundle,
-      TargetNode<AppleNativeTargetDescriptionArg> targetNode,
+      Optional<? extends TargetNode<? extends HasAppleBundleFields>> bundle,
+      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       PBXTarget.ProductType productType,
       String productOutputFormat,
       Optional<Path> infoPlistOptional,
@@ -606,7 +597,7 @@ public class ProjectGenerator {
     if (bundle.isPresent()) {
       defaultSettingsBuilder.put(
           "WRAPPER_EXTENSION",
-          bundle.get().getConstructorArg().getExtensionString());
+          getExtensionString(bundle.get().getConstructorArg()));
     }
     defaultSettingsBuilder.put(
         "PUBLIC_HEADERS_FOLDER_PATH",
@@ -806,7 +797,7 @@ public class ProjectGenerator {
    * @param sourceFlags    Source path to flag mapping.
    */
   private void addHeaderMapsForHeaders(
-      TargetNode<AppleNativeTargetDescriptionArg> targetNode,
+      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       Optional<String> headerPathPrefix,
       Iterable<GroupedSource> groupedSources,
       ImmutableMap<SourcePath, String> sourceFlags) throws IOException {
@@ -1101,7 +1092,7 @@ public class ProjectGenerator {
    * @param targetNode Must have a header map or an exception will be thrown.
    */
   private String getHeaderMapRelativePath(
-      TargetNode<AppleNativeTargetDescriptionArg> targetNode,
+      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       HeaderMapType headerMapType) {
     Optional<Path> filePath = AbstractAppleNativeTargetBuildRuleDescriptions.getPathToHeaderMap(
         targetNode,
@@ -1119,11 +1110,7 @@ public class ProjectGenerator {
   private String getBuiltProductsRelativeTargetOutputPath(TargetNode<?> targetNode) {
     if (targetNode.getType().equals(AppleBinaryDescription.TYPE) ||
         (targetNode.getType().equals(AppleBundleDescription.TYPE) &&
-        (!((AppleBundleDescription.Arg)
-            targetNode.getConstructorArg()).getExtensionValue().isPresent() ||
-        (!((AppleBundleDescription.Arg)
-            targetNode.getConstructorArg()).getExtensionValue().get().equals(
-            AppleBundleExtension.FRAMEWORK))))) {
+            !isFrameworkBundle((AppleBundleDescription.Arg) targetNode.getConstructorArg()))) {
       // TODO(grp): These should be inside the path below. Right now, that causes issues with
       // bundle loader paths hardcoded in .xcconfig files that don't expect the full target path.
       // It also causes issues where Xcode doesn't know where to look for a final .app to run it.
@@ -1142,10 +1129,6 @@ public class ProjectGenerator {
         getBuiltProductsRelativeTargetOutputPath(targetNode));
   }
 
-  private static boolean hasBuckHeaderMaps(TargetNode<AppleNativeTargetDescriptionArg> targetNode) {
-    return targetNode.getConstructorArg().getUseBuckHeaderMaps();
-  }
-
   @SuppressWarnings("unchecked")
   private static Optional<TargetNode<AppleNativeTargetDescriptionArg>>
       getLibraryNode(TargetGraph targetGraph, TargetNode<?> targetNode) {
@@ -1155,19 +1138,17 @@ public class ProjectGenerator {
     } else if (targetNode.getType().equals(AppleBundleDescription.TYPE)) {
       TargetNode<AppleBundleDescription.Arg> bundle =
           (TargetNode<AppleBundleDescription.Arg>) targetNode;
-      Optional<AppleBundleExtension> extension =
-          bundle.getConstructorArg().getExtensionValue();
-      if (extension.isPresent() && extension.get() == AppleBundleExtension.FRAMEWORK) {
+      if (isFrameworkBundle(bundle.getConstructorArg())) {
         library = Optional.of(Preconditions.checkNotNull(
-            (TargetNode<AppleNativeTargetDescriptionArg>) targetGraph.get(
-                bundle.getConstructorArg().binary)));
+                (TargetNode<AppleNativeTargetDescriptionArg>) targetGraph.get(
+                    bundle.getConstructorArg().binary)));
       }
     }
     return library;
   }
 
   private ImmutableSet<String> collectRecursiveHeaderSearchPaths(
-      TargetNode<AppleNativeTargetDescriptionArg> targetNode) {
+      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
     return FluentIterable
         .from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -1181,7 +1162,8 @@ public class ProjectGenerator {
               public boolean apply(TargetNode<?> input) {
                 Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
                     getLibraryNode(targetGraph, input);
-                return library.isPresent() && !hasBuckHeaderMaps(library.get());
+                return library.isPresent() &&
+                    !library.get().getConstructorArg().getUseBuckHeaderMaps();
               }
             })
         .transform(
@@ -1195,12 +1177,11 @@ public class ProjectGenerator {
   }
 
   private ImmutableSet<String> collectRecursiveHeaderMaps(
-      TargetNode<AppleNativeTargetDescriptionArg> targetNode) {
+      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
-    if (hasBuckHeaderMaps(targetNode)) {
-      builder.add(
-          getHeaderMapRelativePath(targetNode, HeaderMapType.TARGET_HEADER_MAP));
+    if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
+      builder.add(getHeaderMapRelativePath(targetNode, HeaderMapType.TARGET_HEADER_MAP));
     }
 
     for (TargetNode<?> input :
@@ -1211,7 +1192,7 @@ public class ProjectGenerator {
             Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))) {
       Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
           getLibraryNode(targetGraph, input);
-      if (library.isPresent() && hasBuckHeaderMaps(library.get())) {
+      if (library.isPresent() && library.get().getConstructorArg().getUseBuckHeaderMaps()) {
         builder.add(getHeaderMapRelativePath(library.get(), HeaderMapType.PUBLIC_HEADER_MAP));
       }
     }
@@ -1220,8 +1201,8 @@ public class ProjectGenerator {
   }
 
   private ImmutableSet<String> collectUserHeaderMaps(
-      TargetNode<AppleNativeTargetDescriptionArg> targetNode) {
-    if (hasBuckHeaderMaps(targetNode)) {
+      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
+    if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
       return ImmutableSet.of(
           getHeaderMapRelativePath(
               targetNode,
@@ -1267,12 +1248,12 @@ public class ProjectGenerator {
               }
             })
         .transform(
-          new Function<TargetNode<AppleBundleDescription.Arg>, String>() {
-            @Override
-            public String apply(TargetNode<AppleBundleDescription.Arg> input) {
-              return getTargetOutputPath(input);
-            }
-          })
+            new Function<TargetNode<AppleBundleDescription.Arg>, String>() {
+              @Override
+              public String apply(TargetNode<AppleBundleDescription.Arg> input) {
+                return getTargetOutputPath(input);
+              }
+            })
         .toSet();
   }
 
@@ -1331,9 +1312,10 @@ public class ProjectGenerator {
               .getFlavors()
               .contains(AppleLibraryDescription.DYNAMIC_LIBRARY));
       productOutputName = String.format(productOutputFormat, productName);
-    } else if (targetNode.getType().equals(AppleBundleDescription.TYPE)) {
-      AppleBundleDescription.Arg arg = (AppleBundleDescription.Arg) targetNode.getConstructorArg();
-      productOutputName = productName + "." + arg.getExtensionString();
+    } else if (targetNode.getType().equals(AppleBundleDescription.TYPE) ||
+        targetNode.getType().equals(AppleTestDescription.TYPE)) {
+      HasAppleBundleFields arg = (HasAppleBundleFields) targetNode.getConstructorArg();
+      productOutputName = productName + "." + getExtensionString(arg);
     } else if (targetNode.getType().equals(AppleBinaryDescription.TYPE)) {
       productOutputName = productName;
     } else {
@@ -1428,18 +1410,15 @@ public class ProjectGenerator {
         .toSet();
   }
 
-  @SuppressWarnings({"incomplete-switch", "unchecked"})
-  private PBXTarget.ProductType bundleToTargetProductType(
-      TargetNode<AppleBundleDescription.Arg> targetNode) {
-    TargetNode<AppleNativeTargetDescriptionArg> binary =
-        (TargetNode<AppleNativeTargetDescriptionArg>) Preconditions.checkNotNull(
-            targetGraph.get(targetNode.getConstructorArg().binary));
+  @SuppressWarnings("incomplete-switch")
+  PBXTarget.ProductType bundleToTargetProductType(
+      TargetNode<? extends HasAppleBundleFields> targetNode,
+      TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode) {
+    if (targetNode.getConstructorArg().getExtension().isLeft()) {
+      AppleBundleExtension extension = targetNode.getConstructorArg().getExtension().getLeft();
 
-    if (targetNode.getConstructorArg().extension.isLeft()) {
-      AppleBundleExtension extension = targetNode.getConstructorArg().extension.getLeft();
-
-      if (binary.getType().equals(AppleLibraryDescription.TYPE)) {
-        if (binary.getBuildTarget().getFlavors().contains(
+      if (binaryNode.getType().equals(AppleLibraryDescription.TYPE)) {
+        if (binaryNode.getBuildTarget().getFlavors().contains(
             AppleLibraryDescription.DYNAMIC_LIBRARY)) {
           switch (extension) {
             case FRAMEWORK:
@@ -1459,10 +1438,17 @@ public class ProjectGenerator {
               return PBXTarget.ProductType.STATIC_FRAMEWORK;
           }
         }
-      } else if (binary.getType().equals(AppleBinaryDescription.TYPE)) {
+      } else if (binaryNode.getType().equals(AppleBinaryDescription.TYPE)) {
         switch (extension) {
           case APP:
             return PBXTarget.ProductType.APPLICATION;
+        }
+      } else if (binaryNode.getType().equals(AppleTestDescription.TYPE)) {
+        switch (extension) {
+          case OCTEST:
+            return PBXTarget.ProductType.BUNDLE;
+          case XCTEST:
+            return PBXTarget.ProductType.UNIT_TEST;
         }
       }
     }
@@ -1472,5 +1458,16 @@ public class ProjectGenerator {
 
   private boolean shouldGenerateReadOnlyFiles() {
     return options.contains(Option.GENERATE_READ_ONLY_FILES);
+  }
+
+  private static String getExtensionString(HasAppleBundleFields bundleArg) {
+    return bundleArg.getExtension().isLeft()
+        ? bundleArg.getExtension().getLeft().toFileExtension()
+        : bundleArg.getExtension().getRight();
+  }
+
+  private static boolean isFrameworkBundle(HasAppleBundleFields arg) {
+    return arg.getExtension().isLeft() &&
+        arg.getExtension().getLeft().equals(AppleBundleExtension.FRAMEWORK);
   }
 }

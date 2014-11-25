@@ -16,25 +16,35 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class AppleTestBuilder extends AbstractNodeBuilder<AppleTestDescription.Arg> {
+public final class AppleTestBuilder
+    extends AbstractAppleNativeTargetBuilder<AppleTestDescription.Arg, AppleTestBuilder> {
+
+  @Override
+  protected AppleTestBuilder getThis() {
+    return this;
+  }
 
   protected AppleTestBuilder(BuildTarget target) {
-    super(new AppleTestDescription(), target);
+    super(createDescription(), target);
   }
 
   public static AppleTestBuilder createBuilder(BuildTarget target) {
     return new AppleTestBuilder(target);
-  }
-
-  public AppleTestBuilder setTestBundle(BuildTarget testBundle) {
-    arg.testBundle = testBundle;
-    return this;
   }
 
   public AppleTestBuilder setContacts(Optional<ImmutableSortedSet<String>> contacts) {
@@ -53,9 +63,25 @@ public class AppleTestBuilder extends AbstractNodeBuilder<AppleTestDescription.A
     return this;
   }
 
-  public AppleTestBuilder setDeps(Optional<ImmutableSortedSet<BuildTarget>> deps) {
-    arg.deps = deps;
+  public AppleTestBuilder setExtension(Either<AppleBundleExtension, String> extension) {
+    arg.extension = extension;
     return this;
   }
 
+  public AppleTestBuilder infoPlist(Optional<SourcePath> infoPlist) {
+    arg.infoPlist = infoPlist;
+    return this;
+  }
+
+  private static AppleTestDescription createDescription() {
+    BuckConfig buckConfig = new FakeBuckConfig();
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
+    FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
+        "C/C++ Platform",
+        ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
+    return new AppleTestDescription(
+        new AppleLibraryDescription(
+            new AppleConfig(buckConfig),
+            new CxxLibraryDescription(new CxxBuckConfig(buckConfig), cxxPlatforms)));
+  }
 }

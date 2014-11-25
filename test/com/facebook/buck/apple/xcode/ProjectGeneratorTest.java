@@ -543,11 +543,10 @@ public class ProjectGeneratorTest {
         .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework")))
         .build();
 
-    BuildTarget testLibraryTarget = BuildTarget.builder("//foo", "testlib")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-        .build();
-    TargetNode<?> testLibraryNode = AppleLibraryBuilder
-        .createBuilder(testLibraryTarget)
+    BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setConfigs(Optional.of(configs))
         .setSrcs(
             Optional.of(
@@ -556,21 +555,8 @@ public class ProjectGeneratorTest {
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
-    BuildTarget testBundleTarget = BuildTarget.builder("//foo", "xctest").build();
-    TargetNode<?> testBundleNode = AppleBundleBuilder
-        .createBuilder(testBundleTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setBinary(testLibraryTarget)
-        .build();
-
-    BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
-    TargetNode<?> testNode = AppleTestBuilder
-        .createBuilder(testTarget)
-        .setTestBundle(testBundleTarget)
-        .build();
-
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(libraryNode, testLibraryNode, testBundleNode, testNode),
+        ImmutableSet.of(libraryNode, testNode),
         ImmutableSet.<ProjectGenerator.Option>of());
 
     projectGenerator.createXcodeProjects();
@@ -579,7 +565,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:xctest");
 
-    ImmutableMap<String, String> settings = getBuildSettings(testBundleTarget, target, "Debug");
+    ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
         "$(inherited) " + "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
         settings.get("HEADER_SEARCH_PATHS"));
@@ -613,11 +599,10 @@ public class ProjectGeneratorTest {
         .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework")))
         .build();
 
-    BuildTarget testLibraryTarget = BuildTarget.builder("//foo", "testlib")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-        .build();
-    TargetNode<?> testLibraryNode = AppleLibraryBuilder
-        .createBuilder(testLibraryTarget)
+    BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setConfigs(Optional.of(configs))
         .setSrcs(
             Optional.of(
@@ -626,21 +611,8 @@ public class ProjectGeneratorTest {
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
-    BuildTarget testBundleTarget = BuildTarget.builder("//foo", "xctest").build();
-    TargetNode<?> testBundleNode = AppleBundleBuilder
-        .createBuilder(testBundleTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setBinary(testLibraryTarget)
-        .build();
-
-    BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
-    TargetNode<?> testNode = AppleTestBuilder
-        .createBuilder(testTarget)
-        .setTestBundle(testBundleTarget)
-        .build();
-
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(libraryNode, testLibraryNode, testBundleNode, testNode),
+        ImmutableSet.of(libraryNode, testNode),
         ImmutableSet.<ProjectGenerator.Option>of());
 
     projectGenerator.createXcodeProjects();
@@ -649,7 +621,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:xctest");
 
-    ImmutableMap<String, String> settings = getBuildSettings(testBundleTarget, target, "Debug");
+    ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
         "headers " + "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
         settings.get("HEADER_SEARCH_PATHS"));
@@ -688,11 +660,10 @@ public class ProjectGeneratorTest {
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryDepTarget)))
         .build();
 
-    BuildTarget testLibraryTarget = BuildTarget.builder("//foo", "testlib")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-        .build();
-    TargetNode<?> testLibraryNode = AppleLibraryBuilder
-        .createBuilder(testLibraryTarget)
+    BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setConfigs(Optional.of(configs))
         .setSrcs(
             Optional.of(
@@ -701,21 +672,8 @@ public class ProjectGeneratorTest {
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
-    BuildTarget testBundleTarget = BuildTarget.builder("//foo", "xctest").build();
-    TargetNode<?> testBundleNode = AppleBundleBuilder
-        .createBuilder(testBundleTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setBinary(testLibraryTarget)
-        .build();
-
-    BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
-    TargetNode<?> testNode = AppleTestBuilder
-        .createBuilder(testTarget)
-        .setTestBundle(testBundleTarget)
-        .build();
-
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(libraryDepNode, libraryNode, testLibraryNode, testBundleNode, testNode),
+        ImmutableSet.of(libraryDepNode, libraryNode, testNode),
         ImmutableSet.<ProjectGenerator.Option>of());
 
     projectGenerator.createXcodeProjects();
@@ -724,7 +682,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:xctest");
 
-    ImmutableMap<String, String> settings = getBuildSettings(testBundleTarget, target, "Debug");
+    ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
         "$(inherited) " +
             "$BUILT_PRODUCTS_DIR/F4XWEYLSHJWGSYQ/Headers " +
@@ -745,28 +703,14 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleTestRule() throws IOException {
-    BuildTarget dynamicLibraryTarget = BuildTarget.builder("//dep", "dynamic")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-        .build();
-    TargetNode<?> dynamicLibraryNode = AppleLibraryBuilder
-        .createBuilder(dynamicLibraryTarget)
-        .build();
-
-    BuildTarget xctestTarget = BuildTarget.builder("//foo", "xctest").build();
-    TargetNode<?> xctestNode = AppleBundleBuilder
-        .createBuilder(xctestTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setBinary(dynamicLibraryTarget)
-        .build();
-
-    BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
+    BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setTestBundle(xctestTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(dynamicLibraryNode, xctestNode, testNode));
+        ImmutableSet.<TargetNode<?>>of(testNode));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(

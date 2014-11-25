@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createAppleBundleBuildRule;
 import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -52,8 +51,6 @@ import java.io.IOException;
 public class AppleBuildRulesTest {
 
   private AppleLibraryDescription appleLibraryDescription;
-  private AppleBundleDescription appleBundleDescription;
-  private AppleTestDescription appleTestDescription;
 
   @Before
   public void setUp() throws IOException {
@@ -65,8 +62,6 @@ public class AppleBuildRulesTest {
     appleLibraryDescription = new AppleLibraryDescription(
         new AppleConfig(buckConfig),
         new CxxLibraryDescription(new CxxBuckConfig(buckConfig), cxxPlatforms));
-    appleBundleDescription = new AppleBundleDescription();
-    appleTestDescription = new AppleTestDescription();
   }
 
   @Test
@@ -82,43 +77,15 @@ public class AppleBuildRulesTest {
   @Test
   public void testAppleTestIsXcodeTargetTestBuildRuleType() throws Exception {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    BuildRuleParams libraryParams =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
-    AppleNativeTargetDescriptionArg libraryArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
-    BuildRule libraryRule =
-        appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg);
-    resolver.addToIndex(libraryRule);
 
-    BuildRule xctestRule = createAppleBundleBuildRule(
-        BuildTarget.builder("//foo", "xctest").build(),
-        resolver,
-        appleBundleDescription,
-        libraryRule,
-        AppleBundleExtension.XCTEST);
-    resolver.addToIndex(xctestRule);
-
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "test").build())
-            .setDeps(ImmutableSortedSet.of(xctestRule))
-            .setType(AppleTestDescription.TYPE)
-            .build();
-
-    AppleTestDescription.Arg arg =
-        appleTestDescription.createUnpopulatedConstructorArg();
-    arg.testBundle = xctestRule.getBuildTarget();
-    arg.contacts = Optional.of(ImmutableSortedSet.<String>of());
-    arg.labels = Optional.of(ImmutableSortedSet.<Label>of());
-    arg.deps = Optional.of(ImmutableSortedSet.of(xctestRule.getBuildTarget()));
-    arg.sourceUnderTest = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-
-    BuildRule testRule = appleTestDescription.createBuildRule(
-        params,
-        resolver,
-        arg);
-    resolver.addToIndex(testRule);
+    AppleTestBuilder appleTestBuilder = new AppleTestBuilder(
+        BuildTarget.builder("//foo", "xctest").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setContacts(Optional.of(ImmutableSortedSet.<String>of()))
+        .setLabels(Optional.of(ImmutableSortedSet.<Label>of()))
+        .setDeps(Optional.of(ImmutableSortedSet.<BuildTarget>of()))
+        .setSourceUnderTest(Optional.of(ImmutableSortedSet.<BuildTarget>of()));
+    BuildRule testRule = appleTestBuilder.build(resolver);
 
     assertTrue(AppleBuildRules.isXcodeTargetTestBuildRule(testRule));
   }

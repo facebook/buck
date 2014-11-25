@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.xcode;
 
 import com.facebook.buck.apple.AppleBuildRules;
-import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
@@ -35,7 +34,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -269,10 +267,8 @@ public class WorkspaceAndProjectGenerator {
       for (TargetNode<?> node : orderedTargetNodes) {
         LOG.verbose("Checking if target %s has any tests covering it..", node);
         for (TargetNode<?> testNode : sourceTargetToTestNodes.get(node.getBuildTarget())) {
-          AppleTestDescription.Arg testConstructorArg =
-              (AppleTestDescription.Arg) testNode.getConstructorArg();
           addTestNodeAndDependencies(
-              Preconditions.checkNotNull(targetGraph.get(testConstructorArg.testBundle)),
+              testNode,
               recursiveTestTargetNodesBuilder,
               orderedTestBundleTargetNodeBuilder);
         }

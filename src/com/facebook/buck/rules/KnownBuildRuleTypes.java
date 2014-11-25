@@ -299,6 +299,10 @@ public class KnownBuildRuleTypes {
     JavacOptions androidBinaryOptions = JavacOptions.builder(defaultJavacOptions)
         .build();
 
+    AppleLibraryDescription appleLibraryDescription =
+        new AppleLibraryDescription(appleConfig, cxxLibraryDescription);
+    builder.register(appleLibraryDescription);
+
     builder.register(
         new AndroidBinaryDescription(
             androidBinaryOptions,
@@ -318,7 +322,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AppleBundleDescription());
     builder.register(new AppleLibraryDescription(appleConfig, cxxLibraryDescription));
     builder.register(new AppleResourceDescription());
-    builder.register(new AppleTestDescription());
+    builder.register(new AppleTestDescription(appleLibraryDescription));
     builder.register(new BuckExtensionDescription(defaultJavacOptions));
     builder.register(new CoreDataModelDescription());
     builder.register(cxxBinaryDescription);
