@@ -16,7 +16,7 @@
 
 package com.facebook.buck.thrift;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_ENV;
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -58,7 +58,7 @@ public class ThriftJavaEnhancerTest {
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
   private static final ThriftJavaEnhancer ENHANCER = new ThriftJavaEnhancer(
       THRIFT_BUCK_CONFIG,
-      DEFAULT_JAVAC_ENV);
+      DEFAULT_JAVAC_OPTIONS);
 
   private static FakeBuildRule createFakeBuildRule(
       String target,

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.dalvik;
 
-import static com.facebook.buck.java.PopularAndroidJavaCompilerEnvironment.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -50,6 +49,8 @@ import javax.tools.ToolProvider;
  * Tests for {@link DalvikStatsTool}.
  */
 public class DalvikStatsToolTest {
+
+  private static final String TARGETED_JAVA_VERSION = "6";
 
   private static final String TEST_CLASS = createSource(
     "package test;",

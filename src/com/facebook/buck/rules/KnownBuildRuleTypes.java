@@ -56,7 +56,7 @@ import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.java.JavaBinaryDescription;
-import com.facebook.buck.java.JavaCompilerEnvironment;
+import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.java.JavacOptions;
@@ -84,6 +84,7 @@ import com.facebook.buck.thrift.ThriftLibraryDescription;
 import com.facebook.buck.thrift.ThriftPythonEnhancer;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -138,10 +139,10 @@ public class KnownBuildRuleTypes {
 
   public static KnownBuildRuleTypes createInstance(
       BuckConfig config,
+      ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver,
-      JavaCompilerEnvironment javacEnv,
-      PythonEnvironment pythonEnv) {
-    return createBuilder(config, androidDirectoryResolver, javacEnv, pythonEnv).build();
+      PythonEnvironment pythonEnv) throws InterruptedException {
+    return createBuilder(config, processExecutor, androidDirectoryResolver, pythonEnv).build();
   }
 
   /**
@@ -220,9 +221,9 @@ public class KnownBuildRuleTypes {
   @VisibleForTesting
   static Builder createBuilder(
       BuckConfig config,
+      ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver,
-      JavaCompilerEnvironment javacEnv,
-      PythonEnvironment pythonEnv) {
+      PythonEnvironment pythonEnv) throws InterruptedException {
 
     Platform platform = Platform.detect();
 
@@ -286,9 +287,11 @@ public class KnownBuildRuleTypes {
 
     Builder builder = builder();
 
-    JavacOptions androidBinaryOptions = JavacOptions.builder()
-        .setJavaCompilerEnvironment(javacEnv)
+    JavaBuckConfig javaConfig = new JavaBuckConfig(config);
+    JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions(processExecutor);
+    JavacOptions androidBinaryOptions = JavacOptions.builder(defaultJavacOptions)
         .build();
+
     builder.register(
         new AndroidBinaryDescription(
             androidBinaryOptions,
@@ -298,7 +301,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidInstrumentationApkDescription(
             proGuardConfig,
             androidBinaryOptions));
-    builder.register(new AndroidLibraryDescription(javacEnv));
+    builder.register(new AndroidLibraryDescription(androidBinaryOptions));
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidPrebuiltAarDescription(androidBinaryOptions));
     builder.register(new AndroidResourceDescription());
@@ -309,7 +312,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AppleLibraryDescription(appleConfig));
     builder.register(new AppleResourceDescription());
     builder.register(new AppleTestDescription());
-    builder.register(new BuckExtensionDescription());
+    builder.register(new BuckExtensionDescription(defaultJavacOptions));
     builder.register(new CoreDataModelDescription());
     builder.register(new CxxBinaryDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms));
     builder.register(new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms));
@@ -322,8 +325,8 @@ public class KnownBuildRuleTypes {
     builder.register(new GwtBinaryDescription());
     builder.register(new IosPostprocessResourcesDescription());
     builder.register(new JavaBinaryDescription());
-    builder.register(new JavaLibraryDescription(javacEnv));
-    builder.register(new JavaTestDescription(javacEnv));
+    builder.register(new JavaLibraryDescription(defaultJavacOptions));
+    builder.register(new JavaTestDescription(defaultJavacOptions));
     builder.register(new KeystoreDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
     builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
@@ -348,14 +351,14 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             cxxPlatforms));
     builder.register(new RemoteFileDescription(downloadAtRuntimeOk, downloader));
-    builder.register(new RobolectricTestDescription(javacEnv));
+    builder.register(new RobolectricTestDescription(androidBinaryOptions));
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription());
     builder.register(
         new ThriftLibraryDescription(
             thriftBuckConfig,
             ImmutableList.of(
-                new ThriftJavaEnhancer(thriftBuckConfig, javacEnv),
+                new ThriftJavaEnhancer(thriftBuckConfig, defaultJavacOptions),
                 new ThriftCxxEnhancer(
                     thriftBuckConfig,
                     cxxBuckConfig,

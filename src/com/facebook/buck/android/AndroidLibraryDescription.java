@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
 import com.facebook.buck.java.AnnotationProcessingParams;
-import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaSourceJar;
@@ -43,10 +42,11 @@ public class AndroidLibraryDescription
     implements Description<AndroidLibraryDescription.Arg>, Flavored {
 
   public static final BuildRuleType TYPE = new BuildRuleType("android_library");
-  private final JavaCompilerEnvironment javacEnv;
 
-  public AndroidLibraryDescription(JavaCompilerEnvironment javacEnv) {
-    this.javacEnv = javacEnv;
+  private final JavacOptions defaultOptions;
+
+  public AndroidLibraryDescription(JavacOptions defaultOptions) {
+    this.defaultOptions = defaultOptions;
   }
 
   @Override
@@ -69,7 +69,9 @@ public class AndroidLibraryDescription
       return new JavaSourceJar(params, pathResolver, args.srcs.get());
     }
 
-    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
+    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
+        args,
+        defaultOptions);
 
     AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
         params.getBuildTarget(),

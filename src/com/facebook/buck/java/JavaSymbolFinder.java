@@ -27,7 +27,6 @@ import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -63,6 +62,7 @@ public class JavaSymbolFinder {
 
   private final ProjectFilesystem projectFilesystem;
   private final SrcRootsFinder srcRootsFinder;
+  private final JavacOptions javacOptions;
   private final ProjectBuildFileParserFactory projectBuildFileParserFactory;
   private final BuckConfig config;
   private final BuckEventBus buckEventBus;
@@ -72,6 +72,7 @@ public class JavaSymbolFinder {
   public JavaSymbolFinder(
       ProjectFilesystem projectFilesystem,
       SrcRootsFinder srcRootsFinder,
+      JavacOptions javacOptions,
       ProjectBuildFileParserFactory projectBuildFileParserFactory,
       BuckConfig config,
       BuckEventBus buckEventBus,
@@ -79,6 +80,7 @@ public class JavaSymbolFinder {
       ImmutableMap<String, String> environment) {
     this.projectFilesystem = projectFilesystem;
     this.srcRootsFinder = srcRootsFinder;
+    this.javacOptions = javacOptions;
     this.projectBuildFileParserFactory = projectBuildFileParserFactory;
     this.config = config;
     this.buckEventBus = buckEventBus;
@@ -237,12 +239,7 @@ public class JavaSymbolFinder {
   private ImmutableSortedSet<Path> getDefiningPaths(String symbol, Collection<Path> srcRoots) {
     ImmutableSortedSet.Builder<Path> definingPaths = ImmutableSortedSet.naturalOrder();
     // TODO(simons): This should use the same javac env as was used for compiling the code.
-    JavaFileParser parser = JavaFileParser.createJavaFileParser(
-        new JavaCompilerEnvironment(
-            Optional.<Path>absent(),
-            Optional.<JavacVersion>absent(),
-            JavaCompilerEnvironment.TARGETED_JAVA_VERSION,
-            JavaCompilerEnvironment.TARGETED_JAVA_VERSION));
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(javacOptions);
 
     for (Path candidatePath : getCandidatePaths(symbol, srcRoots)) {
       try {

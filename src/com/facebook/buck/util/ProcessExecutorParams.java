@@ -130,6 +130,15 @@ public class ProcessExecutorParams {
       Objects.equals(redirectError, that.redirectError);
   }
 
+  @Override
+  public String toString() {
+    return new StringBuilder("ProcessExecutorParams(")
+        .append(command)
+        .append(" {cwd = ").append(directory).append("}, ")
+        .append(environment)
+        .toString();
+  }
+
   public static Builder builder() {
     return new Builder();
   }

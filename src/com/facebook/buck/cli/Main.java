@@ -27,6 +27,8 @@ import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.java.JavaBuckConfig;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.log.CommandThreadAssociation;
 import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.log.Logger;
@@ -805,7 +807,7 @@ public final class Main {
       Console console,
       AbstractConsoleEventBusListener consoleEventBusListener,
       KnownBuildRuleTypes knownBuildRuleTypes,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment) throws InterruptedException {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
@@ -821,12 +823,17 @@ public final class Main {
 
 
 
+    JavacOptions javacOptions = new JavaBuckConfig(config).getDefaultJavacOptions(
+        new ProcessExecutor(
+            console));
+
     eventListenersBuilder.add(MissingSymbolsHandler.createListener(
             projectFilesystem,
             knownBuildRuleTypes.getAllDescriptions(),
             config,
             buckEvents,
             console,
+            javacOptions,
             environment));
 
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();

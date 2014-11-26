@@ -38,10 +38,10 @@ import java.nio.file.Path;
 public class JavaTestDescription implements Description<JavaTestDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("java_test");
-  private final JavaCompilerEnvironment javacEnv;
+  private final JavacOptions templateOptions;
 
-  public JavaTestDescription(JavaCompilerEnvironment javacEnv) {
-    this.javacEnv = javacEnv;
+  public JavaTestDescription(JavacOptions templateOptions) {
+    this.templateOptions = templateOptions;
   }
 
   @Override
@@ -61,7 +61,9 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
-    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
+    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
+        args,
+        templateOptions);
 
     AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
         params.getBuildTarget(),

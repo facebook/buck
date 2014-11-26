@@ -59,7 +59,8 @@ public class CleanCommandTest extends EasyMockSupport {
   // exit code is 1 and that the appropriate error message is printed.
 
   @Test
-  public void testCleanCommandNoArguments() throws CmdLineException, IOException {
+  public void testCleanCommandNoArguments()
+      throws CmdLineException, IOException, InterruptedException {
     // Set up mocks.
     CleanCommand cleanCommand = createCommand();
     Capture<Path> binDir = new Capture<>();
@@ -80,7 +81,8 @@ public class CleanCommandTest extends EasyMockSupport {
   }
 
   @Test
-  public void testCleanCommandWithProjectArgument() throws CmdLineException, IOException {
+  public void testCleanCommandWithProjectArgument()
+      throws CmdLineException, IOException, InterruptedException {
     // Set up mocks.
     CleanCommand cleanCommand = createCommand();
     Capture<Path> androidGenDir = new Capture<>();
@@ -107,7 +109,7 @@ public class CleanCommandTest extends EasyMockSupport {
     return options;
   }
 
-  private CleanCommand createCommand() {
+  private CleanCommand createCommand() throws InterruptedException {
     projectFilesystem = createMock(ProjectFilesystem.class);
     Repository repository = new TestRepositoryBuilder().setFilesystem(projectFilesystem).build();
 

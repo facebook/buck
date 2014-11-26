@@ -38,7 +38,7 @@ public class TestRepositoryBuilder {
   private AndroidDirectoryResolver androidDirectoryResolver;
   private Path rootPath;
 
-  public TestRepositoryBuilder() {
+  public TestRepositoryBuilder() throws InterruptedException {
     name = Optional.absent();
     filesystem = new FakeProjectFilesystem();
     buildRuleTypes = DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem);

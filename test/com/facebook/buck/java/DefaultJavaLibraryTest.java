@@ -18,7 +18,6 @@ package com.facebook.buck.java;
 
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_ENV;
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
-import static com.facebook.buck.java.JavaCompilerEnvironment.TARGETED_JAVA_VERSION;
 import static com.facebook.buck.util.BuckConstant.BIN_PATH;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
@@ -1172,13 +1171,11 @@ public class DefaultJavaLibraryTest {
         .build(ruleResolver);
 
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    JavacOptions javacOptions = JavacOptions.builder()
+    JavacOptions javacOptions = JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
         .setJavaCompilerEnvironment(
             new JavaCompilerEnvironment(
                 Optional.of(Paths.get("javac")),
-                Optional.<JavacVersion>absent(),
-                TARGETED_JAVA_VERSION,
-                TARGETED_JAVA_VERSION))
+                Optional.<JavacVersion>absent()))
         .build();
     ((DefaultJavaLibrary) rule).createCommandsForJavac(
         rule.getPathToOutputFile(),
@@ -1398,7 +1395,7 @@ public class DefaultJavaLibraryTest {
       tmp.newFile(src);
 
       AnnotationProcessingParams params = annotationProcessingParamsBuilder.build();
-      JavacOptions.Builder options = JavacOptions.builder()
+      JavacOptions.Builder options = JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
           .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
           .setAnnotationProcessingData(params);
 

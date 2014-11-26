@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -135,13 +136,14 @@ public class AndroidLibraryGraphEnhancerTest {
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         buildRuleParams,
-        JavacOptions.builder().setJavaCompilerEnvironment(
+        JavacOptions.builder(ANDROID_JAVAC_OPTIONS).setJavaCompilerEnvironment(
             new JavaCompilerEnvironment(
                 Optional.of(Paths.get("javac")),
-                Optional.of(new JavacVersion("1.7")),
-                "7",
-                "7")).build(),
-    ResourceDependencyMode.FIRST_ORDER);
+                Optional.of(new JavacVersion("1.7"))))
+            .setSourceLevel("7")
+            .setTargetLevel("7")
+                    .build(),
+                ResourceDependencyMode.FIRST_ORDER);
         Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);

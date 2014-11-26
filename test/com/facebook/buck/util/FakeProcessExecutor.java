@@ -16,9 +16,13 @@
 
 package com.facebook.buck.util;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteStreams;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -51,7 +55,13 @@ public class FakeProcessExecutor extends ProcessExecutor {
       throw new RuntimeException(String.format("Unexpected params: %s", params));
     }
     launchedProcesses.add(params);
-    return new Result(fakeProcess.waitFor(), "", "");
+    try {
+      String stderr = new String(ByteStreams.toByteArray(fakeProcess.getErrorStream()), UTF_8);
+      String stdout = new String(ByteStreams.toByteArray(fakeProcess.getInputStream()), UTF_8);
+      return new Result(fakeProcess.waitFor(), stdout, stderr);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override

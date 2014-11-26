@@ -28,7 +28,7 @@ public class FakeRepositoryFactory extends RepositoryFactory {
 
   private static final Path FAKE_PATH = Paths.get("/fake/repo/factory/path");
 
-  public FakeRepositoryFactory() {
+  public FakeRepositoryFactory() throws InterruptedException {
     this(FAKE_PATH);
     cachedRepositories.put(FAKE_PATH, new TestRepositoryBuilder().setRootPath(FAKE_PATH).build());
   }

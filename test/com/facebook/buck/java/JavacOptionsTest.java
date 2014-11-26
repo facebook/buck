@@ -33,17 +33,14 @@ public class JavacOptionsTest {
 
   @Test
   public void buildsAreDebugByDefault() {
-    JavacOptions options = JavacOptions.builder()
-        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
-        .build();
+    JavacOptions options = createStandardBuilder().build();
 
     assertOptionsContains(options, "-g");
   }
 
   @Test
   public void productionBuildsCanBeEnabled() {
-    JavacOptions options = JavacOptions.builder()
-        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
+    JavacOptions options = createStandardBuilder()
         .setProductionBuild()
         .build();
 
@@ -52,17 +49,14 @@ public class JavacOptionsTest {
 
   @Test
   public void testDoesNotSetBootclasspathByDefault() {
-    JavacOptions options = JavacOptions.builder()
-        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
-        .build();
+    JavacOptions options = createStandardBuilder().build();
 
     assertOptionsDoesNotContain(options, "-bootclasspath");
   }
 
   @Test
   public void canSetBootclasspath() {
-    JavacOptions options = JavacOptions.builder()
-        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
+    JavacOptions options = createStandardBuilder()
         .setBootclasspath("foo:bar")
         .build();
 
@@ -76,8 +70,7 @@ public class JavacOptionsTest {
         .setProcessOnly(true)
         .build();
 
-    JavacOptions options = JavacOptions.builder()
-        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
+    JavacOptions options = createStandardBuilder()
         .setAnnotationProcessingData(params)
         .build();
 
@@ -91,8 +84,7 @@ public class JavacOptionsTest {
         .setProcessOnly(true)
         .build();
 
-    JavacOptions options = JavacOptions.builder()
-        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
+    JavacOptions options = createStandardBuilder()
         .setAnnotationProcessingData(params)
         .build();
 
@@ -122,5 +114,12 @@ public class JavacOptionsTest {
 
     ImmutableList<String> params = paramBuilder.build();
     return " " + Joiner.on(" ").join(params) + " ";
+  }
+
+  private JavacOptions.Builder createStandardBuilder() {
+    return JavacOptions.builderForUseInJavaBuckConfig()
+        .setSourceLevel("5")
+        .setTargetLevel("5")
+        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV);
   }
 }

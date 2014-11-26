@@ -16,7 +16,7 @@
 
 package com.facebook.buck.java;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_ENV;
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
 
 public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg> {
   private JavaTestBuilder(BuildTarget target) {
-    super(new JavaTestDescription(DEFAULT_JAVAC_ENV), target);
+    super(new JavaTestDescription(DEFAULT_JAVAC_OPTIONS), target);
   }
 
   public static JavaTestBuilder createBuilder(BuildTarget target) {

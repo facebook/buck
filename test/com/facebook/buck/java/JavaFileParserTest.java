@@ -16,23 +16,16 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class JavaFileParserTest {
-
-  static JavaCompilerEnvironment java7Env = new JavaCompilerEnvironment(
-      /* javacPath */ Optional.<Path>absent(),
-      /* javacVersion */ Optional.<JavacVersion>absent(),
-      "7",
-      "7");
 
   static String javaCodeWithManyClasses =
       "package com.example;\n" +
@@ -61,7 +54,7 @@ public class JavaFileParserTest {
 
   @Test
   public void testJavaFileParsing() throws IOException {
-    JavaFileParser parser = JavaFileParser.createJavaFileParser(java7Env);
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
     ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
         javaCodeWithManyClasses);
@@ -88,7 +81,7 @@ public class JavaFileParserTest {
 
   @Test
   public void testJavaFileParsingWithLocalClass() throws IOException {
-    JavaFileParser parser = JavaFileParser.createJavaFileParser(java7Env);
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
     ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
         javaCodeWithLocalClass);
@@ -103,7 +96,7 @@ public class JavaFileParserTest {
 
   @Test
   public void testJavaFileParsingWithNoPackage() throws IOException {
-    JavaFileParser parser = JavaFileParser.createJavaFileParser(java7Env);
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
     ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
         javaCodeWithNoPackage);
@@ -118,7 +111,7 @@ public class JavaFileParserTest {
 
   @Test
   public void testJavaFileParsingWithAnnotationType() throws IOException {
-    JavaFileParser parser = JavaFileParser.createJavaFileParser(java7Env);
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
     ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
         javaCodeWithAnnotationType);

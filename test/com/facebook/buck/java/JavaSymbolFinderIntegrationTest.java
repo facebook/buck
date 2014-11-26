@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.BuckConfig;
@@ -76,6 +77,7 @@ public class JavaSymbolFinderIntegrationTest {
     JavaSymbolFinder finder = new JavaSymbolFinder(
         projectFilesystem,
         srcRootsFinder,
+        DEFAULT_JAVAC_OPTIONS,
         projectBuildFileParserFactory,
         config,
         buckEventBus,

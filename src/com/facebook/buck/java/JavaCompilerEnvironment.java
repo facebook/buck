@@ -22,23 +22,14 @@ import java.nio.file.Path;
 
 public class JavaCompilerEnvironment {
 
-  // Default combined source and target level.
-  public static final String TARGETED_JAVA_VERSION = "7";
-
   private final Optional<Path> javacPath;
   private final Optional<JavacVersion> javacVersion;
-  private final String sourceLevel;
-  private final String targetLevel;
 
   public JavaCompilerEnvironment(
       Optional<Path> javacPath,
-      Optional<JavacVersion> javacVersion,
-      String sourceLevel,
-      String targetLevel) {
+      Optional<JavacVersion> javacVersion) {
     this.javacPath = javacPath;
     this.javacVersion = javacVersion;
-    this.sourceLevel = sourceLevel;
-    this.targetLevel = targetLevel;
   }
 
   public Optional<Path> getJavacPath() {
@@ -47,13 +38,5 @@ public class JavaCompilerEnvironment {
 
   public Optional<JavacVersion> getJavacVersion() {
     return this.javacVersion;
-  }
-
-  public String getSourceLevel() {
-    return sourceLevel;
-  }
-
-  public String getTargetLevel() {
-    return targetLevel;
   }
 }

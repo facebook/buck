@@ -17,7 +17,6 @@
 package com.facebook.buck.thrift;
 
 import com.facebook.buck.java.DefaultJavaLibrary;
-import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
@@ -48,13 +47,13 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
   private static final BuildRuleType SOURCE_ZIP_TYPE = new BuildRuleType("thrift-java-source-zip");
 
   private final ThriftBuckConfig thriftBuckConfig;
-  private final JavaCompilerEnvironment javacEnv;
+  private final JavacOptions templateOptions;
 
   public ThriftJavaEnhancer(
       ThriftBuckConfig thriftBuckConfig,
-      JavaCompilerEnvironment javacEnv) {
+      JavacOptions templateOptions) {
     this.thriftBuckConfig = thriftBuckConfig;
-    this.javacEnv = javacEnv;
+    this.templateOptions = templateOptions;
   }
 
   @Override
@@ -127,9 +126,6 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
             .addAll(deps)
             .build(),
         ImmutableSortedSet.<BuildRule>of());
-    JavacOptions javacOptions = JavacOptions.builder()
-        .setJavaCompilerEnvironment(javacEnv)
-        .build();
     DefaultJavaLibrary defaultJavaLibrary = new DefaultJavaLibrary(
         javaParams,
         pathResolver,
@@ -142,7 +138,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        javacOptions,
+        templateOptions,
         /* resourcesRoot */ Optional.<Path>absent());
 
     return defaultJavaLibrary;

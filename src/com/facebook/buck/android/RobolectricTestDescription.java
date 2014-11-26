@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
 import com.facebook.buck.java.AnnotationProcessingParams;
-import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.java.JavacOptions;
@@ -38,10 +37,10 @@ import java.nio.file.Path;
 public class RobolectricTestDescription implements Description<RobolectricTestDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("robolectric_test");
-  private final JavaCompilerEnvironment javacEnv;
+  private final JavacOptions templateOptions;
 
-  public RobolectricTestDescription(JavaCompilerEnvironment javacEnv) {
-    this.javacEnv = javacEnv;
+  public RobolectricTestDescription(JavacOptions templateOptions) {
+    this.templateOptions = templateOptions;
   }
 
   @Override
@@ -61,7 +60,9 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
-    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(args, javacEnv);
+    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
+        args,
+        templateOptions);
 
     AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
         params.getBuildTarget(),

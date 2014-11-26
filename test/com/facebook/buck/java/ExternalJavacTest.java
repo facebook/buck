@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
@@ -63,25 +64,25 @@ public class ExternalJavacTest extends EasyMockSupport {
 
   private ExternalJavacStep createTestStep(BuildDependencies buildDependencies) {
     return new ExternalJavacStep(
-          /* outputDirectory */ Paths.get("."),
-          /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("foobar.java")),
-          /* transitiveClasspathEntries */
-            ImmutableSet.of(Paths.get("bar.jar"), Paths.get("foo.jar")),
-          /* declaredClasspathEntries */ ImmutableSet.of(Paths.get("foo.jar")),
-          JavacOptions.builder()
-              .setJavaCompilerEnvironment(
-                  new JavaCompilerEnvironment(
-                      Optional.of(Paths.get("fakeJavac")),
-                      Optional.<JavacVersion>absent(),
-                      /* sourceLevel */ "6",
-                      /* targetLevel */ "6"))
-              .build(),
-          /* invokingRule */ Optional.<BuildTarget>absent(),
-          /* buildDependencies */ buildDependencies,
-          /* suggestBuildRules */ Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
-          /* pathToSrcsList */ Optional.of(PATH_TO_SRCS_LIST),
-          /* target */ BuildTarget.builder("//fake", "target").build(),
-          Optional.of(tmpFolder.getRoot().toPath()));
+        /* outputDirectory */ Paths.get("."),
+        /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("foobar.java")),
+        /* transitiveClasspathEntries */
+        ImmutableSet.of(Paths.get("bar.jar"), Paths.get("foo.jar")),
+        /* declaredClasspathEntries */ ImmutableSet.of(Paths.get("foo.jar")),
+        JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
+            .setJavaCompilerEnvironment(
+                new JavaCompilerEnvironment(
+                    Optional.of(Paths.get("fakeJavac")),
+                    Optional.<JavacVersion>absent()))
+            .setTargetLevel("6")
+            .setSourceLevel("6")
+            .build(),
+        /* invokingRule */ Optional.<BuildTarget>absent(),
+        /* buildDependencies */ buildDependencies,
+        /* suggestBuildRules */ Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
+        /* pathToSrcsList */ Optional.of(PATH_TO_SRCS_LIST),
+        /* target */ BuildTarget.builder("//fake", "target").build(),
+        Optional.of(tmpFolder.getRoot().toPath()));
   }
 
 }

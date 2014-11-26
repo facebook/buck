@@ -16,7 +16,7 @@
 
 package com.facebook.buck.java;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_ENV;
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -67,8 +67,8 @@ public class JavacInMemoryStepIntegrationTest {
             "-d %s " +
             "-classpath '' " +
             "@" + pathToSrcsList.toString(),
-            JavaCompilerEnvironment.TARGETED_JAVA_VERSION,
-            JavaCompilerEnvironment.TARGETED_JAVA_VERSION,
+            JavaBuckConfig.TARGETED_JAVA_VERSION,
+            JavaBuckConfig.TARGETED_JAVA_VERSION,
             pathToOutputDir),
         javac.getDescription(executionContext));
   }
@@ -143,7 +143,7 @@ public class JavacInMemoryStepIntegrationTest {
         javaSourceFilePaths,
         /* transitive classpathEntries */ ImmutableSet.<Path>of(),
         /* declated classpathEntries */ ImmutableSet.<Path>of(),
-        JavacOptions.builder().setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV).build(),
+        DEFAULT_JAVAC_OPTIONS,
         Optional.<BuildTarget>absent(),
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),

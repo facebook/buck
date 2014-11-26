@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
@@ -75,6 +76,7 @@ public class MissingSymbolsHandlerIntegrationTest {
         config,
         buckEventBus,
         new TestConsole(),
+        DEFAULT_JAVAC_OPTIONS,
         environment);
 
     MissingSymbolEvent missingSymbolEvent = MissingSymbolEvent.create(

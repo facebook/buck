@@ -24,23 +24,21 @@ public class JavaCompilationConstants {
 
   public static final JavaCompilerEnvironment DEFAULT_JAVAC_ENV = new JavaCompilerEnvironment(
       Optional.<Path>absent(),
-      Optional.<JavacVersion>absent(),
-      JavaCompilerEnvironment.TARGETED_JAVA_VERSION,
-      JavaCompilerEnvironment.TARGETED_JAVA_VERSION);
+      Optional.<JavacVersion>absent());
 
-  public static final JavaCompilerEnvironment DEFAULT_ANDROID_ENV = new JavaCompilerEnvironment(
-      Optional.<Path>absent(),
-      Optional.<JavacVersion>absent(),
-      JavaCompilerEnvironment.TARGETED_JAVA_VERSION,
-      "6");
+  public static final JavacOptions DEFAULT_JAVAC_OPTIONS =
+      JavacOptions.builderForUseInJavaBuckConfig()
+          .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
+          .setSourceLevel("7")
+          .setTargetLevel("7")
+          .build();
 
-  public static final JavacOptions DEFAULT_JAVAC_OPTIONS = JavacOptions.builder()
-      .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
-      .build();
-
-  public static final JavacOptions ANDROID_JAVAC_OPTIONS = JavacOptions.builder()
-      .setJavaCompilerEnvironment(DEFAULT_ANDROID_ENV)
-      .build();
+  public static final JavacOptions ANDROID_JAVAC_OPTIONS =
+      JavacOptions.builderForUseInJavaBuckConfig()
+          .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
+          .setSourceLevel("7")
+          .setTargetLevel("6")
+          .build();
 
   private JavaCompilationConstants() {
     // Thou shalt not instantiate utility classes.

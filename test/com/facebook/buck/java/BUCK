@@ -6,7 +6,6 @@ java_library(
     'JavaLibraryBuilder.java',
     'JavaTestBuilder.java',
     'KeystoreBuilder.java',
-    'PopularAndroidJavaCompilerEnvironment.java',
     'PrebuiltJarBuilder.java',
   ],
   exported_deps = [

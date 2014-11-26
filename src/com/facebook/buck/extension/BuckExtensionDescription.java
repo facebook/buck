@@ -17,6 +17,7 @@
 package com.facebook.buck.extension;
 
 
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -31,6 +32,16 @@ import com.google.common.collect.ImmutableSortedSet;
 public class BuckExtensionDescription implements Description<BuckExtensionDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("buck_extension");
+  private static final String BUCK_TARGET_VERSION = "7";
+
+  private final JavacOptions javacOptions;
+
+  public BuckExtensionDescription(JavacOptions defaultOptions) {
+    javacOptions = JavacOptions.builder(defaultOptions)
+        .setTargetLevel(BUCK_TARGET_VERSION)
+        .setSourceLevel(BUCK_TARGET_VERSION)
+        .build();
+  }
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -49,6 +60,7 @@ public class BuckExtensionDescription implements Description<BuckExtensionDescri
       A args) {
     return new BuckExtension(
         params,
+        javacOptions,
         new SourcePathResolver(resolver),
         args.srcs,
         args.resources.get());

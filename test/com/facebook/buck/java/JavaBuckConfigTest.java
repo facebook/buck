@@ -17,7 +17,7 @@
 package com.facebook.buck.java;
 
 
-import static com.facebook.buck.java.JavaCompilerEnvironment.TARGETED_JAVA_VERSION;
+import static com.facebook.buck.java.JavaBuckConfig.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -111,11 +111,11 @@ public class JavaBuckConfigTest {
 
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    JavaCompilerEnvironment compilerEnvironment = config.getJavaCompilerEnvironment(
+    JavacOptions options = config.getDefaultJavacOptions(
         new ProcessExecutor(new TestConsole()));
 
-    assertEquals(sourceLevel, compilerEnvironment.getSourceLevel());
-    assertEquals(targetLevel, compilerEnvironment.getTargetLevel());
+    assertEquals(sourceLevel, options.getSourceLevel());
+    assertEquals(targetLevel, options.getTargetLevel());
   }
 
   @Test
@@ -123,11 +123,11 @@ public class JavaBuckConfigTest {
       throws IOException, InterruptedException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
 
-    JavaCompilerEnvironment compilerEnvironment = config.getJavaCompilerEnvironment(
+    JavacOptions options = config.getDefaultJavacOptions(
         new ProcessExecutor(new TestConsole()));
 
-    assertEquals(TARGETED_JAVA_VERSION, compilerEnvironment.getSourceLevel());
-    assertEquals(TARGETED_JAVA_VERSION, compilerEnvironment.getTargetLevel());
+    assertEquals(TARGETED_JAVA_VERSION, options.getSourceLevel());
+    assertEquals(TARGETED_JAVA_VERSION, options.getTargetLevel());
   }
 
   private JavaBuckConfig createWithDefaultFilesystem(Reader reader)

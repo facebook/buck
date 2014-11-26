@@ -64,8 +64,8 @@ public class JavaFileParser {
     this.javaVersion = javaVersion;
   }
 
-  public static JavaFileParser createJavaFileParser(JavaCompilerEnvironment env) {
-    String javaVersion = Preconditions.checkNotNull(javaVersionMap.get(env.getSourceLevel()));
+  public static JavaFileParser createJavaFileParser(JavacOptions options) {
+    String javaVersion = Preconditions.checkNotNull(javaVersionMap.get(options.getSourceLevel()));
     return new JavaFileParser(AST.JLS4, javaVersion);
   }
 

@@ -18,8 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.JavaBuckConfig;
-import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.util.AndroidDirectoryResolver;
@@ -134,9 +132,7 @@ public class RepositoryFactory {
             config.getNdkVersion(),
             propertyFinder);
     // Look up the javac version.
-    JavaBuckConfig javaConfig = new JavaBuckConfig(config);
     ProcessExecutor processExecutor = new ProcessExecutor(console);
-    JavaCompilerEnvironment javacEnv = javaConfig.getJavaCompilerEnvironment(processExecutor);
 
     PythonBuckConfig pythonConfig = new PythonBuckConfig(config);
     PythonEnvironment pythonEnv = pythonConfig.getPythonEnvironment(processExecutor);
@@ -147,8 +143,8 @@ public class RepositoryFactory {
     KnownBuildRuleTypes buildRuleTypes =
         KnownBuildRuleTypes.createInstance(
             config,
+            processExecutor,
             androidDirectoryResolver,
-            javacEnv,
             pythonEnv);
 
     Repository repository = new Repository(
