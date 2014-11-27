@@ -31,7 +31,6 @@ import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -44,7 +43,6 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
 
   private static final ImmutableSortedSet<Flavor> JUST_DEFAULT =
       ImmutableSortedSet.of(Flavor.DEFAULT);
-  private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z0-9_]+");
 
   private final Optional<String> repository;
   private final String baseName;
@@ -70,13 +68,6 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     Preconditions.checkArgument(!shortName.contains("#"),
         "Build target name cannot contain '#' but was: %s.",
         shortName);
-
-    for (Flavor flavor : flavors) {
-      if (!Flavor.DEFAULT.equals(flavor) &&
-          !VALID_FLAVOR_PATTERN.matcher(flavor.toString()).matches()) {
-        throw new IllegalArgumentException("Invalid flavor: " + flavor);
-      }
-    }
 
     this.repository = repository;
     // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.

@@ -21,16 +21,27 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.base.Preconditions;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 @JsonSerialize(using = Flavor.FlavorSerializer.class)
 public class Flavor implements Comparable<Flavor> {
 
-  public static final Flavor DEFAULT = new Flavor("");
+  public static final Flavor DEFAULT = new Flavor();
+  private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z0-9_]+");
+
   private final String flavor;
 
+  private Flavor() {
+    this.flavor = "";
+  }
+
   public Flavor(String flavor) {
+    Preconditions.checkArgument(
+        VALID_FLAVOR_PATTERN.matcher(flavor).matches(),
+        "Invalid flavor: " + flavor);
     this.flavor = flavor;
   }
 
