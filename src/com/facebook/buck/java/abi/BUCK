@@ -27,7 +27,7 @@ java_library(
 
 java_binary(
   name = 'api-stubber',
-  main_class = 'com.facebook.buck.abi.ApiStubber',
+  main_class = 'com.facebook.buck.java.abi.ApiStubber',
   deps = [
     ':lib-api-stubber',
   ],
