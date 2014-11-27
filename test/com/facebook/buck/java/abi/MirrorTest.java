@@ -447,6 +447,34 @@ public class MirrorTest {
     assertEquals(42, count.value);
   }
 
+  @Test
+  public void innerClassesInStubsCanBeCompiledAgainst() throws IOException {
+    Path original = compileToJar(
+        EMPTY_CLASSPATH,
+        "Outer.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class Outer {",
+                "  public class Inner {",
+                "    public String getGreeting() { return \"hola\"; }",
+                "  }",
+                "}")));
+
+    new StubJar(original).writeTo(filesystem, stubJar);
+
+    compileToJar(
+        ImmutableSortedSet.of(stubJar),
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck2;",      // Note: different package
+                "import com.example.buck.Outer;",  // Inner class becomes available
+                "public class A {",
+                "  private Outer.Inner field;",    // Reference the inner class
+                "}")));
+  }
+
   private Path compileToJar(
       SortedSet<Path> classpath,
       String fileName,

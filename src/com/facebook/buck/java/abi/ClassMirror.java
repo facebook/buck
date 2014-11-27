@@ -16,6 +16,9 @@
 
 package com.facebook.buck.java.abi;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
 
@@ -38,7 +41,10 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
   private final String fileName;
   private final SortedSet<AnnotationMirror> annotations;
   private final SortedSet<FieldMirror> fields;
+  private final SortedSet<InnerClass> innerClasses;
   private final SortedSet<MethodMirror> methods;
+  @Nullable
+  private OuterClass outerClass;
   private int version;
   private int access;
   @Nullable
@@ -56,6 +62,7 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     this.fileName = name;
     this.annotations = Sets.newTreeSet();
     this.fields = Sets.newTreeSet();
+    this.innerClasses = Sets.newTreeSet();
     this.methods = Sets.newTreeSet();
   }
 
@@ -119,6 +126,22 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
   }
 
   @Override
+  public void visitOuterClass(String owner, String name, String desc) {
+    outerClass = new OuterClass(owner, name, desc);
+    super.visitOuterClass(owner, name, desc);
+  }
+
+  @Override
+  public void visitInnerClass(String name, String outerName, String innerName, int access) {
+    if ((access & Opcodes.ACC_PRIVATE) > 0) {
+      return;
+    }
+
+    innerClasses.add(new InnerClass(name, outerName, innerName, access));
+    super.visitInnerClass(name, outerName, innerName, access);
+  }
+
+  @Override
   public int compareTo(ClassMirror o) {
     return fileName.compareTo(o.fileName);
   }
@@ -130,6 +153,14 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     jar.putNextEntry(entry);
     ClassWriter writer = new ClassWriter(0);
     writer.visit(version, access, name, signature, superName, interfaces);
+
+    if (outerClass != null) {
+      writer.visitOuterClass(outerClass.owner, outerClass.name, outerClass.desc);
+    }
+
+    for (InnerClass inner : innerClasses) {
+      writer.visitInnerClass(inner.name, inner.outerName, inner.innerName, inner.access);
+    }
 
     for (AnnotationMirror annotation : annotations) {
       annotation.appendTo(writer);
@@ -145,5 +176,59 @@ class ClassMirror extends ClassVisitor implements Comparable<ClassMirror> {
     writer.visitEnd();
     ByteSource.wrap(writer.toByteArray()).copyTo(jar);
     jar.closeEntry();
+  }
+
+  private static class InnerClass implements Comparable<InnerClass> {
+
+    private final String name;
+    @Nullable
+    private final String outerName;
+    @Nullable
+    private final String innerName;
+    private final int access;
+
+    public InnerClass(
+        String name,
+        @Nullable String outerName,
+        @Nullable String innerName,
+        int access) {
+      this.name = name;
+      this.outerName = outerName;
+      this.innerName = innerName;
+      this.access = access;
+    }
+
+    @Override
+    public int compareTo(InnerClass o) {
+      Preconditions.checkNotNull(o);
+      return ComparisonChain.start()
+          .compare(name, o.name)
+          .compare(Strings.nullToEmpty(outerName), Strings.nullToEmpty(o.outerName))
+          .compare(Strings.nullToEmpty(innerName), Strings.nullToEmpty(o.innerName))
+          .result();
+    }
+  }
+
+  private static class OuterClass implements Comparable<OuterClass> {
+
+    private final String owner;
+    private final String name;
+    private final String desc;
+
+    public OuterClass(String owner, String name, String desc) {
+      this.owner = owner;
+      this.name = name;
+      this.desc = desc;
+    }
+
+    @Override
+    public int compareTo(OuterClass o) {
+      Preconditions.checkNotNull(o);
+      return ComparisonChain.start()
+          .compare(owner, o.owner)
+          .compare(name, o.name)
+          .compare(desc, o.desc)
+          .result();
+    }
   }
 }
