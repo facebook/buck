@@ -424,6 +424,29 @@ public class MirrorTest {
     assertEquals(originalHash, secondHash);
   }
 
+  @Test
+  public void shouldIncludeStaticFields() throws IOException {
+    Path jar = compileToJar(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  public static String foo;",
+                "  public final static int count = 42;",
+                "  protected static void method() {}",
+                "}")));
+
+    new StubJar(jar).writeTo(filesystem, stubJar);
+    ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
+
+    findMethod(stubbed, "method");  // Presence is enough
+    findField(stubbed, "foo");  // Presence is enough
+    FieldNode count = findField(stubbed, "count");
+    assertEquals(42, count.value);
+  }
+
   private Path compileToJar(
       SortedSet<Path> classpath,
       String fileName,
