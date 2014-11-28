@@ -25,12 +25,16 @@ import org.objectweb.asm.tree.FieldNode;
  */
 class FieldMirror extends FieldNode implements Comparable<FieldMirror> {
 
+  private final String key;
+
   public FieldMirror(int access, String name, String desc, String signature, Object value) {
     super(Opcodes.ASM5, access, name, desc, signature, value);
+
+    this.key = name + desc + signature;
   }
 
   @Override
   public int compareTo(FieldMirror o) {
-    return desc.compareTo(o.desc);
+    return key.compareTo(o.key);
   }
 }

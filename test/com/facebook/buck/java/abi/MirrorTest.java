@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.zip.Unzip;
@@ -37,7 +36,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -47,7 +45,6 @@ import org.objectweb.asm.tree.MethodNode;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -59,7 +56,6 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -110,7 +106,7 @@ public class MirrorTest {
     new StubJar(jar).writeTo(filesystem, stubJar);
 
     // Examine the jar to see if the "A" class is deprecated.
-    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class");
+    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
     assertNotEquals(0, classNode.access & Opcodes.ACC_DEPRECATED);
   }
 
@@ -129,7 +125,7 @@ public class MirrorTest {
     new StubJar(jar).writeTo(filesystem, stubJar);
 
     // Verify that both methods are present and given in alphabetical order.
-    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class");
+    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
     List<MethodNode> methods = classNode.methods;
     // Index 0 is the <init> method. Skip that.
     assertEquals("eatCake", methods.get(1).name);
@@ -154,16 +150,16 @@ public class MirrorTest {
     // Optionally, compilers (and the OpenJDK, Oracle and Eclipse compilers all do this) can also
     // include a "signature", which is the signature of the method before type erasure. See
     // http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3 for more.
-    ClassNode original = readClass(jar, "com/example/buck/A.class");
-    String classSig = original.signature;
-    MethodNode originalGet = findMethod(original, "get");
+    AbiClass original = readClass(jar, "com/example/buck/A.class");
+    String classSig = original.getClassNode().signature;
+    MethodNode originalGet = original.findMethod("get");
 
     new StubJar(jar).writeTo(filesystem, stubJar);
 
-    ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
-    assertEquals(classSig, stubbed.signature);
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    assertEquals(classSig, stubbed.getClassNode().signature);
 
-    MethodNode stubbedGet = findMethod(stubbed, "get");
+    MethodNode stubbedGet = stubbed.findMethod("get");
     assertMethodEquals(originalGet, stubbedGet);
   }
 
@@ -185,8 +181,8 @@ public class MirrorTest {
 
     new StubJar(jar).writeTo(filesystem, stubJar);
 
-    ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
-    for (MethodNode method : stubbed.methods) {
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    for (MethodNode method : stubbed.getClassNode().methods) {
       assertFalse(method.name.contains("private"));
     }
   }
@@ -206,8 +202,8 @@ public class MirrorTest {
 
     new StubJar(jar).writeTo(filesystem, stubJar);
 
-    ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
-    FieldNode field = stubbed.fields.get(0);
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    FieldNode field = stubbed.findField("protectedField");
     assertEquals("protectedField", field.name);
     assertTrue((field.access & Opcodes.ACC_PROTECTED) > 0);
   }
@@ -227,8 +223,8 @@ public class MirrorTest {
 
     new StubJar(jar).writeTo(filesystem, stubJar);
 
-    ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
-    assertEquals(0, stubbed.fields.size());
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    assertEquals(0, stubbed.getClassNode().fields.size());
   }
 
   @Test
@@ -245,11 +241,11 @@ public class MirrorTest {
 
     new StubJar(jar).writeTo(filesystem, stubJar);
 
-    ClassNode original = readClass(jar, "com/example/buck/A.class");
-    ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass original = readClass(jar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
 
-    FieldNode originalField = original.fields.get(0);
-    FieldNode stubbedField = stubbed.fields.get(0);
+    FieldNode originalField = original.findField("theField");
+    FieldNode stubbedField = stubbed.findField("theField");
 
     assertFieldEquals(originalField, stubbedField);
   }
@@ -269,17 +265,17 @@ public class MirrorTest {
 
     new StubJar(jar).writeTo(filesystem, stubJar);
 
-    ClassNode original = readClass(jar, "com/example/buck/A.class");
-    ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass original = readClass(jar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
 
-    MethodNode originalGet = findMethod(original, "get");
-    MethodNode stubbedGet = findMethod(stubbed, "get");
+    MethodNode originalGet = original.findMethod("get");
+    MethodNode stubbedGet = stubbed.findMethod("get");
 
     assertEquals(originalGet.signature, stubbedGet.signature);
     assertEquals(originalGet.desc, stubbedGet.desc);
 
-    MethodNode originalCompare = findMethod(original, "compareWith");
-    MethodNode stubbedCompare = findMethod(stubbed, "compareWith");
+    MethodNode originalCompare = original.findMethod("compareWith");
+    MethodNode stubbedCompare = stubbed.findMethod("compareWith");
 
     assertEquals(originalCompare.signature, stubbedCompare.signature);
     assertEquals(originalCompare.desc, stubbedCompare.desc);
@@ -301,8 +297,8 @@ public class MirrorTest {
 
     new StubJar(jar).writeTo(filesystem, stubJar);
 
-    ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
-    MethodNode method = findMethod(stubbed, "cheese");
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    MethodNode method = stubbed.findMethod("cheese");
 
     List<AnnotationNode> seen = method.visibleAnnotations;
     assertEquals(1, seen.size());
@@ -325,8 +321,8 @@ public class MirrorTest {
 
     new StubJar(jar).writeTo(filesystem, stubJar);
 
-    ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
-    FieldNode field = findField(stubbed, "name");
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    FieldNode field = stubbed.findField("name");
 
     List<AnnotationNode> seen = field.visibleAnnotations;
     assertEquals(1, seen.size());
@@ -348,8 +344,8 @@ public class MirrorTest {
 
     new StubJar(jar).writeTo(filesystem, stubJar);
 
-    ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
-    MethodNode method = findMethod(stubbed, "peynir");
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    MethodNode method = stubbed.findMethod("peynir");
 
     List<AnnotationNode>[] parameterAnnotations = method.visibleParameterAnnotations;
     assertEquals(2, parameterAnnotations.length);
@@ -373,15 +369,15 @@ public class MirrorTest {
 
     new StubJar(jar).writeTo(filesystem, stubJar);
 
-    ClassNode original = readClass(jar, "com/example/buck/A$B.class");
-    ClassNode stubbed = readClass(stubJar, "com/example/buck/A$B.class");
+    AbiClass original = readClass(jar, "com/example/buck/A$B.class");
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A$B.class");
 
-    MethodNode originalFoo = findMethod(original, "foo");
-    MethodNode stubbedFoo = findMethod(stubbed, "foo");
+    MethodNode originalFoo = original.findMethod("foo");
+    MethodNode stubbedFoo = stubbed.findMethod("foo");
     assertMethodEquals(originalFoo, stubbedFoo);
 
-    FieldNode originalCount = findField(original, "count");
-    FieldNode stubbedCount = findField(stubbed, "count");
+    FieldNode originalCount = original.findField("count");
+    FieldNode stubbedCount = stubbed.findField("count");
     assertFieldEquals(originalCount, stubbedCount);
   }
 
@@ -439,11 +435,11 @@ public class MirrorTest {
                 "}")));
 
     new StubJar(jar).writeTo(filesystem, stubJar);
-    ClassNode stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
 
-    findMethod(stubbed, "method");  // Presence is enough
-    findField(stubbed, "foo");  // Presence is enough
-    FieldNode count = findField(stubbed, "count");
+    stubbed.findMethod("method");  // Presence is enough
+    stubbed.findField("foo");  // Presence is enough
+    FieldNode count = stubbed.findField("count");
     assertEquals(42, count.value);
   }
 
@@ -473,6 +469,47 @@ public class MirrorTest {
                 "public class A {",
                 "  private Outer.Inner field;",    // Reference the inner class
                 "}")));
+  }
+
+  @Test
+  public void shouldPreserveSynchronizedKeywordOnMethods() throws IOException {
+    Path original = compileToJar(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  public synchronized void doMagic() {}",
+                "}")));
+
+    new StubJar(original).writeTo(filesystem, stubJar);
+
+    AbiClass stub = readClass(stubJar, "com/example/buck/A.class");
+    MethodNode magic = stub.findMethod("doMagic");
+    assertTrue((magic.access & Opcodes.ACC_SYNCHRONIZED) > 0);
+  }
+
+  @Test
+  public void shouldKeepMultipleFieldsWithSameDescValue() throws IOException {
+    Path original = compileToJar(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  public static final A SEVERE = new A();",
+                "  public static final A NOT_SEVERE = new A();",
+                "  public static final A QUITE_MILD = new A();",
+                "}")));
+
+    new StubJar(original).writeTo(filesystem, stubJar);
+
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    stubbed.findField("SEVERE");
+    stubbed.findField("NOT_SEVERE");
+    stubbed.findField("QUITE_MILD");
   }
 
   private Path compileToJar(
@@ -550,44 +587,15 @@ public class MirrorTest {
     new StubJar(classDir).writeTo(filesystem, stubJar);
 
     // Verify that both methods are present and given in alphabetical order.
-    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class");
-    List<MethodNode> methods = classNode.methods;
+    AbiClass classNode = readClass(stubJar, "com/example/buck/A.class");
+    List<MethodNode> methods = classNode.getClassNode().methods;
     // Index 0 is the <init> method. Skip that.
     assertEquals("eatCake", methods.get(1).name);
     assertEquals("toString", methods.get(2).name);
   }
 
-  private ClassNode readClass(Path pathToJar, String className) throws IOException {
-    try (ZipFile zip = new ZipFile(filesystem.getFileForRelativePath(pathToJar))) {
-      ZipEntry entry = zip.getEntry(className);
-      try (InputStream entryStream = zip.getInputStream(entry)) {
-        ClassReader reader = new ClassReader(entryStream);
-        ClassNode classNode = new ClassNode();
-        reader.accept(classNode, 0);
-        return classNode;
-      }
-    }
-  }
-
-  private MethodNode findMethod(ClassNode clazz, String methodName) {
-    for (MethodNode method : clazz.methods) {
-      if (method.name.equals(methodName)) {
-        return method;
-      }
-    }
-    fail("Unable to find method with name: " + methodName);
-    return null;
-  }
-
-  private FieldNode findField(ClassNode clazz, String fieldName) {
-    for (FieldNode field : clazz.fields) {
-      if (field.name.equals(fieldName)) {
-        return field;
-      }
-    }
-
-    fail("Unable to find field with name: " + fieldName);
-    return null;
+  private AbiClass readClass(Path pathToJar, String className) throws IOException {
+    return AbiClass.extract(filesystem.getPathForRelativePath(pathToJar), className);
   }
 
   private Path buildAnnotationJar() throws IOException {
