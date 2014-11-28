@@ -305,9 +305,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       throw new HumanReadableException(e);
     }
 
-    ExecutionContext executionContext = createExecutionContext(
-        options,
-        targetGraphAndTargets.getTargetGraph().getActionGraph());
+    ActionGraph actionGraph = targetGraphAndTargets.getTargetGraph().getActionGraph();
+    ExecutionContext executionContext = createExecutionContext(options, actionGraph);
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(actionGraph.getNodes());
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
 
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (options.getReadOnly()) {
@@ -352,6 +353,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             getProjectFilesystem(),
             targetGraphAndTargets.getTargetGraph(),
             executionContext,
+            buildRuleResolver,
+            sourcePathResolver,
             castToXcodeWorkspaceTargetNode(workspaceNode),
             optionsBuilder.build(),
             sourceTargetToTestNodes,
@@ -376,6 +379,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           getProjectFilesystem(),
           targetGraphAndTargets.getTargetGraph(),
           executionContext,
+          buildRuleResolver,
+          sourcePathResolver,
           targets,
           optionsBuilder.build());
       projectGenerator.generateProjects();
@@ -418,8 +423,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       }
       console.getStdOut().format(
           "To disable this prompt in the future, add the following to %s: \n\n" +
-          "[project]\n" +
-          "  ide_prompt = false\n\n",
+              "[project]\n" +
+              "  ide_prompt = false\n\n",
           getProjectFilesystem()
               .getRootPath()
               .resolve(BuckConfig.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME)

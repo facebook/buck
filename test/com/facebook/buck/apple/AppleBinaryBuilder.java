@@ -16,8 +16,15 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBinaryDescription;
+import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.FlavorDomain;
+import com.google.common.collect.ImmutableMap;
 
 public class AppleBinaryBuilder
     extends AbstractAppleNativeTargetBuilder<AppleNativeTargetDescriptionArg, AppleBinaryBuilder> {
@@ -28,8 +35,20 @@ public class AppleBinaryBuilder
   }
 
   protected AppleBinaryBuilder(BuildTarget target) {
-    super(new AppleBinaryDescription(new AppleConfig(new FakeBuckConfig())), target);
+    super(createDescription(), target);
   }
+
+  private static AppleBinaryDescription createDescription() {
+    BuckConfig buckConfig = new FakeBuckConfig();
+    CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
+    FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
+        "C/C++ Platform",
+        ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
+    return new AppleBinaryDescription(
+        new AppleConfig(buckConfig),
+        new CxxBinaryDescription(new CxxBuckConfig(buckConfig), cxxPlatform, cxxPlatforms));
+  }
+
 
   public static AppleBinaryBuilder createBuilder(BuildTarget target) {
     return new AppleBinaryBuilder(target);

@@ -1,0 +1,4 @@
+apple_library(
+  name = 'TestLibrary',
+  srcs = ['TestClass.m'],
+)

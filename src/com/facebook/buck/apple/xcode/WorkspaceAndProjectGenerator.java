@@ -26,7 +26,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
@@ -55,6 +57,8 @@ public class WorkspaceAndProjectGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final TargetGraph projectGraph;
   private final ExecutionContext executionContext;
+  private final BuildRuleResolver buildRuleResolver;
+  private final SourcePathResolver sourcePathResolver;
   private final TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceTargetNode;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
   private final ImmutableMultimap<BuildTarget, TargetNode<?>> sourceTargetToTestNodes;
@@ -66,6 +70,8 @@ public class WorkspaceAndProjectGenerator {
       ProjectFilesystem projectFilesystem,
       TargetGraph projectGraph,
       ExecutionContext executionContext,
+      BuildRuleResolver buildRuleResolver,
+      SourcePathResolver sourcePathResolver,
       TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceTargetNode,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       Multimap<BuildTarget, TargetNode<?>> sourceTargetToTestNodes,
@@ -73,6 +79,8 @@ public class WorkspaceAndProjectGenerator {
     this.projectFilesystem = projectFilesystem;
     this.projectGraph = projectGraph;
     this.executionContext = executionContext;
+    this.buildRuleResolver = buildRuleResolver;
+    this.sourcePathResolver = sourcePathResolver;
     this.workspaceTargetNode = workspaceTargetNode;
     this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
     this.sourceTargetToTestNodes = ImmutableMultimap.copyOf(sourceTargetToTestNodes);
@@ -169,6 +177,8 @@ public class WorkspaceAndProjectGenerator {
           initialTargetsBuilder.build(),
           projectFilesystem,
           executionContext,
+          buildRuleResolver,
+          sourcePathResolver,
           outputDirectory,
           "GeneratedProject",
           projectGeneratorOptions);
@@ -200,6 +210,8 @@ public class WorkspaceAndProjectGenerator {
               projectArg.rules,
               projectFilesystem,
               executionContext,
+              buildRuleResolver,
+              sourcePathResolver,
               targetNode.getBuildTarget().getBasePath(),
               projectArg.projectName,
               projectGeneratorOptions);

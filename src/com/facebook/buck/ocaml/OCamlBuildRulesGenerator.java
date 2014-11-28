@@ -130,7 +130,11 @@ public class OCamlBuildRulesGenerator {
         new Flavor(
             String.format(
                 "compile-%s",
-                getCOutputName(name).replace('/', '-').replace('.', '-'))));
+                getCOutputName(name)
+                    .replace('/', '-')
+                    .replace('.', '-')
+                    .replace('+', '-')
+                    .replace(' ', '-'))));
   }
 
   private ImmutableList<SourcePath> generateCCompilation(ImmutableList<SourcePath> cInput) {
@@ -336,7 +340,11 @@ public class OCamlBuildRulesGenerator {
         new Flavor(
             String.format(
                 "ml-compile-%s",
-                getMLOutputName(name).replace('/', '-').replace('.', '-'))));
+                getMLOutputName(name)
+                    .replace('/', '-')
+                    .replace('.', '-')
+                    .replace('+', '-')
+                    .replace(' ', '-'))));
   }
 
   public static BuildTarget createMLBytecodeCompileBuildTarget(
@@ -347,7 +355,11 @@ public class OCamlBuildRulesGenerator {
         new Flavor(
             String.format(
                 "ml-bytecode-compile-%s",
-                getMLBytecodeOutputName(name).replace('/', '-').replace('.', '-'))));
+                getMLBytecodeOutputName(name)
+                    .replace('/', '-')
+                    .replace('.', '-')
+                    .replace('+', '-')
+                    .replace(' ', '-'))));
   }
 
   ImmutableList<SourcePath> generateMLCompilation(

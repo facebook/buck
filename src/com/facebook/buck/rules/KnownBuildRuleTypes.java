@@ -271,6 +271,15 @@ public class KnownBuildRuleTypes {
         "C/C++ platform",
         cxxPlatformsBuilder.build());
 
+    CxxBinaryDescription cxxBinaryDescription = new CxxBinaryDescription(
+        cxxBuckConfig,
+        defaultCxxPlatform,
+        cxxPlatforms);
+
+    CxxLibraryDescription cxxLibraryDescription = new CxxLibraryDescription(
+        cxxBuckConfig,
+        cxxPlatforms);
+
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
     // Look up the path to the PEX builder script.
@@ -307,15 +316,15 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
-    builder.register(new AppleBinaryDescription(appleConfig));
+    builder.register(new AppleBinaryDescription(appleConfig, cxxBinaryDescription));
     builder.register(new AppleBundleDescription());
-    builder.register(new AppleLibraryDescription(appleConfig));
+    builder.register(new AppleLibraryDescription(appleConfig, cxxLibraryDescription));
     builder.register(new AppleResourceDescription());
     builder.register(new AppleTestDescription());
     builder.register(new BuckExtensionDescription(defaultJavacOptions));
     builder.register(new CoreDataModelDescription());
-    builder.register(new CxxBinaryDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms));
-    builder.register(new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms));
+    builder.register(cxxBinaryDescription);
+    builder.register(cxxLibraryDescription);
     builder.register(new CxxPythonExtensionDescription(cxxBuckConfig, cxxPlatforms));
     builder.register(new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms));
     builder.register(new ExportFileDescription());

@@ -21,6 +21,8 @@ import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -41,6 +43,8 @@ public class SeparatedProjectsGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final TargetGraph targetGraph;
   private final ExecutionContext executionContext;
+  private final BuildRuleResolver buildRuleResolver;
+  private final SourcePathResolver sourcePathResolver;
   private final ImmutableSet<BuildTarget> projectConfigTargets;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
 
@@ -55,11 +59,15 @@ public class SeparatedProjectsGenerator {
       ProjectFilesystem projectFilesystem,
       TargetGraph targetGraph,
       ExecutionContext executionContext,
+      BuildRuleResolver buildRuleResolver,
+      SourcePathResolver sourcePathResolver,
       ImmutableSet<BuildTarget> projectConfigTargets,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
     this.projectFilesystem = projectFilesystem;
     this.targetGraph = targetGraph;
     this.executionContext = executionContext;
+    this.buildRuleResolver = buildRuleResolver;
+    this.sourcePathResolver = sourcePathResolver;
     this.projectConfigTargets = projectConfigTargets;
     this.projectGenerators = null;
     this.projectGeneratorOptions = ImmutableSet.<ProjectGenerator.Option>builder()
@@ -101,6 +109,8 @@ public class SeparatedProjectsGenerator {
           initialTargetsBuilder.build(),
           projectFilesystem,
           executionContext,
+          buildRuleResolver,
+          sourcePathResolver,
           target.getBasePath(),
           buildable.getProjectName(),
           projectGeneratorOptions);

@@ -163,7 +163,7 @@ public class CxxDescriptionEnhancer {
         new Flavor(
             String.format(
                 "lex-%s",
-                name.replace('/', '-').replace('.', '-'))));
+                name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));
   }
 
   @VisibleForTesting
@@ -173,7 +173,7 @@ public class CxxDescriptionEnhancer {
         new Flavor(
             String.format(
                 "yacc-%s",
-                name.replace('/', '-').replace('.', '-'))));
+                name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));
   }
 
   /**

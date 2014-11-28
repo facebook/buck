@@ -460,7 +460,11 @@ public class TargetsCommandTest {
 
   @Test
   public void testGetMatchingAppleLibraryBuildTarget() throws CmdLineException, IOException {
-    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    BuildTarget libraryTarget = BuildTarget
+        .builder("//foo", "lib")
+        .addFlavor("static")
+        .addFlavor("default")
+        .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setSrcs(
@@ -494,7 +498,10 @@ public class TargetsCommandTest {
                 ImmutableSet.of(Paths.get("foo/foo.m")),
                 Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
-        ImmutableSet.of("//foo:lib"),
+        ImmutableSet.of(
+            "//foo:lib#compile-foo-m-o,default",
+            "//foo:lib#default,preprocess-foo-m-mi",
+            "//foo:lib#default,static"),
         matchingBuildRules.keySet());
   }
 
@@ -508,7 +515,11 @@ public class TargetsCommandTest {
                 ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo/foo.m")))))
         .build();
 
-    BuildTarget testLibraryTarget = BuildTarget.builder("//foo", "testlib").build();
+    BuildTarget testLibraryTarget = BuildTarget
+        .builder("//foo", "testlib")
+        .addFlavor("shared")
+        .addFlavor("default")
+        .build();
     TargetNode<?> testLibraryNode = AppleLibraryBuilder
         .createBuilder(testLibraryTarget)
         .setSrcs(
@@ -557,7 +568,13 @@ public class TargetsCommandTest {
                 ImmutableSet.of(Paths.get("foo/foo.m")),
                 Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
-        ImmutableSet.of("//foo:lib", "//foo:testlib", "//foo:xctest", "//foo:test"),
+        ImmutableSet.of(
+            "//foo:lib#compile-pic-foo-m-o,default",
+            "//foo:lib#default,preprocess-pic-foo-m-mi",
+            "//foo:lib#default,shared",
+            "//foo:test",
+            "//foo:testlib#default,shared",
+            "//foo:xctest"),
         matchingBuildRules.keySet());
 
     // The test AppleLibrary, AppleBundle and AppleTest match the referenced file.
@@ -570,7 +587,12 @@ public class TargetsCommandTest {
                 ImmutableSet.of(Paths.get("foo/testfoo.m")),
                 Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
-        ImmutableSet.of("//foo:testlib", "//foo:xctest", "//foo:test"),
+        ImmutableSet.of(
+            "//foo:test",
+            "//foo:testlib#compile-pic-testfoo-m-o,default",
+            "//foo:testlib#default,preprocess-pic-testfoo-m-mi",
+            "//foo:testlib#default,shared",
+            "//foo:xctest"),
         matchingBuildRules.keySet());
   }
 }

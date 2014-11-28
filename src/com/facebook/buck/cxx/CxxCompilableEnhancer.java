@@ -109,7 +109,11 @@ public class CxxCompilableEnhancer {
         new Flavor(String.format(
             "compile-%s%s",
             pic ? "pic-" : "",
-            getOutputName(name).replace('/', '-').replace('.', '-'))));
+            getOutputName(name)
+                .replace('/', '-')
+                .replace('.', '-')
+                .replace('+', '-')
+                .replace(' ', '-'))));
   }
 
   /**
