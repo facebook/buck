@@ -26,9 +26,11 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -45,6 +47,7 @@ public class JavacOptions {
   private final String targetLevel;
   private final AnnotationProcessingData annotationProcessingData;
   private final Optional<String> bootclasspath;
+  private final ImmutableMap<String, String> sourceToBootclasspath;
 
   private JavacOptions(
       JavaCompilerEnvironment javacEnv,
@@ -53,6 +56,7 @@ public class JavacOptions {
       String sourceLevel,
       String targetLevel,
       Optional<String> bootclasspath,
+      ImmutableMap<String, String> sourceToBootclasspath,
       AnnotationProcessingData annotationProcessingData) {
     this.javacEnv = Preconditions.checkNotNull(javacEnv);
     this.debug = debug;
@@ -60,6 +64,7 @@ public class JavacOptions {
     this.sourceLevel = sourceLevel;
     this.targetLevel = targetLevel;
     this.bootclasspath = bootclasspath;
+    this.sourceToBootclasspath = sourceToBootclasspath;
     this.annotationProcessingData = annotationProcessingData;
   }
 
@@ -93,6 +98,11 @@ public class JavacOptions {
     // Override the bootclasspath if Buck is building Java code for Android.
     if (bootclasspath.isPresent()) {
       optionsBuilder.add("-bootclasspath", bootclasspath.get());
+    } else {
+      String bcp = sourceToBootclasspath.get(sourceLevel);
+      if (bcp != null) {
+        optionsBuilder.add("-bootclasspath", bcp);
+      }
     }
 
     // Add annotation processors.
@@ -168,6 +178,7 @@ public class JavacOptions {
     }
 
     builder.setAnnotationProcessingData(options.annotationProcessingData);
+    builder.sourceToBootclasspath = options.sourceToBootclasspath;
     builder.setBootclasspath(options.bootclasspath.orNull());
     builder.setSourceLevel(options.getSourceLevel());
     builder.setTargetLevel(options.getTargetLevel());
@@ -186,6 +197,7 @@ public class JavacOptions {
     private AnnotationProcessingData annotationProcessingData = AnnotationProcessingData.EMPTY;
     @Nullable
     private JavaCompilerEnvironment javacEnv;
+    private ImmutableMap<String, String> sourceToBootclasspath;
 
     private Builder() {
     }
@@ -207,6 +219,11 @@ public class JavacOptions {
 
     public Builder setVerboseOutput(boolean verbose) {
       this.verbose = verbose;
+      return this;
+    }
+
+    public Builder setBootclasspathMap(Map<String, String> sourceVersionToClasspath) {
+      this.sourceToBootclasspath = ImmutableMap.copyOf(sourceVersionToClasspath);
       return this;
     }
 
@@ -233,6 +250,7 @@ public class JavacOptions {
           Preconditions.checkNotNull(sourceLevel),
           Preconditions.checkNotNull(targetLevel),
           bootclasspath,
+          sourceToBootclasspath,
           annotationProcessingData);
     }
   }

@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
@@ -31,6 +32,7 @@ public class JavaCompilationConstants {
           .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
           .setSourceLevel("7")
           .setTargetLevel("7")
+          .setBootclasspathMap(ImmutableMap.<String, String>of())
           .build();
 
   public static final JavacOptions ANDROID_JAVAC_OPTIONS =
@@ -38,6 +40,7 @@ public class JavaCompilationConstants {
           .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
           .setSourceLevel("7")
           .setTargetLevel("6")
+          .setBootclasspathMap(ImmutableMap.<String, String>of())
           .build();
 
   private JavaCompilationConstants() {

@@ -25,11 +25,13 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 
 /**
  * A java-specific "view" of BuckConfig.
@@ -48,10 +50,19 @@ public class JavaBuckConfig {
     Optional<String> sourceLevel = delegate.getValue("java", "source_level");
     Optional<String> targetLevel = delegate.getValue("java", "target_level");
 
+    ImmutableMap<String, String> allEntries = delegate.getEntriesForSection("java");
+    ImmutableMap.Builder<String, String> bootclasspaths = ImmutableMap.builder();
+    for (Map.Entry<String, String> entry : allEntries.entrySet()) {
+      if (entry.getKey().startsWith("bootclasspath-")) {
+        bootclasspaths.put(entry.getKey().substring("bootclasspath-".length()), entry.getValue());
+      }
+    }
+
     return JavacOptions.builderForUseInJavaBuckConfig()
         .setJavaCompilerEnvironment(getJavaCompilerEnvironment(processExecutor))
         .setSourceLevel(sourceLevel.or(TARGETED_JAVA_VERSION))
         .setTargetLevel(targetLevel.or(TARGETED_JAVA_VERSION))
+        .setBootclasspathMap(bootclasspaths.build())
         .build();
   }
 

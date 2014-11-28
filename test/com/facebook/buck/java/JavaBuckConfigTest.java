@@ -19,6 +19,8 @@ package com.facebook.buck.java;
 
 import static com.facebook.buck.java.JavaBuckConfig.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.BuckConfig;
@@ -29,8 +31,10 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;
@@ -40,6 +44,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.Path;
 
 public class JavaBuckConfigTest {
 
@@ -128,6 +133,31 @@ public class JavaBuckConfigTest {
 
     assertEquals(TARGETED_JAVA_VERSION, options.getSourceLevel());
     assertEquals(TARGETED_JAVA_VERSION, options.getTargetLevel());
+  }
+
+  @Test
+  public void shouldPopulateTheMapOfSourceLevelToBootclasspath()
+      throws IOException, InterruptedException {
+    String localConfig = "[java]\nbootclasspath-6 = one.jar\nbootclasspath-7 = two.jar";
+    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
+
+    JavacOptions options = config.getDefaultJavacOptions(new ProcessExecutor(new TestConsole()));
+
+    JavacOptions jse5 = JavacOptions.builder(options).setSourceLevel("5").build();
+    JavacOptions jse6 = JavacOptions.builder(options).setSourceLevel("6").build();
+    JavacOptions jse7 = JavacOptions.builder(options).setSourceLevel("7").build();
+
+    assertFalse(isOptionContaining(jse5, "-bootclasspath"));
+    assertTrue(isOptionContaining(jse6, "-bootclasspath one.jar"));
+    assertTrue(isOptionContaining(jse7, "-bootclasspath two.jar"));
+  }
+
+  private boolean isOptionContaining(JavacOptions options, String expectedParameter) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    options.appendOptionsToList(builder, Functions.<Path>identity());
+    String joined = Joiner.on(" ").join(builder.build());
+
+    return joined.contains(expectedParameter);
   }
 
   private JavaBuckConfig createWithDefaultFilesystem(Reader reader)
