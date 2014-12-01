@@ -90,7 +90,7 @@ public class AndroidBinaryGraphEnhancer {
    * Maps a {@link TargetCpuType} to the {@link CxxPlatform} we need to use to build C/C++
    * libraries for it.
    */
-  private final ImmutableMap<TargetCpuType, CxxPlatform> nativePlatforms;
+  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   AndroidBinaryGraphEnhancer(
       BuildRuleParams originalParams,
@@ -111,7 +111,7 @@ public class AndroidBinaryGraphEnhancer {
       Keystore keystore,
       BuildConfigFields buildConfigValues,
       Optional<SourcePath> buildConfigValuesFile,
-      ImmutableMap<TargetCpuType, CxxPlatform> nativePlatforms) {
+      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms) {
     this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
@@ -306,6 +306,7 @@ public class AndroidBinaryGraphEnhancer {
               pathResolver,
               packageableCollection.nativeLibsDirectories(),
               cpuFilters,
+              nativePlatforms,
               pathResolver.getMappedPaths(nativeLinkableLibs)));
       ruleResolver.addToIndex(copyNativeLibraries.get());
       enhancedDeps.add(copyNativeLibraries.get());

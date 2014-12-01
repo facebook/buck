@@ -21,7 +21,6 @@ import static com.facebook.buck.model.HasBuildTarget.TO_TARGET;
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
@@ -124,7 +123,7 @@ public class AndroidInstrumentationApkDescription
         apkUnderTest.getKeystore(),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
-        ImmutableMap.<AndroidBinary.TargetCpuType, CxxPlatform>of());
+        ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>of());
 
     AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();

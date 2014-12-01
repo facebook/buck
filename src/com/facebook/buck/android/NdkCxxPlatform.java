@@ -71,6 +71,8 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private final Optional<DebugPathSanitizer> debugPathSanitizer;
 
+  private final SourcePath objcopy;
+
   public NdkCxxPlatform(
       Flavor flavor,
       Platform platform,
@@ -116,6 +118,8 @@ public class NdkCxxPlatform implements CxxPlatform {
                 File.separatorChar,
                 Paths.get("."),
                 ImmutableBiMap.of(ndkRoot, Paths.get("./."))));
+
+    this.objcopy = getTool(ndkRoot, targetConfiguration, host, "objcopy");
   }
 
   private static SourcePath getTool(
@@ -451,6 +455,10 @@ public class NdkCxxPlatform implements CxxPlatform {
   @Override
   public BuildTarget getBoostTestDep() {
     throw new HumanReadableException("boost is not supported on %s platform", asFlavor());
+  }
+
+  public SourcePath getObjcopy() {
+    return objcopy;
   }
 
   /**

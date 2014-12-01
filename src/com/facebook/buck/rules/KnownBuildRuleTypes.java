@@ -149,11 +149,11 @@ public class KnownBuildRuleTypes {
   /**
    * @return the map holding the available {@link NdkCxxPlatform}s.
    */
-  private static ImmutableMap<AndroidBinary.TargetCpuType, CxxPlatform> getNdkCxxPlatforms(
+  private static ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> getNdkCxxPlatforms(
       Path ndkRoot,
       Platform platform) {
 
-    ImmutableMap.Builder<AndroidBinary.TargetCpuType, CxxPlatform> ndkCxxPlatformBuilder =
+    ImmutableMap.Builder<AndroidBinary.TargetCpuType, NdkCxxPlatform> ndkCxxPlatformBuilder =
         ImmutableMap.builder();
 
     NdkCxxPlatform armeabi =
@@ -241,13 +241,13 @@ public class KnownBuildRuleTypes {
     OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
 
     // Setup the NDK C/C++ platforms.
-    ImmutableMap.Builder<AndroidBinary.TargetCpuType, CxxPlatform> ndkCxxPlatformsBuilder =
+    ImmutableMap.Builder<AndroidBinary.TargetCpuType, NdkCxxPlatform> ndkCxxPlatformsBuilder =
         ImmutableMap.builder();
     Optional<Path> ndkRoot = androidDirectoryResolver.findAndroidNdkDir();
     if (ndkRoot.isPresent()) {
       ndkCxxPlatformsBuilder.putAll(getNdkCxxPlatforms(ndkRoot.get(), platform));
     }
-    ImmutableMap<AndroidBinary.TargetCpuType, CxxPlatform> ndkCxxPlatforms =
+    ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
         ndkCxxPlatformsBuilder.build();
 
     // Construct the C/C++ config wrapping the buck config.

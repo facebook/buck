@@ -83,11 +83,11 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               MoreStrings.regexPatternForAny("mk", "h", "hpp", "c", "cpp", "cc", "cxx") + "$");
 
   private final Optional<String> ndkVersion;
-  private final ImmutableMap<AndroidBinary.TargetCpuType, CxxPlatform> cxxPlatforms;
+  private final ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> cxxPlatforms;
 
   public NdkLibraryDescription(
       Optional<String> ndkVersion,
-      ImmutableMap<AndroidBinary.TargetCpuType, CxxPlatform> cxxPlatforms) {
+      ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
     this.ndkVersion = ndkVersion;
     this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
   }
@@ -163,7 +163,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     ImmutableList.Builder<String> outputLinesBuilder = ImmutableList.builder();
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
 
-    for (Map.Entry<AndroidBinary.TargetCpuType, CxxPlatform> entry : cxxPlatforms.entrySet()) {
+    for (Map.Entry<AndroidBinary.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       AndroidBinary.TargetCpuType targetCpuType = entry.getKey();
       String targetArchAbi = getTargetArchAbi(targetCpuType);
       CxxPlatform cxxPlatform = entry.getValue();

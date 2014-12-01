@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
+import com.facebook.buck.cxx.ObjcopyStep;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -66,6 +67,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
    * The keys of the map are the tuple of {@link TargetCpuType} and shared library SONAME
    * (e.g. <"x86", "libtest.so">), and the values of the map are the full paths to the libraries.
    */
+  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ImmutableMap<Map.Entry<TargetCpuType, String>, Path> filteredNativeLibraries;
 
   protected CopyNativeLibraries(
@@ -73,11 +75,13 @@ public class CopyNativeLibraries extends AbstractBuildRule {
       SourcePathResolver resolver,
       ImmutableSet<Path> nativeLibDirectories,
       ImmutableSet<TargetCpuType> cpuFilters,
+      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap<Map.Entry<TargetCpuType, String>, Path> filteredNativeLibraries) {
     super(buildRuleParams, resolver);
     this.nativeLibDirectories = nativeLibDirectories;
     this.cpuFilters = cpuFilters;
     this.filteredNativeLibraries = filteredNativeLibraries;
+    this.nativePlatforms = nativePlatforms;
     Preconditions.checkArgument(
         !nativeLibDirectories.isEmpty() || !filteredNativeLibraries.isEmpty(),
         "There should be at least one native library to copy.");
@@ -127,8 +131,16 @@ public class CopyNativeLibraries extends AbstractBuildRule {
           pathToNativeLibs
               .resolve(abiDirectoryComponent.get())
               .resolve(entry.getKey().getValue());
+      NdkCxxPlatform platform =
+          Preconditions.checkNotNull(nativePlatforms.get(entry.getKey().getKey()));
+      Path objcopy = getResolver().getPath(platform.getObjcopy());
       steps.add(new MkdirStep(destination.getParent()));
-      steps.add(CopyStep.forFile(entry.getValue(), destination));
+      steps.add(
+          new ObjcopyStep(
+              objcopy,
+              ImmutableList.of("--strip-unneeded"),
+              entry.getValue(),
+              destination));
     }
 
     final Path pathToMetadataTxt = getPathToMetadataTxt();

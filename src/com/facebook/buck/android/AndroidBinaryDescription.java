@@ -21,7 +21,6 @@ import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
@@ -76,12 +75,12 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
 
   private final JavacOptions javacOptions;
   private final ProGuardConfig proGuardConfig;
-  private final ImmutableMap<TargetCpuType, CxxPlatform> nativePlatforms;
+  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   public AndroidBinaryDescription(
       JavacOptions javacOptions,
       ProGuardConfig proGuardConfig,
-      ImmutableMap<TargetCpuType, CxxPlatform> nativePlatforms) {
+      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms) {
     this.javacOptions = javacOptions;
     this.proGuardConfig = proGuardConfig;
     this.nativePlatforms = nativePlatforms;

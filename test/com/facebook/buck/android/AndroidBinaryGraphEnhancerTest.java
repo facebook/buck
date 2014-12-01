@@ -30,7 +30,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.android.AndroidBinaryGraphEnhancer.EnhancementResult;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.Keystore;
@@ -124,7 +123,7 @@ public class AndroidBinaryGraphEnhancerTest {
         createStrictMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
-        /* nativePlatforms */ ImmutableMap.<TargetCpuType, CxxPlatform>of());
+        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTarget.builder("//java/com/example", "apk").setFlavor("aapt_package").build();
@@ -231,7 +230,7 @@ public class AndroidBinaryGraphEnhancerTest {
         keystore,
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
-        /* nativePlatforms */ ImmutableMap.<TargetCpuType, CxxPlatform>of());
+        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of());
     replay(keystore);
     EnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
