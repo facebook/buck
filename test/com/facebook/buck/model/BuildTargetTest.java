@@ -106,10 +106,10 @@ public class BuildTargetTest {
   @Test
   public void testFlavorIsValid() {
     try {
-      BuildTarget.builder("//foo/bar", "baz").addFlavor("d.x").build();
+      BuildTarget.builder("//foo/bar", "baz").addFlavor("d!x").build();
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
-      assertEquals("Invalid flavor: d.x", e.getMessage());
+      assertEquals("Invalid flavor: d!x", e.getMessage());
     }
   }
 

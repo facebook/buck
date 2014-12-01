@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 public class Flavor implements Comparable<Flavor> {
 
   public static final Flavor DEFAULT = new Flavor();
-  private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z0-9_]+");
+  private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z0-9_\\.]+");
 
   private final String flavor;
 
