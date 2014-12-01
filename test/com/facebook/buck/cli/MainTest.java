@@ -23,6 +23,7 @@ import com.facebook.buck.util.CapturingPrintStream;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.martiansoftware.nailgun.NGContext;
 
 import org.easymock.EasyMock;
@@ -68,7 +69,8 @@ public class MainTest {
     int exitCode = main.runMainWithExitCode(
         new BuildId(),
         Paths.get("."),
-        Optional.<NGContext>absent());
+        Optional.<NGContext>absent(),
+        ImmutableMap.<String, String>of());
     assertEquals(1, exitCode);
     assertEquals(
         "When the user does not specify any arguments, the usage information should be displayed",
@@ -85,6 +87,7 @@ public class MainTest {
         new BuildId(),
         Paths.get("."),
         Optional.<NGContext>absent(),
+        ImmutableMap.<String, String>of(),
         "--help");
     assertEquals(1, exitCode);
     assertEquals("Users instinctively try running `buck --help`, so it should print usage info.",

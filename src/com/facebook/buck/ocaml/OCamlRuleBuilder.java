@@ -39,7 +39,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -431,14 +430,13 @@ public class OCamlRuleBuilder {
   private static Optional<String> executeProcessAndGetStdout(
       File baseDir,
       ImmutableList<String> cmd) throws IOException, InterruptedException {
-    Ansi ansi = new Ansi(Platform.detect(), Optional.<String>absent());
     PrintStream stdout = new CapturingPrintStream();
     PrintStream stderr = new CapturingPrintStream();
 
     ImmutableSet.Builder<ProcessExecutor.Option> options = ImmutableSet.builder();
     options.add(ProcessExecutor.Option.EXPECTING_STD_ERR);
     options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
-    Console console = new Console(Verbosity.SILENT, stdout, stderr, ansi);
+    Console console = new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty());
     ProcessExecutor exe = new ProcessExecutor(console);
     ProcessBuilder processBuilder = new ProcessBuilder(cmd);
     processBuilder.directory(baseDir);

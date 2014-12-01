@@ -248,7 +248,12 @@ public class ProjectWorkspace {
     Main main = new Main(stdout, stderr, Optional.of(capturingEventListener));
     int exitCode = 0;
     try {
-      exitCode = main.runMainWithExitCode(new BuildId(), destPath, context, args);
+      exitCode = main.runMainWithExitCode(
+          new BuildId(),
+          destPath,
+          context,
+          ImmutableMap.<String, String>of(),
+          args);
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);
       exitCode = Main.FAIL_EXIT_CODE;

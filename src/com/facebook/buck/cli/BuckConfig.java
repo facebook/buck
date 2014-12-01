@@ -36,6 +36,7 @@ import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
@@ -649,7 +650,8 @@ public class BuckConfig {
         return Ansi.forceTty();
       case "auto":
       default:
-        return new Ansi(platform, Optional.fromNullable(environment.get("TERM")));
+        return new Ansi(
+            AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(platform, environment));
     }
   }
 

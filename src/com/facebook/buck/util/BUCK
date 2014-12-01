@@ -30,6 +30,7 @@ java_library(
 
 IO_SRCS = [
   'Ansi.java',
+  'AnsiEnvironmentChecking.java',
   'Console.java',
   'CapturingPrintStream.java',
   'DirtyPrintStreamDecorator.java',

@@ -16,9 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
-
 import java.io.PrintStream;
 
 /**
@@ -65,26 +62,10 @@ public final class Ansi {
   private static final Ansi forceTtyAnsi = new Ansi(true /* isAnsiTerminal */);
 
   /**
-   * Construct an Ansi object and automatically detect whether the current environment supports
-   * fancylike escape sequences.
-   *
-   * @param platform Detected platform
-   * @param termEnvVar The value of the TERM environment variable or Optional.absent() when TERM is
-   *                    unavailable.
+   * Construct an Ansi object and conditionally enable fancy escape sequences.
    */
-  public Ansi(Platform platform, Optional<String> termEnvVar) {
-    this(isConnectedToTty() && platform != Platform.WINDOWS &&
-        termEnvVar.isPresent() && !termEnvVar.get().equals("dumb"));
-  }
-
-  private Ansi(boolean isAnsiTerminal) {
+  public Ansi(boolean isAnsiTerminal) {
     this.isAnsiTerminal = isAnsiTerminal;
-  }
-
-  private static boolean isConnectedToTty() {
-    // Empirically, this seems to test whether either stdin or stdout are connected to a TTY and
-    // if both are, returns non-null.
-    return System.console() != null;
   }
 
   public static Ansi withoutTty() {

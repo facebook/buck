@@ -263,6 +263,7 @@
 
         <!-- //src/com/facebook/buck/util:io -->
         <include name="com/facebook/buck/util/Ansi.java" />
+        <include name="com/facebook/buck/util/AnsiEnvironmentChecking.java" />
         <include name="com/facebook/buck/util/Console.java" />
         <include name="com/facebook/buck/util/CapturingPrintStream.java" />
         <include name="com/facebook/buck/util/DefaultDirectoryTraverser.java" />

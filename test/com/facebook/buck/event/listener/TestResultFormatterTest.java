@@ -25,9 +25,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -45,7 +43,7 @@ public class TestResultFormatterTest {
   @Before
   public void createFormatter() {
     formatter = new TestResultFormatter(
-        new Ansi(Platform.LINUX, Optional.of("xterm")),
+        new Ansi(true),
         /* isAnAssumptionViolationAnError) */ false);
   }
 

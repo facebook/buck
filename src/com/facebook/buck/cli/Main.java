@@ -47,6 +47,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.NanosAdjustedClock;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
@@ -449,6 +450,7 @@ public final class Main {
       BuildId buildId,
       Path projectRoot,
       Optional<NGContext> context,
+      ImmutableMap<String, String> clientEnvironment,
       String... args)
       throws IOException, InterruptedException {
 
@@ -456,7 +458,7 @@ public final class Main {
     int exitCode;
     Command.ParseResult command = parseCommandIfPresent(args);
     if (command.getCommand().isPresent()) {
-      return executeCommand(buildId, projectRoot, command, context, args);
+      return executeCommand(buildId, projectRoot, command, context, clientEnvironment, args);
     } else {
       exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
       if (exitCode == GenericBuckOptions.SHOW_MAIN_HELP_SCREEN_EXIT_CODE) {
@@ -485,10 +487,8 @@ public final class Main {
       Path projectRoot,
       Command.ParseResult commandParseResult,
       Optional<NGContext> context,
+      ImmutableMap<String, String> clientEnvironment,
       String... args) throws IOException, InterruptedException {
-
-    // Get the client environment, either from this process or from the Nailgun context.
-    ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
 
     Verbosity verbosity = VerbosityParser.parse(args);
     Optional<String> color;
@@ -702,7 +702,7 @@ public final class Main {
    * Buck codebase to ensure that the use of the Buck daemon is transparent.
    */
   @SuppressWarnings({"unchecked", "rawtypes"}) // Safe as Property is a Map<String, String>.
-  private ImmutableMap<String, String> getClientEnvironment(Optional<NGContext> context) {
+  private static ImmutableMap<String, String> getClientEnvironment(Optional<NGContext> context) {
     ImmutableMap<String, String> env;
     if (context.isPresent()) {
       env = ImmutableMap.<String, String>copyOf((Map) context.get().getEnv());
@@ -893,6 +893,7 @@ public final class Main {
       BuildId buildId,
       Path projectRoot,
       Optional<NGContext> context,
+      ImmutableMap<String, String> clientEnvironment,
       String... args)
       throws IOException, InterruptedException {
     try {
@@ -918,12 +919,13 @@ public final class Main {
             buildRev,
             Arrays.toString(args));
       }
-      return runMainWithExitCode(buildId, projectRoot, context, args);
+      return runMainWithExitCode(buildId, projectRoot, context, clientEnvironment, args);
     } catch (HumanReadableException e) {
       Console console = new Console(Verbosity.STANDARD_INFORMATION,
           stdOut,
           stdErr,
-          new Ansi(platform, Optional.<String>absent()));
+          new Ansi(
+              AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(platform, clientEnvironment)));
       console.printBuildFailure(e.getHumanReadableErrorMessage());
       return FAIL_EXIT_CODE;
     } catch (InterruptionFailedException e) { // Command could not be interrupted.
@@ -961,6 +963,9 @@ public final class Main {
     CommandThreadAssociation commandThreadAssociation = null;
     ConsoleHandlerRedirector consoleHandlerRedirector = null;
 
+    // Get the client environment, either from this process or from the Nailgun context.
+    ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
+
     try {
       commandThreadAssociation =
         new CommandThreadAssociation(buildId.toString());
@@ -971,7 +976,7 @@ public final class Main {
           buildId.toString(),
           stdErr,
           Optional.<OutputStream>absent() /* originalOutputStream */);
-      exitCode = tryRunMainWithExitCode(buildId, projectRoot, context, args);
+      exitCode = tryRunMainWithExitCode(buildId, projectRoot, context, clientEnvironment, args);
     } catch (Throwable t) {
       LOG.error(t, "Uncaught exception at top level");
     } finally {

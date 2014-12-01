@@ -217,6 +217,7 @@ public class DaemonIntegrationTest {
               new BuildId(),
               tmp.getRootPath(),
               Optional.<NGContext>of(new TestContext()),
+              ImmutableMap.<String, String>of(),
               args);
           assertEquals("Unexpected exit code.", expectedExitCode, exitCode);
         } catch (IOException e) {
