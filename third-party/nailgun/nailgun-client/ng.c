@@ -98,6 +98,8 @@
 
 #define HEARTBEAT_TIMEOUT_MILLIS 500
 
+#define NAILGUN_TTY_FORMAT "NAILGUN_TTY_%d=%d"
+
 /*
    the following is required to compile for hp-ux
    originally posted at http://jira.codehaus.org/browse/JRUBY-2346
@@ -772,6 +774,15 @@ int main(int argc, char *argv[], char *env[]) {
   /* now send environment */
   sendText(CHUNKTYPE_ENV, NAILGUN_FILESEPARATOR);
   sendText(CHUNKTYPE_ENV, NAILGUN_PATHSEPARATOR);
+#ifndef WIN32
+  /* notify isatty for standard pipes */
+  char buf[] = NAILGUN_TTY_FORMAT;
+  for(i = 0; i < 3; i++) {
+    sprintf(buf, NAILGUN_TTY_FORMAT, i, isatty(i));
+    sendText(CHUNKTYPE_ENV, buf);
+  }
+#endif
+  /* forward the client process environment */
   for(i = 0; env[i]; ++i) {
     sendText(CHUNKTYPE_ENV, env[i]);
   }
