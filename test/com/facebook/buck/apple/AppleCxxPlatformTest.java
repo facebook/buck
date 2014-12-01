@@ -44,7 +44,6 @@ public class AppleCxxPlatformTest {
 
     AppleCxxPlatform appleCxxPlatform =
         new AppleCxxPlatform(
-            "iphoneos8.0",
             new Flavor("iphoneos-8-armv7-arm64"),
             Platform.MACOS,
             appleSdkPaths

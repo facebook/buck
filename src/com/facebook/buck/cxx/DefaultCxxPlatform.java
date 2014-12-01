@@ -114,11 +114,6 @@ public class DefaultCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public String getName() {
-    return "Default";
-  }
-
-  @Override
   public Flavor asFlavor() {
     return FLAVOR;
   }

@@ -48,7 +48,6 @@ public class NdkCxxPlatform implements CxxPlatform {
           Platform.MACOS, Host.DARWIN_X86_64,
           Platform.LINUX, Host.LINUX_X86_64);
 
-  private final String name;
   private final Flavor flavor;
 
   private final SourcePath as;
@@ -73,7 +72,6 @@ public class NdkCxxPlatform implements CxxPlatform {
   private final Optional<DebugPathSanitizer> debugPathSanitizer;
 
   public NdkCxxPlatform(
-      String name,
       Flavor flavor,
       Platform platform,
       Path ndkRoot,
@@ -84,7 +82,6 @@ public class NdkCxxPlatform implements CxxPlatform {
         "NDKCxxPlatform can only currently run on MacOS or Linux.");
     Host host = Preconditions.checkNotNull(BUILD_PLATFORMS.get(platform));
 
-    this.name = Preconditions.checkNotNull(name);
     this.flavor = Preconditions.checkNotNull(flavor);
 
     this.as = getTool(ndkRoot, targetConfiguration, host, "as");
@@ -252,24 +249,26 @@ public class NdkCxxPlatform implements CxxPlatform {
         .addAll(getCommonCxxFlags())
         .addAll(getCommonFlags())
         .add("-Wno-literal-suffix")
-        .add("-isystem",
-             ndkRoot
-                 .resolve("sources")
-                 .resolve("cxx-stl")
-                 .resolve("gnu-libstdc++")
-                 .resolve(targetConfiguration.compilerVersion)
-                 .resolve("include")
-                 .toString())
-        .add("-isystem",
-             ndkRoot
-                 .resolve("sources")
-                 .resolve("cxx-stl")
-                 .resolve("gnu-libstdc++")
-                 .resolve(targetConfiguration.compilerVersion)
-                 .resolve("libs")
-                 .resolve(targetConfiguration.targetArchAbi.toString())
-                 .resolve("include")
-                 .toString())
+        .add(
+            "-isystem",
+            ndkRoot
+                .resolve("sources")
+                .resolve("cxx-stl")
+                .resolve("gnu-libstdc++")
+                .resolve(targetConfiguration.compilerVersion)
+                .resolve("include")
+                .toString())
+        .add(
+            "-isystem",
+            ndkRoot
+                .resolve("sources")
+                .resolve("cxx-stl")
+                .resolve("gnu-libstdc++")
+                .resolve(targetConfiguration.compilerVersion)
+                .resolve("libs")
+                .resolve(targetConfiguration.targetArchAbi.toString())
+                .resolve("include")
+                .toString())
         .addAll(getCommonIncludes(ndkRoot, targetConfiguration, host))
         .build();
   }
@@ -317,11 +316,6 @@ public class NdkCxxPlatform implements CxxPlatform {
             .resolve("usr")
             .resolve("lib")
             .toString());
-  }
-
-  @Override
-  public String getName() {
-    return name;
   }
 
   @Override
@@ -421,22 +415,22 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   @Override
   public SourcePath getLex() {
-    throw new HumanReadableException("lex is not supported on %s platform", getName());
+    throw new HumanReadableException("lex is not supported on %s platform", asFlavor());
   }
 
   @Override
   public ImmutableList<String> getLexFlags() {
-    throw new HumanReadableException("lex is not supported on %s platform", getName());
+    throw new HumanReadableException("lex is not supported on %s platform", asFlavor());
   }
 
   @Override
   public SourcePath getYacc() {
-    throw new HumanReadableException("yacc is not supported on %s platform", getName());
+    throw new HumanReadableException("yacc is not supported on %s platform", asFlavor());
   }
 
   @Override
   public ImmutableList<String> getYaccFlags() {
-    throw new HumanReadableException("yacc is not supported on %s platform", getName());
+    throw new HumanReadableException("yacc is not supported on %s platform", asFlavor());
   }
 
   @Override
@@ -451,12 +445,12 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   @Override
   public BuildTarget getGtestDep() {
-    throw new HumanReadableException("gtest is not supported on %s platform", getName());
+    throw new HumanReadableException("gtest is not supported on %s platform", asFlavor());
   }
 
   @Override
   public BuildTarget getBoostTestDep() {
-    throw new HumanReadableException("boost is not supported on %s platform", getName());
+    throw new HumanReadableException("boost is not supported on %s platform", asFlavor());
   }
 
   /**

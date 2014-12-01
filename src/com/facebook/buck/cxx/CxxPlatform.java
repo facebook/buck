@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableList;
  */
 public interface CxxPlatform {
 
-  String getName();
   Flavor asFlavor();
 
   SourcePath getAs();

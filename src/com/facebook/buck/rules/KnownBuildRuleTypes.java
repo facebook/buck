@@ -157,7 +157,6 @@ public class KnownBuildRuleTypes {
 
     NdkCxxPlatform armeabi =
         new NdkCxxPlatform(
-            "Android NDK arm",
             new Flavor("android-arm"),
             platform,
             ndkRoot,
@@ -177,7 +176,6 @@ public class KnownBuildRuleTypes {
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARM, armeabi);
     NdkCxxPlatform armeabiv7 =
         new NdkCxxPlatform(
-            "Android NDK arm-v7",
             new Flavor("android-armv7"),
             platform,
             ndkRoot,
@@ -198,7 +196,6 @@ public class KnownBuildRuleTypes {
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARMV7, armeabiv7);
     NdkCxxPlatform x86 =
         new NdkCxxPlatform(
-            "Android NDK x86",
             new Flavor("android-x86"),
             platform,
             ndkRoot,

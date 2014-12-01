@@ -44,7 +44,6 @@ public class AppleCxxPlatform implements CxxPlatform {
 
   private static final Path USR_BIN = Paths.get("usr/bin");
 
-  private final String name;
   private final Flavor flavor;
 
   private final SourcePath as;
@@ -73,7 +72,6 @@ public class AppleCxxPlatform implements CxxPlatform {
   private final Optional<DebugPathSanitizer> debugPathSanitizer;
 
   public AppleCxxPlatform(
-      String name,
       Flavor flavor,
       Platform buildPlatform,
       AppleSdkPaths sdkPaths) {
@@ -82,7 +80,6 @@ public class AppleCxxPlatform implements CxxPlatform {
         buildPlatform.equals(Platform.MACOS),
         String.format("%s can only currently run on Mac OS X.", AppleCxxPlatform.class));
 
-    this.name = Preconditions.checkNotNull(name);
     this.flavor = Preconditions.checkNotNull(flavor);
 
     // Search for tools from most specific to least specific.
@@ -142,11 +139,6 @@ public class AppleCxxPlatform implements CxxPlatform {
         toolSearchPaths);
     }
     return new PathSourcePath(toolPath.get());
-  }
-
-  @Override
-  public String getName() {
-    return name;
   }
 
   @Override
@@ -276,11 +268,11 @@ public class AppleCxxPlatform implements CxxPlatform {
 
   @Override
   public BuildTarget getGtestDep() {
-    throw new HumanReadableException("gtest is not supported on %s platform", getName());
+    throw new HumanReadableException("gtest is not supported on %s platform", asFlavor());
   }
 
   @Override
   public BuildTarget getBoostTestDep() {
-    throw new HumanReadableException("boost is not supported on %s platform", getName());
+    throw new HumanReadableException("boost is not supported on %s platform", asFlavor());
   }
 }
