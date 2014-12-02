@@ -72,15 +72,18 @@ public class AppleCxxPlatform implements CxxPlatform {
   private final Optional<DebugPathSanitizer> debugPathSanitizer;
 
   public AppleCxxPlatform(
-      Flavor flavor,
-      Platform buildPlatform,
+      Platform hostPlatform,
+      ApplePlatform targetPlatform,
+      String targetSdkName,
+      String targetVersion,
+      String targetArchitecture,
       AppleSdkPaths sdkPaths) {
 
     Preconditions.checkArgument(
-        buildPlatform.equals(Platform.MACOS),
+        hostPlatform.equals(Platform.MACOS),
         String.format("%s can only currently run on Mac OS X.", AppleCxxPlatform.class));
 
-    this.flavor = Preconditions.checkNotNull(flavor);
+    this.flavor = new Flavor(targetSdkName + "-" + targetArchitecture);
 
     // Search for tools from most specific to least specific.
     ImmutableList<Path> toolSearchPaths = ImmutableList.of(
@@ -97,7 +100,22 @@ public class AppleCxxPlatform implements CxxPlatform {
     this.aspp = clangPath;
     this.asppflags = ImmutableList.of(); // TODO
     this.cc = clangPath;
-    this.cflags = ImmutableList.of(); // TODO
+
+    ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
+    cflagsBuilder.add("-isysroot", sdkPaths.sdkPath().toString());
+    cflagsBuilder.add("-arch", targetArchitecture);
+    switch (targetPlatform) {
+      case MACOS:
+        cflagsBuilder.add("-mmacosx-version-min=" + targetVersion);
+        break;
+      case IPHONESIMULATOR:
+        // Fall through
+      case IPHONEOS:
+        cflagsBuilder.add("-mios-version-min=" + targetVersion);
+        break;
+    }
+    // TODO(user): Add more and better cflags.
+    this.cflags = cflagsBuilder.build();
     this.cpp = clangPath;
     this.cppflags = ImmutableList.of(); // TODO
     this.cxx = clangXxPath;

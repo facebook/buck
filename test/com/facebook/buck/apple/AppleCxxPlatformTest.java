@@ -17,9 +17,12 @@
 package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.util.environment.Platform;
+
+import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecutiveItems;
 
 import org.junit.Test;
 
@@ -44,14 +47,32 @@ public class AppleCxxPlatformTest {
 
     AppleCxxPlatform appleCxxPlatform =
         new AppleCxxPlatform(
-            new Flavor("iphoneos-8-armv7-arm64"),
             Platform.MACOS,
+            ApplePlatform.IPHONEOS,
+            "iphoneos8.0",
+            "7.0",
+            "armv7",
             appleSdkPaths
         );
 
     assertEquals(
+        new Flavor("iphoneos8.0-armv7"),
+        appleCxxPlatform.asFlavor());
+    assertEquals(
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
         appleCxxPlatform.getCc().toString());
+    assertThat(
+        appleCxxPlatform.getCflags(),
+        hasConsecutiveItems(
+            "-isysroot",
+            root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk").toString()));
+    assertThat(
+        appleCxxPlatform.getCflags(),
+        hasConsecutiveItems("-arch", "armv7"));
+    assertThat(
+        appleCxxPlatform.getCflags(),
+        hasConsecutiveItems("-mios-version-min=7.0"));
+
     assertEquals(
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
         appleCxxPlatform.getCxx().toString());
