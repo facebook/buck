@@ -252,7 +252,7 @@ public class ProjectWorkspace {
           new BuildId(),
           destPath,
           context,
-          ImmutableMap.<String, String>of(),
+          ImmutableMap.copyOf(System.getenv()),
           args);
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);
