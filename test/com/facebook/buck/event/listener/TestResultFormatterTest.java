@@ -43,7 +43,7 @@ public class TestResultFormatterTest {
   @Before
   public void createFormatter() {
     formatter = new TestResultFormatter(
-        new Ansi(true),
+        new Ansi(false),
         /* isAnAssumptionViolationAnError) */ false);
   }
 
