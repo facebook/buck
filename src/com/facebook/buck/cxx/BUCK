@@ -7,6 +7,9 @@ PLATFORM_SRCS = [
   'DebugSectionProperty.java',
   'GnuLinker.java',
   'Linker.java',
+  'Tool.java',
+  'SourcePathTool.java',
+  'VersionedTool.java',
 ]
 java_library(
   name = 'platform',

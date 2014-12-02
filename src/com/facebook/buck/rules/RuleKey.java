@@ -251,6 +251,11 @@ public class RuleKey {
       return setKey(key).setVal(val);
     }
 
+    public Builder set(String key, RuleKeyAppendable appendable) {
+      appendable.appendToRuleKey(this, key);
+      return this;
+    }
+
     public Builder set(String key, @Nullable BuildRule val) {
       return setKey(key).setVal(val != null ? val.getRuleKey() : null);
     }

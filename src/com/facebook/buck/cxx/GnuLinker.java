@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -24,15 +23,15 @@ import com.google.common.collect.ImmutableList;
  */
 public class GnuLinker implements Linker {
 
-  private final SourcePath path;
+  private final Tool tool;
 
-  public GnuLinker(SourcePath path) {
-    this.path = path;
+  public GnuLinker(Tool tool) {
+    this.tool = tool;
   }
 
   @Override
-  public SourcePath getPath() {
-    return path;
+  public Tool getTool() {
+    return tool;
   }
 
   @Override

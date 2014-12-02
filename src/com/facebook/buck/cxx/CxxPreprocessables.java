@@ -232,7 +232,7 @@ public class CxxPreprocessables {
             preprocessorInput.getRules(),
             false));
 
-    SourcePath preprocessor;
+    Tool preprocessor;
     ImmutableList.Builder<String> args = ImmutableList.builder();
     CxxSource.Type outputType;
 
@@ -276,6 +276,9 @@ public class CxxPreprocessables {
       default:
         throw new IllegalStateException(String.format("unexpected type: %s", source.getType()));
     }
+
+    // Add dependencies on any build rules used to create the preprocessor.
+    dependencies.addAll(preprocessor.getBuildRules(pathResolver));
 
     // If we're using pic, add in the appropriate flag.
     if (pic) {

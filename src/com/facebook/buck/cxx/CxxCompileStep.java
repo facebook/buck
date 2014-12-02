@@ -37,19 +37,19 @@ import java.nio.file.Path;
  */
 public class CxxCompileStep implements Step {
 
-  private final Path compiler;
+  private final ImmutableList<String> compilerPrefix;
   private final ImmutableList<String> flags;
   private final Path output;
   private final Path input;
   private final Optional<DebugPathSanitizer> sanitizer;
 
   public CxxCompileStep(
-      Path compiler,
+      ImmutableList<String> compilerPrefix,
       ImmutableList<String> flags,
       Path output,
       Path input,
       Optional<DebugPathSanitizer> sanitizer) {
-    this.compiler = compiler;
+    this.compilerPrefix = compilerPrefix;
     this.flags = flags;
     this.output = output;
     this.input = input;
@@ -77,7 +77,7 @@ public class CxxCompileStep implements Step {
   @VisibleForTesting
   protected ImmutableList<String> getCommand() {
     return ImmutableList.<String>builder()
-        .add(compiler.toString())
+        .addAll(compilerPrefix)
         .add("-c")
         .addAll(flags)
         .add("-o", output.toString())

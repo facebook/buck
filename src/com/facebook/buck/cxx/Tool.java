@@ -16,32 +16,24 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 
 /**
- * A specialization of {@link Linker} containing information specific to the Darwin implementation.
+ * Represents tool used as part of the C/C++ build process.
  */
-public class DarwinLinker implements Linker {
+public interface Tool extends RuleKeyAppendable {
 
-  private final Tool tool;
+  /**
+   * @return all `BuildRule`s this tools requires to be built before it can be used.
+   */
+  ImmutableList<BuildRule> getBuildRules(SourcePathResolver resolver);
 
-  public DarwinLinker(Tool tool) {
-    this.tool = tool;
-  }
-
-  @Override
-  public Tool getTool() {
-    return tool;
-  }
-
-  @Override
-  public Iterable<String> linkWhole(String arg) {
-    return ImmutableList.of("-force_load", arg);
-  }
-
-  @Override
-  public Iterable<String> soname(String arg) {
-    return ImmutableList.of("-install_name", arg);
-  }
+  /**
+   * @return the prefix command use to run this tool.
+   */
+  ImmutableList<String> getCommandPrefix(SourcePathResolver resolver);
 
 }

@@ -58,7 +58,7 @@ public class Archives {
       SourcePathResolver resolver,
       BuildTarget target,
       BuildRuleParams originalParams,
-      SourcePath archiver,
+      Tool archiver,
       Path output,
       ImmutableList<SourcePath> inputs) {
 
@@ -68,8 +68,10 @@ public class Archives {
         ARCHIVE_TYPE,
         target,
         ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSortedSet.copyOf(
-            resolver.filterBuildRuleInputs(inputs)));
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(resolver.filterBuildRuleInputs(inputs))
+            .addAll(archiver.getBuildRules(resolver))
+            .build());
 
     return new Archive(
         archiveParams,

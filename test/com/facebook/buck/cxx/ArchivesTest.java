@@ -43,7 +43,7 @@ import java.nio.file.Paths;
 
 public class ArchivesTest {
 
-  private static final SourcePath DEFAULT_ARCHIVER = new TestSourcePath("ar");
+  private static final Tool DEFAULT_ARCHIVER = new SourcePathTool(new TestSourcePath("ar"));
   private static final Path DEFAULT_OUTPUT = Paths.get("libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS = ImmutableList.<SourcePath>of(
       new TestSourcePath("a.o"),

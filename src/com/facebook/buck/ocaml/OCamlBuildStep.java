@@ -33,16 +33,16 @@ import java.nio.file.Paths;
 public class OCamlBuildStep implements Step {
 
   private final OCamlBuildContext ocamlContext;
-  private final Path cCompiler;
-  private final Path cxxCompiler;
+  private final ImmutableList<String> cCompiler;
+  private final ImmutableList<String> cxxCompiler;
 
   private final boolean hasGeneratedSources;
   private final OCamlDepToolStep depToolStep;
 
   public OCamlBuildStep(
       OCamlBuildContext ocamlContext,
-      Path cCompiler,
-      Path cxxCompiler) {
+      ImmutableList<String> cCompiler,
+      ImmutableList<String> cxxCompiler) {
     this.ocamlContext = ocamlContext;
     this.cCompiler = cCompiler;
     this.cxxCompiler = cxxCompiler;

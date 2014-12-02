@@ -35,7 +35,7 @@ public class CxxCompileStepTest {
   public void cxxLinkStepUsesCorrectCommand() {
 
     // Setup some dummy values for inputs to the CxxCompileStep
-    Path compiler = Paths.get("compiler");
+    ImmutableList<String> compiler = ImmutableList.of("compiler");
     ImmutableList<String> flags =
         ImmutableList.of("-fsanitize=address");
     Path output = Paths.get("test.o");
@@ -51,7 +51,7 @@ public class CxxCompileStepTest {
 
     // Verify it uses the expected command.
     ImmutableList<String> expected = ImmutableList.<String>builder()
-        .add(compiler.toString())
+        .addAll(compiler)
         .add("-c")
         .addAll(flags)
         .add("-o", output.toString())
@@ -65,7 +65,7 @@ public class CxxCompileStepTest {
   public void errorProcessor() {
 
     // Setup some dummy values for inputs to the CxxCompileStep
-    Path compiler = Paths.get("compiler");
+    ImmutableList<String> compiler = ImmutableList.of("compiler");
     ImmutableList<String> flags =
         ImmutableList.of("-fsanitize=address");
     Path output = Paths.get("test.o");

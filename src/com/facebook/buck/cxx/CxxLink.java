@@ -32,7 +32,7 @@ import java.nio.file.Path;
 
 public class CxxLink extends AbstractBuildRule {
 
-  private final SourcePath linker;
+  private final Tool linker;
   private final Path output;
   private final ImmutableList<SourcePath> inputs;
   private final ImmutableList<String> args;
@@ -40,7 +40,7 @@ public class CxxLink extends AbstractBuildRule {
   public CxxLink(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      SourcePath linker,
+      Tool linker,
       Path output,
       ImmutableList<SourcePath> inputs,
       ImmutableList<String> args) {
@@ -59,7 +59,7 @@ public class CxxLink extends AbstractBuildRule {
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .setInput("linker", linker)
+        .set("linker", linker)
         .set("output", output.toString())
         .set("args", args);
   }
@@ -71,7 +71,7 @@ public class CxxLink extends AbstractBuildRule {
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
         new CxxLinkStep(
-            getResolver().getPath(linker),
+            linker.getCommandPrefix(getResolver()),
             output,
             args));
   }
@@ -81,7 +81,7 @@ public class CxxLink extends AbstractBuildRule {
     return output;
   }
 
-  public SourcePath getLinker() {
+  public Tool getLinker() {
     return linker;
   }
 

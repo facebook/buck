@@ -113,14 +113,18 @@ public class DefaultCxxPlatform implements CxxPlatform {
     return new PathSourcePath(path.or(def));
   }
 
+  private Tool getTool(String section, String field, Path def) {
+    return new SourcePathTool(getSourcePath(section, field, def));
+  }
+
   @Override
   public Flavor asFlavor() {
     return FLAVOR;
   }
 
   @Override
-  public SourcePath getAs() {
-    return getSourcePath("cxx", "as", DEFAULT_AS);
+  public Tool getAs() {
+    return getTool("cxx", "as", DEFAULT_AS);
   }
 
   @Override
@@ -129,8 +133,8 @@ public class DefaultCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getAspp() {
-    return getSourcePath("cxx", "aspp", DEFAULT_ASPP);
+  public Tool getAspp() {
+    return getTool("cxx", "aspp", DEFAULT_ASPP);
   }
 
   @Override
@@ -139,8 +143,8 @@ public class DefaultCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCc() {
-    return getSourcePath("cxx", "cc", DEFAULT_CC);
+  public Tool getCc() {
+    return getTool("cxx", "cc", DEFAULT_CC);
   }
 
   @Override
@@ -149,8 +153,8 @@ public class DefaultCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCxx() {
-    return getSourcePath("cxx", "cxx", DEFAULT_CXX);
+  public Tool getCxx() {
+    return getTool("cxx", "cxx", DEFAULT_CXX);
   }
 
   @Override
@@ -159,8 +163,8 @@ public class DefaultCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCpp() {
-    return getSourcePath("cxx", "cpp", DEFAULT_CPP);
+  public Tool getCpp() {
+    return getTool("cxx", "cpp", DEFAULT_CPP);
   }
 
   @Override
@@ -169,8 +173,8 @@ public class DefaultCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCxxpp() {
-    return getSourcePath("cxx", "cxxpp", DEFAULT_CXXPP);
+  public Tool getCxxpp() {
+    return getTool("cxx", "cxxpp", DEFAULT_CXXPP);
   }
 
   @Override
@@ -179,8 +183,8 @@ public class DefaultCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCxxld() {
-    return getSourcePath("cxx", "cxxld", DEFAULT_CXXLD);
+  public Tool getCxxld() {
+    return getTool("cxx", "cxxld", DEFAULT_CXXLD);
   }
 
   @Override
@@ -209,13 +213,13 @@ public class DefaultCxxPlatform implements CxxPlatform {
 
   @Override
   public Linker getLd() {
-    SourcePath path = getSourcePath("cxx", "ld", DEFAULT_LD);
+    Tool tool = new SourcePathTool(getSourcePath("cxx", "ld", DEFAULT_LD));
     LinkerType type = getLinkerType();
     switch (type) {
       case GNU:
-        return new GnuLinker(path);
+        return new GnuLinker(tool);
       case DARWIN:
-        return new DarwinLinker(path);
+        return new DarwinLinker(tool);
       // Add a "default" case, even thought we've handled all cases above, just to make the
       // compiler happy.
       default:
@@ -229,8 +233,8 @@ public class DefaultCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getAr() {
-    return getSourcePath("cxx", "ar", DEFAULT_AR);
+  public Tool getAr() {
+    return getTool("cxx", "ar", DEFAULT_AR);
   }
 
   @Override

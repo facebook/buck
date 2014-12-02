@@ -19,9 +19,11 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
@@ -32,7 +34,7 @@ public class OCamlLinkStep extends ShellStep {
 
   public static class Args {
     public final Path ocamlCompiler;
-    public final Path cxxCompiler;
+    public final ImmutableList<String> cxxCompiler;
     public final ImmutableList<String> flags;
     public final Path output;
     public final ImmutableList<String> depInput;
@@ -41,7 +43,7 @@ public class OCamlLinkStep extends ShellStep {
     public final boolean isBytecode;
 
     public Args(
-        Path cxxCompiler,
+        ImmutableList<String> cxxCompiler,
         Path ocamlCompiler,
         Path output,
         ImmutableList<String> depInput,
@@ -129,8 +131,11 @@ public class OCamlLinkStep extends ShellStep {
     return ImmutableList.<String>builder()
         .add(args.ocamlCompiler.toString())
         .addAll(OCamlCompilables.DEFAULT_OCAML_FLAGS)
-        .add("-cc")
-        .add(args.cxxCompiler.toString())
+        .add("-cc", args.cxxCompiler.get(0))
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-ccopt"),
+                args.cxxCompiler.subList(1, args.cxxCompiler.size())))
         .addAll((args.isLibrary ? Optional.of("-a") : Optional.<String>absent()).asSet())
         .addAll((!args.isLibrary && args.isBytecode ?
                 Optional.of("-custom") :

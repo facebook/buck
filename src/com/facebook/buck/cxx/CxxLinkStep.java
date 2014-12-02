@@ -24,12 +24,12 @@ import java.nio.file.Path;
 
 public class CxxLinkStep extends ShellStep {
 
-  private final Path linker;
+  private final ImmutableList<String> linker;
   private final Path output;
   private final ImmutableList<String> args;
 
   public CxxLinkStep(
-      Path linker,
+      ImmutableList<String> linker,
       Path output,
       ImmutableList<String> args) {
     this.linker = linker;
@@ -40,7 +40,7 @@ public class CxxLinkStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(linker.toString())
+        .addAll(linker)
         .add("-o", output.toString())
         .addAll(args)
         .build();

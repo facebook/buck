@@ -19,9 +19,11 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
@@ -32,12 +34,12 @@ public class OCamlMLCompileStep extends ShellStep {
 
   public static class Args {
     public final Path ocamlCompiler;
-    public final Path cCompiler;
+    public final ImmutableList<String> cCompiler;
     public final ImmutableList<String> flags;
     public final Path output;
     public final Path input;
     public Args(
-        Path cCompiler,
+        ImmutableList<String> cCompiler,
         Path ocamlCompiler,
         Path output,
         Path input,
@@ -101,7 +103,11 @@ public class OCamlMLCompileStep extends ShellStep {
     return ImmutableList.<String>builder()
         .add(args.ocamlCompiler.toString())
         .addAll(OCamlCompilables.DEFAULT_OCAML_FLAGS)
-        .add("-cc", args.cCompiler.toString())
+        .add("-cc", args.cCompiler.get(0))
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-ccopt"),
+                args.cCompiler.subList(1, args.cCompiler.size())))
         .add("-c")
         .add("-annot")
         .add("-bin-annot")

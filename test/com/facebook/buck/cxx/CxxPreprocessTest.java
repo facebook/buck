@@ -46,7 +46,7 @@ import java.nio.file.Paths;
 
 public class CxxPreprocessTest {
 
-  private static final SourcePath DEFAULT_COMPILER = new TestSourcePath("compiler");
+  private static final Tool DEFAULT_COMPILER = new SourcePathTool(new TestSourcePath("compiler"));
   private static final ImmutableList<String> DEFAULT_FLAGS =
       ImmutableList.of("-fsanitize=address");
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
@@ -114,7 +114,7 @@ public class CxxPreprocessTest {
         new CxxPreprocess(
             params,
             pathResolver,
-            new TestSourcePath("different"),
+            new SourcePathTool(new TestSourcePath("different")),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,

@@ -16,32 +16,33 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 
-/**
- * A specialization of {@link Linker} containing information specific to the Darwin implementation.
- */
-public class DarwinLinker implements Linker {
+public class SourcePathTool implements Tool {
 
-  private final Tool tool;
+  private final SourcePath path;
 
-  public DarwinLinker(Tool tool) {
-    this.tool = tool;
+  public SourcePathTool(SourcePath path) {
+    this.path = path;
   }
 
   @Override
-  public Tool getTool() {
-    return tool;
+  public void appendToRuleKey(RuleKey.Builder builder, String key) {
+    builder.setInput(key, path);
   }
 
   @Override
-  public Iterable<String> linkWhole(String arg) {
-    return ImmutableList.of("-force_load", arg);
+  public ImmutableList<BuildRule> getBuildRules(SourcePathResolver resolver) {
+    return ImmutableList.copyOf(resolver.filterBuildRuleInputs(ImmutableList.of(path)));
   }
 
   @Override
-  public Iterable<String> soname(String arg) {
-    return ImmutableList.of("-install_name", arg);
+  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+    return ImmutableList.of(resolver.getPath(path).toString());
   }
 
 }

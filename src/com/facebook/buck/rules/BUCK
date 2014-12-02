@@ -94,6 +94,7 @@ java_library(
     'PathSourcePath.java',
     'RecordFileSha1Step.java',
     'RuleKey.java',
+    'RuleKeyAppendable.java',
     'RuleKeyBuilderFactory.java',
     'Sha1HashCode.java',
     'SourcePath.java',

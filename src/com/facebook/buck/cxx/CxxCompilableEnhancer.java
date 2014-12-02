@@ -148,7 +148,7 @@ public class CxxCompilableEnhancer {
 
     // Pick the compiler to use.  Basically, if we're dealing with C++ sources, use the C++
     // compiler, and the C compiler for everything.
-    SourcePath compiler;
+    Tool compiler;
     if (CxxSourceTypes.needsCxxCompiler(source.getType())) {
       compiler = platform.getCxx();
     } else {

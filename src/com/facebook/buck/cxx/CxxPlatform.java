@@ -29,31 +29,31 @@ public interface CxxPlatform {
 
   Flavor asFlavor();
 
-  SourcePath getAs();
+  Tool getAs();
   ImmutableList<String> getAsflags();
 
-  SourcePath getAspp();
+  Tool getAspp();
   ImmutableList<String> getAsppflags();
 
-  SourcePath getCc();
+  Tool getCc();
   ImmutableList<String> getCflags();
 
-  SourcePath getCxx();
+  Tool getCxx();
   ImmutableList<String> getCxxflags();
 
-  SourcePath getCpp();
+  Tool getCpp();
   ImmutableList<String> getCppflags();
 
-  SourcePath getCxxpp();
+  Tool getCxxpp();
   ImmutableList<String> getCxxppflags();
 
-  SourcePath getCxxld();
+  Tool getCxxld();
   ImmutableList<String> getCxxldflags();
 
   Linker getLd();
   ImmutableList<String> getLdflags();
 
-  SourcePath getAr();
+  Tool getAr();
   ImmutableList<String> getArflags();
 
   SourcePath getLex();

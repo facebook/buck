@@ -20,6 +20,8 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.Tool;
+import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.PathSourcePath;
@@ -31,8 +33,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -50,23 +55,23 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private final Flavor flavor;
 
-  private final SourcePath as;
+  private final Tool as;
   private final ImmutableList<String> asflags;
-  private final SourcePath aspp;
+  private final Tool aspp;
   private final ImmutableList<String> asppflags;
-  private final SourcePath cc;
+  private final Tool cc;
   private final ImmutableList<String> cflags;
-  private final SourcePath cpp;
+  private final Tool cpp;
   private final ImmutableList<String> cppflags;
-  private final SourcePath cxx;
+  private final Tool cxx;
   private final ImmutableList<String> cxxflags;
-  private final SourcePath cxxpp;
+  private final Tool cxxpp;
   private final ImmutableList<String> cxxppflags;
-  private final SourcePath cxxld;
+  private final Tool cxxld;
   private final ImmutableList<String> cxxldflags;
   private final Linker ld;
   private final ImmutableList<String> ldflags;
-  private final SourcePath ar;
+  private final Tool ar;
   private final ImmutableList<String> arflags;
 
   private final Optional<DebugPathSanitizer> debugPathSanitizer;
@@ -79,6 +84,8 @@ public class NdkCxxPlatform implements CxxPlatform {
       Path ndkRoot,
       TargetConfiguration targetConfiguration) {
 
+    String version = readVersion(ndkRoot);
+
     Preconditions.checkArgument(
         platform.equals(Platform.MACOS) || platform.equals(Platform.LINUX),
         "NDKCxxPlatform can only currently run on MacOS or Linux.");
@@ -86,55 +93,145 @@ public class NdkCxxPlatform implements CxxPlatform {
 
     this.flavor = Preconditions.checkNotNull(flavor);
 
-    this.as = getTool(ndkRoot, targetConfiguration, host, "as");
+    this.as = getTool(ndkRoot, targetConfiguration, host, "as", version);
 
     // Default assembler flags added by the NDK to enforce the NX (no execute) security feature.
     this.asflags = ImmutableList.of("--noexecstack");
 
-    this.aspp = getTool(ndkRoot, targetConfiguration, host, "gcc");
+    this.aspp = getTool(ndkRoot, targetConfiguration, host, "gcc", version);
     this.asppflags = ImmutableList.of();
-    this.cc = getTool(ndkRoot, targetConfiguration, host, "gcc");
+    this.cc = getTool(ndkRoot, targetConfiguration, host, "gcc", version);
     this.cflags = getCflagsInternal(targetConfiguration);
-    this.cpp = getTool(ndkRoot, targetConfiguration, host, "gcc");
-    this.cppflags = getCppflags(ndkRoot, targetConfiguration, host);
-    this.cxx = getTool(ndkRoot, targetConfiguration, host, "g++");
+    this.cpp = getCppTool(ndkRoot, targetConfiguration, host, "gcc", version);
+    this.cppflags = getCppflags(ndkRoot, targetConfiguration);
+    this.cxx = getTool(ndkRoot, targetConfiguration, host, "g++", version);
     this.cxxflags = getCxxflagsInternal(targetConfiguration);
-    this.cxxpp = getTool(ndkRoot, targetConfiguration, host, "g++");
-    this.cxxppflags = getCxxppflags(ndkRoot, targetConfiguration, host);
-    this.cxxld = getTool(ndkRoot, targetConfiguration, host, "g++");
-    this.cxxldflags = getCxxldflags(ndkRoot, targetConfiguration);
-    this.ld = new GnuLinker(getTool(ndkRoot, targetConfiguration, host, "ld.gold"));
+    this.cxxpp = getCppTool(ndkRoot, targetConfiguration, host, "g++", version);
+    this.cxxppflags = getCxxppflags(ndkRoot, targetConfiguration);
+    this.cxxld = getCcLinkTool(ndkRoot, targetConfiguration, host, "g++", version);
+    this.cxxldflags = ImmutableList.of();
+    this.ld = new GnuLinker(getTool(ndkRoot, targetConfiguration, host, "ld.gold", version));
 
     // Default linker flags added by the NDK to enforce the NX (no execute) security feature.
     this.ldflags = ImmutableList.of("-z", "noexecstack");
 
-    this.ar = getTool(ndkRoot, targetConfiguration, host, "ar");
+    this.ar = getTool(ndkRoot, targetConfiguration, host, "ar", version);
     this.arflags = ImmutableList.of();
 
+    Path ndkToolsRoot = getNdkToolRoot(ndkRoot, targetConfiguration, host);
     this.debugPathSanitizer =
         Optional.of(
             new DebugPathSanitizer(
                 250,
                 File.separatorChar,
                 Paths.get("."),
-                ImmutableBiMap.of(ndkRoot, Paths.get("./."))));
+                ImmutableBiMap.of(
+                    ndkToolsRoot, Paths.get("ANDROID_TOOLS_ROOT"),
+                    ndkRoot, Paths.get("ANDROID_NDK_ROOT"))));
 
-    this.objcopy = getTool(ndkRoot, targetConfiguration, host, "objcopy");
+    this.objcopy = getSourcePath(ndkRoot, targetConfiguration, host, "objcopy");
   }
 
-  private static SourcePath getTool(
+  // Read the NDK version from the "RELEASE.TXT" at the NDK root.
+  private static String readVersion(Path ndkRoot) {
+    try {
+      return Files.readFirstLine(
+          ndkRoot.resolve("RELEASE.TXT").toFile(),
+          Charset.defaultCharset()).trim();
+    } catch (IOException e) {
+      throw new HumanReadableException(
+          e,
+          "could not extract version from NDK repository at %s: %s",
+          ndkRoot,
+          e.getMessage());
+    }
+  }
+
+  private static Path getNdkToolRoot(
+      Path ndkRoot,
+      TargetConfiguration targetConfiguration,
+      Host host) {
+    return ndkRoot
+        .resolve("toolchains")
+        .resolve(targetConfiguration.toolchain.toString())
+        .resolve("prebuilt")
+        .resolve(host.toString());
+  }
+
+  private static SourcePath getSourcePath(
       Path ndkRoot,
       TargetConfiguration targetConfiguration,
       Host host,
       String tool) {
-    return new PathSourcePath(ndkRoot
-        .resolve("toolchains")
-        .resolve(targetConfiguration.toolchain.toString())
-        .resolve("prebuilt")
-        .resolve(host.toString())
-        .resolve(targetConfiguration.toolchainPrefix.toString())
-        .resolve("bin")
-        .resolve(tool));
+    return new PathSourcePath(
+        getNdkToolRoot(ndkRoot, targetConfiguration, host)
+            .resolve(targetConfiguration.toolchainPrefix.toString())
+            .resolve("bin")
+            .resolve(tool));
+  }
+
+  private static Tool getTool(
+      Path ndkRoot,
+      TargetConfiguration targetConfiguration,
+      Host host,
+      String tool,
+      String version) {
+    return new VersionedTool(
+        getSourcePath(ndkRoot, targetConfiguration, host, tool),
+        ImmutableList.<String>of(),
+        tool,
+        targetConfiguration.toolchain.toString() + " " + version);
+  }
+
+  private static Tool getCppTool(
+      Path ndkRoot,
+      TargetConfiguration targetConfiguration,
+      Host host,
+      String tool,
+      String version) {
+    return new VersionedTool(
+        getSourcePath(ndkRoot, targetConfiguration, host, tool),
+        ImmutableList.of(
+            "-isystem", ndkRoot
+                .resolve("toolchains")
+                .resolve(targetConfiguration.toolchain.toString())
+                .resolve("prebuilt")
+                .resolve(host.toString())
+                .resolve("include")
+                .toString(),
+            "-isystem", ndkRoot
+                .resolve("toolchains")
+                .resolve(targetConfiguration.toolchain.toString())
+                .resolve("prebuilt")
+                .resolve(host.toString())
+                .resolve("lib")
+                .resolve("gcc")
+                .resolve(targetConfiguration.toolchainPrefix.toString())
+                .resolve(targetConfiguration.compilerVersion)
+                .resolve("include")
+                .toString()),
+        tool,
+        targetConfiguration.toolchain.toString() + " " + version);
+  }
+
+  private static Tool getCcLinkTool(
+      Path ndkRoot,
+      TargetConfiguration targetConfiguration,
+      Host host,
+      String tool,
+      String version) {
+    return new VersionedTool(
+        getSourcePath(ndkRoot, targetConfiguration, host, tool),
+        ImmutableList.of(
+            "-B" + ndkRoot
+                .resolve("platforms")
+                .resolve(targetConfiguration.targetPlatform)
+                .resolve("arch-" + targetConfiguration.targetArch)
+                .resolve("usr")
+                .resolve("lib")
+                .toString()),
+        tool,
+        targetConfiguration.toolchain.toString() + " " + version);
   }
 
   /**
@@ -192,27 +289,8 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private static ImmutableList<String> getCommonIncludes(
       Path ndkRoot,
-      TargetConfiguration targetConfiguration,
-      Host host) {
+      TargetConfiguration targetConfiguration) {
     return ImmutableList.of(
-        "-isystem", ndkRoot
-            .resolve("toolchains")
-            .resolve(targetConfiguration.toolchain.toString())
-            .resolve("prebuilt")
-            .resolve(host.toString())
-            .resolve("include")
-            .toString(),
-        "-isystem", ndkRoot
-            .resolve("toolchains")
-            .resolve(targetConfiguration.toolchain.toString())
-            .resolve("prebuilt")
-            .resolve(host.toString())
-            .resolve("lib")
-            .resolve("gcc")
-            .resolve(targetConfiguration.toolchainPrefix.toString())
-            .resolve(targetConfiguration.compilerVersion)
-            .resolve("include")
-            .toString(),
         "-isystem", ndkRoot
             .resolve("platforms")
             .resolve(targetConfiguration.targetPlatform)
@@ -232,21 +310,19 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private static ImmutableList<String> getCppflags(
       Path ndkRoot,
-      TargetConfiguration targetConfiguration,
-      Host host) {
+      TargetConfiguration targetConfiguration) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.compilerFlags)
         .addAll(getCommonPreprocessorFlags())
         .addAll(getCommonCFlags())
         .addAll(getCommonFlags())
-        .addAll(getCommonIncludes(ndkRoot, targetConfiguration, host))
+        .addAll(getCommonIncludes(ndkRoot, targetConfiguration))
         .build();
   }
 
   private static ImmutableList<String> getCxxppflags(
       Path ndkRoot,
-      TargetConfiguration targetConfiguration,
-      Host host) {
+      TargetConfiguration targetConfiguration) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.compilerFlags)
         .addAll(getCommonPreprocessorFlags())
@@ -273,7 +349,7 @@ public class NdkCxxPlatform implements CxxPlatform {
                 .resolve(targetConfiguration.targetArchAbi.toString())
                 .resolve("include")
                 .toString())
-        .addAll(getCommonIncludes(ndkRoot, targetConfiguration, host))
+        .addAll(getCommonIncludes(ndkRoot, targetConfiguration))
         .build();
   }
 
@@ -309,26 +385,13 @@ public class NdkCxxPlatform implements CxxPlatform {
         .build();
   }
 
-  private static ImmutableList<String> getCxxldflags(
-      Path ndkRoot,
-      TargetConfiguration targetConfiguration) {
-    return ImmutableList.of(
-        "-B" + ndkRoot
-            .resolve("platforms")
-            .resolve(targetConfiguration.targetPlatform)
-            .resolve("arch-" + targetConfiguration.targetArch)
-            .resolve("usr")
-            .resolve("lib")
-            .toString());
-  }
-
   @Override
   public Flavor asFlavor() {
     return flavor;
   }
 
   @Override
-  public SourcePath getAs() {
+  public Tool getAs() {
     return as;
   }
 
@@ -338,7 +401,7 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getAspp() {
+  public Tool getAspp() {
     return aspp;
   }
 
@@ -348,7 +411,7 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCc() {
+  public Tool getCc() {
     return cc;
   }
 
@@ -358,7 +421,7 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCxx() {
+  public Tool getCxx() {
     return cxx;
   }
 
@@ -368,7 +431,7 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCpp() {
+  public Tool getCpp() {
     return cpp;
   }
 
@@ -378,7 +441,7 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCxxpp() {
+  public Tool getCxxpp() {
     return cxxpp;
   }
 
@@ -388,7 +451,7 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCxxld() {
+  public Tool getCxxld() {
     return cxxld;
   }
 
@@ -408,7 +471,7 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getAr() {
+  public Tool getAr() {
     return ar;
   }
 

@@ -39,7 +39,7 @@ public class CxxLinkStepTest {
         .build();
 
     // Setup some dummy values for inputs to the CxxLinkStep
-    Path linker = Paths.get("linker");
+    ImmutableList<String> linker = ImmutableList.of("linker");
     Path output = Paths.get("output");
     ImmutableList<String> args = ImmutableList.of(
         "-rpath",
@@ -52,7 +52,7 @@ public class CxxLinkStepTest {
 
     // Verify it uses the expected command.
     ImmutableList<String> expected = ImmutableList.<String>builder()
-        .add(linker.toString())
+        .addAll(linker)
         .add("-o", output.toString())
         .addAll(args)
         .build();

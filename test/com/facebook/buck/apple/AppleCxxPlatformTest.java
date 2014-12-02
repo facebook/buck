@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.environment.Platform;
 
 import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecutiveItems;
@@ -55,12 +57,14 @@ public class AppleCxxPlatformTest {
             appleSdkPaths
         );
 
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+
     assertEquals(
         new Flavor("iphoneos8.0-armv7"),
         appleCxxPlatform.asFlavor());
     assertEquals(
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
-        appleCxxPlatform.getCc().toString());
+        appleCxxPlatform.getCc().getCommandPrefix(resolver).get(0));
     assertThat(
         appleCxxPlatform.getCflags(),
         hasConsecutiveItems(
@@ -75,10 +79,10 @@ public class AppleCxxPlatformTest {
 
     assertEquals(
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
-        appleCxxPlatform.getCxx().toString());
+        appleCxxPlatform.getCxx().getCommandPrefix(resolver).get(0));
     assertEquals(
         root.resolve("Platforms/iPhoneOS.platform/Developer/usr/bin/ar")
             .toString(),
-        appleCxxPlatform.getAr().toString());
+        appleCxxPlatform.getAr().getCommandPrefix(resolver).get(0));
   }
 }

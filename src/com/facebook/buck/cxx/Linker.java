@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.SourcePath;
-
 /**
  * An object wrapping a linker, providing its source path and an interface to decorate
  * arguments with specific flags.
@@ -25,20 +23,20 @@ import com.facebook.buck.rules.SourcePath;
 public interface Linker {
 
   /**
-   * @return {@link SourcePath} to the linker.
+   * @return {@link Tool} representing the linker.
    */
-  public SourcePath getPath();
+  Tool getTool();
 
   /**
    * @return the platform-specific way to specify that the library represented by the
    *     given argument should be linked whole.
    */
-  public abstract Iterable<String> linkWhole(String arg);
+  Iterable<String> linkWhole(String arg);
 
   /**
    * @return the platform-specific way to specify that linker should use the given soname
    *     when linking a shared library.
    */
-  public abstract Iterable<String> soname(String soname);
+  Iterable<String> soname(String soname);
 
 }

@@ -41,7 +41,7 @@ public class ArchiveStepTest {
         .build();
 
     // Setup dummy values for the archiver, output, and inputs.
-    Path archiver = Paths.get("ar");
+    ImmutableList<String> archiver = ImmutableList.of("ar");
     Path output = Paths.get("libfoo.a");
     ImmutableList<Path> inputs = ImmutableList.of(
         Paths.get("a.o"),
@@ -56,7 +56,7 @@ public class ArchiveStepTest {
 
     // Verify that the shell command is correct.
     ImmutableList<String> expected = ImmutableList.<String>builder()
-        .add(archiver.toString())
+        .addAll(archiver)
         .add("rcs")
         .add(output.toString())
         .addAll(Iterables.transform(inputs, Functions.toStringFunction()))

@@ -16,12 +16,12 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -36,15 +36,15 @@ import java.nio.file.Path;
 public class OCamlBuild extends AbstractBuildRule {
 
   private final OCamlBuildContext ocamlContext;
-  private final SourcePath cCompiler;
-  private final SourcePath cxxCompiler;
+  private final Tool cCompiler;
+  private final Tool cxxCompiler;
 
   public OCamlBuild(
       BuildRuleParams params,
       SourcePathResolver resolver,
       OCamlBuildContext ocamlContext,
-      SourcePath cCompiler,
-      SourcePath cxxCompiler) {
+      Tool cCompiler,
+      Tool cxxCompiler) {
     super(params, resolver);
     this.ocamlContext = ocamlContext;
     this.cCompiler = cCompiler;
@@ -59,8 +59,8 @@ public class OCamlBuild extends AbstractBuildRule {
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return ocamlContext.appendDetailsToRuleKey(builder)
-        .setInput("cCompiler", cCompiler)
-        .setInput("cxxCompiler", cxxCompiler);
+        .set("cCompiler", cCompiler)
+        .set("cxxCompiler", cxxCompiler);
   }
 
   @Override
@@ -77,8 +77,8 @@ public class OCamlBuild extends AbstractBuildRule {
         new MakeCleanDirectoryStep(ocamlContext.getOutput().getParent()),
         new OCamlBuildStep(
             ocamlContext,
-            getResolver().getPath(cCompiler),
-            getResolver().getPath(cxxCompiler)));
+            cCompiler.getCommandPrefix(getResolver()),
+            cxxCompiler.getCommandPrefix(getResolver())));
   }
 
   @Override

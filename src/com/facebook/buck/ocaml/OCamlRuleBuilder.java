@@ -332,8 +332,8 @@ public class OCamlRuleBuilder {
         ocamlContext,
         mlInput,
         cInput,
-        pathResolver.getPath(ocamlBuckConfig.getCCompiler()),
-        pathResolver.getPath(ocamlBuckConfig.getCxxCompiler()));
+        ocamlBuckConfig.getCCompiler(),
+        ocamlBuckConfig.getCxxCompiler());
 
     ImmutableList<BuildRule> ocamlLibraryBuild = generator.generate();
 

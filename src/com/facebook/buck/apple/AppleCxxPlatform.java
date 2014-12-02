@@ -20,6 +20,8 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DarwinLinker;
 import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.SourcePathTool;
+import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -46,19 +48,19 @@ public class AppleCxxPlatform implements CxxPlatform {
 
   private final Flavor flavor;
 
-  private final SourcePath as;
+  private final Tool as;
   private final ImmutableList<String> asflags;
-  private final SourcePath aspp;
+  private final Tool aspp;
   private final ImmutableList<String> asppflags;
-  private final SourcePath cc;
+  private final Tool cc;
   private final ImmutableList<String> cflags;
-  private final SourcePath cpp;
+  private final Tool cpp;
   private final ImmutableList<String> cppflags;
-  private final SourcePath cxx;
+  private final Tool cxx;
   private final ImmutableList<String> cxxflags;
-  private final SourcePath cxxpp;
+  private final Tool cxxpp;
   private final ImmutableList<String> cxxppflags;
-  private final SourcePath cxxld;
+  private final Tool cxxld;
   private final ImmutableList<String> cxxldflags;
   private final SourcePath lex;
   private final ImmutableList<String> lexflags;
@@ -66,7 +68,7 @@ public class AppleCxxPlatform implements CxxPlatform {
   private final ImmutableList<String> yaccflags;
   private final Linker ld;
   private final ImmutableList<String> ldflags;
-  private final SourcePath ar;
+  private final Tool ar;
   private final ImmutableList<String> arflags;
 
   private final Optional<DebugPathSanitizer> debugPathSanitizer;
@@ -92,8 +94,8 @@ public class AppleCxxPlatform implements CxxPlatform {
         sdkPaths.toolchainPath().resolve(USR_BIN)
     );
 
-    SourcePath clangPath = getTool("clang", toolSearchPaths);
-    SourcePath clangXxPath = getTool("clang++", toolSearchPaths);
+    Tool clangPath = new SourcePathTool(getTool("clang", toolSearchPaths));
+    Tool clangXxPath = new SourcePathTool(getTool("clang++", toolSearchPaths));
 
     this.as = clangPath;
     this.asflags = ImmutableList.of(); // TODO
@@ -130,11 +132,11 @@ public class AppleCxxPlatform implements CxxPlatform {
     this.yacc = getTool("yacc", toolSearchPaths);
     this.yaccflags = ImmutableList.of(); // TODO
 
-    this.ld = new DarwinLinker(getTool("libtool", toolSearchPaths));
+    this.ld = new DarwinLinker(new SourcePathTool(getTool("libtool", toolSearchPaths)));
 
     this.ldflags = ImmutableList.of(); // TODO
 
-    this.ar = getTool("ar", toolSearchPaths);
+    this.ar = new SourcePathTool(getTool("ar", toolSearchPaths));
     this.arflags = ImmutableList.of(); // TODO
 
     this.debugPathSanitizer =
@@ -165,7 +167,7 @@ public class AppleCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getAs() {
+  public Tool getAs() {
     return as;
   }
 
@@ -175,7 +177,7 @@ public class AppleCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getAspp() {
+  public Tool getAspp() {
     return aspp;
   }
 
@@ -185,7 +187,7 @@ public class AppleCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCc() {
+  public Tool getCc() {
     return cc;
   }
 
@@ -195,7 +197,7 @@ public class AppleCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCxx() {
+  public Tool getCxx() {
     return cxx;
   }
 
@@ -205,7 +207,7 @@ public class AppleCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCpp() {
+  public Tool getCpp() {
     return cpp;
   }
 
@@ -215,7 +217,7 @@ public class AppleCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCxxpp() {
+  public Tool getCxxpp() {
     return cxxpp;
   }
 
@@ -225,7 +227,7 @@ public class AppleCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getCxxld() {
+  public Tool getCxxld() {
     return cxxld;
   }
 
@@ -245,7 +247,7 @@ public class AppleCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getAr() {
+  public Tool getAr() {
     return ar;
   }
 

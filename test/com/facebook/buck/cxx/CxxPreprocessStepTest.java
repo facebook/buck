@@ -39,7 +39,7 @@ public class CxxPreprocessStepTest {
   public void cxxLinkStepUsesCorrectCommand() {
 
     // Setup some dummy values for inputs to the CxxPreprocessStep
-    Path compiler = Paths.get("compiler");
+    ImmutableList<String> compiler = ImmutableList.of("compiler");
     ImmutableList<String> flags =
         ImmutableList.of("-Dtest=blah");
     Path output = Paths.get("test.ii");
@@ -65,7 +65,7 @@ public class CxxPreprocessStepTest {
 
     // Verify it uses the expected command.
     ImmutableList<String> expected = ImmutableList.<String>builder()
-        .add(compiler.toString())
+        .addAll(compiler)
         .add("-E")
         .addAll(flags)
         .addAll(
@@ -121,9 +121,8 @@ public class CxxPreprocessStepTest {
     Path replacement = Paths.get("hello/world.h");
 
     // Setup some dummy values for inputs to the CxxPreprocessStep
-    Path compiler = Paths.get("compiler");
-    ImmutableList<String> flags =
-        ImmutableList.of("-Dtest=blah");
+    ImmutableList<String> compiler = ImmutableList.of("compiler");
+    ImmutableList<String> flags = ImmutableList.of("-Dtest=blah");
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
     ImmutableList<Path> includes = ImmutableList.of();

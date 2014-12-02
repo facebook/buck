@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
  */
 public class CxxPreprocessStep implements Step {
 
-  private final Path preprocessor;
+  private final ImmutableList<String> preprocessor;
   private final ImmutableList<String> flags;
   private final Path output;
   private final Path input;
@@ -56,7 +56,7 @@ public class CxxPreprocessStep implements Step {
   private final Optional<DebugPathSanitizer> sanitizer;
 
   public CxxPreprocessStep(
-      Path preprocessor,
+      ImmutableList<String> preprocessor,
       ImmutableList<String> flags,
       Path output,
       Path input,
@@ -82,7 +82,7 @@ public class CxxPreprocessStep implements Step {
   @VisibleForTesting
   protected ImmutableList<String> getCommand() {
     return ImmutableList.<String>builder()
-        .add(preprocessor.toString())
+        .addAll(preprocessor)
         .add("-E")
         .addAll(flags)
         .addAll(

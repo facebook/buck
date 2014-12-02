@@ -40,7 +40,7 @@ import java.util.Map;
  */
 public class CxxPreprocess extends AbstractBuildRule {
 
-  private final SourcePath preprocessor;
+  private final Tool preprocessor;
   private final ImmutableList<String> flags;
   private final Path output;
   private final SourcePath input;
@@ -52,7 +52,7 @@ public class CxxPreprocess extends AbstractBuildRule {
   public CxxPreprocess(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      SourcePath preprocessor,
+      Tool preprocessor,
       ImmutableList<String> flags,
       Path output,
       SourcePath input,
@@ -79,7 +79,7 @@ public class CxxPreprocess extends AbstractBuildRule {
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder
-        .setInput("preprocessor", preprocessor)
+        .set("preprocessor", preprocessor)
         .set("output", output.toString());
 
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
@@ -120,7 +120,7 @@ public class CxxPreprocess extends AbstractBuildRule {
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
         new CxxPreprocessStep(
-            getResolver().getPath(preprocessor),
+            preprocessor.getCommandPrefix(getResolver()),
             flags,
             output,
             getResolver().getPath(input),
@@ -135,7 +135,7 @@ public class CxxPreprocess extends AbstractBuildRule {
     return output;
   }
 
-  public SourcePath getPreprocessor() {
+  public Tool getPreprocessor() {
     return preprocessor;
   }
 

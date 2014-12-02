@@ -29,12 +29,12 @@ import java.nio.file.Path;
  */
 public class ArchiveStep extends ShellStep {
 
-  private final Path archiver;
+  private final ImmutableList<String> archiver;
   private final Path output;
   private final ImmutableList<Path> inputs;
 
   public ArchiveStep(
-      Path archiver,
+      ImmutableList<String> archiver,
       Path output,
       ImmutableList<Path> inputs) {
     this.archiver = archiver;
@@ -45,7 +45,7 @@ public class ArchiveStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(archiver.toString())
+        .addAll(archiver)
         .add("rcs")
         .add(output.toString())
         .addAll(Iterables.transform(inputs, Functions.toStringFunction()))

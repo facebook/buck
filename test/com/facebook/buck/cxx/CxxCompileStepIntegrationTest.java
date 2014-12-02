@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -52,7 +51,8 @@ public class CxxCompileStepIntegrationTest {
     CxxPlatform platform = new DefaultCxxPlatform(new FakeBuckConfig());
 
     // Build up the paths to various files the archive step will use.
-    Path compiler = new SourcePathResolver(new BuildRuleResolver()).getPath(platform.getCc());
+    ImmutableList<String> compiler =
+        platform.getCc().getCommandPrefix(new SourcePathResolver(new BuildRuleResolver()));
     Path output = filesystem.resolve(Paths.get("output.o"));
     Path relativeInput = Paths.get("input.c");
     Path input = filesystem.resolve(relativeInput);
@@ -73,7 +73,6 @@ public class CxxCompileStepIntegrationTest {
         Optional.of(sanitizer));
 
     // Execute the archive step and verify it ran successfully.
-    assumeTrue(Files.exists(compiler));
     ExecutionContext executionContext =
         TestExecutionContext.newBuilder()
             .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
