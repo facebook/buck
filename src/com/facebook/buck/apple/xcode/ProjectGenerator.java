@@ -1111,6 +1111,7 @@ public class ProjectGenerator {
 
   private String getBuiltProductsRelativeTargetOutputPath(TargetNode<?> targetNode) {
     if (targetNode.getType().equals(AppleBinaryDescription.TYPE) ||
+        targetNode.getType().equals(AppleTestDescription.TYPE) ||
         (targetNode.getType().equals(AppleBundleDescription.TYPE) &&
             !isFrameworkBundle((AppleBundleDescription.Arg) targetNode.getConstructorArg()))) {
       // TODO(grp): These should be inside the path below. Right now, that causes issues with
