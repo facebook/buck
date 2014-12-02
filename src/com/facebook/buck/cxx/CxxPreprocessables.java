@@ -184,11 +184,7 @@ public class CxxPreprocessables {
             String.format(
                 "preprocess-%s%s",
                 pic ? "pic-" : "",
-                getOutputName(type, name)
-                    .replace('/', '-')
-                    .replace('.', '-')
-                    .replace('+', '-')
-                    .replace(' ', '-'))));
+                getOutputName(type, name).replace('/', '-').replace('.', '-'))));
   }
 
   /**

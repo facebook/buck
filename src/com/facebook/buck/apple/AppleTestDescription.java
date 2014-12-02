@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasSourceUnderTest;
@@ -69,8 +68,6 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
             BuildTarget.builder(params.getBuildTarget())
                 .addFlavor(LIBRARY_FLAVOR)
                 .addFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
-                .addFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
-                .addFlavor("default")
                 .build(),
             params.getDeclaredDeps(),
             params.getExtraDeps()),

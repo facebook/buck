@@ -31,8 +31,6 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
@@ -59,8 +57,6 @@ public class WorkspaceAndProjectGeneratorTest {
   private ProjectFilesystem projectFilesystem;
   private FakeProjectFilesystem fakeProjectFilesystem;
   private ExecutionContext executionContext;
-  private BuildRuleResolver buildRuleResolver;
-  private SourcePathResolver sourcePathResolver;
 
   private TargetGraph targetGraph;
   private TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode;
@@ -75,8 +71,6 @@ public class WorkspaceAndProjectGeneratorTest {
     fakeProjectFilesystem = new FakeProjectFilesystem(clock);
     projectFilesystem = fakeProjectFilesystem;
     executionContext = TestExecutionContext.newInstance();
-    buildRuleResolver = new BuildRuleResolver();
-    sourcePathResolver = new SourcePathResolver(buildRuleResolver);
 
     // Add support files needed by project generation to fake filesystem.
     projectFilesystem.writeContentsToPath(
@@ -226,8 +220,6 @@ public class WorkspaceAndProjectGeneratorTest {
         projectFilesystem,
         targetGraph,
         executionContext,
-        buildRuleResolver,
-        sourcePathResolver,
         workspaceNode,
         ImmutableSet.<ProjectGenerator.Option>of(),
         AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
@@ -286,8 +278,6 @@ public class WorkspaceAndProjectGeneratorTest {
         projectFilesystem,
         targetGraph,
         executionContext,
-        buildRuleResolver,
-        sourcePathResolver,
         workspaceNode,
         ImmutableSet.<ProjectGenerator.Option>of(),
         AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),

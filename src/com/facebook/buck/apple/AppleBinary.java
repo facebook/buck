@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2013-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,22 +16,16 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.SourcePathResolver;
 
-public class AppleBinaryBuilder
-    extends AbstractAppleNativeTargetBuilder<AppleNativeTargetDescriptionArg, AppleBinaryBuilder> {
+public class AppleBinary extends AbstractAppleNativeTargetBuildRule {
 
-  @Override
-  protected AppleBinaryBuilder getThis() {
-    return this;
-  }
-
-  protected AppleBinaryBuilder(BuildTarget target) {
-    super(new AppleBinaryDescription(new AppleConfig(new FakeBuckConfig())), target);
-  }
-
-  public static AppleBinaryBuilder createBuilder(BuildTarget target) {
-    return new AppleBinaryBuilder(target);
+  public AppleBinary(
+      BuildRuleParams params,
+      SourcePathResolver resolver,
+      AppleNativeTargetDescriptionArg arg,
+      TargetSources targetSources) {
+    super(params, resolver, arg, targetSources);
   }
 }

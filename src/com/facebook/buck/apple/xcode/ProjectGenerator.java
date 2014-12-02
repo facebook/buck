@@ -26,6 +26,7 @@ import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleLibrary;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleResourceDescription;
@@ -182,17 +183,18 @@ public class ProjectGenerator {
       Set<BuildTarget> initialTargets,
       ProjectFilesystem projectFilesystem,
       ExecutionContext executionContext,
-      BuildRuleResolver buildRuleResolver,
-      SourcePathResolver sourcePathResolver,
       Path outputDirectory,
       String projectName,
       Set<Option> options) {
+    this.buildRuleResolver =
+        new BuildRuleResolver(
+            ImmutableSet.copyOf(
+                targetGraph.getActionGraph().getNodes()));
+    this.sourcePathResolver = new SourcePathResolver(this.buildRuleResolver);
     this.targetGraph = targetGraph;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectFilesystem = projectFilesystem;
     this.executionContext = executionContext;
-    this.buildRuleResolver = buildRuleResolver;
-    this.sourcePathResolver = sourcePathResolver;
     this.outputDirectory = outputDirectory;
     this.projectName = projectName;
     this.options = ImmutableSet.copyOf(options);
@@ -437,7 +439,7 @@ public class ProjectGenerator {
         Optional.<TargetNode<AppleBundleDescription.Arg>>absent(),
         targetNode,
         productType,
-        AppleBuildRules.getOutputFileNameFormatForLibrary(isDynamic),
+        AppleLibrary.getOutputFileNameFormat(isDynamic),
         Optional.<Path>absent(),
         /* includeFrameworks */ isDynamic,
         ImmutableSet.<AppleResourceDescription.Arg>of(),
@@ -1306,7 +1308,7 @@ public class ProjectGenerator {
     String productOutputName;
 
     if (targetNode.getType().equals(AppleLibraryDescription.TYPE)) {
-      String productOutputFormat = AppleBuildRules.getOutputFileNameFormatForLibrary(
+      String productOutputFormat = AppleLibrary.getOutputFileNameFormat(
           targetNode
               .getBuildTarget()
               .getFlavors()

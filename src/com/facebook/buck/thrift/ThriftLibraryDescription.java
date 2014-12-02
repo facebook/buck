@@ -107,7 +107,7 @@ public class ThriftLibraryDescription
         target,
         new Flavor(String.format(
             "thrift-compile-%s",
-            name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));
+            name.replace('/', '-').replace('.', '-'))));
   }
 
   /**

@@ -96,14 +96,6 @@ public final class AppleBuildRules {
     return node.getType() == AppleTestDescription.TYPE;
   }
 
-  public static String getOutputFileNameFormatForLibrary(boolean linkedDynamically) {
-    if (linkedDynamically) {
-      return "lib%s.dylib";
-    } else {
-      return "lib%s.a";
-    }
-  }
-
   public enum RecursiveDependenciesMode {
     /**
      * Will traverse all rules that are built.

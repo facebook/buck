@@ -73,7 +73,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
         new Flavor(
             String.format(
                 "thrift-java-source-zip-%s",
-                name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));
+                name.replace('/', '-').replace('.', '-'))));
   }
 
   private Path getSourceZipOutputPath(BuildTarget target, String name) {

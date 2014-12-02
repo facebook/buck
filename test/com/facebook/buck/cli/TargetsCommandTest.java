@@ -459,11 +459,7 @@ public class TargetsCommandTest {
 
   @Test
   public void testGetMatchingAppleLibraryBuildTarget() throws CmdLineException, IOException {
-    BuildTarget libraryTarget = BuildTarget
-        .builder("//foo", "lib")
-        .addFlavor("static")
-        .addFlavor("default")
-        .build();
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setSrcs(
@@ -497,10 +493,7 @@ public class TargetsCommandTest {
                 ImmutableSet.of(Paths.get("foo/foo.m")),
                 Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
-        ImmutableSet.of(
-            "//foo:lib#compile-foo-m-o,default",
-            "//foo:lib#default,preprocess-foo-m-mi",
-            "//foo:lib#default,static"),
+        ImmutableSet.of("//foo:lib"),
         matchingBuildRules.keySet());
   }
 
@@ -551,11 +544,9 @@ public class TargetsCommandTest {
                 Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
         ImmutableSet.of(
-            "//foo:lib#compile-pic-foo-m-o,default",
-            "//foo:lib#default,preprocess-pic-foo-m-mi",
-            "//foo:lib#default,shared",
+            "//foo:lib",
             "//foo:xctest#apple-test-bundle",
-            "//foo:xctest#apple-test-library,default,dynamic,shared",
+            "//foo:xctest#apple-test-library,dynamic",
             "//foo:xctest"),
         matchingBuildRules.keySet());
 
@@ -571,9 +562,7 @@ public class TargetsCommandTest {
     assertEquals(
         ImmutableSet.of(
             "//foo:xctest#apple-test-bundle",
-            "//foo:xctest#apple-test-library,compile-pic-testfoo-m-o,default,dynamic",
-            "//foo:xctest#apple-test-library,default,dynamic,preprocess-pic-testfoo-m-mi",
-            "//foo:xctest#apple-test-library,default,dynamic,shared",
+            "//foo:xctest#apple-test-library,dynamic",
             "//foo:xctest"),
         matchingBuildRules.keySet());
   }
