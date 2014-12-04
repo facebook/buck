@@ -195,11 +195,20 @@ class BuckTool(object):
             script is interrupted, it does not kill buckd.
             '''
             def preexec_func():
+
+                # Close any open file descriptors to further separate buckd from its
+                # invoking context (e.g. otherwise we'd hang when running things like
+                # `ssh localhost buck clean`).
+                os.close(0)
+                os.close(1)
+                os.close(2)
+
                 os.setpgrp()
 
             process = subprocess.Popen(
                 command,
                 cwd=self._buck_project.root,
+                close_fds=True,
                 preexec_fn=preexec_func)
 
             buckd_port = None
