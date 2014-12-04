@@ -120,7 +120,6 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<?> fooBinBinaryNode = AppleBinaryBuilder
         .createBuilder(fooBinBinaryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
-        .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
         .build();
 
     BuildTarget fooBinTarget = BuildTarget.builder("//foo", "bin").build();
@@ -128,6 +127,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .createBuilder(fooBinTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
         .setBinary(fooBinBinaryTarget)
+        .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
         .build();
 
     BuildTarget bazLibTarget = BuildTarget.builder("//baz", "lib").build();

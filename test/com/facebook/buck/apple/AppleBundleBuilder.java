@@ -67,4 +67,9 @@ public class AppleBundleBuilder
     return this;
   }
 
+  public AppleBundleBuilder setTests(Optional<ImmutableSortedSet<BuildTarget>> tests) {
+    arg.tests = tests;
+    return this;
+  }
+
 }
