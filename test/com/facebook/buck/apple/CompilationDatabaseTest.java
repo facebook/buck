@@ -267,8 +267,13 @@ public class CompilationDatabaseTest {
         Paths.get("/Users/user/src/buck-out/gen/library/lib.hmap"));
     Optional<SourcePath> pchFile = Optional.<SourcePath>of(new PathSourcePath(Paths.get(
         "foo/bar.pch")));
-    ImmutableMap<String, AppleSdkPaths> appleSdkPaths = ImmutableMap.of(
-          "iphonesimulator8.0",
+    ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths = ImmutableMap.of(
+          (AppleSdk) ImmutableAppleSdk.builder()
+              .name("iphonesimulator8.0")
+              .version("8.0")
+              .applePlatform(ApplePlatform.IPHONESIMULATOR)
+              .addArchitectures("i386", "x86_64")
+              .build(),
           (AppleSdkPaths) ImmutableAppleSdkPaths.builder()
               .toolchainPath(Paths.get("toolchainPath"))
               .platformDeveloperPath(Paths.get("platformDeveloperPath"))

@@ -26,19 +26,19 @@ import javax.annotation.Nullable;
 public class FakeAppleConfig extends AppleConfig {
 
   @Nullable
-  private ImmutableMap<String, AppleSdkPaths> appleSdkPaths = null;
+  private ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths = null;
 
   public FakeAppleConfig() {
     super(new FakeBuckConfig());
   }
 
-  public FakeAppleConfig setAppleSdkPaths(ImmutableMap<String, AppleSdkPaths> appleSdkPaths) {
+  public FakeAppleConfig setAppleSdkPaths(ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths) {
     this.appleSdkPaths = appleSdkPaths;
     return this;
   }
 
   @Override
-  public ImmutableMap<String, AppleSdkPaths> getAppleSdkPaths(Console console) {
+  public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(Console console) {
     return Preconditions.checkNotNull(appleSdkPaths);
   }
 }

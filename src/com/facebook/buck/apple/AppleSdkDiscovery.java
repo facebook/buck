@@ -20,7 +20,6 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.BufferedInputStream;
@@ -30,6 +29,7 @@ import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 
 /**
  * Utility class to discover the location of SDKs contained inside an Xcode
@@ -44,18 +44,18 @@ public class AppleSdkDiscovery {
 
   /**
    * Given a path to an Xcode developer directory, walks through the
-   * platforms and builds a map of (sdk-name: {@link AppleSdkPaths}) objects
+   * platforms and builds a map of ({@link AppleSdk}: {@link AppleSdkPaths}) objects
    * describing the paths to the SDKs inside.
    *
-   * The sdk-name strings match the ones displayed by {@code xcodebuild -showsdks}
+   * The {@link AppleSdk#name()} strings match the ones displayed by {@code xcodebuild -showsdks}
    * and look like {@code macosx10.9}, {@code iphoneos8.0}, {@code iphonesimulator8.0},
    * etc.
    */
-  public static ImmutableMap<String, AppleSdkPaths> discoverAppleSdkPaths(Path xcodeDir)
+  public static ImmutableMap<AppleSdk, AppleSdkPaths> discoverAppleSdkPaths(Path xcodeDir)
       throws IOException {
     LOG.debug("Searching for Xcode platforms under %s", xcodeDir);
 
-    ImmutableMap.Builder<String, AppleSdkPaths> appleSdkPathsBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<AppleSdk, AppleSdkPaths> appleSdkPathsBuilder = ImmutableMap.builder();
     try (DirectoryStream<Path> platformStream = Files.newDirectoryStream(
              xcodeDir.resolve("Platforms"),
              "*.platform")) {
@@ -70,15 +70,16 @@ public class AppleSdkDiscovery {
               continue;
             }
 
-            Optional<String> sdkName = getSdkNameForPath(sdkDir);
-            if (sdkName.isPresent()) {
-              LOG.debug("Found SDK name %s", sdkName.get());
+            ImmutableAppleSdk.Builder sdkBuilder = ImmutableAppleSdk.builder();
+            if (buildSdkFromPath(sdkDir, sdkBuilder)) {
+              ImmutableAppleSdk sdk = sdkBuilder.build();
+              LOG.debug("Found SDK %s", sdk);
               ImmutableAppleSdkPaths xcodePaths = ImmutableAppleSdkPaths.builder()
                   .toolchainPath(xcodeDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
                   .platformDeveloperPath(platformDir.resolve("Developer"))
                   .sdkPath(sdkDir)
                   .build();
-              appleSdkPathsBuilder.put(sdkName.get(), xcodePaths);
+              appleSdkPathsBuilder.put(sdk, xcodePaths);
             }
           }
         }
@@ -87,7 +88,25 @@ public class AppleSdkDiscovery {
     return appleSdkPathsBuilder.build();
   }
 
-  private static Optional<String> getSdkNameForPath(Path sdkDir) throws IOException {
+  private static void addArchitecturesForPlatform(
+      ImmutableAppleSdk.Builder sdkBuilder,
+      ApplePlatform applePlatform) {
+    // TODO(user): These need to be read from the SDK, not hard-coded.
+    switch (applePlatform) {
+      case MACOSX:
+        // Fall through.
+      case IPHONESIMULATOR:
+        sdkBuilder.addArchitectures("i386", "x86_64");
+        break;
+      case IPHONEOS:
+        sdkBuilder.addArchitectures("armv7", "arm64");
+        break;
+    }
+  }
+
+  private static boolean buildSdkFromPath(
+        Path sdkDir,
+        ImmutableAppleSdk.Builder sdkBuilder) throws IOException {
     try (InputStream sdkSettingsPlist = Files.newInputStream(sdkDir.resolve("SDKSettings.plist"));
          BufferedInputStream bufferedSdkSettingsPlist = new BufferedInputStream(sdkSettingsPlist)) {
       NSDictionary sdkSettings;
@@ -96,11 +115,18 @@ public class AppleSdkDiscovery {
       } catch (Exception e) {
         throw new IOException(e);
       }
-      NSString canonicalName = (NSString) sdkSettings.objectForKey("CanonicalName");
-      return Optional.of(canonicalName.toString());
+      String name = ((NSString) sdkSettings.objectForKey("CanonicalName")).toString();
+      String version = ((NSString) sdkSettings.objectForKey("Version")).toString();
+      NSDictionary defaultProperties = (NSDictionary) sdkSettings.objectForKey("DefaultProperties");
+      NSString platformName = (NSString) defaultProperties.objectForKey("PLATFORM_NAME");
+      ApplePlatform applePlatform =
+          ApplePlatform.valueOf(platformName.toString().toUpperCase(Locale.US));
+      sdkBuilder.name(name).version(version).applePlatform(applePlatform);
+      addArchitecturesForPlatform(sdkBuilder, applePlatform);
+      return true;
     } catch (FileNotFoundException e) {
       LOG.error(e, "No SDKSettings.plist found under SDK path %s", sdkDir);
-      return Optional.absent();
+      return false;
     }
   }
 }

@@ -54,7 +54,7 @@ public class AppleConfig {
     }
   }
 
-  public ImmutableMap<String, AppleSdkPaths> getAppleSdkPaths(Console console) {
+  public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(Console console) {
     Path appleDeveloperDirectory = getAppleDeveloperDirectorySupplier(console).get();
     try {
       return AppleSdkDiscovery.discoverAppleSdkPaths(appleDeveloperDirectory);

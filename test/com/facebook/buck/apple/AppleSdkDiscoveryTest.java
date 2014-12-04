@@ -32,20 +32,35 @@ public class AppleSdkDiscoveryTest {
   @Test
   public void appleSdkPathsBuiltFromDirectory() throws Exception {
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/sdk-discovery");
-    ImmutableMap<String, ImmutableAppleSdkPaths> expected = ImmutableMap.of(
-        "macosx10.9",
+    ImmutableMap<ImmutableAppleSdk, ImmutableAppleSdkPaths> expected = ImmutableMap.of(
+        ImmutableAppleSdk.builder()
+            .name("macosx10.9")
+            .version("10.9")
+            .applePlatform(ApplePlatform.MACOSX)
+            .addArchitectures("i386", "x86_64")
+            .build(),
         ImmutableAppleSdkPaths.builder()
             .toolchainPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
             .platformDeveloperPath(root.resolve("Platforms/MacOSX.platform/Developer"))
             .sdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
             .build(),
-        "iphoneos8.0",
+        ImmutableAppleSdk.builder()
+            .name("iphoneos8.0")
+            .version("8.0")
+            .applePlatform(ApplePlatform.IPHONEOS)
+            .addArchitectures("armv7", "arm64")
+            .build(),
         ImmutableAppleSdkPaths.builder()
             .toolchainPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
             .platformDeveloperPath(root.resolve("Platforms/iPhoneOS.platform/Developer"))
             .sdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
             .build(),
-        "iphonesimulator8.0",
+        ImmutableAppleSdk.builder()
+            .name("iphonesimulator8.0")
+            .version("8.0")
+            .applePlatform(ApplePlatform.IPHONESIMULATOR)
+            .addArchitectures("i386", "x86_64")
+            .build(),
         ImmutableAppleSdkPaths.builder()
             .toolchainPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
             .platformDeveloperPath(root.resolve("Platforms/iPhoneSimulator.platform/Developer"))
