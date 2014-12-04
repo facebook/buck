@@ -245,6 +245,24 @@ public class ProjectWorkspace {
       }
     };
 
+    // Construct a limited view of the parent environment for the child.
+    //
+    // TODO(#5754812): we should eventually get tests working without requiring these be set.
+    ImmutableList<String> inheritedEnvVars = ImmutableList.of(
+        "ANDROID_HOME",
+        "ANDROID_NDK",
+        "ANDROID_NDK_REPOSITORY",
+        "ANDROID_SDK",
+        "PATH");
+    ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
+    for (String variable : inheritedEnvVars) {
+      String value = System.getenv(variable);
+      if (value != null) {
+        envBuilder.put(variable, value);
+      }
+    }
+    ImmutableMap<String, String> env = envBuilder.build();
+
     Main main = new Main(stdout, stderr, Optional.of(capturingEventListener));
     int exitCode = 0;
     try {
@@ -252,7 +270,7 @@ public class ProjectWorkspace {
           new BuildId(),
           destPath,
           context,
-          ImmutableMap.copyOf(System.getenv()),
+          env,
           args);
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);
