@@ -291,17 +291,17 @@ public class WorkspaceAndProjectGenerator {
   }
 
   private void addTestNodeAndDependencies(
-      TargetNode<?> testBundleBuildTarget,
+      TargetNode<?> testBundleTargetNode,
       ImmutableSet.Builder<TargetNode<?>> recursiveTestTargetNodesBuilder,
       ImmutableSet.Builder<TargetNode<?>> orderedTestBundleTargetNodesBuilder) {
     Iterable<TargetNode<?>> testBundleTargetDependencies =
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
             projectGraph,
             AppleBuildRules.RecursiveDependenciesMode.BUILDING,
-            projectGraph.get(testBundleBuildTarget.getBuildTarget()),
+            testBundleTargetNode,
             Optional.<ImmutableSet<BuildRuleType>>absent());
     recursiveTestTargetNodesBuilder.addAll(testBundleTargetDependencies);
-    recursiveTestTargetNodesBuilder.add(testBundleBuildTarget);
-    orderedTestBundleTargetNodesBuilder.add(testBundleBuildTarget);
+    recursiveTestTargetNodesBuilder.add(testBundleTargetNode);
+    orderedTestBundleTargetNodesBuilder.add(testBundleTargetNode);
   }
 }
