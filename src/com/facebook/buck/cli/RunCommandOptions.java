@@ -17,9 +17,13 @@
 package com.facebook.buck.cli;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 import java.util.List;
 
@@ -31,30 +35,44 @@ public class RunCommandOptions extends AbstractCommandOptions {
    * </pre>
    */
   @Argument
-  private List<String> arguments = Lists.newArrayList();
+  private List<String> noDashArguments = Lists.newArrayList();
+
+  @Option(name = "--", handler = ConsumeAllOptionsHandler.class)
+  private List<String> withDashArguments = Lists.newArrayList();
+
+  private Supplier<List<String>> arguments = Suppliers.memoize(
+    new Supplier<List<String>>() {
+      @Override
+      public List<String> get() {
+        ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+        builder.addAll(noDashArguments);
+        builder.addAll(withDashArguments);
+        return builder.build();
+      }
+    });
 
   public RunCommandOptions(BuckConfig buckConfig) {
     super(buckConfig);
   }
 
-  public List<String> getArguments() { return arguments; }
+  public List<String> getArguments() { return arguments.get(); }
 
   /** @return the arguments (if any) to be passed to the target command. */
   public List<String> getTargetArguments() {
-    return arguments.subList(1, arguments.size());
+    return arguments.get().subList(1, arguments.get().size());
   }
 
   public boolean hasTargetSpecified() {
-    return arguments.size() > 0;
+    return arguments.get().size() > 0;
   }
 
   /** @return the normalized target name for command to run. */
   public String getTarget() {
-      return getCommandLineBuildTargetNormalizer().normalize(arguments.get(0));
+      return getCommandLineBuildTargetNormalizer().normalize(arguments.get().get(0));
   }
 
   @VisibleForTesting
   void setArguments(List<String> arguments) {
-    this.arguments = arguments;
+    this.arguments = Suppliers.ofInstance(arguments);
   }
 }
