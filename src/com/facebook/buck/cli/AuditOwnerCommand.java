@@ -133,7 +133,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       // Get the target base name.
       Path targetBasePath = MorePaths.relativize(
           getProjectFilesystem().getRootPath().toAbsolutePath(),
-          buckFile.getParent().toAbsolutePath());
+          buckFile.toAbsolutePath().getParent());
       String targetBaseName = "//" + targetBasePath.toString();
 
       // Parse buck files and load target nodes.
