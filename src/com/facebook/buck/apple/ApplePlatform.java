@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 public enum ApplePlatform {
-    MACOS("macos"),
+    MACOSX("macosx"),
     IPHONESIMULATOR("iphonesimulator"),
     IPHONEOS("iphoneos"),
     ;

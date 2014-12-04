@@ -105,7 +105,7 @@ public class AppleCxxPlatform implements CxxPlatform {
     cflagsBuilder.add("-isysroot", sdkPaths.sdkPath().toString());
     cflagsBuilder.add("-arch", targetArchitecture);
     switch (targetPlatform) {
-      case MACOS:
+      case MACOSX:
         cflagsBuilder.add("-mmacosx-version-min=" + targetVersion);
         break;
       case IPHONESIMULATOR:
