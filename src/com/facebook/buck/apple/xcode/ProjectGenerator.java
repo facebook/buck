@@ -1200,6 +1200,20 @@ public class ProjectGenerator {
       }
     }
 
+    ImmutableSet<TargetNode<?>> directDependencies = ImmutableSet.copyOf(
+        targetGraph.getAll(targetNode.getDeps()));
+    for (TargetNode<?> dependency : directDependencies) {
+      Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
+          getLibraryNode(targetGraph, dependency);
+      if (library.isPresent()) {
+        AppleNativeTargetDescriptionArg constructorArg = library.get().getConstructorArg();
+        if (constructorArg.getUseBuckHeaderMaps() &&
+            constructorArg.tests.get().contains(targetNode.getBuildTarget())) {
+          builder.add(getHeaderMapRelativePath(library.get(), HeaderMapType.TARGET_HEADER_MAP));
+        }
+      }
+    }
+
     return builder.build();
   }
 

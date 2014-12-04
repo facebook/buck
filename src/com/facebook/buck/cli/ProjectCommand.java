@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasSourceUnderTest;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
@@ -58,6 +59,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
 import java.io.BufferedReader;
@@ -580,6 +582,21 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     // graph, all the transitive dependencies of those tests, and all the targets in the main graph.
     ImmutableSet<TargetNode<?>> associatedTests = ImmutableSet.of();
     if (options.isWithTests()) {
+      ImmutableSet<BuildTarget> explicitTests = FluentIterable
+          .from(fullGraph.getSubgraph(projectRoots).getNodes())
+          .transformAndConcat(
+              new Function<TargetNode<?>, Iterable<BuildTarget>>() {
+                @Override
+                public Iterable<BuildTarget> apply(TargetNode<?> node) {
+                  if (node.getConstructorArg() instanceof HasTests) {
+                    return ((HasTests) node.getConstructorArg()).getTests();
+                  } else {
+                    return ImmutableSet.of();
+                  }
+                }
+              })
+          .toSet();
+
       AssociatedTargetNodePredicate associatedTestsPredicate = new AssociatedTargetNodePredicate() {
         @Override
         public boolean apply(TargetNode<?> targetNode, TargetGraph targetGraph) {
@@ -605,10 +622,16 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         }
       };
 
-      associatedTests = getAssociatedTargetNodes(
-          fullGraph,
-          projectRoots,
-          associatedTestsPredicate);
+      associatedTests = ImmutableSet.copyOf(
+          Sets.union(
+              ImmutableSet.copyOf(
+                  fullGraph.getAll(explicitTests)),
+              getAssociatedTargetNodes(
+                  fullGraph,
+                  projectRoots,
+                  associatedTestsPredicate)
+          )
+      );
     }
 
     ImmutableSet<TargetNode<?>> associatedProjects = getAssociatedTargetNodes(

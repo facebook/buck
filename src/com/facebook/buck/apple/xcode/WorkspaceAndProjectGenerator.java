@@ -25,6 +25,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -251,7 +252,7 @@ public class WorkspaceAndProjectGenerator {
     LOG.debug("Getting ordered test target nodes for %s", orderedTargetNodes);
     final ImmutableSet.Builder<TargetNode<?>> recursiveTestTargetNodesBuilder =
         ImmutableSet.builder();
-    if (!sourceTargetToTestNodes.isEmpty()) {
+    if (projectGeneratorOptions.contains(ProjectGenerator.Option.INCLUDE_TESTS)) {
       for (TargetNode<?> node : orderedTargetNodes) {
         LOG.verbose("Checking if target %s has any tests covering it..", node);
         for (TargetNode<?> testNode : sourceTargetToTestNodes.get(node.getBuildTarget())) {
@@ -259,6 +260,24 @@ public class WorkspaceAndProjectGenerator {
               testNode,
               recursiveTestTargetNodesBuilder,
               orderedTestBundleTargetNodeBuilder);
+        }
+      }
+
+      for (TargetNode<?> node : orderedTargetNodes) {
+        if (node.getConstructorArg() instanceof HasTests) {
+          for (BuildTarget explicitTestTarget : ((HasTests) node.getConstructorArg()).getTests()) {
+            TargetNode<?> explicitTestNode = targetGraph.get(explicitTestTarget);
+            if (explicitTestNode == null) {
+              throw new HumanReadableException(
+                  "Test target %s is not in the target graph!",
+                  explicitTestTarget);
+            } else {
+              addTestNodeAndDependencies(
+                  explicitTestNode,
+                  recursiveTestTargetNodesBuilder,
+                  orderedTestBundleTargetNodeBuilder);
+            }
+          }
         }
       }
     }

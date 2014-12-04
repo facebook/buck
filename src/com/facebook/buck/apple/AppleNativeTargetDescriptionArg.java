@@ -17,6 +17,8 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasTests;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -30,7 +32,7 @@ import com.google.common.collect.ImmutableSortedSet;
  * Arguments common to {@link com.facebook.buck.apple.AbstractAppleNativeTargetBuildRule} subclasses
  */
 @SuppressFieldNotInitialized
-public class AppleNativeTargetDescriptionArg {
+public class AppleNativeTargetDescriptionArg implements HasTests {
   public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
   public Optional<ImmutableList<AppleSource>> srcs;
   public Optional<ImmutableSortedSet<String>> frameworks;
@@ -39,8 +41,14 @@ public class AppleNativeTargetDescriptionArg {
   public Optional<String> headerPathPrefix;
   public Optional<Boolean> useBuckHeaderMaps;
   public Optional<SourcePath> prefixHeader;
+  @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
 
   public boolean getUseBuckHeaderMaps() {
     return useBuckHeaderMaps.or(false);
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildTarget> getTests() {
+    return tests.get();
   }
 }

@@ -79,5 +79,10 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
+  public BUILDER setTests(Optional<ImmutableSortedSet<BuildTarget>> tests) {
+    arg.tests = tests;
+    return getThis();
+  }
+
   protected abstract BUILDER getThis();
 }

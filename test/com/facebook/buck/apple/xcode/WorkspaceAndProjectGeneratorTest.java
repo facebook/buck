@@ -96,7 +96,14 @@ public class WorkspaceAndProjectGeneratorTest {
     // |
     // QuxBin
     //
+    //
+    // FooBin and BazLib use "tests" to specify their tests while FooLibTest uses source_under_test
+    // to specify that it is a test of FooLib.
+    //
     // Calling generate on FooBin should pull in everything except BazLibTest and QuxBin
+
+    BuildTarget bazTestTarget = BuildTarget.builder("//baz", "xctest").build();
+    BuildTarget fooBinTestTarget = BuildTarget.builder("//foo", "bin-xctest").build();
 
     BuildTarget barLibTarget = BuildTarget.builder("//bar", "lib").build();
     TargetNode<?> barLibNode = AppleLibraryBuilder
@@ -113,6 +120,7 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<?> fooBinBinaryNode = AppleBinaryBuilder
         .createBuilder(fooBinBinaryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
+        .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
         .build();
 
     BuildTarget fooBinTarget = BuildTarget.builder("//foo", "bin").build();
@@ -126,12 +134,12 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<?> bazLibNode = AppleLibraryBuilder
         .createBuilder(bazLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
+        .setTests(Optional.of(ImmutableSortedSet.of(bazTestTarget)))
         .build();
 
-    BuildTarget bazTestTarget = BuildTarget.builder("//baz", "xctest").build();
     TargetNode<?> bazTestNode = AppleTestBuilder
         .createBuilder(bazTestTarget)
-        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .build();
 
@@ -143,10 +151,9 @@ public class WorkspaceAndProjectGeneratorTest {
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
         .build();
 
-    BuildTarget fooBinTestTarget = BuildTarget.builder("//foo", "bin-xctest").build();
     TargetNode<?> fooBinTestNode = AppleTestBuilder
         .createBuilder(fooBinTestTarget)
-        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(fooBinTarget)))
+        .setDeps(Optional.of(ImmutableSortedSet.of(fooBinTarget)))
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .build();
 
@@ -221,9 +228,9 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         executionContext,
         workspaceNode,
-        ImmutableSet.<ProjectGenerator.Option>of(),
+        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
-        false);
+        false /* combinedProject */);
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -279,9 +286,9 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         executionContext,
         workspaceNode,
-        ImmutableSet.<ProjectGenerator.Option>of(),
+        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
-        true);
+        true /* combinedProject */);
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -313,6 +320,55 @@ public class WorkspaceAndProjectGeneratorTest {
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(),
         "//baz:lib");
+  }
+
+  @Test
+  public void workspaceAndProjectsWithoutTests() throws IOException {
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        targetGraph,
+        executionContext,
+        workspaceNode,
+        ImmutableSet.<ProjectGenerator.Option>of(),
+        AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
+        false /* combinedProject */);
+    Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    ProjectGenerator fooProjectGenerator =
+        projectGenerators.get(fooProjectNode);
+    ProjectGenerator barProjectGenerator =
+        projectGenerators.get(barProjectNode);
+    ProjectGenerator bazProjectGenerator =
+        projectGenerators.get(bazProjectNode);
+    ProjectGenerator quxProjectGenerator =
+        projectGenerators.get(quxProjectNode);
+
+    assertNull(
+        "The Qux project should not be generated at all",
+        quxProjectGenerator);
+
+    assertNull(
+        "The Baz project should not be generated at all",
+        bazProjectGenerator);
+
+    assertNotNull(
+        "The Foo project should have been generated",
+        fooProjectGenerator);
+
+    assertNotNull(
+        "The Bar project should have been generated",
+        barProjectGenerator);
+
+    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
+        fooProjectGenerator.getGeneratedProject(),
+        "//foo:bin");
+    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
+        fooProjectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
+        barProjectGenerator.getGeneratedProject(),
+        "//bar:lib");
   }
 
 }
