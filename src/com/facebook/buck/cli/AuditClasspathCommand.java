@@ -101,10 +101,10 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   }
 
   @VisibleForTesting
-  int printDotOutput(TargetGraph actionGraph) {
+  int printDotOutput(TargetGraph targetGraph) {
     Dot<TargetNode<?>> dot = new Dot<>(
-        actionGraph,
-        "action_graph",
+        targetGraph,
+        "target_graph",
         new Function<TargetNode<?>, String>() {
           @Override
           public String apply(TargetNode<?> targetNode) {
