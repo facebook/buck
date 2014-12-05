@@ -21,8 +21,8 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
@@ -95,13 +95,13 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
   int printJsonInputs(TargetGraph graph) throws IOException {
     final Multimap<String, String> targetInputs = TreeMultimap.create();
 
-    new AbstractBottomUpTraversal<BuildRule, Void>(graph.getActionGraph()) {
+    new AbstractBottomUpTraversal<TargetNode<?>, Void>(graph) {
 
       @Override
-      public void visit(BuildRule rule) {
-        for (Path input : rule.getInputs()) {
+      public void visit(TargetNode<?> node) {
+        for (Path input : node.getInputs()) {
           // TODO(user) remove `toString` once Jackson supports serializing Path instances
-          targetInputs.put(rule.getFullyQualifiedName(), input.toString());
+          targetInputs.put(node.getBuildTarget().getFullyQualifiedName(), input.toString());
         }
       }
 
@@ -124,13 +124,13 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
     // Traverse the TargetGraph and print out all of the inputs used to produce each TargetNode.
     // Keep track of the inputs that have been displayed to ensure that they are not displayed more
     // than once.
-    new AbstractBottomUpTraversal<BuildRule, Void>(graph.getActionGraph()) {
+    new AbstractBottomUpTraversal<TargetNode<?>, Void>(graph) {
 
       final Set<Path> inputs = Sets.newHashSet();
 
       @Override
-      public void visit(BuildRule rule) {
-        for (Path input : rule.getInputs()) {
+      public void visit(TargetNode<?> node) {
+        for (Path input : node.getInputs()) {
           boolean isNewInput = inputs.add(input);
           if (isNewInput) {
             getStdOut().println(input);
