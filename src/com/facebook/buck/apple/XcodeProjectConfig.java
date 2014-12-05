@@ -33,25 +33,18 @@ import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 public class XcodeProjectConfig extends AbstractBuildRule {
-  private final String projectName;
   private final ImmutableSet<BuildRule> rules;
 
   public XcodeProjectConfig(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      String projectName,
       ImmutableSet<BuildRule> rules) {
     super(params, resolver);
-    this.projectName = projectName;
     this.rules = rules;
   }
 
   public ImmutableSet<BuildRule> getRules() {
     return rules;
-  }
-
-  public String getProjectName() {
-    return projectName;
   }
 
   @Nullable

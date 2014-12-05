@@ -16,12 +16,11 @@
 
 package com.facebook.buck.apple.xcode;
 
-import com.facebook.buck.apple.XcodeProjectConfig;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -68,15 +67,15 @@ public class SeparatedProjectsGenerator {
       .build();
 
     for (BuildTarget target : projectConfigTargets) {
-      BuildRule rule = this.targetGraph.getActionGraph().findBuildRuleByTarget(target);
-      if (rule == null) {
+      TargetNode<?> node = this.targetGraph.get(target);
+      if (node == null) {
         throw new HumanReadableException(
             "target not found: " + target.toString());
       }
-      if (!rule.getType().equals(XcodeProjectConfigDescription.TYPE)) {
+      if (!node.getType().equals(XcodeProjectConfigDescription.TYPE)) {
         throw new HumanReadableException(
             "expected only 'xcode_project_config' rules, got a '" +
-                rule.getType().toString() +
+                node.getType().toString() +
                 "' rule: " +
                 target.toString());
       }
@@ -88,13 +87,13 @@ public class SeparatedProjectsGenerator {
     ImmutableMap.Builder<BuildTarget, ProjectGenerator> projectGeneratorsBuilder =
         ImmutableMap.builder();
     for (BuildTarget target : projectConfigTargets) {
-      BuildRule rule = targetGraph.getActionGraph().findBuildRuleByTarget(target);
-      XcodeProjectConfig buildable =
-          (XcodeProjectConfig) Preconditions.checkNotNull(rule);
+      TargetNode<?> node = Preconditions.checkNotNull(targetGraph.get(target));
+      XcodeProjectConfigDescription.Arg arg =
+          (XcodeProjectConfigDescription.Arg) node.getConstructorArg();
 
       ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
-      for (BuildRule memberRule : buildable.getRules()) {
-        initialTargetsBuilder.add(memberRule.getBuildTarget());
+      for (TargetNode<?> memberNode : targetGraph.getAll(arg.rules)) {
+        initialTargetsBuilder.add(memberNode.getBuildTarget());
       }
       ProjectGenerator generator = new ProjectGenerator(
           targetGraph,
@@ -102,7 +101,7 @@ public class SeparatedProjectsGenerator {
           projectFilesystem,
           executionContext,
           target.getBasePath(),
-          buildable.getProjectName(),
+          arg.projectName,
           projectGeneratorOptions);
       generator.createXcodeProjects();
       projectGeneratorsBuilder.put(target, generator);

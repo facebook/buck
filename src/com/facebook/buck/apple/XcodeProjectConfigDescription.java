@@ -47,7 +47,6 @@ public class XcodeProjectConfigDescription
     return new XcodeProjectConfig(
         params,
         new SourcePathResolver(resolver),
-        args.projectName,
         resolver.getAllRules(args.rules));
   }
 
