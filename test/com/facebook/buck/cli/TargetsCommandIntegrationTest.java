@@ -40,6 +40,77 @@ public class TargetsCommandIntegrationTest {
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
+  public void testOutputPath() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show_output",
+        "//:test");
+    result.assertSuccess();
+    assertEquals("//:test buck-out/gen/test-output\n", result.getStdout());
+  }
+
+  @Test
+  public void testRuleKey() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show_rulekey",
+        "//:test");
+    result.assertSuccess();
+    assertEquals("//:test 79fd7645a0ee301307d83049da0ba75f46f7fef3\n", result.getStdout());
+  }
+
+  @Test
+  public void testBothOutputAndRuleKey() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show_rulekey",
+        "--show_output",
+        "//:test");
+    result.assertSuccess();
+    assertEquals(
+        "//:test 79fd7645a0ee301307d83049da0ba75f46f7fef3 buck-out/gen/test-output\n",
+        result.getStdout());
+  }
+
+  @Test
+  public void testOutputWithoutTarget() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show_output");
+    result.assertFailure();
+    assertEquals("BUILD FAILED: Must specify at least one build target.\n", result.getStderr());
+  }
+
+  @Test
+  public void testRuleKeyWithoutTarget() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show_rulekey");
+    result.assertFailure();
+    assertEquals("BUILD FAILED: Must specify at least one build target.\n", result.getStderr());
+  }
+
+  @Test
   public void testBuckTargetsReferencedFileWithFileOutsideOfProject() throws IOException {
     // The contents of the project are not relevant for this test. We just want a non-empty project
     // to prevent against a regression where all of the build rules are printed.

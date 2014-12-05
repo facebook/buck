@@ -110,16 +110,14 @@ public class QuickstartIntegrationTest {
 
     assertEquals(
       "`buck targets` should display a list of targets.",
-      Joiner.on('\n').join("//apps/myapp:app",
-        "//apps/myapp:app#aapt_package",
-        "//apps/myapp:app#dex_merge",
-        "//apps/myapp:debug_keystore",
-        "//apps/myapp:project_config",
-        "//java/com/example/activity:activity",
-        "//java/com/example/activity:activity#dex",
-        "//java/com/example/activity:project_config",
-        "//res/com/example/activity:project_config",
-        "//res/com/example/activity:res") + "\n",
+      Joiner.on('\n').join(
+          "//apps/myapp:app",
+          "//apps/myapp:debug_keystore",
+          "//apps/myapp:project_config",
+          "//java/com/example/activity:activity",
+          "//java/com/example/activity:project_config",
+          "//res/com/example/activity:project_config",
+          "//res/com/example/activity:res") + "\n",
       result.getStdout());
 
     result = targetsWorkspace.runBuckCommand("build", "app");

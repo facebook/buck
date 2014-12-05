@@ -41,16 +41,11 @@ import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParseContext;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
@@ -96,25 +91,13 @@ public class TargetsCommandTest {
   private TargetsCommand targetsCommand;
   private ObjectMapper objectMapper;
 
-  private SortedMap<String, BuildRule> buildBuildTargets(String outputFile, String name) {
-    return buildBuildTargets(outputFile, name, "//");
-  }
-
-  private SortedMap<String, BuildRule> buildBuildTargets(String outputFile,
-      String name,
-      String baseName) {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    SortedMap<String, BuildRule> buildRules = Maps.newTreeMap();
+  private SortedMap<String, TargetNode<?>> buildTargetNodes(String baseName, String name) {
+    SortedMap<String, TargetNode<?>> buildRules = Maps.newTreeMap();
     BuildTarget buildTarget = BuildTarget.builder(baseName, name).build();
-    FakeBuildRule buildRule = new FakeBuildRule(
-        JavaLibraryDescription.TYPE,
-        buildTarget,
-        pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
-    buildRule.setOutputFile(outputFile);
-
-    buildRules.put(buildTarget.getFullyQualifiedName(), buildRule);
+    TargetNode<?> node = JavaLibraryBuilder
+        .createBuilder(buildTarget)
+        .build();
+    buildRules.put(buildTarget.getFullyQualifiedName(), node);
     return buildRules;
   }
 
@@ -154,20 +137,19 @@ public class TargetsCommandTest {
   public void testJsonOutputForBuildTarget()
       throws IOException, BuildFileParseException, InterruptedException {
     final String testBuckFileJson1 = testDataPath("TargetsCommandTestBuckJson1.js");
-    final String outputFile = "buck-out/gen/test/outputFile";
 
     // run `buck targets` on the build file and parse the observed JSON.
-    SortedMap<String, BuildRule> buildRules = buildBuildTargets(
-        outputFile, "test-library", "//testdata/com/facebook/buck/cli");
+    SortedMap<String, TargetNode<?>> nodes = buildTargetNodes(
+        "//testdata/com/facebook/buck/cli",
+        "test-library");
 
-    targetsCommand.printJsonForTargets(buildRules, /* includes */ ImmutableList.<String>of());
+    targetsCommand.printJsonForTargets(nodes, /* includes */ ImmutableList.<String>of());
     String observedOutput = console.getTextWrittenToStdOut();
     JsonNode observed = objectMapper.readTree(
         objectMapper.getJsonFactory().createJsonParser(observedOutput));
 
     // parse the expected JSON.
-    String expectedJson = Files.toString(new File(testBuckFileJson1), Charsets.UTF_8)
-        .replace("{$OUTPUT_FILE}", outputFile);
+    String expectedJson = Files.toString(new File(testBuckFileJson1), Charsets.UTF_8);
     JsonNode expected = objectMapper.readTree(
         objectMapper.getJsonFactory().createJsonParser(expectedJson)
             .enable(Feature.ALLOW_COMMENTS));
@@ -179,49 +161,10 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testNormalOutputForBuildTarget() throws IOException {
-    final String outputFile = "buck-out/gen/test/outputFile";
-
-    // run `buck targets` on the build file and parse the observed JSON.
-    SortedMap<String, BuildRule> buildRules = buildBuildTargets(outputFile, "test-library");
-
-    targetsCommand.printTargetsList(buildRules, /* showOutput */ false, /* showRuleKey */ false);
-    String observedOutput = console.getTextWrittenToStdOut();
-
-    assertEquals("Output from targets command should match expected output.",
-        "//:test-library",
-        observedOutput.trim());
-    assertEquals("Nothing should be printed to stderr.",
-        "",
-        console.getTextWrittenToStdErr());
-  }
-
-  @Test
-  public void testNormalOutputForBuildTargetWithOutput() throws IOException {
-    final String outputFile = "buck-out/gen/test/outputFile";
-
-    // run `buck targets` on the build file and parse the observed JSON.
-    SortedMap<String, BuildRule> buildRules = buildBuildTargets(
-        outputFile,
-        "test-library");
-
-    targetsCommand.printTargetsList(buildRules, /* showOutput */ true, /* showRuleKey */ false);
-    String observedOutput = console.getTextWrittenToStdOut();
-
-    assertEquals("Output from targets command should match expected output.",
-        "//:test-library " + outputFile,
-        observedOutput.trim());
-    assertEquals("Nothing should be printed to stderr.",
-        "",
-        console.getTextWrittenToStdErr());
-  }
-
-  @Test
   public void testJsonOutputForMissingBuildTarget()
       throws BuildFileParseException, IOException, InterruptedException {
     // nonexistent target should not exist.
-    final String outputFile = "buck-out/gen/test/outputFile";
-    SortedMap<String, BuildRule> buildRules = buildBuildTargets(outputFile, "nonexistent");
+    SortedMap<String, TargetNode<?>> buildRules = buildTargetNodes("//", "nonexistent");
     targetsCommand.printJsonForTargets(buildRules, /* includes */ ImmutableList.<String>of());
 
     String output = console.getTextWrittenToStdOut();
@@ -275,8 +218,9 @@ public class TargetsCommandTest {
         "//blah/foo:bar", options));
 
     // Should pass BuildTargetParser but validateBuildTargetForNonAliasTarget will return null.
-    assertNull(targetsCommand.validateBuildTargetForFullyQualifiedTarget(
-        "//:test-libarry", options));
+    assertNull(
+        targetsCommand.validateBuildTargetForFullyQualifiedTarget(
+            "//:test-libarry", options));
   }
 
   @Test
@@ -307,16 +251,15 @@ public class TargetsCommandTest {
         javaTestNode);
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-    ActionGraph actionGraph = targetGraph.getActionGraph();
     ImmutableSet<BuildRuleType> buildRuleTypes = ImmutableSet.of();
 
     ImmutableSet<Path> referencedFiles;
 
     // No target depends on the referenced file.
     referencedFiles = ImmutableSet.of(Paths.get("excludesrc/CannotFind.java"));
-    SortedMap<String, BuildRule> matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+    SortedMap<String, TargetNode<?>> matchingBuildRules =
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 buildRuleTypes,
@@ -327,8 +270,8 @@ public class TargetsCommandTest {
     // Only test-android-library target depends on the referenced file.
     referencedFiles = ImmutableSet.of(Paths.get("javatest/TestJavaLibrary.java"));
     matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 buildRuleTypes,
@@ -342,8 +285,8 @@ public class TargetsCommandTest {
     // while test-java-library target directly depends on the referenced file.
     referencedFiles = ImmutableSet.of(Paths.get("javasrc/JavaLibrary.java"));
     matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 buildRuleTypes,
@@ -356,8 +299,8 @@ public class TargetsCommandTest {
     // Verify that BUCK files show up as referenced_files.
     referencedFiles = ImmutableSet.of(Paths.get("javasrc/" + BuckConstant.BUILD_RULES_FILE_NAME));
     matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 buildRuleTypes,
@@ -372,8 +315,8 @@ public class TargetsCommandTest {
         Paths.get("javatest/TestJavaLibrary.java"),
         Paths.get("othersrc/CannotFind.java"));
     matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 buildRuleTypes,
@@ -385,8 +328,8 @@ public class TargetsCommandTest {
 
     // If no referenced file, means this filter is disabled, we can find all targets.
     matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 buildRuleTypes,
@@ -401,8 +344,8 @@ public class TargetsCommandTest {
 
     // Specify java_test, java_library as type filters.
     matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE),
@@ -417,8 +360,8 @@ public class TargetsCommandTest {
 
     // Specify java_test, java_library, and a rule name as type filters.
     matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE),
@@ -430,8 +373,8 @@ public class TargetsCommandTest {
 
     // Only filter by BuildTarget
     matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 ImmutableSet.<BuildRuleType>of(),
@@ -444,8 +387,8 @@ public class TargetsCommandTest {
 
     // Filter by BuildTarget and Referenced Files
     matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 ImmutableSet.<BuildRuleType>of(),
@@ -470,12 +413,11 @@ public class TargetsCommandTest {
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(libraryNode);
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-    ActionGraph actionGraph = targetGraph.getActionGraph();
 
     // No target depends on the referenced file.
-    SortedMap<String, BuildRule> matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+    SortedMap<String, TargetNode<?>> matchingBuildRules =
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 ImmutableSet.<BuildRuleType>of(),
@@ -485,8 +427,8 @@ public class TargetsCommandTest {
 
     // The AppleLibrary matches the referenced file.
     matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 ImmutableSet.<BuildRuleType>of(),
@@ -520,12 +462,11 @@ public class TargetsCommandTest {
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(libraryNode, testNode);
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-    ActionGraph actionGraph = targetGraph.getActionGraph();
 
     // No target depends on the referenced file.
-    SortedMap<String, BuildRule> matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+    SortedMap<String, TargetNode<?>> matchingBuildRules =
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 ImmutableSet.<BuildRuleType>of(),
@@ -535,35 +476,28 @@ public class TargetsCommandTest {
 
     // Both AppleLibrary nodes, AppleBundle, and AppleTest match the referenced file.
     matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 ImmutableSet.<BuildRuleType>of(),
                 ImmutableSet.of(Paths.get("foo/foo.m")),
                 Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
-        ImmutableSet.of(
-            "//foo:lib",
-            "//foo:xctest#apple-test-bundle",
-            "//foo:xctest#apple-test-library,dynamic",
-            "//foo:xctest"),
+        ImmutableSet.of("//foo:lib", "//foo:xctest"),
         matchingBuildRules.keySet());
 
     // The test AppleLibrary, AppleBundle and AppleTest match the referenced file.
     matchingBuildRules =
-        targetsCommand.getMatchingBuildRules(
-            actionGraph,
+        targetsCommand.getMatchingNodes(
+            targetGraph,
             new TargetsCommandPredicate(
                 targetGraph,
                 ImmutableSet.<BuildRuleType>of(),
                 ImmutableSet.of(Paths.get("foo/testfoo.m")),
                 Optional.<ImmutableSet<BuildTarget>>absent()));
     assertEquals(
-        ImmutableSet.of(
-            "//foo:xctest#apple-test-bundle",
-            "//foo:xctest#apple-test-library,dynamic",
-            "//foo:xctest"),
+        ImmutableSet.of("//foo:xctest"),
         matchingBuildRules.keySet());
   }
 }

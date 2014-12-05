@@ -1,0 +1,4 @@
+genrule(
+  name = 'test',
+  out = 'test-output',
+)

@@ -5,8 +5,6 @@
   "annotationProcessorParams" : [ ],
   "annotationProcessors" : [ ],
   "buck.base_path" : "testdata/com/facebook/buck/cli",
-  "buck.output_file" : "{$OUTPUT_FILE}",
-  "buck.base_path" : "testdata/com/facebook/buck/cli",
   "deps" : [ ],
   "exportedDeps": [],
   "name" : "test-library",
