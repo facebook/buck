@@ -1200,6 +1200,31 @@ public class ProjectGenerator {
       }
     }
 
+    addHeaderMapsForSourceUnderTest(targetNode, builder, HeaderMapType.TARGET_HEADER_MAP);
+
+    return builder.build();
+  }
+
+  private ImmutableSet<String> collectUserHeaderMaps(
+      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+
+    if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
+      builder.add(
+          getHeaderMapRelativePath(
+              targetNode,
+              HeaderMapType.TARGET_USER_HEADER_MAP));
+    }
+
+    addHeaderMapsForSourceUnderTest(targetNode, builder, HeaderMapType.TARGET_USER_HEADER_MAP);
+
+    return builder.build();
+  }
+
+  private void addHeaderMapsForSourceUnderTest(
+      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
+      ImmutableSet.Builder<String> headerMapsBuilder,
+      HeaderMapType headerMapType) {
     ImmutableSet<TargetNode<?>> directDependencies = ImmutableSet.copyOf(
         targetGraph.getAll(targetNode.getDeps()));
     for (TargetNode<?> dependency : directDependencies) {
@@ -1209,23 +1234,12 @@ public class ProjectGenerator {
         AppleNativeTargetDescriptionArg constructorArg = library.get().getConstructorArg();
         if (constructorArg.getUseBuckHeaderMaps() &&
             constructorArg.tests.get().contains(targetNode.getBuildTarget())) {
-          builder.add(getHeaderMapRelativePath(library.get(), HeaderMapType.TARGET_HEADER_MAP));
+          headerMapsBuilder.add(
+              getHeaderMapRelativePath(
+                  library.get(),
+                  headerMapType));
         }
       }
-    }
-
-    return builder.build();
-  }
-
-  private ImmutableSet<String> collectUserHeaderMaps(
-      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
-    if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
-      return ImmutableSet.of(
-          getHeaderMapRelativePath(
-              targetNode,
-              HeaderMapType.TARGET_USER_HEADER_MAP));
-    } else {
-      return ImmutableSet.of();
     }
   }
 

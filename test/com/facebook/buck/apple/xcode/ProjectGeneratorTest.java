@@ -341,8 +341,11 @@ public class ProjectGeneratorTest {
             "../buck-out/gen/foo/lib-target-headers.hmap",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        "test binary should only use its own headermaps in USER_HEADER_SEARCH_PATHS",
-        "$(inherited) ../buck-out/gen/foo/test-target-user-headers.hmap",
+        "test binary should use user headermaps of its own as well as of the tested library " +
+            "in USER_HEADER_SEARCH_PATHS",
+        "$(inherited) " +
+            "../buck-out/gen/foo/test-target-user-headers.hmap " +
+            "../buck-out/gen/foo/lib-target-user-headers.hmap",
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
