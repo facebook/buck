@@ -35,8 +35,12 @@ import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.AppleSdk;
+import com.facebook.buck.apple.AppleSdkDiscovery;
+import com.facebook.buck.apple.AppleSdkPaths;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
@@ -89,12 +93,15 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
+import java.io.IOException;
 import java.net.Proxy;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -142,7 +149,7 @@ public class KnownBuildRuleTypes {
       BuckConfig config,
       ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver,
-      PythonEnvironment pythonEnv) throws InterruptedException {
+      PythonEnvironment pythonEnv) throws InterruptedException, IOException {
     return createBuilder(config, processExecutor, androidDirectoryResolver, pythonEnv).build();
   }
 
@@ -216,12 +223,48 @@ public class KnownBuildRuleTypes {
     return ndkCxxPlatformBuilder.build();
   }
 
+  private static void buildAppleCxxPlatforms(
+      Supplier<Path> appleDeveloperDirectorySupplier,
+      Platform buildPlatform,
+      ImmutableSet.Builder<CxxPlatform> appleCxxPlatformsBuilder)
+      throws IOException {
+    if (!buildPlatform.equals(Platform.MACOS)) {
+      return;
+    }
+
+    Path appleDeveloperDirectory = appleDeveloperDirectorySupplier.get();
+    if (!Files.isDirectory(appleDeveloperDirectory)) {
+      // TODO(user): This should be fatal, but a ton of integration tests enter this code on
+      // Apple platforms.
+      return;
+    }
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths = AppleSdkDiscovery.discoverAppleSdkPaths(
+        appleDeveloperDirectory);
+
+    for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {
+      AppleSdk sdk = entry.getKey();
+      for (String architecture : sdk.architectures()) {
+        CxxPlatform appleCxxPlatform = new AppleCxxPlatform(
+            buildPlatform,
+            sdk.applePlatform(),
+            sdk.name(),
+            // TODO(user): Support targeting earlier OS versions; this
+            // targets the exact version of the SDK.
+            sdk.version(),
+            architecture,
+            entry.getValue());
+        appleCxxPlatformsBuilder.add(appleCxxPlatform);
+      }
+    }
+  }
+
   @VisibleForTesting
   static Builder createBuilder(
       BuckConfig config,
       ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver,
-      PythonEnvironment pythonEnv) throws InterruptedException {
+      PythonEnvironment pythonEnv) throws InterruptedException, IOException {
 
     Platform platform = Platform.detect();
 
@@ -233,6 +276,13 @@ public class KnownBuildRuleTypes {
     }
 
     AppleConfig appleConfig = new AppleConfig(config);
+    ImmutableSet.Builder<CxxPlatform> appleCxxPlatformsBuilder =
+        ImmutableSet.builder();
+    buildAppleCxxPlatforms(
+        appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
+        platform,
+        appleCxxPlatformsBuilder);
+    ImmutableSet<CxxPlatform> appleCxxPlatforms = appleCxxPlatformsBuilder.build();
 
     // Construct the thrift config wrapping the buck config.
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
@@ -262,6 +312,10 @@ public class KnownBuildRuleTypes {
     // testing our Android NDK support for right now.
     for (CxxPlatform ndkCxxPlatform : ndkCxxPlatforms.values()) {
       cxxPlatformsBuilder.put(ndkCxxPlatform.asFlavor(), ndkCxxPlatform);
+    }
+
+    for (CxxPlatform appleCxxPlatform : appleCxxPlatforms) {
+      cxxPlatformsBuilder.put(appleCxxPlatform.asFlavor(), appleCxxPlatform);
     }
 
     // Build up the final list of C/C++ platforms.

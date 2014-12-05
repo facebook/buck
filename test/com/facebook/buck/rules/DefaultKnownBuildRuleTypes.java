@@ -23,7 +23,13 @@ import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.FakeProcess;
+import com.facebook.buck.util.ProcessExecutorParams;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
+import java.io.IOException;
 import java.nio.file.Paths;
 
 public class DefaultKnownBuildRuleTypes {
@@ -32,13 +38,19 @@ public class DefaultKnownBuildRuleTypes {
     // Utility class.
   }
 
+  private static final ProcessExecutorParams XCODE_SELECT_PARAMS =
+      ProcessExecutorParams.builder()
+          .setCommand(ImmutableList.of("xcode-select", "--print-path"))
+          .build();
+  private static final FakeProcess XCODE_SELECT_PROCESS = new FakeProcess(0, "/path/to/xcode", "");
+
   public static KnownBuildRuleTypes getDefaultKnownBuildRuleTypes(ProjectFilesystem filesystem)
-      throws InterruptedException {
+      throws InterruptedException, IOException {
     BuckConfig config = new FakeBuckConfig(filesystem);
 
     return KnownBuildRuleTypes.createInstance(
         config,
-        new FakeProcessExecutor(),
+        new FakeProcessExecutor(ImmutableMap.of(XCODE_SELECT_PARAMS, XCODE_SELECT_PROCESS)),
         new FakeAndroidDirectoryResolver(),
         new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")));
   }

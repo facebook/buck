@@ -21,6 +21,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -28,7 +29,7 @@ public class FakeRepositoryFactory extends RepositoryFactory {
 
   private static final Path FAKE_PATH = Paths.get("/fake/repo/factory/path");
 
-  public FakeRepositoryFactory() throws InterruptedException {
+  public FakeRepositoryFactory() throws InterruptedException, IOException {
     this(FAKE_PATH);
     cachedRepositories.put(FAKE_PATH, new TestRepositoryBuilder().setRootPath(FAKE_PATH).build());
   }

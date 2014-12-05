@@ -1,0 +1,16 @@
+cxx_binary(
+  name = 'main',
+  srcs = [
+    'main.cpp',
+  ],
+  deps = [
+    ':lib',
+  ],
+)
+
+cxx_library(
+  name = 'lib',
+  srcs = [
+    'lib.cpp',
+  ],
+)

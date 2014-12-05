@@ -20,6 +20,7 @@ java_library(
     'TestSourcePath.java',
   ],
   deps = [
+    '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
@@ -69,6 +70,7 @@ java_test(
   deps = [
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:steps',
+    '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/cli:events',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/event:event',

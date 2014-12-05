@@ -119,13 +119,13 @@ public class AppleCxxPlatform implements CxxPlatform {
     // TODO(user): Add more and better cflags.
     this.cflags = cflagsBuilder.build();
     this.cpp = clangPath;
-    this.cppflags = ImmutableList.of(); // TODO
+    this.cppflags = cflagsBuilder.build();
     this.cxx = clangXxPath;
-    this.cxxflags = ImmutableList.of(); // TODO
+    this.cxxflags = cflagsBuilder.build();
     this.cxxpp = clangXxPath;
-    this.cxxppflags = ImmutableList.of(); // TODO
+    this.cxxppflags = cflagsBuilder.build();
     this.cxxld = clangXxPath;
-    this.cxxldflags = ImmutableList.of(); // TODO
+    this.cxxldflags = cflagsBuilder.build();
 
     this.lex = getTool("lex", toolSearchPaths);
     this.lexflags = ImmutableList.of(); // TODO

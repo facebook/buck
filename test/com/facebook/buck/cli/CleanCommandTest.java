@@ -109,7 +109,7 @@ public class CleanCommandTest extends EasyMockSupport {
     return options;
   }
 
-  private CleanCommand createCommand() throws InterruptedException {
+  private CleanCommand createCommand() throws InterruptedException, IOException {
     projectFilesystem = createMock(ProjectFilesystem.class);
     Repository repository = new TestRepositoryBuilder().setFilesystem(projectFilesystem).build();
 

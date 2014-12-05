@@ -27,6 +27,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -38,7 +39,7 @@ public class TestRepositoryBuilder {
   private AndroidDirectoryResolver androidDirectoryResolver;
   private Path rootPath;
 
-  public TestRepositoryBuilder() throws InterruptedException {
+  public TestRepositoryBuilder() throws InterruptedException, IOException {
     name = Optional.absent();
     filesystem = new FakeProjectFilesystem();
     buildRuleTypes = DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem);

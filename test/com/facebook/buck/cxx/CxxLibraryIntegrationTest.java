@@ -19,9 +19,12 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 
+import static org.hamcrest.Matchers.is;
 import org.junit.Rule;
 import org.junit.Test;
+import static org.junit.Assume.assumeThat;
 
 import java.io.IOException;
 
@@ -36,6 +39,16 @@ public class CxxLibraryIntegrationTest {
         this, "exported_preprocessor_flags", tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:main").assertSuccess();
+  }
+
+  @Test
+  public void appleLibraryBuildsOnApplePlatform() throws IOException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_cxx_library", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:main#iphonesimulator8.0-i386").assertSuccess();
   }
 
 }
