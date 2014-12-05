@@ -59,11 +59,18 @@ public class ArchiveScrubberStep implements Step {
     return Integer.parseInt(str.trim());
   }
 
+  private void putSpaceLeftPaddedString(ByteBuffer buffer, int len, String value) {
+    Preconditions.checkState(value.length() <= len);
+    value = Strings.padStart(value, len, ' ');
+    buffer.put(value.getBytes(Charsets.US_ASCII));
+  }
+
+  private void putIntAsOctalString(ByteBuffer buffer, int len, int value) {
+    putSpaceLeftPaddedString(buffer, len, String.format("0%o", value));
+  }
+
   private void putIntAsDecimalString(ByteBuffer buffer, int len, int value) {
-    String val = String.format("%d", value);
-    Preconditions.checkState(val.length() <= len);
-    val = Strings.repeat(" ", len - val.length()) + val;
-    buffer.put(val.getBytes(Charsets.US_ASCII));
+    putSpaceLeftPaddedString(buffer, len, String.format("%d", value));
   }
 
   private void checkArchive(boolean expression, String msg) throws ArchiveException {
@@ -77,6 +84,7 @@ public class ArchiveScrubberStep implements Step {
    * meta-data such as timestamps, UIDs, and GIDs.
    * @param archive a {@link ByteBuffer} wrapping the contents of the archive.
    */
+  @SuppressWarnings("PMD.AvoidUsingOctalValues")
   private void scrubArchive(ByteBuffer archive) throws ArchiveException {
     try {
 
@@ -96,7 +104,7 @@ public class ArchiveScrubberStep implements Step {
         /* Owner ID */ putIntAsDecimalString(archive, 6, 0);
         /* Group ID */ putIntAsDecimalString(archive, 6, 0);
 
-        /* File mode */ getBytes(archive, 8);
+        /* File mode */ putIntAsOctalString(archive, 8, 0100644);
         int fileSize = getDecimalStringAsInt(archive, 10);
 
         // Lastly, grab the file magic entry and verify it's accurate.
