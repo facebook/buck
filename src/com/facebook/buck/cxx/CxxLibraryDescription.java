@@ -431,9 +431,16 @@ public class CxxLibraryDescription implements
         cxxPlatform,
         CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
         CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
-        CxxPreprocessorFlags.fromArgs(
-            args.preprocessorFlags,
-            args.langPreprocessorFlags),
+        ImmutableMultimap.<CxxSource.Type, String>builder()
+            .putAll(
+                CxxPreprocessorFlags.fromArgs(
+                    args.preprocessorFlags,
+                    args.langPreprocessorFlags))
+            .putAll(
+                CxxPreprocessorFlags.fromArgs(
+                    args.propagatedPpFlags,
+                    args.propagatedLangPpFlags))
+            .build(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
         args.compilerFlags.or(ImmutableList.<String>of()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args));
@@ -454,9 +461,16 @@ public class CxxLibraryDescription implements
         cxxPlatform,
         CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
         CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
-        CxxPreprocessorFlags.fromArgs(
-            args.preprocessorFlags,
-            args.langPreprocessorFlags),
+        ImmutableMultimap.<CxxSource.Type, String>builder()
+            .putAll(
+                CxxPreprocessorFlags.fromArgs(
+                    args.preprocessorFlags,
+                    args.langPreprocessorFlags))
+            .putAll(
+                CxxPreprocessorFlags.fromArgs(
+                    args.propagatedPpFlags,
+                    args.propagatedLangPpFlags))
+            .build(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
         args.compilerFlags.or(ImmutableList.<String>of()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
