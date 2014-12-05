@@ -41,6 +41,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.AndroidDirectoryResolver;
 import com.facebook.buck.util.AndroidPlatformTarget;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
@@ -165,6 +166,9 @@ public class Build implements Closeable {
       @Nullable
       private String androidPlatformTargetId = null;
 
+      @Nullable
+      private String androidPlatformTargetIdRuleName = null;
+
       private boolean isEncounteredAndroidRuleInTraversal = false;
 
       @Override
@@ -177,11 +181,15 @@ public class Build implements Closeable {
           String target = ((HasAndroidPlatformTarget) rule).getAndroidPlatformTarget();
           if (androidPlatformTargetId == null) {
             androidPlatformTargetId = target;
+            androidPlatformTargetIdRuleName = rule.getFullyQualifiedName();
           } else if (!target.equals(androidPlatformTargetId)) {
-            throw new RuntimeException(
-                String.format("More than one android platform targeted: %s and %s",
-                    target,
-                    androidPlatformTargetId));
+            throw new HumanReadableException(
+                "More than one android platform targeted: '%s' and '%s'\n" +
+                "Target originally set by %s, conflicting with %s",
+                target,
+                androidPlatformTargetId,
+                androidPlatformTargetIdRuleName,
+                rule.getFullyQualifiedName());
           }
         }
       }
