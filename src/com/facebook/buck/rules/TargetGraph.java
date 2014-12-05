@@ -17,18 +17,13 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -46,8 +41,8 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
       Optional.<BuckEventBus>absent());
 
   private final ImmutableMap<BuildTarget, TargetNode<?>> targetsToNodes;
-  private final Supplier<ActionGraph> actionGraphSupplier;
   private final Optional<BuckEventBus> buckEventBus;
+  private final TargetGraphTransformer<ActionGraph> actionGraphSupplier;
 
   public TargetGraph(
       MutableDirectedGraph<TargetNode<?>> graph,
@@ -58,7 +53,7 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
       builder.put(node.getBuildTarget(), node);
     }
     this.targetsToNodes = builder.build();
-    actionGraphSupplier = createActionGraphSupplier();
+    actionGraphSupplier = new TargetGraphToActionGraph(buckEventBus);
     this.buckEventBus = buckEventBus;
   }
 
@@ -87,103 +82,8 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
         });
   }
 
-  private Supplier<ActionGraph> createActionGraphSupplier() {
-    final TargetGraph targetGraph = this;
-    return Suppliers.memoize(
-        new Supplier<ActionGraph>() {
-          @Override
-          public ActionGraph get() {
-            if (buckEventBus.isPresent()) {
-              buckEventBus.get().post(ActionGraphEvent.started());
-            }
-
-            final BuildRuleResolver ruleResolver = new BuildRuleResolver();
-            final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
-
-            final TargetNodeToBuildRuleTransformer transformer =
-                new TargetNodeToBuildRuleTransformer();
-
-            AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
-                new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(targetGraph) {
-
-                  @Override
-                  public void visit(TargetNode<?> node) {
-                    BuildRule rule;
-                    try {
-                      rule = transformer.transform(TargetGraph.this, ruleResolver, node);
-                    } catch (NoSuchBuildTargetException e) {
-                      throw new HumanReadableException(e);
-                    }
-
-                    // Check whether a rule with this build target already exists. This is possible
-                    // if we create a new build rule during graph enhancement, and the user asks to
-                    // build the same build rule.
-                    Optional<BuildRule> existingRule =
-                        ruleResolver.getRuleOptional(node.getBuildTarget());
-                    Preconditions.checkState(
-                        !existingRule.isPresent() || existingRule.get().equals(rule));
-                    if (!existingRule.isPresent()) {
-                      ruleResolver.addToIndex(rule);
-                    }
-                    actionGraph.addNode(rule);
-
-                    for (BuildRule buildRule : rule.getDeps()) {
-                      if (buildRule.getBuildTarget().isFlavored()) {
-                        addGraphEnhancedDeps(rule);
-                      }
-                    }
-
-                    for (BuildRule dep : rule.getDeps()) {
-                      actionGraph.addEdge(rule, dep);
-                    }
-
-                  }
-
-                  @Override
-                  public ActionGraph getResult() {
-                    return new ActionGraph(actionGraph);
-                  }
-
-                  private void addGraphEnhancedDeps(BuildRule rule) {
-                    new AbstractBreadthFirstTraversal<BuildRule>(rule) {
-                      @Override
-                      public ImmutableSet<BuildRule> visit(BuildRule rule) {
-                        ImmutableSet.Builder<BuildRule> depsToVisit = null;
-                        boolean isRuleFlavored = rule.getBuildTarget().isFlavored();
-
-                        for (BuildRule dep : rule.getDeps()) {
-                          boolean isDepFlavored = dep.getBuildTarget().isFlavored();
-                          if (isRuleFlavored || isDepFlavored) {
-                            actionGraph.addEdge(rule, dep);
-                          }
-
-                          if (isDepFlavored) {
-                            if (depsToVisit == null) {
-                              depsToVisit = ImmutableSet.builder();
-                            }
-                            depsToVisit.add(dep);
-                          }
-                        }
-
-                        return depsToVisit == null ?
-                            ImmutableSet.<BuildRule>of() :
-                            depsToVisit.build();
-                      }
-                    }.start();
-                  }
-                };
-            bottomUpTraversal.traverse();
-            ActionGraph result = bottomUpTraversal.getResult();
-            if (buckEventBus.isPresent()) {
-              buckEventBus.get().post(ActionGraphEvent.finished());
-            }
-            return result;
-          }
-        });
-  }
-
   public ActionGraph getActionGraph() {
-    return actionGraphSupplier.get();
+    return actionGraphSupplier.apply(this);
   }
 
   /**

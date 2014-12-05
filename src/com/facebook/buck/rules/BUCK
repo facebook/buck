@@ -101,6 +101,8 @@ java_library(
     'SourcePaths.java',
     'SourceRoot.java',
     'TargetGraph.java',
+    'TargetGraphToActionGraph.java',
+    'TargetGraphTransformer.java',
     'TargetName.java',
     'TargetNode.java',
     'TargetNodeToBuildRuleTransformer.java',
