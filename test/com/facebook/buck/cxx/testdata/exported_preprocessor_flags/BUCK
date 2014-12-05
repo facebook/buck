@@ -13,7 +13,7 @@ cxx_library(
   srcs = [
     'lib.cpp',
   ],
-  propagated_pp_flags = [
+  exported_preprocessor_flags = [
     '-DLIB',
   ],
 )

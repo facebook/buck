@@ -31,9 +31,9 @@ public class CxxLibraryIntegrationTest {
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
-  public void propagatedPpFlagsApplyToBothTargetAndDependents() throws IOException {
+  public void exportedPreprocessorFlagsApplyToBothTargetAndDependents() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "propagated_pp_flags", tmp);
+        this, "exported_preprocessor_flags", tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:main").assertSuccess();
   }

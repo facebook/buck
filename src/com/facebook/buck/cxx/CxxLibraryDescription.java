@@ -386,8 +386,8 @@ public class CxxLibraryDescription implements
     arg.srcs = Optional.absent();
     arg.headers = Optional.absent();
     arg.compilerFlags = Optional.absent();
-    arg.propagatedPpFlags = Optional.absent();
-    arg.propagatedLangPpFlags = Optional.absent();
+    arg.exportedPreprocessorFlags = Optional.absent();
+    arg.exportedLangPreprocessorFlags = Optional.absent();
     arg.preprocessorFlags = Optional.absent();
     arg.langPreprocessorFlags = Optional.absent();
     arg.linkWhole = Optional.absent();
@@ -438,8 +438,8 @@ public class CxxLibraryDescription implements
                     args.langPreprocessorFlags))
             .putAll(
                 CxxPreprocessorFlags.fromArgs(
-                    args.propagatedPpFlags,
-                    args.propagatedLangPpFlags))
+                    args.exportedPreprocessorFlags,
+                    args.exportedLangPreprocessorFlags))
             .build(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
         args.compilerFlags.or(ImmutableList.<String>of()),
@@ -468,8 +468,8 @@ public class CxxLibraryDescription implements
                     args.langPreprocessorFlags))
             .putAll(
                 CxxPreprocessorFlags.fromArgs(
-                    args.propagatedPpFlags,
-                    args.propagatedLangPpFlags))
+                    args.exportedPreprocessorFlags,
+                    args.exportedLangPreprocessorFlags))
             .build(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
         args.compilerFlags.or(ImmutableList.<String>of()),
@@ -538,8 +538,8 @@ public class CxxLibraryDescription implements
         resolver,
         pathResolver,
         CxxPreprocessorFlags.fromArgs(
-            args.propagatedPpFlags,
-            args.propagatedLangPpFlags),
+            args.exportedPreprocessorFlags,
+            args.exportedLangPreprocessorFlags),
         args.linkWhole.or(false),
         args.soname);
   }
@@ -564,8 +564,9 @@ public class CxxLibraryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends CxxConstructorArg {
-    public Optional<ImmutableList<String>> propagatedPpFlags;
-    public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> propagatedLangPpFlags;
+    public Optional<ImmutableList<String>> exportedPreprocessorFlags;
+    public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>>
+        exportedLangPreprocessorFlags;
     public Optional<String> soname;
     public Optional<Boolean> linkWhole;
   }
