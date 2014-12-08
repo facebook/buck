@@ -38,6 +38,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphToActionGraph;
+import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.TestRunEvent;
@@ -104,9 +106,12 @@ import javax.xml.transform.stream.StreamResult;
 public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
   public static final int TEST_FAILURES_EXIT_CODE = 42;
+  private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
 
   public TestCommand(CommandRunnerParams params) {
     super(params);
+
+    this.targetGraphTransformer = new TargetGraphToActionGraph(params.getBuckEventBus());
   }
 
   @Override
@@ -300,7 +305,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         environment,
         options.getEnableProfiling());
 
-    ActionGraph graph = targetGraph.getActionGraph();
+    ActionGraph graph = targetGraphTransformer.apply(targetGraph);
 
     // Look up all of the test rules in the action graph.
     Iterable<TestRule> testRules = Iterables.filter(graph.getNodes(), TestRule.class);

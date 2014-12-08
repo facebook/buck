@@ -37,6 +37,9 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.TargetGraphToActionGraph;
+import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.step.ExecutionContext;
@@ -62,6 +65,8 @@ import java.nio.file.Paths;
 public class SeparatedProjectsGeneratorTest {
   private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private final ExecutionContext executionContext = TestExecutionContext.newInstance();
+  private final TargetGraphTransformer<ActionGraph> graphTransformer =
+      new TargetGraphToActionGraph(executionContext.getBuckEventBus());
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
@@ -76,6 +81,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of(node)),
+        graphTransformer,
         executionContext,
         ImmutableSet.of(target),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -91,6 +97,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of()),
+        graphTransformer,
         executionContext,
         ImmutableSet.of(target),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -114,6 +121,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         TargetGraphFactory.newInstance(ImmutableSet.of(libraryNode, configNode)),
+        graphTransformer,
         executionContext,
         ImmutableSet.of(configTarget),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -157,6 +165,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         TargetGraphFactory.newInstance(ImmutableSet.of(depNode, node, configNode)),
+        graphTransformer,
         executionContext,
         ImmutableSet.of(configTarget),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -203,6 +212,7 @@ public class SeparatedProjectsGeneratorTest {
         projectFilesystem,
         TargetGraphFactory.newInstance(
             ImmutableSet.of(depNode, dynamicLibraryNode, node, configNode)),
+        graphTransformer,
         executionContext,
         ImmutableSet.of(configTarget),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -252,6 +262,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         TargetGraphFactory.newInstance(ImmutableSet.of(node1, node2, configNode)),
+        graphTransformer,
         executionContext,
         ImmutableSet.of(configTarget),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -322,6 +333,7 @@ public class SeparatedProjectsGeneratorTest {
         projectFilesystem,
         TargetGraphFactory.newInstance(
             ImmutableSet.of(libraryNode, binaryDepNode, binaryNode, nativeNode, configNode)),
+        graphTransformer,
         executionContext,
         ImmutableSet.of(configTarget),
         ImmutableSet.<ProjectGenerator.Option>of());
@@ -363,6 +375,7 @@ public class SeparatedProjectsGeneratorTest {
         projectFilesystem,
         TargetGraphFactory.newInstance(
             ImmutableSet.of(fooNode1, fooConfigNode, barNode2, barConfigNode)),
+        graphTransformer,
         executionContext,
         ImmutableSet.of(fooConfigTarget, barConfigTarget),
         ImmutableSet.<ProjectGenerator.Option>of());

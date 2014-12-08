@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
@@ -30,32 +31,34 @@ import javax.annotation.Nullable;
 
 public class TargetGraphToActionGraph implements TargetGraphTransformer<ActionGraph> {
 
-  private final Optional<BuckEventBus> eventBus;
+  private static final Logger LOG = Logger.get(TargetGraphToActionGraph.class);
+
+  private final BuckEventBus eventBus;
   @Nullable
   private volatile ActionGraph actionGraph;
+  private volatile int hashOfTargetGraph;
 
-  public TargetGraphToActionGraph(Optional<BuckEventBus> eventBus) {
+  public TargetGraphToActionGraph(BuckEventBus eventBus) {
     this.eventBus = eventBus;
   }
 
   @Override
-  public ActionGraph apply(TargetGraph targetGraph) {
+  public synchronized ActionGraph apply(TargetGraph targetGraph) {
     if (actionGraph != null) {
-      return actionGraph;
+      if (targetGraph.hashCode() == hashOfTargetGraph) {
+        return actionGraph;
+      }
+      LOG.info("Flushing cached action graph. May be a performance hit.");
     }
 
-    synchronized (this) {
-      if (actionGraph == null) {
-        actionGraph = createActionGraph(targetGraph);
-      }
-    }
+    actionGraph = createActionGraph(targetGraph);
+    hashOfTargetGraph = targetGraph.hashCode();
+
     return actionGraph;
   }
 
   private ActionGraph createActionGraph(final TargetGraph targetGraph) {
-    if (eventBus.isPresent()) {
-      eventBus.get().post(ActionGraphEvent.started());
-    }
+    eventBus.post(ActionGraphEvent.started());
 
     final BuildRuleResolver ruleResolver = new BuildRuleResolver();
     final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
@@ -135,9 +138,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer<ActionGr
         };
     bottomUpTraversal.traverse();
     ActionGraph result = bottomUpTraversal.getResult();
-    if (eventBus.isPresent()) {
-      eventBus.get().post(ActionGraphEvent.finished());
-    }
+    eventBus.post(ActionGraphEvent.finished());
     return result;
   }
 }

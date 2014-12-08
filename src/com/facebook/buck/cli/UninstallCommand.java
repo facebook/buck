@@ -25,6 +25,9 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.InstallableApk;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphToActionGraph;
+import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -33,8 +36,12 @@ import java.io.IOException;
 
 public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOptions> {
 
+  private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
+
   public UninstallCommand(CommandRunnerParams params) {
     super(params);
+
+    this.targetGraphTransformer = new TargetGraphToActionGraph(params.getBuckEventBus());
   }
 
   @Override
@@ -61,13 +68,14 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
     BuildTarget buildTarget;
     try {
       buildTarget = buildTargetParser.parse(buildTargetName, ParseContext.fullyQualified());
-      actionGraph = parser.buildTargetGraphForBuildTargets(
+      TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           ImmutableList.of(buildTarget),
           options.getDefaultIncludes(),
           getBuckEventBus(),
           console,
           environment,
-          options.getEnableProfiling()).getActionGraph();
+          options.getEnableProfiling());
+      actionGraph = targetGraphTransformer.apply(targetGraph);
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

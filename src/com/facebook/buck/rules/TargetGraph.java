@@ -42,7 +42,6 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
 
   private final ImmutableMap<BuildTarget, TargetNode<?>> targetsToNodes;
   private final Optional<BuckEventBus> buckEventBus;
-  private final TargetGraphTransformer<ActionGraph> actionGraphSupplier;
 
   public TargetGraph(
       MutableDirectedGraph<TargetNode<?>> graph,
@@ -53,7 +52,6 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
       builder.put(node.getBuildTarget(), node);
     }
     this.targetsToNodes = builder.build();
-    actionGraphSupplier = new TargetGraphToActionGraph(buckEventBus);
     this.buckEventBus = buckEventBus;
   }
 
@@ -80,10 +78,6 @@ public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode
             return Preconditions.checkNotNull(get(input));
           }
         });
-  }
-
-  public ActionGraph getActionGraph() {
-    return actionGraphSupplier.apply(this);
   }
 
   /**

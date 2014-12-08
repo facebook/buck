@@ -25,6 +25,8 @@ import com.facebook.buck.parser.ParseContext;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphToActionGraph;
+import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -46,8 +48,12 @@ import javax.annotation.Nullable;
 
 public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOptions> {
 
+  private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
+
   public AuditClasspathCommand(CommandRunnerParams params) {
     super(params);
+
+    this.targetGraphTransformer = new TargetGraphToActionGraph(params.getBuckEventBus());
   }
 
   @Override
@@ -122,7 +128,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
 
   @VisibleForTesting
   int printClasspath(TargetGraph targetGraph, ImmutableSet<BuildTarget> targets) {
-    ActionGraph graph = targetGraph.getActionGraph();
+    ActionGraph graph = targetGraphTransformer.apply(targetGraph);
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
     for (BuildTarget target : targets) {
@@ -146,7 +152,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   @VisibleForTesting
   int printJsonClasspath(TargetGraph targetGraph, ImmutableSet<BuildTarget> targets)
       throws IOException {
-    ActionGraph graph = targetGraph.getActionGraph();
+    ActionGraph graph = targetGraphTransformer.apply(targetGraph);
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {

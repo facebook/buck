@@ -48,6 +48,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.TestConsole;
@@ -97,6 +98,7 @@ public class ParserTest extends EasyMockSupport {
   private KnownBuildRuleTypes buildRuleTypes;
   private ProjectFilesystem filesystem;
   private RepositoryFactory repositoryFactory;
+  private BuckEventBus eventBus;
 
   @Rule
   public TemporaryFolder tempDir = new TemporaryFolder();
@@ -146,6 +148,7 @@ public class ParserTest extends EasyMockSupport {
     repositoryFactory = new FakeRepositoryFactory(root.toPath());
     Repository repository = repositoryFactory.getRootRepository();
     filesystem = repository.getFilesystem();
+    eventBus = BuckEventBusFactory.newInstance();
 
     buildRuleTypes = repository.getKnownBuildRuleTypes();
 
@@ -228,7 +231,6 @@ public class ParserTest extends EasyMockSupport {
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     // The EventBus should be updated with events indicating how parsing ran.
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 
@@ -239,7 +241,7 @@ public class ParserTest extends EasyMockSupport {
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         /* enableProfiling */ false);
-    ActionGraph actionGraph = targetGraph.getActionGraph();
+    ActionGraph actionGraph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
     BuildRule fooRule = actionGraph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
     BuildRule barRule = actionGraph.findBuildRuleByTarget(barTarget);
@@ -1004,13 +1006,14 @@ public class ParserTest extends EasyMockSupport {
     Iterable<String> defaultIncludes = ImmutableList.of();
 
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    ActionGraph graph = testParser.buildTargetGraphForBuildTargets(
+    TargetGraph targetGraph = testParser.buildTargetGraphForBuildTargets(
         buildTargets,
         defaultIncludes,
         eventBus,
         new TestConsole(),
         ImmutableMap.<String, String>of(),
-        /* enableProfiling */ false).getActionGraph();
+        /* enableProfiling */ false);
+    ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
 
     BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
@@ -1259,14 +1262,14 @@ public class ParserTest extends EasyMockSupport {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
     {
-      ActionGraph graph = parser.buildTargetGraphForBuildTargets(
+      TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           buildTargets,
           defaultIncludes,
           eventBus,
           new TestConsole(),
           ImmutableMap.<String, String>of(),
-          /* enableProfiling */ false)
-          .getActionGraph();
+          /* enableProfiling */ false);
+      ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(ImmutableList.of(Paths.get("foo/bar/Bar.java")), libRule.getInputs());
@@ -1282,14 +1285,15 @@ public class ParserTest extends EasyMockSupport {
       // Even though we've created this new file, the parser can't know it
       // has anything to do with our lib (which looks in foo/*.java)
       // until we clean the parser cache.
-      ActionGraph graph = parser.buildTargetGraphForBuildTargets(
+      TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           buildTargets,
           defaultIncludes,
           eventBus,
           new TestConsole(),
           ImmutableMap.<String, String>of(),
-          /* enableProfiling */ false)
-             .getActionGraph();
+          /* enableProfiling */ false);
+      ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(ImmutableList.of(Paths.get("foo/bar/Bar.java")), libRule.getInputs());
     }
@@ -1298,14 +1302,15 @@ public class ParserTest extends EasyMockSupport {
     parser.cleanCache();
 
     {
-      ActionGraph graph = parser.buildTargetGraphForBuildTargets(
+      TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           buildTargets,
           defaultIncludes,
           eventBus,
           new TestConsole(),
           ImmutableMap.<String, String>of(),
-          /* enableProfiling */ false)
-            .getActionGraph();
+          /* enableProfiling */ false);
+      ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
           ImmutableList.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
@@ -1339,13 +1344,14 @@ public class ParserTest extends EasyMockSupport {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
     {
-      ActionGraph graph = parser.buildTargetGraphForBuildTargets(
+      TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           buildTargets,
           defaultIncludes,
           eventBus,
           new TestConsole(),
           ImmutableMap.<String, String>of(),
-          /* enableProfiling */ false).getActionGraph();
+          /* enableProfiling */ false);
+      ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
@@ -1363,14 +1369,15 @@ public class ParserTest extends EasyMockSupport {
       // Even though we've deleted a source file, the parser can't know it
       // has anything to do with our lib (which looks in foo/*.java)
       // until we clean the parser cache.
-      ActionGraph graph = parser.buildTargetGraphForBuildTargets(
+      TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           buildTargets,
           defaultIncludes,
           eventBus,
           new TestConsole(),
           ImmutableMap.<String, String>of(),
-          /* enableProfiling */ false)
-              .getActionGraph();
+          /* enableProfiling */ false);
+      ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
           ImmutableList.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
@@ -1381,14 +1388,15 @@ public class ParserTest extends EasyMockSupport {
     parser.cleanCache();
 
     {
-      ActionGraph graph = parser.buildTargetGraphForBuildTargets(
+      TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           buildTargets,
           defaultIncludes,
           eventBus,
           new TestConsole(),
           ImmutableMap.<String, String>of(),
-          /* enableProfiling */ false)
-              .getActionGraph();
+          /* enableProfiling */ false);
+      ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
           ImmutableList.of(Paths.get("foo/bar/Bar.java")),

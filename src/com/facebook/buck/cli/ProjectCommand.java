@@ -42,6 +42,8 @@ import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphToActionGraph;
+import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -94,49 +96,12 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
   private static final String XCODE_PROCESS_NAME = "Xcode";
 
-  private static class TargetGraphAndTargets {
-    private final TargetGraph targetGraph;
-    private final TargetGraph fullGraph;
-    private final ImmutableSet<TargetNode<?>> projectRoots;
-    private final ImmutableSet<TargetNode<?>> associatedTests;
-    private final ImmutableSet<TargetNode<?>> associatedProjects;
-
-    public TargetGraphAndTargets(
-        TargetGraph targetGraph,
-        TargetGraph fullGraph,
-        ImmutableSet<TargetNode<?>> projectRoots,
-        ImmutableSet<TargetNode<?>> associatedTests,
-        ImmutableSet<TargetNode<?>> associatedProjects) {
-      this.targetGraph = targetGraph;
-      this.fullGraph = fullGraph;
-      this.projectRoots = projectRoots;
-      this.associatedTests = associatedTests;
-      this.associatedProjects = associatedProjects;
-    }
-
-    public TargetGraph getTargetGraph() {
-      return targetGraph;
-    }
-
-    public TargetGraph getFullGraph() {
-      return fullGraph;
-    }
-
-    public ImmutableSet<TargetNode<?>> getProjectRoots() {
-      return projectRoots;
-    }
-
-    public ImmutableSet<TargetNode<?>> getAssociatedTests() {
-      return associatedTests;
-    }
-
-    public ImmutableSet<TargetNode<?>> getAssociatedProjects() {
-      return associatedProjects;
-    }
-  }
+  private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
 
   public ProjectCommand(CommandRunnerParams params) {
     super(params);
+
+    this.targetGraphTransformer = new TargetGraphToActionGraph(params.getBuckEventBus());
   }
 
   @Override
@@ -171,7 +136,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     try {
       TargetGraphAndTargets targetGraphAndTargets = createTargetGraph(options);
       fullGraph = targetGraphAndTargets.getFullGraph();
-      actionGraph = targetGraphAndTargets.getTargetGraph().getActionGraph();
+      actionGraph = targetGraphTransformer.apply(targetGraphAndTargets.getTargetGraph());
     } catch (BuildTargetException | BuildFileParseException e) {
       throw new HumanReadableException(e);
     }
@@ -309,7 +274,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     ExecutionContext executionContext = createExecutionContext(
         options,
-        targetGraphAndTargets.getTargetGraph().getActionGraph());
+        targetGraphTransformer.apply(targetGraphAndTargets.getTargetGraph()));
 
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (options.getReadOnly()) {
@@ -353,6 +318,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
             getProjectFilesystem(),
             targetGraphAndTargets.getTargetGraph(),
+            targetGraphTransformer,
             executionContext,
             castToXcodeWorkspaceTargetNode(workspaceNode),
             optionsBuilder.build(),
@@ -377,6 +343,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       SeparatedProjectsGenerator projectGenerator = new SeparatedProjectsGenerator(
           getProjectFilesystem(),
           targetGraphAndTargets.getTargetGraph(),
+          targetGraphTransformer,
           executionContext,
           targets,
           optionsBuilder.build());
@@ -679,5 +646,46 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   @Override
   String getUsageIntro() {
     return "generates project configuration files for an IDE";
+  }
+
+  private static class TargetGraphAndTargets {
+    private final TargetGraph targetGraph;
+    private final TargetGraph fullGraph;
+    private final ImmutableSet<TargetNode<?>> projectRoots;
+    private final ImmutableSet<TargetNode<?>> associatedTests;
+    private final ImmutableSet<TargetNode<?>> associatedProjects;
+
+    public TargetGraphAndTargets(
+        TargetGraph targetGraph,
+        TargetGraph fullGraph,
+        ImmutableSet<TargetNode<?>> projectRoots,
+        ImmutableSet<TargetNode<?>> associatedTests,
+        ImmutableSet<TargetNode<?>> associatedProjects) {
+      this.targetGraph = targetGraph;
+      this.fullGraph = fullGraph;
+      this.projectRoots = projectRoots;
+      this.associatedTests = associatedTests;
+      this.associatedProjects = associatedProjects;
+    }
+
+    public TargetGraph getTargetGraph() {
+      return targetGraph;
+    }
+
+    public TargetGraph getFullGraph() {
+      return fullGraph;
+    }
+
+    public ImmutableSet<TargetNode<?>> getProjectRoots() {
+      return projectRoots;
+    }
+
+    public ImmutableSet<TargetNode<?>> getAssociatedTests() {
+      return associatedTests;
+    }
+
+    public ImmutableSet<TargetNode<?>> getAssociatedProjects() {
+      return associatedProjects;
+    }
   }
 }

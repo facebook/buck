@@ -30,6 +30,8 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphToActionGraph;
+import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -63,8 +65,12 @@ import javax.annotation.Nullable;
 
 public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions> {
 
+  private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
+
   public TargetsCommand(CommandRunnerParams params) {
     super(params);
+
+    this.targetGraphTransformer = new TargetGraphToActionGraph(params.getBuckEventBus());
   }
 
   @Override
@@ -331,13 +337,14 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
     ActionGraph graph;
     try {
-      graph = getParser().buildTargetGraphForBuildTargets(
+      TargetGraph targetGraph = getParser().buildTargetGraphForBuildTargets(
           matchingBuildTargets,
           options.getDefaultIncludes(),
           getBuckEventBus(),
           console,
           environment,
-          options.getEnableProfiling()).getActionGraph();
+          options.getEnableProfiling());
+      graph = targetGraphTransformer.apply(targetGraph);
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;

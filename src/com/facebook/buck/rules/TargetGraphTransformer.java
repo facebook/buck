@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Function;
 import com.facebook.buck.graph.ImmutableDirectedAcyclicGraph;
+import com.google.common.base.Function;
 
 /**
  * Responsible for converting a {@link TargetGraph} to a graph of some other type, typically of
@@ -25,4 +25,7 @@ import com.facebook.buck.graph.ImmutableDirectedAcyclicGraph;
  */
 public interface TargetGraphTransformer<T extends ImmutableDirectedAcyclicGraph<?>>
     extends Function<TargetGraph, T> {
+
+    @Override
+    T apply(TargetGraph input);
 }

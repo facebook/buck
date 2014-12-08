@@ -28,6 +28,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RepositoryFactory;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -83,14 +85,14 @@ public class CrossRepoTargetsIntegrationTest {
         BuildTarget.builder("//", "external").setRepository("external").build();
 
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    ActionGraph graph = parser.buildTargetGraphForBuildTargets(
+    TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
         ImmutableList.of(mainTarget),
         ImmutableList.<String>of(),
         eventBus,
         new TestConsole(),
         ImmutableMap.<String, String>of(),
-        /* enableProfiling */ false)
-        .getActionGraph();
+        /* enableProfiling */ false);
+    ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
 
     BuildRule mainRule = graph.findBuildRuleByTarget(mainTarget);
     assertEquals(mainTarget, mainRule.getBuildTarget());

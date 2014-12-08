@@ -58,11 +58,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.shell.GenruleDescription;
@@ -184,16 +186,15 @@ public class ProjectGenerator {
 
   public ProjectGenerator(
       TargetGraph targetGraph,
+      TargetGraphTransformer<ActionGraph> graphTransformer,
       Set<BuildTarget> initialTargets,
       ProjectFilesystem projectFilesystem,
       ExecutionContext executionContext,
       Path outputDirectory,
       String projectName,
       Set<Option> options) {
-    this.buildRuleResolver =
-        new BuildRuleResolver(
-            ImmutableSet.copyOf(
-                targetGraph.getActionGraph().getNodes()));
+    ActionGraph actionGraph = graphTransformer.apply(targetGraph);
+    this.buildRuleResolver = new BuildRuleResolver(actionGraph.getNodes());
     this.sourcePathResolver = new SourcePathResolver(this.buildRuleResolver);
     this.targetGraph = targetGraph;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);

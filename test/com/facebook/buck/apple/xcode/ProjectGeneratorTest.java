@@ -53,10 +53,12 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
@@ -1777,6 +1779,7 @@ public class ProjectGeneratorTest {
 
     return new ProjectGenerator(
         TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes)),
+        new TargetGraphToActionGraph(BuckEventBusFactory.newInstance()),
         initialBuildTargets,
         projectFilesystem,
         executionContext,

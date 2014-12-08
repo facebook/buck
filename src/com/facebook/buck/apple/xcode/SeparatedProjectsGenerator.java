@@ -19,7 +19,9 @@ package com.facebook.buck.apple.xcode;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -42,6 +44,7 @@ public class SeparatedProjectsGenerator {
   private final ExecutionContext executionContext;
   private final ImmutableSet<BuildTarget> projectConfigTargets;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
+  private final TargetGraphTransformer<ActionGraph> graphTransformer;
 
   /**
    * Project generators used to generate the projects, useful for testing to retrieve pre-serialized
@@ -53,6 +56,7 @@ public class SeparatedProjectsGenerator {
   public SeparatedProjectsGenerator(
       ProjectFilesystem projectFilesystem,
       TargetGraph targetGraph,
+      TargetGraphTransformer<ActionGraph> graphTransformer,
       ExecutionContext executionContext,
       ImmutableSet<BuildTarget> projectConfigTargets,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
@@ -80,6 +84,8 @@ public class SeparatedProjectsGenerator {
                 target.toString());
       }
     }
+
+    this.graphTransformer = graphTransformer;
   }
 
   public ImmutableSet<Path> generateProjects() throws IOException {
@@ -97,6 +103,7 @@ public class SeparatedProjectsGenerator {
       }
       ProjectGenerator generator = new ProjectGenerator(
           targetGraph,
+          graphTransformer,
           initialTargetsBuilder.build(),
           projectFilesystem,
           executionContext,
