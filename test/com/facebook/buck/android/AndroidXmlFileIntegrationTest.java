@@ -43,6 +43,7 @@ public class AndroidXmlFileIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     tmpFolder.create();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_project", tmpFolder);

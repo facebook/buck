@@ -49,6 +49,7 @@ public class MultipleResourcePackageIntegrationTest {
 
   @Test
   public void testRDotJavaFilesPerPackage() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_with_multiple_rdot_java_packages").assertSuccess();
 
     Path uberRDotJavaDir = AaptPackageResources.getPathToGeneratedRDotJavaSrcFiles(

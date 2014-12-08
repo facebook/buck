@@ -38,6 +38,7 @@ public class MultipleBuildConfigIntegrationTest {
    */
   @Test
   public void testAndroidBinarySupportsMultipleBuildConfigs() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_project", tmp);
     workspace.setUp();

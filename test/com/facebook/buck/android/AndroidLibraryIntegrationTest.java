@@ -47,6 +47,7 @@ public class AndroidLibraryIntegrationTest {
 
   @Test
   public void testAndroidLibraryDoesNotUseTransitiveResources() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult result =
         workspace.runBuckBuild("//java/com/sample/lib:lib_using_transitive_empty_res");
     result.assertFailure();

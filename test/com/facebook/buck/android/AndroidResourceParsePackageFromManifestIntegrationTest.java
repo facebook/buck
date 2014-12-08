@@ -42,6 +42,7 @@ public class AndroidResourceParsePackageFromManifestIntegrationTest {
    */
   @Test
   public void testParsePackageFromManifest() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "parse_package_from_manifest",

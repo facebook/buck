@@ -48,6 +48,8 @@ public class AndroidBinaryIntegrationTest {
 
   @BeforeClass
   public static void setUpOnce() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
     projectFolderWithPrebuiltTargets.create();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         new AndroidBinaryIntegrationTest(),

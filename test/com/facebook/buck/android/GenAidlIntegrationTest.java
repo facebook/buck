@@ -32,6 +32,7 @@ public class GenAidlIntegrationTest {
 
   @Test
   public void buildingCleaningAndThenRebuildingFromCacheShouldWorkAsExpected() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "cached_build",

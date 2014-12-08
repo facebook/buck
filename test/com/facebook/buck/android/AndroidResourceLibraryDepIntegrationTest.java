@@ -44,6 +44,7 @@ public class AndroidResourceLibraryDepIntegrationTest {
 
   @Test
   public void testModifyingLibraryDependencyDoesNotCauseRebuilt() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     String appTarget = "//apps/sample:app_res_lib_dep";
     String resTarget = "//res/com/sample/base:base_with_lib_dep";
     String libTarget = "//java/com/sample/small:small";

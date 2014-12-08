@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -58,6 +59,7 @@ public class QuickstartIntegrationTest {
    */
   @Test
   public void testQuickstartCreatesProject() throws CmdLineException, IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace quickstartWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "empty_project", quickstartDirectory);
     quickstartWorkspace.setUp();

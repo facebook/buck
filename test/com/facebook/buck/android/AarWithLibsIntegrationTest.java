@@ -35,6 +35,7 @@ public class AarWithLibsIntegrationTest {
 
   @Test
   public void testLibsInAarAreIncludedInApk() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_project", tmp);
     workspace.setUp();

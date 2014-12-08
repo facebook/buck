@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
@@ -459,6 +460,7 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void ndkCxxPlatforms() throws IOException {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple", tmp);
     workspace.setUp();

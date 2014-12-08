@@ -48,6 +48,7 @@ public class AaptPackageResourcesIntegrationTest {
 
   @Test
   public void testEditingLayoutChangesPackageHash() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild(MAIN_BUILD_TARGET).assertSuccess();
 
     // This is too low-level of a test.  Ideally, we'd be able to save the rule graph generated
@@ -70,6 +71,7 @@ public class AaptPackageResourcesIntegrationTest {
 
   @Test
   public void testOrigFileIsIgnoredByAapt() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_deps_resource_with_orig_file").assertSuccess();
   }
 }

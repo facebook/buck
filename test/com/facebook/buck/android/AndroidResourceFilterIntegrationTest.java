@@ -57,6 +57,7 @@ public class AndroidResourceFilterIntegrationTest {
 
   @BeforeClass
   public static void findBuildToolsVersion() {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get("."));
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         filesystem,

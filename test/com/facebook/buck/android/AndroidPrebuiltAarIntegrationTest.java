@@ -32,6 +32,7 @@ public class AndroidPrebuiltAarIntegrationTest {
 
   @Test
   public void testBuildAndroidPrebuiltAar() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "android_prebuilt_aar",

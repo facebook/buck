@@ -32,6 +32,7 @@ public class NdkLibraryIntegrationTest {
 
   @Test
   public void cxxLibraryDep() throws IOException {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "cxx_deps", tmp);
     workspace.setUp();
