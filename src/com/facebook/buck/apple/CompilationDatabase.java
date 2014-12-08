@@ -232,7 +232,7 @@ public class CompilationDatabase extends AbstractBuildRule {
 
         // Result of `xcode-select --print-path`.
         ImmutableMap<AppleSdk, AppleSdkPaths> allAppleSdkPaths = appleConfig.getAppleSdkPaths(
-            context.getConsole());
+            context.getProcessExecutor());
         AppleSdkPaths appleSdkPaths = selectNewestSimulatorSdk(allAppleSdkPaths);
 
         // TODO(mbolin): Make the sysroot configurable.

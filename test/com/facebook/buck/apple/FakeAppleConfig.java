@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
@@ -38,7 +38,7 @@ public class FakeAppleConfig extends AppleConfig {
   }
 
   @Override
-  public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(Console console) {
+  public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(ProcessExecutor processExecutor) {
     return Preconditions.checkNotNull(appleSdkPaths);
   }
 }

@@ -17,11 +17,12 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
@@ -43,19 +44,19 @@ public class AppleConfig {
    * Otherwise, this returns a {@link Supplier} that lazily runs {@code xcode-select --print-path}
    * and caches the result.
    */
-  public Supplier<Path> getAppleDeveloperDirectorySupplier(Console console) {
+  public Supplier<Path> getAppleDeveloperDirectorySupplier(ProcessExecutor processExecutor) {
     Optional<String> xcodeDeveloperDirectory = delegate.getValue("apple", "xcode_developer_dir");
     if (xcodeDeveloperDirectory.isPresent()) {
       Path developerDirectory = delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
           Paths.get(xcodeDeveloperDirectory.get()));
       return Suppliers.ofInstance(developerDirectory);
     } else {
-      return createAppleDeveloperDirectorySupplier(console);
+      return createAppleDeveloperDirectorySupplier(processExecutor);
     }
   }
 
-  public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(Console console) {
-    Path appleDeveloperDirectory = getAppleDeveloperDirectorySupplier(console).get();
+  public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(ProcessExecutor processExecutor) {
+    Path appleDeveloperDirectory = getAppleDeveloperDirectorySupplier(processExecutor).get();
     try {
       return AppleSdkDiscovery.discoverAppleSdkPaths(appleDeveloperDirectory);
     } catch (IOException e) {
@@ -67,18 +68,21 @@ public class AppleConfig {
    * @return a memoizing {@link Supplier} that caches the output of
    *     {@code xcode-select --print-path}.
    */
-  private static Supplier<Path> createAppleDeveloperDirectorySupplier(final Console console) {
+  private static Supplier<Path> createAppleDeveloperDirectorySupplier(
+      final ProcessExecutor processExecutor) {
     return Suppliers.memoize(new Supplier<Path>() {
       @Override
       public Path get() {
-        ProcessBuilder processBuilder = new ProcessBuilder("xcode-select", "--print-path");
+        ProcessExecutorParams processExecutorParams =
+            ProcessExecutorParams.builder()
+                .setCommand(ImmutableList.of("xcode-select", "--print-path"))
+                .build();
         // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
         Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
-        ProcessExecutor processExecutor = new ProcessExecutor(console);
         ProcessExecutor.Result result;
         try {
-          result = processExecutor.execute(
-              processBuilder.start(),
+          result = processExecutor.launchAndExecute(
+              processExecutorParams,
               options,
               /* stdin */ Optional.<String>absent());
         } catch (InterruptedException | IOException e) {
