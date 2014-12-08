@@ -77,9 +77,10 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer<ActionGr
 
             // Check whether a rule with this build target already exists. This is possible
             // if we create a new build rule during graph enhancement, and the user asks to
-            // build the same build rule.
+            // build the same build rule. The returned rule may have a different name from the
+            // target node.
             Optional<BuildRule> existingRule =
-                ruleResolver.getRuleOptional(node.getBuildTarget());
+                ruleResolver.getRuleOptional(rule.getBuildTarget());
             Preconditions.checkState(
                 !existingRule.isPresent() || existingRule.get().equals(rule));
             if (!existingRule.isPresent()) {
