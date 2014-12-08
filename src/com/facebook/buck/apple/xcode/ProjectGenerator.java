@@ -56,6 +56,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -81,6 +82,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
@@ -1230,17 +1232,33 @@ public class ProjectGenerator {
     for (TargetNode<?> dependency : directDependencies) {
       Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
           getLibraryNode(targetGraph, dependency);
-      if (library.isPresent()) {
-        AppleNativeTargetDescriptionArg constructorArg = library.get().getConstructorArg();
-        if (constructorArg.getUseBuckHeaderMaps() &&
-            constructorArg.tests.get().contains(targetNode.getBuildTarget())) {
-          headerMapsBuilder.add(
-              getHeaderMapRelativePath(
-                  library.get(),
-                  headerMapType));
-        }
+      if (library.isPresent() &&
+          isSourceUnderTest(dependency, library.get(), targetNode) &&
+          library.get().getConstructorArg().getUseBuckHeaderMaps()) {
+        headerMapsBuilder.add(
+            getHeaderMapRelativePath(
+                library.get(),
+                headerMapType));
       }
     }
+  }
+
+  private boolean isSourceUnderTest(
+      TargetNode<?> dependencyNode,
+      TargetNode<AppleNativeTargetDescriptionArg> libraryNode,
+      TargetNode<?> testNode) {
+    boolean isSourceUnderTest =
+        libraryNode.getConstructorArg().getTests().contains(testNode.getBuildTarget());
+
+    if (dependencyNode != libraryNode && dependencyNode.getConstructorArg() instanceof HasTests) {
+      ImmutableSortedSet<BuildTarget> tests =
+          ((HasTests) dependencyNode.getConstructorArg()).getTests();
+      if (tests.contains(testNode.getBuildTarget())) {
+        isSourceUnderTest = true;
+      }
+    }
+
+    return isSourceUnderTest;
   }
 
   private ImmutableSet<String> collectRecursiveLibrarySearchPaths(TargetNode<?> targetNode) {
