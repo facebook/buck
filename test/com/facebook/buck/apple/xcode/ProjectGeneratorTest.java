@@ -416,6 +416,73 @@ public class ProjectGeneratorTest {
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
+  @Test
+  public void testHeaderMapsWithTestsAndBinaryBundles() throws IOException {
+    BuildTarget binaryTarget = BuildTarget.builder("//foo", "bin").build();
+    BuildTarget bundleTarget = BuildTarget.builder("//foo", "bundle").build();
+    BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
+
+    TargetNode<?> binaryNode = AppleBinaryBuilder
+        .createBuilder(binaryTarget)
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(
+                            new TestSourcePath("foo.h"),
+                            "public")),
+                    AppleSource.ofSourcePath(
+                        new TestSourcePath("bar.h")))))
+        .setUseBuckHeaderMaps(Optional.of(true))
+        .build();
+
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setBinary(binaryTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
+        .setTests(Optional.of(ImmutableSortedSet.of(testTarget)))
+        .build();
+
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Default",
+                    ImmutableMap.<String, String>of())))
+        .setUseBuckHeaderMaps(Optional.of(true))
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setDeps(Optional.of(ImmutableSortedSet.of(bundleTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(binaryNode, bundleNode, testNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
+
+    ImmutableMap<String, String> buildSettings =
+        getBuildSettings(testTarget, testPBXTarget, "Default");
+
+    assertEquals(
+        "test binary should use headermaps for both public and non-public headers of the tested " +
+            "binary in HEADER_SEARCH_PATHS",
+        "$(inherited) " +
+            "../buck-out/gen/foo/test-target-headers.hmap " +
+            "../buck-out/gen/foo/bin-public-headers.hmap " +
+            "../buck-out/gen/foo/bin-target-headers.hmap",
+        buildSettings.get("HEADER_SEARCH_PATHS"));
+    assertEquals(
+        "test binary should use user headermaps of its own as well as of the tested binary " +
+            "in USER_HEADER_SEARCH_PATHS",
+        "$(inherited) " +
+            "../buck-out/gen/foo/test-target-user-headers.hmap " +
+            "../buck-out/gen/foo/bin-target-user-headers.hmap",
+        buildSettings.get("USER_HEADER_SEARCH_PATHS"));
+  }
+
   private void assertThatHeaderMapFileContains(String file, ImmutableMap<String, String> content) {
     byte[] bytes = projectFilesystem.readFileIfItExists(Paths.get(file)).get().getBytes();
     HeaderMap map = HeaderMap.deserialize(bytes);

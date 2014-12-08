@@ -59,10 +59,12 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.BuckConstant;
@@ -1135,21 +1137,52 @@ public class ProjectGenerator {
   }
 
   @SuppressWarnings("unchecked")
-  private static Optional<TargetNode<AppleNativeTargetDescriptionArg>>
-      getLibraryNode(TargetGraph targetGraph, TargetNode<?> targetNode) {
-    Optional<TargetNode<AppleNativeTargetDescriptionArg>> library = Optional.absent();
-    if (targetNode.getType().equals(AppleLibraryDescription.TYPE)) {
-      library = Optional.of((TargetNode<AppleNativeTargetDescriptionArg>) targetNode);
+  private static Optional<TargetNode<AppleNativeTargetDescriptionArg>> getAppleNativeNodeOfType(
+      TargetGraph targetGraph,
+      TargetNode<?> targetNode,
+      Set<BuildRuleType> nodeTypes,
+      Set<AppleBundleExtension> bundleExtensions) {
+    Optional<TargetNode<AppleNativeTargetDescriptionArg>> nativeNode = Optional.absent();
+    if (nodeTypes.contains(targetNode.getType())) {
+      nativeNode = Optional.of((TargetNode<AppleNativeTargetDescriptionArg>) targetNode);
     } else if (targetNode.getType().equals(AppleBundleDescription.TYPE)) {
       TargetNode<AppleBundleDescription.Arg> bundle =
           (TargetNode<AppleBundleDescription.Arg>) targetNode;
-      if (isFrameworkBundle(bundle.getConstructorArg())) {
-        library = Optional.of(Preconditions.checkNotNull(
+      Either<AppleBundleExtension, String> extension = bundle.getConstructorArg().getExtension();
+      if (extension.isLeft() && bundleExtensions.contains(extension.getLeft())) {
+        nativeNode = Optional.of(
+            Preconditions.checkNotNull(
                 (TargetNode<AppleNativeTargetDescriptionArg>) targetGraph.get(
                     bundle.getConstructorArg().binary)));
       }
     }
-    return library;
+    return nativeNode;
+  }
+
+  private static Optional<TargetNode<AppleNativeTargetDescriptionArg>> getAppleNativeNode(
+      TargetGraph targetGraph,
+      TargetNode<?> targetNode) {
+    return getAppleNativeNodeOfType(
+        targetGraph,
+        targetNode,
+        ImmutableSet.of(
+            AppleBinaryDescription.TYPE,
+            AppleLibraryDescription.TYPE),
+        ImmutableSet.of(
+            AppleBundleExtension.APP,
+            AppleBundleExtension.FRAMEWORK));
+  }
+
+  private static Optional<TargetNode<AppleNativeTargetDescriptionArg>> getLibraryNode(
+      TargetGraph targetGraph,
+      TargetNode<?> targetNode) {
+    return getAppleNativeNodeOfType(
+        targetGraph,
+        targetNode,
+        ImmutableSet.of(
+            AppleLibraryDescription.TYPE),
+        ImmutableSet.of(
+            AppleBundleExtension.FRAMEWORK));
   }
 
   private ImmutableSet<String> collectRecursiveHeaderSearchPaths(
@@ -1165,10 +1198,10 @@ public class ProjectGenerator {
             new Predicate<TargetNode<?>>() {
               @Override
               public boolean apply(TargetNode<?> input) {
-                Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
-                    getLibraryNode(targetGraph, input);
-                return library.isPresent() &&
-                    !library.get().getConstructorArg().getUseBuckHeaderMaps();
+                Optional<TargetNode<AppleNativeTargetDescriptionArg>> nativeNode =
+                    getAppleNativeNode(targetGraph, input);
+                return nativeNode.isPresent() &&
+                    !nativeNode.get().getConstructorArg().getUseBuckHeaderMaps();
               }
             })
         .transform(
@@ -1195,10 +1228,10 @@ public class ProjectGenerator {
             AppleBuildRules.RecursiveDependenciesMode.BUILDING,
             targetNode,
             Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))) {
-      Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
-          getLibraryNode(targetGraph, input);
-      if (library.isPresent() && library.get().getConstructorArg().getUseBuckHeaderMaps()) {
-        builder.add(getHeaderMapRelativePath(library.get(), HeaderMapType.PUBLIC_HEADER_MAP));
+      Optional<TargetNode<AppleNativeTargetDescriptionArg>> nativeNode =
+          getAppleNativeNode(targetGraph, input);
+      if (nativeNode.isPresent() && nativeNode.get().getConstructorArg().getUseBuckHeaderMaps()) {
+        builder.add(getHeaderMapRelativePath(nativeNode.get(), HeaderMapType.PUBLIC_HEADER_MAP));
       }
     }
 
@@ -1230,14 +1263,14 @@ public class ProjectGenerator {
     ImmutableSet<TargetNode<?>> directDependencies = ImmutableSet.copyOf(
         targetGraph.getAll(targetNode.getDeps()));
     for (TargetNode<?> dependency : directDependencies) {
-      Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
-          getLibraryNode(targetGraph, dependency);
-      if (library.isPresent() &&
-          isSourceUnderTest(dependency, library.get(), targetNode) &&
-          library.get().getConstructorArg().getUseBuckHeaderMaps()) {
+      Optional<TargetNode<AppleNativeTargetDescriptionArg>> nativeNode =
+          getAppleNativeNode(targetGraph, dependency);
+      if (nativeNode.isPresent() &&
+          isSourceUnderTest(dependency, nativeNode.get(), targetNode) &&
+          nativeNode.get().getConstructorArg().getUseBuckHeaderMaps()) {
         headerMapsBuilder.add(
             getHeaderMapRelativePath(
-                library.get(),
+                nativeNode.get(),
                 headerMapType));
       }
     }
@@ -1245,12 +1278,12 @@ public class ProjectGenerator {
 
   private boolean isSourceUnderTest(
       TargetNode<?> dependencyNode,
-      TargetNode<AppleNativeTargetDescriptionArg> libraryNode,
+      TargetNode<AppleNativeTargetDescriptionArg> nativeNode,
       TargetNode<?> testNode) {
     boolean isSourceUnderTest =
-        libraryNode.getConstructorArg().getTests().contains(testNode.getBuildTarget());
+        nativeNode.getConstructorArg().getTests().contains(testNode.getBuildTarget());
 
-    if (dependencyNode != libraryNode && dependencyNode.getConstructorArg() instanceof HasTests) {
+    if (dependencyNode != nativeNode && dependencyNode.getConstructorArg() instanceof HasTests) {
       ImmutableSortedSet<BuildTarget> tests =
           ((HasTests) dependencyNode.getConstructorArg()).getTests();
       if (tests.contains(testNode.getBuildTarget())) {
