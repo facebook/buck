@@ -385,8 +385,8 @@ public class ProjectGenerator {
         "%s." + getExtensionString(targetNode.getConstructorArg()),
         infoPlistPath,
         /* includeFrameworks */ true,
-        collectRecursiveResources(targetNode),
-        collectRecursiveAssetCatalogs(targetNode));
+        collectRecursiveResources(ImmutableList.of(targetNode)),
+        collectRecursiveAssetCatalogs(ImmutableList.of(targetNode)));
 
     // -- copy any binary and bundle targets into this bundle
     Iterable<TargetNode<?>> copiedRules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -533,9 +533,10 @@ public class ProjectGenerator {
     if (includeFrameworks) {
       ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
       frameworksBuilder.addAll(targetNode.getConstructorArg().frameworks.get());
-      collectRecursiveFrameworkDependencies(targetNode, frameworksBuilder);
+      frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(ImmutableList.of(targetNode)));
       mutator.setFrameworks(frameworksBuilder.build());
-      mutator.setArchives(collectRecursiveLibraryDependencies(targetNode));
+      mutator.setArchives(
+          collectRecursiveLibraryDependencies(ImmutableList.of(targetNode), false));
     }
 
     // TODO(Task #3772930): Go through all dependencies of the rule
@@ -624,10 +625,12 @@ public class ProjectGenerator {
             Joiner.on(' ').join(collectUserHeaderMaps(targetNode)))
         .put(
             "LIBRARY_SEARCH_PATHS",
-            Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(targetNode)))
+            Joiner.on(' ').join(
+                collectRecursiveLibrarySearchPaths(ImmutableSet.of(targetNode), false)))
         .put(
             "FRAMEWORK_SEARCH_PATHS",
-            Joiner.on(' ').join(collectRecursiveFrameworkSearchPaths(targetNode)));
+            Joiner.on(' ').join(
+                collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode), false)));
 
     setTargetBuildConfigurations(
         buildTarget,
@@ -1283,79 +1286,92 @@ public class ProjectGenerator {
     return isSourceUnderTest;
   }
 
-  private ImmutableSet<String> collectRecursiveLibrarySearchPaths(TargetNode<?> targetNode) {
+  private <T> ImmutableSet<String> collectRecursiveLibrarySearchPaths(
+      Iterable<TargetNode<T>> targetNodes,
+      boolean includeInputs) {
     return FluentIterable
-        .from(
-            AppleBuildRules
-                .<AppleNativeTargetDescriptionArg>getRecursiveTargetNodeDependenciesOfType(
-                    targetGraph,
-                    AppleBuildRules.RecursiveDependenciesMode.LINKING,
-                    targetNode,
-                    AppleLibraryDescription.TYPE))
+        .from(targetNodes)
+        .transformAndConcat(
+            newRecursiveRuleDependencyTransformer(
+                AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                ImmutableSet.of(AppleLibraryDescription.TYPE)))
+        .append(includeInputs ? targetNodes : ImmutableList.<TargetNode<?>>of())
         .transform(
-            new Function<TargetNode<AppleNativeTargetDescriptionArg>, String>() {
+            new Function<TargetNode<?>, String>() {
               @Override
-              public String apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
+              public String apply(TargetNode<?> input) {
                 return getTargetOutputPath(input);
               }
             })
         .toSet();
   }
 
-  private ImmutableSet<String> collectRecursiveFrameworkSearchPaths(TargetNode<?> targetNode) {
+  private <T> ImmutableSet<String> collectRecursiveFrameworkSearchPaths(
+      Iterable<TargetNode<T>> targetNodes,
+      boolean includeInputs) {
     return FluentIterable
-        .from(
-            AppleBuildRules
-                .<AppleBundleDescription.Arg>getRecursiveTargetNodeDependenciesOfType(
-                    targetGraph,
-                    AppleBuildRules.RecursiveDependenciesMode.LINKING,
-                    targetNode,
-                    AppleBundleDescription.TYPE))
+        .from(targetNodes)
+        .transformAndConcat(
+            newRecursiveRuleDependencyTransformer(
+                AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                ImmutableSet.of(AppleBundleDescription.TYPE)))
+        .append(includeInputs ? targetNodes : ImmutableList.<TargetNode<?>>of())
         .filter(
-            new Predicate<TargetNode<AppleBundleDescription.Arg>>() {
+            new Predicate<TargetNode<?>>() {
               @Override
-              public boolean apply(TargetNode<AppleBundleDescription.Arg> input) {
+              public boolean apply(TargetNode<?> input) {
                 return getLibraryNode(targetGraph, input).isPresent();
               }
             })
         .transform(
-            new Function<TargetNode<AppleBundleDescription.Arg>, String>() {
+            new Function<TargetNode<?>, String>() {
               @Override
-              public String apply(TargetNode<AppleBundleDescription.Arg> input) {
+              public String apply(TargetNode<?> input) {
                 return getTargetOutputPath(input);
               }
             })
         .toSet();
   }
 
-  private void collectRecursiveFrameworkDependencies(
-      TargetNode<?> targetNode,
-      ImmutableSet.Builder<String> frameworksBuilder) {
-    for (TargetNode<?> dependency :
-           AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-               targetGraph,
-               AppleBuildRules.RecursiveDependenciesMode.LINKING,
-               targetNode,
-               Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))) {
-      Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
-          getLibraryNode(targetGraph, dependency);
-      // Shared library dependencies don't require including their frameworks in dependencies.
-      if (library.isPresent() &&
-          !AppleLibraryDescription.isSharedLibraryTarget(library.get().getBuildTarget())) {
-        frameworksBuilder.addAll(
-            library.get().getConstructorArg().frameworks.get());
-      }
-    }
+  private <T> Iterable<String> collectRecursiveFrameworkDependencies(
+      Iterable<TargetNode<T>> targetNodes) {
+    return FluentIterable
+        .from(targetNodes)
+        .transformAndConcat(
+            newRecursiveRuleDependencyTransformer(
+                AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))
+        .transformAndConcat(
+            new Function<TargetNode<?>, Iterable<String>>() {
+              @Override
+              public Iterable<String> apply(TargetNode<?> input) {
+                Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
+                    getLibraryNode(targetGraph, input);
+                if (library.isPresent() &&
+                    !AppleLibraryDescription.isSharedLibraryTarget(
+                        library.get().getBuildTarget())) {
+                  return library.get().getConstructorArg().frameworks.get();
+                } else {
+                  return ImmutableList.of();
+                }
+              }
+            });
   }
 
-  private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(
-      TargetNode<?> targetNode) {
+  /**
+   * @param includeInputs whether to include library references to the inputs themselves in addition
+   *                      to their dependencies
+   */
+  private <T> ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(
+      Iterable<TargetNode<T>> targetNodes,
+      boolean includeInputs) {
     return FluentIterable
-        .from(AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-                targetGraph,
+        .from(targetNodes)
+        .transformAndConcat(
+            newRecursiveRuleDependencyTransformer(
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
-                targetNode,
-                Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES)))
+                AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))
+        .append(includeInputs ? targetNodes : ImmutableList.<TargetNode<?>>of())
         .filter(
             new Predicate<TargetNode<?>>() {
               @Override
@@ -1370,6 +1386,21 @@ public class ProjectGenerator {
                 return getLibraryFileReference(input);
               }
             }).toSet();
+  }
+
+  private Function<TargetNode<?>, Iterable<TargetNode<?>>> newRecursiveRuleDependencyTransformer(
+      final AppleBuildRules.RecursiveDependenciesMode mode,
+      final ImmutableSet<BuildRuleType> types) {
+    return new Function<TargetNode<?>, Iterable<TargetNode<?>>>() {
+      @Override
+      public Iterable<TargetNode<?>> apply(TargetNode<?> input) {
+        return AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+            targetGraph,
+            mode,
+            input,
+            Optional.of(types));
+      }
+    };
   }
 
   private SourceTreePath getProductsSourceTreePath(TargetNode<?> targetNode) {
@@ -1431,26 +1462,22 @@ public class ProjectGenerator {
   /**
    * Collect resources from recursive dependencies.
    *
-   * @param targetNode {@link TargetNode} at the tip of the traversal.
+   * @param targetNodes {@link TargetNode} at the tip of the traversal.
    * @return The recursive resource buildables.
    */
-  private ImmutableSet<AppleResourceDescription.Arg> collectRecursiveResources(
-      TargetNode<?> targetNode) {
+  private <T> ImmutableSet<AppleResourceDescription.Arg> collectRecursiveResources(
+      Iterable<TargetNode<T>> targetNodes) {
     return FluentIterable
-        .from(
-            AppleBuildRules
-                .<AppleResourceDescription.Arg>getRecursiveTargetNodeDependenciesOfType(
-                    targetGraph,
-                    AppleBuildRules.RecursiveDependenciesMode.COPYING,
-                    targetNode,
-                    AppleResourceDescription.TYPE))
+        .from(targetNodes)
+        .transformAndConcat(
+            newRecursiveRuleDependencyTransformer(
+                AppleBuildRules.RecursiveDependenciesMode.COPYING,
+                ImmutableSet.of(AppleResourceDescription.TYPE)))
         .transform(
-            new Function<
-                TargetNode<AppleResourceDescription.Arg>, AppleResourceDescription.Arg>() {
+            new Function<TargetNode<?>, AppleResourceDescription.Arg>() {
               @Override
-              public AppleResourceDescription.Arg apply(
-                  TargetNode<AppleResourceDescription.Arg> input) {
-                return input.getConstructorArg();
+              public AppleResourceDescription.Arg apply(TargetNode<?> input) {
+                return (AppleResourceDescription.Arg) input.getConstructorArg();
               }
             })
         .toSet();
@@ -1459,23 +1486,19 @@ public class ProjectGenerator {
   /**
    * Collect asset catalogs from recursive dependencies.
    */
-  private ImmutableSet<AppleAssetCatalogDescription.Arg> collectRecursiveAssetCatalogs(
-      TargetNode<?> targetNode) {
+  private <T> ImmutableSet<AppleAssetCatalogDescription.Arg> collectRecursiveAssetCatalogs(
+      Iterable<TargetNode<T>> targetNodes) {
     return FluentIterable
-        .from(
-            AppleBuildRules
-                .<AppleAssetCatalogDescription.Arg>getRecursiveTargetNodeDependenciesOfType(
-                    targetGraph,
-                    AppleBuildRules.RecursiveDependenciesMode.COPYING,
-                    targetNode,
-                    AppleAssetCatalogDescription.TYPE))
+        .from(targetNodes)
+        .transformAndConcat(
+            newRecursiveRuleDependencyTransformer(
+                AppleBuildRules.RecursiveDependenciesMode.COPYING,
+                ImmutableSet.of(AppleAssetCatalogDescription.TYPE)))
         .transform(
-            new Function<
-                TargetNode<AppleAssetCatalogDescription.Arg>, AppleAssetCatalogDescription.Arg>() {
+            new Function<TargetNode<?>, AppleAssetCatalogDescription.Arg>() {
               @Override
-              public AppleAssetCatalogDescription.Arg apply(
-                  TargetNode<AppleAssetCatalogDescription.Arg> input) {
-                return input.getConstructorArg();
+              public AppleAssetCatalogDescription.Arg apply(TargetNode<?> input) {
+                return (AppleAssetCatalogDescription.Arg) input.getConstructorArg();
               }
             })
         .toSet();
