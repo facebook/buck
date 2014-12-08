@@ -16,8 +16,10 @@
 
 package com.facebook.buck.apple.xcode;
 
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.apple.AppleBundle;
@@ -164,10 +166,10 @@ public final class ProjectGeneratorTestUtils {
       final Class<T> cls,
       ImmutableList<String> entries) {
     PBXBuildPhase buildPhase = getSingletonPhaseByType(target, cls);
-    assertEquals(
+    assertThat(
         "Phase should have right number of entries",
-        entries.size(),
-        buildPhase.getFiles().size());
+        buildPhase.getFiles(),
+        hasSize(entries.size()));
 
     for (PBXBuildFile file : buildPhase.getFiles()) {
       PBXReference.SourceTree sourceTree = file.getFileRef().getSourceTree();
@@ -181,10 +183,10 @@ public final class ProjectGeneratorTestUtils {
         // $CASES-OMITTED$
         default:
           String serialized = "$" + sourceTree + "/" + file.getFileRef().getPath();
-          assertTrue(
-              "Source tree prefixed file references should exist in list of expected entries: " +
-                  serialized,
-              entries.contains(serialized));
+          assertThat(
+              "Source tree prefixed file references should exist in list of expected entries.",
+              entries,
+              hasItem(serialized));
           break;
       }
     }
