@@ -1739,7 +1739,7 @@ class _BasePathTest(object):
         self.addCleanup(sock.close)
         try:
             sock.bind(str(P))
-        except Exception as e:
+        except IOError as e:
             if "AF_UNIX path too long" in str(e):
                 self.skipTest("cannot bind Unix socket: " + str(e))
             raise e
