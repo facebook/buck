@@ -73,7 +73,8 @@ class TestLabelOptions {
   private Map<Integer, LabelSelector> includedLabelSets;
 
   @Option(
-      name = "--always_exclude",
+      name = "--always-exclude",
+      aliases = {"--always_exclude"},
       usage =
           "If set, an exclude filter will win over a target on the command line, so tests " +
           "that were both specified to run on the command line and are excluded through either " +

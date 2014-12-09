@@ -37,7 +37,7 @@ A list of rules can also be passed into <code>buck targets</code> and Buck will
 only print out target information for those rules.  For example:
 
 {literal}<pre>
-buck targets --show_output &#x2F;/java/com/myproject:binary
+buck targets --show-output &#x2F;/java/com/myproject:binary
 > &#x2F;/java/com/myproject:binary buck-out/gen/java/com/myproject/binary.apk
 </pre>{/literal}
 
@@ -55,10 +55,10 @@ buck targets --show_output &#x2F;/java/com/myproject:binary
 {/call}
 
 {call buck.param}
-  {param name: 'referenced_file' /}
+  {param name: 'referenced-file' /}
   {param desc}
   Filters targets by the list of rules that include
-  {sp}<code>referenced_file</code> in their transitive closure.
+  {sp}<code>referenced-file</code> in their transitive closure.
 
   <p>
 
@@ -66,7 +66,7 @@ buck targets --show_output &#x2F;/java/com/myproject:binary
   particular file, they would run:
 {literal}<pre>
 buck targets --type java_test \
-  --referenced_file java/com/example/Foo.java |
+  --referenced-file java/com/example/Foo.java |
   xargs buck test
 </pre>{/literal}
   {/param}
@@ -90,7 +90,7 @@ buck targets --type java_test \
 {/call}
 
 {call buck.param}
-  {param name: 'show_output' /}
+  {param name: 'show-output' /}
   {param desc}
   Prints the relative path to the output for each rule after the rule name.
   {/param}

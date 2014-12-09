@@ -33,7 +33,8 @@ public class TargetsCommandOptions extends BuildCommandOptions {
 
   // TODO(mbolin): Use org.kohsuke.args4j.spi.PathOptionHandler. Currently, we resolve paths
   // manually, which is likely the path to madness.
-  @Option(name = "--referenced_file",
+  @Option(name = "--referenced-file",
+      aliases = {"--referenced_file"},
       usage = "The referenced file list, --referenced_file file1 file2  ... fileN --other_option",
       handler = StringSetOptionHandler.class)
   @SuppressFieldNotInitialized
@@ -52,11 +53,13 @@ public class TargetsCommandOptions extends BuildCommandOptions {
       usage = "Print the fully-qualified build target for the specified alias[es]")
   private boolean isResolveAlias;
 
-  @Option(name = "--show_output",
+  @Option(name = "--show-output",
+      aliases = {"--show_output"},
       usage = "Print the absolute path to the output for each rule after the rule name.")
   private boolean isShowOutput;
 
-  @Option(name = "--show_rulekey",
+  @Option(name = "--show-rulekey",
+      aliases = {"--show_rulekey"},
       usage = "Print the RuleKey of each rule after the rule name.")
   private boolean isShowRuleKey;
 
