@@ -89,13 +89,6 @@ public final class AppleBuildRules {
     return XCODE_TARGET_TEST_BUNDLE_EXTENSIONS.contains(extension);
   }
 
-  /**
-   * Whether the target node represents an AppleBundle rule with a known test bundle extension.
-   */
-  public static boolean isXcodeTargetTestBundleTargetNode(TargetNode<?> node) {
-    return node.getType() == AppleTestDescription.TYPE;
-  }
-
   public static String getOutputFileNameFormatForLibrary(boolean linkedDynamically) {
     if (linkedDynamically) {
       return "lib%s.dylib";
@@ -261,21 +254,22 @@ public final class AppleBuildRules {
    * Builds the multimap of (source rule: [test rule 1, test rule 2, ...])
    * for the set of test rules covering each source rule.
    */
-  public static ImmutableMultimap<BuildTarget, TargetNode<?>> getSourceTargetToTestNodesMap(
-      Iterable<TargetNode<?>> testTargets) {
-    ImmutableMultimap.Builder<BuildTarget, TargetNode<?>>
+  public static ImmutableMultimap<BuildTarget, TargetNode<AppleTestDescription.Arg>>
+  getSourceTargetToTestNodesMap(Iterable<TargetNode<?>> testTargets) {
+    ImmutableMultimap.Builder<BuildTarget, TargetNode<AppleTestDescription.Arg>>
         sourceNodeToTestNodesBuilder = ImmutableMultimap.builder();
     for (TargetNode<?> targetNode : testTargets) {
-      if (!isXcodeTargetTestTargetNode(targetNode)) {
-        LOG.verbose("Skipping target node %s (not xcode target test)", targetNode);
-        continue;
-      }
-      AppleTestDescription.Arg testDescriptionArg =
-          (AppleTestDescription.Arg) targetNode.getConstructorArg();
-      if (testDescriptionArg.sourceUnderTest.isPresent()) {
-        for (BuildTarget sourceTarget : testDescriptionArg.sourceUnderTest.get()) {
-          sourceNodeToTestNodesBuilder.put(sourceTarget, targetNode);
+      Optional<TargetNode<AppleTestDescription.Arg>> castedNode =
+          targetNode.castArg(AppleTestDescription.Arg.class);
+      if (castedNode.isPresent()) {
+        AppleTestDescription.Arg testDescriptionArg = castedNode.get().getConstructorArg();
+        if (testDescriptionArg.sourceUnderTest.isPresent()) {
+          for (BuildTarget sourceTarget : testDescriptionArg.sourceUnderTest.get()) {
+            sourceNodeToTestNodesBuilder.put(sourceTarget, castedNode.get());
+          }
         }
+      } else {
+        LOG.verbose("Skipping target node %s (not xcode target test)", targetNode);
       }
     }
     return sourceNodeToTestNodesBuilder.build();

@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.xcode;
 
 import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
@@ -57,8 +58,9 @@ public class WorkspaceAndProjectGenerator {
   private final TargetGraph projectGraph;
   private final TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceTargetNode;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
-  private final ImmutableMultimap<BuildTarget, TargetNode<?>> sourceTargetToTestNodes;
-  private final ImmutableSet<TargetNode<?>> extraTestBundleTargetNodes;
+  private final ImmutableMultimap<BuildTarget, TargetNode<AppleTestDescription.Arg>>
+      sourceTargetToTestNodes;
+  private final ImmutableSet<TargetNode<AppleTestDescription.Arg>> extraTestBundleTargetNodes;
   private final boolean combinedProject;
   private Optional<ProjectGenerator> combinedProjectGenerator;
 
@@ -67,7 +69,7 @@ public class WorkspaceAndProjectGenerator {
       TargetGraph projectGraph,
       TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceTargetNode,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
-      Multimap<BuildTarget, TargetNode<?>> sourceTargetToTestNodes,
+      Multimap<BuildTarget, TargetNode<AppleTestDescription.Arg>> sourceTargetToTestNodes,
       boolean combinedProject) {
     this.projectFilesystem = projectFilesystem;
     this.projectGraph = projectGraph;
@@ -76,9 +78,8 @@ public class WorkspaceAndProjectGenerator {
     this.sourceTargetToTestNodes = ImmutableMultimap.copyOf(sourceTargetToTestNodes);
     this.combinedProject = combinedProject;
     this.combinedProjectGenerator = Optional.absent();
-    extraTestBundleTargetNodes = ImmutableSet.copyOf(
-        projectGraph.getAll(
-            workspaceTargetNode.getConstructorArg().extraTests.get()));
+    extraTestBundleTargetNodes = getExtraTestTargetNodes(
+        projectGraph, workspaceTargetNode.getConstructorArg().extraTests.get());
   }
 
   @VisibleForTesting
@@ -118,7 +119,7 @@ public class WorkspaceAndProjectGenerator {
       orderedTargetNodes = ImmutableSet.of();
     }
 
-    ImmutableSet<TargetNode<?>> selectedTests = getOrderedTestNodes(
+    ImmutableSet<TargetNode<AppleTestDescription.Arg>> selectedTests = getOrderedTestNodes(
         projectGraph,
         sourceTargetToTestNodes,
         orderedTargetNodes,
@@ -234,13 +235,14 @@ public class WorkspaceAndProjectGenerator {
    *
    * @return test targets that should be run.
    */
-  private ImmutableSet<TargetNode<?>> getOrderedTestNodes(
+  private ImmutableSet<TargetNode<AppleTestDescription.Arg>> getOrderedTestNodes(
       TargetGraph targetGraph,
-      ImmutableMultimap<BuildTarget, TargetNode<?>> sourceTargetToTestNodes,
+      ImmutableMultimap<BuildTarget, TargetNode<AppleTestDescription.Arg>> sourceTargetToTestNodes,
       ImmutableSet<TargetNode<?>> orderedTargetNodes,
-      ImmutableSet<TargetNode<?>> extraTestBundleTargets) {
+      ImmutableSet<TargetNode<AppleTestDescription.Arg>> extraTestBundleTargets) {
     LOG.debug("Getting ordered test target nodes for %s", orderedTargetNodes);
-    ImmutableSet.Builder<TargetNode<?>> testsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg>> testsBuilder =
+        ImmutableSet.builder();
     if (projectGeneratorOptions.contains(ProjectGenerator.Option.INCLUDE_TESTS)) {
       for (TargetNode<?> node : orderedTargetNodes) {
         testsBuilder.addAll(sourceTargetToTestNodes.get(node.getBuildTarget()));
@@ -250,23 +252,27 @@ public class WorkspaceAndProjectGenerator {
         for (BuildTarget explicitTestTarget : ((HasTests) node.getConstructorArg()).getTests()) {
           TargetNode<?> explicitTestNode = targetGraph.get(explicitTestTarget);
           if (explicitTestNode != null) {
-            testsBuilder.add(explicitTestNode);
+            Optional<TargetNode<AppleTestDescription.Arg>> castedNode =
+                explicitTestNode.castArg(AppleTestDescription.Arg.class);
+            if (castedNode.isPresent()) {
+              testsBuilder.add(castedNode.get());
+            } else {
+              throw new HumanReadableException(
+                  "Test target specified in '%s' is not a test: '%s'",
+                  node.getBuildTarget(),
+                  explicitTestTarget);
+            }
           } else {
             throw new HumanReadableException(
-                "Test target %s is not in the target graph!",
+                "Test target specified in '%s' is not in the target graph: '%s'",
+                node.getBuildTarget(),
                 explicitTestTarget);
           }
         }
       }
     }
-    for (TargetNode<?> extraTestTarget : extraTestBundleTargets) {
-      if (AppleBuildRules.isXcodeTargetTestBundleTargetNode(extraTestTarget)) {
-        testsBuilder.add(extraTestTarget);
-      } else {
-        throw new HumanReadableException(
-            "Test target %s must be apple_bundle with a test extension!",
-            extraTestTarget);
-      }
+    for (TargetNode<AppleTestDescription.Arg> extraTestTarget : extraTestBundleTargets) {
+      testsBuilder.add(extraTestTarget);
     }
     return testsBuilder.build();
   }
@@ -279,7 +285,7 @@ public class WorkspaceAndProjectGenerator {
    * @return targets and their dependencies that should be build.
    */
   private ImmutableSet<TargetNode<?>> getTransitiveDepsAndInputs(
-      Iterable<TargetNode<?>> nodes,
+      Iterable<? extends TargetNode<?>> nodes,
       final ImmutableSet<TargetNode<?>> excludes) {
     return FluentIterable
         .from(nodes)
@@ -304,5 +310,22 @@ public class WorkspaceAndProjectGenerator {
               }
             })
         .toSet();
+  }
+
+  private static ImmutableSet<TargetNode<AppleTestDescription.Arg>> getExtraTestTargetNodes(
+      TargetGraph graph,
+      Iterable<BuildTarget> targets) {
+    ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg>> builder = ImmutableSet.builder();
+    for (TargetNode<?> node : graph.getAll(targets)) {
+      Optional<TargetNode<AppleTestDescription.Arg>> castedNode =
+          node.castArg(AppleTestDescription.Arg.class);
+      if (castedNode.isPresent()) {
+        builder.add(castedNode.get());
+      } else {
+        throw new HumanReadableException(
+            "Extra test target is not a test: '%s'", node.getBuildTarget());
+      }
+    }
+    return builder.build();
   }
 }

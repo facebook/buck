@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.ProjectGenerator;
@@ -301,7 +302,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       LOG.debug("Generating workspace for config targets %s", targets);
       Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
       ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
-      ImmutableMultimap<BuildTarget, TargetNode<?>> sourceTargetToTestNodes =
+      ImmutableMultimap<BuildTarget, TargetNode<AppleTestDescription.Arg>> sourceTargetToTestNodes =
           AppleBuildRules.getSourceTargetToTestNodesMap(testTargetNodes);
       for (BuildTarget workspaceTarget : targets) {
         TargetNode<?> workspaceNode = Preconditions.checkNotNull(

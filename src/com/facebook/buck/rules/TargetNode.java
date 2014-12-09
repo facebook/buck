@@ -161,6 +161,18 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     }
   }
 
+  /**
+   * Type safe checked cast of the constructor arg.
+   */
+  @SuppressWarnings("unchecked")
+  public <U> Optional<TargetNode<U>> castArg(Class<U> cls) {
+    if (cls.isInstance(constructorArg)) {
+      return Optional.of((TargetNode<U>) this);
+    } else {
+      return Optional.absent();
+    }
+  }
+
   private void detectBuildTargetsAndPathsForConstructorArg(
       final ImmutableSet.Builder<BuildTarget> depsBuilder,
       final ImmutableSet.Builder<Path> pathsBuilder,
