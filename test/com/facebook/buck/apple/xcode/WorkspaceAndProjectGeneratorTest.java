@@ -16,8 +16,13 @@
 
 package com.facebook.buck.apple.xcode;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.AppleBinaryBuilder;
@@ -25,10 +30,14 @@ import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
+import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleTestBuilder;
+import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.XcodeProjectConfigBuilder;
+import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
@@ -38,14 +47,20 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 
+import org.hamcrest.FeatureMatcher;
+import org.hamcrest.Matcher;
+import org.hamcrest.core.AllOf;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -360,4 +375,167 @@ public class WorkspaceAndProjectGeneratorTest {
         "//bar:lib");
   }
 
+  @Test
+  public void combinedTestBundle() throws IOException {
+    TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
+        .createBuilder(BuildTarget.builder("//foo", "lib").build())
+        .build();
+    TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
+        .createBuilder(BuildTarget.builder("//foo", "combinableTest1").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(library.getBuildTarget())))
+        .build();
+    TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
+        .createBuilder(BuildTarget.builder("//bar", "combinableTest2").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(library.getBuildTarget())))
+        .build();
+    TargetNode<AppleTestDescription.Arg> anotherTest = AppleTestBuilder
+        .createBuilder(BuildTarget.builder("//foo", "anotherTest").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.OCTEST))
+        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(library.getBuildTarget())))
+        .build();
+    TargetNode<XcodeProjectConfigDescription.Arg> fooProject = XcodeProjectConfigBuilder
+        .createBuilder(BuildTarget.builder("//foo", "project").build())
+        .setProjectName("foo")
+        .setRules(
+            ImmutableSortedSet.of(
+                library.getBuildTarget(),
+                combinableTest1.getBuildTarget(),
+                anotherTest.getBuildTarget()))
+        .build();
+    TargetNode<XcodeProjectConfigDescription.Arg> barProject = XcodeProjectConfigBuilder
+        .createBuilder(BuildTarget.builder("//bar", "project").build())
+        .setProjectName("bar")
+        .setRules(ImmutableSortedSet.of(combinableTest2.getBuildTarget()))
+        .build();
+    TargetNode<XcodeWorkspaceConfigDescription.Arg> workspace = XcodeWorkspaceConfigBuilder
+        .createBuilder(BuildTarget.builder("//foo", "workspace").build())
+        .setSrcTarget(Optional.of(library.getBuildTarget()))
+        .setWorkspaceName(Optional.of("workspace"))
+        .build();
+
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        TargetGraphFactory.newInstance(
+            library,
+            combinableTest1,
+            combinableTest2,
+            anotherTest,
+            fooProject,
+            barProject,
+            workspace),
+        workspace,
+        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
+        ImmutableMultimap.of(
+            library.getBuildTarget(), combinableTest1,
+            library.getBuildTarget(), combinableTest2,
+            library.getBuildTarget(), anotherTest),
+        false);
+    generator.setGroupTestBundles(true);
+    Map<TargetNode<?>, ProjectGenerator> projectGenerators = Maps.newHashMap();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    // Tests should become libraries
+    PBXTarget combinableTestTarget1 = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
+        projectGenerators.get(fooProject).getGeneratedProject(),
+        "//foo:combinableTest1");
+    assertEquals(
+        "Test in the bundle should be built as a static library.",
+        PBXTarget.ProductType.STATIC_LIBRARY,
+        combinableTestTarget1.getProductType());
+
+    PBXTarget combinableTestTarget2 = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
+        projectGenerators.get(barProject).getGeneratedProject(),
+        "//bar:combinableTest2");
+    assertEquals(
+        "Other test in the bundle should be built as a static library.",
+        PBXTarget.ProductType.STATIC_LIBRARY,
+        combinableTestTarget2.getProductType());
+
+    // Test not bundled with any others should retain behavior.
+    PBXTarget notCombinedTest = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
+        projectGenerators.get(fooProject).getGeneratedProject(),
+        "//foo:anotherTest");
+    assertEquals(
+        "Test that cannot be combined with other tests should generate a test bundle.",
+        PBXTarget.ProductType.BUNDLE,
+        notCombinedTest.getProductType());
+
+    // Combined test project should be generated with a combined test bundle.
+    PBXTarget combinedTestBundle = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
+        generator.getCombinedTestsProjectGenerator().get().getGeneratedProject(),
+        "_BuckCombinedTest-xctest-0");
+    assertEquals(
+        "Combined test project target should be test bundle.",
+        PBXTarget.ProductType.UNIT_TEST,
+        combinedTestBundle.getProductType());
+
+    // Scheme should contain generated test targets.
+    XCScheme scheme = generator.getSchemeGenerator().get().getOutputScheme().get();
+    XCScheme.TestAction testAction = scheme.getTestAction().get();
+    assertThat(
+        "Combined test target should be a testable",
+        testAction.getTestables(),
+        hasItem(testableWithName("_BuckCombinedTest-xctest-0")));
+    assertThat(
+        "Unbundled test should be a testable",
+        testAction.getTestables(),
+        hasItem(testableWithName("anotherTest")));
+    assertThat(
+        "Bundled test library is not a testable",
+        testAction.getTestables(),
+        not(hasItem(testableWithName("combinableTest1"))));
+
+    XCScheme.BuildAction buildAction = scheme.getBuildAction().get();
+    assertThat(
+        "Bundled test library should be built for tests",
+        buildAction.getBuildActionEntries(),
+        hasItem(
+            withNameAndBuildingFor(
+                "combinableTest1",
+                equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY))));
+    assertThat(
+        "Combined test library should be built for tests",
+        buildAction.getBuildActionEntries(),
+        hasItem(
+            withNameAndBuildingFor(
+                "_BuckCombinedTest-xctest-0",
+                equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY))));
+  }
+
+  private Matcher<XCScheme.BuildActionEntry> buildActionEntryWithName(String name) {
+    return new FeatureMatcher<XCScheme.BuildActionEntry, String>(
+        equalTo(name), "BuildActionEntry named", "name") {
+      @Override
+      protected String featureValueOf(XCScheme.BuildActionEntry buildActionEntry) {
+        return buildActionEntry.getBuildableReference().blueprintName;
+      }
+    };
+  }
+
+  private Matcher<XCScheme.TestableReference> testableWithName(String name) {
+    return new FeatureMatcher<XCScheme.TestableReference, String>(
+        equalTo(name), "TestableReference named", "name") {
+      @Override
+      protected String featureValueOf(XCScheme.TestableReference testableReference) {
+        return testableReference.getBuildableReference().blueprintName;
+      }
+    };
+  }
+  private Matcher<XCScheme.BuildActionEntry> withNameAndBuildingFor(
+      String name,
+      Matcher<? super EnumSet<XCScheme.BuildActionEntry.BuildFor>> buildFor) {
+    return AllOf.allOf(
+        buildActionEntryWithName(name),
+        new FeatureMatcher<
+            XCScheme.BuildActionEntry,
+            EnumSet<XCScheme.BuildActionEntry.BuildFor>>(buildFor, "Building for", "BuildFor") {
+          @Override
+          protected EnumSet<XCScheme.BuildActionEntry.BuildFor> featureValueOf(
+              XCScheme.BuildActionEntry entry) {
+            return entry.getBuildFor();
+          }
+        });
+  }
 }

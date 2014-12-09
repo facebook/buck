@@ -21,6 +21,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -74,6 +75,7 @@ class SchemeGenerator {
   private final Path outputDirectory;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
   private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
+  private Optional<XCScheme> outputScheme = Optional.absent();
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
@@ -100,6 +102,11 @@ class SchemeGenerator {
         orderedBuildTargets,
         orderedBuildTestTargets,
         orderedRunTestTargets);
+  }
+
+  @VisibleForTesting
+  Optional<XCScheme> getOutputScheme() {
+    return outputScheme;
   }
 
   public Path writeScheme() throws IOException {
@@ -176,6 +183,7 @@ class SchemeGenerator {
         profileAction,
         Optional.of(analyzeAction),
         Optional.of(archiveAction));
+    outputScheme = Optional.of(scheme);
 
     Path schemeDirectory = outputDirectory.resolve("xcshareddata/xcschemes");
     projectFilesystem.mkdirs(schemeDirectory);
