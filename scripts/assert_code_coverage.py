@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import xml.etree.ElementTree as ElementTree
+import os
 import sys
 
 # This parses buck-out/gen/jacoco/code-coverage/coverage.xml after
@@ -12,7 +13,13 @@ PATH_TO_CODE_COVERAGE_XML = 'buck-out/gen/jacoco/code-coverage/coverage.xml'
 # fail the build. This is designed to far enough below our current
 # standards (80% coverage) that this should be possible to sustain
 # given the inevitable ebb and flow of the code coverage level.
-CODE_COVERAGE_GOAL = 78
+# Note: our Darwin test machines don't have all the packages
+# installed that we do on Linux, so the code coverage there is
+# naturally lower.
+CODE_COVERAGE_GOAL = {
+    'Linux': 78,
+    'Darwin': 68,
+}
 
 
 def is_covered_package_name(package_name):
@@ -115,7 +122,8 @@ def calculate_code_coverage():
     def get_color_for_percentage(percentage):
         # \033[92m is OKGREEN.
         # \033[93m is WARNING.
-        return '\033[92m' if percentage >= CODE_COVERAGE_GOAL else '\033[93m'
+        platform = os.uname()[0]
+        return '\033[92m' if percentage >= CODE_COVERAGE_GOAL[platform] else '\033[93m'
 
     # Print header.
     # Type column headers are right-justified and truncated to 7 characters.
@@ -164,9 +172,10 @@ def calculate_code_coverage():
 def main():
     """Exits with 0 or 1 depending on whether the code coverage goal is met."""
     coverage = calculate_code_coverage()
-    if coverage < CODE_COVERAGE_GOAL:
+    platform = os.uname()[0]
+    if coverage < CODE_COVERAGE_GOAL[platform]:
         data = {
-            'expected': CODE_COVERAGE_GOAL,
+            'expected': CODE_COVERAGE_GOAL[platform],
             'observed': coverage,
         }
         print '\033[91mFAIL: %(observed).2f%% does not meet goal of %(expected).2f%%\033[0m' % data
