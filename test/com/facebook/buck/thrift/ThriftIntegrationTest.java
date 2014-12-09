@@ -26,6 +26,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ThriftWatcher;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -37,6 +38,7 @@ public class ThriftIntegrationTest {
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
+  @Ignore("hasn't been running in CI, and is now broken.  Tracked in t5773432")
   public void testThriftFileGen() throws IOException, InterruptedException {
     assumeTrue(ThriftWatcher.isThriftAvailable());
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
