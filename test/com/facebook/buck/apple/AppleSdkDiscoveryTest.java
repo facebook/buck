@@ -16,7 +16,10 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.equalTo;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -45,42 +48,156 @@ public class AppleSdkDiscoveryTest {
   @Test
   public void appleSdkPathsBuiltFromDirectory() throws Exception {
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/sdk-discovery");
-    ImmutableMap<ImmutableAppleSdk, ImmutableAppleSdkPaths> expected = ImmutableMap.of(
+    ImmutableAppleSdk macosx109Sdk =
         ImmutableAppleSdk.builder()
             .name("macosx10.9")
             .version("10.9")
             .applePlatform(ApplePlatform.MACOSX)
             .addArchitectures("i386", "x86_64")
-            .build(),
+            .build();
+    ImmutableAppleSdkPaths macosx109Paths =
         ImmutableAppleSdkPaths.builder()
             .toolchainPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
             .platformDeveloperPath(root.resolve("Platforms/MacOSX.platform/Developer"))
             .sdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
-            .build(),
+            .build();
+
+    ImmutableAppleSdk iphoneos80Sdk =
         ImmutableAppleSdk.builder()
             .name("iphoneos8.0")
             .version("8.0")
             .applePlatform(ApplePlatform.IPHONEOS)
             .addArchitectures("armv7", "arm64")
-            .build(),
+            .build();
+    ImmutableAppleSdkPaths iphoneos80Paths =
         ImmutableAppleSdkPaths.builder()
             .toolchainPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
             .platformDeveloperPath(root.resolve("Platforms/iPhoneOS.platform/Developer"))
             .sdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
-            .build(),
+            .build();
+
+    ImmutableAppleSdk iphonesimulator80Sdk =
         ImmutableAppleSdk.builder()
             .name("iphonesimulator8.0")
             .version("8.0")
             .applePlatform(ApplePlatform.IPHONESIMULATOR)
             .addArchitectures("i386", "x86_64")
-            .build(),
+            .build();
+    ImmutableAppleSdkPaths iphonesimulator80Paths =
         ImmutableAppleSdkPaths.builder()
             .toolchainPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
             .platformDeveloperPath(root.resolve("Platforms/iPhoneSimulator.platform/Developer"))
             .sdkPath(
                 root.resolve(
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"))
-            .build());
-    assertEquals(expected, AppleSdkDiscovery.discoverAppleSdkPaths(root));
+            .build();
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> expected =
+        ImmutableMap.<AppleSdk, AppleSdkPaths>builder()
+            .put(macosx109Sdk, macosx109Paths)
+            .put(macosx109Sdk.withName("macosx"), macosx109Paths)
+            .put(iphoneos80Sdk, iphoneos80Paths)
+            .put(iphoneos80Sdk.withName("iphoneos"), iphoneos80Paths)
+            .put(iphonesimulator80Sdk, iphonesimulator80Paths)
+            .put(iphonesimulator80Sdk.withName("iphonesimulator"), iphonesimulator80Paths)
+            .build();
+
+    assertThat(
+        AppleSdkDiscovery.discoverAppleSdkPaths(root),
+        equalTo(expected));
+  }
+
+  @Test
+  public void multipleAppleSdkPathsPerPlatformBuiltFromDirectory() throws Exception {
+    Path root = Paths.get("test/com/facebook/buck/apple/testdata/sdk-multi-version-discovery");
+    ImmutableAppleSdk macosx109Sdk =
+        ImmutableAppleSdk.builder()
+            .name("macosx10.9")
+            .version("10.9")
+            .applePlatform(ApplePlatform.MACOSX)
+            .addArchitectures("i386", "x86_64")
+            .build();
+    ImmutableAppleSdkPaths macosx109Paths =
+        ImmutableAppleSdkPaths.builder()
+            .toolchainPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .platformDeveloperPath(root.resolve("Platforms/MacOSX.platform/Developer"))
+            .sdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
+            .build();
+
+    ImmutableAppleSdk iphoneos80Sdk =
+        ImmutableAppleSdk.builder()
+            .name("iphoneos8.0")
+            .version("8.0")
+            .applePlatform(ApplePlatform.IPHONEOS)
+            .addArchitectures("armv7", "arm64")
+            .build();
+    ImmutableAppleSdkPaths iphoneos80Paths =
+        ImmutableAppleSdkPaths.builder()
+            .toolchainPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .platformDeveloperPath(root.resolve("Platforms/iPhoneOS.platform/Developer"))
+            .sdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+            .build();
+
+    ImmutableAppleSdk iphonesimulator80Sdk =
+        ImmutableAppleSdk.builder()
+            .name("iphonesimulator8.0")
+            .version("8.0")
+            .applePlatform(ApplePlatform.IPHONESIMULATOR)
+            .addArchitectures("i386", "x86_64")
+            .build();
+    ImmutableAppleSdkPaths iphonesimulator80Paths =
+        ImmutableAppleSdkPaths.builder()
+            .toolchainPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .platformDeveloperPath(root.resolve("Platforms/iPhoneSimulator.platform/Developer"))
+            .sdkPath(
+                root.resolve(
+                    "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
+            .build();
+
+    ImmutableAppleSdk iphoneos81Sdk =
+        ImmutableAppleSdk.builder()
+            .name("iphoneos8.1")
+            .version("8.1")
+            .applePlatform(ApplePlatform.IPHONEOS)
+            .addArchitectures("armv7", "arm64")
+            .build();
+    ImmutableAppleSdkPaths iphoneos81Paths =
+        ImmutableAppleSdkPaths.builder()
+            .toolchainPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .platformDeveloperPath(root.resolve("Platforms/iPhoneOS.platform/Developer"))
+            .sdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
+            .build();
+
+    ImmutableAppleSdk iphonesimulator81Sdk =
+        ImmutableAppleSdk.builder()
+            .name("iphonesimulator8.1")
+            .version("8.1")
+            .applePlatform(ApplePlatform.IPHONESIMULATOR)
+            .addArchitectures("i386", "x86_64")
+            .build();
+    ImmutableAppleSdkPaths iphonesimulator81Paths =
+        ImmutableAppleSdkPaths.builder()
+            .toolchainPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .platformDeveloperPath(root.resolve("Platforms/iPhoneSimulator.platform/Developer"))
+            .sdkPath(
+                root.resolve(
+                    "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"))
+            .build();
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> expected =
+        ImmutableMap.<AppleSdk, AppleSdkPaths>builder()
+            .put(macosx109Sdk, macosx109Paths)
+            .put(macosx109Sdk.withName("macosx"), macosx109Paths)
+            .put(iphoneos80Sdk, iphoneos80Paths)
+            .put(iphonesimulator80Sdk, iphonesimulator80Paths)
+            .put(iphoneos81Sdk, iphoneos81Paths)
+            .put(iphoneos81Sdk.withName("iphoneos"), iphoneos81Paths)
+            .put(iphonesimulator81Sdk, iphonesimulator81Paths)
+            .put(iphonesimulator81Sdk.withName("iphonesimulator"), iphonesimulator81Paths)
+            .build();
+
+    assertThat(
+        AppleSdkDiscovery.discoverAppleSdkPaths(root),
+        equalTo(expected));
   }
 }

@@ -48,7 +48,7 @@ public class CxxLibraryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_cxx_library", tmp);
     workspace.setUp();
-    workspace.runBuckBuild("//:main#iphonesimulator8.0-i386").assertSuccess();
+    workspace.runBuckBuild("//:main#iphonesimulator-i386").assertSuccess();
   }
 
 }

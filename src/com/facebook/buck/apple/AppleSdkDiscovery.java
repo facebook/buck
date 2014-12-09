@@ -20,7 +20,11 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.VersionStringComparator;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
 
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
@@ -38,6 +42,16 @@ import java.util.Locale;
 public class AppleSdkDiscovery {
 
   private static final Logger LOG = Logger.get(AppleSdkDiscovery.class);
+
+  private static final Ordering<AppleSdk> APPLE_SDK_VERSION_ORDERING =
+    Ordering
+        .from(new VersionStringComparator())
+        .onResultOf(new Function<AppleSdk, String>() {
+            @Override
+            public String apply(AppleSdk appleSdk) {
+                return appleSdk.version();
+            }
+        });
 
   // Utility class; do not instantiate.
   private AppleSdkDiscovery() { }
@@ -61,6 +75,17 @@ public class AppleSdkDiscovery {
     if (!Files.exists(platforms)) {
       return appleSdkPathsBuilder.build();
     }
+
+    // We need to find the most recent SDK for each platform so we can
+    // make the fall-back SDKs with no version number in their name
+    // ("macosx", "iphonesimulator", "iphoneos").
+    //
+    // To do this, we store a map of (platform: [sdk1, sdk2, ...])
+    // pairs where the SDKs for each platform are ordered by version.
+    TreeMultimap<ApplePlatform, ImmutableAppleSdk> orderedSdksForPlatform =
+        TreeMultimap.create(
+            Ordering.natural(),
+            APPLE_SDK_VERSION_ORDERING);
 
     try (DirectoryStream<Path> platformStream = Files.newDirectoryStream(
         platforms,
@@ -86,11 +111,27 @@ public class AppleSdkDiscovery {
                   .sdkPath(sdkDir)
                   .build();
               appleSdkPathsBuilder.put(sdk, xcodePaths);
+              orderedSdksForPlatform.put(sdk.applePlatform(), sdk);
             }
           }
         }
       }
     }
+
+    // Get a snapshot of what's in appleSdkPathsBuilder, then for each
+    // ApplePlatform, add to appleSdkPathsBuilder the most recent
+    // SDK with an unversioned name.
+    ImmutableMap<AppleSdk, AppleSdkPaths> discoveredSdkPaths = appleSdkPathsBuilder.build();
+
+    for (ApplePlatform platform : orderedSdksForPlatform.keySet()) {
+      ImmutableAppleSdk mostRecentSdkForPlatform = orderedSdksForPlatform.get(platform).last();
+      appleSdkPathsBuilder.put(
+          mostRecentSdkForPlatform.withName(platform.toString()),
+          discoveredSdkPaths.get(mostRecentSdkForPlatform));
+    }
+
+    // This includes both the discovered SDKs with versions in their names, as well as
+    // the unversioned aliases added just above.
     return appleSdkPathsBuilder.build();
   }
 
