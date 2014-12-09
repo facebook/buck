@@ -66,6 +66,8 @@ public class KnownBuildRuleTypesTest {
   private static final PythonEnvironment DUMMY_PYTHON_ENVIRONMENT =
       new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7"));
 
+  private static final String FAKE_XCODE_DEV_PATH = "/Fake/Path/To/Xcode.app/Contents/Developer";
+
   private static BuildRuleParams buildRuleParams;
 
   private static class TestDescription implements Description<Object> {
@@ -143,7 +145,7 @@ public class KnownBuildRuleTypesTest {
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
-        new FakeProcessExecutor(),
+        createExecutor(),
         new FakeAndroidDirectoryResolver(),
         DUMMY_PYTHON_ENVIRONMENT).build();
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
@@ -261,8 +263,8 @@ public class KnownBuildRuleTypesTest {
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
-        new FakeProcessExecutor(),
-    new FakeAndroidDirectoryResolver(),
+        createExecutor(),
+        new FakeAndroidDirectoryResolver(),
         new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7"))).build();
     AndroidLibraryDescription description =
         (AndroidLibraryDescription) buildRuleTypes.getDescription(AndroidLibraryDescription.TYPE);
@@ -342,7 +344,7 @@ public class KnownBuildRuleTypesTest {
       throws IOException, InterruptedException {
     KnownBuildRuleTypes knownBuildRuleTypes1 = KnownBuildRuleTypes.createInstance(
         new FakeBuckConfig(),
-        new FakeProcessExecutor(),
+        createExecutor(),
         new FakeAndroidDirectoryResolver(),
         DUMMY_PYTHON_ENVIRONMENT);
 
@@ -363,6 +365,12 @@ public class KnownBuildRuleTypesTest {
     assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);
   }
 
+  private ProcessExecutor createExecutor() throws IOException {
+    File javac = temporaryFolder.newFile();
+    javac.setExecutable(true);
+    return createExecutor(javac.toString(), "");
+  }
+
   private ProcessExecutor createExecutor(String javac, String version) {
     Map<ProcessExecutorParams, FakeProcess> processMap = new HashMap<>();
 
@@ -370,10 +378,22 @@ public class KnownBuildRuleTypesTest {
       ProcessExecutorParams params = ProcessExecutorParams.builder()
           .setCommand(Lists.newArrayList(javac, "-version"))
           .build();
-
       processMap.put(params, process);
 
+    addXcodeSelectProcess(processMap, FAKE_XCODE_DEV_PATH);
+
     return new FakeProcessExecutor(processMap);
+  }
+
+  private static void addXcodeSelectProcess(
+      Map<ProcessExecutorParams, FakeProcess> processMap,
+      String xcodeSelectPath) {
+
+    FakeProcess xcodeSelectOutputProcess = new FakeProcess(0, xcodeSelectPath, "");
+    ProcessExecutorParams xcodeSelectParams = ProcessExecutorParams.builder()
+        .setCommand(Lists.newArrayList("xcode-select", "--print-path"))
+        .build();
+    processMap.put(xcodeSelectParams, xcodeSelectOutputProcess);
   }
 
 }
