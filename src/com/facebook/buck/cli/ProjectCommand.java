@@ -272,10 +272,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       throw new HumanReadableException(e);
     }
 
-    ExecutionContext executionContext = createExecutionContext(
-        options,
-        targetGraphTransformer.apply(targetGraphAndTargets.getTargetGraph()));
-
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (options.getReadOnly()) {
       optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
@@ -318,8 +314,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
             getProjectFilesystem(),
             targetGraphAndTargets.getTargetGraph(),
-            targetGraphTransformer,
-            executionContext,
             castToXcodeWorkspaceTargetNode(workspaceNode),
             optionsBuilder.build(),
             sourceTargetToTestNodes,
@@ -343,8 +337,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       SeparatedProjectsGenerator projectGenerator = new SeparatedProjectsGenerator(
           getProjectFilesystem(),
           targetGraphAndTargets.getTargetGraph(),
-          targetGraphTransformer,
-          executionContext,
           targets,
           optionsBuilder.build());
       projectGenerator.generateProjects();

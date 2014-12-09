@@ -53,19 +53,15 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.Pair;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;
@@ -107,7 +103,6 @@ public class ProjectGeneratorTest {
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
   private FakeProjectFilesystem fakeProjectFilesystem;
-  private ExecutionContext executionContext;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -117,7 +112,6 @@ public class ProjectGeneratorTest {
     clock = new SettableFakeClock(0, 0);
     fakeProjectFilesystem = new FakeProjectFilesystem(clock);
     projectFilesystem = fakeProjectFilesystem;
-    executionContext = TestExecutionContext.newInstance();
 
     // Add support files needed by project generation to fake filesystem.
     projectFilesystem.writeContentsToPath(
@@ -1017,7 +1011,7 @@ public class ProjectGeneratorTest {
 
     assertThat(
         shellScriptBuildPhase.getShellScript(),
-        equalTo("/bin/bash -e -c script.sh"));
+        equalTo("script.sh"));
 
     // Assert that the post-build script phase comes after resources are copied.
     assertThat(
@@ -1779,10 +1773,8 @@ public class ProjectGeneratorTest {
 
     return new ProjectGenerator(
         TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes)),
-        new TargetGraphToActionGraph(BuckEventBusFactory.newInstance()),
         initialBuildTargets,
         projectFilesystem,
-        executionContext,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         projectGeneratorOptions);

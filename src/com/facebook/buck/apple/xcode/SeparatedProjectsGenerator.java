@@ -19,11 +19,8 @@ package com.facebook.buck.apple.xcode;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -41,10 +38,8 @@ import javax.annotation.Nullable;
 public class SeparatedProjectsGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final TargetGraph targetGraph;
-  private final ExecutionContext executionContext;
   private final ImmutableSet<BuildTarget> projectConfigTargets;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
-  private final TargetGraphTransformer<ActionGraph> graphTransformer;
 
   /**
    * Project generators used to generate the projects, useful for testing to retrieve pre-serialized
@@ -56,13 +51,10 @@ public class SeparatedProjectsGenerator {
   public SeparatedProjectsGenerator(
       ProjectFilesystem projectFilesystem,
       TargetGraph targetGraph,
-      TargetGraphTransformer<ActionGraph> graphTransformer,
-      ExecutionContext executionContext,
       ImmutableSet<BuildTarget> projectConfigTargets,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
     this.projectFilesystem = projectFilesystem;
     this.targetGraph = targetGraph;
-    this.executionContext = executionContext;
     this.projectConfigTargets = projectConfigTargets;
     this.projectGenerators = null;
     this.projectGeneratorOptions = ImmutableSet.<ProjectGenerator.Option>builder()
@@ -84,8 +76,6 @@ public class SeparatedProjectsGenerator {
                 target.toString());
       }
     }
-
-    this.graphTransformer = graphTransformer;
   }
 
   public ImmutableSet<Path> generateProjects() throws IOException {
@@ -103,10 +93,8 @@ public class SeparatedProjectsGenerator {
       }
       ProjectGenerator generator = new ProjectGenerator(
           targetGraph,
-          graphTransformer,
           initialTargetsBuilder.build(),
           projectFilesystem,
-          executionContext,
           target.getBasePath(),
           arg.projectName,
           projectGeneratorOptions);

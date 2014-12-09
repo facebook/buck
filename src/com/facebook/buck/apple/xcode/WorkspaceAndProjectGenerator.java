@@ -26,12 +26,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -55,27 +52,22 @@ public class WorkspaceAndProjectGenerator {
 
   private final ProjectFilesystem projectFilesystem;
   private final TargetGraph projectGraph;
-  private final ExecutionContext executionContext;
   private final TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceTargetNode;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
   private final ImmutableMultimap<BuildTarget, TargetNode<?>> sourceTargetToTestNodes;
   private final ImmutableSet<TargetNode<?>> extraTestBundleTargetNodes;
   private final boolean combinedProject;
-  private final TargetGraphTransformer<ActionGraph> graphTransformer;
   private Optional<ProjectGenerator> combinedProjectGenerator;
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
       TargetGraph projectGraph,
-      TargetGraphTransformer<ActionGraph> graphTransformer,
-      ExecutionContext executionContext,
       TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceTargetNode,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       Multimap<BuildTarget, TargetNode<?>> sourceTargetToTestNodes,
       boolean combinedProject) {
     this.projectFilesystem = projectFilesystem;
     this.projectGraph = projectGraph;
-    this.executionContext = executionContext;
     this.workspaceTargetNode = workspaceTargetNode;
     this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
     this.sourceTargetToTestNodes = ImmutableMultimap.copyOf(sourceTargetToTestNodes);
@@ -84,8 +76,6 @@ public class WorkspaceAndProjectGenerator {
     extraTestBundleTargetNodes = ImmutableSet.copyOf(
         projectGraph.getAll(
             workspaceTargetNode.getConstructorArg().extraTests.get()));
-
-    this.graphTransformer = graphTransformer;
   }
 
   @VisibleForTesting
@@ -171,10 +161,8 @@ public class WorkspaceAndProjectGenerator {
       LOG.debug("Generating a combined project");
       ProjectGenerator generator = new ProjectGenerator(
           projectGraph,
-          graphTransformer,
           initialTargetsBuilder.build(),
           projectFilesystem,
-          executionContext,
           outputDirectory,
           "GeneratedProject",
           projectGeneratorOptions);
@@ -203,10 +191,8 @@ public class WorkspaceAndProjectGenerator {
           LOG.debug("Generating project for target %s", targetNode);
           generator = new ProjectGenerator(
               projectGraph,
-              graphTransformer,
               projectArg.rules,
               projectFilesystem,
-              executionContext,
               targetNode.getBuildTarget().getBasePath(),
               projectArg.projectName,
               projectGeneratorOptions);

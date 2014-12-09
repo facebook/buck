@@ -58,17 +58,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.shell.GenruleDescription;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -153,11 +150,9 @@ public class ProjectGenerator {
           PosixFilePermission.GROUP_READ,
           PosixFilePermission.OTHERS_READ));
 
-  private final BuildRuleResolver buildRuleResolver;
   private final SourcePathResolver sourcePathResolver;
   private final TargetGraph targetGraph;
   private final ProjectFilesystem projectFilesystem;
-  private final ExecutionContext executionContext;
   private final Path outputDirectory;
   private final String projectName;
   private final ImmutableSet<BuildTarget> initialTargets;
@@ -186,20 +181,15 @@ public class ProjectGenerator {
 
   public ProjectGenerator(
       TargetGraph targetGraph,
-      TargetGraphTransformer<ActionGraph> graphTransformer,
       Set<BuildTarget> initialTargets,
       ProjectFilesystem projectFilesystem,
-      ExecutionContext executionContext,
       Path outputDirectory,
       String projectName,
       Set<Option> options) {
-    ActionGraph actionGraph = graphTransformer.apply(targetGraph);
-    this.buildRuleResolver = new BuildRuleResolver(actionGraph.getNodes());
-    this.sourcePathResolver = new SourcePathResolver(this.buildRuleResolver);
     this.targetGraph = targetGraph;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectFilesystem = projectFilesystem;
-    this.executionContext = executionContext;
+    this.sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
     this.outputDirectory = outputDirectory;
     this.projectName = projectName;
     this.options = ImmutableSet.copyOf(options);
@@ -511,10 +501,7 @@ public class ProjectGenerator {
         sourcePathResolver,
         targetNode.getConstructorArg().srcs.get());
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
-        targetGraph,
-        executionContext,
         pathRelativizer,
-        buildRuleResolver,
         sourcePathResolver,
         buildTarget);
     mutator

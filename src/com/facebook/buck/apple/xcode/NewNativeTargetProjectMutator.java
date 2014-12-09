@@ -24,6 +24,7 @@ import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.FileExtensions;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.HeaderVisibility;
+import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
@@ -42,15 +43,10 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
-import com.facebook.buck.shell.Genrule;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.Escaper;
+import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -82,12 +78,7 @@ public class NewNativeTargetProjectMutator {
     }
   }
 
-  private final TargetNodeToBuildRuleTransformer targetNodeToBuildRuleTransformer =
-      new TargetNodeToBuildRuleTransformer();
-  private final TargetGraph targetGraph;
-  private final ExecutionContext executionContext;
   private final PathRelativizer pathRelativizer;
-  private final BuildRuleResolver buildRuleResolver;
   private final SourcePathResolver sourcePathResolver;
   private final BuildTarget buildTarget;
 
@@ -108,16 +99,10 @@ public class NewNativeTargetProjectMutator {
   private Iterable<TargetNode<?>> postBuildRunScriptPhases = ImmutableList.of();
 
   public NewNativeTargetProjectMutator(
-      TargetGraph targetGraph,
-      ExecutionContext executionContext,
       PathRelativizer pathRelativizer,
-      BuildRuleResolver buildRuleResolver,
       SourcePathResolver sourcePathResolver,
       BuildTarget buildTarget) {
-    this.targetGraph = targetGraph;
-    this.executionContext = executionContext;
     this.pathRelativizer = pathRelativizer;
-    this.buildRuleResolver = buildRuleResolver;
     this.sourcePathResolver = sourcePathResolver;
     this.buildTarget = buildTarget;
     this.targetName = buildTarget.getFullyQualifiedName();
@@ -534,27 +519,31 @@ public class NewNativeTargetProjectMutator {
     for (TargetNode<?> node : nodes) {
       // TODO(user): Check and validate dependencies of the script. If it depends on libraries etc.
       // we can't handle it currently.
-      Genrule rule = (Genrule) targetNodeToBuildRuleTransformer.transform(
-          targetGraph,
-          buildRuleResolver,
-          node);
       PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
       target.getBuildPhases().add(shellScriptBuildPhase);
-      for (Path path : rule.getSrcs()) {
-        shellScriptBuildPhase.getInputPaths().add(
-            pathRelativizer.outputDirToRootRelative(path).toString());
-      }
-
-      StringBuilder bashCommandBuilder = new StringBuilder();
-      for (String commandElement : rule.createGenruleStep().getShellCommand(executionContext)) {
-        if (bashCommandBuilder.length() > 0) {
-          bashCommandBuilder.append(' ');
+      if (GenruleDescription.TYPE.equals(node.getType())) {
+        GenruleDescription.Arg arg = (GenruleDescription.Arg) node.getConstructorArg();
+        for (Path path : sourcePathResolver.getAllPaths(arg.srcs.get())) {
+          shellScriptBuildPhase.getInputPaths().add(
+              pathRelativizer.outputDirToRootRelative(path).toString());
         }
-        bashCommandBuilder.append(Escaper.escapeAsBashString(commandElement));
-      }
-      shellScriptBuildPhase.setShellScript(bashCommandBuilder.toString());
-      if (rule.getOutputName().length() > 0) {
-        shellScriptBuildPhase.getOutputPaths().add(rule.getOutputName());
+        if (arg.cmd.isPresent() && !arg.cmd.get().isEmpty()) {
+          shellScriptBuildPhase.setShellScript(arg.cmd.get());
+        } else if (arg.bash.isPresent() || arg.cmdExe.isPresent()) {
+          throw new IllegalStateException("Shell script phase only supports cmd for genrule.");
+        }
+        if (!arg.out.isEmpty()) {
+          shellScriptBuildPhase.getOutputPaths().add(arg.out);
+        }
+      } else if (IosPostprocessResourcesDescription.TYPE.equals(node.getType())) {
+        IosPostprocessResourcesDescription.Arg arg =
+            (IosPostprocessResourcesDescription.Arg) node.getConstructorArg();
+        if (arg.cmd.isPresent()) {
+          shellScriptBuildPhase.setShellScript(arg.cmd.get());
+        }
+      } else {
+        // unreachable
+        throw new IllegalStateException("Invalid rule type for shell script build phase");
       }
     }
   }

@@ -31,14 +31,9 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetGraphToActionGraph;
-import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;
@@ -56,11 +51,7 @@ import java.util.Map;
 
 public class WorkspaceAndProjectGeneratorTest {
 
-  private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
-  private FakeProjectFilesystem fakeProjectFilesystem;
-  private ExecutionContext executionContext;
-  private TargetGraphTransformer<ActionGraph> graphTransformer;
 
   private TargetGraph targetGraph;
   private TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode;
@@ -71,11 +62,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Before
   public void setUp() throws IOException {
-    clock = new SettableFakeClock(0, 0);
-    fakeProjectFilesystem = new FakeProjectFilesystem(clock);
-    projectFilesystem = fakeProjectFilesystem;
-    executionContext = TestExecutionContext.newInstance();
-    graphTransformer = new TargetGraphToActionGraph(executionContext.getBuckEventBus());
+    projectFilesystem = new FakeProjectFilesystem(new SettableFakeClock(0, 0));
 
     // Add support files needed by project generation to fake filesystem.
     projectFilesystem.writeContentsToPath(
@@ -231,8 +218,6 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
         targetGraph,
-        graphTransformer,
-        executionContext,
         workspaceNode,
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
@@ -290,8 +275,6 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
         targetGraph,
-        graphTransformer,
-        executionContext,
         workspaceNode,
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
@@ -334,8 +317,6 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
         targetGraph,
-        graphTransformer,
-        executionContext,
         workspaceNode,
         ImmutableSet.<ProjectGenerator.Option>of(),
         AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),

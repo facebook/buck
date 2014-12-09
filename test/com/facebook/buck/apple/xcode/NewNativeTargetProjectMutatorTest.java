@@ -55,9 +55,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -72,7 +69,6 @@ import org.junit.Test;
 import java.nio.file.Paths;
 
 public class NewNativeTargetProjectMutatorTest {
-  private ExecutionContext executionContext;
   private BuildRuleResolver buildRuleResolver;
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
@@ -80,7 +76,6 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Before
   public void setUp() {
-    executionContext = TestExecutionContext.newInstance();
     buildRuleResolver = new BuildRuleResolver();
     generatedProject = new PBXProject("TestProject");
     sourcePathResolver = new SourcePathResolver(buildRuleResolver);
@@ -94,10 +89,7 @@ public class NewNativeTargetProjectMutatorTest {
   public void shouldCreateTargetAndTargetGroup() throws NoSuchBuildTargetException {
     BuildTarget testBuildTarget = BuildTarget.builder("//foo", "test").build();
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
-        TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of()),
-        executionContext,
         pathRelativizer,
-        buildRuleResolver,
         sourcePathResolver,
         testBuildTarget);
     mutator
@@ -324,7 +316,7 @@ public class NewNativeTargetProjectMutatorTest {
     TargetNode<?> genruleNode = GenruleBuilder
         .newGenruleBuilder(BuildTarget.builder("//foo", "script").build())
         .setSrcs(ImmutableList.<SourcePath>of(new TestSourcePath("script/input.png")))
-        .setBash("echo \"hello world!\"")
+        .setCmd("echo \"hello world!\"")
         .setOut("helloworld.txt")
         .build();
 
@@ -340,7 +332,7 @@ public class NewNativeTargetProjectMutatorTest {
         Iterables.getOnlyElement(phase.getInputPaths()));
     assertEquals(
         "should set script correctly",
-        "/bin/bash -e -c 'echo \"hello world!\"'",
+        "echo \"hello world!\"",
         phase.getShellScript());
   }
 
@@ -353,14 +345,14 @@ public class NewNativeTargetProjectMutatorTest {
     // This has the side effect of adding the dependency to the BuildRuleResolver map.
     GenruleBuilder
         .newGenruleBuilder(depBuildTarget)
-        .setBash("echo \"hello dep!\"")
+        .setCmd("echo \"hello dep!\"")
         .setOut("dep.txt")
         .build(buildRuleResolver);
 
     TargetNode<?> genruleNode = GenruleBuilder
         .newGenruleBuilder(BuildTarget.builder("//foo", "script").build())
         .setSrcs(ImmutableList.<SourcePath>of(new TestSourcePath("script/input.png")))
-        .setBash("echo \"hello world!\"")
+        .setCmd("echo \"hello world!\"")
         .setOut("helloworld.txt")
         .setDeps(ImmutableSortedSet.of(depBuildTarget))
         .build();
@@ -377,16 +369,13 @@ public class NewNativeTargetProjectMutatorTest {
         Iterables.getOnlyElement(phase.getInputPaths()));
     assertEquals(
         "should set script correctly",
-        "/bin/bash -e -c 'echo \"hello world!\"'",
+        "echo \"hello world!\"",
         phase.getShellScript());
   }
 
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults(BuildTarget target) {
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
-        TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of()),
-        executionContext,
         pathRelativizer,
-        buildRuleResolver,
         sourcePathResolver,
         target);
     mutator
