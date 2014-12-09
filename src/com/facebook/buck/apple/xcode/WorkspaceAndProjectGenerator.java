@@ -31,9 +31,12 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -115,28 +118,19 @@ public class WorkspaceAndProjectGenerator {
       orderedTargetNodes = ImmutableSet.of();
     }
 
-    ImmutableSet<TargetNode<?>> orderedTestTargetNodes;
-    ImmutableSet<TargetNode<?>> orderedTestBundleTargetNodes;
-    {
-      ImmutableSet.Builder<TargetNode<?>> orderedTestTargetNodesBuilder =
-          ImmutableSet.builder();
-      ImmutableSet.Builder<TargetNode<?>> orderedTestBundleTargetNodesBuilder =
-          ImmutableSet.builder();
-
-      getOrderedTestNodes(
-          projectGraph,
-          sourceTargetToTestNodes,
-          orderedTargetNodes,
-          extraTestBundleTargetNodes,
-          orderedTestTargetNodesBuilder,
-          orderedTestBundleTargetNodesBuilder);
-
-      orderedTestTargetNodes = orderedTestTargetNodesBuilder.build();
-      orderedTestBundleTargetNodes = orderedTestBundleTargetNodesBuilder.build();
-    }
+    ImmutableSet<TargetNode<?>> selectedTests = getOrderedTestNodes(
+        projectGraph,
+        sourceTargetToTestNodes,
+        orderedTargetNodes,
+        extraTestBundleTargetNodes);
+    ImmutableList<TargetNode<?>> buildForTestNodes =
+        TopologicalSort.sort(
+            projectGraph,
+            Predicates.in(getTransitiveDepsAndInputs(selectedTests, orderedTargetNodes)));
 
     ImmutableSet<BuildTarget> targetsInRequiredProjects = FluentIterable
-        .from(Sets.union(orderedTargetNodes, orderedTestTargetNodes))
+        .from(orderedTargetNodes)
+        .append(buildForTestNodes)
         .transform(HasBuildTarget.TO_TARGET)
         .toSet();
     ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder =
@@ -216,15 +210,9 @@ public class WorkspaceAndProjectGenerator {
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
         workspaceTargetNode.getConstructorArg().srcTarget,
-        Iterables.transform(
-            orderedTargetNodes,
-            HasBuildTarget.TO_TARGET),
-        Iterables.transform(
-            orderedTestTargetNodes,
-            HasBuildTarget.TO_TARGET),
-        Iterables.transform(
-            orderedTestBundleTargetNodes,
-            HasBuildTarget.TO_TARGET),
+        Iterables.transform(orderedTargetNodes, HasBuildTarget.TO_TARGET),
+        Iterables.transform(buildForTestNodes, HasBuildTarget.TO_TARGET),
+        Iterables.transform(selectedTests, HasBuildTarget.TO_TARGET),
         workspaceName,
         outputDirectory.resolve(workspaceName + ".xcworkspace"),
         XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(
@@ -236,85 +224,85 @@ public class WorkspaceAndProjectGenerator {
     return workspacePath;
   }
 
-  private void getOrderedTestNodes(
+  /**
+   * Find tests to run.
+   *
+   * @param targetGraph input target graph
+   * @param sourceTargetToTestNodes map of nodes to nodes that test them
+   * @param orderedTargetNodes target nodes for which to fetch tests for
+   * @param extraTestBundleTargets extra tests to include
+   *
+   * @return test targets that should be run.
+   */
+  private ImmutableSet<TargetNode<?>> getOrderedTestNodes(
       TargetGraph targetGraph,
       ImmutableMultimap<BuildTarget, TargetNode<?>> sourceTargetToTestNodes,
       ImmutableSet<TargetNode<?>> orderedTargetNodes,
-      ImmutableSet<TargetNode<?>> extraTestBundleTargets,
-      ImmutableSet.Builder<TargetNode<?>> orderedTestTargetNodeBuilder,
-      ImmutableSet.Builder<TargetNode<?>> orderedTestBundleTargetNodeBuilder) {
+      ImmutableSet<TargetNode<?>> extraTestBundleTargets) {
     LOG.debug("Getting ordered test target nodes for %s", orderedTargetNodes);
-    final ImmutableSet.Builder<TargetNode<?>> recursiveTestTargetNodesBuilder =
-        ImmutableSet.builder();
+    ImmutableSet.Builder<TargetNode<?>> testsBuilder = ImmutableSet.builder();
     if (projectGeneratorOptions.contains(ProjectGenerator.Option.INCLUDE_TESTS)) {
       for (TargetNode<?> node : orderedTargetNodes) {
-        LOG.verbose("Checking if target %s has any tests covering it..", node);
-        for (TargetNode<?> testNode : sourceTargetToTestNodes.get(node.getBuildTarget())) {
-          addTestNodeAndDependencies(
-              testNode,
-              recursiveTestTargetNodesBuilder,
-              orderedTestBundleTargetNodeBuilder);
+        testsBuilder.addAll(sourceTargetToTestNodes.get(node.getBuildTarget()));
+        if (!(node.getConstructorArg() instanceof HasTests)) {
+          continue;
         }
-      }
-
-      for (TargetNode<?> node : orderedTargetNodes) {
-        if (node.getConstructorArg() instanceof HasTests) {
-          for (BuildTarget explicitTestTarget : ((HasTests) node.getConstructorArg()).getTests()) {
-            TargetNode<?> explicitTestNode = targetGraph.get(explicitTestTarget);
-            if (explicitTestNode == null) {
-              throw new HumanReadableException(
-                  "Test target %s is not in the target graph!",
-                  explicitTestTarget);
-            } else {
-              addTestNodeAndDependencies(
-                  explicitTestNode,
-                  recursiveTestTargetNodesBuilder,
-                  orderedTestBundleTargetNodeBuilder);
-            }
+        for (BuildTarget explicitTestTarget : ((HasTests) node.getConstructorArg()).getTests()) {
+          TargetNode<?> explicitTestNode = targetGraph.get(explicitTestTarget);
+          if (explicitTestNode != null) {
+            testsBuilder.add(explicitTestNode);
+          } else {
+            throw new HumanReadableException(
+                "Test target %s is not in the target graph!",
+                explicitTestTarget);
           }
         }
       }
     }
-
-    for (TargetNode<?> testBundleTarget : extraTestBundleTargets) {
-      if (!AppleBuildRules.isXcodeTargetTestBundleTargetNode(testBundleTarget)) {
+    for (TargetNode<?> extraTestTarget : extraTestBundleTargets) {
+      if (AppleBuildRules.isXcodeTargetTestBundleTargetNode(extraTestTarget)) {
+        testsBuilder.add(extraTestTarget);
+      } else {
         throw new HumanReadableException(
             "Test target %s must be apple_bundle with a test extension!",
-            testBundleTarget);
+            extraTestTarget);
       }
-      addTestNodeAndDependencies(
-          testBundleTarget,
-          recursiveTestTargetNodesBuilder,
-          orderedTestBundleTargetNodeBuilder);
     }
+    return testsBuilder.build();
+  }
 
-    final Set<TargetNode<?>> includedTestNodes =
-        Sets.difference(recursiveTestTargetNodesBuilder.build(), orderedTargetNodes);
-
-    orderedTestTargetNodeBuilder.addAll(
-        TopologicalSort.sort(
-            targetGraph,
+  /**
+   * Find transitive dependencies of inputs for building.
+   *
+   * @param nodes Nodes to fetch dependencies for.
+   * @param excludes Nodes to exclude from dependencies list.
+   * @return targets and their dependencies that should be build.
+   */
+  private ImmutableSet<TargetNode<?>> getTransitiveDepsAndInputs(
+      Iterable<TargetNode<?>> nodes,
+      final ImmutableSet<TargetNode<?>> excludes) {
+    return FluentIterable
+        .from(nodes)
+        .transformAndConcat(
+            new Function<TargetNode<?>, Iterable<TargetNode<?>>>() {
+              @Override
+              public Iterable<TargetNode<?>> apply(TargetNode<?> input) {
+                return AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                    projectGraph,
+                    AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+                    input,
+                    Optional.<ImmutableSet<BuildRuleType>>absent());
+              }
+            })
+        .append(nodes)
+        .filter(
             new Predicate<TargetNode<?>>() {
               @Override
               public boolean apply(TargetNode<?> input) {
-                return includedTestNodes.contains(input) &&
+                return !excludes.contains(input) &&
                     AppleBuildRules.isXcodeTargetBuildRuleType(input.getType());
               }
-            }));
-  }
-
-  private void addTestNodeAndDependencies(
-      TargetNode<?> testBundleTargetNode,
-      ImmutableSet.Builder<TargetNode<?>> recursiveTestTargetNodesBuilder,
-      ImmutableSet.Builder<TargetNode<?>> orderedTestBundleTargetNodesBuilder) {
-    Iterable<TargetNode<?>> testBundleTargetDependencies =
-        AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-            projectGraph,
-            AppleBuildRules.RecursiveDependenciesMode.BUILDING,
-            testBundleTargetNode,
-            Optional.<ImmutableSet<BuildRuleType>>absent());
-    recursiveTestTargetNodesBuilder.addAll(testBundleTargetDependencies);
-    recursiveTestTargetNodesBuilder.add(testBundleTargetNode);
-    orderedTestBundleTargetNodesBuilder.add(testBundleTargetNode);
+            })
+        .toSet();
   }
 }
