@@ -57,20 +57,20 @@ public class ExecutionContext {
   private final ObjectMapper objectMapper;
 
   private ExecutionContext(
-      @Nullable ProjectFilesystem projectFilesystem,
+      ProjectFilesystem projectFilesystem,
       Console console,
       Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<TargetDevice> targetDevice,
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
-      @Nullable BuckEventBus eventBus,
-      @Nullable Platform platform,
-      @Nullable ImmutableMap<String, String> environment,
-      @Nullable JavaPackageFinder javaPackageFinder,
-      @Nullable ObjectMapper objectMapper) {
+      BuckEventBus eventBus,
+      Platform platform,
+      ImmutableMap<String, String> environment,
+      JavaPackageFinder javaPackageFinder,
+      ObjectMapper objectMapper) {
     this.verbosity = console.getVerbosity();
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
+    this.projectFilesystem = projectFilesystem;
     this.console = console;
     this.androidPlatformTarget = androidPlatformTarget;
     this.targetDevice = targetDevice;
@@ -78,11 +78,11 @@ public class ExecutionContext {
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
     this.isDebugEnabled = isDebugEnabled;
     this.processExecutor = new ProcessExecutor(console);
-    this.eventBus = Preconditions.checkNotNull(eventBus);
-    this.platform = Preconditions.checkNotNull(platform);
-    this.environment = Preconditions.checkNotNull(environment);
-    this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
-    this.objectMapper = Preconditions.checkNotNull(objectMapper);
+    this.eventBus = eventBus;
+    this.platform = platform;
+    this.environment = environment;
+    this.javaPackageFinder = javaPackageFinder;
+    this.objectMapper = objectMapper;
   }
 
   /**
@@ -239,18 +239,18 @@ public class ExecutionContext {
 
     public ExecutionContext build() {
       return new ExecutionContext(
-          projectFilesystem,
+          Preconditions.checkNotNull(projectFilesystem),
           Preconditions.checkNotNull(console),
           androidPlatformTarget,
           targetDevice,
           defaultTestTimeoutMillis,
           isCodeCoverageEnabled,
           isDebugEnabled,
-          eventBus,
-          platform,
-          environment,
-          javaPackageFinder,
-          objectMapper);
+          Preconditions.checkNotNull(eventBus),
+          Preconditions.checkNotNull(platform),
+          Preconditions.checkNotNull(environment),
+          Preconditions.checkNotNull(javaPackageFinder),
+          Preconditions.checkNotNull(objectMapper));
     }
 
     public Builder setExecutionContext(ExecutionContext executionContext) {
@@ -291,7 +291,8 @@ public class ExecutionContext {
 
     /** Specify 0 for no timeout. */
     public Builder setDefaultTestTimeoutMillis(long defaultTestTimeoutMillis) {
-      Preconditions.checkArgument(defaultTestTimeoutMillis >= 0,
+      Preconditions.checkArgument(
+          defaultTestTimeoutMillis >= 0,
           "Default timeout cannot be negative.");
       this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
       return this;
