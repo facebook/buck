@@ -56,8 +56,14 @@ public class AppleSdkDiscovery {
     LOG.debug("Searching for Xcode platforms under %s", xcodeDir);
 
     ImmutableMap.Builder<AppleSdk, AppleSdkPaths> appleSdkPathsBuilder = ImmutableMap.builder();
+    Path platforms = xcodeDir.resolve("Platforms");
+
+    if (!Files.exists(platforms)) {
+      return appleSdkPathsBuilder.build();
+    }
+
     try (DirectoryStream<Path> platformStream = Files.newDirectoryStream(
-             xcodeDir.resolve("Platforms"),
+        platforms,
              "*.platform")) {
       for (Path platformDir : platformStream) {
         LOG.debug("Searching for Xcode SDKs under %s", platformDir);

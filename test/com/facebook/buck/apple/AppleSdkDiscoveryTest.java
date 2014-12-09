@@ -20,15 +20,28 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Unit tests for {@link AppleSdkDiscovery}.
- */
 public class AppleSdkDiscoveryTest {
+
+  @Rule
+  public TemporaryFolder temp = new TemporaryFolder();
+
+  @Test
+  public void shouldReturnAnEmptyMapIfNoPlatformsFound() throws IOException {
+    Path path = temp.newFolder().toPath().toAbsolutePath();
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(path);
+
+    assertEquals(0, sdks.size());
+  }
+
   @Test
   public void appleSdkPathsBuiltFromDirectory() throws Exception {
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/sdk-discovery");
