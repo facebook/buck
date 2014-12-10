@@ -103,6 +103,7 @@ public class NdkLibraryTest {
     expect(projectFilesystem.getAbsolutifier()).andReturn(pathTransform);
     Path binDir = Paths.get(BuckConstant.BIN_DIR, "java/src/com/facebook/base/__libbase/libs");
     expect(projectFilesystem.resolve(binDir)).andReturn(Paths.get("/foo/" + binDir));
+    expect(projectFilesystem.getRootPath()).andReturn(Paths.get("/foo"));
     Path ndkDir = createMock(Path.class);
     AndroidPlatformTarget mockPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(mockPlatformTarget.getNdkDirectory()).andReturn(Optional.of(ndkDir));
@@ -121,6 +122,7 @@ public class NdkLibraryTest {
               "APP_PROJECT_PATH=/foo/%s/%s/%s/ APP_BUILD_SCRIPT=/foo/%s/Android.mk " +
               "NDK_OUT=/foo/%s/%s/%s/ " +
               "NDK_LIBS_OUT=/foo/%s/%s/%s/libs " +
+              "BUCK_PROJECT_DIR=/foo " +
               "host-echo-build-step=@# " +
               "--silent",
               Runtime.getRuntime().availableProcessors(),

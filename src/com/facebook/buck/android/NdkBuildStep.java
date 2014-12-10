@@ -86,6 +86,7 @@ public class NdkBuildStep extends ShellStep {
         "APP_BUILD_SCRIPT=" + absolutifier.apply(makefile),
         "NDK_OUT=" + absolutifier.apply(buildArtifactsDirectory) + "/",
         "NDK_LIBS_OUT=" + projectFilesystem.resolve(binDirectory),
+        "BUCK_PROJECT_DIR=" + projectFilesystem.getRootPath(),
         // Suppress the custom build step messages (e.g. "Compile++ ...").
         "host-echo-build-step=@#");
 

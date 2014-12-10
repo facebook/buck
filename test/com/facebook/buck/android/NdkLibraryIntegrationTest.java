@@ -16,6 +16,11 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -24,21 +29,42 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class NdkLibraryIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public DebuggableTemporaryFolder tmp1 = new DebuggableTemporaryFolder();
+
+  @Rule
+  public DebuggableTemporaryFolder tmp2 = new DebuggableTemporaryFolder();
 
   @Test
   public void cxxLibraryDep() throws IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "cxx_deps", tmp);
-    workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//jni:foo");
-    result.assertSuccess();
+    ProjectWorkspace workspace1 = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "cxx_deps", tmp1);
+    workspace1.setUp();
+    workspace1.runBuckBuild("//jni:foo").assertSuccess();
+
+    ProjectWorkspace workspace2 = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "cxx_deps", tmp2);
+    workspace2.setUp();
+    workspace2.runBuckBuild("//jni:foo").assertSuccess();
+
+    // Verify that rule keys generated from building in two different working directories
+    // does not affect the rule key.
+    BuildTarget target = BuildTargetFactory.newInstance("//jni:foo");
+    assertNotEquals(workspace1.resolve(Paths.get("test")), workspace2.resolve(Paths.get("test")));
+    assertEquals(
+        workspace1.getFileContents(
+            NdkLibraryDescription.getGeneratedMakefilePath(target).toString()),
+        workspace2.getFileContents(
+            NdkLibraryDescription.getGeneratedMakefilePath(target).toString()));
+    assertEquals(
+        workspace1.getBuildLog().getRuleKey("//jni:foo"),
+        workspace2.getBuildLog().getRuleKey("//jni:foo"));
   }
 
 }

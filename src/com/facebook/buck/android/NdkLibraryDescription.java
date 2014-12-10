@@ -46,7 +46,7 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -102,33 +102,33 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     return new Arg();
   }
 
-  private Iterable<String> escapeForMakefile(final BuildRuleParams params, Iterable<String> args) {
+  private Iterable<String> escapeForMakefile(Iterable<String> args) {
+    ImmutableList.Builder<String> escapedArgs = ImmutableList.builder();
 
-    // We run ndk-build from the root of the NDK, so fixup paths that use the relative path to
-    // the buck out directory.
-    final Function<String, String> makeOutputArgsAbsolute =
-        new Function<String, String>() {
-          @Override
-          public String apply(String input) {
-            return input.startsWith(BuckConstant.BUCK_OUTPUT_DIRECTORY) ?
-                params.getProjectFilesystem().resolve(input).toString() :
-                input;
-          }
-        };
+    for (String arg : args) {
+      String escapedArg = arg;
 
-    // The ndk-build makefiles make heavy use of the "eval" function to propagate variables,
-    // which means we need to perform additional makefile escaping for *every* "eval" that
-    // gets used.  Turns out there are three "evals", so we escape a total of four times
-    // including the initial escaping.  Since the makefiles eventually hand-off these values
-    // to the shell, we first perform bash escaping.
-    //
-    return FluentIterable.from(args)
-        .transform(makeOutputArgsAbsolute)
-        .transform(Escaper.BASH_ESCAPER)
-        .transform(Escaper.MAKEFILE_VALUE_ESCAPER)
-        .transform(Escaper.MAKEFILE_VALUE_ESCAPER)
-        .transform(Escaper.MAKEFILE_VALUE_ESCAPER)
-        .transform(Escaper.MAKEFILE_VALUE_ESCAPER);
+      // The ndk-build makefiles make heavy use of the "eval" function to propagate variables,
+      // which means we need to perform additional makefile escaping for *every* "eval" that
+      // gets used.  Turns out there are three "evals", so we escape a total of four times
+      // including the initial escaping.  Since the makefiles eventually hand-off these values
+      // to the shell, we first perform bash escaping.
+      //
+      escapedArg = Escaper.escapeAsBashString(escapedArg);
+      for (int i = 0; i < 4; i++) {
+        escapedArg = Escaper.escapeAsMakefileValueString(escapedArg);
+      }
+
+      // We run ndk-build from the root of the NDK, so fixup paths that use the relative path to
+      // the buck out directory.
+      if (arg.startsWith(BuckConstant.BUCK_OUTPUT_DIRECTORY)) {
+        escapedArg = "$(BUCK_PROJECT_DIR)/" + escapedArg;
+      }
+
+      escapedArgs.add(escapedArg);
+    }
+
+    return escapedArgs.build();
   }
 
   private String getTargetArchAbi(AndroidBinary.TargetCpuType cpuType) {
@@ -146,7 +146,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     }
   }
 
-  private Path getGeneratedMakefilePath(BuildTarget target) {
+  @VisibleForTesting
+  protected static Path getGeneratedMakefilePath(BuildTarget target) {
     return BuildTargets.getGenPath(target, "Android.%s.mk");
   }
 
@@ -192,14 +193,12 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
           MoreIterables.zipAndConcat(
               Iterables.cycle("-I"),
               FluentIterable.from(cxxPreprocessorInput.getIncludeRoots())
-                  .transform(params.getPathAbsolutifier())
                   .transform(Functions.toStringFunction())),
           MoreIterables.zipAndConcat(
               Iterables.cycle("-isystem"),
               FluentIterable.from(cxxPreprocessorInput.getIncludeRoots())
-                  .transform(params.getPathAbsolutifier())
                   .transform(Functions.toStringFunction())));
-      String localCflags = Joiner.on(' ').join(escapeForMakefile(params, ppflags));
+      String localCflags = Joiner.on(' ').join(escapeForMakefile(ppflags));
 
       // Collect the native linkable input for all C/C++ library deps.  We search *through* other
       // NDK library rules.
@@ -219,8 +218,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
       // Add in the transitive native linkable flags contributed by C/C++ library rules into the
       // NDK build.
-      String localLdflags =
-          Joiner.on(' ').join(escapeForMakefile(params, nativeLinkableInput.getArgs()));
+      String localLdflags = Joiner.on(' ').join(escapeForMakefile(nativeLinkableInput.getArgs()));
 
       // Write the relevant lines to the generated makefile.
       if (!localCflags.isEmpty() || !localLdflags.isEmpty()) {
