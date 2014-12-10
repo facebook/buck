@@ -19,6 +19,7 @@ java_test(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:io',
     '//test/com/facebook/buck/apple/xcode:testutil',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
@@ -45,6 +46,8 @@ java_library(
   deps = [
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/cxx:platform',
+    '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util:io',

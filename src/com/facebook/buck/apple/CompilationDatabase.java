@@ -62,7 +62,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Build rule that generates a <a href="http://clang.llvm.org/docs/JSONCompilationDatabase.html">
- * clang compilation database</a> for an {@link AbstractAppleNativeTargetBuildRule}.
+ * clang compilation database</a> for an Apple target.
  */
 public class CompilationDatabase extends AbstractBuildRule {
 

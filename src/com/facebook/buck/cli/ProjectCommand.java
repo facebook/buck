@@ -379,8 +379,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       }
       console.getStdOut().format(
           "To disable this prompt in the future, add the following to %s: \n\n" +
-          "[project]\n" +
-          "  ide_prompt = false\n\n",
+              "[project]\n" +
+              "  ide_prompt = false\n\n",
           getProjectFilesystem()
               .getRootPath()
               .resolve(BuckConfig.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME)

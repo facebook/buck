@@ -50,8 +50,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Common logic for a {@link com.facebook.buck.rules.Description} that creates
- * {@link AbstractAppleNativeTargetBuildRule} rules.
+ * Common logic for a {@link com.facebook.buck.rules.Description} that creates Apple target rules.
  */
 public class AbstractAppleNativeTargetBuildRuleDescriptions {
 
@@ -63,8 +62,8 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
   private AbstractAppleNativeTargetBuildRuleDescriptions() {}
 
   /**
-   * Tries to create a flavored version of a {@link AbstractAppleNativeTargetBuildRule} based on
-   * the flavors of {@code params.getBuildTarget().getFlavors()} and using the specified args.
+   * Tries to create a {@link BuildRule} based on the flavors of {@code params.getBuildTarget()} and
+   * the specified args.
    * If this method does not know how to handle the specified flavors, it returns {@code null}.
    */
   static <A extends AppleNativeTargetDescriptionArg> Optional<BuildRule> createFlavoredRule(
@@ -92,11 +91,7 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
   }
 
   /**
-   * Takes the arguments for the description of an unflavored
-   * {@link AbstractAppleNativeTargetBuildRule} and creates the rule/action for the corresponding
-   * {@link AbstractAppleNativeTargetBuildRuleDescriptions#HEADERS} flavor if it is not already
-   * present in the specified {@code resolver}. (This could happen if another rule has already
-   * requested the {@code #headers} flavor for this rule.)
+   * @return A rule for making the headers of an Apple target available to other targets.
    */
   static BuildRule createHeadersFlavor(
       BuildRuleParams params,
