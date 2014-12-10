@@ -21,7 +21,6 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -37,41 +36,35 @@ import java.util.Map;
  */
 public class BuildFileToJsonParser implements AutoCloseable {
 
-  private final Gson gson;
-  private final JsonReader reader;
-
   /**
    * The parser below uses these objects for stateful purposes with the ultimate goal
    * of populating the parsed rules into `currentObjects`.
    *
-   * The parser is expecting two different styles of output:
-   *   1. Server mode: [{"key": "value"}, {"key": "value"}, ...]
-   *   2. Regular mode: {"key": "value"}, {"key": "value"}, ...
+   * The parser is expecting output in the form:
+   *   [{"key": "value"}, {"key": "value"}, ...]
    *
-   * Server mode output is a necessary short-term step to keep logic in the main Parser
-   * consistent (expecting to be able to correlate a set of rules with the specific BUCK file
-   * that generated them).  This requirement creates an unnecessary performance weakness
-   * in this design where we cannot parallelize buck.py's parsing of BUCK files with buck's
-   * processing of the result into a DAG.  Once this can be addressed, server mode should be
-   * eliminated.
+   * This is a necessary short-term step to keep logic in the main Parser consistent (expecting to
+   * be able to correlate a set of rules with the specific BUCK file that generated them). This
+   * requirement creates an unnecessary performance weakness in this design where we cannot
+   * parallelize buck.py's parsing of BUCK files with buck's processing of the result into a DAG.
    */
-  private final boolean isServerMode;
+  private final Gson gson;
+  private final JsonReader reader;
 
   /**
    * @param jsonReader That contains the JSON data.
    */
-  public BuildFileToJsonParser(Reader jsonReader, boolean isServerMode) {
+  public BuildFileToJsonParser(Reader jsonReader) {
     this.gson = new Gson();
     this.reader = new JsonReader(jsonReader);
-    this.isServerMode = isServerMode;
 
     // This is used to read one line at a time.
     reader.setLenient(true);
   }
 
   @VisibleForTesting
-  public BuildFileToJsonParser(String json, boolean isServerMode) {
-    this(new StringReader(json), isServerMode);
+  public BuildFileToJsonParser(String json) {
+    this(new StringReader(json));
   }
 
   /**
@@ -88,21 +81,14 @@ public class BuildFileToJsonParser implements AutoCloseable {
   List<Map<String, Object>> nextRules() throws IOException {
     try {
       List<Map<String, Object>> items = Lists.newArrayList();
-      if (isServerMode) {
-        reader.beginArray();
+      reader.beginArray();
 
-        while (reader.hasNext()) {
-          JsonObject json = gson.fromJson(reader, JsonObject.class);
-          items.add((Map<String, Object>) RawParser.toRawTypes(json));
-        }
-
-        reader.endArray();
-      } else {
-        while (reader.peek() != JsonToken.END_DOCUMENT) {
-          JsonObject json = gson.fromJson(reader, JsonObject.class);
-          items.add((Map<String, Object>) RawParser.toRawTypes(json));
-        }
+      while (reader.hasNext()) {
+        JsonObject json = gson.fromJson(reader, JsonObject.class);
+        items.add((Map<String, Object>) RawParser.toRawTypes(json));
       }
+
+      reader.endArray();
       return items;
     } catch (IllegalStateException e) {
       throw new IOException(e); // Rethrow Gson exceptions as IO (non-runtime) exceptions.

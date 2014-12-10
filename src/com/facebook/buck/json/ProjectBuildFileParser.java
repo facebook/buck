@@ -89,8 +89,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private final BuckEventBus buckEventBus;
   private final boolean allowEmptyGlobs;
 
-  private boolean isServerMode;
-
   private boolean isInitialized;
   private boolean isClosed;
 
@@ -116,25 +114,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.console = console;
     this.environment = environment;
     this.buckEventBus = buckEventBus;
-
-    // Default to server mode unless explicitly unset internally.
-    setServerMode(true);
-  }
-
-  /**
-   * Sets whether buck.py will use --server mode.  Server mode communicates via
-   * stdin/stdout to accept new BUCK files to parse in a long running fashion.  It
-   * also changes the stdout format so that output has an extra layer of structure
-   * sufficient to communicate state and coordinate on individual BUCK files
-   * submitted.
-   * <p>
-   * Note that you must not invoke this method after initialization.
-   */
-  private void setServerMode(boolean isServerMode) {
-    ensureNotClosed();
-    ensureNotInitialized();
-
-    this.isServerMode = isServerMode;
   }
 
   public void setEnableProfiling(boolean enableProfiling) {
@@ -210,7 +189,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
 
     Reader reader = new InputStreamReader(buckPyProcess.getInputStream(), Charsets.UTF_8);
-    buckPyStdoutParser = new BuildFileToJsonParser(reader, isServerMode);
+    buckPyStdoutParser = new BuildFileToJsonParser(reader);
   }
 
   private ImmutableList<String> buildArgs() throws IOException {
@@ -232,11 +211,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
     }
 
     argBuilder.add(getPathToBuckPy(descriptions).toString());
-
-    if (isServerMode) {
-      // Provide BUCK files to parse via buck.py's stdin.
-      argBuilder.add("--server");
-    }
 
     if (allowEmptyGlobs) {
       argBuilder.add("--allow_empty_globs");
@@ -275,14 +249,14 @@ public class ProjectBuildFileParser implements AutoCloseable {
   public List<Map<String, Object>> getAllRulesAndMetaRules(Path buildFile)
       throws BuildFileParseException {
     try {
-      return getAllRulesInternal(Optional.of(buildFile));
+      return getAllRulesInternal(buildFile);
     } catch (IOException e) {
       throw BuildFileParseException.createForBuildFileParseError(buildFile, e);
     }
   }
 
   @VisibleForTesting
-  protected List<Map<String, Object>> getAllRulesInternal(Optional<Path> buildFile)
+  protected List<Map<String, Object>> getAllRulesInternal(Path buildFile)
       throws IOException {
     ensureNotClosed();
     initIfNeeded();
@@ -292,17 +266,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
     Preconditions.checkNotNull(buckPyStdinWriter);
     Preconditions.checkNotNull(buckPyProcess);
 
-    // When in server mode, we require a build file.  When not in server mode, we
-    // cannot accept a build file.  Pretty stupid, actually.  Consider fixing this.
-    Preconditions.checkState(buildFile.isPresent() == isServerMode);
-
-    if (buildFile.isPresent()) {
-      String buildFileString = buildFile.get().toString();
-      LOG.verbose("Writing to buck.py stdin: %s", buildFileString);
-      buckPyStdinWriter.write(buildFileString);
-      buckPyStdinWriter.newLine();
-      buckPyStdinWriter.flush();
-    }
+    String buildFileString = buildFile.toString();
+    LOG.verbose("Writing to buck.py stdin: %s", buildFileString);
+    buckPyStdinWriter.write(buildFileString);
+    buckPyStdinWriter.newLine();
+    buckPyStdinWriter.flush();
 
     LOG.debug("Parsing output of process %s...", buckPyProcess);
     List<Map<String, Object>> result = buckPyStdoutParser.nextRules();
@@ -332,14 +300,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
           // This is bad, but we swallow this so we can still close the other objects.
         }
 
-        if (isServerMode) {
-          // Allow buck.py to terminate gracefully.
-          try {
-            buckPyStdinWriter.close();
-          } catch (IOException e) {
-            // Safe to ignore since we've already flushed everything we wanted
-            // to write.
-          }
+        // Allow buck.py to terminate gracefully.
+        try {
+          buckPyStdinWriter.close();
+        } catch (IOException e) {
+          // Safe to ignore since we've already flushed everything we wanted
+          // to write.
         }
 
         if (stderrConsumer != null) {

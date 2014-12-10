@@ -438,11 +438,6 @@ def main():
         '--include',
         action='append',
         dest='include')
-    parser.add_option(
-        '--server',
-        action='store_true',
-        dest='server',
-        help='Invoke as a server to parse individual BUCK files on demand.')
     (options, args) = parser.parse_args()
 
     # Even though project_root is absolute path, it may not be concise. For
@@ -456,17 +451,12 @@ def main():
 
     for build_file in args:
         values = buildFileProcessor.process(build_file)
-        if options.server:
-            print json.dumps(values)
-        else:
-            for value in values:
-                print json.dumps(value)
+        print json.dumps(values)
 
-    if options.server:
-        # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
-        for build_file in iter(sys.stdin.readline, ''):
-            values = buildFileProcessor.process(build_file.rstrip())
-            print json.dumps(values)
+    # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
+    for build_file in iter(sys.stdin.readline, ''):
+        values = buildFileProcessor.process(build_file.rstrip())
+        print json.dumps(values)
 
     # Python tries to flush/close stdout when it quits, and if there's a dead
     # pipe on the other end, it will spit some warnings to stderr. This breaks

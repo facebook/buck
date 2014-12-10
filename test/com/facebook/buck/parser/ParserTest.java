@@ -1457,7 +1457,7 @@ public class ParserTest extends EasyMockSupport {
       }
 
       @Override
-      protected List<Map<String, Object>> getAllRulesInternal(Optional<Path> buildFile)
+      protected List<Map<String, Object>> getAllRulesInternal(Path buildFile)
           throws IOException {
         calls += 1;
         return super.getAllRulesInternal(buildFile);

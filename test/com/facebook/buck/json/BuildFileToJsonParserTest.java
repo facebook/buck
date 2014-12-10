@@ -40,11 +40,13 @@ public class BuildFileToJsonParserTest {
   @Test
   public void testSimpleParse() throws IOException {
     String json =
+        "[" +
         "{" +
           "\"srcs\": [\"src/com/facebook/buck/Bar.java\", \"src/com/facebook/buck/Foo.java\"]" +
-        "}";
+        "}" +
+        "]";
 
-    try (BuildFileToJsonParser parser = new BuildFileToJsonParser(json, false /* isServerMode */)) {
+    try (BuildFileToJsonParser parser = new BuildFileToJsonParser(json)) {
       assertEquals(
           ImmutableList.of(
               ImmutableMap.of("srcs",
@@ -57,9 +59,9 @@ public class BuildFileToJsonParserTest {
 
   @Test
   public void testParseLong() throws IOException {
-    String json = "{\"thing\": 27}";
+    String json = "[{\"thing\": 27}]";
     List<Map<String, Object>> tokens;
-    try (BuildFileToJsonParser parser = new BuildFileToJsonParser(json, false /* isServerMode */)) {
+    try (BuildFileToJsonParser parser = new BuildFileToJsonParser(json)) {
       tokens = parser.nextRules();
     }
 
@@ -72,34 +74,16 @@ public class BuildFileToJsonParserTest {
   }
 
   @Test
-  public void testServerModeParse() throws IOException {
-    String json =
-        "[{\"foo\": \"a:1\"}, {\"foo\": \"a:2\"}]\n" +
-        "[{\"bar\": \"b:1\"}]";
-
-    try (BuildFileToJsonParser parser = new BuildFileToJsonParser(json, true /* isServerMode */)) {
-      assertEquals(
-          ImmutableList.of(
-              ImmutableMap.of("foo", "a:1"),
-              ImmutableMap.of("foo", "a:2")),
-          parser.nextRules());
-
-      assertEquals(
-          ImmutableList.of(
-              ImmutableMap.of("bar", "b:1")),
-          parser.nextRules());
-    }
-  }
-
-  @Test
   public void testParseNestedStructures() throws IOException {
     String json =
+        "[" +
          "{" +
              "\"foo\": [\"a\", \"b\"]," +
              "\"bar\": {\"baz\": \"quox\"}" +
-         "}";
+         "}" +
+        "]";
 
-    try (BuildFileToJsonParser parser = new BuildFileToJsonParser(json, false /* isServerMode */)) {
+    try (BuildFileToJsonParser parser = new BuildFileToJsonParser(json)) {
       assertEquals(
           ImmutableList.of(ImmutableMap.of(
               "foo", ImmutableList.of("a", "b"),
