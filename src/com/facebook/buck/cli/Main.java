@@ -897,12 +897,15 @@ public final class Main {
       String... args)
       throws IOException, InterruptedException {
     try {
-      if (daemon != null) {
-        // Reset logging each time we run a command while daemonized.
+
+      // Reset logging each time we run a command while daemonized.
+      // This will cause us to write a new log per command.
+      if (context.isPresent()) {
         LOG.debug("Rotating log.");
         LogConfig.flushLogs();
         LogConfig.setupLogging();
       }
+
       if (LOG.isDebugEnabled()) {
         Long gitCommitTimestamp = Long.getLong("buck.git_commit_timestamp");
         String buildDateStr;
