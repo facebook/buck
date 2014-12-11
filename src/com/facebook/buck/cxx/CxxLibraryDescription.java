@@ -330,6 +330,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<Path, SourcePath> headers,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
+      ImmutableList<String> linkerFlags,
       Optional<String> soname) {
 
     // Create rules for compiling the non-PIC object files.
@@ -362,8 +363,8 @@ public class CxxLibraryDescription implements
             cxxPlatform,
             params,
             pathResolver,
-            ImmutableList.<String>of(),
-            ImmutableList.<String>of(),
+            /* extraCxxLdFlags */ ImmutableList.<String>of(),
+            /* extraLdFlags */ linkerFlags,
             sharedTarget,
             CxxLinkableEnhancer.LinkType.SHARED,
             Optional.of(sharedLibrarySoname),
@@ -390,6 +391,7 @@ public class CxxLibraryDescription implements
     arg.exportedLangPreprocessorFlags = Optional.absent();
     arg.preprocessorFlags = Optional.absent();
     arg.langPreprocessorFlags = Optional.absent();
+    arg.linkerFlags = Optional.absent();
     arg.linkWhole = Optional.absent();
     arg.lexSrcs = Optional.absent();
     arg.yaccSrcs = Optional.absent();
@@ -474,6 +476,7 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
         args.compilerFlags.or(ImmutableList.<String>of()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
+        args.linkerFlags.or(ImmutableList.<String>of()),
         args.soname);
   }
 
@@ -540,6 +543,7 @@ public class CxxLibraryDescription implements
         CxxPreprocessorFlags.fromArgs(
             args.exportedPreprocessorFlags,
             args.exportedLangPreprocessorFlags),
+        args.linkerFlags.or(ImmutableList.<String>of()),
         args.linkWhole.or(false),
         args.soname);
   }

@@ -45,6 +45,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
   private final ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags;
+  private final ImmutableList<String> linkerFlags;
   private final boolean linkWhole;
   private final Optional<String> soname;
 
@@ -53,12 +54,14 @@ public class CxxLibrary extends AbstractCxxLibrary {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
+      ImmutableList<String> linkerFlags,
       boolean linkWhole,
       Optional<String> soname) {
     super(params, pathResolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
+    this.linkerFlags = linkerFlags;
     this.linkWhole = linkWhole;
     this.soname = soname;
   }
@@ -93,6 +96,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     // whole archive, wrap the library argument in the necessary "ld" flags.
     final BuildRule libraryRule;
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
+    linkerArgsBuilder.addAll(linkerFlags);
     if (type == Type.SHARED) {
       Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
           getBuildTarget(),

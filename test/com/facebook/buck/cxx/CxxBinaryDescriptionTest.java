@@ -164,6 +164,7 @@ public class CxxBinaryDescriptionTest {
     arg.compilerFlags = Optional.absent();
     arg.preprocessorFlags = Optional.absent();
     arg.langPreprocessorFlags = Optional.absent();
+    arg.linkerFlags = Optional.absent();
     arg.lexSrcs = Optional.absent();
     arg.yaccSrcs = Optional.absent();
     arg.headerNamespace = Optional.absent();

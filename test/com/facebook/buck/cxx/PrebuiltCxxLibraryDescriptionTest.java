@@ -97,6 +97,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     arg.libDir = Optional.absent();
     arg.headerOnly = Optional.absent();
     arg.provided = Optional.absent();
+    arg.linkerFlags = Optional.absent();
     arg.linkWhole = Optional.absent();
     arg.soname = Optional.absent();
     arg.deps = Optional.absent();

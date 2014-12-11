@@ -40,6 +40,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   private final ImmutableList<Path> includeDirs;
   private final Path staticLibraryPath;
   private final Path sharedLibraryPath;
+  private final ImmutableList<String> linkerFlags;
   private final String soname;
   private final boolean headerOnly;
   private final boolean linkWhole;
@@ -52,6 +53,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
       ImmutableList<Path> includeDirs,
       Path staticLibraryPath,
       Path sharedLibraryPath,
+      ImmutableList<String> linkerFlags,
       String soname,
       boolean headerOnly,
       boolean linkWhole,
@@ -63,6 +65,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     this.includeDirs = includeDirs;
     this.staticLibraryPath = staticLibraryPath;
     this.sharedLibraryPath = sharedLibraryPath;
+    this.linkerFlags = linkerFlags;
     this.soname = soname;
     this.headerOnly = headerOnly;
     this.linkWhole = linkWhole;
@@ -108,6 +111,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     // {@link NativeLinkable} interface for linking.
     ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
+    linkerArgsBuilder.addAll(linkerFlags);
     if (!headerOnly) {
       if (provided || type == Type.SHARED) {
         SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);

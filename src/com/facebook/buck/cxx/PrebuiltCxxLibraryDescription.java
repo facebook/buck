@@ -179,6 +179,7 @@ public class PrebuiltCxxLibraryDescription
         includeDirs,
         staticLibraryPath,
         sharedLibraryPath,
+        args.linkerFlags.or(ImmutableList.<String>of()),
         soname,
         headerOnly,
         linkWhole,
@@ -193,6 +194,7 @@ public class PrebuiltCxxLibraryDescription
     public Optional<Boolean> headerOnly;
     public Optional<Boolean> provided;
     public Optional<Boolean> linkWhole;
+    public Optional<ImmutableList<String>> linkerFlags;
     public Optional<String> soname;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }

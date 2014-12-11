@@ -1,0 +1,68 @@
+cxx_binary(
+  name = 'binary_with_linker_flag',
+  srcs = [
+    'main.cpp',
+  ],
+  linker_flags = [
+    '--bad-flag',
+  ],
+)
+
+cxx_binary(
+  name = 'binary_with_library_dep',
+  srcs = [
+    'main.cpp',
+  ],
+  deps = [
+    ':library_with_linker_flag',
+  ],
+)
+
+cxx_library(
+  name = 'library_with_linker_flag',
+  srcs = [
+    'lib.cpp',
+  ],
+  linker_flags = [
+    '--bad-flag',
+  ],
+)
+
+cxx_binary(
+  name = 'binary_with_prebuilt_library_dep',
+  srcs = [
+    'main.cpp',
+  ],
+  deps = [
+    ':prebuilt_library_with_linker_flag',
+  ],
+)
+
+prebuilt_cxx_library(
+  name = 'prebuilt_library_with_linker_flag',
+  header_only = True,
+  linker_flags = [
+    '--bad-flag',
+  ],
+)
+
+cxx_binary(
+  name = 'binary_with_unresolved_symbols_linux',
+  srcs = [
+    'bin.cpp',
+  ],
+  linker_flags = [
+    '--unresolved-symbols=ignore-all',
+  ],
+)
+
+cxx_binary(
+  name = 'binary_with_unresolved_symbols_macos',
+  srcs = [
+    'bin.cpp',
+  ],
+  linker_flags = [
+    '-flat_namespace',
+    '-undefined', 'suppress',
+  ],
+)

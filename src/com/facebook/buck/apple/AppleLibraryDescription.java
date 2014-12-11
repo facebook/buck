@@ -123,6 +123,7 @@ public class AppleLibraryDescription implements
     delegateArg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
     delegateArg.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
+    delegateArg.linkerFlags = Optional.of(ImmutableList.<String>of());
     delegateArg.soname = Optional.absent();
     delegateArg.linkWhole = Optional.of(!isDynamicLibraryTarget(params.getBuildTarget()));
 
