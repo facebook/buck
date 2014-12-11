@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Locale;
 
@@ -107,8 +108,9 @@ public class AppleSdkDiscovery {
              "*.platform")) {
       for (Path platformDir : platformStream) {
         LOG.debug("Searching for Xcode SDKs under %s", platformDir);
+        Path developerSdksPath = platformDir.resolve("Developer/SDKs");
         try (DirectoryStream<Path> sdkStream = Files.newDirectoryStream(
-                 platformDir.resolve("Developer/SDKs"),
+                 developerSdksPath,
                  "*.sdk")) {
           for (Path sdkDir : sdkStream) {
             LOG.debug("Fetching SDK name for %s", sdkDir);
@@ -149,6 +151,12 @@ public class AppleSdkDiscovery {
               orderedSdksForPlatform.put(sdk.applePlatform(), sdk);
             }
           }
+        } catch (NoSuchFileException e) {
+          LOG.warn(
+              e,
+              "Couldn't discover SDKs at path %s, ignoring platform %s",
+              developerSdksPath,
+              platformDir);
         }
       }
     }

@@ -66,6 +66,20 @@ public class AppleSdkDiscoveryTest {
   }
 
   @Test
+  public void shouldIgnoreSdkWithBadSymlink() throws Exception {
+    Path root = Paths.get("test/com/facebook/buck/apple/testdata/sdk-bad-symlink-discovery");
+    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
+        "com.apple.dt.toolchain.XcodeDefault",
+        root.resolve("Toolchains/XcodeDefault")
+    );
+    ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
+        root,
+        toolchainPaths);
+
+    assertEquals(0, sdks.size());
+  }
+
+  @Test
   public void appleSdkPathsBuiltFromDirectory() throws Exception {
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/sdk-discovery");
     ImmutableAppleSdk macosx109Sdk =
