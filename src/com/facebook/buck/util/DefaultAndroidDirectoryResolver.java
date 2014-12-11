@@ -204,9 +204,11 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
 
     DefaultAndroidDirectoryResolver that = (DefaultAndroidDirectoryResolver) other;
 
-    return Objects.equals(projectFilesystem, that.projectFilesystem) &&
+    return
+        Objects.equals(projectFilesystem, that.projectFilesystem) &&
         Objects.equals(targetNdkVersion, that.targetNdkVersion) &&
-        Objects.equals(propertyFinder, that.propertyFinder);
+        Objects.equals(propertyFinder, that.propertyFinder) &&
+        Objects.equals(findAndroidNdkDir(), that.findAndroidNdkDir());
   }
 
   @Override

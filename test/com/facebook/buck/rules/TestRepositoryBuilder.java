@@ -73,6 +73,11 @@ public class TestRepositoryBuilder {
     return this;
   }
 
+  public TestRepositoryBuilder setAndroidDirectoryResolver(AndroidDirectoryResolver resolver) {
+    this.androidDirectoryResolver = resolver;
+    return this;
+  }
+
   public Repository build() {
     RepositoryFactory fakeRepositoryFactory = new RepositoryFactory(
         ImmutableMap.copyOf(System.getenv()),

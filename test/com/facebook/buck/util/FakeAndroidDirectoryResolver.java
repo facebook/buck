@@ -19,6 +19,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
   private final Optional<Path> androidSdkDir;
@@ -61,4 +62,23 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
   public Optional<String> getNdkVersion() {
     return ndkVersion;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof FakeAndroidDirectoryResolver)) return false;
+
+    FakeAndroidDirectoryResolver that = (FakeAndroidDirectoryResolver) o;
+
+    return
+        Objects.equals(androidNdkDir, that.androidNdkDir) &&
+        Objects.equals(androidSdkDir, that.androidSdkDir) &&
+        Objects.equals(ndkVersion, that.ndkVersion);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(androidNdkDir, androidSdkDir, ndkVersion);
+  }
+
 }

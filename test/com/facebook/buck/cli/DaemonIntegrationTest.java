@@ -37,6 +37,7 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
@@ -488,6 +489,41 @@ public class DaemonIntegrationTest {
 
     buildLogFile = workspace.getFile("buck-out/bin/build.log");
     assertTrue(buildLogFile.isFile());
+  }
+
+  @Test
+  public void whenAndroidDirectoryResolverChangesParserInvalidated()
+      throws IOException, InterruptedException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ObjectMapper objectMapper = new ObjectMapper();
+
+    Object daemon = Main.getDaemon(
+        new FakeRepositoryFactory().setRootRepoForTesting(
+            new TestRepositoryBuilder()
+                .setAndroidDirectoryResolver(
+                    new FakeAndroidDirectoryResolver(
+                        Optional.<Path>absent(),
+                        Optional.<Path>absent(),
+                        Optional.of("something")))
+                .setFilesystem(filesystem)
+                .build()),
+        new FakeClock(0),
+        objectMapper);
+
+    assertNotEquals(
+        "Daemon should be replaced when not equal.", daemon,
+        Main.getDaemon(
+            new FakeRepositoryFactory().setRootRepoForTesting(
+                new TestRepositoryBuilder()
+                    .setAndroidDirectoryResolver(
+                        new FakeAndroidDirectoryResolver(
+                            Optional.<Path>absent(),
+                            Optional.<Path>absent(),
+                            Optional.of("different")))
+                    .setFilesystem(filesystem)
+                    .build()),
+            new FakeClock(0),
+            objectMapper));
   }
 
   private void waitForChange(final Path path) throws IOException, InterruptedException {

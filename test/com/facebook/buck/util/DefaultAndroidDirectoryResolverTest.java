@@ -16,6 +16,7 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.MoreFiles;
@@ -202,6 +203,33 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
         androidDirectoryResolver.findAndroidNdkDir());
   }
 
+  @Test
+  public void notEqualWhenNdkIsDifferent() throws IOException {
+    tmpDir.newFolder("ndk-dir-r9a");
+    tmpDir.newFolder("ndk-dir-r9b");
+    File releaseFile = tmpDir.newFile("ndk-dir-r9a/RELEASE.TXT");
+    MoreFiles.writeLinesToFile(ImmutableList.of("r9a"), releaseFile);
+    releaseFile = tmpDir.newFile("ndk-dir-r9b/RELEASE.TXT");
+    MoreFiles.writeLinesToFile(ImmutableList.of("r9b"), releaseFile);
+
+    PropertyFinder propertyFinder = new FakePropertyFinder(
+        ImmutableMap.of(
+            "ndk.dir", Optional.<Path>absent(),
+            "ndk.repository", Optional.of(tmpDir.getRoot().toPath())));
+
+    DefaultAndroidDirectoryResolver androidDirectoryResolver1 =
+        new DefaultAndroidDirectoryResolver(
+            new ProjectFilesystem(tmpDir.getRoot().toPath()),
+            Optional.of("r9a"),
+            propertyFinder);
+    DefaultAndroidDirectoryResolver androidDirectoryResolver2 =
+        new DefaultAndroidDirectoryResolver(
+            new ProjectFilesystem(tmpDir.getRoot().toPath()),
+            Optional.of("r9b"),
+            propertyFinder);
+
+    assertNotEquals(androidDirectoryResolver1, androidDirectoryResolver2);
+  }
 
   @Test
   public void testFindAndroidNdkDirScanTakesVersion() throws IOException {
