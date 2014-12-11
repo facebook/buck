@@ -275,7 +275,7 @@ public class CompilationDatabaseTest {
               .addArchitectures("i386", "x86_64")
               .build(),
           (AppleSdkPaths) ImmutableAppleSdkPaths.builder()
-              .toolchainPath(Paths.get("toolchainPath"))
+              .addToolchainPaths(Paths.get("toolchainPath"))
               .platformDeveloperPath(Paths.get("platformDeveloperPath"))
               .sdkPath(Paths.get("/path/to/somewhere" +
                   "/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))

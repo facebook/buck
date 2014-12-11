@@ -16,13 +16,17 @@
 
 package com.facebook.buck.apple;
 
+import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
+import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
 
@@ -53,20 +57,31 @@ public class AppleSdkDiscovery {
             }
         });
 
+  private static final String DEFAULT_TOOLCHAIN_ID = "com.apple.dt.toolchain.XcodeDefault";
+
   // Utility class; do not instantiate.
   private AppleSdkDiscovery() { }
 
   /**
-   * Given a path to an Xcode developer directory, walks through the
-   * platforms and builds a map of ({@link AppleSdk}: {@link AppleSdkPaths}) objects
-   * describing the paths to the SDKs inside.
+   * Given a path to an Xcode developer directory and a map of
+   * (xctoolchain ID: path) pairs as returned by
+   * {@link AppleToolchainDiscovery}, walks through the platforms
+   * and builds a map of ({@link AppleSdk}: {@link AppleSdkPaths})
+   * objects describing the paths to the SDKs inside.
    *
    * The {@link AppleSdk#name()} strings match the ones displayed by {@code xcodebuild -showsdks}
    * and look like {@code macosx10.9}, {@code iphoneos8.0}, {@code iphonesimulator8.0},
    * etc.
    */
-  public static ImmutableMap<AppleSdk, AppleSdkPaths> discoverAppleSdkPaths(Path xcodeDir)
+  public static ImmutableMap<AppleSdk, AppleSdkPaths> discoverAppleSdkPaths(
+      Path xcodeDir,
+      ImmutableMap<String, Path> xcodeToolchainPaths)
       throws IOException {
+    Path defaultToolchainPath = xcodeToolchainPaths.get(DEFAULT_TOOLCHAIN_ID);
+    Preconditions.checkArgument(
+        defaultToolchainPath != null,
+        "xcodeToolchainPaths must contain default toolchain ID key %s",
+        DEFAULT_TOOLCHAIN_ID);
     LOG.debug("Searching for Xcode platforms under %s", xcodeDir);
 
     ImmutableMap.Builder<AppleSdk, AppleSdkPaths> appleSdkPathsBuilder = ImmutableMap.builder();
@@ -105,8 +120,28 @@ public class AppleSdkDiscovery {
             if (buildSdkFromPath(sdkDir, sdkBuilder)) {
               ImmutableAppleSdk sdk = sdkBuilder.build();
               LOG.debug("Found SDK %s", sdk);
-              ImmutableAppleSdkPaths xcodePaths = ImmutableAppleSdkPaths.builder()
-                  .toolchainPath(xcodeDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
+
+              ImmutableSet.Builder<Path> toolchainPathsBuilder = ImmutableSet.builder();
+              for (String toolchain : sdk.toolchains()) {
+                Path toolchainPath = xcodeToolchainPaths.get(toolchain);
+                if (toolchainPath == null) {
+                  LOG.debug("Could not find toolchain with ID %s, ignoring", toolchain);
+                } else {
+                  toolchainPathsBuilder.add(toolchainPath);
+                }
+              }
+              ImmutableSet<Path> toolchainPaths = toolchainPathsBuilder.build();
+              ImmutableAppleSdkPaths.Builder xcodePathsBuilder = ImmutableAppleSdkPaths.builder();
+              if (toolchainPaths.isEmpty()) {
+                LOG.debug(
+                    "No toolchains found for SDK %s, falling back to default %s",
+                    sdk,
+                    defaultToolchainPath);
+                xcodePathsBuilder.addToolchainPaths(defaultToolchainPath);
+              } else {
+                xcodePathsBuilder.addAllToolchainPaths(toolchainPaths);
+              }
+              ImmutableAppleSdkPaths xcodePaths = xcodePathsBuilder
                   .platformDeveloperPath(platformDir.resolve("Developer"))
                   .sdkPath(sdkDir)
                   .build();
@@ -165,6 +200,13 @@ public class AppleSdkDiscovery {
       String name = ((NSString) sdkSettings.objectForKey("CanonicalName")).toString();
       String version = ((NSString) sdkSettings.objectForKey("Version")).toString();
       NSDictionary defaultProperties = (NSDictionary) sdkSettings.objectForKey("DefaultProperties");
+      NSArray toolchains = (NSArray) sdkSettings.objectForKey("Toolchains");
+      if (toolchains != null) {
+        for (NSObject toolchain : toolchains.getArray()) {
+          String toolchainId = ((NSString) toolchain).toString();
+          sdkBuilder.addToolchains(toolchainId);
+        }
+      }
       NSString platformName = (NSString) defaultProperties.objectForKey("PLATFORM_NAME");
       ApplePlatform applePlatform =
           ApplePlatform.valueOf(platformName.toString().toUpperCase(Locale.US));

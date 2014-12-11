@@ -58,7 +58,9 @@ public class AppleConfig {
   public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(ProcessExecutor processExecutor) {
     Path appleDeveloperDirectory = getAppleDeveloperDirectorySupplier(processExecutor).get();
     try {
-      return AppleSdkDiscovery.discoverAppleSdkPaths(appleDeveloperDirectory);
+      ImmutableMap<String, Path> toolchainPaths =
+          AppleToolchainDiscovery.discoverAppleToolchainPaths(appleDeveloperDirectory);
+      return AppleSdkDiscovery.discoverAppleSdkPaths(appleDeveloperDirectory, toolchainPaths);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

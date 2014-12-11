@@ -20,19 +20,21 @@ import org.immutables.value.Value;
 
 import java.nio.file.Path;
 
+import java.util.Set;
+
 /**
  * Paths to Apple SDK directories under an installation of Xcode.
  */
 @Value.Immutable
 public interface AppleSdkPaths {
   /**
-   * Absolute path to tools and files independent of the platform.
+   * Absolute paths to tools and files independent of the platform.
    *
    * Example:
    *
-   * {@code /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain}
+   * {@code [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain]}
    */
-  Path toolchainPath();
+  Set<Path> toolchainPaths();
 
   /**
    * Absolute path to tools and files which depend on a particular platform.

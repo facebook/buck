@@ -44,4 +44,10 @@ public interface AppleSdk {
    * The architectures supported by the SDK. For example: {@code [i386, x86_64]}.
    */
   Set<String> architectures();
+
+  /**
+   * The identifiers for the toolchains used by the SDK. For example:
+   * {@code ["com.apple.dt.toolchain.XcodeDefault"]}
+   */
+  Set<String> toolchains();
 }

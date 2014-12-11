@@ -88,11 +88,14 @@ public class AppleCxxPlatform implements CxxPlatform {
     this.flavor = new Flavor(targetSdkName + "-" + targetArchitecture);
 
     // Search for tools from most specific to least specific.
-    ImmutableList<Path> toolSearchPaths = ImmutableList.of(
-        sdkPaths.sdkPath().resolve(USR_BIN),
-        sdkPaths.platformDeveloperPath().resolve(USR_BIN),
-        sdkPaths.toolchainPath().resolve(USR_BIN)
-    );
+    ImmutableList.Builder<Path> toolSearchPathsBuilder =
+        ImmutableList.<Path>builder()
+            .add(sdkPaths.sdkPath().resolve(USR_BIN))
+            .add(sdkPaths.platformDeveloperPath().resolve(USR_BIN));
+    for (Path toolchainPath : sdkPaths.toolchainPaths()) {
+      toolSearchPathsBuilder.add(toolchainPath.resolve(USR_BIN));
+    }
+    ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
     Tool clangPath = new SourcePathTool(getTool("clang", toolSearchPaths));
     Tool clangXxPath = new SourcePathTool(getTool("clang++", toolSearchPaths));

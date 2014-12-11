@@ -42,6 +42,7 @@ import com.facebook.buck.apple.AppleSdk;
 import com.facebook.buck.apple.AppleSdkDiscovery;
 import com.facebook.buck.apple.AppleSdkPaths;
 import com.facebook.buck.apple.AppleTestDescription;
+import com.facebook.buck.apple.AppleToolchainDiscovery;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
@@ -239,8 +240,12 @@ public class KnownBuildRuleTypes {
       return;
     }
 
-    ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths = AppleSdkDiscovery.discoverAppleSdkPaths(
+    ImmutableMap<String, Path> toolchainPaths = AppleToolchainDiscovery.discoverAppleToolchainPaths(
         appleDeveloperDirectory);
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths = AppleSdkDiscovery.discoverAppleSdkPaths(
+        appleDeveloperDirectory,
+        toolchainPaths);
 
     for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {
       AppleSdk sdk = entry.getKey();

@@ -42,7 +42,7 @@ public class AppleCxxPlatformTest {
 
     AppleSdkPaths appleSdkPaths =
         ImmutableAppleSdkPaths.builder()
-            .toolchainPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
             .platformDeveloperPath(root.resolve("Platforms/iPhoneOS.platform/Developer"))
             .sdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
