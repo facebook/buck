@@ -208,11 +208,17 @@ public class AppleSdkDiscovery {
         }
       }
       NSString platformName = (NSString) defaultProperties.objectForKey("PLATFORM_NAME");
-      ApplePlatform applePlatform =
-          ApplePlatform.valueOf(platformName.toString().toUpperCase(Locale.US));
-      sdkBuilder.name(name).version(version).applePlatform(applePlatform);
-      addArchitecturesForPlatform(sdkBuilder, applePlatform);
-      return true;
+      // TODO(grp): Generalize this to handle new platforms as they are added.
+      ApplePlatform applePlatform;
+      try {
+        applePlatform = ApplePlatform.valueOf(platformName.toString().toUpperCase(Locale.US));
+        sdkBuilder.name(name).version(version).applePlatform(applePlatform);
+        addArchitecturesForPlatform(sdkBuilder, applePlatform);
+        return true;
+      } catch (IllegalArgumentException e) {
+        LOG.debug(e, "Ignoring SDK at %s with unrecognized platform %s", sdkDir, platformName);
+        return false;
+      }
     } catch (FileNotFoundException e) {
       LOG.error(e, "No SDKSettings.plist found under SDK path %s", sdkDir);
       return false;
