@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.rules.BuildRule;
@@ -45,8 +46,8 @@ import java.util.Set;
 
 public class CxxLibraryDescription implements
     Description<CxxLibraryDescription.Arg>,
-    ImplicitDepsInferringDescription<CxxLibraryDescription.Arg> {
-
+    ImplicitDepsInferringDescription<CxxLibraryDescription.Arg>,
+    Flavored {
   private static enum Type {
     HEADERS,
     SHARED,
@@ -71,6 +72,11 @@ public class CxxLibraryDescription implements
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
+  }
+
+  @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return cxxPlatforms.containsAnyOf(flavors);
   }
 
   private static final Flavor LEX_YACC_SOURCE_FLAVOR = new Flavor("lex_yacc_sources");

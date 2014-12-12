@@ -79,7 +79,8 @@ public class AppleLibraryDescription implements
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR);
+    return FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR) ||
+        delegate.hasFlavors(flavors);
   }
 
   @Override

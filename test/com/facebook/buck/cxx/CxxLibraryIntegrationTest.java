@@ -42,13 +42,23 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void appleLibraryBuildsOnApplePlatform() throws IOException {
+  public void appleBinaryBuildsOnApplePlatform() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_cxx_library", tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:main#iphonesimulator-i386").assertSuccess();
+  }
+
+  @Test
+  public void appleLibraryBuildsOnApplePlatform() throws IOException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_cxx_library", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:lib#iphonesimulator-i386,static").assertSuccess();
   }
 
 }

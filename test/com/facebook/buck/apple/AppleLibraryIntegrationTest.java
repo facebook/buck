@@ -51,4 +51,19 @@ public class AppleLibraryIntegrationTest {
     assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
   }
 
+  @Test
+  public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#static,macosx-x86_64");
+    result.assertSuccess();
+
+    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+  }
+
 }
