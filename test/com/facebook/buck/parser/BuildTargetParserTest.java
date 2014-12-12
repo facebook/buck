@@ -16,10 +16,14 @@
 
 package com.facebook.buck.parser;
 
+import static org.hamcrest.Matchers.hasItems;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
@@ -39,6 +43,22 @@ public class BuildTargetParserTest {
     assertEquals(Paths.get(""), buildTarget.getBasePath());
     assertEquals("", buildTarget.getBasePathWithSlash());
     assertEquals("//:fb4a", buildTarget.getFullyQualifiedName());
+  }
+
+  @Test
+  public void testParseRuleWithFlavors() {
+    BuildTargetParser parser = new BuildTargetParser();
+    BuildTarget buildTarget = parser.parse("//:lib#foo,bar", ParseContext.fullyQualified());
+    // Note the sort order.
+    assertEquals("lib#bar,foo", buildTarget.getShortName());
+    assertEquals("//", buildTarget.getBaseName());
+    assertEquals(Paths.get(""), buildTarget.getBasePath());
+    assertEquals("", buildTarget.getBasePathWithSlash());
+    // Note the sort order.
+    assertEquals("//:lib#bar,foo", buildTarget.getFullyQualifiedName());
+    assertThat(
+        buildTarget.getFlavors(),
+        hasItems(new Flavor("foo"), new Flavor("bar")));
   }
 
   @Test

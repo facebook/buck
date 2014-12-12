@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.FlavorParser;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -36,6 +37,7 @@ public class BuildTargetParser {
   private static final List<String> INVALID_BUILD_RULE_SUBSTRINGS = ImmutableList.of("..", "./");
 
   private final ImmutableMap<Optional<String>, Optional<String>> localToCanonicalRepoNamesMap;
+  private final FlavorParser flavorParser = new FlavorParser();
 
   public BuildTargetParser() {
     // By default, use a canonical names map that only allows targets with no repo name.
@@ -119,10 +121,7 @@ public class BuildTargetParser {
     Iterable<String> flavorNames = new HashSet<>();
     int hashIndex = shortName.indexOf("#");
     if (hashIndex != -1 && hashIndex < shortName.length()) {
-      flavorNames = Splitter.on(",")
-          .omitEmptyStrings()
-          .trimResults()
-          .split(shortName.substring(hashIndex + 1));
+      flavorNames = flavorParser.parseFlavorString(shortName.substring(hashIndex + 1));
       shortName = shortName.substring(0, hashIndex);
     }
 
