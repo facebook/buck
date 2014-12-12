@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 
 import static org.junit.Assert.assertEquals;
@@ -145,6 +146,16 @@ public class AppleSdkDiscoveryTest {
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(root, toolchainPaths),
         equalTo(expected));
+  }
+
+  @Test
+  public void noAppleSdksFoundIfDefaultPlatformMissing() throws Exception {
+    Path root = Paths.get("test/com/facebook/buck/apple/testdata/sdk-discovery");
+    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of();
+
+    assertThat(
+        AppleSdkDiscovery.discoverAppleSdkPaths(root, toolchainPaths).entrySet(),
+        empty());
   }
 
   @Test

@@ -24,7 +24,6 @@ import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
@@ -79,10 +78,10 @@ public class AppleSdkDiscovery {
       ImmutableMap<String, Path> xcodeToolchainPaths)
       throws IOException {
     Path defaultToolchainPath = xcodeToolchainPaths.get(DEFAULT_TOOLCHAIN_ID);
-    Preconditions.checkArgument(
-        defaultToolchainPath != null,
-        "xcodeToolchainPaths must contain default toolchain ID key %s",
-        DEFAULT_TOOLCHAIN_ID);
+    if (defaultToolchainPath == null) {
+      LOG.debug("Could not find default toolchain %s; skipping discovery.", DEFAULT_TOOLCHAIN_ID);
+      return ImmutableMap.<AppleSdk, AppleSdkPaths>of();
+    }
     LOG.debug("Searching for Xcode platforms under %s", xcodeDir);
 
     ImmutableMap.Builder<AppleSdk, AppleSdkPaths> appleSdkPathsBuilder = ImmutableMap.builder();
