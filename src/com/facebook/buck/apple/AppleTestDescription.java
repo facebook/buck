@@ -68,7 +68,6 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
             AppleLibraryDescription.TYPE,
             BuildTarget.builder(params.getBuildTarget())
                 .addFlavor(LIBRARY_FLAVOR)
-                .addFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
                 .addFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
                 .addFlavor("default")
                 .build(),

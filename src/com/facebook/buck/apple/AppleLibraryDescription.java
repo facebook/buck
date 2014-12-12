@@ -43,12 +43,9 @@ public class AppleLibraryDescription implements
     Description<AppleNativeTargetDescriptionArg>, Flavored {
   public static final BuildRuleType TYPE = new BuildRuleType("apple_library");
 
-  public static final Flavor DYNAMIC_LIBRARY = new Flavor("dynamic");
-
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       CompilationDatabase.COMPILATION_DATABASE,
       Flavor.DEFAULT,
-      DYNAMIC_LIBRARY,
       AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS,
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.STATIC_FLAVOR,
@@ -125,12 +122,12 @@ public class AppleLibraryDescription implements
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     delegateArg.linkerFlags = Optional.of(ImmutableList.<String>of());
     delegateArg.soname = Optional.absent();
-    delegateArg.linkWhole = Optional.of(!isDynamicLibraryTarget(params.getBuildTarget()));
+    delegateArg.linkWhole = Optional.of(!isSharedLibraryTarget(params.getBuildTarget()));
 
     return delegate.createBuildRule(params, resolver, delegateArg);
   }
 
-  public static boolean isDynamicLibraryTarget(BuildTarget target) {
-    return target.getFlavors().contains(DYNAMIC_LIBRARY);
+  public static boolean isSharedLibraryTarget(BuildTarget target) {
+    return target.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
   }
 }

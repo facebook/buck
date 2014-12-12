@@ -49,4 +49,12 @@ public class FlavorParserTest {
         contains("foo", "bar"));
   }
 
+  @Test
+  public void testParseMultipleWithDeprecated() {
+    FlavorParser flavorParser = new FlavorParser();
+    assertThat(
+        flavorParser.parseFlavorString("foo,dynamic"),
+        contains("foo", "shared"));
+  }
+
 }

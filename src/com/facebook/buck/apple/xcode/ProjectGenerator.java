@@ -50,6 +50,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -421,11 +422,11 @@ public class ProjectGenerator {
       PBXProject project,
       TargetNode<AppleNativeTargetDescriptionArg> targetNode)
       throws IOException {
-    boolean isDynamic = targetNode
+    boolean isShared = targetNode
         .getBuildTarget()
         .getFlavors()
-        .contains(AppleLibraryDescription.DYNAMIC_LIBRARY);
-    PBXTarget.ProductType productType = isDynamic ?
+        .contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
+    PBXTarget.ProductType productType = isShared ?
         PBXTarget.ProductType.DYNAMIC_LIBRARY :
         PBXTarget.ProductType.STATIC_LIBRARY;
     PBXNativeTarget target = generateBinaryTarget(
@@ -433,9 +434,9 @@ public class ProjectGenerator {
         Optional.<TargetNode<AppleBundleDescription.Arg>>absent(),
         targetNode,
         productType,
-        AppleBuildRules.getOutputFileNameFormatForLibrary(isDynamic),
+        AppleBuildRules.getOutputFileNameFormatForLibrary(isShared),
         Optional.<Path>absent(),
-        /* includeFrameworks */ isDynamic,
+        /* includeFrameworks */ isShared,
         ImmutableSet.<AppleResourceDescription.Arg>of(),
         ImmutableSet.<AppleAssetCatalogDescription.Arg>of());
     LOG.debug("Generated iOS library target %s", target);
@@ -996,7 +997,7 @@ public class ProjectGenerator {
       if (targetNode
           .getBuildTarget()
           .getFlavors()
-          .contains(AppleLibraryDescription.DYNAMIC_LIBRARY)) {
+          .contains(CxxDescriptionEnhancer.SHARED_FLAVOR)) {
         return Optional.of(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
       } else {
         return Optional.absent();
@@ -1337,9 +1338,9 @@ public class ProjectGenerator {
                Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))) {
       Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
           getLibraryNode(targetGraph, dependency);
-      // Dynamically linked dependencies don't require including their frameworks in dependencies.
+      // Shared library dependencies don't require including their frameworks in dependencies.
       if (library.isPresent() &&
-          !AppleLibraryDescription.isDynamicLibraryTarget(library.get().getBuildTarget())) {
+          !AppleLibraryDescription.isSharedLibraryTarget(library.get().getBuildTarget())) {
         frameworksBuilder.addAll(
             library.get().getConstructorArg().frameworks.get());
       }
@@ -1379,7 +1380,7 @@ public class ProjectGenerator {
           targetNode
               .getBuildTarget()
               .getFlavors()
-              .contains(AppleLibraryDescription.DYNAMIC_LIBRARY));
+              .contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
       productOutputName = String.format(productOutputFormat, productName);
     } else if (targetNode.getType().equals(AppleBundleDescription.TYPE) ||
         targetNode.getType().equals(AppleTestDescription.TYPE)) {
@@ -1488,7 +1489,7 @@ public class ProjectGenerator {
 
       if (binaryNode.getType().equals(AppleLibraryDescription.TYPE)) {
         if (binaryNode.getBuildTarget().getFlavors().contains(
-            AppleLibraryDescription.DYNAMIC_LIBRARY)) {
+            CxxDescriptionEnhancer.SHARED_FLAVOR)) {
           switch (extension) {
             case FRAMEWORK:
               return PBXTarget.ProductType.FRAMEWORK;

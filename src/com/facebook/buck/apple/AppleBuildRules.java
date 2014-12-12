@@ -89,8 +89,8 @@ public final class AppleBuildRules {
     return XCODE_TARGET_TEST_BUNDLE_EXTENSIONS.contains(extension);
   }
 
-  public static String getOutputFileNameFormatForLibrary(boolean linkedDynamically) {
-    if (linkedDynamically) {
+  public static String getOutputFileNameFormatForLibrary(boolean isSharedLibrary) {
+    if (isSharedLibrary) {
       return "lib%s.dylib";
     } else {
       return "lib%s.a";
@@ -107,7 +107,7 @@ public final class AppleBuildRules {
      */
     COPYING,
     /**
-     * Will also not traverse the dependencies of dynamic libraries, as those are linked already.
+     * Will also not traverse the dependencies of shared libraries, as those are linked already.
      */
     LINKING,
   }
@@ -178,7 +178,7 @@ public final class AppleBuildRules {
               switch (mode) {
                 case LINKING:
                   if (node.getType().equals(AppleLibraryDescription.TYPE)) {
-                    if (AppleLibraryDescription.isDynamicLibraryTarget(node.getBuildTarget())) {
+                    if (AppleLibraryDescription.isSharedLibraryTarget(node.getBuildTarget())) {
                       deps = ImmutableSortedSet.of();
                     } else {
                       deps = defaultDeps;

@@ -35,7 +35,6 @@ import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
-import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleResourceBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.CoreDataModelBuilder;
@@ -53,6 +52,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
@@ -593,9 +593,9 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryConfiguresDynamicLibraryOutputPaths() throws IOException {
+  public void testAppleLibraryConfiguresSharedLibraryOutputPaths() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder("//hi", "lib")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
@@ -615,7 +615,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(),
-        "//hi:lib#dynamic");
+        "//hi:lib#shared");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.DYNAMIC_LIBRARY));
 
@@ -624,7 +624,7 @@ public class ProjectGeneratorTest {
         "$SYMROOT/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME",
         settings.get("BUILT_PRODUCTS_DIR"));
     assertEquals(
-        "$BUILT_PRODUCTS_DIR/F4XWQ2J2NRUWEI3EPFXGC3LJMM",
+        "$BUILT_PRODUCTS_DIR/F4XWQ2J2NRUWEI3TNBQXEZLE",
         settings.get("CONFIGURATION_BUILD_DIR"));
     assertEquals(
         "Headers/MyHeaderPathPrefix",
@@ -976,12 +976,12 @@ public class ProjectGeneratorTest {
         .setDirs(ImmutableSet.<Path>of())
         .build();
 
-    BuildTarget dynamicLibraryTarget = BuildTarget
-        .builder("//dep", "dynamic")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+    BuildTarget sharedLibraryTarget = BuildTarget
+        .builder("//dep", "shared")
+        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
-    TargetNode<?> dynamicLibraryNode = AppleLibraryBuilder
-        .createBuilder(dynamicLibraryTarget)
+    TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
+        .createBuilder(sharedLibraryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
         .build();
 
@@ -989,12 +989,12 @@ public class ProjectGeneratorTest {
     TargetNode<?> bundleNode = AppleBundleBuilder
         .createBuilder(bundleTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.BUNDLE))
-        .setBinary(dynamicLibraryTarget)
+        .setBinary(sharedLibraryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(scriptTarget)))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(scriptNode, resourceNode, dynamicLibraryNode, bundleNode));
+        ImmutableSet.of(scriptNode, resourceNode, sharedLibraryNode, bundleNode));
 
     projectGenerator.createXcodeProjects();
 
@@ -1024,13 +1024,13 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleBundleRuleForDynamicFramework() throws IOException {
-    BuildTarget dynamicLibraryTarget = BuildTarget
-        .builder("//dep", "dynamic")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+  public void testAppleBundleRuleForSharedLibaryFramework() throws IOException {
+    BuildTarget sharedLibraryTarget = BuildTarget
+        .builder("//dep", "shared")
+        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
-    TargetNode<?> dynamicLibraryNode = AppleLibraryBuilder
-        .createBuilder(dynamicLibraryTarget)
+    TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
+        .createBuilder(sharedLibraryTarget)
         .setConfigs(
             Optional.of(
                 ImmutableSortedMap.of(
@@ -1042,11 +1042,11 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleBundleBuilder
         .createBuilder(buildTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(dynamicLibraryTarget)
+        .setBinary(sharedLibraryTarget)
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(dynamicLibraryNode, node),
+        ImmutableSet.of(sharedLibraryNode, node),
         ImmutableSet.<ProjectGenerator.Option>of());
     projectGenerator.createXcodeProjects();
 
@@ -1150,28 +1150,28 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void stopsLinkingRecursiveDependenciesAtDynamicLibraries() throws IOException {
+  public void stopsLinkingRecursiveDependenciesAtSharedLibraries() throws IOException {
     BuildTarget dependentStaticLibraryTarget = BuildTarget.builder("//dep", "static").build();
     TargetNode<?> dependentStaticLibraryNode = AppleLibraryBuilder
         .createBuilder(dependentStaticLibraryTarget)
         .build();
 
-    BuildTarget dependentDynamicLibraryTarget = BuildTarget
-        .builder("//dep", "dynamic")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+    BuildTarget dependentSharedLibraryTarget = BuildTarget
+        .builder("//dep", "shared")
+        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
-    TargetNode<?> dependentDynamicLibraryNode = AppleLibraryBuilder
-        .createBuilder(dependentDynamicLibraryTarget)
+    TargetNode<?> dependentSharedLibraryNode = AppleLibraryBuilder
+        .createBuilder(dependentSharedLibraryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(dependentStaticLibraryTarget)))
         .build();
 
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(dependentDynamicLibraryTarget)))
+        .setDeps(Optional.of(ImmutableSortedSet.of(dependentSharedLibraryTarget)))
         .build();
 
     BuildTarget bundleTarget = BuildTarget.builder("//foo", "final").build();
@@ -1184,7 +1184,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(
             dependentStaticLibraryNode,
-            dependentDynamicLibraryNode,
+            dependentSharedLibraryNode,
             libraryNode,
             bundleNode));
     projectGenerator.createXcodeProjects();
@@ -1197,7 +1197,7 @@ public class ProjectGeneratorTest {
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
-            "$BUILT_PRODUCTS_DIR/F4XWIZLQHJSHS3TBNVUWGI3EPFXGC3LJMM/libdynamic.dylib"));
+            "$BUILT_PRODUCTS_DIR/F4XWIZLQHJZWQYLSMVSCG43IMFZGKZA/libshared.dylib"));
   }
 
   @Test
@@ -1207,12 +1207,12 @@ public class ProjectGeneratorTest {
         .createBuilder(dependentStaticLibraryTarget)
         .build();
 
-    BuildTarget dependentDynamicLibraryTarget = BuildTarget
-        .builder("//dep", "dynamic")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+    BuildTarget dependentSharedLibraryTarget = BuildTarget
+        .builder("//dep", "shared")
+        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
-    TargetNode<?> dependentDynamicLibraryNode = AppleLibraryBuilder
-        .createBuilder(dependentDynamicLibraryTarget)
+    TargetNode<?> dependentSharedLibraryNode = AppleLibraryBuilder
+        .createBuilder(dependentSharedLibraryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(dependentStaticLibraryTarget)))
         .build();
 
@@ -1220,12 +1220,12 @@ public class ProjectGeneratorTest {
     TargetNode<?> dependentFrameworkNode = AppleBundleBuilder
         .createBuilder(dependentFrameworkTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(dependentDynamicLibraryTarget)
+        .setBinary(dependentSharedLibraryTarget)
         .build();
 
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
@@ -1242,7 +1242,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(
             dependentStaticLibraryNode,
-            dependentDynamicLibraryNode,
+            dependentSharedLibraryNode,
             dependentFrameworkNode,
             libraryNode,
             bundleNode));
@@ -1274,12 +1274,12 @@ public class ProjectGeneratorTest {
         .setBinary(dependentStaticLibraryTarget)
         .build();
 
-    BuildTarget dependentDynamicLibraryTarget = BuildTarget
-        .builder("//dep", "dynamic")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+    BuildTarget dependentSharedLibraryTarget = BuildTarget
+        .builder("//dep", "shared")
+        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
-    TargetNode<?> dependentDynamicLibraryNode = AppleLibraryBuilder
-        .createBuilder(dependentDynamicLibraryTarget)
+    TargetNode<?> dependentSharedLibraryNode = AppleLibraryBuilder
+        .createBuilder(dependentSharedLibraryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(dependentStaticFrameworkTarget)))
         .build();
 
@@ -1287,12 +1287,12 @@ public class ProjectGeneratorTest {
     TargetNode<?> dependentFrameworkNode = AppleBundleBuilder
         .createBuilder(dependentFrameworkTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(dependentDynamicLibraryTarget)
+        .setBinary(dependentSharedLibraryTarget)
         .build();
 
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
@@ -1311,7 +1311,7 @@ public class ProjectGeneratorTest {
         ImmutableSet.<TargetNode<?>>of(
             dependentStaticLibraryNode,
             dependentStaticFrameworkNode,
-            dependentDynamicLibraryNode,
+            dependentSharedLibraryNode,
             dependentFrameworkNode,
             libraryNode,
             bundleNode));
@@ -1331,7 +1331,7 @@ public class ProjectGeneratorTest {
   public void bundlesDontLinkTheirOwnBinary() throws IOException {
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
@@ -1501,7 +1501,7 @@ public class ProjectGeneratorTest {
   public void shouldEmitFilesForBuildSettingPrefixedFrameworks() throws IOException {
     BuildTarget buildTarget = BuildTarget
         .builder("//foo", "rule")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
@@ -1518,7 +1518,7 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(generatedProject, "//foo:rule#dynamic");
+    PBXTarget target = assertTargetExistsAndReturnTarget(generatedProject, "//foo:rule#shared");
     assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
@@ -1531,7 +1531,7 @@ public class ProjectGeneratorTest {
   public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws IOException {
     BuildTarget buildTarget = BuildTarget
         .builder("//foo", "rule")
-        .setFlavor(AppleLibraryDescription.DYNAMIC_LIBRARY)
+        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)

@@ -31,10 +31,10 @@ import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
-import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.XcodeProjectConfigBuilder;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
@@ -171,10 +171,10 @@ public class SeparatedProjectsGeneratorTest {
         .createBuilder(depTarget)
         .build();
 
-    BuildTarget dynamicLibraryTarget = BuildTarget.builder("//dep", "dynamic").setFlavor(
-        AppleLibraryDescription.DYNAMIC_LIBRARY).build();
-    TargetNode<?> dynamicLibraryNode = AppleLibraryBuilder
-        .createBuilder(dynamicLibraryTarget)
+    BuildTarget sharedLibraryTarget = BuildTarget.builder("//dep", "shared").setFlavor(
+        CxxDescriptionEnhancer.SHARED_FLAVOR).build();
+    TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
+        .createBuilder(sharedLibraryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(depTarget)))
         .build();
 
@@ -182,7 +182,7 @@ public class SeparatedProjectsGeneratorTest {
     TargetNode<?> node = AppleBundleBuilder
         .createBuilder(target)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
-        .setBinary(dynamicLibraryTarget)
+        .setBinary(sharedLibraryTarget)
         .build();
 
     BuildTarget configTarget = BuildTarget.builder("//foo/bar", "project").build();
@@ -195,7 +195,7 @@ public class SeparatedProjectsGeneratorTest {
     SeparatedProjectsGenerator generator = new SeparatedProjectsGenerator(
         projectFilesystem,
         TargetGraphFactory.newInstance(
-            ImmutableSet.of(depNode, dynamicLibraryNode, node, configNode)),
+            ImmutableSet.of(depNode, sharedLibraryNode, node, configNode)),
         ImmutableSet.of(configTarget),
         ImmutableSet.<ProjectGenerator.Option>of());
     generator.generateProjects();
@@ -285,7 +285,7 @@ public class SeparatedProjectsGeneratorTest {
         .build();
 
     BuildTarget binaryDepTarget = BuildTarget.builder("//foo", "binarybin").setFlavor(
-        AppleLibraryDescription.DYNAMIC_LIBRARY).build();
+        CxxDescriptionEnhancer.SHARED_FLAVOR).build();
     TargetNode<?> binaryDepNode = AppleBinaryBuilder
         .createBuilder(binaryDepTarget)
         .build();
