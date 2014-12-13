@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.cxx.VersionedTool;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -515,16 +514,6 @@ public class NdkCxxPlatform implements CxxPlatform {
   @Override
   public Optional<DebugPathSanitizer> getDebugPathSanitizer() {
     return debugPathSanitizer;
-  }
-
-  @Override
-  public BuildTarget getGtestDep() {
-    throw new HumanReadableException("gtest is not supported on %s platform", asFlavor());
-  }
-
-  @Override
-  public BuildTarget getBoostTestDep() {
-    throw new HumanReadableException("boost is not supported on %s platform", asFlavor());
   }
 
   public SourcePath getObjcopy() {

@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -278,16 +277,6 @@ public class DefaultCxxPlatform implements CxxPlatform {
   @Override
   public Optional<DebugPathSanitizer> getDebugPathSanitizer() {
     return debugPathSanitizer;
-  }
-
-  @Override
-  public BuildTarget getGtestDep() {
-    return delegate.getRequiredBuildTarget("cxx", "gtest_dep");
-  }
-
-  @Override
-  public BuildTarget getBoostTestDep() {
-    return delegate.getRequiredBuildTarget("cxx", "boost_test_dep");
   }
 
 }

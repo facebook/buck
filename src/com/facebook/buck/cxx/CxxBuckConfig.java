@@ -44,4 +44,18 @@ public class CxxBuckConfig {
     return delegate.getRequiredBuildTarget("cxx", "python_dep");
   }
 
+  /**
+   * @return the {@link BuildTarget} which represents the gtest library.
+   */
+  public BuildTarget getGtestDep() {
+    return delegate.getRequiredBuildTarget("cxx", "gtest_dep");
+  }
+
+  /**
+   * @return the {@link BuildTarget} which represents the boost testing library.
+   */
+  public BuildTarget getBoostTestDep() {
+    return delegate.getRequiredBuildTarget("cxx", "boost_test_dep");
+  }
+
 }

@@ -23,7 +23,6 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.SourcePathTool;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -289,13 +288,4 @@ public class AppleCxxPlatform implements CxxPlatform {
     return debugPathSanitizer;
   }
 
-  @Override
-  public BuildTarget getGtestDep() {
-    throw new HumanReadableException("gtest is not supported on %s platform", asFlavor());
-  }
-
-  @Override
-  public BuildTarget getBoostTestDep() {
-    throw new HumanReadableException("boost is not supported on %s platform", asFlavor());
-  }
 }

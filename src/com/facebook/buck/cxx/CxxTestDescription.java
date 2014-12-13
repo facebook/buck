@@ -140,16 +140,6 @@ public class CxxTestDescription implements
       BuildTarget buildTarget,
       Arg constructorArg) {
 
-    // Extract the platform from the flavor, falling back to the default platform if none are
-    // found.
-    CxxPlatform cxxPlatform;
-    try {
-      cxxPlatform = cxxPlatforms.getValue(
-          buildTarget.getFlavors()).or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", buildTarget, e.getMessage());
-    }
-
     ImmutableSet.Builder<String> deps = ImmutableSet.builder();
 
     if (!constructorArg.lexSrcs.get().isEmpty()) {
@@ -159,11 +149,11 @@ public class CxxTestDescription implements
     CxxTestType type = constructorArg.framework.or(getDefaultTestType());
     switch (type) {
       case GTEST: {
-        deps.add(cxxPlatform.getGtestDep().toString());
+        deps.add(cxxBuckConfig.getGtestDep().toString());
         break;
       }
       case BOOST: {
-        deps.add(cxxPlatform.getBoostTestDep().toString());
+        deps.add(cxxBuckConfig.getBoostTestDep().toString());
         break;
       }
       default: {

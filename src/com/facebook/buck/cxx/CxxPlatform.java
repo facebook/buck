@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
@@ -65,9 +64,5 @@ public interface CxxPlatform {
   String getSharedLibraryExtension();
 
   Optional<DebugPathSanitizer> getDebugPathSanitizer();
-
-  BuildTarget getGtestDep();
-
-  BuildTarget getBoostTestDep();
 
 }
