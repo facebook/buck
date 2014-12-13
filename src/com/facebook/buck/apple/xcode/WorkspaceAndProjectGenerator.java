@@ -33,7 +33,9 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -208,17 +210,27 @@ public class WorkspaceAndProjectGenerator {
 
     Path workspacePath = workspaceGenerator.writeWorkspace();
 
+    final Map<BuildTarget, PBXTarget> buildTargetToTarget =
+        buildTargetToPbxTargetMapBuilder.build();
+    Function<TargetNode<?>, PBXTarget> targetNodeToPBXTargetTransformer =
+        new Function<TargetNode<?>, PBXTarget>() {
+          @Override
+          public PBXTarget apply(TargetNode<?> input) {
+            return Preconditions.checkNotNull(buildTargetToTarget.get(input.getBuildTarget()));
+          }
+        };
+
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        workspaceTargetNode.getConstructorArg().srcTarget,
-        Iterables.transform(orderedTargetNodes, HasBuildTarget.TO_TARGET),
-        Iterables.transform(buildForTestNodes, HasBuildTarget.TO_TARGET),
-        Iterables.transform(selectedTests, HasBuildTarget.TO_TARGET),
+        workspaceTargetNode.getConstructorArg().srcTarget.transform(
+            Functions.forMap(buildTargetToTarget)),
+        Iterables.transform(orderedTargetNodes, targetNodeToPBXTargetTransformer),
+        Iterables.transform(buildForTestNodes, targetNodeToPBXTargetTransformer),
+        Iterables.transform(selectedTests, targetNodeToPBXTargetTransformer),
         workspaceName,
         outputDirectory.resolve(workspaceName + ".xcworkspace"),
         XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(
             workspaceTargetNode.getConstructorArg()),
-        buildTargetToPbxTargetMapBuilder.build(),
         targetToProjectPathMapBuilder.build());
     schemeGenerator.writeScheme();
 

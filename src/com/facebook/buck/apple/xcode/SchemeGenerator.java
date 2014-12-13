@@ -21,8 +21,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -68,72 +66,47 @@ class SchemeGenerator {
   private static final Logger LOG = Logger.get(SchemeGenerator.class);
 
   private final ProjectFilesystem projectFilesystem;
-  private final Optional<BuildTarget> primaryTarget;
-  private final ImmutableSet<BuildTarget> orderedBuildTargets;
-  private final ImmutableSet<BuildTarget> orderedTestBuildTargets;
-  private final ImmutableSet<BuildTarget> orderedTestBundleTargets;
+  private final Optional<PBXTarget> primaryTarget;
+  private final ImmutableSet<PBXTarget> orderedBuildTargets;
+  private final ImmutableSet<PBXTarget> orderedBuildTestTargets;
+  private final ImmutableSet<PBXTarget> orderedRunTestTargets;
   private final String schemeName;
   private final Path outputDirectory;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
-  private final ImmutableMap<BuildTarget, PBXTarget> buildTargetToPbxTargetMap;
   private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
-      Optional<BuildTarget> primaryTarget,
-      Iterable<BuildTarget> orderedBuildTargets,
-      Iterable<BuildTarget> orderedTestBuildTargets,
-      Iterable<BuildTarget> orderedTestBundleTargets,
+      Optional<PBXTarget> primaryTarget,
+      Iterable<PBXTarget> orderedBuildTargets,
+      Iterable<PBXTarget> orderedBuildTestTargets,
+      Iterable<PBXTarget> orderedRunTestTargets,
       String schemeName,
       Path outputDirectory,
       Map<SchemeActionType, String> actionConfigNames,
-      Map<BuildTarget, PBXTarget> buildTargetToPbxTargetMap,
       Map<PBXTarget, Path> targetToProjectPathMap) {
     this.projectFilesystem = projectFilesystem;
     this.primaryTarget = primaryTarget;
     this.orderedBuildTargets = ImmutableSet.copyOf(orderedBuildTargets);
-    this.orderedTestBuildTargets = ImmutableSet.copyOf(orderedTestBuildTargets);
-    this.orderedTestBundleTargets = ImmutableSet.copyOf(orderedTestBundleTargets);
+    this.orderedBuildTestTargets = ImmutableSet.copyOf(orderedBuildTestTargets);
+    this.orderedRunTestTargets = ImmutableSet.copyOf(orderedRunTestTargets);
     this.schemeName = schemeName;
     this.outputDirectory = outputDirectory;
     this.actionConfigNames = ImmutableMap.copyOf(actionConfigNames);
-    this.buildTargetToPbxTargetMap = ImmutableMap.copyOf(buildTargetToPbxTargetMap);
     this.targetToProjectPathMap = ImmutableMap.copyOf(targetToProjectPathMap);
 
     LOG.debug(
         "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
         orderedBuildTargets,
-        orderedTestBuildTargets,
-        orderedTestBundleTargets);
-
-    for (BuildTarget buildTarget : orderedBuildTargets) {
-      expectTargetMapContainsBuildTarget(buildTarget);
-    }
-
-    for (BuildTarget buildTarget : orderedTestBuildTargets) {
-      expectTargetMapContainsBuildTarget(buildTarget);
-    }
-
-    for (BuildTarget buildTarget : orderedTestBundleTargets) {
-      expectTargetMapContainsBuildTarget(buildTarget);
-    }
-  }
-
-  private void expectTargetMapContainsBuildTarget(BuildTarget buildTarget) {
-    if (!buildTargetToPbxTargetMap.containsKey(buildTarget)) {
-      throw new HumanReadableException(
-          "Scheme generation failed: No project containing required target %s was found.",
-          buildTarget.getFullyQualifiedName());
-    }
+        orderedBuildTestTargets,
+        orderedRunTestTargets);
   }
 
   public Path writeScheme() throws IOException {
-    Map<BuildTarget, XCScheme.BuildableReference>
+    Map<PBXTarget, XCScheme.BuildableReference>
         buildTargetToBuildableReferenceMap = Maps.newHashMap();
 
-    for (BuildTarget buildTarget : Iterables.concat(orderedBuildTargets, orderedTestBuildTargets)) {
-      PBXTarget target = Preconditions.checkNotNull(buildTargetToPbxTargetMap.get(buildTarget));
-
+    for (PBXTarget target : Iterables.concat(orderedBuildTargets, orderedBuildTestTargets)) {
       String blueprintName = target.getProductName();
       if (blueprintName == null) {
         blueprintName = target.getName();
@@ -145,31 +118,31 @@ class SchemeGenerator {
           target.getGlobalID(),
           Preconditions.checkNotNull(target.getProductReference()).getName(),
           blueprintName);
-      buildTargetToBuildableReferenceMap.put(buildTarget, buildableReference);
+      buildTargetToBuildableReferenceMap.put(target , buildableReference);
     }
 
     XCScheme.BuildAction buildAction = new XCScheme.BuildAction();
 
     // For aesthetic reasons put all non-test build actions before all test build actions.
-    for (BuildTarget buildTarget : orderedBuildTargets) {
+    for (PBXTarget target : orderedBuildTargets) {
       addBuildActionForBuildTarget(
-          buildTargetToBuildableReferenceMap.get(buildTarget),
+          buildTargetToBuildableReferenceMap.get(target),
           XCScheme.BuildActionEntry.BuildFor.DEFAULT,
           buildAction);
     }
 
-    for (BuildTarget buildTarget : orderedTestBuildTargets) {
+    for (PBXTarget target : orderedBuildTestTargets) {
       addBuildActionForBuildTarget(
-          buildTargetToBuildableReferenceMap.get(buildTarget),
+          buildTargetToBuildableReferenceMap.get(target),
           XCScheme.BuildActionEntry.BuildFor.TEST_ONLY,
           buildAction);
     }
 
     XCScheme.TestAction testAction = new XCScheme.TestAction(
         actionConfigNames.get(SchemeActionType.TEST));
-    for (BuildTarget buildTarget : orderedTestBundleTargets) {
+    for (PBXTarget target : orderedRunTestTargets) {
       XCScheme.BuildableReference buildableReference =
-          buildTargetToBuildableReferenceMap.get(buildTarget);
+          buildTargetToBuildableReferenceMap.get(target);
       XCScheme.TestableReference testableReference =
           new XCScheme.TestableReference(buildableReference);
       testAction.addTestableReference(testableReference);
