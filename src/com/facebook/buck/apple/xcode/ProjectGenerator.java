@@ -502,8 +502,7 @@ public class ProjectGenerator {
         targetNode.getConstructorArg().srcs.get());
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
-        sourcePathResolver,
-        buildTarget);
+        sourcePathResolver);
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
         .setProduct(
@@ -531,8 +530,11 @@ public class ProjectGenerator {
     }
 
     if (includeFrameworks) {
-      ImmutableSet.Builder<String> frameworksBuilder = ImmutableSet.builder();
-      frameworksBuilder.addAll(targetNode.getConstructorArg().frameworks.get());
+      ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
+      frameworksBuilder.addAll(
+          Iterables.transform(
+              targetNode.getConstructorArg().frameworks.get(),
+              FrameworkPath.transformFromString(targetNode.getBuildTarget())));
       frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(ImmutableList.of(targetNode)));
       mutator.setFrameworks(frameworksBuilder.build());
       mutator.setArchives(
@@ -1333,7 +1335,7 @@ public class ProjectGenerator {
         .toSet();
   }
 
-  private <T> Iterable<String> collectRecursiveFrameworkDependencies(
+  private <T> Iterable<FrameworkPath> collectRecursiveFrameworkDependencies(
       Iterable<TargetNode<T>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
@@ -1342,15 +1344,17 @@ public class ProjectGenerator {
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))
         .transformAndConcat(
-            new Function<TargetNode<?>, Iterable<String>>() {
+            new Function<TargetNode<?>, Iterable<FrameworkPath>>() {
               @Override
-              public Iterable<String> apply(TargetNode<?> input) {
+              public Iterable<FrameworkPath> apply(TargetNode<?> input) {
                 Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
                     getLibraryNode(targetGraph, input);
                 if (library.isPresent() &&
                     !AppleLibraryDescription.isSharedLibraryTarget(
                         library.get().getBuildTarget())) {
-                  return library.get().getConstructorArg().frameworks.get();
+                  return Iterables.transform(
+                      library.get().getConstructorArg().frameworks.get(),
+                      FrameworkPath.transformFromString(input.getBuildTarget()));
                 } else {
                   return ImmutableList.of();
                 }

@@ -41,17 +41,13 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleDescription;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -80,17 +76,16 @@ public class NewNativeTargetProjectMutator {
 
   private final PathRelativizer pathRelativizer;
   private final SourcePathResolver sourcePathResolver;
-  private final BuildTarget buildTarget;
 
   private PBXTarget.ProductType productType = PBXTarget.ProductType.BUNDLE;
   private Path productOutputPath = Paths.get("");
   private String productName = "";
-  private String targetName;
+  private String targetName = "";
   private Optional<String> gid = Optional.absent();
   private Iterable<GroupedSource> sources = ImmutableList.of();
   private ImmutableMap<SourcePath, String> sourceFlags = ImmutableMap.of();
   private boolean shouldGenerateCopyHeadersPhase = true;
-  private ImmutableSet<String> frameworks = ImmutableSet.of();
+  private ImmutableSet<FrameworkPath> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
   private ImmutableSet<AppleResourceDescription.Arg> resources = ImmutableSet.of();
   private ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogs = ImmutableSet.of();
@@ -100,12 +95,9 @@ public class NewNativeTargetProjectMutator {
 
   public NewNativeTargetProjectMutator(
       PathRelativizer pathRelativizer,
-      SourcePathResolver sourcePathResolver,
-      BuildTarget buildTarget) {
+      SourcePathResolver sourcePathResolver) {
     this.pathRelativizer = pathRelativizer;
     this.sourcePathResolver = sourcePathResolver;
-    this.buildTarget = buildTarget;
-    this.targetName = buildTarget.getFullyQualifiedName();
   }
 
   /**
@@ -148,7 +140,7 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public NewNativeTargetProjectMutator setFrameworks(ImmutableSet<String> frameworks) {
+  public NewNativeTargetProjectMutator setFrameworks(ImmutableSet<FrameworkPath> frameworks) {
     this.frameworks = frameworks;
     return this;
   }
@@ -358,44 +350,20 @@ public class NewNativeTargetProjectMutator {
     PBXFrameworksBuildPhase frameworksBuildPhase = new PBXFrameworksBuildPhase();
     target.getBuildPhases().add(frameworksBuildPhase);
 
-    for (String framework : frameworks) {
-      Path path = Paths.get(framework);
-
-      String firstElement =
-          Preconditions.checkNotNull(Iterables.getFirst(path, Paths.get(""))).toString();
-
-      if (firstElement.startsWith("$")) { // NOPMD - length() > 0 && charAt(0) == '$' is ridiculous
-        Optional<PBXReference.SourceTree> sourceTree =
-            PBXReference.SourceTree.fromBuildSetting(firstElement);
-        if (sourceTree.isPresent()) {
-          Path sdkRootRelativePath = path.subpath(1, path.getNameCount());
-          PBXFileReference fileReference =
-              sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
-                  new SourceTreePath(sourceTree.get(), sdkRootRelativePath));
-          frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
-        } else {
-          throw new HumanReadableException(String.format(
-              "Unknown SourceTree: %s in build target: %s. Should be one of: %s",
-              firstElement,
-              buildTarget,
-              Joiner.on(',').join(Iterables.transform(
-                      ImmutableList.copyOf(PBXReference.SourceTree.values()),
-                      new Function<PBXReference.SourceTree, String>() {
-                        @Override
-                        public String apply(PBXReference.SourceTree input) {
-                          return "$" + input.toString();
-                        }
-                      }))));
-        }
+    for (FrameworkPath framework : frameworks) {
+      SourceTreePath sourceTreePath;
+      if (framework.sourceTreePath().isPresent()) {
+        sourceTreePath = framework.sourceTreePath().get();
+      } else if (framework.sourcePath().isPresent()) {
+        sourceTreePath = new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            pathRelativizer.outputPathToSourcePath(framework.sourcePath().get()));
       } else {
-        // regular path
-        PBXFileReference fileReference =
-            sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(
-                new SourceTreePath(
-                    PBXReference.SourceTree.GROUP,
-                    pathRelativizer.outputPathToBuildTargetPath(buildTarget, path)));
-        frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+        throw new RuntimeException();
       }
+      PBXFileReference fileReference =
+          sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(sourceTreePath);
+      frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
     }
 
     for (PBXFileReference archive : archives) {

@@ -87,11 +87,9 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void shouldCreateTargetAndTargetGroup() throws NoSuchBuildTargetException {
-    BuildTarget testBuildTarget = BuildTarget.builder("//foo", "test").build();
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
-        sourcePathResolver,
-        testBuildTarget);
+        sourcePathResolver);
     mutator
         .setTargetName("TestTarget")
         .setProduct(
@@ -106,8 +104,7 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void testSourceGroups() throws NoSuchBuildTargetException {
-    BuildTarget testBuildTarget = BuildTarget.builder("//foo", "lib").build();
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
     SourcePath foo = new TestSourcePath("foo.m");
     SourcePath bar = new TestSourcePath("bar.m");
@@ -146,8 +143,7 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void testLibraryHeaderGroups() throws NoSuchBuildTargetException {
-    BuildTarget testBuildTarget = BuildTarget.builder("//foo", "lib").build();
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
     SourcePath foo = new TestSourcePath("foo.h");
     SourcePath bar = new TestSourcePath("bar.h");
@@ -220,8 +216,7 @@ public class NewNativeTargetProjectMutatorTest {
         GroupedSource.ofSourcePath(new TestSourcePath("foo.h")));
 
     {
-      BuildTarget testBuildTarget = BuildTarget.builder("//foo", "lib").build();
-      NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+      NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
       mutator
           .setShouldGenerateCopyHeadersPhase(false)
           .setSources(sources, ImmutableMap.<SourcePath, String>of());
@@ -235,8 +230,7 @@ public class NewNativeTargetProjectMutatorTest {
     }
 
     {
-      BuildTarget testBuildTarget = BuildTarget.builder("//foo", "lib").build();
-      NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+      NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
       mutator
           .setShouldGenerateCopyHeadersPhase(true)
           .setSources(sources, ImmutableMap.<SourcePath, String>of());
@@ -252,13 +246,15 @@ public class NewNativeTargetProjectMutatorTest {
   @Test
   public void testFrameworkBuildPhase() throws NoSuchBuildTargetException {
     BuildTarget testBuildTarget = BuildTarget.builder("//foo", "binary").build();
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
-    mutator.setFrameworks(ImmutableSet.of("$SDKROOT/Foo.framework"));
-    mutator.setArchives(ImmutableSet.of(
-        new PBXFileReference(
-            "libdep.a",
-            "libdep.a",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR)));
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
+    mutator.setFrameworks(
+        ImmutableSet.of(FrameworkPath.fromString(testBuildTarget, "$SDKROOT/Foo.framework")));
+    mutator.setArchives(
+        ImmutableSet.of(
+            new PBXFileReference(
+                "libdep.a",
+                "libdep.a",
+                PBXReference.SourceTree.BUILT_PRODUCTS_DIR)));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
     assertHasSingletonFrameworksPhaseWithFrameworkEntries(
@@ -270,8 +266,7 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void testResourcesBuildPhase() throws NoSuchBuildTargetException {
-    BuildTarget testBuildTarget = BuildTarget.builder("//foo", "binary").build();
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
     AppleResourceDescription appleResourceDescription = new AppleResourceDescription();
     AppleResourceDescription.Arg arg = createDescriptionArgWithDefaults(appleResourceDescription);
@@ -298,8 +293,7 @@ public class NewNativeTargetProjectMutatorTest {
     arg2.dirs = ImmutableSet.of(Paths.get("AssetCatalog2.xcassets"));
     arg2.copyToBundles = Optional.of(true);
 
-    BuildTarget testBuildTarget = BuildTarget.builder("//foo", "binary").build();
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
     mutator.setAssetCatalogs(
         Paths.get("compile_asset_catalogs"),
         ImmutableSet.of(arg1, arg2));
@@ -310,8 +304,7 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void testScriptBuildPhase() throws NoSuchBuildTargetException{
-    BuildTarget testBuildTarget = BuildTarget.builder("//foo", "library").build();
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
     TargetNode<?> genruleNode = GenruleBuilder
         .newGenruleBuilder(BuildTarget.builder("//foo", "script").build())
@@ -338,8 +331,7 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void testScriptBuildPhaseWithGenruleDep() throws NoSuchBuildTargetException{
-    BuildTarget testBuildTarget = BuildTarget.builder("//foo", "library").build();
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults(testBuildTarget);
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
     BuildTarget depBuildTarget = BuildTarget.builder("//foo", "dep").build();
     // This has the side effect of adding the dependency to the BuildRuleResolver map.
@@ -373,11 +365,10 @@ public class NewNativeTargetProjectMutatorTest {
         phase.getShellScript());
   }
 
-  private NewNativeTargetProjectMutator mutatorWithCommonDefaults(BuildTarget target) {
+  private NewNativeTargetProjectMutator mutatorWithCommonDefaults() {
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
-        sourcePathResolver,
-        target);
+        sourcePathResolver);
     mutator
         .setTargetName("TestTarget")
         .setProduct(

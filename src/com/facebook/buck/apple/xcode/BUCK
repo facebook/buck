@@ -1,6 +1,7 @@
-java_library(
+java_immutables_library(
   name = 'project_generator',
   srcs = [
+    'FrameworkPath.java',
     'NewNativeTargetProjectMutator.java',
     'PathRelativizer.java',
     'ProjectGenerator.java',
