@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.rules.coercer.Pair;
+import com.facebook.buck.model.Pair;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;

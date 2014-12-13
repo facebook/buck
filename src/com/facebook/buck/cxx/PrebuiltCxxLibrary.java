@@ -26,7 +26,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.Pair;
+import com.facebook.buck.model.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 

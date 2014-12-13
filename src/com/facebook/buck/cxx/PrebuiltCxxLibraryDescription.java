@@ -29,7 +29,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.Pair;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;

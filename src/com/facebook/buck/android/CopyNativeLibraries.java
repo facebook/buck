@@ -21,11 +21,13 @@ import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.cxx.ObjcopyStep;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -40,6 +42,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -68,7 +71,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
    * (e.g. <"x86", "libtest.so">), and the values of the map are the full paths to the libraries.
    */
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
-  private final ImmutableMap<Map.Entry<TargetCpuType, String>, Path> filteredNativeLibraries;
+  private final ImmutableMap<Pair<TargetCpuType, String>, SourcePath> filteredNativeLibraries;
 
   protected CopyNativeLibraries(
       BuildRuleParams buildRuleParams,
@@ -76,7 +79,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
       ImmutableSet<Path> nativeLibDirectories,
       ImmutableSet<TargetCpuType> cpuFilters,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
-      ImmutableMap<Map.Entry<TargetCpuType, String>, Path> filteredNativeLibraries) {
+      ImmutableMap<Pair<TargetCpuType, String>, SourcePath> filteredNativeLibraries) {
     super(buildRuleParams, resolver);
     this.nativeLibDirectories = nativeLibDirectories;
     this.cpuFilters = cpuFilters;
@@ -106,7 +109,21 @@ public class CopyNativeLibraries extends AbstractBuildRule {
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.setReflectively("cpuFilters", cpuFilters);
+    builder.setReflectively("cpuFilters", cpuFilters);
+
+    // Hash in the pre-filtered native libraries we're pulling in.
+    ImmutableSortedMap<Pair<TargetCpuType, String>, SourcePath> sortedLibs =
+        ImmutableSortedMap.<Pair<TargetCpuType, String>, SourcePath>orderedBy(
+                Pair.<TargetCpuType, String>comparator())
+            .putAll(filteredNativeLibraries)
+            .build();
+    for (Map.Entry<Pair<TargetCpuType, String>, SourcePath> entry : sortedLibs.entrySet()) {
+      builder.setInput(
+          String.format("lib(%s, %s)", entry.getKey().getFirst(), entry.getKey().getSecond()),
+          entry.getValue());
+    }
+
+    return builder;
   }
 
   @Override
@@ -123,23 +140,23 @@ public class CopyNativeLibraries extends AbstractBuildRule {
     }
 
     // Copy in the pre-filtered native libraries.
-    for (Map.Entry<Map.Entry<TargetCpuType, String>, Path> entry :
+    for (Map.Entry<Pair<TargetCpuType, String>, SourcePath> entry :
          filteredNativeLibraries.entrySet()) {
-      Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(entry.getKey().getKey());
+      Optional<String> abiDirectoryComponent = getAbiDirectoryComponent(entry.getKey().getFirst());
       Preconditions.checkState(abiDirectoryComponent.isPresent());
       Path destination =
           pathToNativeLibs
               .resolve(abiDirectoryComponent.get())
-              .resolve(entry.getKey().getValue());
+              .resolve(entry.getKey().getSecond());
       NdkCxxPlatform platform =
-          Preconditions.checkNotNull(nativePlatforms.get(entry.getKey().getKey()));
+          Preconditions.checkNotNull(nativePlatforms.get(entry.getKey().getFirst()));
       Path objcopy = getResolver().getPath(platform.getObjcopy());
       steps.add(new MkdirStep(destination.getParent()));
       steps.add(
           new ObjcopyStep(
               objcopy,
               ImmutableList.of("--strip-unneeded"),
-              entry.getValue(),
+              getResolver().getPath(entry.getValue()),
               destination));
     }
 

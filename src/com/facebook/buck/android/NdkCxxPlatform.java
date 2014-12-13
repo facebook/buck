@@ -70,6 +70,8 @@ public class NdkCxxPlatform implements CxxPlatform {
   private final ImmutableList<String> cxxldflags;
   private final Linker ld;
   private final ImmutableList<String> ldflags;
+  private final ImmutableList<String> sharedRuntimeLdflags;
+  private final ImmutableList<String> staticRuntimeLdflags;
   private final Tool ar;
   private final ImmutableList<String> arflags;
 
@@ -77,11 +79,15 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private final SourcePath objcopy;
 
+  private final CxxRuntime cxxRuntime;
+  private final Path cxxSharedRuntimePath;
+
   public NdkCxxPlatform(
       Flavor flavor,
       Platform platform,
       Path ndkRoot,
-      TargetConfiguration targetConfiguration) {
+      TargetConfiguration targetConfiguration,
+      CxxRuntime cxxRuntime) {
 
     String version = readVersion(ndkRoot);
 
@@ -107,7 +113,7 @@ public class NdkCxxPlatform implements CxxPlatform {
     this.cxxflags = getCxxflagsInternal(targetConfiguration);
     this.cxxpp = getCppTool(ndkRoot, targetConfiguration, host, "g++", version);
     this.cxxppflags = getCxxppflags(ndkRoot, targetConfiguration);
-    this.cxxld = getCcLinkTool(ndkRoot, targetConfiguration, host, "g++", version);
+    this.cxxld = getCcLinkTool(ndkRoot, targetConfiguration, host, cxxRuntime, "g++", version);
     this.cxxldflags = ImmutableList.of();
     this.ld = new GnuLinker(getTool(ndkRoot, targetConfiguration, host, "ld.gold", version));
 
@@ -118,8 +124,20 @@ public class NdkCxxPlatform implements CxxPlatform {
         // Strip unused code
         "--gc-sections",
         // Forbid dangerous copy "relocations"
-        "-z", "nocopyreloc"
+        "-z", "nocopyreloc",
+        // We always pass the runtime library on the command line, so setting this flag
+        // means the resulting link will only use it if it was actually needed it.
+        "--as-needed"
     );
+
+    this.sharedRuntimeLdflags =
+        cxxRuntime != CxxRuntime.SYSTEM ?
+            ImmutableList.of("-l" + cxxRuntime.getSharedName()) :
+            ImmutableList.<String>of();
+    this.staticRuntimeLdflags =
+        cxxRuntime != CxxRuntime.SYSTEM ?
+            ImmutableList.of("-l" + cxxRuntime.getStaticName()) :
+            ImmutableList.<String>of();
 
     this.ar = getTool(ndkRoot, targetConfiguration, host, "ar", version);
     this.arflags = ImmutableList.of();
@@ -136,6 +154,11 @@ public class NdkCxxPlatform implements CxxPlatform {
                     ndkRoot, Paths.get("ANDROID_NDK_ROOT"))));
 
     this.objcopy = getSourcePath(ndkRoot, targetConfiguration, host, "objcopy");
+
+    this.cxxRuntime = cxxRuntime;
+    this.cxxSharedRuntimePath =
+        getCxxRuntimeDirectory(ndkRoot, targetConfiguration)
+            .resolve(cxxRuntime.getSoname());
   }
 
   // Read the NDK version from the "RELEASE.TXT" at the NDK root.
@@ -220,10 +243,23 @@ public class NdkCxxPlatform implements CxxPlatform {
         targetConfiguration.toolchain.toString() + " " + version);
   }
 
+  private static Path getCxxRuntimeDirectory(
+      Path ndkRoot,
+      TargetConfiguration targetConfiguration) {
+    return ndkRoot
+        .resolve("sources")
+        .resolve("cxx-stl")
+        .resolve("gnu-libstdc++")
+        .resolve(targetConfiguration.compilerVersion)
+        .resolve("libs")
+        .resolve(targetConfiguration.targetArchAbi.toString());
+  }
+
   private static Tool getCcLinkTool(
       Path ndkRoot,
       TargetConfiguration targetConfiguration,
       Host host,
+      CxxRuntime cxxRuntime,
       String tool,
       String version) {
     return new VersionedTool(
@@ -235,9 +271,10 @@ public class NdkCxxPlatform implements CxxPlatform {
                 .resolve("arch-" + targetConfiguration.targetArch)
                 .resolve("usr")
                 .resolve("lib")
-                .toString()),
+                .toString(),
+            "-L" + getCxxRuntimeDirectory(ndkRoot, targetConfiguration).toString()),
         tool,
-        targetConfiguration.toolchain.toString() + " " + version);
+        targetConfiguration.toolchain.toString() + " " + version + " " + cxxRuntime.toString());
   }
 
   /**
@@ -480,7 +517,9 @@ public class NdkCxxPlatform implements CxxPlatform {
   public ImmutableList<String> getRuntimeLdflags(
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType) {
-    return ImmutableList.of();
+    return linkableDepType == Linker.LinkableDepType.SHARED ?
+        sharedRuntimeLdflags :
+        staticRuntimeLdflags;
   }
 
   @Override
@@ -525,6 +564,17 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   public SourcePath getObjcopy() {
     return objcopy;
+  }
+
+  public CxxRuntime getCxxRuntime() {
+    return cxxRuntime;
+  }
+
+  /**
+   * @return the {@link Path} to the C/C++ runtime library.
+   */
+  public Path getCxxSharedRuntimePath() {
+    return cxxSharedRuntimePath;
   }
 
   /**
@@ -666,6 +716,39 @@ public class NdkCxxPlatform implements CxxPlatform {
       this.targetPlatform = Preconditions.checkNotNull(targetPlatform);
       this.compilerVersion = Preconditions.checkNotNull(compilerVersion);
       this.compilerFlags = Preconditions.checkNotNull(compilerFlags);
+    }
+
+  }
+
+  /**
+   * The C/C++ runtime library to link against.
+   */
+  public static enum CxxRuntime {
+
+    SYSTEM("system", "system"),
+    GABIXX("gabi++_shared", "gabi++_static"),
+    STLPORT("stlport_shared", "stlport_static"),
+    GNUSTL("gnustl_shared", "gnustl_static"),
+    ;
+
+    private final String sharedName;
+    private final String staticName;
+
+    private CxxRuntime(String sharedName, String staticName) {
+      this.sharedName = sharedName;
+      this.staticName = staticName;
+    }
+
+    public String getStaticName() {
+      return staticName;
+    }
+
+    public String getSharedName() {
+      return sharedName;
+    }
+
+    public String getSoname() {
+      return "lib" + sharedName + ".so";
     }
 
   }

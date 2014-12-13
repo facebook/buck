@@ -35,7 +35,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
-import com.facebook.buck.rules.coercer.Pair;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;

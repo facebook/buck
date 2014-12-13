@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;

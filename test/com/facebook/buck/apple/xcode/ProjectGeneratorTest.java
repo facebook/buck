@@ -66,7 +66,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.rules.coercer.Pair;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;

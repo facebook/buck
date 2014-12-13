@@ -30,7 +30,7 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.rules.coercer.Pair;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;

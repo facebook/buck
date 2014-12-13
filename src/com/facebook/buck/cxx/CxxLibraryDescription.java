@@ -31,7 +31,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.rules.coercer.Pair;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;

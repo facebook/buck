@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.model;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 /**
@@ -24,6 +25,7 @@ import java.util.Objects;
  * Used to represent pair-like structures in coerced values.
  */
 public class Pair<FIRST, SECOND> {
+
   private FIRST first;
   private SECOND second;
 
@@ -55,4 +57,22 @@ public class Pair<FIRST, SECOND> {
   public int hashCode() {
     return Objects.hash(first, second);
   }
+
+  /**
+   * Provides a comparison using the natural ordering of contained types (which my be comparable).
+   */
+  public static <FIRST extends Comparable<FIRST>, SECOND extends Comparable<SECOND>>
+      Comparator<Pair<FIRST, SECOND>> comparator() {
+    return new Comparator<Pair<FIRST, SECOND>>() {
+      @Override
+      public int compare(Pair<FIRST, SECOND> o1, Pair<FIRST, SECOND> o2) {
+        int res = o1.first.compareTo(o2.first);
+        if (res != 0) {
+          return res;
+        }
+        return o1.second.compareTo(o2.second);
+      };
+    };
+  }
+
 }

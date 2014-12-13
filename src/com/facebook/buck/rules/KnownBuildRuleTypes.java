@@ -181,7 +181,8 @@ public class KnownBuildRuleTypes {
                     "-mtune=xscale",
                     "-msoft-float",
                     "-mthumb",
-                    "-Os")));
+                    "-Os")),
+            NdkCxxPlatform.CxxRuntime.GNUSTL);
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARM, armeabi);
     NdkCxxPlatform armeabiv7 =
         new NdkCxxPlatform(
@@ -201,7 +202,8 @@ public class KnownBuildRuleTypes {
                     "-mfpu=vfpv3-d16",
                     "-mfloat-abi=softfp",
                     "-mthumb",
-                    "-Os")));
+                    "-Os")),
+            NdkCxxPlatform.CxxRuntime.GNUSTL);
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARMV7, armeabiv7);
     NdkCxxPlatform x86 =
         new NdkCxxPlatform(
@@ -218,7 +220,8 @@ public class KnownBuildRuleTypes {
                 /* compilerFlags */ ImmutableList.of(
                     "-funswitch-loops",
                     "-finline-limit=300",
-                    "-O2")));
+                    "-O2")),
+            NdkCxxPlatform.CxxRuntime.GNUSTL);
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.X86, x86);
 
     return ndkCxxPlatformBuilder.build();
