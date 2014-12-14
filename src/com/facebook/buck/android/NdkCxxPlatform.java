@@ -112,8 +112,15 @@ public class NdkCxxPlatform implements CxxPlatform {
     this.cxxldflags = ImmutableList.of();
     this.ld = new GnuLinker(getTool(ndkRoot, targetConfiguration, host, "ld.gold", version));
 
-    // Default linker flags added by the NDK to enforce the NX (no execute) security feature.
-    this.ldflags = ImmutableList.of("-z", "noexecstack");
+    // Default linker flags added by the NDK
+    this.ldflags = ImmutableList.of(
+        //  Enforce the NX (no execute) security feature
+        "-z", "noexecstack",
+        // Strip unused code
+        "--gc-sections",
+        // Forbid dangerous copy "relocations"
+        "-z", "nocopyreloc"
+    );
 
     this.ar = getTool(ndkRoot, targetConfiguration, host, "ar", version);
     this.arflags = ImmutableList.of();
