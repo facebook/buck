@@ -232,6 +232,13 @@ public class DefaultCxxPlatform implements CxxPlatform {
   }
 
   @Override
+  public ImmutableList<String> getRuntimeLdflags(
+      Linker.LinkType linkType,
+      Linker.LinkableDepType linkableDepType) {
+    return ImmutableList.of();
+  }
+
+  @Override
   public Tool getAr() {
     return getTool("cxx", "ar", DEFAULT_AR);
   }

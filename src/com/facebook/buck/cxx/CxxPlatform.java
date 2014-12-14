@@ -51,6 +51,9 @@ public interface CxxPlatform {
 
   Linker getLd();
   ImmutableList<String> getLdflags();
+  ImmutableList<String> getRuntimeLdflags(
+      Linker.LinkType linkType,
+      Linker.LinkableDepType linkableDepType);
 
   Tool getAr();
   ImmutableList<String> getArflags();
