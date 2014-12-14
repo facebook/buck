@@ -333,7 +333,7 @@ public class CxxLibraryDescription implements
       ImmutableList<String> linkerFlags,
       Optional<String> soname) {
 
-    // Create rules for compiling the non-PIC object files.
+    // Create rules for compiling the PIC object files.
     ImmutableList<SourcePath> objects = requireObjects(
         params,
         ruleResolver,
