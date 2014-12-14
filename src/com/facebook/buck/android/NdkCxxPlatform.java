@@ -244,7 +244,7 @@ public class NdkCxxPlatform implements CxxPlatform {
         "-Werror",
         // NDK builds enable stack protector and debug symbols by default.
         "-fstack-protector",
-        "-g");
+        "-g3");
   }
 
   /**
