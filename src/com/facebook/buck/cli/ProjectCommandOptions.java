@@ -73,6 +73,12 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
   private boolean withTests = false;
 
   @Option(
+      name = "--combine-test-bundles",
+      usage = "Combine multiple ios/osx test targets into the same bundle if they have identical " +
+          "settings")
+  private boolean combineTestBundles = false;
+
+  @Option(
       name = "--ide",
       usage = "The type of IDE for which to generate a project. Defaults to 'intellij' if not " +
           "specified in .buckconfig.")
@@ -107,6 +113,10 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
 
   public boolean getCombinedProject() {
     return combinedProject;
+  }
+
+  public boolean getCombineTestBundles() {
+    return combineTestBundles;
   }
 
   public boolean shouldProcessAnnotations() {

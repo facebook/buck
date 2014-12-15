@@ -314,6 +314,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           optionsBuilder.build(),
           sourceTargetToTestNodes,
           combinedProject);
+      generator.setGroupTestBundles(options.getCombineTestBundles());
       generator.generateWorkspaceAndDependentProjects(projectGenerators);
     }
 
