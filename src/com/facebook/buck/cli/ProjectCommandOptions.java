@@ -63,11 +63,6 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
       usage = "Generate an xcode project of a target and its dependencies.")
   private boolean combinedProject;
 
-  @Option(
-      name = "--workspace-and-projects",
-      usage = "Generate an xcode workspace containing separate projects per target.")
-  private boolean workspaceAndProjects;
-
   @Option(name = "--process-annotations", usage = "Enable annotation processing")
   private boolean processAnnotations;
 
@@ -112,10 +107,6 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
 
   public boolean getCombinedProject() {
     return combinedProject;
-  }
-
-  public boolean getWorkspaceAndProjects() {
-    return workspaceAndProjects;
   }
 
   public boolean shouldProcessAnnotations() {

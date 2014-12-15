@@ -49,7 +49,6 @@ java_test(
     'PathRelativizerTest.java',
     'ProjectGeneratorTest.java',
     'SchemeGeneratorTest.java',
-    'SeparatedProjectsGeneratorTest.java',
     'WorkspaceGeneratorTest.java',
     'WorkspaceAndProjectGeneratorTest.java',
   ],

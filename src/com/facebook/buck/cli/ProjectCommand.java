@@ -21,7 +21,6 @@ import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.ProjectGenerator;
-import com.facebook.buck.apple.xcode.SeparatedProjectsGenerator;
 import com.facebook.buck.apple.xcode.WorkspaceAndProjectGenerator;
 import com.facebook.buck.command.Project;
 import com.facebook.buck.java.JavaLibraryDescription;
@@ -38,7 +37,6 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -281,66 +279,44 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       optionsBuilder.add(ProjectGenerator.Option.INCLUDE_TESTS);
     }
 
-    if (options.getCombinedProject() || options.getWorkspaceAndProjects()) {
-      boolean combinedProject = options.getCombinedProject();
-      if (combinedProject && passedInTargetsSet.size() != 1) {
-        throw new HumanReadableException(
-            "Combined project can only be generated for one target at a time");
-      }
-      ImmutableSet<BuildTarget> targets;
-      if (passedInTargetsSet.isEmpty()) {
-        targets = FluentIterable
-            .from(targetGraphAndTargets.getProjectRoots())
-            .transform(HasBuildTarget.TO_TARGET)
-            .toSet();
-      } else {
-        targets = passedInTargetsSet;
-      }
-      if (!combinedProject) {
-        optionsBuilder.addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
-      }
-      LOG.debug("Generating workspace for config targets %s", targets);
-      Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
-      ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
-      ImmutableMultimap<BuildTarget, TargetNode<AppleTestDescription.Arg>> sourceTargetToTestNodes =
-          AppleBuildRules.getSourceTargetToTestNodesMap(testTargetNodes);
-      for (BuildTarget workspaceTarget : targets) {
-        TargetNode<?> workspaceNode = Preconditions.checkNotNull(
-            targetGraphAndTargets.getTargetGraph().get(workspaceTarget));
-        if (workspaceNode.getType() != XcodeWorkspaceConfigDescription.TYPE) {
-          throw new HumanReadableException(
-              "%s must be a xcode_workspace_config",
-              workspaceTarget);
-        }
-        WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
-            getProjectFilesystem(),
-            targetGraphAndTargets.getTargetGraph(),
-            castToXcodeWorkspaceTargetNode(workspaceNode),
-            optionsBuilder.build(),
-            sourceTargetToTestNodes,
-            combinedProject);
-        generator.generateWorkspaceAndDependentProjects(projectGenerators);
-      }
+    boolean combinedProject = options.getCombinedProject();
+    if (combinedProject && passedInTargetsSet.size() != 1) {
+      throw new HumanReadableException(
+          "Combined project can only be generated for one target at a time");
+    }
+    ImmutableSet<BuildTarget> targets;
+    if (passedInTargetsSet.isEmpty()) {
+      targets = FluentIterable
+          .from(targetGraphAndTargets.getProjectRoots())
+          .transform(HasBuildTarget.TO_TARGET)
+          .toSet();
     } else {
-      // Generate projects based on xcode_project_config rules, and place them in the same directory
-      // as the Buck file.
-
-      ImmutableSet<BuildTarget> targets;
-      if (passedInTargetsSet.isEmpty()) {
-        targets = FluentIterable
-            .from(targetGraphAndTargets.getAssociatedProjects())
-            .transform(HasBuildTarget.TO_TARGET)
-            .toSet();
-      } else {
-        targets = passedInTargetsSet;
+      targets = passedInTargetsSet;
+    }
+    if (!combinedProject) {
+      optionsBuilder.addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
+    }
+    LOG.debug("Generating workspace for config targets %s", targets);
+    Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
+    ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
+    ImmutableMultimap<BuildTarget, TargetNode<AppleTestDescription.Arg>> sourceTargetToTestNodes =
+        AppleBuildRules.getSourceTargetToTestNodesMap(testTargetNodes);
+    for (BuildTarget workspaceTarget : targets) {
+      TargetNode<?> workspaceNode = Preconditions.checkNotNull(
+          targetGraphAndTargets.getTargetGraph().get(workspaceTarget));
+      if (workspaceNode.getType() != XcodeWorkspaceConfigDescription.TYPE) {
+        throw new HumanReadableException(
+            "%s must be a xcode_workspace_config",
+            workspaceTarget);
       }
-
-      SeparatedProjectsGenerator projectGenerator = new SeparatedProjectsGenerator(
+      WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
           getProjectFilesystem(),
           targetGraphAndTargets.getTargetGraph(),
-          targets,
-          optionsBuilder.build());
-      projectGenerator.generateProjects();
+          castToXcodeWorkspaceTargetNode(workspaceNode),
+          optionsBuilder.build(),
+          sourceTargetToTestNodes,
+          combinedProject);
+      generator.generateWorkspaceAndDependentProjects(projectGenerators);
     }
 
     return 0;
@@ -471,10 +447,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         projectRootsPredicate = new Predicate<TargetNode<?>>() {
           @Override
           public boolean apply(TargetNode<?> input) {
-            BuildRuleType filterType = options.getWorkspaceAndProjects() ?
-                XcodeWorkspaceConfigDescription.TYPE :
-                XcodeProjectConfigDescription.TYPE;
-            if (filterType != input.getType()) {
+            if (XcodeWorkspaceConfigDescription.TYPE != input.getType()) {
               return false;
             }
 
@@ -606,8 +579,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         targetGraph,
         fullGraph,
         projectRoots,
-        associatedTests,
-        associatedProjects);
+        associatedTests);
   }
 
   /**
@@ -646,19 +618,16 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     private final TargetGraph fullGraph;
     private final ImmutableSet<TargetNode<?>> projectRoots;
     private final ImmutableSet<TargetNode<?>> associatedTests;
-    private final ImmutableSet<TargetNode<?>> associatedProjects;
 
     public TargetGraphAndTargets(
         TargetGraph targetGraph,
         TargetGraph fullGraph,
         ImmutableSet<TargetNode<?>> projectRoots,
-        ImmutableSet<TargetNode<?>> associatedTests,
-        ImmutableSet<TargetNode<?>> associatedProjects) {
+        ImmutableSet<TargetNode<?>> associatedTests) {
       this.targetGraph = targetGraph;
       this.fullGraph = fullGraph;
       this.projectRoots = projectRoots;
       this.associatedTests = associatedTests;
-      this.associatedProjects = associatedProjects;
     }
 
     public TargetGraph getTargetGraph() {
@@ -675,10 +644,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     public ImmutableSet<TargetNode<?>> getAssociatedTests() {
       return associatedTests;
-    }
-
-    public ImmutableSet<TargetNode<?>> getAssociatedProjects() {
-      return associatedProjects;
     }
   }
 }

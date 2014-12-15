@@ -5,7 +5,6 @@ java_library(
     'PathRelativizer.java',
     'ProjectGenerator.java',
     'SchemeGenerator.java',
-    'SeparatedProjectsGenerator.java',
     'WorkspaceAndProjectGenerator.java',
     'WorkspaceGenerator.java',
   ],

@@ -293,20 +293,6 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void buckProjectXcodeSeparatedProjectsNoArgsGeneratesAllProjects() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "project_xcode_two_projects",
-        temporaryFolder);
-    workspace.setUp();
-
-    ProcessResult result = workspace.runBuckCommand("project");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
-
-  @Test
   public void testBuckProjectGeneratedSchemeOnlyIncludesDependencies() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -316,7 +302,6 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--workspace-and-projects",
         "//Apps:workspace");
     result.assertSuccess();
 
@@ -333,7 +318,6 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--workspace-and-projects",
         "--with-tests",
         "//Apps:workspace");
     result.assertSuccess();
@@ -352,7 +336,6 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--workspace-and-projects",
         "--with-tests",
         "//Apps:workspace");
     result.assertSuccess();
@@ -369,10 +352,7 @@ public class ProjectIntegrationTest {
         temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "project",
-        "--workspace-and-projects",
-        "--with-tests");
+    ProcessResult result = workspace.runBuckCommand("project", "--with-tests");
     result.assertSuccess();
 
     workspace.verify();
@@ -386,9 +366,7 @@ public class ProjectIntegrationTest {
         temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "project",
-        "--workspace-and-projects");
+    ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
 
     workspace.verify();
@@ -402,9 +380,7 @@ public class ProjectIntegrationTest {
         temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "project",
-        "--workspace-and-projects");
+    ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
 
     workspace.verify();
@@ -418,9 +394,7 @@ public class ProjectIntegrationTest {
         temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand(
-        "project",
-        "--workspace-and-projects");
+    ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
 
     workspace.verify();
