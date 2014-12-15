@@ -31,7 +31,11 @@ import javax.annotation.Nullable;
 
 public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg> {
   private JavaTestBuilder(BuildTarget target) {
-    super(new JavaTestDescription(DEFAULT_JAVAC_OPTIONS), target);
+    super(
+        new JavaTestDescription(
+            DEFAULT_JAVAC_OPTIONS,
+            /* testRuleTimeoutMs */ Optional.<Long>absent()),
+        target);
   }
 
   public static JavaTestBuilder createBuilder(BuildTarget target) {

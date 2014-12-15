@@ -830,6 +830,12 @@ public class BuckConfig {
     return Optional.fromNullable(properties.get(propertyName));
   }
 
+  public Optional<Long> getLong(String sectionName, String propertyName) {
+    Optional<String> value = getValue(sectionName, propertyName);
+    return value.isPresent() ?
+        Optional.of(Long.valueOf(value.get())) :
+        Optional.<Long>absent();
+  }
 
   public boolean getBooleanValue(String sectionName, String propertyName, boolean defaultValue) {
     Map<String, String> entries = getEntriesForSection(sectionName);

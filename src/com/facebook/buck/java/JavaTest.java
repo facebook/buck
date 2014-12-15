@@ -41,6 +41,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -80,9 +81,14 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
 
   private final TestType testType;
 
+  private final Optional<Long> testRuleTimeoutMs;
+
   private static final int TEST_CLASSES_SHUFFLE_SEED = 0xFACEB00C;
 
   private static final Logger LOG = Logger.get(JavaTest.class);
+
+  @Nullable
+  private JUnitStep junit;
 
   protected JavaTest(
       BuildRuleParams params,
@@ -97,7 +103,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       JavacOptions javacOptions,
       List<String> vmArgs,
       ImmutableSet<BuildRule> sourceUnderTest,
-      Optional<Path> resourcesRoot) {
+      Optional<Path> resourcesRoot,
+      Optional<Long> testRuleTimeoutMs) {
     super(
         params,
         resolver,
@@ -116,6 +123,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
     this.contacts = ImmutableSet.copyOf(contacts);
     this.additionalClasspathEntries = addtionalClasspathEntries;
     this.testType = testType;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
 
   @Override
@@ -192,7 +200,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
         .addAll(getBootClasspathEntries(executionContext))
         .build();
 
-    Step junit = new JUnitStep(
+    junit = new JUnitStep(
         classpathEntries,
         reorderedTestClasses,
         amendVmArgs(vmArgs, executionContext.getTargetDeviceOptional()),
@@ -203,7 +211,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
         executionContext.getBuckEventBus().getBuildId(),
         testSelectorList,
         isDryRun,
-        testType);
+        testType,
+        testRuleTimeoutMs);
     steps.add(junit);
 
     return steps.build();
@@ -354,10 +363,16 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
           File testResultFile = filesystem.getFileForRelativePath(
               getPathToTestOutputDirectory().resolve(path));
           if (!isUsingTestSelectors && !testResultFile.isFile()) {
+            String message;
+            if (Preconditions.checkNotNull(junit).hasTimedOut()) {
+              message = "test timed out before generating results file";
+            } else {
+              message = "test exited before generating results file";
+            }
             summaries.add(
                 getTestClassFailedSummary(
                     testClass,
-                    "test exited before generating results file"));
+                    message));
           // Not having a test result file at all (which only happens when we are using test
           // selectors) is interpreted as meaning a test didn't run at all, so we'll completely
           // ignore it.  This is another result of the fact that JUnit is the only thing that can

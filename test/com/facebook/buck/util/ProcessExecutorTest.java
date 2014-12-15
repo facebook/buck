@@ -51,7 +51,8 @@ public class ProcessExecutorTest {
     ProcessExecutor.Result result = executor.execute(
         Runtime.getRuntime().exec("echo Hello"),
         EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-        Optional.<String>absent());
+        /* stdin */ Optional.<String>absent(),
+        /* timeOutMs */ Optional.<Long>absent());
     assertEquals("Hello\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());
   }

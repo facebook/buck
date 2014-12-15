@@ -26,6 +26,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -75,7 +76,8 @@ public class JUnitStepTest {
         TestSelectorList.empty(),
         /* isDryRun */ false,
         TestType.JUNIT,
-        testRunnerClasspath);
+        testRunnerClasspath,
+        /* testRuleTimeoutMs*/ Optional.<Long>absent());
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.ALL);
@@ -141,7 +143,8 @@ public class JUnitStepTest {
         TestSelectorList.empty(),
         /* isDryRun */ false,
         TestType.JUNIT,
-        testRunnerClasspath);
+        testRunnerClasspath,
+        /* testRuleTimeoutMs*/ Optional.<Long>absent());
 
     TestConsole console = new TestConsole();
     console.setVerbosity(Verbosity.ALL);

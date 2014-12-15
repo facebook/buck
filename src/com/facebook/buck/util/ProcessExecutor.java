@@ -34,7 +34,7 @@ public class ProcessExecutor {
   private static final Logger LOG = Logger.get(ProcessExecutor.class);
 
   /**
-   * Options for {@link ProcessExecutor#execute(Process, Set, Optional)}.
+   * Options for {@link ProcessExecutor#execute(Process, Set, Optional, Optional)}.
    */
   public static enum Option {
     PRINT_STD_OUT,
@@ -95,7 +95,7 @@ public class ProcessExecutor {
       ProcessExecutorParams params,
       Set<Option> options,
       Optional<String> stdin) throws InterruptedException, IOException {
-    return execute(launchProcess(params), options, stdin);
+    return execute(launchProcess(params), options, stdin, /* timeOutMs */ Optional.<Long>absent());
   }
 
   /**
@@ -124,13 +124,46 @@ public class ProcessExecutor {
   }
 
   /**
-   * Convenience method for {@link #execute(Process, Set, Optional)}
+   * Convenience method for {@link #execute(Process, Set, Optional, Optional)}
    * with boolean values set to {@code false} and optional values set to absent.
    */
   public Result execute(Process process) throws InterruptedException {
-    return execute(process,
+    return execute(
+        process,
         ImmutableSet.<Option>of(),
-        /* stdin */ Optional.<String>absent());
+        /* stdin */ Optional.<String>absent(),
+        /* timeOutMs */ Optional.<Long>absent());
+  }
+
+  /**
+   * @return whether the process has finished executing or not.
+   */
+  private boolean finished(Process process) {
+    try {
+      process.exitValue();
+      return true;
+    } catch (IllegalThreadStateException e) {
+      return false;
+    }
+  }
+
+  /**
+   * Waits up to {@code millis} milliseconds for the given process to finish.
+   */
+  private void waitForTimeout(final Process process, long millis) throws InterruptedException {
+    Thread waiter =
+        new Thread(
+            new Runnable() {
+              @Override
+              public void run() {
+                try {
+                  process.waitFor();
+                } catch (InterruptedException e) {}
+              }
+            });
+    waiter.join(millis);
+    waiter.interrupt();
+    waiter.join();
   }
 
   /**
@@ -147,7 +180,8 @@ public class ProcessExecutor {
   public Result execute(
       Process process,
       Set<Option> options,
-      Optional<String> stdin) throws InterruptedException {
+      Optional<String> stdin,
+      Optional<Long> timeOutMs) throws InterruptedException {
 
     // Read stdout/stderr asynchronously while running a Process.
     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
@@ -181,6 +215,8 @@ public class ProcessExecutor {
     Thread stdErrConsumer = Threads.namedThread("ProcessExecutor (stdErr)", stdErr);
     stdErrConsumer.start();
 
+    boolean timedOut = false;
+
     // Block until the Process completes.
     try {
 
@@ -192,8 +228,19 @@ public class ProcessExecutor {
         }
       }
 
-      // Wait for the process and consumer threads to finish.
-      process.waitFor();
+      // Wait for the process to complete.  If a timeout was given, we wait up to the timeout
+      // for it to finish then force kill it.  If no timeout was given, just wait for it using
+      // the regular `waitFor` method.
+      if (timeOutMs.isPresent()) {
+        waitForTimeout(process, timeOutMs.get());
+        if (!finished(process)) {
+          timedOut = true;
+          process.destroy();
+        }
+      } else {
+        process.waitFor();
+      }
+
       stdOutConsumer.join();
       stdErrConsumer.join();
 
@@ -227,7 +274,7 @@ public class ProcessExecutor {
       }
     }
 
-    return new Result(exitCode, stdoutText, stderrText);
+    return new Result(exitCode, timedOut, stdoutText, stderrText);
   }
 
   private static Optional<String> getDataIfNotPrinted(
@@ -243,30 +290,40 @@ public class ProcessExecutor {
 
   /**
    * Values from the result of
-   * {@link ProcessExecutor#execute(Process, Set, Optional)}.
+   * {@link ProcessExecutor#execute(Process, Set, Optional, Optional)}.
    */
   public static class Result {
 
     private final int exitCode;
+    private final boolean timedOut;
     private final Optional<String> stdout;
     private final Optional<String> stderr;
 
-    public Result(int exitCode, Optional<String> stdout, Optional<String> stderr) {
+    public Result(
+        int exitCode,
+        boolean timedOut,
+        Optional<String> stdout,
+        Optional<String> stderr) {
       this.exitCode = exitCode;
+      this.timedOut = timedOut;
       this.stdout = stdout;
       this.stderr = stderr;
     }
 
     public Result(int exitCode, String stdout, String stderr) {
-      this(exitCode, Optional.of(stdout), Optional.of(stderr));
+      this(exitCode, /* timedOut */ false, Optional.of(stdout), Optional.of(stderr));
     }
 
     public Result(int exitCode) {
-      this(exitCode, Optional.<String>absent(), Optional.<String>absent());
+      this(exitCode, /* timedOut */ false, Optional.<String>absent(), Optional.<String>absent());
     }
 
     public int getExitCode() {
       return exitCode;
+    }
+
+    public boolean isTimedOut() {
+      return timedOut;
     }
 
     public Optional<String> getStdout() {

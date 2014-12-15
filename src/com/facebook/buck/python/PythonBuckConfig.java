@@ -72,9 +72,10 @@ public class PythonBuckConfig {
       throws InterruptedException {
     try {
       ProcessExecutor.Result versionResult = processExecutor.execute(
-          Runtime.getRuntime().exec(new String[] {pythonPath.toString(), "--version"}),
+          Runtime.getRuntime().exec(new String[]{pythonPath.toString(), "--version"}),
           EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_ERR),
-          Optional.<String>absent());
+          /* stdin */ Optional.<String>absent(),
+          /* timeOutMs */ Optional.<Long>absent());
       return extractPythonVersion(pythonPath, versionResult);
     } catch (IOException e) {
       throw new HumanReadableException(

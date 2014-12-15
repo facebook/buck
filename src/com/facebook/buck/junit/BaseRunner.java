@@ -137,7 +137,6 @@ public abstract class BaseRunner {
       testSelectorSuffix += ".dry_run";
     }
     File outputFile = new File(outputDirectory, testClassName + testSelectorSuffix + ".xml");
-    System.out.println("Writing " + outputFile);
     OutputStream output = new BufferedOutputStream(new FileOutputStream(outputFile));
     StreamResult streamResult = new StreamResult(output);
     DOMSource source = new DOMSource(doc);

@@ -76,7 +76,11 @@ public class CxxTestStep implements Step {
     ProcessExecutor executor = context.getProcessExecutor();
     ImmutableSet<ProcessExecutor.Option> options = ImmutableSet.of(
         ProcessExecutor.Option.EXPECTING_STD_OUT);
-    ProcessExecutor.Result result = executor.execute(process, options, Optional.<String>absent());
+    ProcessExecutor.Result result = executor.execute(
+        process,
+        options,
+        /* stdin */ Optional.<String>absent(),
+        /* timeOutMs */ Optional.<Long>absent());
 
     // Since test binaries return a non-zero exit code when unittests fail, save the exit code
     // to a file rather than signalling a step failure.

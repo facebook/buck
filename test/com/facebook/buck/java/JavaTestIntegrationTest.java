@@ -132,4 +132,19 @@ public class JavaTestIntegrationTest {
     assertTrue(stderr, stderr.contains("test exited before generating results file"));
   }
 
+  @Test
+  public void spinningTestTimesOut() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "spinning_test",
+        temp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:simple");
+
+    result.assertSpecialExitCode("test should fail", 42);
+    String stderr = result.getStderr();
+    assertTrue(stderr, stderr.contains("test timed out before generating results file"));
+  }
+
 }

@@ -65,7 +65,11 @@ public class FakeProcessExecutor extends ProcessExecutor {
   }
 
   @Override
-  public Result execute(Process process, Set<Option> options, Optional<String> stdin) {
+  public Result execute(
+      Process process,
+      Set<Option> options,
+      Optional<String> stdin,
+      Optional<Long> timeOutMs) {
     return new Result(0, "", "");
   }
 

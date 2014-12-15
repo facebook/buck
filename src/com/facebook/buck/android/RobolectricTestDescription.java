@@ -38,9 +38,13 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
   public static final BuildRuleType TYPE = new BuildRuleType("robolectric_test");
   private final JavacOptions templateOptions;
+  private final Optional<Long> testRuleTimeoutMs;
 
-  public RobolectricTestDescription(JavacOptions templateOptions) {
+  public RobolectricTestDescription(
+      JavacOptions templateOptions,
+      Optional<Long> testRuleTimeoutMs) {
     this.templateOptions = templateOptions;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
 
   @Override
@@ -107,7 +111,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             params.getBuildTarget(),
             resolver),
         args.resourcesRoot,
-        dummyRDotJava);
+        dummyRDotJava,
+        testRuleTimeoutMs);
   }
 
   @SuppressFieldNotInitialized

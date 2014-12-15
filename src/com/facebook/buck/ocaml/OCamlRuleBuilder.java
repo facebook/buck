@@ -443,7 +443,8 @@ public class OCamlRuleBuilder {
     ProcessExecutor.Result result = exe.execute(
         processBuilder.start(),
         options.build(),
-        Optional.<String>absent());
+        /* stdin */ Optional.<String>absent(),
+        /* timeOutMs */ Optional.<Long>absent());
     if (result.getExitCode() != 0) {
       return Optional.absent();
     } else {

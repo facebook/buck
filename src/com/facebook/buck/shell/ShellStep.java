@@ -137,6 +137,14 @@ public abstract class ShellStep implements Step {
     }
   }
 
+  /**
+   * @return the exit code interpreted from the {@code result}.
+   */
+  @SuppressWarnings("unused")
+  protected int getExitCodeFromResult(ExecutionContext context, ProcessExecutor.Result result) {
+    return result.getExitCode();
+  }
+
   @VisibleForTesting
   int interactWithProcess(ExecutionContext context, Process process) throws InterruptedException {
     ImmutableSet.Builder<Option> options = ImmutableSet.builder();
@@ -144,7 +152,8 @@ public abstract class ShellStep implements Step {
     addOptions(context, options);
 
     ProcessExecutor executor = context.getProcessExecutor();
-    ProcessExecutor.Result result = executor.execute(process, options.build(), getStdin());
+    ProcessExecutor.Result result =
+        executor.execute(process, options.build(), getStdin(), getTimeout());
     stdout = result.getStdout();
     stderr = result.getStderr();
 
@@ -156,7 +165,7 @@ public abstract class ShellStep implements Step {
       context.postEvent(ConsoleEvent.warning("%s", stderr.get()));
     }
 
-    return result.getExitCode();
+    return getExitCodeFromResult(context, result);
   }
 
   protected void addOptions(
@@ -292,4 +301,12 @@ public abstract class ShellStep implements Step {
   protected boolean shouldFlushStdOutErrAsProgressIsMade(Verbosity verbosity) {
     return false;
   }
+
+  /**
+   * @return an optional timeout to apply to the step.
+   */
+  protected Optional<Long> getTimeout() {
+    return Optional.absent();
+  }
+
 }

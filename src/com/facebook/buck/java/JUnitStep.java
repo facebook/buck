@@ -21,8 +21,10 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -66,6 +68,10 @@ public class JUnitStep extends ShellStep {
   private TestSelectorList testSelectorList;
   private final boolean isDryRun;
   private final TestType type;
+  private final Optional<Long> testRuleTimeoutMs;
+
+  // Set when the junit command times out.
+  private boolean hasTimedOut = false;
 
   /**
    *  JaCoco is enabled for the code-coverage analysis.
@@ -99,7 +105,8 @@ public class JUnitStep extends ShellStep {
       BuildId buildId,
       TestSelectorList testSelectorList,
       boolean isDryRun,
-      TestType type) {
+      TestType type,
+      Optional<Long> testRuleTimeoutMs) {
     this(classpathEntries,
         testClassNames,
         vmArgs,
@@ -111,7 +118,8 @@ public class JUnitStep extends ShellStep {
         testSelectorList,
         isDryRun,
         type,
-        TESTRUNNER_CLASSES);
+        TESTRUNNER_CLASSES,
+        testRuleTimeoutMs);
   }
 
   @VisibleForTesting
@@ -127,7 +135,8 @@ public class JUnitStep extends ShellStep {
       TestSelectorList testSelectorList,
       boolean isDryRun,
       TestType type,
-      Path testRunnerClasspath) {
+      Path testRunnerClasspath,
+      Optional<Long> testRuleTimeoutMs) {
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
     this.testClassNames = Iterables.unmodifiableIterable(testClassNames);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
@@ -140,6 +149,7 @@ public class JUnitStep extends ShellStep {
     this.isDryRun = isDryRun;
     this.type = type;
     this.testRunnerClasspath = testRunnerClasspath;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
 
   @Override
@@ -243,6 +253,31 @@ public class JUnitStep extends ShellStep {
 
   private void warnUser(ExecutionContext context, String message) {
     context.getStdErr().println(context.getAnsi().asWarningText(message));
+  }
+
+  @Override
+  protected Optional<Long> getTimeout() {
+    return testRuleTimeoutMs;
+  }
+
+  @Override
+  protected int getExitCodeFromResult(ExecutionContext context, ProcessExecutor.Result result) {
+    int exitCode = result.getExitCode();
+
+    // If we timed out, force the exit code to 0 just so that the step itself doesn't fail,
+    // allowing us to interpret any test cases that finished before the bad test.  We signify
+    // this special case by setting `hasTimedOut` which the result interpreter will query to
+    // properly format its results.
+    if (result.isTimedOut()) {
+      exitCode = 0;
+      hasTimedOut = true;
+    }
+
+    return exitCode;
+  }
+
+  public boolean hasTimedOut() {
+    return hasTimedOut;
   }
 
 }

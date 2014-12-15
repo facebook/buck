@@ -39,9 +39,13 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
 
   public static final BuildRuleType TYPE = new BuildRuleType("java_test");
   private final JavacOptions templateOptions;
+  private final Optional<Long> testRuleTimeoutMs;
 
-  public JavaTestDescription(JavacOptions templateOptions) {
+  public JavaTestDescription(
+      JavacOptions templateOptions,
+      Optional<Long> testRuleTimeoutMs) {
     this.templateOptions = templateOptions;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
 
   @Override
@@ -89,7 +93,8 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
             args.sourceUnderTest.get(),
             params.getBuildTarget(),
             resolver),
-        args.resourcesRoot);
+        args.resourcesRoot,
+        testRuleTimeoutMs);
   }
 
   public static ImmutableSet<BuildRule> validateAndGetSourcesUnderTest(

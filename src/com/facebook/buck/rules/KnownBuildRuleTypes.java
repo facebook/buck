@@ -337,6 +337,9 @@ public class KnownBuildRuleTypes {
     // Look up the path to the main module we use for python tests.
     Optional<Path> pythonPathToPythonTestMain = pyConfig.getPathToTestMain();
 
+    // Look up the timeout to apply to entire test rules.
+    Optional<Long> testRuleTimeoutMs = config.getLong("test", "rule_timeout");
+
     // Default maven repo, if set
     Optional<String> defaultMavenRepo = config.getValue("download", "maven_repo");
     Downloader downloader = new Downloader(Optional.<Proxy>absent(), defaultMavenRepo);
@@ -396,7 +399,7 @@ public class KnownBuildRuleTypes {
     builder.register(new IosPostprocessResourcesDescription());
     builder.register(new JavaBinaryDescription());
     builder.register(new JavaLibraryDescription(defaultJavacOptions));
-    builder.register(new JavaTestDescription(defaultJavacOptions));
+    builder.register(new JavaTestDescription(defaultJavacOptions, testRuleTimeoutMs));
     builder.register(new KeystoreDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
     builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
@@ -421,7 +424,7 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             cxxPlatforms));
     builder.register(new RemoteFileDescription(downloadAtRuntimeOk, downloader));
-    builder.register(new RobolectricTestDescription(androidBinaryOptions));
+    builder.register(new RobolectricTestDescription(androidBinaryOptions, testRuleTimeoutMs));
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription());
     builder.register(
