@@ -295,7 +295,8 @@ public class BuckConfigTest {
       assertEquals(
           "Throw an exception if there are duplicate definitions for an alias, " +
               "even if the values are the same.",
-          "Duplicate definition for foo in [alias].",
+          "Duplicate definition for foo in the [alias] section of your .buckconfig or " +
+              ".buckconfig.local.",
           e.getHumanReadableErrorMessage());
     }
   }

@@ -301,7 +301,9 @@ public class BuckConfig {
       Section section = ini.get(sectionName);
       for (String propertyName : section.keySet()) {
         if (section.getAll(propertyName).size() > 1) {
-          throw new HumanReadableException("Duplicate definition for %s in [%s].",
+          throw new HumanReadableException(
+              "Duplicate definition for %s in the [%s] section of your .buckconfig or " +
+                  ".buckconfig.local.",
               propertyName,
               sectionName);
         }
