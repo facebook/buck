@@ -578,6 +578,7 @@ public class ProjectGenerator {
         Path prefixHeaderRelative = sourcePathResolver.getPath(prefixHeaderOptional.get());
         Path prefixHeaderPath = pathRelativizer.outputDirToRootRelative(prefixHeaderRelative);
         extraSettingsBuilder.put("GCC_PREFIX_HEADER", prefixHeaderPath.toString());
+        extraSettingsBuilder.put("GCC_PRECOMPILE_PREFIX_HEADER", "YES");
     }
     if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
       extraSettingsBuilder.put("USE_HEADERMAP", "NO");
