@@ -45,7 +45,6 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.util.Random;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -57,7 +56,6 @@ public class DownloaderIntegrationTest {
 
   private static Server server;
   private static int port;
-  private static Random random = new Random();
   private Downloader downloader;
   private Path outputDir;
 
@@ -67,12 +65,10 @@ public class DownloaderIntegrationTest {
     Log.setLog(new JavaUtilLog());
     server = new Server();
 
-    // Always bind to a port that non-root users are allowed to bind to.
-    port = random.nextInt(60000) + 1024;
-
     ServerConnector connector = new ServerConnector(server);
     connector.addConnectionFactory(new HttpConnectionFactory());
-    connector.setPort(port);
+    // Choose a port randomly upon listening for socket connections.
+    connector.setPort(0);
     server.addConnector(connector);
 
     HandlerList handlers = new HandlerList();
@@ -82,6 +78,11 @@ public class DownloaderIntegrationTest {
 
     server.setHandler(handlers);
     server.start();
+
+    // Since we called setPort(0), an unused port number is chosen
+    // upon calling start().  This returns the actual port number to
+    // which the socket is locally bound.
+    port = connector.getLocalPort();
   }
 
   @AfterClass
