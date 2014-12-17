@@ -56,6 +56,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Configures a PBXProject by adding a PBXNativeTarget and its associated dependencies into a
@@ -129,9 +130,9 @@ public class NewNativeTargetProjectMutator {
 
   public NewNativeTargetProjectMutator setSources(
       Iterable<GroupedSource> sources,
-      ImmutableMap<SourcePath, String> sourceFlags) {
+      Map<SourcePath, String> sourceFlags) {
     this.sources = sources;
-    this.sourceFlags = sourceFlags;
+    this.sourceFlags = ImmutableMap.copyOf(sourceFlags);
     return this;
   }
 
@@ -140,19 +141,18 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public NewNativeTargetProjectMutator setFrameworks(ImmutableSet<FrameworkPath> frameworks) {
-    this.frameworks = frameworks;
+  public NewNativeTargetProjectMutator setFrameworks(Set<FrameworkPath> frameworks) {
+    this.frameworks = ImmutableSet.copyOf(frameworks);
     return this;
   }
 
-  public NewNativeTargetProjectMutator setArchives(ImmutableSet<PBXFileReference> archives) {
-    this.archives = archives;
+  public NewNativeTargetProjectMutator setArchives(Set<PBXFileReference> archives) {
+    this.archives = ImmutableSet.copyOf(archives);
     return this;
   }
 
-  public NewNativeTargetProjectMutator setResources(
-      ImmutableSet<AppleResourceDescription.Arg> resources) {
-    this.resources = resources;
+  public NewNativeTargetProjectMutator setResources(Set<AppleResourceDescription.Arg> resources) {
+    this.resources = ImmutableSet.copyOf(resources);
     return this;
   }
 
@@ -172,9 +172,9 @@ public class NewNativeTargetProjectMutator {
    */
   public NewNativeTargetProjectMutator setAssetCatalogs(
       Path assetCatalogBuildScript,
-      ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogs) {
+      Set<AppleAssetCatalogDescription.Arg> assetCatalogs) {
     this.assetCatalogBuildScript = assetCatalogBuildScript;
-    this.assetCatalogs = assetCatalogs;
+    this.assetCatalogs = ImmutableSet.copyOf(assetCatalogs);
     return this;
   }
 
