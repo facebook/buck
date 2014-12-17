@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 
 public class PythonBuckConfig {
   private static final Pattern PYTHON_VERSION_REGEX =
-        Pattern.compile(".*?(\\wython \\d+\\.\\d+).*");
+      Pattern.compile(".*?(\\wython \\d+\\.\\d+).*");
 
   private final BuckConfig delegate;
 
@@ -46,6 +46,27 @@ public class PythonBuckConfig {
     PythonVersion pythonVersion = getPythonVersion(processExecutor, pythonPath);
     return new PythonEnvironment(pythonPath, pythonVersion);
   }
+
+  public Optional<Path> getPathToTestMain() {
+    Optional <Path> testMain = delegate.getPath("python", "path_to_python_test_main");
+     if (testMain.isPresent()) {
+       return testMain;
+    }
+
+    // In some configs (particularly tests) it's possible that this variable will not be set.
+
+    String rawPath = System.getProperty("buck.path_to_python_test_main");
+    if (rawPath == null) {
+      return Optional.absent();
+    }
+
+    return Optional.of(Paths.get(rawPath));
+  }
+
+  public Optional<Path> getPathToPex() {
+    return delegate.getPath("python", "path_to_pex");
+  }
+
 
   private static PythonVersion getPythonVersion(ProcessExecutor processExecutor, Path pythonPath)
       throws InterruptedException {

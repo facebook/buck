@@ -81,6 +81,7 @@ RESOURCES = {
     "path_to_compile_asset_catalogs_build_phase_sh": (
         "src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh"),
     "path_to_intellij_py": "src/com/facebook/buck/command/intellij.py",
+    "path_to_python_test_main": "src/com/facebook/buck/python/__test_main__.py",
     "jacoco_agent_jar": "third-party/java/jacoco/jacocoagent.jar",
     "report_generator_jar": "build/report-generator.jar",
     "path_to_static_content": "webserver/static",
