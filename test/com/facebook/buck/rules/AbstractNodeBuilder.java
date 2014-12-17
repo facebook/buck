@@ -54,12 +54,20 @@ public abstract class AbstractNodeBuilder<A> {
   }
 
   public final BuildRule build(BuildRuleResolver resolver) {
-    return build(resolver, new FakeProjectFilesystem());
+    return build(resolver, new FakeProjectFilesystem(), TargetGraph.EMPTY);
   }
 
   public final BuildRule build(BuildRuleResolver resolver, ProjectFilesystem filesystem) {
+    return build(resolver, filesystem, TargetGraph.EMPTY);
+  }
+
+  public final BuildRule build(
+      BuildRuleResolver resolver,
+      ProjectFilesystem filesystem,
+      TargetGraph targetGraph) {
+
     // The BuildRule determines its deps by extracting them from the rule parameters.
-    BuildRuleParams params = createBuildRuleParams(resolver, filesystem);
+    BuildRuleParams params = createBuildRuleParams(resolver, filesystem, targetGraph);
 
     BuildRule rule = description.createBuildRule(params, resolver, arg);
     resolver.addToIndex(rule);
@@ -82,12 +90,14 @@ public abstract class AbstractNodeBuilder<A> {
   @SuppressWarnings("unchecked")
   private BuildRuleParams createBuildRuleParams(
       BuildRuleResolver resolver,
-      ProjectFilesystem filesystem) {
+      ProjectFilesystem filesystem,
+      TargetGraph targetGraph) {
     // Not all rules have deps, but all rules call them deps. When they do, they're always optional.
     // Grab them in the unsafest way I know.
     FakeBuildRuleParamsBuilder builder = new FakeBuildRuleParamsBuilder(target)
         .setType(description.getBuildRuleType())
-        .setProjectFilesystem(filesystem);
+        .setProjectFilesystem(filesystem)
+        .setTargetGraph(targetGraph);
     try {
       Field depsField = arg.getClass().getField("deps");
       Object optional = depsField.get(arg);

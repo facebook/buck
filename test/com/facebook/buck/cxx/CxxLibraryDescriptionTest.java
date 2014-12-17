@@ -24,40 +24,23 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.model.InMemoryBuildFileTree;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -87,74 +70,28 @@ public class CxxLibraryDescriptionTest {
     }
   }
 
-  private GenruleDescription.Arg createEmptyGenruleDescriptionArg() {
-    GenruleDescription.Arg arg = new GenruleDescription().createUnpopulatedConstructorArg();
-    arg.bash = Optional.absent();
-    arg.cmd = Optional.absent();
-    arg.cmdExe = Optional.absent();
-    arg.deps = Optional.absent();
-    arg.srcs = Optional.absent();
-    arg.out = "";
-    return arg;
-  }
-
-  private <T> TargetNode<?> createTargetNode(
-      BuildTarget target,
-      Description<T> description,
-      T arg) {
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        new FakeProjectFilesystem(),
-        new BuildTargetParser(),
-        target,
-        new FakeRuleKeyBuilderFactory(),
-        new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
-        /* enforceBuckPackageBoundary */ true);
-    try {
-      return new TargetNode<>(
-          description,
-          arg,
-          params,
-          ImmutableSet.<BuildTarget>of(),
-          ImmutableSet.<BuildTargetPattern>of());
-    } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
-      throw Throwables.propagate(e);
-    }
-  }
-
-  private <T> TargetGraph createTargetGraph(
-      BuildTarget target,
-      Description<T> description,
-      T arg) {
-    return TargetGraphFactory.newInstance(createTargetNode(target, description, arg));
-  }
-
   @Test
   @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
   public void createBuildRule() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
 
     // Setup a genrule the generates a header we'll list.
     String genHeaderName = "test/foo.h";
-    GenruleDescription genHeaderDescription = new GenruleDescription();
-    GenruleDescription.Arg genHeaderArg = createEmptyGenruleDescriptionArg();
-    genHeaderArg.out = genHeaderName;
     BuildTarget genHeaderTarget = BuildTargetFactory.newInstance("//:genHeader");
-    Genrule genHeader = (Genrule) GenruleBuilder
+    GenruleBuilder genHeaderBuilder = GenruleBuilder
         .newGenruleBuilder(genHeaderTarget)
-        .setOut(genHeaderName)
-        .build(resolver);
+        .setOut(genHeaderName);
+    genHeaderBuilder.build(resolver);
 
     // Setup a genrule the generates a source we'll list.
     String genSourceName = "test/foo.cpp";
-    GenruleDescription genSourceDescription = new GenruleDescription();
-    GenruleDescription.Arg genSourceArg = createEmptyGenruleDescriptionArg();
-    genHeaderArg.out = genSourceName;
     BuildTarget genSourceTarget = BuildTargetFactory.newInstance("//:genSource");
-    Genrule genSource = (Genrule) GenruleBuilder
+    GenruleBuilder genSourceBuilder = GenruleBuilder
         .newGenruleBuilder(genSourceTarget)
-        .setOut(genSourceName)
-        .build(resolver);
+        .setOut(genSourceName);
+    genSourceBuilder.build(resolver);
 
     // Setup a C/C++ library that we'll depend on form the C/C++ binary description.
     final BuildRule header = new FakeBuildRule("//:header", pathResolver);
@@ -206,47 +143,31 @@ public class CxxLibraryDescriptionTest {
       }
 
     };
-    resolver.addAllToIndex(ImmutableList.of(header, headerSymlinkTree, archive));
+    resolver.addAllToIndex(ImmutableList.of(header, headerSymlinkTree, archive, dep));
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-
-    // Instantiate a description and call its `createBuildRule` method.
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
-    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
-    FlavorDomain<CxxPlatform> cxxPlatforms =
-        new FlavorDomain<>(
-            "C/C++ Platform",
-            ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
-    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms);
-    CxxLibraryDescription.Arg arg = description.createEmptyConstructorArg();
-    arg.deps = Optional.of(ImmutableSortedSet.of(dep.getBuildTarget()));
-    arg.srcs =
-        Optional.of(
-            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-                ImmutableList.<SourcePath>of(
-                    new TestSourcePath("test/bar.cpp"),
-                    new BuildTargetSourcePath(genSource.getBuildTarget()))));
     String headerName = "test/bar.h";
-    arg.headers =
-        Optional.of(
-            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-                ImmutableList.<SourcePath>of(
-                    new TestSourcePath(headerName),
-                    new BuildTargetSourcePath(genHeader.getBuildTarget()))));
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
-        .setTargetGraph(
-            TargetGraphFactory.newInstance(
-                createTargetNode(target, description, arg),
-                createTargetNode(genSource.getBuildTarget(), genSourceDescription, genSourceArg),
-                createTargetNode(genHeader.getBuildTarget(), genHeaderDescription, genHeaderArg),
-                createTargetNode(
-                    depTarget,
-                    new GenruleDescription(),
-                    createEmptyGenruleDescriptionArg())))
-        .setDeps(ImmutableSortedSet.<BuildRule>of(dep))
-        .build();
-    CxxLibrary rule = (CxxLibrary) description.createBuildRule(params, resolver, arg);
+    CxxLibraryBuilder cxxLibraryBuilder = (CxxLibraryBuilder) new CxxLibraryBuilder(target)
+        .setSrcs(
+            ImmutableList.<SourcePath>of(
+                new TestSourcePath("test/bar.cpp"),
+                new BuildTargetSourcePath(genSourceTarget)))
+        .setHeaders(
+            ImmutableList.<SourcePath>of(
+                new TestSourcePath(headerName),
+                new BuildTargetSourcePath(genHeaderTarget)))
+        .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
+
+    CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(
+        resolver,
+        new FakeProjectFilesystem(),
+        TargetGraphFactory.newInstance(
+            cxxLibraryBuilder.build(),
+            genSourceBuilder.build(),
+            genHeaderBuilder.build(),
+            GenruleBuilder.newGenruleBuilder(depTarget)
+                .build()));
 
     Path headerRoot =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target, cxxPlatform.asFlavor());
@@ -264,13 +185,13 @@ public class CxxLibraryDescriptionTest {
                         new TestSourcePath(headerName))
                     .putNameToPathMap(
                         Paths.get(genHeaderName),
-                        new BuildTargetSourcePath(genHeader.getBuildTarget()))
+                        new BuildTargetSourcePath(genHeaderTarget))
                     .putFullNameToPathMap(
                         headerRoot.resolve(headerName),
                         new TestSourcePath(headerName))
                     .putFullNameToPathMap(
                         headerRoot.resolve(genHeaderName),
-                        new BuildTargetSourcePath(genHeader.getBuildTarget()))
+                        new BuildTargetSourcePath(genHeaderTarget))
                     .build())
             .setIncludeRoots(
                 ImmutableList.of(
@@ -376,25 +297,19 @@ public class CxxLibraryDescriptionTest {
   @Test
   public void overrideSoname() {
     BuildRuleResolver resolver = new BuildRuleResolver();
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
+
     String soname = "test_soname";
 
-    // Setup the build params we'll pass to description when generating the build rules.
+    // Generate the C++ library rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-
-    // Instantiate a description and call its `createBuildRule` method.
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
-    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
-    FlavorDomain<CxxPlatform> cxxPlatforms =
-        new FlavorDomain<>(
-            "C/C++ Platform",
-            ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
-    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms);
-    CxxLibraryDescription.Arg arg = description.createEmptyConstructorArg();
-    arg.soname = Optional.of(soname);
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
-        .setTargetGraph(createTargetGraph(target, description, arg))
-        .build();
-    CxxLibrary rule = (CxxLibrary) description.createBuildRule(params, resolver, arg);
+    CxxLibraryBuilder ruleBuilder = new CxxLibraryBuilder(target)
+        .setSoname(soname);
+    CxxLibrary rule = (CxxLibrary) ruleBuilder.build(
+        resolver,
+        filesystem,
+        TargetGraphFactory.newInstance(ruleBuilder.build()));
 
     Linker linker = cxxPlatform.getLd();
     NativeLinkableInput input = rule.getNativeLinkableInput(
@@ -418,16 +333,8 @@ public class CxxLibraryDescriptionTest {
 
   @Test
   public void linkWhole() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    FakeBuckConfig buckConfig = new FakeBuckConfig();
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
-    CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
-    FlavorDomain<CxxPlatform> cxxPlatforms =
-        new FlavorDomain<>(
-            "C/C++ Platform",
-            ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
-    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
 
     // Setup the target name and build params.
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
@@ -439,11 +346,11 @@ public class CxxLibraryDescriptionTest {
     linkWholeFlags.remove(staticLib.toString());
 
     // First, create a cxx library without using link whole.
-    CxxLibraryDescription.Arg normalArg = description.createEmptyConstructorArg();
-    BuildRuleParams normalParams = new FakeBuildRuleParamsBuilder(target)
-        .setTargetGraph(createTargetGraph(target, description, normalArg))
-        .build();
-    CxxLibrary normal = (CxxLibrary) description.createBuildRule(normalParams, resolver, normalArg);
+    CxxLibraryBuilder normalBuilder = new CxxLibraryBuilder(target);
+    CxxLibrary normal = (CxxLibrary) normalBuilder.build(
+        new BuildRuleResolver(),
+        filesystem,
+        TargetGraphFactory.newInstance(normalBuilder.build()));
 
     // Verify that the linker args contains the link whole flags.
     assertNotContains(
@@ -451,13 +358,12 @@ public class CxxLibraryDescriptionTest {
         linkWholeFlags);
 
     // Create a cxx library using link whole.
-    CxxLibraryDescription.Arg linkWholeArg = description.createEmptyConstructorArg();
-    linkWholeArg.linkWhole = Optional.of(true);
-    BuildRuleParams linkWholeParams = new FakeBuildRuleParamsBuilder(target)
-        .setTargetGraph(createTargetGraph(target, description, linkWholeArg))
-        .build();
-    CxxLibrary linkWhole =
-        (CxxLibrary) description.createBuildRule(linkWholeParams, resolver, linkWholeArg);
+    CxxLibraryBuilder linkWholeBuilder = new CxxLibraryBuilder(target)
+        .setLinkWhole(true);
+    CxxLibrary linkWhole = (CxxLibrary) linkWholeBuilder.build(
+        new BuildRuleResolver(),
+        filesystem,
+        TargetGraphFactory.newInstance(linkWholeBuilder.build()));
 
     // Verify that the linker args contains the link whole flags.
     assertContains(
@@ -470,31 +376,26 @@ public class CxxLibraryDescriptionTest {
   public void createCxxLibraryBuildRules() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
 
     // Setup a normal C++ source
     String sourceName = "test/bar.cpp";
 
     // Setup a genrule the generates a header we'll list.
     String genHeaderName = "test/foo.h";
-    GenruleDescription genHeaderDescription = new GenruleDescription();
-    GenruleDescription.Arg genHeaderArg = createEmptyGenruleDescriptionArg();
-    genHeaderArg.out = genHeaderName;
     BuildTarget genHeaderTarget = BuildTargetFactory.newInstance("//:genHeader");
-    Genrule genHeader = (Genrule) GenruleBuilder
+    GenruleBuilder genHeaderBuilder = GenruleBuilder
         .newGenruleBuilder(genHeaderTarget)
-        .setOut(genHeaderName)
-        .build(resolver);
+        .setOut(genHeaderName);
+    genHeaderBuilder.build(resolver);
 
     // Setup a genrule the generates a source we'll list.
     String genSourceName = "test/foo.cpp";
-    GenruleDescription genSourceDescription = new GenruleDescription();
-    GenruleDescription.Arg genSourceArg = createEmptyGenruleDescriptionArg();
-    genHeaderArg.out = genSourceName;
     BuildTarget genSourceTarget = BuildTargetFactory.newInstance("//:genSource");
-    Genrule genSource = (Genrule) GenruleBuilder
+    GenruleBuilder genSourceBuilder = GenruleBuilder
         .newGenruleBuilder(genSourceTarget)
-        .setOut(genSourceName)
-        .build(resolver);
+        .setOut(genSourceName);
+    genSourceBuilder.build(resolver);
 
     // Setup a C/C++ library that we'll depend on form the C/C++ binary description.
     final BuildRule header = new FakeBuildRule("//:header", pathResolver);
@@ -561,41 +462,31 @@ public class CxxLibraryDescriptionTest {
             header,
             headerSymlinkTree,
             staticLibraryDep,
-            sharedLibraryDep));
+            sharedLibraryDep,
+            dep));
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    CxxLibraryBuilder cxxLibraryBuilder = (CxxLibraryBuilder) new CxxLibraryBuilder(target)
+        .setHeaders(
+            ImmutableMap.<String, SourcePath>of(
+                genHeaderName, new BuildTargetSourcePath(genHeaderTarget)))
+        .setSrcs(
+            ImmutableMap.<String, SourcePath>of(
+                sourceName, new TestSourcePath(sourceName),
+                genSourceName, new BuildTargetSourcePath(genSourceTarget)))
+        .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
 
     // Construct C/C++ library build rules.
-    FakeBuckConfig buckConfig = new FakeBuckConfig();
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
-    CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
-    FlavorDomain<CxxPlatform> cxxPlatforms =
-        new FlavorDomain<>(
-            "C/C++ Platform",
-            ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
-    CxxLibraryDescription description = new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms);
-    CxxLibraryDescription.Arg arg = description.createEmptyConstructorArg();
-    arg.headers =
-        Optional.of(
-            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
-                ImmutableMap.<String, SourcePath>of(
-                    genHeaderName, new BuildTargetSourcePath(genHeader.getBuildTarget()))));
-    arg.srcs =
-        Optional.of(
-            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
-                ImmutableMap.<String, SourcePath>of(
-                    sourceName, new TestSourcePath(sourceName),
-                    genSourceName, new BuildTargetSourcePath(genSource.getBuildTarget()))));
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
-        .setTargetGraph(
-            TargetGraphFactory.newInstance(
-                createTargetNode(target, description, arg),
-                createTargetNode(genSource.getBuildTarget(), genSourceDescription, genSourceArg),
-                createTargetNode(genHeader.getBuildTarget(), genHeaderDescription, genHeaderArg)))
-        .setDeps(ImmutableSortedSet.<BuildRule>of(dep))
-        .build();
-    CxxLibrary rule = (CxxLibrary) description.createBuildRule(params, resolver, arg);
+    CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(
+        resolver,
+        new FakeProjectFilesystem(),
+        TargetGraphFactory.newInstance(
+            cxxLibraryBuilder.build(),
+            genSourceBuilder.build(),
+            genHeaderBuilder.build(),
+            GenruleBuilder.newGenruleBuilder(depTarget)
+                .build()));
 
     // Verify the C/C++ preprocessor input is setup correctly.
     Path headerRoot =
@@ -611,10 +502,10 @@ public class CxxLibraryDescriptionTest {
                 ImmutableCxxHeaders.builder()
                     .putNameToPathMap(
                         Paths.get(genHeaderName),
-                        new BuildTargetSourcePath(genHeader.getBuildTarget()))
+                        new BuildTargetSourcePath(genHeaderTarget))
                     .putFullNameToPathMap(
                         headerRoot.resolve(genHeaderName),
-                        new BuildTargetSourcePath(genHeader.getBuildTarget()))
+                        new BuildTargetSourcePath(genHeaderTarget))
                     .build())
             .setIncludeRoots(
                 ImmutableList.of(

@@ -21,11 +21,8 @@ import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
@@ -38,10 +35,8 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -71,6 +66,7 @@ public class CxxBinaryDescriptionTest {
   public void createBuildRule() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    CxxPlatform cxxPlatform = CxxBinaryBuilder.createDefaultPlatform();
 
     // Setup a genrule the generates a header we'll list.
     String genHeaderName = "test/foo.h";
@@ -138,46 +134,21 @@ public class CxxBinaryDescriptionTest {
       }
 
     };
-    resolver.addAllToIndex(ImmutableList.of(header, headerSymlinkTree, archive));
+    resolver.addAllToIndex(ImmutableList.of(header, headerSymlinkTree, archive, dep));
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
-        .setDeps(ImmutableSortedSet.<BuildRule>of(dep))
-        .build();
-
-    // Create the description arg.
-    CxxBinaryDescription.Arg arg = new CxxBinaryDescription.Arg();
-    arg.deps = Optional.of(ImmutableSortedSet.of(dep.getBuildTarget()));
-    arg.srcs =
-        Optional.of(
-            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-                ImmutableList.<SourcePath>of(
-                    new TestSourcePath("test/bar.cpp"),
-                    new BuildTargetSourcePath(genSource.getBuildTarget()))));
-    arg.headers =
-        Optional.of(
-            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-                ImmutableList.<SourcePath>of(
-                    new TestSourcePath("test/bar.h"),
-                    new BuildTargetSourcePath(genHeader.getBuildTarget()))));
-    arg.compilerFlags = Optional.absent();
-    arg.preprocessorFlags = Optional.absent();
-    arg.langPreprocessorFlags = Optional.absent();
-    arg.linkerFlags = Optional.absent();
-    arg.lexSrcs = Optional.absent();
-    arg.yaccSrcs = Optional.absent();
-    arg.headerNamespace = Optional.absent();
-
-    // Instantiate a description and call its `createBuildRule` method.
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(new FakeBuckConfig());
-    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
-    CxxBinaryDescription description =
-        new CxxBinaryDescription(
-            cxxBuckConfig,
-            cxxPlatform,
-            new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of()));
-    CxxBinary binRule = description.createBuildRule(params, resolver, arg);
+    CxxBinary binRule = (CxxBinary) new CxxBinaryBuilder(target)
+        .setSrcs(
+            ImmutableList.<SourcePath>of(
+                new TestSourcePath("test/bar.cpp"),
+                new BuildTargetSourcePath(genSource.getBuildTarget())))
+        .setHeaders(
+            ImmutableList.<SourcePath>of(
+                new TestSourcePath("test/bar.h"),
+                new BuildTargetSourcePath(genHeader.getBuildTarget())))
+        .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+        .build(resolver);
     CxxLink rule = binRule.getRule();
 
     // Check that link rule has the expected deps: the object files for our sources and the

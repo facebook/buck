@@ -19,37 +19,22 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.InMemoryBuildFileTree;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonPackageComponents;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -58,51 +43,8 @@ import java.nio.file.Paths;
 
 public class PrebuiltCxxLibraryDescriptionTest {
 
-  private <T> TargetNode<?> createTargetNode(
-      BuildTarget target,
-      Description<T> description,
-      T arg) {
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        new FakeProjectFilesystem(),
-        new BuildTargetParser(),
-        target,
-        new FakeRuleKeyBuilderFactory(),
-        new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
-        /* enforceBuckPackageBoundary */ true);
-    try {
-      return new TargetNode<>(
-          description,
-          arg,
-          params,
-          ImmutableSet.<BuildTarget>of(),
-          ImmutableSet.<BuildTargetPattern>of());
-    } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
-      throw Throwables.propagate(e);
-    }
-  }
-
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:target");
-  private static final CxxPlatform CXX_PLATFORM = new DefaultCxxPlatform(new FakeBuckConfig());
-  private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
-      new FlavorDomain<>(
-          "C/C++ Platform",
-          ImmutableMap.of(CXX_PLATFORM.asFlavor(), CXX_PLATFORM));
-  private static final PrebuiltCxxLibraryDescription DESC =
-      new PrebuiltCxxLibraryDescription(CXX_PLATFORMS);
-
-  private static PrebuiltCxxLibraryDescription.Arg getDefaultArg() {
-    PrebuiltCxxLibraryDescription.Arg arg = DESC.createUnpopulatedConstructorArg();
-    arg.includeDirs = Optional.absent();
-    arg.libName = Optional.absent();
-    arg.libDir = Optional.absent();
-    arg.headerOnly = Optional.absent();
-    arg.provided = Optional.absent();
-    arg.linkerFlags = Optional.absent();
-    arg.linkWhole = Optional.absent();
-    arg.soname = Optional.absent();
-    arg.deps = Optional.absent();
-    return arg;
-  }
+  private static final CxxPlatform CXX_PLATFORM = PrebuiltCxxLibraryBuilder.createDefaultPlatform();
 
   private static Path getStaticLibraryPath(PrebuiltCxxLibraryDescription.Arg arg) {
     String libDir = arg.libDir.or("lib");
@@ -139,12 +81,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
   @Test
   public void createBuildRuleDefault() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
-        .setProjectFilesystem(filesystem)
-        .build();
-    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem);
+    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
@@ -185,13 +125,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
   @Test
   public void createBuildRuleHeaderOnly() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
-    arg.headerOnly = Optional.of(true);
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
-        .setProjectFilesystem(filesystem)
-        .build();
-    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
+        .setHeaderOnly(true);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem);
+    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
@@ -230,13 +168,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
   @Test
   public void createBuildRuleExternal() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
-    arg.provided = Optional.of(true);
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
-        .setProjectFilesystem(filesystem)
-        .build();
-    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
+        .setProvided(true);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem);
+    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
@@ -275,13 +211,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
   @Test
   public void createBuildRuleIncludeDirs() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
-    arg.includeDirs = Optional.of(ImmutableList.of("test"));
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
-        .setProjectFilesystem(filesystem)
-        .build();
-    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
+        .setIncludeDirs(ImmutableList.of("test"));
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem);
+    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
@@ -322,15 +256,12 @@ public class PrebuiltCxxLibraryDescriptionTest {
   @Test
   public void missingSharedLibsAreAutoBuilt() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
-        .setProjectFilesystem(filesystem)
-        .setTargetGraph(
-            TargetGraphFactory.newInstance(
-                createTargetNode(TARGET, DESC, arg)))
-        .build();
-    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder.build(
+        resolver,
+        filesystem,
+        TargetGraphFactory.newInstance(libBuilder.build()));
     NativeLinkableInput nativeLinkableInput = lib.getNativeLinkableInput(
         CXX_PLATFORM,
         NativeLinkable.Type.SHARED);
@@ -342,13 +273,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
   @Test
   public void missingSharedLibsAreNotAutoBuiltForHeaderOnlyRules() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
-    arg.headerOnly = Optional.of(true);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
-        .setProjectFilesystem(filesystem)
-        .build();
-    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
+        .setHeaderOnly(true);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder.build(
+        resolver,
+        filesystem,
+        TargetGraphFactory.newInstance(libBuilder.build()));
     NativeLinkableInput nativeLinkableInput = lib.getNativeLinkableInput(
         CXX_PLATFORM,
         NativeLinkable.Type.SHARED);
@@ -358,12 +289,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
   @Test
   public void addsLibsToAndroidPackageableCollector() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    PrebuiltCxxLibraryDescription.Arg arg = getDefaultArg();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(TARGET)
-        .setProjectFilesystem(filesystem)
-        .build();
-    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) DESC.createBuildRule(params, resolver, arg);
+    PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder.build(
+        resolver,
+        filesystem,
+        TargetGraphFactory.newInstance(libBuilder.build()));
+    PrebuiltCxxLibraryDescription.Arg arg = libBuilder.build().getConstructorArg();
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             getSharedLibrarySoname(arg),
