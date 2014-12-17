@@ -52,7 +52,6 @@ import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -121,15 +120,14 @@ public class WorkspaceAndProjectGenerator {
       throws IOException {
     LOG.debug("Generating workspace for target %s", workspaceTargetNode);
 
-    String workspaceName;
+    String workspaceName = XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(
+        workspaceTargetNode.getConstructorArg());
     Path outputDirectory;
-
     if (combinedProject) {
-      workspaceName = "GeneratedProject";
-      outputDirectory = Paths.get("_gen");
+      workspaceName += "-Combined";
+      outputDirectory =
+          BuildTargets.getGenPath(workspaceTargetNode.getBuildTarget(), "%s").getParent();
     } else {
-      workspaceName = XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(
-          workspaceTargetNode.getConstructorArg());
       outputDirectory = workspaceTargetNode.getBuildTarget().getBasePath();
     }
 
@@ -194,7 +192,7 @@ public class WorkspaceAndProjectGenerator {
           initialTargetsBuilder.build(),
           projectFilesystem,
           outputDirectory,
-          "GeneratedProject",
+          workspaceName,
           projectGeneratorOptions)
           .setAdditionalCombinedTestTargets(groupedTestResults.groupedTests)
           .setTestsToGenerateAsStaticLibraries(
