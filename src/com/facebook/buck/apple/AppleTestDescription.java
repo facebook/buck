@@ -104,6 +104,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<Boolean> canGroup;
 
     // Bundle related fields.
     public Either<AppleBundleExtension, String> extension;
@@ -122,6 +123,10 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     @Override
     public Optional<SourcePath> getInfoPlist() {
       return infoPlist;
+    }
+
+    public boolean canGroup() {
+      return canGroup.or(false);
     }
   }
 }

@@ -73,6 +73,11 @@ public final class AppleTestBuilder
     return this;
   }
 
+  public AppleTestBuilder setCanGroup(Optional<Boolean> value) {
+    arg.canGroup = value;
+    return this;
+  }
+
   private static AppleTestDescription createDescription() {
     BuckConfig buckConfig = new FakeBuckConfig();
     CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);

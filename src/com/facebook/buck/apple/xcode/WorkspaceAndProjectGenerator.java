@@ -418,19 +418,23 @@ public class WorkspaceAndProjectGenerator {
     // Put tests in groups.
     ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
         groupsBuilder = ImmutableMultimap.builder();
+    ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg>> ungroupedTestsBuilder =
+        ImmutableSet.builder();
     for (TargetNode<AppleTestDescription.Arg> test : tests) {
-      groupsBuilder.put(
-          AppleTestBundleParamsKey.fromAppleTestDescriptionArg(test.getConstructorArg()),
-          test);
+      if (test.getConstructorArg().canGroup()) {
+        groupsBuilder.put(
+            AppleTestBundleParamsKey.fromAppleTestDescriptionArg(test.getConstructorArg()),
+            test);
+      } else {
+        ungroupedTestsBuilder.add(test);
+      }
     }
     ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
         groups = groupsBuilder.build();
 
-    // Partition groups into those with multiple tests, and those with only one.
+    // Of the grouped tests, remove the ones that only have a single entry.
     ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
         multiEntryGroupsBuilder = ImmutableMultimap.builder();
-    ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg>> ungroupedTestsBuilder =
-        ImmutableSet.builder();
     for (Map.Entry<
           AppleTestBundleParamsKey,
           Collection<TargetNode<AppleTestDescription.Arg>>> entry : groups.asMap().entrySet()) {

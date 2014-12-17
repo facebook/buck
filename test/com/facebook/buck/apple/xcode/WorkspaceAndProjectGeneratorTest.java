@@ -384,16 +384,25 @@ public class WorkspaceAndProjectGeneratorTest {
         .createBuilder(BuildTarget.builder("//foo", "combinableTest1").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(library.getBuildTarget())))
+        .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
         .createBuilder(BuildTarget.builder("//bar", "combinableTest2").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(library.getBuildTarget())))
+        .setCanGroup(Optional.of(true))
+        .build();
+    TargetNode<AppleTestDescription.Arg> testMarkedUncombinable = AppleTestBuilder
+        .createBuilder(BuildTarget.builder("//foo", "testMarkedUncombinable").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(library.getBuildTarget())))
+        .setCanGroup(Optional.of(false))
         .build();
     TargetNode<AppleTestDescription.Arg> anotherTest = AppleTestBuilder
         .createBuilder(BuildTarget.builder("//foo", "anotherTest").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.OCTEST))
         .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(library.getBuildTarget())))
+        .setCanGroup(Optional.of(true))
         .build();
     TargetNode<XcodeProjectConfigDescription.Arg> fooProject = XcodeProjectConfigBuilder
         .createBuilder(BuildTarget.builder("//foo", "project").build())
@@ -402,6 +411,7 @@ public class WorkspaceAndProjectGeneratorTest {
             ImmutableSortedSet.of(
                 library.getBuildTarget(),
                 combinableTest1.getBuildTarget(),
+                testMarkedUncombinable.getBuildTarget(),
                 anotherTest.getBuildTarget()))
         .build();
     TargetNode<XcodeProjectConfigDescription.Arg> barProject = XcodeProjectConfigBuilder
@@ -421,6 +431,7 @@ public class WorkspaceAndProjectGeneratorTest {
             library,
             combinableTest1,
             combinableTest2,
+            testMarkedUncombinable,
             anotherTest,
             fooProject,
             barProject,
@@ -430,6 +441,7 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableMultimap.of(
             library.getBuildTarget(), combinableTest1,
             library.getBuildTarget(), combinableTest2,
+            library.getBuildTarget(), testMarkedUncombinable,
             library.getBuildTarget(), anotherTest),
         false);
     generator.setGroupTestBundles(true);
@@ -461,6 +473,15 @@ public class WorkspaceAndProjectGeneratorTest {
         "Test that cannot be combined with other tests should generate a test bundle.",
         PBXTarget.ProductType.BUNDLE,
         notCombinedTest.getProductType());
+
+    // Test not bundled with any others should retain behavior.
+    PBXTarget uncombinableTest = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
+        projectGenerators.get(fooProject).getGeneratedProject(),
+        "//foo:testMarkedUncombinable");
+    assertEquals(
+        "Test marked uncombinable should not be combined",
+        PBXTarget.ProductType.UNIT_TEST,
+        uncombinableTest.getProductType());
 
     // Combined test project should be generated with a combined test bundle.
     PBXTarget combinedTestBundle = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
