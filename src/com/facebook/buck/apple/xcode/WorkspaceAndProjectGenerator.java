@@ -200,7 +200,7 @@ public class WorkspaceAndProjectGenerator {
       combinedProjectGenerator = Optional.of(generator);
       generator.createXcodeProjects();
 
-      workspaceGenerator.addFilePath(generator.getProjectPath());
+      workspaceGenerator.addFilePath(generator.getProjectPath(), Optional.<Path>absent());
 
       buildTargetToPbxTargetMapBuilder.putAll(generator.getBuildTargetToGeneratedTargetMap());
       for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {

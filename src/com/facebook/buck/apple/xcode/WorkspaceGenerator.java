@@ -20,6 +20,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import org.w3c.dom.DOMImplementation;
@@ -95,16 +96,38 @@ public class WorkspaceGenerator {
     this.children = new TreeMap<>();
   }
 
+  /**
+   * Adds a reference to a project file to the generated workspace.
+   *
+   * @param path Path to the referenced project file in the repository.
+   */
   public void addFilePath(Path path) {
     path = path.normalize();
-    Map<String, WorkspaceNode> children = this.children;
+
+    Optional<Path> groupPath = Optional.absent();
     // We skip the last name before the file name as it's usually the same as the project name, and
     // adding a group would add an unnecessary level of nesting. We don't check whether it's the
     // same or not to avoid inconsistent behaviour: this will result in all projects to show up in a
     // group with the path of their grandparent directory in all cases.
     if (path.getNameCount() > 2) {
-      for (Path name : path.subpath(0, path.getNameCount() - 2)) {
-        String groupName = name.toString();
+      groupPath = Optional.of(path.subpath(0, path.getNameCount() - 2));
+    }
+    addFilePath(path, groupPath);
+  }
+
+  /**
+   * Adds a reference to a project file to the group hierarchy of the generated workspace.
+   *
+   * @param path Path to the referenced project file in the repository.
+   * @param groupPath Path in the group hierarchy of the generated workspace where
+   *                  the reference will be placed.
+   *                  If absent, the project reference is placed to the root of the workspace.
+   */
+  public void addFilePath(Path path, Optional<Path> groupPath) {
+    Map<String, WorkspaceNode> children = this.children;
+    if (groupPath.isPresent()) {
+      for (Path groupPathPart : groupPath.get()) {
+        String groupName = groupPathPart.toString();
         WorkspaceNode node = children.get(groupName);
         WorkspaceGroup group;
         if (node instanceof WorkspaceFileRef) {

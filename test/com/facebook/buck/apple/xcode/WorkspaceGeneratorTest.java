@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.SettableFakeClock;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
@@ -74,6 +75,23 @@ public class WorkspaceGeneratorTest {
     Document workspace = dBuilder.parse(projectFilesystem.newFileInputStream(contentsPath));
     assertThat(workspace, hasXPath("/Workspace/Group[@name=\"grandparent\"]/FileRef/@location",
             equalTo("container:grandparent/parent/Project.xcodeproj")));
+  }
+
+  @Test
+  public void testWorkspaceWithCustomFilePaths() throws Exception {
+    generator.addFilePath(
+        Paths.get("grandparent/parent/Project.xcodeproj"),
+        Optional.of(Paths.get("VirtualParent")));
+    Path workspacePath = generator.writeWorkspace();
+    Path contentsPath = workspacePath.resolve("contents.xcworkspacedata");
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document workspace = dBuilder.parse(projectFilesystem.newFileInputStream(contentsPath));
+    assertThat(
+        workspace,
+        hasXPath("/Workspace/Group[@name=\"VirtualParent\"]/FileRef/@location",
+        equalTo("container:grandparent/parent/Project.xcodeproj")));
   }
 
   @Test
