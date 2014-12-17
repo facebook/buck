@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.ImmutableAndroidPackageableCollection.ResourceDetails;
 import com.facebook.buck.java.HasJavaClassHashes;
+import com.facebook.buck.java.JavaNativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -145,7 +146,7 @@ public class AndroidPackageableCollector {
     return this;
   }
 
-  public AndroidPackageableCollector addNativeLinkable(AndroidNativeLinkable nativeLinkable) {
+  public AndroidPackageableCollector addNativeLinkable(JavaNativeLinkable nativeLinkable) {
     collectionBuilder.addNativeLinkables(nativeLinkable);
     return this;
   }

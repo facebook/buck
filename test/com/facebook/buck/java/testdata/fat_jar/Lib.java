@@ -14,21 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+public class Lib {
 
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.collect.ImmutableMap;
+  private Lib() {}
 
-/**
- * Represents components which contribute native shared libraries to an android package.
- */
-public interface AndroidNativeLinkable {
-
-  /**
-   * @return a map of shared library SONAME to shared library path for the given
-   *     {@link CxxPlatform}.
-   */
-  ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform);
+  public static void main(String[] args) {
+    Runtime.getRuntime().loadLibrary("native");
+  }
 
 }

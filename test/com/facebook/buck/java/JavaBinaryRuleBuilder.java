@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.base.Optional;
@@ -24,7 +26,11 @@ import com.google.common.collect.ImmutableSortedSet;
 public class JavaBinaryRuleBuilder extends AbstractNodeBuilder<JavaBinaryDescription.Args> {
 
   public JavaBinaryRuleBuilder(BuildTarget target) {
-    super(new JavaBinaryDescription(), target);
+    super(
+        new JavaBinaryDescription(
+            JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS,
+            new DefaultCxxPlatform(new FakeBuckConfig())),
+        target);
   }
 
   public JavaBinaryRuleBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {

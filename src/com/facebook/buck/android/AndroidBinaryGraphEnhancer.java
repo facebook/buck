@@ -23,6 +23,7 @@ import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.java.JavaNativeLinkable;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
@@ -268,7 +269,7 @@ public class AndroidBinaryGraphEnhancer {
     // rule will use to compose the destination name.
     ImmutableMap.Builder<Map.Entry<TargetCpuType, String>, SourcePath> nativeLinkableLibsBuilder =
         ImmutableMap.builder();
-    for (AndroidNativeLinkable nativeLinkable : packageableCollection.nativeLinkables()) {
+    for (JavaNativeLinkable nativeLinkable : packageableCollection.nativeLinkables()) {
 
       // TODO(agallagher): We currently treat an empty set of filters to mean to allow everything.
       // We should fix this by assigning a default list of CPU filters in the descriptions, but

@@ -1,4 +1,30 @@
 java_library(
+  name = 'nativelinkable',
+  srcs = [
+    'JavaNativeLinkable.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/cxx:platform',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_library(
+  name = 'fat-jar-main',
+  srcs = [
+    'FatJar.java',
+    'FatJarMain.java',
+  ],
+  # Must be empty!  We package these sources and compile them into fat JARs,
+  # so it's important that they don't bring along any additional dependencies.
+  deps = []
+)
+
+java_library(
   name = 'coverage',
   srcs = ['ReportGenerator.java',],
   deps = [
@@ -96,6 +122,7 @@ java_library(
     'Classpaths.java',
     'DefaultJavaLibrary.java',
     'GwtModule.java',
+    'JarFattener.java',
     'JavaBinary.java',
     'JavaBinaryDescription.java',
     'JavaLibraryDescription.java',
@@ -109,12 +136,19 @@ java_library(
     'PrebuiltJar.java',
     'PrebuiltJarDescription.java',
   ],
+  resources = [
+    'FatJar.java',
+    'FatJarMain.java',
+  ],
   deps = [
     ':classhash',
+    ':fat-jar-main',
+    ':nativelinkable',
     ':packagefinder',
     ':steps',
     ':support',
     '//src/com/facebook/buck/android:packageable',
+    '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.android.AndroidNativeLinkable;
+import com.facebook.buck.java.JavaNativeLinkable;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -28,7 +28,7 @@ public abstract class AbstractCxxLibrary
         CxxPreprocessorDep,
         NativeLinkable,
         PythonPackagable,
-        AndroidNativeLinkable,
+        JavaNativeLinkable,
         AndroidPackageable {
 
   public AbstractCxxLibrary(

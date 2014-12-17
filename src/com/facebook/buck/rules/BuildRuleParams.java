@@ -65,6 +65,15 @@ public class BuildRuleParams {
     return copyWithDeps(declaredDeps, extraDeps);
   }
 
+  public BuildRuleParams appendExtraDeps(Iterable<BuildRule> additional) {
+    return copyWithDeps(
+        declaredDeps,
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(extraDeps)
+            .addAll(additional)
+            .build());
+  }
+
   public BuildRuleParams copyWithDeps(
       ImmutableSortedSet<BuildRule> declaredDeps,
       ImmutableSortedSet<BuildRule> extraDeps) {

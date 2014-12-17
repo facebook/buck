@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.JavaNativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Supplier;
@@ -80,7 +81,7 @@ public interface AndroidPackageableCollection {
   /**
    * Native libraries.
    */
-  List<AndroidNativeLinkable> nativeLinkables();
+  List<JavaNativeLinkable> nativeLinkables();
 
   /**
    * Directories containing native libraries.
