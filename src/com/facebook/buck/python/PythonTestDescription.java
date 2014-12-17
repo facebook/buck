@@ -55,23 +55,19 @@ import java.nio.file.Paths;
 
 public class PythonTestDescription implements Description<PythonTestDescription.Arg> {
 
-  public static final Path PYTHON_PATH_TO_PYTHON_TEST_MAIN =
-      Paths.get(System.getProperty("buck.buck_dir", System.getProperty("user.dir")))
-          .resolve("src/com/facebook/buck/python/__test_main__.py");
-
   private static final BuildRuleType TYPE = new BuildRuleType("python_test");
 
   private static final Flavor BINARY_FLAVOR = new Flavor("binary");
 
   private final Path pathToPex;
-  private final Path pathToPythonTestMain;
+  private final Optional<Path> pathToPythonTestMain;
   private final PythonEnvironment pythonEnvironment;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonTestDescription(
       Path pathToPex,
-      Path pathToPythonTestMain,
+      Optional<Path> pathToPythonTestMain,
       PythonEnvironment pythonEnvironment,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
@@ -185,6 +181,11 @@ public class PythonTestDescription implements Description<PythonTestDescription.
       BuildRuleResolver resolver,
       A args) {
 
+    if (!pathToPythonTestMain.isPresent()) {
+      throw new HumanReadableException(
+          "Please configure python -> path_to_python_test_main in your .buckconfig");
+    }
+
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
     CxxPlatform cxxPlatform;
@@ -234,7 +235,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
             .put(
                 getTestModulesListName(),
                 new BuildTargetSourcePath(testModulesBuildRule.getBuildTarget()))
-            .put(getTestMainName(), new PathSourcePath(pathToPythonTestMain))
+            .put(getTestMainName(), new PathSourcePath(pathToPythonTestMain.get()))
             .putAll(srcs)
             .build(),
         resources,

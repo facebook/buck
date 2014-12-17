@@ -46,7 +46,7 @@ import java.nio.file.Paths;
 public class PythonTestDescriptionTest {
 
   private static final Path PEX_PATH = Paths.get("pex");
-  private static final Path TEST_MAIN = Paths.get("main");
+  private static final Optional<Path> TEST_MAIN = Optional.of(Paths.get("main"));
   private static final CxxPlatform CXX_PLATFORM = new DefaultCxxPlatform(new FakeBuckConfig());
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of());
