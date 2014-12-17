@@ -1910,6 +1910,8 @@ public class ProjectGeneratorTest {
     assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
+            "$BUILT_PRODUCTS_DIR/libxctest1.a",
+            "$BUILT_PRODUCTS_DIR/libxctest2.a",
             "$BUILT_PRODUCTS_DIR/F4XWY2LCOM5GIZLQNRUWE/libdeplib.a",
             "$BUILT_PRODUCTS_DIR/F4XWM33PHJSGK4BR/libdep1.a",
             "$BUILT_PRODUCTS_DIR/F4XWM33PHJSGK4BS/libdep2.a",

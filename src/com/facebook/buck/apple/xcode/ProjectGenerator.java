@@ -92,6 +92,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
@@ -596,7 +597,7 @@ public class ProjectGenerator {
       frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(ImmutableList.of(targetNode)));
       mutator.setFrameworks(frameworksBuilder.build());
       mutator.setArchives(
-          collectRecursiveLibraryDependencies(ImmutableList.of(targetNode), false));
+          collectRecursiveLibraryDependencies(ImmutableList.of(targetNode)));
     }
 
     // TODO(Task #3772930): Go through all dependencies of the rule
@@ -751,6 +752,10 @@ public class ProjectGenerator {
       AppleTestBundleParamsKey key,
       ImmutableCollection<TargetNode<AppleTestDescription.Arg>> tests)
       throws IOException {
+    ImmutableSet.Builder<PBXFileReference> testLibs = ImmutableSet.builder();
+    for (TargetNode<AppleTestDescription.Arg> test : tests) {
+      testLibs.add(getOrCreateTestLibraryFileReference(test));
+    }
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
         sourcePathResolver)
@@ -764,7 +769,7 @@ public class ProjectGenerator {
             ImmutableList.of(
                 GroupedSource.ofSourcePath(new PathSourcePath(emptyFileWithExtension("c")))),
             ImmutableMap.<SourcePath, String>of())
-        .setArchives(collectRecursiveLibraryDependencies(tests, true))
+        .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))
         .setFrameworks(ImmutableSet.copyOf(collectRecursiveFrameworkDependencies(tests)))
         .setResources(collectRecursiveResources(tests))
         .setAssetCatalogs(
@@ -1499,20 +1504,14 @@ public class ProjectGenerator {
             });
   }
 
-  /**
-   * @param includeInputs whether to include library references to the inputs themselves in addition
-   *                      to their dependencies
-   */
   private <T> ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(
-      Iterable<TargetNode<T>> targetNodes,
-      boolean includeInputs) {
+      Iterable<TargetNode<T>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
             newRecursiveRuleDependencyTransformer(
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))
-        .append(includeInputs ? targetNodes : ImmutableList.<TargetNode<?>>of())
         .filter(
             new Predicate<TargetNode<?>>() {
               @Override
@@ -1585,6 +1584,22 @@ public class ProjectGenerator {
     } else {
       throw new RuntimeException("Unexpected type: " + targetNode.getType());
     }
+  }
+
+  /**
+   * Return a file reference to a test assuming it's built as a static library.
+   */
+  private PBXFileReference getOrCreateTestLibraryFileReference(
+      TargetNode<AppleTestDescription.Arg> test) {
+    SourceTreePath path = new SourceTreePath(
+        PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+        Paths.get(getBuiltProductsRelativeTargetOutputPath(test)).resolve(
+            String.format(
+                AppleBuildRules.getOutputFileNameFormatForLibrary(false),
+                getProductName(test.getBuildTarget()))));
+    return project.getMainGroup()
+        .getOrCreateChildGroupByName("Test Libraries")
+        .getOrCreateFileReferenceBySourceTreePath(path);
   }
 
   /**
