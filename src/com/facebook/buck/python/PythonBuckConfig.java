@@ -22,6 +22,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -32,7 +33,7 @@ import java.util.regex.Pattern;
 
 public class PythonBuckConfig {
   private static final Pattern PYTHON_VERSION_REGEX =
-        Pattern.compile(".*?(\\wython \\d+\\.\\d+).*");
+      Pattern.compile(".*?(\\wython \\d+\\.\\d+).*");
 
   private final BuckConfig delegate;
 
@@ -46,6 +47,20 @@ public class PythonBuckConfig {
     PythonVersion pythonVersion = getPythonVersion(processExecutor, pythonPath);
     return new PythonEnvironment(pythonPath, pythonVersion);
   }
+
+  public Path getPathToTestMain() {
+    Optional < Path > testMain = delegate.getPath("python", "path_to_python_test_main");
+     if (testMain.isPresent()) {
+       return testMain.get();
+    }
+    return Paths.get(
+        Preconditions.checkNotNull(System.getProperty("buck.path_to_python_test_main")));
+  }
+
+  public Optional<Path> getPathToPex() {
+    return delegate.getPath("python", "path_to_pex");
+  }
+
 
   private static PythonVersion getPythonVersion(ProcessExecutor processExecutor, Path pythonPath)
       throws InterruptedException {

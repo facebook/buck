@@ -49,6 +49,7 @@ EXPORTED_RESOURCES = [
     Resource("path_to_compile_asset_catalogs_py"),
     Resource("path_to_compile_asset_catalogs_build_phase_sh"),
     Resource("path_to_intellij_py"),
+    Resource("path_to_python_test_main"),
     Resource("jacoco_agent_jar"),
     Resource("report_generator_jar"),
     Resource("path_to_static_content"),

@@ -70,6 +70,7 @@ import com.facebook.buck.ocaml.OCamlLibraryDescription;
 import com.facebook.buck.ocaml.PrebuiltOCamlLibraryDescription;
 import com.facebook.buck.parcelable.GenParcelableDescription;
 import com.facebook.buck.python.PythonBinaryDescription;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.python.PythonTestDescription;
@@ -279,12 +280,12 @@ public class KnownBuildRuleTypes {
 
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
+    PythonBuckConfig pyConfig = new PythonBuckConfig(config);
     // Look up the path to the PEX builder script.
-    Optional<Path> pythonPathToPex = config.getPath("python", "path_to_pex");
+    Optional<Path> pythonPathToPex = pyConfig.getPathToPex();
 
     // Look up the path to the main module we use for python tests.
-    Optional<Path> pythonPathToPythonTestMain =
-        config.getPath("python", "path_to_python_test_main");
+    Path pythonPathToPythonTestMain = pyConfig.getPathToTestMain();
 
     // Default maven repo, if set
     Optional<String> defaultMavenRepo = config.getValue("download", "maven_repo");
@@ -352,7 +353,7 @@ public class KnownBuildRuleTypes {
     builder.register(
         new PythonTestDescription(
             pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
-            pythonPathToPythonTestMain.or(PythonTestDescription.PYTHON_PATH_TO_PYTHON_TEST_MAIN),
+            pythonPathToPythonTestMain,
             pythonEnv,
             defaultCxxPlatform,
             cxxPlatforms));

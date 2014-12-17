@@ -55,10 +55,6 @@ import java.nio.file.Paths;
 
 public class PythonTestDescription implements Description<PythonTestDescription.Arg> {
 
-  public static final Path PYTHON_PATH_TO_PYTHON_TEST_MAIN =
-      Paths.get(System.getProperty("buck.buck_dir", System.getProperty("user.dir")))
-          .resolve("src/com/facebook/buck/python/__test_main__.py");
-
   private static final BuildRuleType TYPE = new BuildRuleType("python_test");
 
   private static final Flavor BINARY_FLAVOR = new Flavor("binary");
