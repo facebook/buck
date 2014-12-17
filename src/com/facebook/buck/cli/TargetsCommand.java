@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
@@ -49,16 +49,13 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 
 import javax.annotation.Nullable;
@@ -148,15 +145,19 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         referencedFiles.relativePathsUnderProjectRoot.isEmpty()) {
       matchingNodes = ImmutableSortedMap.of();
     } else {
+      ImmutableSet<BuildRuleType> buildRuleTypes = buildRuleTypesBuilder.build();
+
       matchingNodes = getMatchingNodes(
           graph,
-          new TargetsCommandPredicate(
-              graph,
-              buildRuleTypesBuilder.build(),
-              referencedFiles.relativePathsUnderProjectRoot,
-              matchingBuildTargets.isEmpty() ?
-                  Optional.<ImmutableSet<BuildTarget>>absent() :
-                  Optional.of(matchingBuildTargets)));
+          referencedFiles.relativePathsUnderProjectRoot.isEmpty() ?
+              Optional.<ImmutableSet<Path>>absent() :
+              Optional.of(referencedFiles.relativePathsUnderProjectRoot),
+          matchingBuildTargets.isEmpty() ?
+              Optional.<ImmutableSet<BuildTarget>>absent() :
+              Optional.of(matchingBuildTargets),
+          buildRuleTypes.isEmpty() ?
+              Optional.<ImmutableSet<BuildRuleType>>absent() :
+              Optional.of(buildRuleTypes));
     }
 
     // Print out matching targets in alphabetical order.
@@ -176,31 +177,86 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     return 0;
   }
 
+  /**
+   * @param graph Graph used to resolve dependencies between targets and find all build files.
+   * @param referencedFiles If present, the result will be limited to the nodes that transitively
+   *                        depend on at least one of those.
+   * @param matchingBuildTargets If present, the result will be limited to the specified targets.
+   * @param buildRuleTypes If present, the result will be limited to targets with the specified
+   *                       types.
+   * @return A map of target names to target nodes.
+   */
   @VisibleForTesting
-  SortedMap<String, TargetNode<?>> getMatchingNodes(
+  ImmutableSortedMap<String, TargetNode<?>> getMatchingNodes(
       TargetGraph graph,
-      final TargetsCommandPredicate predicate) {
-    // Traverse the DependencyGraph and select all of the nodes that accepted by Predicate.
-    AbstractBottomUpTraversal<TargetNode<?>, SortedMap<String, TargetNode<?>>> traversal =
-        new AbstractBottomUpTraversal<TargetNode<?>, SortedMap<String, TargetNode<?>>>(graph) {
+      Optional<ImmutableSet<Path>> referencedFiles,
+      final Optional<ImmutableSet<BuildTarget>> matchingBuildTargets,
+      final Optional<ImmutableSet<BuildRuleType>> buildRuleTypes) {
+    ImmutableSet<TargetNode<?>> directOwners;
+    if (referencedFiles.isPresent()) {
+      BuildFileTree buildFileTree = new InMemoryBuildFileTree(
+            FluentIterable
+                .from(graph.getNodes())
+                .transform(HasBuildTarget.TO_TARGET)
+                .toSet());
+      directOwners = FluentIterable
+          .from(graph.getNodes())
+          .filter(
+              new DirectOwnerPredicate(
+                  buildFileTree,
+                  referencedFiles.get()))
+          .toSet();
+    } else {
+      directOwners = graph.getNodes();
+    }
+    ImmutableSet<TargetNode<?>> selectedReferrers = FluentIterable
+        .from(getDependentNodes(graph, directOwners))
+        .filter(
+            new Predicate<TargetNode<?>>() {
+              @Override
+              public boolean apply(TargetNode<?> targetNode) {
+                if (matchingBuildTargets.isPresent() &&
+                    !matchingBuildTargets.get().contains(targetNode.getBuildTarget())) {
+                  return false;
+                }
 
-      final SortedMap<String, TargetNode<?>> matchingNodes = Maps.newTreeMap();
+                if (buildRuleTypes.isPresent() &&
+                    !buildRuleTypes.get().contains(targetNode.getType())) {
+                  return false;
+                }
 
-      @Override
-      public void visit(TargetNode<?> node) {
-        if (predicate.apply(node)) {
-          matchingNodes.put(node.getBuildTarget().getFullyQualifiedName(), node);
-        }
-      }
+                return true;
+              }
+            })
+        .toSet();
+    ImmutableSortedMap.Builder<String, TargetNode<?>> matchingNodesBuilder =
+        ImmutableSortedMap.naturalOrder();
+    for (TargetNode<?> targetNode : selectedReferrers) {
+      matchingNodesBuilder.put(targetNode.getBuildTarget().getFullyQualifiedName(), targetNode);
+    }
+    return matchingNodesBuilder.build();
+  }
 
-      @Override
-      public SortedMap<String, TargetNode<?>> getResult() {
-        return matchingNodes;
-      }
+  /**
+   * @param graph A graph used to resolve dependencies between targets.
+   * @param nodes A set of nodes.
+   * @return A set of all nodes that transitively depend on {@code nodes}
+   * (a superset of {@code nodes}).
+   */
+  private static ImmutableSet<TargetNode<?>> getDependentNodes(
+      final TargetGraph graph,
+      ImmutableSet<TargetNode<?>> nodes) {
+    final ImmutableSet.Builder<TargetNode<?>> builder = ImmutableSet.builder();
+    AbstractBreadthFirstTraversal<TargetNode<?>> traversal =
+        new AbstractBreadthFirstTraversal<TargetNode<?>>(nodes) {
+          @Override
+          public ImmutableSet<TargetNode<?>> visit(TargetNode<?> targetNode) {
+            builder.add(targetNode);
+            return graph.getIncomingNodesFor(targetNode);
+          }
     };
-
-    traversal.traverse();
-    return traversal.getResult();
+    traversal.start();
+    return builder.build();
   }
 
   @Override
@@ -409,91 +465,46 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     return null;
   }
 
-  static class TargetsCommandPredicate implements Predicate<TargetNode<?>> {
+  private static class DirectOwnerPredicate implements Predicate<TargetNode<?>> {
 
-    private final TargetGraph graph;
-    private final ImmutableSet<BuildRuleType> buildRuleTypes;
-    @Nullable
-    private ImmutableSet<Path> referencedInputs;
-    private final Set<Path> basePathOfTargets;
-    private final Set<TargetNode<?>> dependentTargets;
-    private final Optional<ImmutableSet<BuildTarget>> matchingTargets;
+    private final ImmutableSet<Path> referencedInputs;
+    private final ImmutableSet<Path> basePathOfTargets;
 
     /**
-     * @param buildRuleTypes A {@link TargetNode}'s {@link BuildRuleType} must be contained in this
-     *     set for it to match. Ignored if empty.
      * @param referencedInputs A {@link TargetNode} must reference at least one of these paths as
      *     input to match the predicate. All the paths must be relative to the project root. Ignored
      *     if empty.
-     * @param matchingTargets If present, a {@link TargetNode}'s {@link BuildTarget} must be
-     *     contained in this set for it to match.
      */
-    public TargetsCommandPredicate(
-        TargetGraph targetGraph,
-        ImmutableSet<BuildRuleType> buildRuleTypes,
-        ImmutableSet<Path> referencedInputs,
-        Optional<ImmutableSet<BuildTarget>> matchingTargets) {
-      this.graph = targetGraph;
-      this.buildRuleTypes = buildRuleTypes;
-      this.matchingTargets = matchingTargets;
+    public DirectOwnerPredicate(
+        BuildFileTree buildFileTree,
+        ImmutableSet<Path> referencedInputs) {
+      this.referencedInputs = referencedInputs;
 
-      if (!referencedInputs.isEmpty()) {
-        this.referencedInputs = referencedInputs;
-        BuildFileTree tree = new InMemoryBuildFileTree(
-            matchingTargets.or(
-                FluentIterable
-                    .from(graph.getNodes())
-                    .transform(HasBuildTarget.TO_TARGET)
-                    .toSet()));
-        basePathOfTargets = Sets.newHashSet();
-        dependentTargets = Sets.newHashSet();
-        for (Path input : referencedInputs) {
-          Optional<Path> path = tree.getBasePathOfAncestorTarget(input);
-          if (path.isPresent()) {
-            basePathOfTargets.add(path.get());
-          }
+      ImmutableSet.Builder<Path> basePathOfTargetsBuilder = ImmutableSet.builder();
+      for (Path input : referencedInputs) {
+        Optional<Path> path = buildFileTree.getBasePathOfAncestorTarget(input);
+        if (path.isPresent()) {
+          basePathOfTargetsBuilder.add(path.get());
         }
-      } else {
-        basePathOfTargets = ImmutableSet.of();
-        dependentTargets = ImmutableSet.of();
       }
+      basePathOfTargets = basePathOfTargetsBuilder.build();
     }
 
     @Override
     public boolean apply(TargetNode<?> node) {
-      boolean isDependent = true;
-      if (referencedInputs != null) {
-        // Indirectly depend on some referenced file.
-        isDependent = !Collections.disjoint(graph.getOutgoingNodesFor(node), dependentTargets);
-
-        // Any referenced file, only those with the nearest BuildTarget can
-        // directly depend on that file.
-        if (!isDependent &&
-            basePathOfTargets.contains(node.getBuildTarget().getBasePath())) {
-          for (Path input : node.getInputs()) {
-            if (referencedInputs.contains(input)) {
-              isDependent = true;
-              break;
-            }
-          }
-          if (referencedInputs.contains(node.getBuildTarget().getBuildFilePath())) {
-            isDependent = true;
-          }
-        }
-
-        if (isDependent) {
-          // Save the node only when exists referenced file
-          // and this node depend on at least one referenced file.
-          dependentTargets.add(node);
-        }
-      }
-
-      if (matchingTargets.isPresent() && !matchingTargets.get().contains(node.getBuildTarget())) {
+      // For any referenced file, only those with the nearest target base path can
+      // directly depend on that file.
+      if (!basePathOfTargets.contains(node.getBuildTarget().getBasePath())) {
         return false;
       }
 
-      return (isDependent && (buildRuleTypes.isEmpty() || buildRuleTypes.contains(node.getType())));
-    }
+      for (Path input : node.getInputs()) {
+        if (referencedInputs.contains(input)) {
+          return true;
+        }
+      }
 
+      return referencedInputs.contains(node.getBuildTarget().getBuildFilePath());
+    }
   }
 }
