@@ -39,7 +39,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeRepositoryFactory;
@@ -178,17 +178,17 @@ public class TargetsCommandTest {
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     // Set up the test buck file, parser, config, options.
     BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
-    EasyMock.expect(parser.parse("//:test-library", ParseContext.fullyQualified()))
+    EasyMock.expect(parser.parse("//:test-library", BuildTargetPatternParser.fullyQualified()))
         .andReturn(BuildTarget.builder("//testdata/com/facebook/buck/cli", "test-library").build())
         .anyTimes();
-    EasyMock.expect(parser.parse("//:", ParseContext.fullyQualified()))
+    EasyMock.expect(parser.parse("//:", BuildTargetPatternParser.fullyQualified()))
         .andThrow(new BuildTargetParseException(
             String.format("%s cannot end with a colon.", "//:")))
         .anyTimes();
-    EasyMock.expect(parser.parse("//blah/foo:bar", ParseContext.fullyQualified()))
+    EasyMock.expect(parser.parse("//blah/foo:bar", BuildTargetPatternParser.fullyQualified()))
         .andReturn(BuildTarget.builder("//blah/foo", "bar").build())
         .anyTimes();
-    EasyMock.expect(parser.parse("//:test-libarry", ParseContext.fullyQualified()))
+    EasyMock.expect(parser.parse("//:test-libarry", BuildTargetPatternParser.fullyQualified()))
         .andReturn(BuildTarget.builder("//testdata/com/facebook/buck/cli", "test-libarry").build())
         .anyTimes();
     EasyMock.replay(parser);

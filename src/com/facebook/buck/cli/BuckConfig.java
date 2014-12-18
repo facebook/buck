@@ -24,7 +24,7 @@ import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -434,7 +434,7 @@ public class BuckConfig {
   }
 
   public BuildTarget getBuildTargetForFullyQualifiedTarget(String target) {
-    return buildTargetParser.parse(target, ParseContext.fullyQualified());
+    return buildTargetParser.parse(target, BuildTargetPatternParser.fullyQualified());
   }
 
   /**
@@ -532,7 +532,7 @@ public class BuckConfig {
       } else {
         // Here we parse the alias values with a BuildTargetParser to be strict. We could be looser
         // and just grab everything between "//" and ":" and assume it's a valid base path.
-        buildTarget = buildTargetParser.parse(value, ParseContext.fullyQualified());
+        buildTarget = buildTargetParser.parse(value, BuildTargetPatternParser.fullyQualified());
       }
       aliasToBuildTarget.put(alias, buildTarget);
     }

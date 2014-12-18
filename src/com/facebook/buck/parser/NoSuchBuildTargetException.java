@@ -30,9 +30,9 @@ public class NoSuchBuildTargetException extends BuildTargetException {
    * @param buildTarget the failing {@link com.facebook.buck.model.BuildTarget}
    */
   static NoSuchBuildTargetException createForMissingBuildRule(BuildTarget buildTarget,
-      ParseContext parseContext) {
+      BuildTargetPatternParser buildTargetPatternParser) {
     String message = String.format("No rule found when resolving target %s",
-        parseContext.makeTargetDescription(buildTarget.getFullyQualifiedName()));
+        buildTargetPatternParser.makeTargetDescription(buildTarget.getFullyQualifiedName()));
 
     return new NoSuchBuildTargetException(message);
   }

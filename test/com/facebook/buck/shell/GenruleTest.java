@@ -30,7 +30,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -134,7 +134,7 @@ public class GenruleTest {
     // that builds a Genrule from the Python object.
     BuildTargetParser parser = EasyMock.createNiceMock(BuildTargetParser.class);
     EasyMock.expect(parser.parse(EasyMock.eq("//java/com/facebook/util:util"),
-        EasyMock.anyObject(ParseContext.class)))
+        EasyMock.anyObject(BuildTargetPatternParser.class)))
         .andStubReturn(BuildTargetFactory.newInstance("//java/com/facebook/util:util"));
     EasyMock.replay(parser);
 

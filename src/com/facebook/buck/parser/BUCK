@@ -41,7 +41,6 @@ java_library(
     'BuildTargetParseException.java',
     'BuildTargetPatternParser.java',
     'NoSuchBuildTargetException.java',
-    'ParseContext.java',
   ],
   deps = [
     '//third-party/java/guava:guava',

@@ -20,7 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.base.Optional;
@@ -52,7 +52,7 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
 
     BuildTarget other;
     try {
-      other = parser.parse(input, ParseContext.forBaseName(target.getBaseName()));
+      other = parser.parse(input, BuildTargetPatternParser.forBaseName(target.getBaseName()));
     } catch (BuildTargetParseException e) {
       throw new MacroException(e.getMessage(), e);
     }
@@ -67,7 +67,8 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
   public ImmutableList<BuildTarget> extractTargets(
       BuildTarget target,
       String input) {
-    return ImmutableList.of(parser.parse(input, ParseContext.forBaseName(target.getBaseName())));
+    return ImmutableList.of(
+        parser.parse(input, BuildTargetPatternParser.forBaseName(target.getBaseName())));
   }
 
 }

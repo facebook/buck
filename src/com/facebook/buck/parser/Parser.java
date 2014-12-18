@@ -446,14 +446,16 @@ public class Parser {
           @Override
           protected Iterator<BuildTarget> findChildren(BuildTarget buildTarget)
               throws IOException, InterruptedException {
-            ParseContext parseContext = ParseContext.forBaseName(buildTarget.getBaseName());
+            BuildTargetPatternParser buildTargetPatternParser =
+                BuildTargetPatternParser.forBaseName(buildTarget.getBaseName());
 
             // Verify that the BuildTarget actually exists in the map of known BuildTargets
             // before trying to recurse through its children.
             TargetNode<?> targetNode = getTargetNode(buildTarget);
             if (targetNode == null) {
               throw new HumanReadableException(
-                  NoSuchBuildTargetException.createForMissingBuildRule(buildTarget, parseContext));
+                  NoSuchBuildTargetException.createForMissingBuildRule(buildTarget,
+                      buildTargetPatternParser));
             }
 
             Set<BuildTarget> deps = Sets.newHashSet();
@@ -471,7 +473,7 @@ public class Parser {
                     throw new HumanReadableException(
                         NoSuchBuildTargetException.createForMissingBuildRule(
                             buildTargetForDep,
-                            ParseContext.forBaseName(buildTargetForDep.getBaseName())));
+                            BuildTargetPatternParser.forBaseName(buildTargetForDep.getBaseName())));
                   }
                 }
                 depTargetNode.checkVisibility(buildTarget);

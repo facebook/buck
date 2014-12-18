@@ -20,7 +20,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -67,7 +67,9 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
     ActionGraph actionGraph;
     BuildTarget buildTarget;
     try {
-      buildTarget = buildTargetParser.parse(buildTargetName, ParseContext.fullyQualified());
+      buildTarget = buildTargetParser.parse(
+          buildTargetName,
+          BuildTargetPatternParser.fullyQualified());
       TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           ImmutableList.of(buildTarget),
           options.getDefaultIncludes(),

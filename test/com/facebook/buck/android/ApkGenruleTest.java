@@ -32,7 +32,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
@@ -123,7 +123,9 @@ public class ApkGenruleTest {
     // that builds a ApkGenrule from the Python object.
     BuildTargetParser parser = EasyMock.createNiceMock(BuildTargetParser.class);
     final BuildTarget apkTarget = BuildTargetFactory.newInstance("//:fb4a");
-    EasyMock.expect(parser.parse(EasyMock.eq(":fb4a"), EasyMock.anyObject(ParseContext.class)))
+    EasyMock.expect(
+        parser.parse(EasyMock.eq(":fb4a"),
+            EasyMock.anyObject(BuildTargetPatternParser.class)))
         .andStubReturn(apkTarget);
     EasyMock.replay(parser);
 

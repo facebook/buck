@@ -20,7 +20,7 @@ import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.annotations.VisibleForTesting;
@@ -66,7 +66,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
                      public BuildTarget apply(String input) {
                        return getParser().getBuildTargetParser().parse(
                            input,
-                           ParseContext.fullyQualified());
+                           BuildTargetPatternParser.fullyQualified());
                      }
                    })
         .toSet();

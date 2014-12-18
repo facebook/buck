@@ -13,73 +13,193 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.facebook.buck.parser;
+
+import static com.facebook.buck.util.BuckConstant.BUILD_RULES_FILE_NAME;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
-public class BuildTargetPatternParser {
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
-  @VisibleForTesting
-  public static final String VISIBILITY_PUBLIC = "PUBLIC";
+/**
+ * Context for parsing build target names. Fully-qualified target names are parsed the same
+ * regardless of the context.
+ */
+@Immutable
+public abstract class BuildTargetPatternParser {
+
+  private static final String VISIBILITY_PUBLIC = "PUBLIC";
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String WILDCARD_BUILD_RULE_SUFFIX = "...";
   private static final String BUILD_RULE_SEPARATOR = ":";
 
-  private BuildTargetParser buildTargetParser;
+  private static final BuildTargetPatternParser FULLY_QUALIFIED = new FullyQualifiedContext();
 
-  public BuildTargetPatternParser() {
-    buildTargetParser = new BuildTargetParser();
+  private static final BuildTargetPatternParser VISIBILITY = new VisibilityContext();
+
+  @Nullable
+  private final String baseName;
+
+  private final BuildTargetParser buildTargetParser;
+
+  private BuildTargetPatternParser(String baseName) {
+    this.baseName = baseName;
+    this.buildTargetParser = new BuildTargetParser();
+  }
+
+  @Nullable
+  public String getBaseName() {
+    return baseName;
+  }
+
+  @Nullable
+  public String getBaseNameWithSlash() {
+    return BuildTarget.getBaseNameWithSlash(baseName);
+  }
+
+  protected boolean isPublicVisibilityAllowed() {
+    return false;
+  }
+
+  protected boolean isWildCardAllowed() {
+    return false;
   }
 
   /**
    * 1. //src/com/facebook/buck/cli:cli will be converted to a single build target
    * 2. //src/com/facebook/buck/cli: will match all in the same directory.
    * 3. //src/com/facebook/buck/cli/... will match all in or under that directory.
-   * For case 2 and 3, parseContext is expected to be {@link ParseContext#forVisibilityArgument()}.
+   * For case 2 and 3, parseContext is expected to be
+   * {@link BuildTargetPatternParser#forVisibilityArgument()}.
    */
-  public BuildTargetPattern parse(
-      String buildTargetPattern,
-      ParseContext parseContext) throws NoSuchBuildTargetException {
-
-    if (buildTargetPattern.equals(VISIBILITY_PUBLIC)) {
-      if (parseContext.getType() != ParseContext.Type.VISIBILITY) {
+  public final BuildTargetPattern parse(String buildTargetPattern)
+      throws NoSuchBuildTargetException {
+    if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
+      if (isPublicVisibilityAllowed()) {
+        return BuildTargetPattern.MATCH_ALL;
+      } else {
         throw new BuildTargetParseException(
             String.format("%s not supported in the parse context", VISIBILITY_PUBLIC));
-      } else {
-        return BuildTargetPattern.MATCH_ALL;
       }
     }
 
-    Preconditions.checkArgument(buildTargetPattern.startsWith(BUILD_RULE_PREFIX),
+    Preconditions.checkArgument(
+        buildTargetPattern.startsWith(BUILD_RULE_PREFIX),
         String.format("'%s' must start with '//'", buildTargetPattern));
 
     if (buildTargetPattern.endsWith(WILDCARD_BUILD_RULE_SUFFIX)) {
-      if (parseContext.getType() != ParseContext.Type.VISIBILITY) {
-        throw new BuildTargetParseException(
-            String.format("'%s' cannot end with '...'", buildTargetPattern));
-      } else {
+      if (isWildCardAllowed()) {
         if (buildTargetPattern.contains(BUILD_RULE_SEPARATOR)) {
-          throw new BuildTargetParseException(String.format(
-              "'%s' cannot contain colon", buildTargetPattern));
+          throw new BuildTargetParseException(
+              String.format(
+                  "'%s' cannot contain colon", buildTargetPattern));
         }
         String basePathWithSlash = buildTargetPattern.substring(
             BUILD_RULE_PREFIX.length(),
             buildTargetPattern.length() - WILDCARD_BUILD_RULE_SUFFIX.length());
         return new SubdirectoryBuildTargetPattern(basePathWithSlash);
-      }
-    } else {
-      BuildTarget target = buildTargetParser.parse(buildTargetPattern, parseContext);
-      if (target.getShortName().isEmpty()) {
-        return new ImmediateDirectoryBuildTargetPattern(target.getBasePathWithSlash());
       } else {
-        return new SingletonBuildTargetPattern(target.getFullyQualifiedName());
+        throw new BuildTargetParseException(
+            String.format("'%s' cannot end with '...'", buildTargetPattern));
       }
+    }
+
+    BuildTarget target = buildTargetParser.parse(buildTargetPattern, this);
+    if (target.getShortName().isEmpty()) {
+      return new ImmediateDirectoryBuildTargetPattern(target.getBasePathWithSlash());
+    } else {
+      return new SingletonBuildTargetPattern(target.getFullyQualifiedName());
+    }
+  }
+
+  /**
+   * Used when parsing target names relative to another target, such as in a build file.
+   * @param baseName name such as {@code //first-party/orca}
+   */
+  public static BuildTargetPatternParser forBaseName(String baseName) {
+    Preconditions.checkNotNull(Strings.emptyToNull(baseName));
+    return new BuildFileContext(baseName);
+  }
+
+  /**
+   * Used when parsing target names in the {@code visibility} argument to a build rule.
+   */
+  public static BuildTargetPatternParser forVisibilityArgument() {
+    return VISIBILITY;
+  }
+
+  /**
+   * Used when parsing fully-qualified target names only, such as from the command line.
+   */
+  public static BuildTargetPatternParser fullyQualified() {
+    return FULLY_QUALIFIED;
+  }
+
+  /**
+   * @return description of the target name and context being parsed when an error was encountered.
+   *     Examples are ":azzetz in build file //first-party/orca/orcaapp/BUCK" and
+   *     "//first-party/orca/orcaapp:mezzenger in context FULLY_QUALIFIED"
+   */
+  public abstract String makeTargetDescription(String buildTargetName);
+
+  private static class BuildFileContext extends BuildTargetPatternParser {
+
+    public BuildFileContext(String basePath) {
+      super(basePath);
+    }
+
+    @Override
+    public String makeTargetDescription(String buildTargetName) {
+      return String.format(
+          "%s in build file %s%s",
+          buildTargetName,
+          getBaseNameWithSlash(),
+          BUILD_RULES_FILE_NAME);
+    }
+  }
+
+  /**
+   * When parsing a build target for the visibility argument in a build file, targets must be
+   * fully-qualified, but wildcards are allowed.
+   */
+  private static class FullyQualifiedContext extends BuildTargetPatternParser {
+    public FullyQualifiedContext() {
+      super("");
+    }
+
+    @Override
+    public String makeTargetDescription(String buildTargetName) {
+      return String.format("%s in fully qualified context.", buildTargetName);
+    }
+  }
+
+  private static class VisibilityContext extends BuildTargetPatternParser {
+    public VisibilityContext() {
+      super("");
+    }
+
+    @Override
+    public String makeTargetDescription(String buildTargetName) {
+      return String.format("%s in context visibility", buildTargetName);
+    }
+
+
+    @Override
+    protected boolean isPublicVisibilityAllowed() {
+      return true;
+    }
+
+    @Override
+    protected boolean isWildCardAllowed() {
+      return true;
     }
   }
 }

@@ -23,7 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParseContext;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
@@ -185,7 +185,9 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     BuildTargetParser buildTargetParser = getParser().getBuildTargetParser();
 
     for (String buildTargetName : buildTargetNames) {
-      buildTargets.add(buildTargetParser.parse(buildTargetName, ParseContext.fullyQualified()));
+      buildTargets.add(buildTargetParser.parse(
+              buildTargetName,
+              BuildTargetPatternParser.fullyQualified()));
     }
 
     return buildTargets.build();
