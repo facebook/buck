@@ -16,12 +16,8 @@
 
 package com.facebook.buck.parser;
 
-import static com.facebook.buck.util.BuckConstant.BUILD_RULES_FILE_NAME;
-
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-
-import java.nio.file.Path;
 
 @SuppressWarnings("serial")
 public class NoSuchBuildTargetException extends BuildTargetException {
@@ -31,41 +27,12 @@ public class NoSuchBuildTargetException extends BuildTargetException {
   }
 
   /**
-   * @param directoryPath missing directory
-   * @param buildTargetName missing build target name
-   * @param parseContext the context used when attempting to resolve the build target
-   */
-  static NoSuchBuildTargetException createForMissingDirectory(Path directoryPath,
-      String buildTargetName,
-      ParseContext parseContext) {
-    String message = String.format("No directory %s when resolving target %s",
-        directoryPath,
-        makeTargetDescription(buildTargetName, parseContext));
-    return new NoSuchBuildTargetException(message);
-  }
-
-  /**
-   * @param buildFilePath missing build file
-   * @param buildTargetName missing build target name
-   * @param parseContext the context used when attempting to resolve the build target
-   */
-  static NoSuchBuildTargetException createForMissingBuildFile(Path buildFilePath,
-      String buildTargetName,
-      ParseContext parseContext) {
-    String message = String.format("No %s file %s when resolving target %s",
-        BUILD_RULES_FILE_NAME,
-        buildFilePath,
-        makeTargetDescription(buildTargetName, parseContext));
-    return new NoSuchBuildTargetException(message);
-  }
-
-  /**
    * @param buildTarget the failing {@link com.facebook.buck.model.BuildTarget}
    */
   static NoSuchBuildTargetException createForMissingBuildRule(BuildTarget buildTarget,
       ParseContext parseContext) {
     String message = String.format("No rule found when resolving target %s",
-        makeTargetDescription(buildTarget.getFullyQualifiedName(), parseContext));
+        parseContext.makeTargetDescription(buildTarget.getFullyQualifiedName()));
 
     return new NoSuchBuildTargetException(message);
   }
@@ -75,20 +42,4 @@ public class NoSuchBuildTargetException extends BuildTargetException {
     return getMessage();
   }
 
-  /**
-   * @return description of the target name and context being parsed when an error was encountered.
-   *     Examples are ":azzetz in build file //first-party/orca/orcaapp/BUCK" and
-   *     "//first-party/orca/orcaapp:mezzenger in context FULLY_QUALIFIED"
-   */
-  private static String makeTargetDescription(String buildTargetName, ParseContext parseContext) {
-    String location = parseContext.getType().name();
-    if (parseContext.getType() == ParseContext.Type.BUILD_FILE) {
-      return String.format("%s in build file %s%s",
-          buildTargetName,
-          parseContext.getBaseNameWithSlash(),
-          BUILD_RULES_FILE_NAME);
-    } else {
-      return String.format("%s in context %s", buildTargetName, location);
-    }
-  }
 }

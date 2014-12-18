@@ -16,6 +16,8 @@
 
 package com.facebook.buck.parser;
 
+import static com.facebook.buck.util.BuckConstant.BUILD_RULES_FILE_NAME;
+
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -90,5 +92,22 @@ public class ParseContext {
    */
   public static ParseContext fullyQualified() {
     return FULLY_QUALIFIED;
+  }
+
+  /**
+   * @return description of the target name and context being parsed when an error was encountered.
+   *     Examples are ":azzetz in build file //first-party/orca/orcaapp/BUCK" and
+   *     "//first-party/orca/orcaapp:mezzenger in context FULLY_QUALIFIED"
+   */
+  public String makeTargetDescription(String buildTargetName) {
+    String location = getType().name();
+    if (getType() == ParseContext.Type.BUILD_FILE) {
+      return String.format("%s in build file %s%s",
+          buildTargetName,
+          getBaseNameWithSlash(),
+          BUILD_RULES_FILE_NAME);
+    } else {
+      return String.format("%s in context %s", buildTargetName, location);
+    }
   }
 }
