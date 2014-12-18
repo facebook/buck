@@ -106,6 +106,7 @@ public class PexStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.of(
+        pythonPath.toString(),
         pathToPex.toString(),
         "--python", pythonPath.toString(),
         "--entry-point", entry,
