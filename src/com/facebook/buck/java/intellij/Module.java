@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.command;
+package com.facebook.buck.java.intellij;
 
-import com.facebook.buck.command.Project.SourceFolder;
+import com.facebook.buck.java.intellij.Project.SourceFolder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.fasterxml.jackson.annotation.JsonInclude;

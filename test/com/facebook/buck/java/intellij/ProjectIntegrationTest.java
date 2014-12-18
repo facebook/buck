@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.java.intellij;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;

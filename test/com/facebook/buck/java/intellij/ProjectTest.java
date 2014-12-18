@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.command;
+package com.facebook.buck.java.intellij;
 
 import static com.facebook.buck.testutil.MoreAsserts.assertListEquals;
 import static org.junit.Assert.assertEquals;
@@ -27,7 +27,6 @@ import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidResourceRuleBuilder;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
-import com.facebook.buck.command.Project.SourceFolder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryBuilder;
@@ -36,6 +35,7 @@ import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.java.PrebuiltJarBuilder;
+import com.facebook.buck.java.intellij.Project.SourceFolder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InMemoryBuildFileTree;

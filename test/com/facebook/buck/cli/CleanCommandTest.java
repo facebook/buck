@@ -19,10 +19,10 @@ package com.facebook.buck.cli;
 import static org.easymock.EasyMock.capture;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.command.Project;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
+import com.facebook.buck.java.intellij.Project;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.CachingBuildEngine;

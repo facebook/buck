@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.command;
+package com.facebook.buck.java.intellij;
 
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Charsets;

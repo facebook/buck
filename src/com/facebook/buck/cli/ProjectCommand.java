@@ -22,15 +22,14 @@ import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.ProjectGenerator;
 import com.facebook.buck.apple.xcode.WorkspaceAndProjectGenerator;
-import com.facebook.buck.command.Project;
+import com.facebook.buck.java.intellij.Project;
+import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.model.HasSourceUnderTest;
-import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
@@ -58,9 +57,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
 import java.io.BufferedReader;
@@ -504,110 +500,17 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         environment,
         options.getEnableProfiling());
 
-    // Create the main graph. This contains all the targets in the project slice, or all the valid
-    // project roots if a project slice is not specified, and their transitive dependencies.
-    ImmutableSet<TargetNode<?>> projectRoots = ImmutableSet.copyOf(
-        fullGraph.getAll(
-            getRootsFromOptionsWithPredicate(
-                fullGraph,
-                options,
-                projectRootsPredicate)));
 
-    // Optionally create the test graph. This contains all the tests that cover targets in the main
-    // graph, all the transitive dependencies of those tests, and all the targets in the main graph.
-    ImmutableSet<TargetNode<?>> associatedTests = ImmutableSet.of();
-    if (options.isWithTests()) {
-      ImmutableSet<BuildTarget> explicitTests = FluentIterable
-          .from(fullGraph.getSubgraph(projectRoots).getNodes())
-          .transformAndConcat(
-              new Function<TargetNode<?>, Iterable<BuildTarget>>() {
-                @Override
-                public Iterable<BuildTarget> apply(TargetNode<?> node) {
-                  if (node.getConstructorArg() instanceof HasTests) {
-                    return ((HasTests) node.getConstructorArg()).getTests();
-                  } else {
-                    return ImmutableSet.of();
-                  }
-                }
-              })
-          .toSet();
-
-      AssociatedTargetNodePredicate associatedTestsPredicate = new AssociatedTargetNodePredicate() {
-        @Override
-        public boolean apply(TargetNode<?> targetNode, TargetGraph targetGraph) {
-          if (!targetNode.getType().isTestRule()) {
-            return false;
-          }
-          ImmutableSortedSet<BuildTarget> sourceUnderTest;
-          if (targetNode.getConstructorArg() instanceof HasSourceUnderTest) {
-            HasSourceUnderTest argWithSourceUnderTest =
-                (HasSourceUnderTest) targetNode.getConstructorArg();
-            sourceUnderTest = argWithSourceUnderTest.getSourceUnderTest();
-          } else {
-            return false;
-          }
-
-          for (BuildTarget buildTargetUnderTest : sourceUnderTest) {
-            if (targetGraph.get(buildTargetUnderTest) != null) {
-              return true;
-            }
-          }
-
-          return false;
-        }
-      };
-
-      associatedTests = ImmutableSet.copyOf(
-          Sets.union(
-              ImmutableSet.copyOf(
-                  fullGraph.getAll(explicitTests)),
-              getAssociatedTargetNodes(
-                  fullGraph,
-                  projectRoots,
-                  associatedTestsPredicate)
-          )
-      );
-    }
-
-    ImmutableSet<TargetNode<?>> associatedProjects = getAssociatedTargetNodes(
+    ImmutableSet<BuildTarget> graphRoots = getRootsFromOptionsWithPredicate(
         fullGraph,
-        Iterables.concat(projectRoots, associatedTests),
-        associatedProjectPredicate);
+        options,
+        projectRootsPredicate);
 
-    TargetGraph targetGraph = fullGraph.getSubgraph(
-        Iterables.concat(projectRoots, associatedTests, associatedProjects));
-
-    return new TargetGraphAndTargets(
-        targetGraph,
+    return TargetGraphAndTargets.create(
+        graphRoots,
         fullGraph,
-        projectRoots,
-        associatedTests);
-  }
-
-  /**
-   * @param fullGraph A TargetGraph containing all nodes that could be related.
-   * @param subgraphRoots Target nodes forming the roots of the subgraph to which the returned nodes
-   *                      are related.
-   * @param associatedTargetNodePredicate A predicate to determine whether a node is related or not.
-   * @return A set of nodes related to {@code subgraphRoots} or their dependencies.
-   */
-  private ImmutableSet<TargetNode<?>> getAssociatedTargetNodes(
-      TargetGraph fullGraph,
-      Iterable<TargetNode<?>> subgraphRoots,
-      final AssociatedTargetNodePredicate associatedTargetNodePredicate)
-      throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
-    final TargetGraph subgraph = fullGraph.getSubgraph(subgraphRoots);
-
-    return FluentIterable
-        .from(fullGraph.getNodes())
-        .filter(
-            new Predicate<TargetNode<?>>() {
-              @Override
-              public boolean apply(TargetNode<?> node) {
-                return associatedTargetNodePredicate.apply(node, subgraph);
-              }
-            })
-        .toSet();
+        associatedProjectPredicate,
+        options.isWithTests());
   }
 
   @Override
@@ -615,37 +518,4 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return "generates project configuration files for an IDE";
   }
 
-  private static class TargetGraphAndTargets {
-    private final TargetGraph targetGraph;
-    private final TargetGraph fullGraph;
-    private final ImmutableSet<TargetNode<?>> projectRoots;
-    private final ImmutableSet<TargetNode<?>> associatedTests;
-
-    public TargetGraphAndTargets(
-        TargetGraph targetGraph,
-        TargetGraph fullGraph,
-        ImmutableSet<TargetNode<?>> projectRoots,
-        ImmutableSet<TargetNode<?>> associatedTests) {
-      this.targetGraph = targetGraph;
-      this.fullGraph = fullGraph;
-      this.projectRoots = projectRoots;
-      this.associatedTests = associatedTests;
-    }
-
-    public TargetGraph getTargetGraph() {
-      return targetGraph;
-    }
-
-    public TargetGraph getFullGraph() {
-      return fullGraph;
-    }
-
-    public ImmutableSet<TargetNode<?>> getProjectRoots() {
-      return projectRoots;
-    }
-
-    public ImmutableSet<TargetNode<?>> getAssociatedTests() {
-      return associatedTests;
-    }
-  }
 }

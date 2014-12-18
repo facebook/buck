@@ -48,6 +48,7 @@ prebuilt_jar(
     '//src/com/facebook/buck/command:command',
     '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/httpserver:httpserver',
+    '//src/com/facebook/buck/java/intellij:intellij',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/util:util',

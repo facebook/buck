@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.command;
+package com.facebook.buck.java.intellij;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
@@ -25,6 +25,7 @@ import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidPackageableCollection;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.NdkLibrary;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.java.JavaLibrary;
@@ -33,7 +34,6 @@ import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
@@ -258,11 +258,12 @@ public class Project {
     return 0;
   }
 
-  private List<String> generateProjectDotPropertiesFiles(List<Module> modules) throws IOException {
+  private ImmutableList<String> generateProjectDotPropertiesFiles(List<Module> modules)
+      throws IOException {
     if (GENERATE_PROPERTIES_FILES) {
       // Create a map of module names to modules.
       Map<String, Module> nameToModule = buildNameToModuleMap(modules);
-      List<String> modifiedFiles = Lists.newArrayList();
+      ImmutableList.Builder<String> modifiedFiles = ImmutableList.builder();
 
       for (Module module : modules) {
         if (!module.isAndroidModule()) {
@@ -275,7 +276,7 @@ public class Project {
         }
       }
 
-      return modifiedFiles;
+      return modifiedFiles.build();
     } else {
       return ImmutableList.of();
     }

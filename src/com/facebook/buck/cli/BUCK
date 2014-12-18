@@ -81,6 +81,7 @@ java_library(
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:steps',
     '//src/com/facebook/buck/java:support',
+    '//src/com/facebook/buck/java/intellij:intellij',
     '//src/com/facebook/buck/json:json',
     '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/model:model',
