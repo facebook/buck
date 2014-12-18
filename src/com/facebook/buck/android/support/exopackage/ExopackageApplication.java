@@ -21,6 +21,7 @@ import java.lang.reflect.Constructor;
 import android.annotation.TargetApi;
 import android.app.Application;
 import android.content.Context;
+import android.content.res.Configuration;
 
 /**
  * A base class for implementing an Application that delegates to an {@link ApplicationLike}
@@ -143,5 +144,13 @@ public abstract class ExopackageApplication<T extends ApplicationLike> extends A
     if (delegate != null) {
       delegate.onTrimMemory(level);
     }
+  }
+
+  @Override
+  public void onConfigurationChanged(Configuration newConfig) {
+    super.onConfigurationChanged(newConfig);
+    if (delegate != null) {
+      delegate.onConfigurationChanged(newConfig);
+    }  
   }
 }
