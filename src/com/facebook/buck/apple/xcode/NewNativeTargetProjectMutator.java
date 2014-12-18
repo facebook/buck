@@ -82,6 +82,7 @@ public class NewNativeTargetProjectMutator {
   private Path productOutputPath = Paths.get("");
   private String productName = "";
   private String targetName = "";
+  private ImmutableList<String> targetGroupPath = ImmutableList.of();
   private Optional<String> gid = Optional.absent();
   private Iterable<GroupedSource> sources = ImmutableList.of();
   private ImmutableMap<SourcePath, String> sourceFlags = ImmutableMap.of();
@@ -125,6 +126,11 @@ public class NewNativeTargetProjectMutator {
 
   public NewNativeTargetProjectMutator setTargetName(String targetName) {
     this.targetName = targetName;
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setTargetGroupPath(ImmutableList<String> targetGroupPath) {
+    this.targetGroupPath = targetGroupPath;
     return this;
   }
 
@@ -181,7 +187,12 @@ public class NewNativeTargetProjectMutator {
   public Result buildTargetAndAddToProject(PBXProject project)
       throws NoSuchBuildTargetException {
     PBXNativeTarget target = new PBXNativeTarget(targetName, productType);
-    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(targetName);
+
+    PBXGroup targetGroup = project.getMainGroup();
+    for (String groupPathPart : targetGroupPath) {
+      targetGroup = targetGroup.getOrCreateChildGroupByName(groupPathPart);
+    }
+    targetGroup = targetGroup.getOrCreateChildGroupByName(targetName);
 
     if (gid.isPresent()) {
       target.setGlobalID(gid.get());

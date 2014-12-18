@@ -293,7 +293,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     } else {
       targets = passedInTargetsSet;
     }
-    if (!combinedProject) {
+    if (combinedProject) {
+      optionsBuilder.addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS);
+    } else {
       optionsBuilder.addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
     }
     LOG.debug("Generating workspace for config targets %s", targets);

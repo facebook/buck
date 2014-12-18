@@ -30,6 +30,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
@@ -57,6 +58,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -100,6 +102,26 @@ public class NewNativeTargetProjectMutatorTest {
 
     assertTargetExistsAndReturnTarget(generatedProject, "TestTarget");
     assertHasTargetGroupWithName(generatedProject, "TestTarget");
+  }
+
+  @Test
+  public void shouldCreateTargetAndCustomTargetGroup() throws NoSuchBuildTargetException {
+    NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
+        pathRelativizer,
+        sourcePathResolver);
+    mutator
+        .setTargetName("TestTarget")
+        .setTargetGroupPath(ImmutableList.of("Grandparent", "Parent"))
+        .setProduct(
+            PBXTarget.ProductType.BUNDLE,
+            "TestTargetProduct",
+            Paths.get("TestTargetProduct.bundle"))
+        .buildTargetAndAddToProject(generatedProject);
+
+    assertTargetExistsAndReturnTarget(generatedProject, "TestTarget");
+    PBXGroup grandparentGroup =
+        assertHasSubgroupAndReturnIt(generatedProject.getMainGroup(), "Grandparent");
+    assertHasSubgroupAndReturnIt(grandparentGroup, "Parent");
   }
 
   @Test
@@ -389,6 +411,24 @@ public class NewNativeTargetProjectMutatorTest {
               }
             }),
         not(emptyIterable()));
+  }
+
+  private static PBXGroup assertHasSubgroupAndReturnIt(PBXGroup group, final String subgroupName) {
+    ImmutableList<PBXGroup> candidates = FluentIterable
+        .from(group.getChildren())
+        .filter(
+            new Predicate<PBXReference>() {
+              @Override
+              public boolean apply(PBXReference input) {
+                return input.getName().equals(subgroupName);
+              }
+            })
+        .filter(PBXGroup.class)
+        .toList();
+    if (candidates.size() != 1) {
+      fail("Could not find a unique subgroup by its name");
+    }
+    return candidates.get(0);
   }
 
   private boolean hasShellScriptPhaseToCompileCommonAndSplitAssetCatalogs(PBXTarget target) {

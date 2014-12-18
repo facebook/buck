@@ -123,6 +123,9 @@ public class ProjectGenerator {
     /** Use short BuildTarget name instead of full name for targets */
     USE_SHORT_NAMES_FOR_TARGETS,
 
+    /** Put targets into groups reflecting directory structure of their BUCK files */
+    CREATE_DIRECTORY_STRUCTURE,
+
     /** Generate read-only project files */
     GENERATE_READ_ONLY_FILES,
 
@@ -135,6 +138,13 @@ public class ProjectGenerator {
    * Standard options for generating a separated project
    */
   public static final ImmutableSet<Option> SEPARATED_PROJECT_OPTIONS = ImmutableSet.of(
+      Option.USE_SHORT_NAMES_FOR_TARGETS);
+
+  /**
+   * Standard options for generating a combined project
+   */
+  public static final ImmutableSet<Option> COMBINED_PROJECT_OPTIONS = ImmutableSet.of(
+      Option.CREATE_DIRECTORY_STRUCTURE,
       Option.USE_SHORT_NAMES_FOR_TARGETS);
 
   public static final String PATH_TO_ASSET_CATALOG_COMPILER = System.getProperty(
@@ -564,6 +574,14 @@ public class ProjectGenerator {
             !targetNode.getConstructorArg().getUseBuckHeaderMaps())
         .setSources(sources.srcs, sources.perFileFlags)
         .setResources(resources);
+
+    if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE)) {
+      ImmutableList.Builder<String> targetGroupPathBuilder = ImmutableList.builder();
+      for (Path pathPart : buildTarget.getBasePath()) {
+        targetGroupPathBuilder.add(pathPart.toString());
+      }
+      mutator.setTargetGroupPath(targetGroupPathBuilder.build());
+    }
 
     if (!assetCatalogs.isEmpty()) {
       mutator.setAssetCatalogs(getAndMarkAssetCatalogBuildScript(), assetCatalogs);
