@@ -33,9 +33,19 @@ public class ElfSection {
 
   static ElfSection parse(ElfHeader.EIClass ei_class, ByteBuffer buffer) {
     ElfSectionHeader header = ElfSectionHeader.parse(ei_class, buffer);
-    buffer.position((int) header.sh_off);
-    ByteBuffer body = buffer.slice();
-    body.limit((int) header.sh_size);
+
+    // If section is of type SHT_NULL or SHT_NOBITS, it has no body in the file.
+    // Otherwise, use the offset and size to bound the body of the section from the input buffer.
+    ByteBuffer body;
+    if (header.sh_type == ElfSectionHeader.SHType.SHT_NULL ||
+        header.sh_type == ElfSectionHeader.SHType.SHT_NOBITS) {
+      body = ByteBuffer.wrap(new byte[0]);
+    } else {
+      buffer.position((int) header.sh_off);
+      body = buffer.slice();
+      body.limit((int) header.sh_size);
+    }
+
     return new ElfSection(header, body);
 
   }

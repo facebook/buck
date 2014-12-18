@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.base.Optional;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -87,6 +88,37 @@ public class ElfTest {
       assertEquals(ElfHeader.EIData.ELFDATA2MSB, elf.header.ei_data);
       assertEquals(14, elf.getNumberOfSections());
       assertTrue(elf.getSectionByName(".text").isPresent());
+    }
+
+  }
+
+  @Test
+  public void sectionTypes() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "samples", tmp);
+    workspace.setUp();
+
+    Path elfPath = workspace.resolve(Paths.get("section_types.o"));
+    try (FileChannel channel = FileChannel.open(elfPath)) {
+      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+      Elf elf = new Elf(buffer);
+      Optional<ElfSection> section;
+
+      section = elf.getSectionByName(".text");
+      assertTrue(section.isPresent());
+      assertEquals(ElfSectionHeader.SHType.SHT_PROGBITS, section.get().header.sh_type);
+
+      section = elf.getSectionByName(".bss");
+      assertTrue(section.isPresent());
+      assertEquals(ElfSectionHeader.SHType.SHT_NOBITS, section.get().header.sh_type);
+
+      section = elf.getSectionByName(".strtab");
+      assertTrue(section.isPresent());
+      assertEquals(ElfSectionHeader.SHType.SHT_STRTAB, section.get().header.sh_type);
+
+      section = elf.getSectionByName(".symtab");
+      assertTrue(section.isPresent());
+      assertEquals(ElfSectionHeader.SHType.SHT_SYMTAB, section.get().header.sh_type);
     }
 
   }

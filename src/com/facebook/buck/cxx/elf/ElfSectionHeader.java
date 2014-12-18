@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
 public class ElfSectionHeader {
 
   public final long sh_name;
-  public final long sh_type;
+  public final SHType sh_type;
   public final long sh_flags;
   public final long sh_addr;
   public final long sh_off;
@@ -36,7 +36,7 @@ public class ElfSectionHeader {
 
   ElfSectionHeader(
       long sh_name,
-      long sh_type,
+      SHType sh_type,
       long sh_flags,
       long sh_addr,
       long sh_off,
@@ -64,7 +64,7 @@ public class ElfSectionHeader {
     if (eiClass == ElfHeader.EIClass.ELFCLASS32) {
       return new ElfSectionHeader(
           buffer.getInt(),
-          buffer.getInt(),
+          SHType.valueOf(buffer.getInt()),
           buffer.getInt(),
           buffer.getInt(),
           buffer.getInt(),
@@ -76,7 +76,7 @@ public class ElfSectionHeader {
     } else {
       return new ElfSectionHeader(
           buffer.getInt(),
-          buffer.getInt(),
+          SHType.valueOf(buffer.getInt()),
           buffer.getLong(),
           buffer.getLong(),
           buffer.getLong(),
@@ -86,6 +86,42 @@ public class ElfSectionHeader {
           buffer.getLong(),
           buffer.getLong());
     }
+  }
+
+  public static enum SHType {
+
+    SHT_NULL(0),
+    SHT_PROGBITS(1),
+    SHT_SYMTAB(2),
+    SHT_STRTAB(3),
+    SHT_RELA(4),
+    SHT_HASH(5),
+    SHT_DYNAMIC(6),
+    SHT_NOTE(7),
+    SHT_NOBITS(8),
+    SHT_REL(9),
+    SHT_SHLIB(10),
+    SHT_DYNSYM(11),
+
+    // Represents one of the user/processor specific values.
+    SHT_UNKNOWN(0xffffffff),
+    ;
+
+    private final int value;
+
+    private SHType(int value) {
+      this.value = value;
+    }
+
+    static SHType valueOf(int val) {
+      for (SHType clazz : SHType.values()) {
+        if (clazz.value == val) {
+          return clazz;
+        }
+      }
+      return SHT_UNKNOWN;
+    }
+
   }
 
 }
