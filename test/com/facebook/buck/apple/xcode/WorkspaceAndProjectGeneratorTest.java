@@ -425,8 +425,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .setWorkspaceName(Optional.of("workspace"))
         .build();
 
-    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
-        projectFilesystem,
+    TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             library,
             combinableTest1,
@@ -435,7 +434,11 @@ public class WorkspaceAndProjectGeneratorTest {
             anotherTest,
             fooProject,
             barProject,
-            workspace),
+            workspace);
+
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        targetGraph,
         workspace,
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         ImmutableMultimap.of(
@@ -444,7 +447,7 @@ public class WorkspaceAndProjectGeneratorTest {
             library.getBuildTarget(), testMarkedUncombinable,
             library.getBuildTarget(), anotherTest),
         false);
-    generator.setGroupTestBundles(true);
+    generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = Maps.newHashMap();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -470,8 +473,8 @@ public class WorkspaceAndProjectGeneratorTest {
         projectGenerators.get(fooProject).getGeneratedProject(),
         "//foo:anotherTest");
     assertEquals(
-        "Test that cannot be combined with other tests should generate a test bundle.",
-        PBXTarget.ProductType.BUNDLE,
+        "Test that is not combined with other tests should also generate a test bundle.",
+        PBXTarget.ProductType.STATIC_LIBRARY,
         notCombinedTest.getProductType());
 
     // Test not bundled with any others should retain behavior.
@@ -500,9 +503,9 @@ public class WorkspaceAndProjectGeneratorTest {
         testAction.getTestables(),
         hasItem(testableWithName("_BuckCombinedTest-xctest-0")));
     assertThat(
-        "Unbundled test should be a testable",
+        "Uncombined but groupable test should be a testable",
         testAction.getTestables(),
-        hasItem(testableWithName("anotherTest")));
+        hasItem(testableWithName("_BuckCombinedTest-octest-1")));
     assertThat(
         "Bundled test library is not a testable",
         testAction.getTestables(),

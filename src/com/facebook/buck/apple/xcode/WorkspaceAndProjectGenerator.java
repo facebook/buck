@@ -52,7 +52,6 @@ import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -67,7 +66,7 @@ public class WorkspaceAndProjectGenerator {
       sourceTargetToTestNodes;
   private final ImmutableSet<TargetNode<AppleTestDescription.Arg>> extraTestBundleTargetNodes;
   private final boolean combinedProject;
-  private boolean groupTestBundles = false;
+  private ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = ImmutableSet.of();
 
   private Optional<ProjectGenerator> combinedProjectGenerator;
   private Optional<ProjectGenerator> combinedTestsProjectGenerator = Optional.absent();
@@ -110,8 +109,17 @@ public class WorkspaceAndProjectGenerator {
     return combinedTestsProjectGenerator;
   }
 
-  public WorkspaceAndProjectGenerator setGroupTestBundles(boolean groupTestBundles) {
-    this.groupTestBundles = groupTestBundles;
+  /**
+   * Set the tests that can be grouped. These tests will always be generated as static libraries,
+   * and linked into synthetic test targets.
+   *
+   * While it may seem unnecessary to do this for tests which may not be able to share a bundle with
+   * any other test, note that WorkspaceAndProjectGenerator only has a limited view of all the tests
+   * that exists, but the generated projects are shared amongst all Workspaces.
+   */
+  public WorkspaceAndProjectGenerator setGroupableTests(
+      Set<TargetNode<AppleTestDescription.Arg>> tests) {
+    groupableTests = ImmutableSet.copyOf(tests);
     return this;
   }
 
@@ -156,11 +164,7 @@ public class WorkspaceAndProjectGenerator {
             projectGraph,
             Predicates.in(getTransitiveDepsAndInputs(selectedTests, orderedTargetNodes)));
 
-    GroupedTestResults groupedTestResults = groupTestBundles
-        ? groupTests(selectedTests)
-        : new GroupedTestResults(
-            ImmutableMultimap.<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>of(),
-            selectedTests);
+    GroupedTestResults groupedTestResults = groupTests(selectedTests);
     Iterable<PBXTarget> synthesizedCombinedTestTargets = ImmutableList.of();
 
     ImmutableSet<BuildTarget> targetsInRequiredProjects = FluentIterable
@@ -172,6 +176,7 @@ public class WorkspaceAndProjectGenerator {
         ImmutableMap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
         ImmutableMap.builder();
+
     if (combinedProject) {
       ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
       for (TargetNode<?> targetNode : projectGraph.getNodes()) {
@@ -195,8 +200,7 @@ public class WorkspaceAndProjectGenerator {
           workspaceName,
           projectGeneratorOptions)
           .setAdditionalCombinedTestTargets(groupedTestResults.groupedTests)
-          .setTestsToGenerateAsStaticLibraries(
-              Sets.difference(selectedTests, groupedTestResults.ungroupedTests));
+          .setTestsToGenerateAsStaticLibraries(groupableTests);
       combinedProjectGenerator = Optional.of(generator);
       generator.createXcodeProjects();
 
@@ -231,8 +235,7 @@ public class WorkspaceAndProjectGenerator {
               targetNode.getBuildTarget().getBasePath(),
               projectArg.projectName,
               projectGeneratorOptions)
-              .setTestsToGenerateAsStaticLibraries(
-                  Sets.difference(selectedTests, groupedTestResults.ungroupedTests));
+              .setTestsToGenerateAsStaticLibraries(groupableTests);
 
           generator.createXcodeProjects();
           projectGenerators.put(targetNode, generator);
@@ -248,7 +251,7 @@ public class WorkspaceAndProjectGenerator {
         }
       }
 
-      if (groupTestBundles && !groupedTestResults.groupedTests.isEmpty()) {
+      if (!groupedTestResults.groupedTests.isEmpty()) {
         ProjectGenerator combinedTestsProjectGenerator = new ProjectGenerator(
             projectGraph,
             ImmutableSortedSet.<BuildTarget>of(),
@@ -413,7 +416,6 @@ public class WorkspaceAndProjectGenerator {
     return builder.build();
   }
 
-
   private GroupedTestResults groupTests(ImmutableSet<TargetNode<AppleTestDescription.Arg>> tests) {
     // Put tests in groups.
     ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
@@ -421,7 +423,10 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg>> ungroupedTestsBuilder =
         ImmutableSet.builder();
     for (TargetNode<AppleTestDescription.Arg> test : tests) {
-      if (test.getConstructorArg().canGroup()) {
+      if (groupableTests.contains(test)) {
+        Preconditions.checkState(
+            test.getConstructorArg().canGroup(),
+            "Groupable test should actually be groupable.");
         groupsBuilder.put(
             AppleTestBundleParamsKey.fromAppleTestDescriptionArg(test.getConstructorArg()),
             test);
@@ -429,23 +434,7 @@ public class WorkspaceAndProjectGenerator {
         ungroupedTestsBuilder.add(test);
       }
     }
-    ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        groups = groupsBuilder.build();
-
-    // Of the grouped tests, remove the ones that only have a single entry.
-    ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        multiEntryGroupsBuilder = ImmutableMultimap.builder();
-    for (Map.Entry<
-          AppleTestBundleParamsKey,
-          Collection<TargetNode<AppleTestDescription.Arg>>> entry : groups.asMap().entrySet()) {
-      if (entry.getValue().size() > 1) {
-        multiEntryGroupsBuilder.putAll(entry.getKey(), entry.getValue());
-      } else {
-        ungroupedTestsBuilder.add(Iterables.getOnlyElement(entry.getValue()));
-      }
-    }
-
-    return new GroupedTestResults(multiEntryGroupsBuilder.build(), ungroupedTestsBuilder.build());
+    return new GroupedTestResults(groupsBuilder.build(), ungroupedTestsBuilder.build());
   }
 
   private static class GroupedTestResults {

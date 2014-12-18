@@ -299,6 +299,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
     ImmutableMultimap<BuildTarget, TargetNode<AppleTestDescription.Arg>> sourceTargetToTestNodes =
         AppleBuildRules.getSourceTargetToTestNodesMap(testTargetNodes);
+    ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests =
+      options.getCombineTestBundles()
+          ? AppleBuildRules.filterGroupableTests(testTargetNodes)
+          : ImmutableSet.<TargetNode<AppleTestDescription.Arg>>of();
     for (BuildTarget workspaceTarget : targets) {
       TargetNode<?> workspaceNode = Preconditions.checkNotNull(
           targetGraphAndTargets.getTargetGraph().get(workspaceTarget));
@@ -314,7 +318,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           optionsBuilder.build(),
           sourceTargetToTestNodes,
           combinedProject);
-      generator.setGroupTestBundles(options.getCombineTestBundles());
+      generator.setGroupableTests(groupableTests);
       generator.generateWorkspaceAndDependentProjects(projectGenerators);
     }
 
