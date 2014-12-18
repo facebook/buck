@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -65,14 +66,20 @@ public class TargetGraphAndTargets {
       TargetGraph fullGraph,
       AssociatedTargetNodePredicate associatedProjectPredicate,
       boolean isWithTests) {
-    // Create the main graph. This contains all the targets in the project slice, or all the valid
-    // project roots if a project slice is not specified, and their transitive dependencies.
-    ImmutableSet<TargetNode<?>> projectRoots = ImmutableSet.copyOf(
-        fullGraph.getAll(
-            graphRoots));
+    // Get the roots of the main graph. This contains all the targets in the project slice, or all
+    // the valid project roots if a project slice is not specified.
+    ImmutableSet.Builder<TargetNode<?>> projectRootsBuilder = ImmutableSet.builder();
+    for (BuildTarget target : graphRoots) {
+      TargetNode<?> targetNode = fullGraph.get(target);
+      if (targetNode == null) {
+        throw new HumanReadableException("Target '%s' does not exist.", target);
+      }
+      projectRootsBuilder.add(targetNode);
+    }
+    ImmutableSet<TargetNode<?>> projectRoots = projectRootsBuilder.build();
 
-    // Optionally create the test graph. This contains all the tests that cover targets in the main
-    // graph, all the transitive dependencies of those tests, and all the targets in the main graph.
+    // Optionally get the roots of the test graph. This contains all the tests that cover the roots
+    // of the main graph or their dependencies.
     ImmutableSet<TargetNode<?>> associatedTests = ImmutableSet.of();
     if (isWithTests) {
       ImmutableSet<BuildTarget> explicitTests = FluentIterable

@@ -24,10 +24,12 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 
@@ -38,6 +40,9 @@ public class ProjectIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void testBuckProject() throws IOException {
@@ -398,5 +403,37 @@ public class ProjectIntegrationTest {
     result.assertSuccess();
 
     workspace.verify();
+  }
+
+  @Test
+  public void testNonexistentTarget() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project1",
+        temporaryFolder);
+    workspace.setUp();
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("Target '//modules/dep1:nonexistent-target' does not exist.");
+
+    workspace.runBuckCommand(
+        "project",
+        "//modules/dep1:nonexistent-target");
+  }
+
+  @Test
+  public void testNonexistentBuckFile() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project1",
+        temporaryFolder);
+    workspace.setUp();
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("Target '//nonexistent/path:target' does not exist.");
+
+    workspace.runBuckCommand(
+        "project",
+        "//nonexistent/path:target");
   }
 }
