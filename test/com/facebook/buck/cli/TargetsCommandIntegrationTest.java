@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 
@@ -40,6 +41,9 @@ public class TargetsCommandIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testOutputPath() throws IOException {
@@ -110,6 +114,51 @@ public class TargetsCommandIntegrationTest {
         "--show_rulekey");
     result.assertFailure();
     assertEquals("BUILD FAILED: Must specify at least one build target.\n", result.getStderr());
+  }
+
+  @Test
+  public void testTargetHash() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show-target-hash",
+        "//:test");
+    result.assertSuccess();
+    assertEquals("//:test 1ee8b3a59144222d0bb9aa886aef036950b93e6a\n", result.getStdout());
+  }
+
+  @Test
+  public void testTargetHashAndRuleKeyThrows() throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("Cannot show rule key and target hash at the same time.");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand(
+        "targets",
+        "--show-target-hash",
+        "--show-rulekey",
+        "//:test");
+  }
+
+  @Test
+  public void testTargetHashAndRuleKeyAndOutputThrows() throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("Cannot show rule key and target hash at the same time.");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "output_path", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand(
+        "targets",
+        "--show-target-hash",
+        "--show-rulekey",
+        "--show-output",
+        "//:test");
   }
 
   @Test

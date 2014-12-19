@@ -68,6 +68,10 @@ public class TargetsCommandOptions extends BuildCommandOptions {
       usage = "Print the RuleKey of each rule after the rule name.")
   private boolean isShowRuleKey;
 
+  @Option(name = "--show-target-hash",
+      usage = "Print a stable hash of each target after the target name.")
+  private boolean isShowTargetHash;
+
   public TargetsCommandOptions(BuckConfig buckConfig) {
     super(buckConfig);
   }
@@ -103,6 +107,11 @@ public class TargetsCommandOptions extends BuildCommandOptions {
   /** @return {@code true} if {@code --show_rulekey} was specified. */
   public boolean isShowRuleKey() {
     return isShowRuleKey;
+  }
+
+  /** @return {@code true} if {@code --show-targethash} was specified. */
+  public boolean isShowTargetHash() {
+    return isShowTargetHash;
   }
 
   /** @return the name of the build target identified by the specified alias or {@code null}. */

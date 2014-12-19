@@ -32,6 +32,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphHashing;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
@@ -46,12 +47,14 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.hash.HashCode;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -86,7 +89,11 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       return doResolveAlias(options);
     }
 
-    if (options.isShowOutput() || options.isShowRuleKey()) {
+    if (options.isShowRuleKey() && options.isShowTargetHash()) {
+      throw new HumanReadableException("Cannot show rule key and target hash at the same time.");
+    }
+
+    if (options.isShowOutput() || options.isShowRuleKey() || options.isShowTargetHash()) {
       return doShowRules(options);
     }
 
@@ -417,9 +424,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   }
 
   /**
-   * Assumes at least one target is specified.
-   * Prints each of the specified targets, followed by the rule key, output path or both, depending
-   * on what flags are passed in.
+   * Assumes at least one target is specified.  Prints each of the
+   * specified targets, followed by the rule key, output path, and/or
+   * target hash, depending on what flags are passed in.
    */
   private int doShowRules(TargetsCommandOptions options) throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> matchingBuildTargets = ImmutableSet.copyOf(
@@ -430,32 +437,56 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       return 1;
     }
 
-    ActionGraph graph;
+    TargetGraph targetGraph;
     try {
-      TargetGraph targetGraph = getParser().buildTargetGraphForBuildTargets(
+      targetGraph = getParser().buildTargetGraphForBuildTargets(
           matchingBuildTargets,
           options.getDefaultIncludes(),
           getBuckEventBus(),
           console,
           environment,
           options.getEnableProfiling());
-      graph = targetGraphTransformer.apply(targetGraph);
     } catch (BuildTargetException | BuildFileParseException e) {
       console.printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
+    Optional<ActionGraph> actionGraph;
+    if (options.isShowRuleKey() || options.isShowOutput()) {
+      actionGraph = Optional.of(targetGraphTransformer.apply(targetGraph));
+    } else {
+      actionGraph = Optional.absent();
+    }
+
+    ImmutableMap<BuildTarget, HashCode> buildTargetHashes;
+    if (options.isShowTargetHash()) {
+      buildTargetHashes = TargetGraphHashing.hashTargetGraph(
+          getProjectFilesystem(),
+          targetGraph,
+          getParser().getBuildTargetHashCodeCache(),
+          matchingBuildTargets);
+    } else {
+      buildTargetHashes = ImmutableMap.of();
+    }
+
     for (BuildTarget target : ImmutableSortedSet.copyOf(matchingBuildTargets)) {
-      BuildRule rule = Preconditions.checkNotNull(graph.findBuildRuleByTarget(target));
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.add(target.getFullyQualifiedName());
-      if (options.isShowRuleKey()) {
-        builder.add(rule.getRuleKey().toString());
+      if (options.isShowTargetHash()) {
+        HashCode targetHash = Preconditions.checkNotNull(buildTargetHashes.get(target));
+        builder.add(targetHash.toString());
       }
-      if (options.isShowOutput()) {
-        Path outputPath = rule.getPathToOutputFile();
-        if (outputPath != null) {
-          builder.add(outputPath.toString());
+      if (actionGraph.isPresent()) {
+        BuildRule rule = Preconditions.checkNotNull(
+            actionGraph.get().findBuildRuleByTarget(target));
+        if (options.isShowRuleKey()) {
+          builder.add(rule.getRuleKey().toString());
+        }
+        if (options.isShowOutput()) {
+          Path outputPath = rule.getPathToOutputFile();
+          if (outputPath != null) {
+            builder.add(outputPath.toString());
+          }
         }
       }
       getStdOut().println(Joiner.on(' ').join(builder.build()));
