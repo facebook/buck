@@ -41,18 +41,14 @@ public abstract class BuildTargetPatternParser {
   private static final String WILDCARD_BUILD_RULE_SUFFIX = "...";
   private static final String BUILD_RULE_SEPARATOR = ":";
 
-  private static final BuildTargetPatternParser FULLY_QUALIFIED = new FullyQualifiedContext();
-
-  private static final BuildTargetPatternParser VISIBILITY = new VisibilityContext();
-
   @Nullable
   private final String baseName;
 
   private final BuildTargetParser buildTargetParser;
 
-  private BuildTargetPatternParser(String baseName) {
+  private BuildTargetPatternParser(BuildTargetParser targetParser, String baseName) {
     this.baseName = baseName;
-    this.buildTargetParser = new BuildTargetParser();
+    this.buildTargetParser = targetParser;
   }
 
   @Nullable
@@ -78,7 +74,7 @@ public abstract class BuildTargetPatternParser {
    * 2. //src/com/facebook/buck/cli: will match all in the same directory.
    * 3. //src/com/facebook/buck/cli/... will match all in or under that directory.
    * For case 2 and 3, parseContext is expected to be
-   * {@link BuildTargetPatternParser#forVisibilityArgument()}.
+   * {@link BuildTargetPatternParser#forVisibilityArgument(BuildTargetParser)}.
    */
   public final BuildTargetPattern parse(String buildTargetPattern)
       throws NoSuchBuildTargetException {
@@ -124,23 +120,25 @@ public abstract class BuildTargetPatternParser {
    * Used when parsing target names relative to another target, such as in a build file.
    * @param baseName name such as {@code //first-party/orca}
    */
-  public static BuildTargetPatternParser forBaseName(String baseName) {
+  public static BuildTargetPatternParser forBaseName(
+      BuildTargetParser targetParser,
+      String baseName) {
     Preconditions.checkNotNull(Strings.emptyToNull(baseName));
-    return new BuildFileContext(baseName);
+    return new BuildFileContext(targetParser, baseName);
   }
 
   /**
    * Used when parsing target names in the {@code visibility} argument to a build rule.
    */
-  public static BuildTargetPatternParser forVisibilityArgument() {
-    return VISIBILITY;
+  public static BuildTargetPatternParser forVisibilityArgument(BuildTargetParser targetParser) {
+    return new VisibilityContext(targetParser);
   }
 
   /**
    * Used when parsing fully-qualified target names only, such as from the command line.
    */
-  public static BuildTargetPatternParser fullyQualified() {
-    return FULLY_QUALIFIED;
+  public static BuildTargetPatternParser fullyQualified(BuildTargetParser targetParser) {
+    return new FullyQualifiedContext(targetParser);
   }
 
   /**
@@ -152,8 +150,8 @@ public abstract class BuildTargetPatternParser {
 
   private static class BuildFileContext extends BuildTargetPatternParser {
 
-    public BuildFileContext(String basePath) {
-      super(basePath);
+    public BuildFileContext(BuildTargetParser targetParser, String basePath) {
+      super(targetParser, basePath);
     }
 
     @Override
@@ -171,8 +169,8 @@ public abstract class BuildTargetPatternParser {
    * fully-qualified, but wildcards are allowed.
    */
   private static class FullyQualifiedContext extends BuildTargetPatternParser {
-    public FullyQualifiedContext() {
-      super("");
+    public FullyQualifiedContext(BuildTargetParser targetParser) {
+      super(targetParser, "");
     }
 
     @Override
@@ -182,8 +180,8 @@ public abstract class BuildTargetPatternParser {
   }
 
   private static class VisibilityContext extends BuildTargetPatternParser {
-    public VisibilityContext() {
-      super("");
+    public VisibilityContext(BuildTargetParser targetParser) {
+      super(targetParser, "");
     }
 
     @Override

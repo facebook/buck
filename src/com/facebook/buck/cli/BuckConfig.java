@@ -434,7 +434,9 @@ public class BuckConfig {
   }
 
   public BuildTarget getBuildTargetForFullyQualifiedTarget(String target) {
-    return buildTargetParser.parse(target, BuildTargetPatternParser.fullyQualified());
+    return buildTargetParser.parse(
+        target,
+        BuildTargetPatternParser.fullyQualified(buildTargetParser));
   }
 
   /**
@@ -532,7 +534,9 @@ public class BuckConfig {
       } else {
         // Here we parse the alias values with a BuildTargetParser to be strict. We could be looser
         // and just grab everything between "//" and ":" and assume it's a valid base path.
-        buildTarget = buildTargetParser.parse(value, BuildTargetPatternParser.fullyQualified());
+        buildTarget = buildTargetParser.parse(
+            value,
+            BuildTargetPatternParser.fullyQualified(buildTargetParser));
       }
       aliasToBuildTarget.put(alias, buildTarget);
     }

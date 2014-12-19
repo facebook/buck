@@ -69,7 +69,7 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
     try {
       buildTarget = buildTargetParser.parse(
           buildTargetName,
-          BuildTargetPatternParser.fullyQualified());
+          BuildTargetPatternParser.fullyQualified(buildTargetParser));
       TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           ImmutableList.of(buildTarget),
           options.getDefaultIncludes(),

@@ -50,7 +50,7 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
 
       return buildTargetParser.parse(
           param,
-          BuildTargetPatternParser.forBaseName(baseName));
+          BuildTargetPatternParser.forBaseName(buildTargetParser, baseName));
     } catch (BuildTargetParseException e) {
       throw CoerceFailedException.simple(object, getOutputClass());
     }

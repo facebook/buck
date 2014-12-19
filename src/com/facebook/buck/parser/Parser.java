@@ -447,7 +447,7 @@ public class Parser {
           protected Iterator<BuildTarget> findChildren(BuildTarget buildTarget)
               throws IOException, InterruptedException {
             BuildTargetPatternParser buildTargetPatternParser =
-                BuildTargetPatternParser.forBaseName(buildTarget.getBaseName());
+                BuildTargetPatternParser.forBaseName(buildTargetParser, buildTarget.getBaseName());
 
             // Verify that the BuildTarget actually exists in the map of known BuildTargets
             // before trying to recurse through its children.
@@ -473,7 +473,9 @@ public class Parser {
                     throw new HumanReadableException(
                         NoSuchBuildTargetException.createForMissingBuildRule(
                             buildTargetForDep,
-                            BuildTargetPatternParser.forBaseName(buildTargetForDep.getBaseName())));
+                            BuildTargetPatternParser.forBaseName(
+                                buildTargetParser,
+                                buildTargetForDep.getBaseName())));
                   }
                 }
                 depTargetNode.checkVisibility(buildTarget);

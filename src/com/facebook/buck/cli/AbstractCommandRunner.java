@@ -187,7 +187,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     for (String buildTargetName : buildTargetNames) {
       buildTargets.add(buildTargetParser.parse(
               buildTargetName,
-              BuildTargetPatternParser.fullyQualified()));
+              BuildTargetPatternParser.fullyQualified(buildTargetParser)));
     }
 
     return buildTargets.build();

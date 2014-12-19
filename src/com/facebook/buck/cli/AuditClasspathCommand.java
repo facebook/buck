@@ -73,7 +73,8 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
                      public BuildTarget apply(String input) {
                        return getParser().getBuildTargetParser().parse(
                            input,
-                           BuildTargetPatternParser.fullyQualified());
+                           BuildTargetPatternParser.fullyQualified(
+                               getParser().getBuildTargetParser()));
                      }
                    })
         .toSet();

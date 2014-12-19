@@ -17,7 +17,6 @@
 package com.facebook.buck.parser;
 
 import static org.hamcrest.Matchers.hasItems;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -27,17 +26,26 @@ import com.facebook.buck.model.Flavor;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Paths;
 
 public class BuildTargetParserTest {
 
+  private BuildTargetPatternParser fullyQualifiedParser;
+
+  @Before
+  public void setUpFullyQualifiedBuildTargetPatternParser() {
+    BuildTargetParser targetParser = new BuildTargetParser();
+    fullyQualifiedParser = BuildTargetPatternParser.fullyQualified(targetParser);
+  }
+
   @Test
   public void testParseRootRule() {
     // Parse "//:fb4a" with the BuildTargetParser and test all of its observers.
     BuildTargetParser parser = new BuildTargetParser();
-    BuildTarget buildTarget = parser.parse("//:fb4a", BuildTargetPatternParser.fullyQualified());
+    BuildTarget buildTarget = parser.parse("//:fb4a", fullyQualifiedParser);
     assertEquals("fb4a", buildTarget.getShortName());
     assertEquals("//", buildTarget.getBaseName());
     assertEquals(Paths.get(""), buildTarget.getBasePath());
@@ -48,9 +56,7 @@ public class BuildTargetParserTest {
   @Test
   public void testParseRuleWithFlavors() {
     BuildTargetParser parser = new BuildTargetParser();
-    BuildTarget buildTarget = parser.parse(
-        "//:lib#foo,bar",
-        BuildTargetPatternParser.fullyQualified());
+    BuildTarget buildTarget = parser.parse("//:lib#foo,bar", fullyQualifiedParser);
     // Note the sort order.
     assertEquals("lib#bar,foo", buildTarget.getShortName());
     assertEquals("//", buildTarget.getBaseName());
@@ -67,7 +73,7 @@ public class BuildTargetParserTest {
   public void testParseInvalidSubstrings() {
     try {
       BuildTargetParser parser = new BuildTargetParser();
-      parser.parse("//facebook..orca:assets", BuildTargetPatternParser.fullyQualified());
+      parser.parse("//facebook..orca:assets", fullyQualifiedParser);
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
       assertEquals("//facebook..orca:assets cannot contain ..", e.getMessage());
@@ -75,7 +81,7 @@ public class BuildTargetParserTest {
 
     try {
       BuildTargetParser parser = new BuildTargetParser();
-      parser.parse("//./facebookorca:assets", BuildTargetPatternParser.fullyQualified());
+      parser.parse("//./facebookorca:assets", fullyQualifiedParser);
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
       assertEquals("//./facebookorca:assets cannot contain ./", e.getMessage());
@@ -86,7 +92,7 @@ public class BuildTargetParserTest {
   public void testParseTrailingColon() {
     try {
       BuildTargetParser parser = new BuildTargetParser();
-      parser.parse("//facebook/orca:assets:", BuildTargetPatternParser.fullyQualified());
+      parser.parse("//facebook/orca:assets:", fullyQualifiedParser);
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
       assertEquals("//facebook/orca:assets: cannot end with a colon", e.getMessage());
@@ -97,7 +103,7 @@ public class BuildTargetParserTest {
   public void testParseNoColon() {
     try {
       BuildTargetParser parser = new BuildTargetParser();
-      parser.parse("//facebook/orca/assets", BuildTargetPatternParser.fullyQualified());
+      parser.parse("//facebook/orca/assets", fullyQualifiedParser);
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
       assertEquals("//facebook/orca/assets must contain exactly one colon (found 0)",
@@ -109,7 +115,7 @@ public class BuildTargetParserTest {
   public void testParseMultipleColons() {
     try {
       BuildTargetParser parser = new BuildTargetParser();
-      parser.parse("//facebook:orca:assets", BuildTargetPatternParser.fullyQualified());
+      parser.parse("//facebook:orca:assets", fullyQualifiedParser);
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
       assertEquals("//facebook:orca:assets must contain exactly one colon (found 2)",
@@ -120,9 +126,7 @@ public class BuildTargetParserTest {
   @Test
   public void testParseFullyQualified() {
     BuildTargetParser parser = new BuildTargetParser();
-    BuildTarget buildTarget = parser.parse(
-        "//facebook/orca:assets",
-        BuildTargetPatternParser.fullyQualified());
+    BuildTarget buildTarget = parser.parse("//facebook/orca:assets", fullyQualifiedParser);
     assertEquals("//facebook/orca", buildTarget.getBaseName());
     assertEquals("assets", buildTarget.getShortName());
   }
@@ -132,7 +136,7 @@ public class BuildTargetParserTest {
     BuildTargetParser parser = new BuildTargetParser();
     BuildTarget buildTarget = parser.parse(
         ":assets",
-        BuildTargetPatternParser.forBaseName("//facebook/orca"));
+        BuildTargetPatternParser.forBaseName(new BuildTargetParser(), "//facebook/orca"));
     assertEquals("//facebook/orca", buildTarget.getBaseName());
     assertEquals("assets", buildTarget.getShortName());
   }
@@ -142,7 +146,7 @@ public class BuildTargetParserTest {
     // Invoke the BuildTargetParser using the VISIBILITY context.
     BuildTargetParser parser = new BuildTargetParser();
     BuildTargetPatternParser buildTargetPatternParser =
-        BuildTargetPatternParser.forVisibilityArgument();
+        BuildTargetPatternParser.forVisibilityArgument(new BuildTargetParser());
     BuildTarget target = parser.parse("//java/com/example:", buildTargetPatternParser);
     assertEquals(
         "A build target that ends with a colon should be treated as a wildcard build target " +
@@ -156,10 +160,9 @@ public class BuildTargetParserTest {
     ImmutableMap<Optional<String>, Optional<String>> canonicalRepoNamesMap =
         ImmutableMap.of(Optional.of("localreponame"), Optional.of("canonicalname"));
     BuildTargetParser parser = new BuildTargetParser(canonicalRepoNamesMap);
-    BuildTargetPatternParser context = BuildTargetPatternParser.fullyQualified();
     String targetStr = "@localreponame//foo/bar:baz";
     String canonicalStr = "@canonicalname//foo/bar:baz";
-    BuildTarget buildTarget = parser.parse(targetStr, context);
+    BuildTarget buildTarget = parser.parse(targetStr, fullyQualifiedParser);
     assertEquals(canonicalStr, buildTarget.getFullyQualifiedName());
     assertEquals("canonicalname", buildTarget.getRepository().get());
   }
@@ -167,18 +170,16 @@ public class BuildTargetParserTest {
   @Test(expected = BuildTargetParseException.class)
   public void testParseFailsWithRepoNameAndRelativeTarget() throws NoSuchBuildTargetException {
     BuildTargetParser parser = new BuildTargetParser();
-    BuildTargetPatternParser context = BuildTargetPatternParser.fullyQualified();
 
     String invalidTargetStr = "@myRepo:baz";
-    parser.parse(invalidTargetStr, context);
+    parser.parse(invalidTargetStr, fullyQualifiedParser);
   }
 
   @Test(expected = BuildTargetParseException.class)
   public void testParseFailsWithEmptyRepoName() throws NoSuchBuildTargetException {
     BuildTargetParser parser = new BuildTargetParser();
-    BuildTargetPatternParser context = BuildTargetPatternParser.fullyQualified();
 
     String zeroLengthRepoTargetStr = "@//foo/bar:baz";
-    parser.parse(zeroLengthRepoTargetStr, context);
+    parser.parse(zeroLengthRepoTargetStr, fullyQualifiedParser);
   }
 }

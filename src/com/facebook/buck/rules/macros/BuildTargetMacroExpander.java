@@ -52,7 +52,9 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
 
     BuildTarget other;
     try {
-      other = parser.parse(input, BuildTargetPatternParser.forBaseName(target.getBaseName()));
+      other = parser.parse(input, BuildTargetPatternParser.forBaseName(
+              parser,
+              target.getBaseName()));
     } catch (BuildTargetParseException e) {
       throw new MacroException(e.getMessage(), e);
     }
@@ -68,7 +70,9 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
       BuildTarget target,
       String input) {
     return ImmutableList.of(
-        parser.parse(input, BuildTargetPatternParser.forBaseName(target.getBaseName())));
+        parser.parse(input, BuildTargetPatternParser.forBaseName(
+                parser,
+                target.getBaseName())));
   }
 
 }

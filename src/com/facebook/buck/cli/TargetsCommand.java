@@ -351,7 +351,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     for (String alias : options.getArguments()) {
       String buildTarget;
       if (alias.startsWith("//")) {
-        buildTarget = validateBuildTargetForFullyQualifiedTarget(alias, options);
+        buildTarget = validateBuildTargetForFullyQualifiedTarget(alias, options, getParser());
         if (buildTarget == null) {
           throw new HumanReadableException("%s is not a valid target.", alias);
         }
@@ -431,7 +431,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   @Nullable
   @VisibleForTesting
   String validateBuildTargetForFullyQualifiedTarget(
-      String target, TargetsCommandOptions options) throws IOException, InterruptedException {
+      String target,
+      TargetsCommandOptions options,
+      Parser parser) throws IOException, InterruptedException {
     BuildTarget buildTarget;
     try {
       buildTarget = options.getBuildTargetForFullyQualifiedTarget(target);
@@ -440,9 +442,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     }
 
     // Get all valid targets in our target directory by reading the build file.
-
     List<Map<String, Object>> ruleObjects;
-    Parser parser = getParser();
     try {
       ruleObjects = parser.parseBuildFile(
           getRepository().getAbsolutePathToBuildFile(buildTarget),

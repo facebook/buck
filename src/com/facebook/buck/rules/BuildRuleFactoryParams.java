@@ -43,7 +43,7 @@ public final class BuildRuleFactoryParams {
     this.buildTargetParser = buildTargetParser;
     this.target = target;
     this.buildFileBuildTargetPatternParser =
-        BuildTargetPatternParser.forBaseName(target.getBaseName());
+        BuildTargetPatternParser.forBaseName(buildTargetParser, target.getBaseName());
     this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
     this.buildFileTree = buildFileTree;
     this.enforceBuckPackageBoundary = enforceBuckPackageBoundary;

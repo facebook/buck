@@ -18,11 +18,13 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 
@@ -166,5 +168,33 @@ public class TargetsCommandIntegrationTest {
         pathToNonExistentFile);
     result.assertSuccess("Even though the file does not exist, buck targets` should succeed.");
     assertEquals("Because no targets match, stdout should be empty.", "", result.getStdout());
+  }
+
+  @Test
+  public void testValidateBuildTargetForNonAliasTarget() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "target_validation", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("targets", "--resolvealias", "//:test-library");
+    assertTrue(result.getStdout(), result.getStdout().contains("//:test-library"));
+
+    try {
+      workspace.runBuckCommand("targets", "--resolvealias", "//:");
+    } catch (HumanReadableException e) {
+      assertEquals("//: cannot end with a colon", e.getMessage());
+    }
+
+    try {
+      workspace.runBuckCommand("targets", "--resolvealias", "//:test-libarry");
+    } catch (HumanReadableException e) {
+      assertEquals("//:test-libarry is not a valid target.", e.getMessage());
+    }
+
+    try {
+      workspace.runBuckCommand("targets", "--resolvealias", "//blah/foo");
+    } catch (HumanReadableException e) {
+      assertEquals("//blah/foo must contain exactly one colon (found 0)", e.getMessage());
+    }
   }
 }

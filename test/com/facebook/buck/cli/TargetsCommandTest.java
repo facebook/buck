@@ -17,9 +17,7 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
@@ -36,10 +34,6 @@ import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.BuildTargetParseException;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeRepositoryFactory;
@@ -71,15 +65,12 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
-import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.SortedMap;
@@ -174,56 +165,7 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testValidateBuildTargetForNonAliasTarget()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
-    // Set up the test buck file, parser, config, options.
-    BuildTargetParser parser = EasyMock.createMock(BuildTargetParser.class);
-    EasyMock.expect(parser.parse("//:test-library", BuildTargetPatternParser.fullyQualified()))
-        .andReturn(BuildTarget.builder("//testdata/com/facebook/buck/cli", "test-library").build())
-        .anyTimes();
-    EasyMock.expect(parser.parse("//:", BuildTargetPatternParser.fullyQualified()))
-        .andThrow(new BuildTargetParseException(
-            String.format("%s cannot end with a colon.", "//:")))
-        .anyTimes();
-    EasyMock.expect(parser.parse("//blah/foo:bar", BuildTargetPatternParser.fullyQualified()))
-        .andReturn(BuildTarget.builder("//blah/foo", "bar").build())
-        .anyTimes();
-    EasyMock.expect(parser.parse("//:test-libarry", BuildTargetPatternParser.fullyQualified()))
-        .andReturn(BuildTarget.builder("//testdata/com/facebook/buck/cli", "test-libarry").build())
-        .anyTimes();
-    EasyMock.replay(parser);
-    Reader reader = new StringReader("");
-    BuckConfig config = BuckConfig.createFromReader(
-        reader,
-        new ProjectFilesystem(Paths.get(".")),
-        parser,
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()));
-    TargetsCommandOptions options = new TargetsCommandOptions(config);
-
-    // Test a valid target.
-    assertEquals(
-        "//testdata/com/facebook/buck/cli:test-library",
-        targetsCommand.validateBuildTargetForFullyQualifiedTarget("//:test-library", options));
-
-    // Targets that will be rejected by BuildTargetParser with an exception.
-    try {
-      targetsCommand.validateBuildTargetForFullyQualifiedTarget("//:", options);
-      fail("Should have thrown BuildTargetParseException.");
-    } catch (BuildTargetParseException e) {
-      assertEquals("//: cannot end with a colon.", e.getHumanReadableErrorMessage());
-    }
-    assertNull(targetsCommand.validateBuildTargetForFullyQualifiedTarget(
-        "//blah/foo:bar", options));
-
-    // Should pass BuildTargetParser but validateBuildTargetForNonAliasTarget will return null.
-    assertNull(
-        targetsCommand.validateBuildTargetForFullyQualifiedTarget(
-            "//:test-libarry", options));
-  }
-
-  @Test
-  public void testGetMachingBuildTargets() throws CmdLineException, IOException {
+  public void testGetMatchingBuildTargets() throws CmdLineException, IOException {
     BuildTarget prebuiltJarTarget = BuildTargetFactory.newInstance("//empty:empty");
     TargetNode<?> prebuiltJarNode = PrebuiltJarBuilder
         .createBuilder(prebuiltJarTarget)

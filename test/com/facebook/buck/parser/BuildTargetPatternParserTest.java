@@ -22,14 +22,22 @@ import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 
+import org.junit.Before;
 import org.junit.Test;
 
 public class BuildTargetPatternParserTest {
 
+  private BuildTargetParser targetParser;
+
+  @Before
+  public void setUpBuildTargetParser() {
+    targetParser = new BuildTargetParser();
+  }
+
   @Test
   public void testParse() throws NoSuchBuildTargetException {
     BuildTargetPatternParser buildTargetPatternParser =
-        BuildTargetPatternParser.forVisibilityArgument();
+        BuildTargetPatternParser.forVisibilityArgument(targetParser);
 
     assertEquals(
         new ImmediateDirectoryBuildTargetPattern("test/com/facebook/buck/parser/"),
@@ -46,7 +54,8 @@ public class BuildTargetPatternParserTest {
 
   @Test(expected = BuildTargetParseException.class)
   public void testParseWildcardWithInvalidContext() throws NoSuchBuildTargetException {
-    BuildTargetPatternParser buildTargetPatternParser = BuildTargetPatternParser.fullyQualified();
+    BuildTargetPatternParser buildTargetPatternParser =
+        BuildTargetPatternParser.fullyQualified(targetParser);
 
     buildTargetPatternParser.parse("//...");
   }
@@ -54,7 +63,7 @@ public class BuildTargetPatternParserTest {
   @Test
   public void testParseRootPattern() throws NoSuchBuildTargetException {
     BuildTargetPatternParser buildTargetPatternParser =
-        BuildTargetPatternParser.forVisibilityArgument();
+        BuildTargetPatternParser.forVisibilityArgument(targetParser);
 
     assertEquals(
         new ImmediateDirectoryBuildTargetPattern(""),
@@ -72,7 +81,7 @@ public class BuildTargetPatternParserTest {
   @Test
   public void visibilityParserCanHandleSpecialCasedPublicVisibility()
       throws NoSuchBuildTargetException {
-    BuildTargetPatternParser parser = BuildTargetPatternParser.forVisibilityArgument();
+    BuildTargetPatternParser parser = BuildTargetPatternParser.forVisibilityArgument(targetParser);
 
     assertEquals(BuildTargetPattern.MATCH_ALL, parser.parse("PUBLIC"));
   }
