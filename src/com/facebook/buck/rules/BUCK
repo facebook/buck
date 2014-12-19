@@ -103,6 +103,7 @@ java_library(
     'SourcePaths.java',
     'SourceRoot.java',
     'TargetGraph.java',
+    'TargetGraphHashing.java',
     'TargetGraphToActionGraph.java',
     'TargetGraphTransformer.java',
     'TargetName.java',
