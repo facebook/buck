@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -41,6 +42,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   private final Path staticLibraryPath;
   private final Path sharedLibraryPath;
   private final ImmutableList<String> linkerFlags;
+  private final ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags;
   private final String soname;
   private final boolean headerOnly;
   private final boolean linkWhole;
@@ -54,6 +56,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
       Path staticLibraryPath,
       Path sharedLibraryPath,
       ImmutableList<String> linkerFlags,
+      ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags,
       String soname,
       boolean headerOnly,
       boolean linkWhole,
@@ -66,6 +69,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     this.staticLibraryPath = staticLibraryPath;
     this.sharedLibraryPath = sharedLibraryPath;
     this.linkerFlags = linkerFlags;
+    this.platformLinkerFlags = platformLinkerFlags;
     this.soname = soname;
     this.headerOnly = headerOnly;
     this.linkWhole = linkWhole;
@@ -114,6 +118,10 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(linkerFlags);
+    linkerArgsBuilder.addAll(
+        CxxDescriptionEnhancer.getPlatformFlags(
+            platformLinkerFlags,
+            cxxPlatform.asFlavor().toString()));
     if (!headerOnly) {
       if (provided || type == Linker.LinkableDepType.SHARED) {
         SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.coercer.Pair;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -398,6 +399,7 @@ public class CxxLibraryDescription implements
     arg.preprocessorFlags = Optional.absent();
     arg.langPreprocessorFlags = Optional.absent();
     arg.linkerFlags = Optional.absent();
+    arg.platformLinkerFlags = Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     arg.linkWhole = Optional.absent();
     arg.lexSrcs = Optional.absent();
     arg.yaccSrcs = Optional.absent();
@@ -482,7 +484,13 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
         args.compilerFlags.or(ImmutableList.<String>of()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
-        args.linkerFlags.or(ImmutableList.<String>of()),
+        ImmutableList.<String>builder()
+            .addAll(args.linkerFlags.or(ImmutableList.<String>of()))
+            .addAll(
+                CxxDescriptionEnhancer.getPlatformFlags(
+                    args.platformLinkerFlags.get(),
+                    cxxPlatform.asFlavor().toString()))
+            .build(),
         args.soname);
   }
 
@@ -550,6 +558,7 @@ public class CxxLibraryDescription implements
             args.exportedPreprocessorFlags,
             args.exportedLangPreprocessorFlags),
         args.linkerFlags.or(ImmutableList.<String>of()),
+        args.platformLinkerFlags.get(),
         args.linkWhole.or(false),
         args.soname);
   }

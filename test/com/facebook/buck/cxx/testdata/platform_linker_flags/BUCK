@@ -1,0 +1,78 @@
+TARGETS = {
+  'linux': ['--unresolved-symbols=ignore-all'],
+  'macos': ['-flat_namespace', '-undefined', 'suppress'],
+}
+
+for target, flags in TARGETS.iteritems():
+
+  cxx_binary(
+    name = 'binary_matches_default_exactly_' + target,
+    srcs = [
+      'bin.cpp',
+    ],
+    platform_linker_flags = [
+      ('nomatch', ['--bad-flag']),
+      ('default', flags),
+    ],
+  )
+
+  cxx_binary(
+    name = 'binary_matches_default_' + target,
+    srcs = [
+      'bin.cpp',
+    ],
+    platform_linker_flags = [
+      ('nomatch', ['--bad-flag']),
+      ('def.*', flags),
+    ],
+  )
+
+  cxx_binary(
+    name = 'binary_no_match_' + target,
+    srcs = [
+      'bin.cpp',
+    ],
+    platform_linker_flags = [
+      ('nomatch', ['--bad-flag']),
+    ],
+  )
+
+  cxx_binary(
+    name = 'binary_with_library_matches_default_' + target,
+    srcs = [
+      'bin.cpp',
+    ],
+    deps = [
+      ':library_matches_default_' + target,
+    ],
+  )
+
+  cxx_library(
+    name = 'library_matches_default_' + target,
+    srcs = [
+      'lib.cpp',
+    ],
+    platform_linker_flags = [
+      ('nomatch', ['--bad-flag']),
+      ('def.*', flags),
+    ],
+  )
+
+  cxx_binary(
+    name = 'binary_with_prebuilt_library_matches_default_' + target,
+    srcs = [
+      'main.cpp',
+    ],
+    deps = [
+      ':prebuilt_library_matches_default_' + target,
+    ],
+  )
+
+  prebuilt_cxx_library(
+    name = 'prebuilt_library_matches_default_' + target,
+    header_only = True,
+    platform_linker_flags = [
+      ('nomatch', ['--bad-flag']),
+      ('def.*', flags),
+    ],
+  )

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.coercer.Pair;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -46,6 +47,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
   private final BuildRuleResolver ruleResolver;
   private final ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags;
   private final ImmutableList<String> linkerFlags;
+  private final ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags;
   private final boolean linkWhole;
   private final Optional<String> soname;
 
@@ -55,6 +57,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
       SourcePathResolver pathResolver,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
       ImmutableList<String> linkerFlags,
+      ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags,
       boolean linkWhole,
       Optional<String> soname) {
     super(params, pathResolver);
@@ -62,6 +65,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     this.ruleResolver = ruleResolver;
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
     this.linkerFlags = linkerFlags;
+    this.platformLinkerFlags = platformLinkerFlags;
     this.linkWhole = linkWhole;
     this.soname = soname;
   }
@@ -97,6 +101,10 @@ public class CxxLibrary extends AbstractCxxLibrary {
     final BuildRule libraryRule;
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(linkerFlags);
+    linkerArgsBuilder.addAll(
+        CxxDescriptionEnhancer.getPlatformFlags(
+            platformLinkerFlags,
+            cxxPlatform.asFlavor().toString()));
     if (type == Linker.LinkableDepType.SHARED) {
       Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
           getBuildTarget(),

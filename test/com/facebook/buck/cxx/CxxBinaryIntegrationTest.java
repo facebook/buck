@@ -496,4 +496,34 @@ public class CxxBinaryIntegrationTest {
     }
   }
 
+  private void platformLinkerFlags(ProjectWorkspace workspace, String target) throws IOException {
+    workspace.runBuckBuild("//:binary_matches_default_exactly_" + target).assertSuccess();
+    workspace.runBuckBuild("//:binary_matches_default_" + target).assertSuccess();
+    workspace.runBuckBuild("//:binary_no_match_" + target).assertFailure("unresolved");
+    workspace.runBuckBuild("//:binary_with_library_matches_default_" + target).assertSuccess();
+    workspace.runBuckBuild("//:binary_with_prebuilt_library_matches_default_" + target)
+        .assertSuccess();
+  }
+
+  @Test
+  public void platformLinkerFlags() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "platform_linker_flags", tmp);
+    workspace.setUp();
+
+    // Build binary that has unresolved symbols.  Normally this would fail, but should work
+    // with the proper linker flag.
+    switch (Platform.detect()) {
+      case MACOS:
+        platformLinkerFlags(workspace, "macos");
+        break;
+      case LINUX:
+        platformLinkerFlags(workspace, "linux");
+        break;
+      // $CASES-OMITTED$
+      default:
+        break;
+    }
+  }
+
 }

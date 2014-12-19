@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -524,7 +525,13 @@ public class CxxDescriptionEnhancer {
         params,
         new SourcePathResolver(resolver),
         /* extraCxxLdFlags */ ImmutableList.<String>of(),
-        /* extraLdFlags */ args.linkerFlags.or(ImmutableList.<String>of()),
+        /* extraLdFlags */ ImmutableList.<String>builder()
+            .addAll(args.linkerFlags.or(ImmutableList.<String>of()))
+            .addAll(
+                CxxDescriptionEnhancer.getPlatformFlags(
+                    args.platformLinkerFlags.get(),
+                    cxxPlatform.asFlavor().toString()))
+            .build(),
         createCxxLinkTarget(params.getBuildTarget()),
         Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
@@ -611,6 +618,24 @@ public class CxxDescriptionEnhancer {
       }
 
     };
+  }
+
+  public static ImmutableList<String> getPlatformFlags(
+      ImmutableList<Pair<String, ImmutableList<String>>> platformFlags,
+      String platform) {
+
+    ImmutableList.Builder<String> platformFlagsBuilder = ImmutableList.builder();
+
+    for (Pair<String, ImmutableList<String>> pair : platformFlags) {
+      Pattern pattern = Pattern.compile(pair.getFirst());
+      Matcher matcher = pattern.matcher(platform);
+      if (matcher.find()) {
+        platformFlagsBuilder.addAll(pair.getSecond());
+        break;
+      }
+    }
+
+    return platformFlagsBuilder.build();
   }
 
 }

@@ -168,8 +168,14 @@ public class CxxPythonExtensionDescription implements
         cxxPlatform,
         params,
         new SourcePathResolver(ruleResolver),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
+        /* extraCxxLdFlags */ ImmutableList.<String>of(),
+        /* extraLdFlags */ ImmutableList.<String>builder()
+            .addAll(args.linkerFlags.or(ImmutableList.<String>of()))
+            .addAll(
+                CxxDescriptionEnhancer.getPlatformFlags(
+                    args.platformLinkerFlags.get(),
+                    cxxPlatform.asFlavor().toString()))
+            .build(),
         getExtensionTarget(params.getBuildTarget(), cxxPlatform.asFlavor()),
         Linker.LinkType.SHARED,
         Optional.of(extensionName),

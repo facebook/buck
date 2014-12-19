@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.Pair;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -32,6 +33,7 @@ public class CxxConstructorArg {
   public Optional<ImmutableList<String>> compilerFlags;
   public Optional<ImmutableList<String>> preprocessorFlags;
   public Optional<ImmutableList<String>> linkerFlags;
+  public Optional<ImmutableList<Pair<String, ImmutableList<String>>>> platformLinkerFlags;
   public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags;
   public Optional<ImmutableList<SourcePath>> lexSrcs;
   public Optional<ImmutableList<SourcePath>> yaccSrcs;

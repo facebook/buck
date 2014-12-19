@@ -30,6 +30,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.Pair;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -122,6 +123,8 @@ public class AppleLibraryDescription implements
     delegateArg.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     delegateArg.linkerFlags = Optional.of(ImmutableList.<String>of());
+    delegateArg.platformLinkerFlags =
+        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     delegateArg.soname = Optional.absent();
     delegateArg.linkWhole = Optional.of(!isSharedLibraryTarget(params.getBuildTarget()));
 
