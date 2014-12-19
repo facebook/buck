@@ -372,11 +372,11 @@ public class CxxLibraryDescription implements
             /* extraCxxLdFlags */ ImmutableList.<String>of(),
             /* extraLdFlags */ linkerFlags,
             sharedTarget,
-            CxxLinkableEnhancer.LinkType.SHARED,
+            Linker.LinkType.SHARED,
             Optional.of(sharedLibrarySoname),
             sharedLibraryPath,
             objects,
-            NativeLinkable.Type.SHARED,
+            Linker.LinkableDepType.SHARED,
             params.getDeps());
 
     return sharedLibraryBuildRule;

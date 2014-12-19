@@ -36,7 +36,7 @@ public class NativeLinkables {
    */
   public static Function<NativeLinkable, NativeLinkableInput> getNativeLinkableInput(
       final CxxPlatform cxxPlatform,
-      final NativeLinkable.Type type) {
+      final Linker.LinkableDepType type) {
     return new Function<NativeLinkable, NativeLinkableInput>() {
       @Override
       public NativeLinkableInput apply(NativeLinkable input) {
@@ -54,7 +54,7 @@ public class NativeLinkables {
   public static NativeLinkableInput getTransitiveNativeLinkableInput(
       final CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
-      final NativeLinkable.Type depType,
+      final Linker.LinkableDepType depType,
       final Predicate<Object> traverse,
       boolean reverse) {
 
@@ -78,7 +78,7 @@ public class NativeLinkables {
   public static NativeLinkableInput getTransitiveNativeLinkableInput(
       final CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
-      final NativeLinkable.Type depType,
+      final Linker.LinkableDepType depType,
       boolean reverse) {
     return getTransitiveNativeLinkableInput(
         cxxPlatform,

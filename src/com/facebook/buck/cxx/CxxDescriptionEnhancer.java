@@ -526,11 +526,11 @@ public class CxxDescriptionEnhancer {
         /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ args.linkerFlags.or(ImmutableList.<String>of()),
         createCxxLinkTarget(params.getBuildTarget()),
-        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
         output,
         objects,
-        NativeLinkable.Type.STATIC,
+        Linker.LinkableDepType.STATIC,
         params.getDeps());
     resolver.addToIndex(cxxLink);
 

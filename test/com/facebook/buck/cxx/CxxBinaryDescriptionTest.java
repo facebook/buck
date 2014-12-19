@@ -106,7 +106,9 @@ public class CxxBinaryDescriptionTest {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type) {
+      public NativeLinkableInput getNativeLinkableInput(
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType type) {
         return new NativeLinkableInput(
             ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()));

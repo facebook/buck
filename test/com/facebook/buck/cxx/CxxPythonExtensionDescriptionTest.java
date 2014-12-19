@@ -141,8 +141,10 @@ public class CxxPythonExtensionDescriptionTest {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type) {
-        return type == Type.STATIC ?
+      public NativeLinkableInput getNativeLinkableInput(
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType type) {
+        return type == Linker.LinkableDepType.STATIC ?
             new NativeLinkableInput(
                 ImmutableList.<SourcePath>of(),
                 ImmutableList.<String>of()) :

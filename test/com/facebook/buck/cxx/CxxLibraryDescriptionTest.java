@@ -115,7 +115,9 @@ public class CxxLibraryDescriptionTest {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type) {
+      public NativeLinkableInput getNativeLinkableInput(
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType type) {
         return new NativeLinkableInput(
             ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()));
@@ -202,7 +204,7 @@ public class CxxLibraryDescriptionTest {
         rule.getCxxPreprocessorInput(cxxPlatform));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxPlatform, NativeLinkable.Type.STATIC);
+    rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC);
     BuildRule archiveRule = resolver.getRule(
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(target, cxxPlatform.asFlavor()));
     assertNotNull(archiveRule);
@@ -314,7 +316,7 @@ public class CxxLibraryDescriptionTest {
     Linker linker = cxxPlatform.getLd();
     NativeLinkableInput input = rule.getNativeLinkableInput(
         cxxPlatform,
-        NativeLinkable.Type.SHARED);
+        Linker.LinkableDepType.SHARED);
 
     ImmutableList<SourcePath> inputs = input.getInputs();
     assertEquals(inputs.size(), 1);
@@ -354,7 +356,7 @@ public class CxxLibraryDescriptionTest {
 
     // Verify that the linker args contains the link whole flags.
     assertNotContains(
-        normal.getNativeLinkableInput(cxxPlatform, NativeLinkable.Type.STATIC).getArgs(),
+        normal.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC).getArgs(),
         linkWholeFlags);
 
     // Create a cxx library using link whole.
@@ -367,7 +369,7 @@ public class CxxLibraryDescriptionTest {
 
     // Verify that the linker args contains the link whole flags.
     assertContains(
-        linkWhole.getNativeLinkableInput(cxxPlatform, NativeLinkable.Type.STATIC).getArgs(),
+        linkWhole.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC).getArgs(),
         linkWholeFlags);
   }
 
@@ -422,8 +424,10 @@ public class CxxLibraryDescriptionTest {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type) {
-        return type == Type.STATIC ?
+      public NativeLinkableInput getNativeLinkableInput(
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType type) {
+        return type == Linker.LinkableDepType.STATIC ?
             new NativeLinkableInput(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(staticLibraryDep.getBuildTarget())),
@@ -516,7 +520,7 @@ public class CxxLibraryDescriptionTest {
         rule.getCxxPreprocessorInput(cxxPlatform));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxPlatform, NativeLinkable.Type.STATIC);
+    rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC);
     BuildRule staticRule = resolver.getRule(
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(target, cxxPlatform.asFlavor()));
     assertNotNull(staticRule);
@@ -608,7 +612,7 @@ public class CxxLibraryDescriptionTest {
             .toSet());
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxPlatform, NativeLinkable.Type.SHARED);
+    rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.SHARED);
     BuildRule sharedRule = resolver.getRule(
         CxxDescriptionEnhancer.createSharedLibraryBuildTarget(target, cxxPlatform.asFlavor()));
     assertNotNull(sharedRule);

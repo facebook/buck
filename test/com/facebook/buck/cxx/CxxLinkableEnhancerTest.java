@@ -74,8 +74,10 @@ public class CxxLinkableEnhancerTest {
     }
 
     @Override
-    public NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type) {
-      return type == Type.STATIC ? staticInput : sharedInput;
+    public NativeLinkableInput getNativeLinkableInput(
+        CxxPlatform cxxPlatform,
+        Linker.LinkableDepType type) {
+      return type == Linker.LinkableDepType.STATIC ? staticInput : sharedInput;
     }
 
   }
@@ -119,14 +121,14 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
-        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         ImmutableList.<SourcePath>of(
             new TestSourcePath("simple.o"),
             new BuildTargetSourcePath(genrule1.getBuildTarget()),
             new BuildTargetSourcePath(genrule2.getBuildTarget())),
-        NativeLinkable.Type.STATIC,
+        Linker.LinkableDepType.STATIC,
         EMPTY_DEPS);
 
     // Verify that the archive dependencies include the genrules providing the
@@ -168,11 +170,11 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
-        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
-        NativeLinkable.Type.STATIC,
+        Linker.LinkableDepType.STATIC,
         EMPTY_DEPS);
 
     // Verify that the archive rules dependencies are empty.
@@ -211,11 +213,11 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
-        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
-        NativeLinkable.Type.STATIC,
+        Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable));
 
     // Verify that the fake build rule made it in as a dep.
@@ -242,11 +244,11 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
-        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
-        NativeLinkable.Type.STATIC,
+        Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of());
     assertFalse(executable.getArgs().contains("-shared"));
     assertEquals(Collections.indexOfSubList(executable.getArgs(), sonameArgs), -1);
@@ -259,11 +261,11 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
-        CxxLinkableEnhancer.LinkType.SHARED,
+        Linker.LinkType.SHARED,
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
-        NativeLinkable.Type.STATIC,
+        Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of());
     assertTrue(shared.getArgs().contains("-shared"));
     assertEquals(Collections.indexOfSubList(shared.getArgs(), sonameArgs), -1);
@@ -276,11 +278,11 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
-        CxxLinkableEnhancer.LinkType.SHARED,
+        Linker.LinkType.SHARED,
         Optional.of("soname"),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
-        NativeLinkable.Type.STATIC,
+        Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of());
     assertTrue(sharedWithSoname.getArgs().contains("-shared"));
     assertNotEquals(Collections.indexOfSubList(sharedWithSoname.getArgs(), sonameArgs), -1);
@@ -314,11 +316,11 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
-        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
-        NativeLinkable.Type.STATIC,
+        Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable));
     assertTrue(staticLink.getArgs().contains(staticArg));
     assertFalse(staticLink.getArgs().contains(sharedArg));
@@ -331,11 +333,11 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         target,
-        CxxLinkableEnhancer.LinkType.EXECUTABLE,
+        Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
-        NativeLinkable.Type.SHARED,
+        Linker.LinkableDepType.SHARED,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable));
     assertFalse(sharedLink.getArgs().contains(staticArg));
     assertTrue(sharedLink.getArgs().contains(sharedArg));
@@ -369,7 +371,7 @@ public class CxxLinkableEnhancerTest {
         NativeLinkables.getTransitiveNativeLinkableInput(
             cxxPlatform,
             ImmutableList.of(top),
-            NativeLinkable.Type.STATIC,
+            Linker.LinkableDepType.STATIC,
             /* reverse */ true);
     assertTrue(bottomInput.getArgs().contains(sentinel));
     assertFalse(totalInput.getArgs().contains(sentinel));

@@ -100,7 +100,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableList.of(getStaticLibraryPath(arg).toString()));
     assertEquals(
         expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, NativeLinkable.Type.STATIC));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = new NativeLinkableInput(
@@ -108,7 +108,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableList.of(getSharedLibraryPath(arg).toString()));
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, NativeLinkable.Type.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
     PythonPackageComponents expectedComponents = new PythonPackageComponents(
@@ -145,7 +145,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableList.<String>of());
     assertEquals(
         expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, NativeLinkable.Type.STATIC));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = new NativeLinkableInput(
@@ -153,7 +153,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableList.<String>of());
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, NativeLinkable.Type.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
     PythonPackageComponents expectedComponents = new PythonPackageComponents(
@@ -188,7 +188,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableList.of(getSharedLibraryPath(arg).toString()));
     assertEquals(
         expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, NativeLinkable.Type.STATIC));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = new NativeLinkableInput(
@@ -196,7 +196,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableList.of(getSharedLibraryPath(arg).toString()));
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, NativeLinkable.Type.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
     PythonPackageComponents expectedComponents = new PythonPackageComponents(
@@ -231,7 +231,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableList.of(getStaticLibraryPath(arg).toString()));
     assertEquals(
         expectedStaticLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, NativeLinkable.Type.STATIC));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = new NativeLinkableInput(
@@ -239,7 +239,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableList.of(getSharedLibraryPath(arg).toString()));
     assertEquals(
         expectedSharedLinkableInput,
-        lib.getNativeLinkableInput(CXX_PLATFORM, NativeLinkable.Type.SHARED));
+        lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
     PythonPackageComponents expectedComponents = new PythonPackageComponents(
@@ -264,7 +264,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         TargetGraphFactory.newInstance(libBuilder.build()));
     NativeLinkableInput nativeLinkableInput = lib.getNativeLinkableInput(
         CXX_PLATFORM,
-        NativeLinkable.Type.SHARED);
+        Linker.LinkableDepType.SHARED);
     SourcePath input = nativeLinkableInput.getInputs().get(0);
     assertTrue(input instanceof BuildTargetSourcePath);
     assertTrue(new SourcePathResolver(resolver).getRule(input).get() instanceof CxxLink);
@@ -282,7 +282,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         TargetGraphFactory.newInstance(libBuilder.build()));
     NativeLinkableInput nativeLinkableInput = lib.getNativeLinkableInput(
         CXX_PLATFORM,
-        NativeLinkable.Type.SHARED);
+        Linker.LinkableDepType.SHARED);
     assertTrue(nativeLinkableInput.getInputs().isEmpty());
   }
 

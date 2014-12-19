@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
@@ -206,7 +207,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
           NativeLinkables.getTransitiveNativeLinkableInput(
               cxxPlatform,
               params.getDeps(),
-              NativeLinkable.Type.SHARED,
+              Linker.LinkableDepType.SHARED,
               Predicates.or(
                   Predicates.instanceOf(NativeLinkable.class),
                   Predicates.instanceOf(NdkLibrary.class)),

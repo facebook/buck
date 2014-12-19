@@ -36,19 +36,6 @@ public class CxxLinkableEnhancer {
   private CxxLinkableEnhancer() {}
 
   /**
-   * Represents the link types.
-   */
-  public static enum LinkType {
-
-    // Link as standalone executable.
-    EXECUTABLE,
-
-    // Link as shared library, which can be loaded into a process image.
-    SHARED,
-
-  }
-
-  /**
    * Prefixes each of the given linker arguments with "-Xlinker" so that the compiler linker
    * driver will pass these arguments directly down to the linker rather than interpreting them
    * itself.
@@ -75,15 +62,15 @@ public class CxxLinkableEnhancer {
       ImmutableList<String> extraCxxLdFlags,
       ImmutableList<String> extraLdFlags,
       BuildTarget target,
-      LinkType linkType,
+      Linker.LinkType linkType,
       Optional<String> soname,
       Path output,
       Iterable<SourcePath> inputs,
-      NativeLinkable.Type depType,
+      Linker.LinkableDepType depType,
       Iterable<? extends BuildRule> nativeLinkableDeps) {
 
     // Soname should only ever be set when linking a "shared" library.
-    Preconditions.checkState(!soname.isPresent() || linkType.equals(LinkType.SHARED));
+    Preconditions.checkState(!soname.isPresent() || linkType.equals(Linker.LinkType.SHARED));
 
     Linker linker = cxxPlatform.getLd();
 
@@ -121,7 +108,7 @@ public class CxxLinkableEnhancer {
 
     // If we're doing a shared build, pass the necessary flags to the linker, including setting
     // the soname.
-    if (linkType == LinkType.SHARED) {
+    if (linkType == Linker.LinkType.SHARED) {
       argsBuilder.add("-shared");
     }
     if (soname.isPresent()) {

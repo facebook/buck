@@ -171,11 +171,11 @@ public class CxxPythonExtensionDescription implements
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
         getExtensionTarget(params.getBuildTarget(), cxxPlatform.asFlavor()),
-        CxxLinkableEnhancer.LinkType.SHARED,
+        Linker.LinkType.SHARED,
         Optional.of(extensionName),
         extensionPath,
         picObjects,
-        NativeLinkable.Type.SHARED,
+        Linker.LinkableDepType.SHARED,
         params.getDeps());
 
   }

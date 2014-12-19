@@ -105,11 +105,11 @@ public class PrebuiltCxxLibraryDescription
         /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         sharedTarget,
-        CxxLinkableEnhancer.LinkType.SHARED,
+        Linker.LinkType.SHARED,
         Optional.of(soname),
         builtSharedLibraryPath,
         ImmutableList.<SourcePath>of(new PathSourcePath(staticLibraryPath)),
-        NativeLinkable.Type.SHARED,
+        Linker.LinkableDepType.SHARED,
         params.getDeps());
   }
 

@@ -19,6 +19,7 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
@@ -174,7 +175,7 @@ public class OCamlRuleBuilder {
     NativeLinkableInput linkableInput = NativeLinkables.getTransitiveNativeLinkableInput(
         ocamlBuckConfig.getCxxPlatform(),
         params.getDeps(),
-        NativeLinkable.Type.STATIC,
+        Linker.LinkableDepType.STATIC,
         /* reverse */ false);
 
     ImmutableList<OCamlLibrary> ocamlInput = OCamlUtil.getTransitiveOCamlInput(params.getDeps());
@@ -276,7 +277,7 @@ public class OCamlRuleBuilder {
     NativeLinkableInput linkableInput = NativeLinkables.getTransitiveNativeLinkableInput(
         ocamlBuckConfig.getCxxPlatform(),
         params.getDeps(),
-        NativeLinkable.Type.STATIC,
+        Linker.LinkableDepType.STATIC,
         /* reverse */ false);
 
     ImmutableList<OCamlLibrary> ocamlInput = OCamlUtil.getTransitiveOCamlInput(params.getDeps());

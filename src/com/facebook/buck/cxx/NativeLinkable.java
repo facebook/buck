@@ -24,21 +24,8 @@ import com.facebook.buck.rules.BuildRuleType;
  */
 public interface NativeLinkable {
 
-  // The style of linking for which this native linkable should provide input for.
-  public static enum Type {
-
-    // Provide input suitable for statically linking this linkable (e.g. return references to
-    // static libraries, libfoo.a).
-    STATIC,
-
-    // Provide input suitable for dynamically linking this linkable (e.g. return references to
-    // shared libraries, libfoo.so).
-    SHARED
-
-  }
-
   final BuildRuleType NATIVE_LINKABLE_TYPE = new BuildRuleType("link");
 
-  NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type);
+  NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Linker.LinkableDepType type);
 
 }

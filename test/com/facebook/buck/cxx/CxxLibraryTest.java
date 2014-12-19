@@ -80,8 +80,10 @@ public class CxxLibraryTest {
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type) {
-        return type == Type.STATIC ?
+      public NativeLinkableInput getNativeLinkableInput(
+          CxxPlatform cxxPlatform,
+          Linker.LinkableDepType type) {
+        return type == Linker.LinkableDepType.STATIC ?
             new NativeLinkableInput(
                 ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
                 ImmutableList.of(archiveOutput.toString())) :
@@ -133,7 +135,7 @@ public class CxxLibraryTest {
         expectedStaticNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
             cxxPlatform,
-            NativeLinkable.Type.STATIC));
+            Linker.LinkableDepType.STATIC));
 
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
@@ -144,7 +146,7 @@ public class CxxLibraryTest {
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
             cxxPlatform,
-            NativeLinkable.Type.SHARED));
+            Linker.LinkableDepType.SHARED));
 
     // Verify that we return the expected output for python packages.
     PythonPackageComponents expectedPythonPackageComponents = new PythonPackageComponents(

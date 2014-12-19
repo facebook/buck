@@ -39,4 +39,32 @@ public interface Linker {
    */
   Iterable<String> soname(String soname);
 
+  /**
+   * The various ways to link an output file.
+   */
+  public static enum LinkType {
+
+    // Link as standalone executable.
+    EXECUTABLE,
+
+    // Link as shared library, which can be loaded into a process image.
+    SHARED,
+
+  }
+
+  /**
+   * The various ways to link in dependencies.
+   */
+  public static enum LinkableDepType {
+
+    // Provide input suitable for statically linking this linkable (e.g. return references to
+    // static libraries, libfoo.a).
+    STATIC,
+
+    // Provide input suitable for dynamically linking this linkable (e.g. return references to
+    // shared libraries, libfoo.so).
+    SHARED
+
+  }
+
 }

@@ -90,14 +90,14 @@ public class CxxLibrary extends AbstractCxxLibrary {
   @Override
   public NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform,
-      Type type) {
+      Linker.LinkableDepType type) {
 
     // Build up the arguments used to link this library.  If we're linking the
     // whole archive, wrap the library argument in the necessary "ld" flags.
     final BuildRule libraryRule;
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(linkerFlags);
-    if (type == Type.SHARED) {
+    if (type == Linker.LinkableDepType.SHARED) {
       Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
           getBuildTarget(),
           cxxPlatform);

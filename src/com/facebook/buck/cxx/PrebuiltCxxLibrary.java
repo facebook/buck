@@ -105,7 +105,9 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Type type) {
+  public NativeLinkableInput getNativeLinkableInput(
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type) {
 
     // Build the library path and linker arguments that we pass through the
     // {@link NativeLinkable} interface for linking.
@@ -113,7 +115,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(linkerFlags);
     if (!headerOnly) {
-      if (provided || type == Type.SHARED) {
+      if (provided || type == Linker.LinkableDepType.SHARED) {
         SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
         librariesBuilder.add(sharedLibrary);
         linkerArgsBuilder.add(pathResolver.getPath(sharedLibrary).toString());
