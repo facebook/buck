@@ -1,0 +1,79 @@
+{namespace cxx_binary}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'cxx_binary()' /}
+    {param prettify: true /}
+    {param description}
+      A cxx_binary() rule builds a native C/C++ executable.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A cxx_binary() rule builds a native executable from the supplied set of C/C++ source
+files and dependencies.
+If C/C++ library dependencies are listed, the generated native executable will
+request and link against their static archives
+(which are *not* built using <a href="http://en.wikipedia.org/wiki/Position-independent_code">PIC</a>).
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call cxx_common.srcs_arg /}
+
+{call cxx_common.headers_arg /}
+
+{call cxx_common.preprocessor_flags_arg /}
+
+{call cxx_common.compiler_flags_arg /}
+
+{call cxx_common.linker_flags_arg /}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+# A rule that builds a C/C++ native executable from a single .cpp file
+# its corresponding header, and a C/C++ library dependency.
+cxx_binary(
+  name = 'echo',
+  srcs = [
+    'echo.cpp',
+  ],
+  headers = [
+    'echo.h',
+  ],
+  deps = [
+    ':util',
+  ],
+)
+
+cxx_library(
+  name = 'util',
+  srcs = [
+    'util.cpp',
+  ],
+  headers = [
+    'util.h',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

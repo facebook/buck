@@ -1,0 +1,68 @@
+{namespace cxx_test}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'cxx_test()' /}
+    {param prettify: true /}
+    {param description}
+      A cxx_test() rule builds a native C/C++ executable.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A cxx_test() rule builds a C/C++ binary against a C/C++ testing framework and runs
+it as part of <code>buck test</code>.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call cxx_common.srcs_arg /}
+
+{call cxx_common.headers_arg /}
+
+{call cxx_common.preprocessor_flags_arg /}
+
+{call cxx_common.compiler_flags_arg /}
+
+{call cxx_common.linker_flags_arg /}
+
+{call buck.arg}
+  {param name: 'framework' /}
+  {param default : '"gtest"' /}
+  {param desc}
+  The testing framework to build against and run with.
+  We currently support <a href="https://code.google.com/p/googletest/"><code>gtest</code></a> and <a href="http://www.boost.org/doc/libs/1_57_0/libs/test/doc/html/index.html"><code>boost</code></a>.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+# A rule that builds and runs C/C++ test using gtest.
+cxx_test(
+  name = 'echo_test',
+  srcs = [
+    'echo_test.cpp',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

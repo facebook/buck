@@ -1,0 +1,81 @@
+{namespace cxx_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'cxx_library()' /}
+    {param prettify: true /}
+    {param description}
+      A cxx_library() rule represents a set of C/C++ source files.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A cxx_library() rule represents a set of C/C++ source files and provides
+various flags to control how they get built.
+Other than that, C/C++ libraries by themselves are relatively abstract,
+and it's dependent on the various top-level targets (e.g. C/C++ binary, Android APK)
+that transitively depend on this rule how this library actually gets built
+(e.g. a C/C++ binary will require a static non-PIC build of the library,
+while an Android APK will require a shared PIC-enabled build).
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call cxx_common.srcs_arg /}
+
+{call cxx_common.headers_arg /}
+
+{call cxx_common.preprocessor_flags_arg /}
+
+{call buck.arg}
+  {param name : 'exported_preprocess_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Just as <code>preprocessor_flags</code>, flags to use when preprocessing any of the above sources (which require preprocessing).
+  However, unlike <code>preprocessor_flags</code>, these preprocessor flags are also used by rules that
+  transitively depend on this rule when preprocessing their own sources.
+  {/param}
+{/call}
+
+{call cxx_common.compiler_flags_arg /}
+
+{call cxx_common.linker_flags_arg /}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+# A rule that includes a single .cpp file and its corresponding header and
+# also supplies an additional flag for compilation.
+cxx_library(
+  name = 'fileutil',
+  srcs = [
+    'fileutil.cpp',
+  ],
+  headers = [
+    'fileutil.h',
+  ],
+  compiler_flags = [
+    '-fno-omit-frame-pointer',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

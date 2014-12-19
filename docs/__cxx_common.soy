@@ -1,0 +1,64 @@
+{namespace cxx_common}
+
+/***/
+{template .srcs_arg}
+{call buck.arg}
+  {param name : 'srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of C, C++, or assembler source files to be preprocessed, compiled,
+  and assembled by this rule.  We determine which stages to run on each input
+  source based on it's file extension.
+  See the <a href="https://gcc.gnu.org/onlinedocs/gcc/Overall-Options.html">GCC documentation</a> for more detail
+  on how file extensions are interpreted.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .headers_arg}
+{call buck.arg}
+  {param name : 'headers' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of header files that are available for inclusion for the above sources.
+  In the case of libraries, these headers are also made available to all transitive
+  dependents.
+  Header files listed here are included in code using their project-relative path on the filesystem
+  (e.g. header <code>bar.h</code> listed in <code>foo/BUCK</code> is included with <code>#include "foo/bar.h"</code>).
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .preprocessor_flags_arg}
+{call buck.arg}
+  {param name : 'preprocessor_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Flags to use when preprocessing any of the above sources (which require preprocessing).
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .compiler_flags_arg}
+{call buck.arg}
+  {param name : 'compiler_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Flags to use when compiling any of the above sources (which require compilation).
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .linker_flags_arg}
+{call buck.arg}
+  {param name : 'linker_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Flags to use whenever this rule is involed in a link operation (e.g linked into an executable or shared library).
+  {/param}
+{/call}
+{/template}
