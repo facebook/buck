@@ -115,6 +115,12 @@ public class CompilationDatabaseIntegrationTest {
         /* includes */ ImmutableList.<String>of(),
         iquoteArg);
     assertFlags(
+        "Libraries/EXExample/EXExample/EXUser.mm",
+        fileToEntry,
+        /* additionalFrameworks */ ImmutableList.<String>of(),
+        /* includes */ ImmutableList.<String>of(),
+        iquoteArg);
+    assertFlags(
         "Libraries/EXExample/EXExample/Categories/NSString+Palindrome.h",
         fileToEntry,
         /* additionalFrameworks */ ImmutableList.<String>of(),
@@ -203,17 +209,23 @@ public class CompilationDatabaseIntegrationTest {
         .resolve(XCODE_DEVELOPER_DIR)
         .resolve("Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk")
         .toRealPath().toString();
+    String language = "objective-c";
+    String languageStandard = "-std=gnu99";
+    if ("Libraries/EXExample/EXExample/EXUser.mm".equals(fileName)) {
+      language = "objective-c++";
+      languageStandard = "-std=c++11";
+    }
     List<String> commandArgs = Lists.newArrayList(
         "clang",
         "-x",
-        "objective-c",
+        language,
         "-arch",
         "i386",
         "-mios-simulator-version-min=7.0",
         "-fmessage-length=0",
         "-fdiagnostics-show-note-include-stack",
         "-fmacro-backtrace-limit=0",
-        "-std=gnu99",
+        languageStandard,
         "-fpascal-strings",
         "-fexceptions",
         "-fasm-blocks",

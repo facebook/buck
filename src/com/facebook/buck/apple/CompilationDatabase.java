@@ -50,8 +50,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
 
 import java.io.IOException;
@@ -63,6 +63,9 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Build rule that generates a <a href="http://clang.llvm.org/docs/JSONCompilationDatabase.html">
  * clang compilation database</a> for an Apple target.
+ *
+ * TODO(mbolin): t5879160 Generate the compilation database based on a set of CxxCompile actions
+ * rather than a TargetSources object so the set of build flags is legit.
  */
 public class CompilationDatabase extends AbstractBuildRule {
 
@@ -195,10 +198,22 @@ public class CompilationDatabase extends AbstractBuildRule {
           targetSources.headerPaths);
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       for (SourcePath srcPath : allSources) {
+        String fileToCompile = projectFilesystem.resolve(getResolver().getPath(srcPath))
+            .toString();
+        String language;
+        String languageStandard;
+        if (fileToCompile.endsWith(".mm")) {
+          language = "objective-c++";
+          languageStandard = "-std=c++11";
+        } else {
+          language = "objective-c";
+          languageStandard = "-std=gnu99";
+        }
+
         List<String> commandArgs = Lists.newArrayList(
             "clang",
             "-x",
-            "objective-c",
+            language,
 
             // TODO(mbolin): Simulator arguments should be configurable (and should likely be
             // derived from the PlatformFlavor).
@@ -209,7 +224,7 @@ public class CompilationDatabase extends AbstractBuildRule {
             "-fmessage-length=0",
             "-fdiagnostics-show-note-include-stack",
             "-fmacro-backtrace-limit=0",
-            "-std=gnu99",
+            languageStandard,
             "-fpascal-strings",
             "-fexceptions",
             "-fasm-blocks",
@@ -268,8 +283,6 @@ public class CompilationDatabase extends AbstractBuildRule {
         }
 
         commandArgs.add("-c");
-        String fileToCompile = projectFilesystem.resolve(getResolver().getPath(srcPath))
-            .toString();
         commandArgs.add(fileToCompile);
 
         // Currently, perFileFlags is a single string rather than a list, so we concatenate it

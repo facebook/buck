@@ -3,6 +3,7 @@ apple_library(
   srcs = [
     ('EXExample/EXExampleModel.h', 'public'),
     'EXExample/EXExampleModel.m',
+    'EXExample/EXUser.mm',
     'EXExample/Categories/NSString+Palindrome.h',
     'EXExample/Categories/NSString+Palindrome.m',
   ],
