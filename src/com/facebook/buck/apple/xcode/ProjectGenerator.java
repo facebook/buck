@@ -770,11 +770,20 @@ public class ProjectGenerator {
                 GroupedSource.ofSourcePath(new PathSourcePath(emptyFileWithExtension("c")))),
             ImmutableMap.<SourcePath, String>of())
         .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))
-        .setFrameworks(ImmutableSet.copyOf(collectRecursiveFrameworkDependencies(tests)))
         .setResources(collectRecursiveResources(tests))
         .setAssetCatalogs(
             getAndMarkAssetCatalogBuildScript(),
             collectRecursiveAssetCatalogs(tests));
+
+    ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
+    frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(tests));
+    for (TargetNode<AppleTestDescription.Arg> test : tests) {
+      frameworksBuilder.addAll(
+          Iterables.transform(
+              test.getConstructorArg().frameworks.get(),
+              FrameworkPath.transformFromString(test.getBuildTarget())));
+    }
+    mutator.setFrameworks(frameworksBuilder.build());
 
     NewNativeTargetProjectMutator.Result result;
     try {

@@ -1866,6 +1866,8 @@ public class ProjectGeneratorTest {
         AppleTestBuilder.createBuilder(BuildTarget.builder("//foo", "xctest1").build())
             .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
             .setDeps(Optional.of(ImmutableSortedSet.of(dep1.getBuildTarget())))
+            .setFrameworks(
+                Optional.of(ImmutableSortedSet.of("$SDKROOT/DeclaredInTest.framework")))
             .build();
     TargetNode<AppleTestDescription.Arg> xctest2 =
         AppleTestBuilder.createBuilder(BuildTarget.builder("//foo", "xctest2").build())
@@ -1916,7 +1918,8 @@ public class ProjectGeneratorTest {
             "$BUILT_PRODUCTS_DIR/F4XWM33PHJSGK4BR/libdep1.a",
             "$BUILT_PRODUCTS_DIR/F4XWM33PHJSGK4BS/libdep2.a",
             "$SDKROOT/DeclaredInTestLib.framework",
-            "$SDKROOT/DeclaredInTestLibDep.framework"));
+            "$SDKROOT/DeclaredInTestLibDep.framework",
+            "$SDKROOT/DeclaredInTest.framework"));
     assertHasSingletonResourcesPhaseWithEntries(
         target,
         "bar.png");
