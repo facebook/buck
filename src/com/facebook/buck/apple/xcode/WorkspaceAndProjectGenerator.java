@@ -178,23 +178,10 @@ public class WorkspaceAndProjectGenerator {
         ImmutableMap.builder();
 
     if (combinedProject) {
-      ImmutableSet.Builder<BuildTarget> initialTargetsBuilder = ImmutableSet.builder();
-      for (TargetNode<?> targetNode : projectGraph.getNodes()) {
-        if (targetNode.getType() != XcodeProjectConfigDescription.TYPE) {
-          continue;
-        }
-        XcodeProjectConfigDescription.Arg projectArg =
-            (XcodeProjectConfigDescription.Arg) targetNode.getConstructorArg();
-        if (Sets.intersection(targetsInRequiredProjects, projectArg.rules).isEmpty()) {
-          continue;
-        }
-        initialTargetsBuilder.addAll(projectArg.rules);
-      }
-
       LOG.debug("Generating a combined project");
       ProjectGenerator generator = new ProjectGenerator(
           projectGraph,
-          initialTargetsBuilder.build(),
+          targetsInRequiredProjects,
           projectFilesystem,
           outputDirectory,
           workspaceName,
