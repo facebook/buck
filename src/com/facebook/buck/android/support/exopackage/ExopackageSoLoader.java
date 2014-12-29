@@ -16,7 +16,18 @@
 
 package com.facebook.buck.android.support.exopackage;
 
+import java.io.BufferedReader;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import android.content.Context;
 import android.os.Build;
@@ -34,6 +45,10 @@ public class ExopackageSoLoader {
   private static boolean initialized = false;
   private static String nativeLibsDir = null;
 
+  private static File privateNativeLibsDir = null;
+  private static Map<String, String> abi1Libraries = new HashMap<String, String>();
+  private static Map<String, String> abi2Libraries = new HashMap<String, String>();
+
   private ExopackageSoLoader() {}
 
   public static void init(Context context) {
@@ -43,31 +58,83 @@ public class ExopackageSoLoader {
     }
     nativeLibsDir = "/data/local/tmp/exopackage/" + context.getPackageName() + "/native-libs/";
     verifyMetadataFile();
+
+    if (isCopyToPrivateStorage()) {
+      preparePrivateDirectory(context);
+      parseMetadata();
+    }
   }
 
   private static void verifyMetadataFile() {
-    File abiMetadata = new File(nativeLibsDir + Build.CPU_ABI + "/metadata.txt");
+    File abiMetadata = getAbi1Metadata();
     if (abiMetadata.exists()) {
       return;
     }
-    if (!Build.CPU_ABI2.equals("unknown")) {
-      abiMetadata = new File(nativeLibsDir + Build.CPU_ABI2 + "/metadata.txt");
-      if (abiMetadata.exists()) {
-        return;
-      }
+    abiMetadata = getAbi2Metadata();
+    if (abiMetadata == null || abiMetadata.exists()) {
+      return;
     }
     throw new RuntimeException("Either 'native' exopackage is not turned on for this build, " +
         "or the installation did not complete successfully.");
   }
 
-  public static void loadLibrary(String shortName) throws UnsatisfiedLinkError {
-    String filename = shortName.startsWith("lib") ? shortName : "lib" + shortName;
+  private static void preparePrivateDirectory(Context context) {
+    privateNativeLibsDir = context.getDir("exo-libs", Context.MODE_PRIVATE);
+    for (File file : privateNativeLibsDir.listFiles()) {
+      file.delete();
+    }
+  }
 
-    File libraryFile = new File(nativeLibsDir + Build.CPU_ABI + "/" + filename + ".so");
-    if (!libraryFile.exists()) {
-      libraryFile = new File(nativeLibsDir + Build.CPU_ABI2 + "/" + filename + ".so");
+  private static void parseMetadata() {
+    doParseMetadata(getAbi1Metadata(), abi1Libraries);
+    doParseMetadata(getAbi2Metadata(), abi2Libraries);
+  }
+
+  private static void doParseMetadata(File metadata, Map<String, String> libraries) {
+    if (metadata == null || !metadata.exists()) {
+      return;
+    }
+
+    BufferedReader br = null;
+    try {
+      br = new BufferedReader(new FileReader(metadata));
+      String line;
+      try {
+        while ((line = br.readLine()) != null) {
+          line = line.trim();
+          if (line.isEmpty()) {
+            continue;
+          }
+          int spaceIndex = line.indexOf(' ');
+          if (spaceIndex == -1) {
+            throw new RuntimeException("Error parsing metadata.txt; invalid line: " + line);
+          }
+          String libname = line.substring(0, spaceIndex);
+          String filename = line.substring(spaceIndex + 1);
+          libraries.put(libname, filename);
+        }
+      } finally {
+        br.close();
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static void loadLibrary(String shortName) throws UnsatisfiedLinkError {
+    String libname = shortName.startsWith("lib") ? shortName : "lib" + shortName;
+
+    File libraryFile;
+
+    if (isCopyToPrivateStorage()) {
+      libraryFile = copySoFileIfRequired(libname);
+    } else {
+      libraryFile = new File(nativeLibsDir + Build.CPU_ABI + "/" + libname + ".so");
       if (!libraryFile.exists()) {
-        libraryFile = null;
+        libraryFile = new File(nativeLibsDir + Build.CPU_ABI2 + "/" + libname + ".so");
+        if (!libraryFile.exists()) {
+          libraryFile = null;
+        }
       }
     }
 
@@ -80,5 +147,68 @@ public class ExopackageSoLoader {
     Log.d(TAG, "Attempting to load library: " + path);
     System.load(path);
     Log.d(TAG, "Successfully loaded library: " + path);
+  }
+
+  private static File copySoFileIfRequired(String libname) {
+    File libraryFile = new File(privateNativeLibsDir, libname + ".so");
+    if (libraryFile.exists()) {
+      return libraryFile;
+    }
+
+    if (!abi1Libraries.containsKey(libname) && !abi2Libraries.containsKey(libname)) {
+      return null;
+    }
+
+    String abiDir;
+    String sourceFilename;
+    if (abi1Libraries.containsKey(libname)) {
+      sourceFilename = abi1Libraries.get(libname);
+      abiDir = Build.CPU_ABI;
+    } else {
+      sourceFilename = abi2Libraries.get(libname);
+      abiDir = Build.CPU_ABI2;
+    }
+    String sourcePath = nativeLibsDir + abiDir + "/" + sourceFilename;
+
+    try {
+      InputStream in = null;
+      OutputStream out = null;
+      try {
+        in = new BufferedInputStream(new FileInputStream(sourcePath));
+        out = new BufferedOutputStream(new FileOutputStream(libraryFile));
+        byte[] buffer = new byte[4 * 1024];
+        int len;
+        while ((len = in.read(buffer)) > 0) {
+          out.write(buffer, 0, len);
+        }
+      } finally {
+        if (in != null) {
+          in.close();
+        }
+        if (out != null) {
+          out.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    return libraryFile;
+  }
+
+  private static boolean isCopyToPrivateStorage() {
+    return Build.VERSION.SDK_INT >= 21;
+  }
+
+  private static File getAbi1Metadata() {
+    return new File(nativeLibsDir + Build.CPU_ABI + "/metadata.txt");
+  }
+
+  private static File getAbi2Metadata() {
+    if (Build.CPU_ABI2.equals("unknown")) {
+      return null;
+    }
+
+    return new File(nativeLibsDir + Build.CPU_ABI2 + "/metadata.txt");
   }
 }

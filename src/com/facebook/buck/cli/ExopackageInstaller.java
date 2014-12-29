@@ -315,15 +315,30 @@ public class ExopackageInstaller {
       Map<String, Path> filesToInstallByHash =
           Maps.filterKeys(libraries, Predicates.not(Predicates.in(presentHashes)));
 
-      createSymlinks(abi, libraries);
+      if (useNativeAgent) {
+        // "ln -s" only works on pre-L Android devices.
+        createSymlinks(abi, libraries);
+      }
+
+      String metadataContents = Joiner.on('\n').join(
+          FluentIterable.from(libraries.entrySet()).transform(
+              new Function<Map.Entry<String, Path>, String>() {
+                @Override
+                public String apply(Map.Entry<String, Path> input) {
+                  String hash = input.getKey();
+                  String filename = input.getValue().getFileName().toString();
+                  int index = filename.indexOf('.');
+                  String libname = index == -1 ? filename : filename.substring(0, index);
+                  return String.format("%s native-%s.so", libname, hash);
+                }
+              }));
 
       installFiles(
           "native_library",
           ImmutableMap.copyOf(filesToInstallByHash),
-          /* metadataContents */ "success",
+          metadataContents,
           "native-%s.so",
           NATIVE_LIBS_DIR.resolve(abi));
-
     }
 
     /**
