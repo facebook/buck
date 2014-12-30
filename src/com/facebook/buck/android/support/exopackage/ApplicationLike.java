@@ -17,6 +17,7 @@
 package com.facebook.buck.android.support.exopackage;
 
 import android.app.Application;
+import android.content.res.Configuration;
 
 /**
  * This interface is used to delegate calls from main Application object.
@@ -46,5 +47,10 @@ public interface ApplicationLike {
    * Same as {@link Application#onTerminate()}.
    */
   void onTerminate();
+
+  /**
+   * Same as {@link Application#onConfigurationChanged(Configuration newconfig)}.
+   */
+  void onConfigurationChanged(Configuration newConfig);
 
 }
