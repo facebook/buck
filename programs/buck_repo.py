@@ -117,6 +117,13 @@ class BuckRepo(BuckTool):
     def _checkout_and_clean(self, revision, branch):
         with Tracing('BuckRepo._checkout_and_clean'):
             if not self._revision_exists(revision):
+                print(textwrap.dedent("""\
+                    Required revision {0} is not
+                    available in the local repository.
+                    Buck is fetching updates from git. You can disable this by creating
+                    a '.nobuckcheck' file in your repository, but this might lead to
+                    strange bugs or build failures.""".format(revision)),
+                      file=sys.stderr)
                 git_command = ['git', 'fetch']
                 git_command.extend(['--all'] if not branch else ['origin', branch])
                 try:
@@ -126,10 +133,7 @@ class BuckRepo(BuckTool):
                         cwd=self._buck_dir)
                 except subprocess.CalledProcessError:
                     raise BuckToolException(textwrap.dedent("""\
-                          Failed to fetch Buck updates from git.
-                          You can disable this by creating a '.nobuckcheck' file in
-                          your repository, but this might lead to strange bugs or
-                          build failures."""))
+                          Failed to fetch Buck updates from git."""))
 
             current_revision = self._get_git_revision()
 
@@ -142,9 +146,13 @@ class BuckRepo(BuckTool):
                     current_revision, revision)),
                     file=sys.stderr)
 
-                subprocess.check_call(
-                    ['git', 'checkout', '--quiet', revision],
-                    cwd=self._buck_dir)
+                try:
+                    subprocess.check_call(
+                        ['git', 'checkout', '--quiet', revision],
+                        cwd=self._buck_dir)
+                except subprocess.CalledProcessError:
+                    raise BuckToolException(textwrap.dedent("""\
+                          Failed to update Buck to revision {0}.""".format(revision)))
                 if os.path.exists(self._build_success_file):
                     os.remove(self._build_success_file)
 
