@@ -1,0 +1,127 @@
+{namespace buck.presentations}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Presentations about Buck' /}
+    {param description: 'Public presentations about Buck.' /}
+    {param content}
+<p>
+This is a collection of presentations that have been given on Buck.
+Note that Buck has evolved over time, so more recent presentations
+may have information that supersedes information in older presentations.
+
+{call .presentation}
+  {param title: 'Speeding Up Android Development with Exopackage' /}
+  {param speaker: 'David Reiss' /}
+  {param event: '@Scale' /}
+  {param eventUrl: 'http://atscaleconference.com/' /}
+  {param date: 'September 15, 2014' /}
+  {param youTubeId: 'kr2cGU7lumA' /}
+{/call}
+
+{call .presentation}
+  {param title: 'Hacker Way: Releasing and Optimizing Mobile Apps for the World' /}
+  {param speaker: 'Christian Legnitto' /}
+  {param event: 'F8' /}
+  {param eventUrl: 'https://f8.facebooklive.com/' /}
+  {param date: 'April 30, 2014' /}
+  {param youTubeId: 'mOyoTUETmSM' /}
+  {param youTubeStart: 30 * 60 + 14 /} // 30m14s
+{/call}
+
+{call .presentation}
+  {param title: 'Improve your Java builds with Buck' /}
+  {param speaker: 'Shawn Pearce' /}
+  {param event: 'EclipseCon Europe' /}
+  {param eventUrl: 'https://www.eclipsecon.org/europe2013/improve-your-java-builds-buck' /}
+  {param date: 'October 31, 2013' /}
+  {param slides: 'http://gerrit-talks.commondatastorage.googleapis.com/buck-rant.html' /}
+{/call}
+
+{call .presentation}
+  {param title: 'Building mobile apps with OSS' /}
+  {param speaker: 'Simon Stewart' /}
+  {param event: 'Mobile @ Scale' /}
+  {param eventUrl: 'https://code.facebook.com/events/449722311809857/mobile-scale-2013/' /}
+  {param date: 'October 25, 2013' /}
+  {param youTubeId: 'c2Q22KDjXmI' /}
+  {param youTubeStart: 13 * 60 + 14 /} // 13m14s
+{/call}
+
+{call .presentation}
+  {param title: 'How Facebook builds Facebook for Android' /}
+  {param speaker: 'Michael Bolin' /}
+  {param event: 'Facebook Mobile DevCon NYC' /}
+  {param eventUrl: 'https://www.facebook.com/events/338640646236511/' /}
+  {param date: 'April 18, 2013' /}
+  {param youTubeId: 'CdNw6mRpsDI' /}
+{/call}
+
+    {/param}
+  {/call}
+{/template}
+
+/**
+ * @param title
+ * @param speaker
+ * @param event
+ * @param? eventUrl
+ * @param? date
+ * @param? youTubeId
+ * @param? youTubeStart
+ * @param? slides
+ * @param? embedSlides
+ */
+{template .presentation}
+<hr>
+<p>
+<strong>{$title}</strong>
+<br>
+{$speaker}
+<br>
+{if $eventUrl}<a href="{$eventUrl}">{/if}
+  {$event}{if $date} ({$date}){/if}
+{if $eventUrl}</a>{/if}
+
+{if $youTubeId}
+  <p>
+  {call .youTubeVideo}
+    {param id: $youTubeId /}
+    {param start: $youTubeStart /}
+  {/call}
+{/if}
+
+{if $slides}
+  <br>
+  Slides: <a href="{$slides}">{$slides}</a>
+{/if}
+{if $embedSlides}
+  <p>
+  {call .iframe}
+    {param url: $slides /}
+  {/call}
+{/if}
+{/template}
+
+/**
+ * @param id
+ * @param? start
+ */
+{template .youTubeVideo}
+  {call .iframe}
+    {param url}//www.youtube.com/embed/{$id}{if $start}?start={$start}{/if}{/param}
+  {/call}
+{/template}
+
+/**
+ * @param url
+ */
+{template .iframe autoescape="strict"}
+  <iframe width="560"
+          height="315"
+          src="{$url}"
+          frameborder="0"
+          allowfullscreen>
+  </iframe>
+{/template}
