@@ -578,6 +578,29 @@ public class BuckConfigTest {
   }
 
   @Test
+  public void whenMultiplePythonExecutablesOnPathFirstIsUsed() throws IOException {
+    File pythonA = temporaryFolder.newFile("python");
+    assertTrue("Should be able to set file executable", pythonA.setExecutable(true));
+    DebuggableTemporaryFolder temporaryFolder2 = new DebuggableTemporaryFolder();
+    temporaryFolder2.create();
+    File pythonB = temporaryFolder2.newFile("python");
+    assertTrue("Should be able to set file executable", pythonB.setExecutable(true));
+    String path = temporaryFolder.getRoot().getAbsolutePath() +
+        File.pathSeparator +
+        temporaryFolder2.getRoot().getAbsolutePath();
+    FakeBuckConfig config = new FakeBuckEnvironment(ImmutableMap.<String, Map<String, String>>of(),
+        ImmutableMap.<String, String>builder()
+            .put("PATH", path)
+            .put("PATHEXT", "")
+            .build(),
+        ImmutableMap.<String, String>of());
+    assertEquals(
+        "Should return the first path",
+        config.getPythonInterpreter(),
+        pythonA.getAbsolutePath());
+  }
+
+  @Test
   public void getEnvUsesSuppliedEnvironment() {
     String name = "SOME_ENVIRONMENT_VARIABLE";
     String value = "SOME_VALUE";
