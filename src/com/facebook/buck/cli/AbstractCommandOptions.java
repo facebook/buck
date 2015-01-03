@@ -19,8 +19,8 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.util.AndroidDirectoryResolver;
-import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 

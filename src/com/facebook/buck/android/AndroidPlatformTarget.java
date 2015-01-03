@@ -14,7 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.android;
+
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.VersionStringComparator;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;

@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.android.sdklib.build.ApkBuilder;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 

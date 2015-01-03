@@ -23,7 +23,7 @@ import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;

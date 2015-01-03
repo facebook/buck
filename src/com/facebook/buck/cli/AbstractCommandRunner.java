@@ -30,7 +30,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.AndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.environment.Platform;

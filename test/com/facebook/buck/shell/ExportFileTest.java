@@ -45,7 +45,7 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.util.AndroidPlatformTarget;
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

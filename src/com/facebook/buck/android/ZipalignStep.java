@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.AndroidPlatformTarget;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;

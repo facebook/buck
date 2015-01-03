@@ -21,6 +21,7 @@ java_library(
   ],
   deps = [
     '//src/com/facebook/buck/apple:rules',
+    '//src/com/facebook/buck/android:utils',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
@@ -42,6 +43,7 @@ java_library(
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:platform',
+    '//test/com/facebook/buck/android:utils',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/event:testutil',
     '//test/com/facebook/buck/java:fakepackagefinder',
@@ -70,6 +72,7 @@ java_test(
   deps = [
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:steps',
+    '//src/com/facebook/buck/android:utils',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/cli:events',
     '//src/com/facebook/buck/cli:config',
@@ -100,6 +103,7 @@ java_test(
     '//src/com/facebook/buck/util/concurrent:concurrent',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/timing:timing',
+    '//test/com/facebook/buck/android:utils',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/event:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',

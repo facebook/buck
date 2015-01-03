@@ -19,8 +19,8 @@ package com.facebook.buck.android.agent.util;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.AndroidManifestReader;
-import com.facebook.buck.util.DefaultAndroidManifestReader;
+import com.facebook.buck.android.AndroidManifestReader;
+import com.facebook.buck.android.DefaultAndroidManifestReader;
 import com.google.common.io.ByteStreams;
 
 import org.junit.Test;

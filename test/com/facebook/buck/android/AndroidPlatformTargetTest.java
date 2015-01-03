@@ -14,12 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import com.facebook.buck.util.HumanReadableException;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;

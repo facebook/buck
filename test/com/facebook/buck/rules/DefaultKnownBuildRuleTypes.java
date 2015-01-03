@@ -21,7 +21,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.python.PythonVersion;
-import com.facebook.buck.util.FakeAndroidDirectoryResolver;
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.ProcessExecutorParams;

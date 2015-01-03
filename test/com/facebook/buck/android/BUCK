@@ -2,13 +2,29 @@ STANDARD_TEST_SRCS = [
   '*Test.java',
 ]
 
+UTILS_SRCS = [
+  'FakeAndroidDirectoryResolver.java',
+]
+
+java_library(
+  name = 'utils',
+  srcs = UTILS_SRCS,
+  deps = [
+    '//src/com/facebook/buck/android:utils',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = ['PUBLIC'],
+)
+
 java_library(
   name = 'testutil',
-  srcs = glob(['*.java'], excludes = STANDARD_TEST_SRCS),
+  srcs = glob(['*.java'], excludes = STANDARD_TEST_SRCS + UTILS_SRCS),
   deps = [
+    ':utils',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:split_dex',
     '//src/com/facebook/buck/android:steps',
+    '//src/com/facebook/buck/android:utils',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/io:io',
@@ -40,6 +56,7 @@ java_test(
   srcs = glob(STANDARD_TEST_SRCS),
   resources = glob(['testdata/**'], include_dotfiles=True),
   deps = [
+    ':utils',
     ':testutil',
     '//src/com/facebook/buck/android/aapt:aapt',
     '//src/com/facebook/buck/android:exceptions',
@@ -47,6 +64,7 @@ java_test(
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:split_dex',
     '//src/com/facebook/buck/android:steps',
+    '//src/com/facebook/buck/android:utils',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',

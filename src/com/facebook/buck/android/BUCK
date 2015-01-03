@@ -89,6 +89,7 @@ java_immutables_library(
     ':packageable',
     ':split_dex',
     ':steps',
+    ':utils',
     '//src/com/facebook/buck/android/aapt:aapt',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
@@ -149,13 +150,34 @@ java_library(
   ],
 )
 
+UTILS_SRCS = [
+  'AndroidPlatformTarget.java',
+  'AndroidManifestReader.java',
+  'DefaultAndroidManifestReader.java',
+  'AndroidDirectoryResolver.java',
+  'DefaultAndroidDirectoryResolver.java',
+]
+
+java_library(
+  name = 'utils',
+  srcs = UTILS_SRCS,
+  deps = [
+    '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/io:io',  # While we move classes
+    '//third-party/java/guava:guava',
+  ],
+  visibility = ['PUBLIC'],
+)
+
 java_library(
   name = 'steps',
   srcs = glob(['*.java'],
-              excludes = EXCEPTION_SRCS + PACKAGEABLE_SOURCES + RULES_SRCS + SPLIT_DEX_SRCS),
+              excludes = EXCEPTION_SRCS + PACKAGEABLE_SOURCES + RULES_SRCS + SPLIT_DEX_SRCS + UTILS_SRCS),
   deps = [
     ':exceptions',
     ':split_dex',
+    ':utils',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/dalvik/firstorder:firstorder',
     '//src/com/facebook/buck/dalvik:dalvik',
