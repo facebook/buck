@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" version="1.1" width="800" height="800">
+  <desc>Created with Highcharts 3.0.9</desc>
+  <defs>
+    <clipPath id="highcharts-3">
+      <rect fill="none" x="0" y="0" width="780" height="685"/>
+    </clipPath>
+  </defs>
+  <rect rx="5" ry="5" fill="#FFFFFF" x="0" y="0" width="800" height="800"/>
+
+  <g class="dreiss-move-everything" visibility="visible" transform="translate(0,-60)">
+
+  <g class="highcharts-series-group">
+    <g class="highcharts-series highcharts-tracker" visibility="visible" transform="translate(10,40) scale(1 1)" style="cursor:pointer;">
+      <path fill="none" d="M 680.7223789352811 261.57222090223013 C 675.7223789352811 261.57222090223013 668.2646985715543 264.4675626078815 658.01038807143 268.44865745315224 L 647.7560775713058 272.42975229842295" stroke="#000000" stroke-width="1" visibility="visible"/>
+      <path fill="none" d="M 449.65019300702573 674.0884719353425 C 444.65019300702573 674.0884719353425 443.22376056312277 666.2166684264265 441.26241595275644 655.3929386016671 L 439.3010713423901 644.5692087769077" stroke="#000000" stroke-width="1" visibility="visible"/>
+      <path fill="none" d="M 195.64752252322685 613.5142926745385 C 200.64752252322685 613.5142926745385 205.5898384116908 607.2235444154968 212.38552275832868 598.5737655593143 L 219.18120710496655 589.9239867031318" stroke="#000000" stroke-width="1" visibility="visible"/>
+      <path fill="none" d="M 96.79427254206269 476.8058419286339 C 101.79427254206269 476.8058419286339 109.31677113802843 474.08334034485233 119.66020670748132 470.33990066715256 L 130.00364227693422 466.5964609894528" stroke="#000000" stroke-width="1" visibility="visible"/>
+      <path fill="none" d="M 81.84352506085935 327.351337755431 C 86.84352506085935 327.351337755431 94.7562552387162 328.5297693963986 105.63625923326937 330.15011290272895 L 116.51626322782255 331.7704564090593" stroke="#000000" stroke-width="1" visibility="visible"/>
+      <path fill="none" d="M 130.12707896189391 202.25886477850503 C 135.12707896189391 202.25886477850503 141.77955324673846 206.70235281038745 150.92670538839968 212.81214885422577 L 160.0738575300609 218.92194489806408" stroke="#000000" stroke-width="1" visibility="visible"/>
+      <path fill="none" d="M 198.8548953101372 129 C 203.8548953101372 129 220.879820456279 126.53127257494788 227.11205487832567 135.5954467849163 L 233.34428930037234 144.65962099488473" stroke="#000000" stroke-width="1" visibility="visible"/>
+      <path fill="none" d="M 230.13877179874882 108 C 235.13877179874882 108 297.52386612506945 88.68595055292644 300.93169685412886 99.14475974528091 L 304.33952758318827 109.60356893763537" stroke="#000000" stroke-width="1" visibility="visible"/>
+      <path fill="none" d="M 273.5011210818692 87 C 278.5011210818692 87 354.1936156738295 76.15534787770073 355.51311392370513 87.07592132274358 L 356.83261217358074 97.99649476778643" stroke="#000000" stroke-width="1" visibility="visible"/>
+      <path fill="none" d="M 376.8723535058823 66 C 381.8723535058823 66 382.08449436054127 74.10496858950265 382.3761880356972 85.10110040027475 L 382.6678817108532 96.09723221104684" stroke="#000000" stroke-width="1" visibility="visible"/>
+      <path fill="rgb(69,114,167)" d="M 389.9436843591783 96.50000573499358 A 276.5 276.5 0 0 1 576.8070923482449 576.851318976342 L 390 373 A 0 0 0 0 0 390 373 Z" stroke="#FFFFFF" stroke-width="1" fill-opacity="1" stroke-linejoin="round" transform="translate(0,0)" visibility="visible"/>
+      <path fill="rgb(170,70,67)" d="M 576.6031476597054 577.0380241119046 A 276.5 276.5 0 0 1 287.1314904613799 629.6521376207547 L 390 373 A 0 0 0 0 0 390 373 Z" stroke="#FFFFFF" stroke-width="1" fill-opacity="1" stroke-linejoin="round" transform="translate(0,0)" visibility="visible"/>
+      <path fill="rgb(137,165,78)" d="M 286.874889800785 629.5491408023028 A 276.5 276.5 0 0 1 165.21876174188043 534.0144245934086 L 390 373 A 0 0 0 0 0 390 373 Z" stroke="#FFFFFF" stroke-width="1" fill-opacity="1" stroke-linejoin="round" transform="translate(0,0)" visibility="visible"/>
+      <path fill="rgb(128,105,155)" d="M 165.05785973473252 533.7895628854085 A 276.5 276.5 0 0 1 114.26887523867191 393.6057476897327 L 390 373 A 0 0 0 0 0 390 373 Z" stroke="#FFFFFF" stroke-width="1" fill-opacity="1" stroke-linejoin="round" transform="translate(0,0)" visibility="visible"/>
+      <path fill="rgb(61,150,174)" d="M 114.24840735996736 393.3300063080536 A 276.5 276.5 0 0 1 132.0525718292916 273.4240274960007 L 390 373 A 0 0 0 0 0 390 373 Z" stroke="#FFFFFF" stroke-width="1" fill-opacity="1" stroke-linejoin="round" transform="translate(0,0)" visibility="visible"/>
+      <path fill="rgb(219,132,61)" d="M 132.15227675890293 273.1661298988033 A 276.5 276.5 0 0 1 198.8351058005428 173.22954866720065 L 390 373 A 0 0 0 0 0 390 373 Z" stroke="#FFFFFF" stroke-width="1" fill-opacity="1" stroke-linejoin="round" transform="translate(0,0)" visibility="visible"/>
+      <path fill="rgb(146,168,205)" d="M 199.03497180101965 173.0384836900794 A 276.5 276.5 0 0 1 271.3806155203807 123.23672882972517 L 390 373 A 0 0 0 0 0 390 373 Z" stroke="#FFFFFF" stroke-width="1" fill-opacity="1" stroke-linejoin="round" transform="translate(0,0)" visibility="visible"/>
+      <path fill="rgb(164,125,124)" d="M 271.6304380596111 123.11823434664058 A 276.5 276.5 0 0 1 338.21801388010647 101.39205476739244 L 390 373 A 0 0 0 0 0 390 373 Z" stroke="#FFFFFF" stroke-width="1" fill-opacity="1" stroke-linejoin="round" transform="translate(0,0)" visibility="visible"/>
+      <path fill="rgb(181,202,146)" d="M 338.4896476710621 101.34040859386414 A 276.5 276.5 0 0 1 374.9688602377298 96.90886497852364 L 390 373 A 0 0 0 0 0 390 373 Z" stroke="#FFFFFF" stroke-width="1" fill-opacity="1" stroke-linejoin="round" transform="translate(0,0)" visibility="visible"/>
+      <path fill="rgb(69,114,167)" d="M 375.24495884230544 96.89397188682256 A 276.5 276.5 0 0 1 389.6159470471232 96.50026672105196 L 390 373 A 0 0 0 0 0 390 373 Z" stroke="#FFFFFF" stroke-width="1" fill-opacity="1" stroke-linejoin="round" transform="translate(0,0)" visibility="visible"/>
+    </g>
+    <g class="highcharts-markers" visibility="visible" transform="translate(10,40) scale(1 1)"/>
+  </g>
+  <text x="400" y="25" style="font-family:'lucida grande', 'lucida sans unicode', verdana, arial, helvetica, sans-serif;font-size:16px;color:#274b6d;fill:#274b6d;" text-anchor="middle" class="highcharts-title">
+    <tspan x="400">Amortized Time Ms grouped by Rule Type</tspan>
+  </text>
+  <g class="highcharts-data-labels highcharts-tracker" visibility="visible" transform="translate(10,40) scale(1 1)" style="cursor:pointer;">
+    <g style="cursor:pointer;" transform="translate(665,242)" visibility="visible">
+      <text x="3" y="15" style="font-family:'lucida grande', 'lucida sans unicode', verdana, arial, helvetica, sans-serif;font-size:14px;color:#000000;fill:#000000;">
+        <tspan x="3">android_library</tspan>
+      </text>
+    </g>
+    <g style="cursor:pointer;" transform="translate(455,664)" visibility="visible">
+      <text x="3" y="15" style="font-family:'lucida grande', 'lucida sans unicode', verdana, arial, helvetica, sans-serif;font-size:14px;color:#000000;fill:#000000;">
+        <tspan x="3">_dummy_r_dot_java</tspan>
+      </text>
+    </g>
+    <g style="cursor:pointer;" transform="translate(113,614)" visibility="visible">
+      <text x="3" y="15" style="font-family:'lucida grande', 'lucida sans unicode', verdana, arial, helvetica, sans-serif;font-size:14px;color:#000000;fill:#000000;">
+        <tspan x="3">_aapt_package</tspan>
+      </text>
+    </g>
+    <g style="cursor:pointer;" transform="translate(-2,475)" visibility="visible">
+      <text x="3" y="15" style="font-family:'lucida grande', 'lucida sans unicode', verdana, arial, helvetica, sans-serif;font-size:14px;color:#000000;fill:#000000;">
+        <tspan x="3">android_resource</tspan>
+      </text>
+    </g>
+    <g style="cursor:pointer;" transform="translate(28,305)" visibility="visible">
+      <text x="3" y="15" style="font-family:'lucida grande', 'lucida sans unicode', verdana, arial, helvetica, sans-serif;font-size:14px;color:#000000;fill:#000000;">
+        <tspan x="3">_pre_dex</tspan>
+      </text>
+    </g>
+    <g style="cursor:pointer;" transform="translate(50,180)" visibility="visible">
+      <text x="3" y="15" style="font-family:'lucida grande', 'lucida sans unicode', verdana, arial, helvetica, sans-serif;font-size:14px;color:#000000;fill:#000000;">
+        <tspan x="3">android_binary</tspan>
+      </text>
+    </g>
+    <g style="cursor:pointer;" transform="translate(105,119)" visibility="visible">
+      <text x="3" y="15" style="font-family:'lucida grande', 'lucida sans unicode', verdana, arial, helvetica, sans-serif;font-size:14px;color:#000000;fill:#000000;">
+        <tspan x="3">ndk_library</tspan>
+      </text>
+    </g>
+    <g style="cursor:pointer;" transform="translate(125,96)" visibility="visible">
+      <text x="3" y="15" style="font-family:'lucida grande', 'lucida sans unicode', verdana, arial, helvetica, sans-serif;font-size:14px;color:#000000;fill:#000000;">
+        <tspan x="3">_dex_merge</tspan>
+      </text>
+    </g>
+    <g style="cursor:pointer;" transform="translate(130,73)" visibility="visible">
+      <text x="3" y="15" style="font-family:'lucida grande', 'lucida sans unicode', verdana, arial, helvetica, sans-serif;font-size:14px;color:#000000;fill:#000000;">
+        <tspan x="3">_uber_r_dot_java</tspan>
+      </text>
+    </g>
+    <g style="cursor:pointer;" transform="translate(253,45)" visibility="visible">
+      <text x="3" y="15" style="font-family:'lucida grande', 'lucida sans unicode', verdana, arial, helvetica, sans-serif;font-size:14px;color:#000000;fill:#000000;">
+        <tspan x="3">_exopackage_deps_abi</tspan>
+      </text>
+    </g>
+  </g>
+  <g class="highcharts-legend">
+    <rect rx="5" ry="5" fill="none" x="0.5" y="0.5" width="7" height="7" stroke="#909090" stroke-width="1" visibility="hidden"/>
+    <g>
+      <g/>
+    </g>
+  </g>
+  <text x="790" y="795" style="font-family:'lucida grande', 'lucida sans unicode', verdana, arial, helvetica, sans-serif;font-size:9px;cursor:pointer;color:#909090;fill:#909090;" text-anchor="end" visibility="hidden">
+    <tspan x="790">Highcharts.com</tspan>
+  </text>
+
+  </g>
+
+</svg>

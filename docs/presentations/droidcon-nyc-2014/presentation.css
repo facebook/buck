@@ -1,0 +1,106 @@
+body {
+  font-family:  'Helvetica Neue', Helvetica, Arial, 'lucida grande', tahoma, verdana, arial, sans-serif;
+}
+
+h1, h2, h3, h4 {
+  font-family:  'Helvetica Neue', Helvetica, Arial, 'lucida grande', tahoma, verdana, arial, sans-serif;
+  font-weight: bold;
+}
+
+h4 {
+  font-size: 24px;
+}
+
+.author-table {
+  position: absolute;
+  left: 0;
+  bottom: 5%;
+  width: 100%;
+  padding: 0 1em;
+}
+
+.email {
+  color: rgb(64, 80, 151);
+}
+
+.remark-code, .remark-inline-code {
+  font-family: 'Ubuntu Mono';
+}
+
+/* Consider removing this after publishing the slides. */
+.remark-slide-number {
+  display: none;
+}
+
+#slide-title,
+#slide-demo,
+#slide-thank-you {
+  background-color: #030303;
+  color: white;
+}
+
+#slide-r-txt pre {
+  line-height: 1.4em;
+}
+
+.remark-slide-content {
+  font-size: 32px;
+  padding: 0 1em;
+}
+
+.remark-slide-content h1 {
+  font-size: 48px;
+}
+
+/* Inspired by Markdown preview in Atom. */
+.remark-inline-code {
+  border: 1px solid #bbb;
+  background-color: #eaeaea;
+  border-radius: 5px;
+  padding: 3px;
+}
+
+li {
+  margin: 5px;
+}
+
+.remark-code {
+  font-size: 32px;
+}
+
+.hljs {
+  border-radius: 5px;
+}
+
+a, a:visited {
+  color: #4566a4;
+}
+
+
+.left-column {
+  font-size: 16px;
+  width: 25%;
+  float: left;
+}
+
+.right-column {
+  width: 70%;
+  float: right;
+}
+
+#slide-scuba img {
+  width: 70%;
+}
+
+.big-picture img {
+  width: 100%;
+}
+
+.scuba-picture img {
+  width: 65%;
+}
+
+.serious-business {
+  color: #A00;
+  font-weight: bold;
+}
