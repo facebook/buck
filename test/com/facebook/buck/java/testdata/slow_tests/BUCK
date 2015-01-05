@@ -1,7 +1,17 @@
 java_test(
-  name = 'simple',
+  name = 'spinning',
   srcs = [
-    'SimpleTest.java',
+    'SpinningTest.java',
+  ],
+  deps = [
+    ':junit',
+  ],
+)
+
+java_test(
+  name = 'slow',
+  srcs = [
+    'SlowTest.java',
   ],
   deps = [
     ':junit',

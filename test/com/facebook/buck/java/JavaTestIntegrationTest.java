@@ -136,15 +136,27 @@ public class JavaTestIntegrationTest {
   public void spinningTestTimesOut() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "spinning_test",
+        "slow_tests",
         temp);
     workspace.setUp();
+    workspace.writeContentsToPath("[test]\n  rule_timeout = 250", ".buckconfig");
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:simple");
-
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
     result.assertSpecialExitCode("test should fail", 42);
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("test timed out before generating results file"));
+  }
+
+  @Test
+  public void normalTestDoesNotTimeOut() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "slow_tests",
+        temp);
+    workspace.setUp();
+    workspace.writeContentsToPath("[test]\n  rule_timeout = 10000", ".buckconfig");
+
+    workspace.runBuckCommand("test", "//:slow").assertSuccess();
   }
 
 }

@@ -16,12 +16,11 @@
 
 import org.junit.Test;
 
-public class SimpleTest {
+public class SlowTest {
 
   @Test
-  @SuppressWarnings("PMD.EmptyWhileStmt")
-  public void test() {
-    while (true) {}
+  public void test() throws InterruptedException {
+    Thread.sleep(500);
   }
 
 }

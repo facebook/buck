@@ -161,6 +161,7 @@ public class ProcessExecutor {
                 } catch (InterruptedException e) {}
               }
             });
+    waiter.start();
     waiter.join(millis);
     waiter.interrupt();
     waiter.join();
