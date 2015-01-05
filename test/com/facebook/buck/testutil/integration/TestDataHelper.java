@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -40,7 +41,7 @@ public class TestDataHelper {
   /** Utility class: do not instantiate. */
   private TestDataHelper() {}
 
-  public static File getTestDataDirectory(Object testCase) {
+  public static Path getTestDataDirectory(Object testCase) {
     String javaPackage = testCase.getClass().getPackage().getName();
     List<String> parts = Lists.newArrayList();
     for (String component : JAVA_PACKAGE_SPLITTER.split(javaPackage)) {
@@ -49,18 +50,18 @@ public class TestDataHelper {
 
     parts.add(TESTDATA_DIRECTORY_NAME);
     String[] directories = parts.toArray(new String[0]);
-    return FileSystems.getDefault().getPath(TEST_DIRECTORY, directories).toFile();
+    return FileSystems.getDefault().getPath(TEST_DIRECTORY, directories);
   }
 
-  public static File getTestDataScenario(Object testCase, String scenario) {
-    return new File(getTestDataDirectory(testCase), scenario);
+  public static Path getTestDataScenario(Object testCase, String scenario) {
+    return getTestDataDirectory(testCase).resolve(scenario);
   }
 
   public static ProjectWorkspace createProjectWorkspaceForScenario(
       Object testCase,
       String scenario,
       DebuggableTemporaryFolder temporaryFolder) {
-    File templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
+    Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
     return new ProjectWorkspace(templateDir, temporaryFolder);
   }
 }

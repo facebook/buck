@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,8 +47,8 @@ public class CalculateAbiStepTest {
     Path outDir = temp.newFolder().toPath().toAbsolutePath();
     ProjectFilesystem filesystem = new ProjectFilesystem(outDir);
 
-    File directory = TestDataHelper.getTestDataDirectory(this);
-    Path source = new File(directory, "prebuilt/junit.jar").toPath();
+    Path directory = TestDataHelper.getTestDataDirectory(this);
+    Path source = directory.resolve("prebuilt/junit.jar");
     Path binJar = Paths.get("source.jar");
     Files.copy(source, outDir.resolve(binJar));
 

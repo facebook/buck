@@ -20,11 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.PathByteSource;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.io.ByteSource;
-import com.google.common.io.Files;
 
 import org.easymock.EasyMock;
 import org.junit.Rule;
@@ -54,20 +54,19 @@ public class XzStepTest {
 
   @Test
   public void testXzStep() throws IOException {
-    final File sourceFile = new File(
-        TestDataHelper.getTestDataScenario(this, "xz_with_rm_and_check"),
-        "xzstep.data");
+    final Path sourceFile =
+        TestDataHelper.getTestDataScenario(this, "xz_with_rm_and_check").resolve("xzstep.data");
     final File destinationFile = tmp.newFile("xzstep.data.xz");
 
     XzStep step = new XzStep(
-        sourceFile.toPath(),
+        sourceFile,
         destinationFile.toPath(),
         /* compressionLevel -- for faster testing */ 1,
         /* keep */ false,
         XZ.CHECK_CRC32);
 
     ProjectFilesystem fs = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(fs.deleteFileAtPath(sourceFile.toPath())).andReturn(true);
+    EasyMock.expect(fs.deleteFileAtPath(sourceFile)).andReturn(true);
     EasyMock.replay(fs);
 
     ExecutionContext context = TestExecutionContext.newBuilder()
@@ -76,7 +75,7 @@ public class XzStepTest {
 
     assertEquals(0, step.execute(context));
 
-    ByteSource original = Files.asByteSource(sourceFile);
+    ByteSource original = PathByteSource.asByteSource(sourceFile);
     ByteSource decompressed = new ByteSource() {
       @Override
       public InputStream openStream() throws IOException {

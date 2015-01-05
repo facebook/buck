@@ -27,7 +27,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,8 +40,8 @@ public class StubJarIntegrationTest {
 
   @Before
   public void createWorkspace() throws IOException {
-    File dir = TestDataHelper.getTestDataDirectory(this);
-    testDataDir = dir.toPath().resolve("sample").toAbsolutePath();
+    Path dir = TestDataHelper.getTestDataDirectory(this);
+    testDataDir = dir.resolve("sample").toAbsolutePath();
 
     filesystem = new ProjectFilesystem(temp.newFolder().toPath());
   }

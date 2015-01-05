@@ -12,6 +12,7 @@ java_test(
     '//src/com/facebook/buck/step/fs:fs',
     '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/event:testutil',
+    '//test/com/facebook/buck/io:testutil',
     '//test/com/facebook/buck/step:testutil',
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
