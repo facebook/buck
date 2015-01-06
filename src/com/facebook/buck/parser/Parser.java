@@ -24,6 +24,7 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
+import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.log.Logger;
@@ -54,6 +55,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -66,6 +70,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
@@ -279,6 +286,10 @@ public class Parser {
    */
   public synchronized void cleanCache() {
     state.cleanCache();
+  }
+
+  public LoadingCache<BuildTarget, HashCode> getBuildTargetHashCodeCache() {
+    return state.getBuildTargetHashCodeCache();
   }
 
   /**
@@ -904,6 +915,8 @@ public class Parser {
 
     private final Map<BuildTarget, Path> targetsToFile;
 
+    private final LoadingCache<BuildTarget, HashCode> buildTargetHashCodeCache;
+
     public CachedState() {
       this.memoizedTargetNodes = Maps.newHashMap();
       this.symlinkExistenceCache = Maps.newHashMap();
@@ -911,6 +924,13 @@ public class Parser {
       this.parsedBuildFiles = ArrayListMultimap.create();
       this.targetsToFile = Maps.newHashMap();
       this.pathsToBuildTargets = ArrayListMultimap.create();
+      this.buildTargetHashCodeCache = CacheBuilder.newBuilder().build(
+          new CacheLoader<BuildTarget, HashCode>() {
+            @Override
+            public HashCode load(BuildTarget buildTarget) throws IOException, InterruptedException {
+              return loadHashCodeForBuildTarget(buildTarget);
+            }
+          });
     }
 
     public void invalidateAll() {
@@ -921,20 +941,22 @@ public class Parser {
       memoizedTargetNodes.clear();
       targetsToFile.clear();
       pathsToBuildTargets.clear();
+      buildTargetHashCodeCache.invalidateAll();
     }
 
     @Override
     public String toString() {
       return String.format(
           "%s memoized=%s symlinks=%s build files under symlink=%s parsed=%s targets-to-files=%s " +
-          "paths-to-targets=%s",
+          "paths-to-targets=%s build-target-hash-code-cache=%s",
           super.toString(),
           memoizedTargetNodes,
           symlinkExistenceCache,
           buildInputPathsUnderSymlink,
           parsedBuildFiles,
           targetsToFile,
-          pathsToBuildTargets);
+          pathsToBuildTargets,
+          buildTargetHashCodeCache);
     }
 
     /**
@@ -1005,6 +1027,7 @@ public class Parser {
       for (BuildTarget target : targetsToRemove) {
         memoizedTargetNodes.remove(target);
       }
+      buildTargetHashCodeCache.invalidateAll(targetsToRemove);
       pathsToBuildTargets.removeAll(path);
 
       List<Path> dependents = buildFileDependents.get(path);
@@ -1158,6 +1181,31 @@ public class Parser {
       for (Path buildFilePath : buildInputPathsUnderSymlinkCopy) {
         invalidateDependents(buildFilePath);
       }
+    }
+
+    private synchronized HashCode loadHashCodeForBuildTarget(BuildTarget buildTarget)
+        throws IOException, InterruptedException{
+      // Warm up the cache.
+      get(buildTarget);
+
+      Path buildTargetPath = targetsToFile.get(buildTarget.getUnflavoredTarget());
+      if (buildTargetPath == null) {
+        throw new HumanReadableException("Couldn't find build target %s", buildTarget);
+      }
+      List<Map<String, Object>> rules = getRawRules(buildTargetPath);
+      Hasher hasher = Hashing.sha1().newHasher();
+      for (Map<String, Object> map : rules) {
+        if (!buildTarget.getShortNameOnly().equals(map.get("name"))) {
+          continue;
+        }
+
+        JsonObjectHashing.hashJsonObject(hasher, map);
+      }
+      return hasher.hash();
+    }
+
+    public LoadingCache<BuildTarget, HashCode> getBuildTargetHashCodeCache() {
+      return buildTargetHashCodeCache;
     }
   }
 

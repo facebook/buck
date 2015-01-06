@@ -70,6 +70,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.google.common.hash.HashCode;
 
 import org.easymock.EasyMockSupport;
 import org.junit.Before;
@@ -1402,6 +1403,218 @@ public class ParserTest extends EasyMockSupport {
           ImmutableList.of(Paths.get("foo/bar/Bar.java")),
           libRule.getInputs());
     }
+  }
+
+  @Test
+  public void buildTargetHashCodePopulatesCorrectly() throws Exception {
+    Parser parser = createParser(emptyBuildTargets());
+
+    tempDir.newFolder("foo");
+
+    File testFooBuckFile = tempDir.newFile(
+        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+        "java_library(name = 'lib', visibility=['PUBLIC'])\n",
+        testFooBuckFile,
+        Charsets.UTF_8);
+
+    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+
+    assertEquals(
+        ImmutableMap.of(
+            fooLibTarget,
+            HashCode.fromString("5cdb8afe6875f6b8b813c791b65fdcbc348f3b5c")),
+        buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
+  }
+
+  @Test
+  public void targetWithSourceFileChangesHash() throws Exception {
+    Parser parser = createParser(emptyBuildTargets());
+
+    tempDir.newFolder("foo");
+
+    File testFooBuckFile = tempDir.newFile(
+        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+        "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n",
+        testFooBuckFile,
+        Charsets.UTF_8);
+
+    File testFooJavaFile = tempDir.newFile("foo/Foo.java");
+    Files.write(
+        "// Ceci n'est pas une Javafile\n",
+        testFooJavaFile,
+        Charsets.UTF_8);
+
+    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+
+    assertEquals(
+        ImmutableMap.of(
+            fooLibTarget,
+            HashCode.fromString("dac89a79547c9013dd12f336e4448b8e973e0a86")),
+        buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
+  }
+
+  @Test
+  public void deletingSourceFileChangesHash() throws Exception {
+    Parser parser = createParser(emptyBuildTargets());
+
+    tempDir.newFolder("foo");
+
+    File testFooBuckFile = tempDir.newFile(
+        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+        "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n",
+        testFooBuckFile,
+        Charsets.UTF_8);
+
+    File testFooJavaFile = tempDir.newFile("foo/Foo.java");
+    Files.write(
+        "// Ceci n'est pas une Javafile\n",
+        testFooJavaFile,
+        Charsets.UTF_8);
+
+    File testBarJavaFile = tempDir.newFile("foo/Bar.java");
+    Files.write(
+        "// Seriously, no Java here\n",
+        testBarJavaFile,
+        Charsets.UTF_8);
+
+    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+
+    assertEquals(
+        ImmutableMap.of(
+            fooLibTarget,
+            HashCode.fromString("c9d6183a6e0fd5cf6ae3f85d7fbba8c35c6007fb")),
+        buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
+
+    testBarJavaFile.delete();
+    WatchEvent<Path> deleteEvent = createPathEvent(
+        Paths.get("foo/Bar.java"),
+        StandardWatchEventKinds.ENTRY_DELETE);
+    parser.onFileSystemChange(deleteEvent);
+
+    assertEquals(
+        ImmutableMap.of(
+            fooLibTarget,
+            HashCode.fromString("dac89a79547c9013dd12f336e4448b8e973e0a86")),
+        buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
+  }
+
+  @Test
+  public void renamingSourceFileChangesHash() throws Exception {
+    Parser parser = createParser(emptyBuildTargets());
+
+    tempDir.newFolder("foo");
+
+    File testFooBuckFile = tempDir.newFile(
+        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+        "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n",
+        testFooBuckFile,
+        Charsets.UTF_8);
+
+    File testFooJavaFile = tempDir.newFile("foo/Foo.java");
+    Files.write(
+        "// Ceci n'est pas une Javafile\n",
+        testFooJavaFile,
+        Charsets.UTF_8);
+
+    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+
+    assertEquals(
+        ImmutableMap.of(
+            fooLibTarget,
+            HashCode.fromString("dac89a79547c9013dd12f336e4448b8e973e0a86")),
+        buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
+
+    Path testFooJavaFilePath = testFooJavaFile.toPath();
+    java.nio.file.Files.move(testFooJavaFilePath, testFooJavaFilePath.resolveSibling("Bar.java"));
+    WatchEvent<Path> deleteEvent = createPathEvent(
+        Paths.get("foo/Foo.java"),
+        StandardWatchEventKinds.ENTRY_DELETE);
+    WatchEvent<Path> createEvent = createPathEvent(
+        Paths.get("foo/Bar.java"),
+        StandardWatchEventKinds.ENTRY_CREATE);
+    parser.onFileSystemChange(deleteEvent);
+    parser.onFileSystemChange(createEvent);
+
+    assertEquals(
+        ImmutableMap.of(
+            fooLibTarget,
+            HashCode.fromString("c1f65c45fdaab58a4422534b1332027e88dd32e1")),
+        buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
+  }
+
+  @Test
+  public void twoBuildTargetHashCodesPopulatesCorrectly() throws Exception {
+    Parser parser = createParser(emptyBuildTargets());
+
+    tempDir.newFolder("foo");
+
+    File testFooBuckFile = tempDir.newFile(
+        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+        "java_library(name = 'lib', visibility=['PUBLIC'])\n" +
+        "java_library(name = 'lib2', visibility=['PUBLIC'])\n",
+        testFooBuckFile,
+        Charsets.UTF_8);
+
+    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+    BuildTarget fooLib2Target = BuildTarget.builder("//foo", "lib2").build();
+    assertEquals(
+        ImmutableMap.of(
+            fooLibTarget,
+            HashCode.fromString("5cdb8afe6875f6b8b813c791b65fdcbc348f3b5c"),
+            fooLib2Target,
+            HashCode.fromString("c8647d8770b4ba754a0753061b3e6edcec2141c7")),
+        buildTargetGraphAndGetHashCodes(parser, fooLibTarget, fooLib2Target));
+  }
+
+  @Test
+  public void addingDepToTargetChangesHashOfDependingTargetOnly() throws Exception {
+    Parser parser = createParser(emptyBuildTargets());
+
+    tempDir.newFolder("foo");
+
+    File testFooBuckFile = tempDir.newFile(
+        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    Files.write(
+        "java_library(name = 'lib', visibility=['PUBLIC'], deps=[':lib2'])\n" +
+        "java_library(name = 'lib2', visibility=['PUBLIC'])\n",
+        testFooBuckFile,
+        Charsets.UTF_8);
+
+    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+    BuildTarget fooLib2Target = BuildTarget.builder("//foo", "lib2").build();
+    assertEquals(
+        ImmutableMap.of(
+            fooLibTarget,
+            HashCode.fromString("0939759ac2f1f5ab542fb594fba3b3951c55a0e8"),
+            fooLib2Target,
+            HashCode.fromString("c8647d8770b4ba754a0753061b3e6edcec2141c7")),
+        buildTargetGraphAndGetHashCodes(parser, fooLibTarget, fooLib2Target));
+  }
+
+  private ImmutableMap<BuildTarget, HashCode> buildTargetGraphAndGetHashCodes(
+      Parser parser,
+      BuildTarget... buildTargets) throws Exception {
+    // Build the target graph so we can access the hash code cache.
+    //
+    // TODO(user): It'd be really nice if parser.getBuildTargetHashCodeCache()
+    // knew how to run the parser for targets that weren't yet parsed, but
+    // then we'd need to pass in the BuckEventBusFactory, Console, etc.
+    // to every call to get()..
+    ImmutableList<BuildTarget> buildTargetsList = ImmutableList.copyOf(buildTargets);
+    parser.buildTargetGraphForBuildTargets(
+        buildTargetsList,
+        ImmutableList.<String>of(),
+        BuckEventBusFactory.newInstance(),
+        new TestConsole(),
+        ImmutableMap.<String, String>of(),
+        /* enableProfiling */ false);
+
+    return parser.getBuildTargetHashCodeCache().getAll(buildTargetsList);
   }
 
   private Iterable<Map<String, Object>> emptyBuildTargets() {
