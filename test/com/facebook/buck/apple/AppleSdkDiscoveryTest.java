@@ -18,24 +18,29 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Set;
 
 public class AppleSdkDiscoveryTest {
 
   @Rule
-  public TemporaryFolder temp = new TemporaryFolder();
+  public DebuggableTemporaryFolder temp = new DebuggableTemporaryFolder();
 
   @Test
   public void shouldReturnAnEmptyMapIfNoPlatformsFound() throws IOException {
@@ -54,7 +59,13 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void shouldIgnoreSdkWithUnrecognizedPlatform() throws Exception {
-    Path root = Paths.get("test/com/facebook/buck/apple/testdata/sdk-unknown-platform-discovery");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-unknown-platform-discovery",
+        temp);
+    workspace.setUp();
+    Path root = workspace.getPath("");
+
     ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
         "com.apple.dt.toolchain.XcodeDefault",
         root.resolve("Toolchains/XcodeDefault")
@@ -68,7 +79,15 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void shouldIgnoreSdkWithBadSymlink() throws Exception {
-    Path root = Paths.get("test/com/facebook/buck/apple/testdata/sdk-bad-symlink-discovery");
+    Path root = temp.newFolder().toPath();
+
+    // Create a dangling symlink
+    File toDelete = File.createTempFile("foo", "bar");
+    Path symlink = root.resolve("Platforms/Foo.platform/Developer/NonExistent1.0.sdk");
+    Files.createDirectories(symlink.getParent());
+    Files.createSymbolicLink(symlink, toDelete.toPath());
+    assertTrue(toDelete.delete());
+
     ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
         "com.apple.dt.toolchain.XcodeDefault",
         root.resolve("Toolchains/XcodeDefault")
@@ -82,7 +101,14 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void appleSdkPathsBuiltFromDirectory() throws Exception {
-    Path root = Paths.get("test/com/facebook/buck/apple/testdata/sdk-discovery");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-discovery",
+        temp);
+    workspace.setUp();
+    Path root = workspace.getPath("");
+    createSymLinkIosSdks(root, "8.0");
+
     ImmutableAppleSdk macosx109Sdk =
         ImmutableAppleSdk.builder()
             .name("macosx10.9")
@@ -150,7 +176,13 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void noAppleSdksFoundIfDefaultPlatformMissing() throws Exception {
-    Path root = Paths.get("test/com/facebook/buck/apple/testdata/sdk-discovery");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-discovery",
+        temp);
+    workspace.setUp();
+    Path root = workspace.getPath("");
+
     ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of();
 
     assertThat(
@@ -160,7 +192,15 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void multipleAppleSdkPathsPerPlatformBuiltFromDirectory() throws Exception {
-    Path root = Paths.get("test/com/facebook/buck/apple/testdata/sdk-multi-version-discovery");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-multi-version-discovery",
+        temp);
+    workspace.setUp();
+    Path root = workspace.getPath("");
+
+    createSymLinkIosSdks(root, "8.1");
+
     ImmutableAppleSdk macosx109Sdk =
         ImmutableAppleSdk.builder()
             .name("macosx10.9")
@@ -258,5 +298,20 @@ public class AppleSdkDiscoveryTest {
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(root, toolchainPaths),
         equalTo(expected));
+  }
+
+  private void createSymLinkIosSdks(Path root, String version) throws IOException {
+    Set<String> sdks = ImmutableSet.of("iPhoneOS", "iPhoneSimulator");
+    for (String sdk : sdks) {
+      Path sdkDir = root.resolve(String.format("Platforms/%s.platform/Developer/SDKs", sdk));
+
+      if (!Files.exists(sdkDir)) {
+        continue;
+      }
+
+      Path actual = sdkDir.resolve(String.format("%s.sdk", sdk));
+      Path link = sdkDir.resolve(String.format("%s%s.sdk", sdk, version));
+      Files.createSymbolicLink(link, actual);
+    }
   }
 }

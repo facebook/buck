@@ -18,25 +18,27 @@ package com.facebook.buck.apple.xcode.xcspec;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-/**
- * Unit tests for {@link SDKSettings}.
- */
 public class SDKSettingsTest {
   @Test
   public void parsingXcode5SDKSettingsShouldContainExpectedDefaultCompiler() throws Exception {
-    InputStream sdkSettingsPlist = getClass().getResourceAsStream(
-        "testdata/Xcode5SDKSettings.plist");
-    ImmutableMap.Builder<String, String> defaultPropertiesBuilder = ImmutableMap.builder();
-    SDKSettings.parseDefaultPropertiesFromPlist(sdkSettingsPlist, defaultPropertiesBuilder);
-    ImmutableMap<String, String> defaultProperties = defaultPropertiesBuilder.build();
-    assertEquals(
-        "com.apple.compilers.llvm.clang.1_0",
-        defaultProperties.get(SDKSettings.DEFAULT_COMPILER_KEY));
+    Path plist = TestDataHelper.getTestDataDirectory(this).resolve("Xcode5SDKSettings.plist");
+
+    try (InputStream sdkSettingsPlist = Files.newInputStream(plist)) {
+      ImmutableMap.Builder<String, String> defaultPropertiesBuilder = ImmutableMap.builder();
+      SDKSettings.parseDefaultPropertiesFromPlist(sdkSettingsPlist, defaultPropertiesBuilder);
+      ImmutableMap<String, String> defaultProperties = defaultPropertiesBuilder.build();
+      assertEquals(
+          "com.apple.compilers.llvm.clang.1_0",
+          defaultProperties.get(SDKSettings.DEFAULT_COMPILER_KEY));
+    }
   }
 }

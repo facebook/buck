@@ -292,7 +292,11 @@ public class ProjectWorkspace {
    * @return the {@link File} that corresponds to the {@code pathRelativeToProjectRoot}.
    */
   public File getFile(String pathRelativeToProjectRoot) {
-    return destPath.resolve(pathRelativeToProjectRoot).toFile();
+    return getPath(pathRelativeToProjectRoot).toFile();
+  }
+
+  public Path getPath(String pathRelativeToProjectRoot) {
+    return destPath.resolve(pathRelativeToProjectRoot);
   }
 
   public String getFileContents(String pathRelativeToProjectRoot) throws IOException {

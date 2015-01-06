@@ -6,8 +6,9 @@ java_test(
     '//src/com/facebook/buck/apple/xcode/xcspec:xcspec',
   ],
   deps = [
+    '//src/com/facebook/buck/apple/xcode/xcspec:xcspec',
+    '//test/com/facebook/buck/testutil/integration:integration',
     '//third-party/java/guava:guava',
     '//third-party/java/junit:junit',
-    '//src/com/facebook/buck/apple/xcode/xcspec:xcspec',
   ]
 )
