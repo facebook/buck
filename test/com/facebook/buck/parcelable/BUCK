@@ -5,8 +5,9 @@ java_test(
     '//src/com/facebook/buck/parcelable:parcelable',
   ],
   deps = [
+    '//src/com/facebook/buck/parcelable:parcelable',
+    '//test/com/facebook/buck/testutil/integration:integration',
     '//third-party/java/guava:guava',
     '//third-party/java/junit:junit',
-    '//src/com/facebook/buck/parcelable:parcelable',
   ],
 )

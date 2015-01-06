@@ -22,6 +22,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/java/intellij/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/java/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/parcelable/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/parser/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/shell/testdata" />
     </content>
@@ -56,4 +57,3 @@
     <orderEntry type="library" name="immutables-annotations" level="project" />
   </component>
 </module>
-

@@ -4,7 +4,7 @@
   "annotationProcessorOnly" : null,
   "annotationProcessorParams" : [ ],
   "annotationProcessors" : [ ],
-  "buck.base_path" : "testdata/com/facebook/buck/cli",
+  "buck.base_path" : "test/com/facebook/buck/cli/testdata/target_command",
   "deps" : [ ],
   "exportedDeps": [],
   "name" : "test-library",

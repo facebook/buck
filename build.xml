@@ -557,7 +557,9 @@
     <pmd failOnRuleViolation="true" rulesetfiles="pmd/rules.xml">
       <ruleset>buck</ruleset>
       <formatter type="xml" toFile="${lint.outputpath}" />
-      <fileset dir="${basedir}" includes="${lint.files}" />
+      <fileset dir="${basedir}" includes="${lint.files}">
+        <exclude name="**/testdata/**"/>
+      </fileset>
     </pmd>
   </target>
 
@@ -594,7 +596,9 @@
            classpathref="checkstyle-classpath"/>
     <checkstyle config="checkstyle.xml">
       <formatter type="xml" toFile="${lint.outputpath}" />
-      <fileset dir="${basedir}" includes="${lint.files}" />
+      <fileset dir="${basedir}" includes="${lint.files}">
+        <exclude name="**/testdata/**"/>
+      </fileset>
     </checkstyle>
   </target>
 

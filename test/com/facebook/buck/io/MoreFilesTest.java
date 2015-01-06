@@ -38,7 +38,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -72,115 +71,6 @@ public class MoreFilesTest {
 
     List<String> observedLines = Files.readLines(outputFile, Charsets.UTF_8);
     assertEquals(lines, observedLines);
-  }
-
-  private String testDataPath(String fileName) {
-    return "testdata/com/facebook/buck/util/" + fileName;
-  }
-
-  @Test
-  public void testDiffFileContents() throws IOException {
-    List<String> diffLines;
-    String testPath = testDataPath("MoreFilesTest.txt");
-    File testFile = new File(testPath);
-
-    diffLines = MoreFiles.diffFileContents(
-        Arrays.asList("AAA", "BBB", "CCC"),
-        testFile);
-    assertEquals(diffLines, new ArrayList<String>());
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("AAA", "BBB"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| CCC |  |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("AAA", "CCC"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| BBB | CCC |",
-        "| CCC |  |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("BBB", "CCC"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| AAA | BBB |",
-        "| BBB | CCC |",
-        "| CCC |  |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("AAA"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| BBB |  |",
-        "| CCC |  |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("BBB"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| AAA | BBB |",
-        "| BBB |  |",
-        "| CCC |  |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("CCC"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| AAA | CCC |",
-        "| BBB |  |",
-        "| CCC |  |"));
-
-    diffLines = MoreFiles.diffFileContents(new ArrayList<String>(), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| AAA |  |",
-        "| BBB |  |",
-        "| CCC |  |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("AAA", "BBB", "CCC", "xxx"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "|  | xxx |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("AAA", "BBB", "xxx", "CCC"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| CCC | xxx |",
-        "|  | CCC |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("AAA", "xxx", "BBB", "CCC"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| BBB | xxx |",
-        "| CCC | BBB |",
-        "|  | CCC |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("xxx", "AAA", "BBB", "CCC"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| AAA | xxx |",
-        "| BBB | AAA |",
-        "| CCC | BBB |",
-        "|  | CCC |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("AAA", "BBB", "xxx"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| CCC | xxx |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("AAA", "xxx", "CCC"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| BBB | xxx |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("xxx", "BBB", "CCC"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| AAA | xxx |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("AAA", "xxx", "yyy"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| BBB | xxx |",
-        "| CCC | yyy |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("xxx", "BBB", "yyy"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| AAA | xxx |",
-        "| CCC | yyy |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("xxx", "yyy", "CCC"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| AAA | xxx |",
-        "| BBB | yyy |"));
-
-    diffLines = MoreFiles.diffFileContents(Arrays.asList("xxx", "yyy", "zzz"), testFile);
-    assertEquals(diffLines, Arrays.asList(
-        "| AAA | xxx |",
-        "| BBB | yyy |",
-        "| CCC | zzz |"));
   }
 
   @Test

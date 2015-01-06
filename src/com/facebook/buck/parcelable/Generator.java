@@ -26,8 +26,8 @@ import com.google.common.collect.Iterables;
 
 import org.xml.sax.SAXException;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -40,7 +40,7 @@ public class Generator {
     this.clazz = clazz;
   }
 
-  public static String generateFromFile(File file) throws IOException, SAXException {
+  public static String generateFromPath(Path file) throws IOException, SAXException {
     ParcelableClass parcelableClass = Parser.parse(file);
     return new Generator(parcelableClass).generate();
   }

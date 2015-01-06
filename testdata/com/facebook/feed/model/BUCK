@@ -1,9 +1,0 @@
-java_library(
-  name = 'model',
-  srcs = [
-    'CacheableEntity.java',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
-)

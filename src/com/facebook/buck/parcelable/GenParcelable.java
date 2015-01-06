@@ -79,7 +79,7 @@ public class GenParcelable extends AbstractBuildRule {
       public int execute(ExecutionContext executionContext) {
         for (SourcePath sourcePath : srcs) {
           Path src = getResolver().getPath(sourcePath);
-          File file = executionContext.getProjectFilesystem().getFileForRelativePath(src);
+          Path file = executionContext.getProjectFilesystem().getPathForRelativePath(src);
           try {
             // Generate the Java code for the Parcelable class.
             ParcelableClass parcelableClass = Parser.parse(file);

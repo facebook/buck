@@ -24,6 +24,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
@@ -35,7 +36,6 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class GenerateManifestStepTest {
 
@@ -83,6 +83,8 @@ public class GenerateManifestStepTest {
   }
 
   private SourcePath testDataPath(String fileName) {
-    return new PathSourcePath(Paths.get("testdata/com/facebook/buck/shell", fileName));
+    Path testData = TestDataHelper.getTestDataDirectory(this).resolve("create_manifest");
+
+    return new PathSourcePath(testData.resolve(fileName));
   }
 }

@@ -35,7 +35,9 @@ public class LicenseCheckTest {
   // Files where we're okay with the license not being the normal Facebook apache one.
   private static final Set<String> NON_APACHE_LICENSE_WHITELIST = ImmutableSet.of(
       // Because it's not originally our code.
-      "com/facebook/buck/java/ReportGenerator.java");
+      "com/facebook/buck/java/ReportGenerator.java",
+      // It's a golden version of a generated file.
+      "com/facebook/buck/parcelable/testdata/generator/GeneratedStudent.java");
 
   @Test
   public void ensureAllSrcFilesHaveTheApacheLicense() throws IOException {

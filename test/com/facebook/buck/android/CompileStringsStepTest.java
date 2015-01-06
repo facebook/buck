@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
@@ -33,6 +34,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMockSupport;
+import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -53,12 +55,21 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
   private static final String XML_HEADER = "<?xml version='1.0' encoding='utf-8'?>";
 
-  private static final Path TESTDATA_DIR = Paths.get("testdata/com/facebook/buck/android/");
-  private static final Path FIRST_FILE = TESTDATA_DIR.resolve("first/res/values-es/strings.xml");
-  private static final Path SECOND_FILE = TESTDATA_DIR.resolve("second/res/values-es/strings.xml");
-  private static final Path THIRD_FILE = TESTDATA_DIR.resolve("third/res/values-pt/strings.xml");
-  private static final Path FOURTH_FILE =
-      TESTDATA_DIR.resolve("third/res/values-pt-rBR/strings.xml");
+  private Path testdataDir;
+  private Path firstFile;
+  private Path secondFile;
+  private Path thirdFile;
+  private Path fourthFile;
+
+  @Before
+  public void findTestData() {
+    testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("compile_strings");
+
+    firstFile = testdataDir.resolve("first/res/values-es/strings.xml");
+    secondFile = testdataDir.resolve("second/res/values-es/strings.xml");
+    thirdFile = testdataDir.resolve("third/res/values-pt/strings.xml");
+    fourthFile = testdataDir.resolve("third/res/values-pt-rBR/strings.xml");
+  }
 
   @Test
   public void testStringFilePattern() {
@@ -272,10 +283,10 @@ public class CompileStringsStepTest extends EasyMockSupport {
     expect(context.getProjectFilesystem()).andStubReturn(fileSystem);
 
     ImmutableSet<Path> filteredStringFiles = ImmutableSet.of(
-        FIRST_FILE,
-        SECOND_FILE,
-        THIRD_FILE,
-        FOURTH_FILE);
+        firstFile,
+        secondFile,
+        thirdFile,
+        fourthFile);
 
     replayAll();
     CompileStringsStep step = new CompileStringsStep(
@@ -286,7 +297,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     Map<String, byte[]> fileContentsMap = fileSystem.getFileContents();
     assertEquals("Incorrect number of string files written.", 3, fileContentsMap.size());
     for (Map.Entry<String, byte[]> entry : fileContentsMap.entrySet()) {
-      File expectedFile = TESTDATA_DIR.resolve(entry.getKey()).toFile();
+      File expectedFile = testdataDir.resolve(entry.getKey()).toFile();
       assertArrayEquals(createBinaryStream(expectedFile), fileContentsMap.get(entry.getKey()));
     }
 
@@ -325,7 +336,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
   }
 
 
-  private static class FakeProjectFileSystem extends ProjectFilesystem {
+  private class FakeProjectFileSystem extends ProjectFilesystem {
 
     private ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder = ImmutableMap.builder();
 
@@ -340,7 +351,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
     @Override
     public List<String> readLines(Path path) throws IOException {
-      Path fullPath = TESTDATA_DIR.resolve(path);
+      Path fullPath = testdataDir.resolve(path);
       return Files.readLines(fullPath.toFile(), Charset.defaultCharset());
     }
 

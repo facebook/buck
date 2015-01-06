@@ -16,25 +16,29 @@
 
 package com.facebook.buck.parcelable;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class GeneratorTest {
 
   @Test
   public void testGenerate() throws IOException, SAXException {
-    File parcelableDescriptor = new File("testdata/com/facebook/buck/parcelable/student.xml");
-    String observed = Generator.generateFromFile(parcelableDescriptor);
-    String expected = Files.toString(
-        new File("testdata/com/facebook/buck/parcelable/GeneratedStudent.java"), Charsets.UTF_8);
+    Path testData = TestDataHelper.getTestDataDirectory(this).resolve("generator");
+    Path parcelableDescriptor = testData.resolve("student.xml");
+
+    String observed = Generator.generateFromPath(parcelableDescriptor);
+
+    String expected =
+        new String(Files.readAllBytes(testData.resolve("GeneratedStudent.java")), UTF_8);
     assertEquals(expected, observed);
   }
 }

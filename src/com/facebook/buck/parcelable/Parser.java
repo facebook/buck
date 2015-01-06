@@ -26,8 +26,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -36,8 +36,8 @@ public class Parser {
   /** Utility class: do not instantiate. */
   private Parser() {}
 
-  public static ParcelableClass parse(File xml) throws IOException, SAXException {
-    Document doc = XmlDomParser.parse(xml);
+  public static ParcelableClass parse(Path xml) throws IOException, SAXException {
+    Document doc = XmlDomParser.parse(xml.toFile());
 
     // packageName, className, creatorClass
     Element classElement = (Element) doc.getElementsByTagName("class").item(0);

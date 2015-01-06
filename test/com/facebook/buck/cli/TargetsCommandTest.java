@@ -19,6 +19,8 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
@@ -49,9 +51,8 @@ import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -92,7 +93,10 @@ public class TargetsCommandTest {
   }
 
   private String testDataPath(String fileName) {
-    return "testdata/com/facebook/buck/cli/" + fileName;
+    return TestDataHelper.getTestDataDirectory(this)
+        .resolve("target_command")
+        .resolve(fileName)
+        .toString();
   }
 
   @Before
@@ -130,7 +134,7 @@ public class TargetsCommandTest {
 
     // run `buck targets` on the build file and parse the observed JSON.
     SortedMap<String, TargetNode<?>> nodes = buildTargetNodes(
-        "//testdata/com/facebook/buck/cli",
+        "//" + testDataPath(""),
         "test-library");
 
     targetsCommand.printJsonForTargets(nodes, /* includes */ ImmutableList.<String>of());
