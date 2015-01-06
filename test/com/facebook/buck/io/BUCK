@@ -3,6 +3,7 @@ java_test(
   srcs = glob(['*Test.java']),
   deps = [
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/commons-compress:commons-compress',

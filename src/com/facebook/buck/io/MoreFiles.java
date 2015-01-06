@@ -24,7 +24,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -32,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -119,8 +119,8 @@ public final class MoreFiles {
       public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
           throws IOException {
         Path targetPath = toPath.resolve(fromPath.relativize(dir));
-        if (!java.nio.file.Files.exists(targetPath)) {
-          java.nio.file.Files.createDirectory(targetPath);
+        if (!Files.exists(targetPath)) {
+          Files.createDirectory(targetPath);
         }
         return FileVisitResult.CONTINUE;
       }
@@ -130,13 +130,13 @@ public final class MoreFiles {
         Path destPath = toPath.resolve(fromPath.relativize(file));
         Path transformedDestPath = transform.apply(destPath);
         if (transformedDestPath != null) {
-          if (java.nio.file.Files.isSymbolicLink(file)) {
-            java.nio.file.Files.deleteIfExists(transformedDestPath);
-            java.nio.file.Files.createSymbolicLink(
+          if (Files.isSymbolicLink(file)) {
+            Files.deleteIfExists(transformedDestPath);
+            Files.createSymbolicLink(
                 transformedDestPath,
-                java.nio.file.Files.readSymbolicLink(file));
+                Files.readSymbolicLink(file));
           } else {
-            java.nio.file.Files.copy(
+            Files.copy(
                 file,
                 transformedDestPath,
                 StandardCopyOption.REPLACE_EXISTING);
@@ -145,7 +145,7 @@ public final class MoreFiles {
         return FileVisitResult.CONTINUE;
       }
     };
-    java.nio.file.Files.walkFileTree(fromPath, copyDirVisitor);
+    Files.walkFileTree(fromPath, copyDirVisitor);
   }
 
   public static void deleteRecursively(final Path path) throws IOException {
@@ -154,21 +154,21 @@ public final class MoreFiles {
 
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        java.nio.file.Files.delete(file);
+        Files.delete(file);
         return FileVisitResult.CONTINUE;
       }
 
       @Override
       public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
         if (e == null) {
-          java.nio.file.Files.delete(dir);
+          Files.delete(dir);
           return FileVisitResult.CONTINUE;
         } else {
           throw e;
         }
       }
     };
-    java.nio.file.Files.walkFileTree(path, deleteDirVisitor);
+    Files.walkFileTree(path, deleteDirVisitor);
   }
 
   /**
@@ -176,7 +176,7 @@ public final class MoreFiles {
    */
   public static void writeLinesToFile(Iterable<String> lines, File file)
       throws IOException {
-    try (BufferedWriter writer = Files.newWriter(file, Charsets.UTF_8)) {
+    try (BufferedWriter writer = Files.newBufferedWriter(file.toPath(), Charsets.UTF_8)) {
       for (String line : lines) {
         writer.write(line);
         writer.newLine();
@@ -191,7 +191,7 @@ public final class MoreFiles {
   static List<String> diffFileContents(Iterable<String> lines, File file) throws IOException {
     List<String> diffLines = Lists.newArrayList();
     Iterator<String> iter = lines.iterator();
-    try (BufferedReader reader = Files.newReader(file, Charsets.UTF_8)) {
+    try (BufferedReader reader = Files.newBufferedReader(file.toPath(), Charsets.UTF_8)) {
       while (iter.hasNext()) {
         String lineA = reader.readLine();
         String lineB = iter.next();
@@ -217,7 +217,8 @@ public final class MoreFiles {
     for (int i = 0; i < files.length; ++i) {
       FileTime lastAccess;
       try {
-        lastAccess = java.nio.file.Files.readAttributes(files[i].toPath(),
+        lastAccess = Files.readAttributes(
+            files[i].toPath(),
             BasicFileAttributes.class).lastAccessTime();
       } catch (IOException e) {
         lastAccess = FileTime.fromMillis(files[i].lastModified());
@@ -242,7 +243,7 @@ public final class MoreFiles {
   public static void makeExecutable(File file) throws IOException {
     if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
       Path path = file.toPath();
-      Set<PosixFilePermission> permissions = java.nio.file.Files.getPosixFilePermissions(path);
+      Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(path);
 
       if (permissions.contains(PosixFilePermission.OWNER_READ)) {
         permissions.add(PosixFilePermission.OWNER_EXECUTE);
@@ -254,7 +255,7 @@ public final class MoreFiles {
         permissions.add(PosixFilePermission.OTHERS_EXECUTE);
       }
 
-      java.nio.file.Files.setPosixFilePermissions(path, permissions);
+      Files.setPosixFilePermissions(path, permissions);
     } else {
       if (!file.setExecutable(/* executable */ true, /* ownerOnly */ true)) {
         throw new IOException("The file could not be made executable");
@@ -282,8 +283,8 @@ public final class MoreFiles {
 
     for (Path pathToSearch : pathsToSearch) {
       Path resolved = pathToSearch.resolve(executableToFind);
-      if (java.nio.file.Files.isRegularFile(resolved) &&
-          java.nio.file.Files.isExecutable(resolved)) {
+      if (Files.isRegularFile(resolved) &&
+          Files.isExecutable(resolved)) {
         return Optional.of(resolved);
       }
     }
