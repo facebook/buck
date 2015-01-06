@@ -21,7 +21,6 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvent;
@@ -93,12 +92,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     ArtifactCache artifactCache = getArtifactCache();
 
 
-    try {
-      buildTargets = getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
-    } catch (NoSuchBuildTargetException e) {
-      console.printBuildFailureWithoutStacktrace(e);
-      return 1;
-    }
+    buildTargets = getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
 
     if (buildTargets.isEmpty()) {
       console.printBuildFailure("Must specify at least one build target.");

@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.shell.DefaultShellStep;
@@ -60,13 +59,7 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
     }
 
     String targetName = options.getTarget();
-    BuildTarget target;
-    try {
-      target = Iterables.getOnlyElement(getBuildTargets(ImmutableSet.of(targetName)));
-    } catch (NoSuchBuildTargetException e) {
-      console.printBuildFailure(e.getMessage());
-      return 1;
-    }
+    BuildTarget target = Iterables.getOnlyElement(getBuildTargets(ImmutableSet.of(targetName)));
 
     Build build = buildCommand.getBuild();
     BuildRule targetRule = build.getActionGraph().findBuildRuleByTarget(target);

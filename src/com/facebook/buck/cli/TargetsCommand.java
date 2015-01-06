@@ -99,14 +99,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       }
     }
 
-    ImmutableSet<BuildTarget> matchingBuildTargets;
-    try {
-      matchingBuildTargets = ImmutableSet.copyOf(
-          getBuildTargets(options.getArgumentsFormattedAsBuildTargets()));
-    } catch (NoSuchBuildTargetException e) {
-      console.printBuildFailureWithoutStacktrace(e);
-      return 1;
-    }
+    ImmutableSet<BuildTarget> matchingBuildTargets = ImmutableSet.copyOf(
+        getBuildTargets(options.getArgumentsFormattedAsBuildTargets()));
 
     // Parse the entire action graph, or (if targets are specified),
     // only the specified targets and their dependencies..
@@ -377,14 +371,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
    * on what flags are passed in.
    */
   private int doShowRules(TargetsCommandOptions options) throws IOException, InterruptedException {
-    ImmutableSet<BuildTarget> matchingBuildTargets;
-    try {
-      matchingBuildTargets = ImmutableSet.copyOf(
-          getBuildTargets(options.getArgumentsFormattedAsBuildTargets()));
-    } catch (NoSuchBuildTargetException e) {
-      console.printBuildFailureWithoutStacktrace(e);
-      return 1;
-    }
+    ImmutableSet<BuildTarget> matchingBuildTargets = ImmutableSet.copyOf(
+        getBuildTargets(options.getArgumentsFormattedAsBuildTargets()));
 
     if (matchingBuildTargets.isEmpty()) {
       console.printBuildFailure("Must specify at least one build target.");
