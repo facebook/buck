@@ -30,27 +30,20 @@ import com.google.common.collect.Sets;
 
 public class TargetGraphAndTargets {
   private final TargetGraph targetGraph;
-  private final TargetGraph fullGraph;
   private final ImmutableSet<TargetNode<?>> projectRoots;
   private final ImmutableSet<TargetNode<?>> associatedTests;
 
   private TargetGraphAndTargets(
       TargetGraph targetGraph,
-      TargetGraph fullGraph,
       ImmutableSet<TargetNode<?>> projectRoots,
       ImmutableSet<TargetNode<?>> associatedTests) {
     this.targetGraph = targetGraph;
-    this.fullGraph = fullGraph;
     this.projectRoots = projectRoots;
     this.associatedTests = associatedTests;
   }
 
   public TargetGraph getTargetGraph() {
     return targetGraph;
-  }
-
-  public TargetGraph getFullGraph() {
-    return fullGraph;
   }
 
   public ImmutableSet<TargetNode<?>> getProjectRoots() {
@@ -142,7 +135,7 @@ public class TargetGraphAndTargets {
     TargetGraph targetGraph = fullGraph.getSubgraph(
         Iterables.concat(projectRoots, associatedTests, associatedProjects));
 
-    return new TargetGraphAndTargets(targetGraph, fullGraph, projectRoots, associatedTests);
+    return new TargetGraphAndTargets(targetGraph, projectRoots, associatedTests);
   }
 
   /**

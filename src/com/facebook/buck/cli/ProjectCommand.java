@@ -45,6 +45,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessManager;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -106,11 +107,31 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   @Override
   int runCommandWithOptionsInternal(ProjectCommandOptions options)
       throws IOException, InterruptedException {
+    if (options.getIde() == ProjectCommandOptions.Ide.XCODE) {
+      checkForAndKillXcodeIfRunning(options.getIdePrompt());
+    }
+
+    TargetGraph fullGraph;
+    try {
+      fullGraph = getParser().buildTargetGraphForTargetNodeSpecs(
+          ImmutableList.of(
+              new TargetNodePredicateSpec(
+                  Predicates.<TargetNode<?>>alwaysTrue(),
+                  getProjectFilesystem().getIgnorePaths())),
+          options.getDefaultIncludes(),
+          getBuckEventBus(),
+          console,
+          environment,
+          options.getEnableProfiling());
+    } catch (BuildTargetException | BuildFileParseException e) {
+      throw new HumanReadableException(e);
+    }
+
     switch (options.getIde()) {
       case INTELLIJ:
-        return runIntellijProjectGenerator(options);
+        return runIntellijProjectGenerator(fullGraph, options);
       case XCODE:
-        return runXcodeProjectGenerator(options);
+        return runXcodeProjectGenerator(fullGraph, options);
       default:
         // unreachable
         throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
@@ -120,20 +141,20 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   /**
    * Run intellij specific project generation actions.
    */
-  int runIntellijProjectGenerator(ProjectCommandOptions options)
+  int runIntellijProjectGenerator(
+      TargetGraph fullGraph,
+      ProjectCommandOptions options)
       throws IOException, InterruptedException {
+    TargetGraphAndTargets targetGraphAndTargets = createTargetGraph(
+        fullGraph,
+        options.getIde(),
+        getBuildTargets(options.getArgumentsFormattedAsBuildTargets()),
+        options.getDefaultExcludePaths(),
+        options.isWithTests());
+
     // Create an ActionGraph that only contains targets that can be represented as IDE
     // configuration files.
-    TargetGraph fullGraph;
-    ActionGraph actionGraph;
-
-    try {
-      TargetGraphAndTargets targetGraphAndTargets = createTargetGraph(options);
-      fullGraph = targetGraphAndTargets.getFullGraph();
-      actionGraph = targetGraphTransformer.apply(targetGraphAndTargets.getTargetGraph());
-    } catch (BuildTargetException | BuildFileParseException e) {
-      throw new HumanReadableException(e);
-    }
+    ActionGraph actionGraph = targetGraphTransformer.apply(targetGraphAndTargets.getTargetGraph());
 
     ExecutionContext executionContext = createExecutionContext(
         options,
@@ -233,10 +254,13 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       TargetGraph fullGraph,
       ProjectCommandOptions options)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    ImmutableSet<BuildTarget> buildTargets = getRootsFromOptionsWithPredicate(
-        fullGraph,
-        options,
-        ANNOTATION_PREDICATE);
+    ImmutableSet<BuildTarget> buildTargets =
+        getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
+    if (buildTargets.isEmpty()) {
+      buildTargets = getRootsFromPredicate(
+          fullGraph,
+          ANNOTATION_PREDICATE);
+    }
     return FluentIterable
         .from(buildTargets)
         .transform(Functions.toStringFunction())
@@ -246,16 +270,17 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   /**
    * Run xcode specific project generation actions.
    */
-  int runXcodeProjectGenerator(ProjectCommandOptions options)
+  int runXcodeProjectGenerator(
+      TargetGraph fullGraph,
+      ProjectCommandOptions options)
       throws IOException, InterruptedException {
-    checkForAndKillXcodeIfRunning(options.getIdePrompt());
-
     TargetGraphAndTargets targetGraphAndTargets;
-    try {
-      targetGraphAndTargets = createTargetGraph(options);
-    } catch (BuildTargetException | BuildFileParseException e) {
-      throw new HumanReadableException(e);
-    }
+    targetGraphAndTargets = createTargetGraph(
+        fullGraph,
+        options.getIde(),
+        getBuildTargets(options.getArgumentsFormattedAsBuildTargets()),
+        options.getDefaultExcludePaths(),
+        options.isWithTests());
 
     ImmutableSet<BuildTarget> passedInTargetsSet;
 
@@ -387,15 +412,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       (result.get().isEmpty() || result.get().toLowerCase(Locale.US).startsWith("y"));
   }
 
-  private ImmutableSet<BuildTarget> getRootsFromOptionsWithPredicate(
+  private static ImmutableSet<BuildTarget> getRootsFromPredicate(
       TargetGraph fullGraph,
-      ProjectCommandOptions options,
-      Predicate<TargetNode<?>> rootsPredicate)
-      throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
-    ImmutableSet<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
-    if (!argumentsAsBuildTargets.isEmpty()) {
-      return getBuildTargets(argumentsAsBuildTargets);
-    }
+      Predicate<TargetNode<?>> rootsPredicate) {
     return FluentIterable
         .from(fullGraph.getNodes())
         .filter(rootsPredicate)
@@ -403,13 +422,18 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         .toSet();
   }
 
-  private TargetGraphAndTargets createTargetGraph(final ProjectCommandOptions options)
-      throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
+  @VisibleForTesting
+  static TargetGraphAndTargets createTargetGraph(
+      TargetGraph fullGraph,
+      ProjectCommandOptions.Ide targetIde,
+      final ImmutableSet<BuildTarget> passedInTargetsSet,
+      final ImmutableSet<String> defaultExcludePaths,
+      boolean withTests) {
     Predicate<TargetNode<?>> projectRootsPredicate;
     AssociatedTargetNodePredicate associatedProjectPredicate;
 
     // Prepare the predicates to create the project graph based on the IDE.
-    switch (options.getIde()) {
+    switch (targetIde) {
       case INTELLIJ:
         projectRootsPredicate = new Predicate<TargetNode<?>>() {
           @Override
@@ -438,10 +462,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         };
         break;
       case XCODE:
-        final ImmutableSet<String> defaultExcludePaths = options.getDefaultExcludePaths();
-        final ImmutableSet<BuildTarget> passedInTargetsSet =
-            ImmutableSet.copyOf(getBuildTargets(options.getArgumentsFormattedAsBuildTargets()));
-
         projectRootsPredicate = new Predicate<TargetNode<?>>() {
           @Override
           public boolean apply(TargetNode<?> input) {
@@ -489,28 +509,18 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
     }
 
-    TargetGraph fullGraph = getParser().buildTargetGraphForTargetNodeSpecs(
-        ImmutableList.of(
-            new TargetNodePredicateSpec(
-                Predicates.<TargetNode<?>>alwaysTrue(),
-                getProjectFilesystem().getIgnorePaths())),
-        options.getDefaultIncludes(),
-        getBuckEventBus(),
-        console,
-        environment,
-        options.getEnableProfiling());
-
-
-    ImmutableSet<BuildTarget> graphRoots = getRootsFromOptionsWithPredicate(
-        fullGraph,
-        options,
-        projectRootsPredicate);
+    ImmutableSet<BuildTarget> graphRoots;
+    if (!passedInTargetsSet.isEmpty()) {
+      graphRoots = passedInTargetsSet;
+    } else {
+      graphRoots = getRootsFromPredicate(fullGraph, projectRootsPredicate);
+    }
 
     return TargetGraphAndTargets.create(
         graphRoots,
         fullGraph,
         associatedProjectPredicate,
-        options.isWithTests());
+        withTests);
   }
 
   @Override
