@@ -466,10 +466,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
    */
   @Override
   public void walkRelativeFileTree(Path path, FileVisitor<Path> fileVisitor) throws IOException {
-    Preconditions.checkArgument(
-        !fileContents.containsKey(path),
-        "FakeProjectFilesystem only supports walkRelativeFileTree over directories.");
-    for (Path file : getFilesUnderDir(path)) {
+    for (Path file : filesUnderPath(path)) {
       fileVisitor.visitFile(file, DEFAULT_FILE_ATTRIBUTES);
     }
   }
@@ -478,7 +475,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     writeContentsToPath("", path);
   }
 
-  private Collection<Path> getFilesUnderDir(final Path dirPath) {
+  private Collection<Path> filesUnderPath(final Path dirPath) {
     return Collections2.filter(fileContents.keySet(), new Predicate<Path>() {
           @Override
           public boolean apply(Path input) {

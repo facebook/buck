@@ -17,6 +17,7 @@
 package com.facebook.buck.testutil;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -127,6 +128,27 @@ public class FakeProjectFilesystemTest {
         filesVisited, containsInAnyOrder(
             Paths.get("root/A/B/C.txt"),
             Paths.get("root/A/B.txt")));
+  }
+
+  @Test
+  public void testWalkRelativeFileTreeWhenPathIsAFile() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.touch(Paths.get("A.txt"));
+
+    final List<Path> filesVisited = Lists.newArrayList();
+
+    FileVisitor<Path> fileVisitor = new SimpleFileVisitor<Path>() {
+      @Override
+      public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
+        filesVisited.add(path);
+        return FileVisitResult.CONTINUE;
+      }
+    };
+
+    filesystem.walkRelativeFileTree(Paths.get("A.txt"), fileVisitor);
+
+    // Despite the awkward name, "contains" implies an exact match.
+    assertThat(filesVisited, contains(Paths.get("A.txt")));
   }
 
   @Test
