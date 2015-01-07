@@ -26,6 +26,8 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -79,6 +81,39 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testBuckProjectDryRun() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project1", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "--dry-run");
+    result.assertSuccess("buck project should exit cleanly");
+
+    ImmutableSortedSet<String> expectedResult = ImmutableSortedSet.of(
+        "//:project_config",
+        "//:root_module",
+        "//libs:generated",
+        "//libs:generated_jar",
+        "//libs:guava",
+        "//libs:jsr305",
+        "//libs:junit",
+        "//modules/dep1:dep1",
+        "//modules/dep1:project_config",
+        "//modules/dep1:test",
+        "//modules/tip:project_config",
+        "//modules/tip:test",
+        "//modules/tip:tip");
+
+    ImmutableSortedSet<String> actualResult = ImmutableSortedSet.copyOf(
+        Splitter.on('\n').omitEmptyStrings().split(result.getStdout()));
+
+    assertEquals(
+        "`buck project --dry-run` should print the list of targets that would be included.",
+        expectedResult,
+        actualResult);
+  }
+
+  @Test
   public void testBuckProjectExcludesSubdirectories() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "project2", temporaryFolder);
@@ -124,6 +159,38 @@ public class ProjectIntegrationTest {
         "`buck project` should contain warning to restart IntelliJ.",
         result.getStderr(),
         containsString("  ::  Please close and re-open IntelliJ."));
+  }
+
+  @Test
+  public void testBuckProjectSliceDryRun() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_slice", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--dry-run",
+        "//modules/dep1:dep1",
+        "//:root");
+    result.assertSuccess("buck project should exit cleanly");
+
+    ImmutableSortedSet<String> expectedResult = ImmutableSortedSet.of(
+        "//:project_config",
+        "//:root",
+        "//libs:guava",
+        "//libs:jsr305",
+        "//libs:junit",
+        "//modules/dep1:dep1",
+        "//modules/dep1:project_config",
+        "//modules/dep1:test");
+
+    ImmutableSortedSet<String> actualResult = ImmutableSortedSet.copyOf(
+        Splitter.on('\n').omitEmptyStrings().split(result.getStdout()));
+
+    assertEquals(
+        "`buck project --dry-run` should print the list of targets that would be included.",
+        expectedResult,
+        actualResult);
   }
 
   /**
@@ -198,6 +265,35 @@ public class ProjectIntegrationTest {
         "`buck project` should contain warning to restart IntelliJ.",
         result.getStderr(),
         containsString("  ::  Please close and re-open IntelliJ."));
+  }
+
+  @Test
+  public void testBuckProjectSliceWithTestsDryRun() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_slice_with_tests", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--dry-run",
+        "//modules/dep1:dep1");
+    result.assertSuccess("buck project should exit cleanly");
+
+    ImmutableSortedSet<String> expectedResult = ImmutableSortedSet.of(
+        "//libs:guava",
+        "//libs:jsr305",
+        "//libs:junit",
+        "//modules/dep1:dep1",
+        "//modules/dep1:project_config",
+        "//modules/dep1:test");
+
+    ImmutableSortedSet<String> actualResult = ImmutableSortedSet.copyOf(
+        Splitter.on('\n').omitEmptyStrings().split(result.getStdout()));
+
+    assertEquals(
+        "`buck project --dry-run` should print the list of targets that would be included.",
+        expectedResult,
+        actualResult);
   }
 
   /**

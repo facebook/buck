@@ -92,6 +92,12 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
           "applies to generated Xcode projects.)")
   private boolean readOnly = DEFAULT_READ_ONLY_VALUE;
 
+  @Option(
+      name = "--dry-run",
+      usage = "Instead of actually generating the project, only print out the targets that " +
+          "would be included.")
+  private boolean dryRun = false;
+
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
@@ -113,6 +119,10 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
 
   public boolean getCombinedProject() {
     return combinedProject;
+  }
+
+  public boolean getDryRun() {
+    return dryRun;
   }
 
   public boolean getCombineTestBundles() {

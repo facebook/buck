@@ -136,6 +136,14 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         options.getDefaultExcludePaths(),
         options.isWithTests());
 
+    if (options.getDryRun()) {
+      for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+        console.getStdOut().println(targetNode.toString());
+      }
+
+      return 0;
+    }
+
     switch (options.getIde()) {
       case INTELLIJ:
         return runIntellijProjectGenerator(
