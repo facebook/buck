@@ -127,11 +127,27 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       throw new HumanReadableException(e);
     }
 
+    ImmutableSet<BuildTarget> passedInTargetsSet =
+        getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
+    TargetGraphAndTargets targetGraphAndTargets = createTargetGraph(
+        fullGraph,
+        options.getIde(),
+        passedInTargetsSet,
+        options.getDefaultExcludePaths(),
+        options.isWithTests());
+
     switch (options.getIde()) {
       case INTELLIJ:
-        return runIntellijProjectGenerator(fullGraph, options);
+        return runIntellijProjectGenerator(
+            fullGraph,
+            targetGraphAndTargets,
+            passedInTargetsSet,
+            options);
       case XCODE:
-        return runXcodeProjectGenerator(fullGraph, options);
+        return runXcodeProjectGenerator(
+            targetGraphAndTargets,
+            passedInTargetsSet,
+            options);
       default:
         // unreachable
         throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
@@ -143,15 +159,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    */
   int runIntellijProjectGenerator(
       TargetGraph fullGraph,
+      TargetGraphAndTargets targetGraphAndTargets,
+      ImmutableSet<BuildTarget> passedInTargetsSet,
       ProjectCommandOptions options)
       throws IOException, InterruptedException {
-    TargetGraphAndTargets targetGraphAndTargets = createTargetGraph(
-        fullGraph,
-        options.getIde(),
-        getBuildTargets(options.getArgumentsFormattedAsBuildTargets()),
-        options.getDefaultExcludePaths(),
-        options.isWithTests());
-
     // Create an ActionGraph that only contains targets that can be represented as IDE
     // configuration files.
     ActionGraph actionGraph = targetGraphTransformer.apply(targetGraphAndTargets.getTargetGraph());
@@ -197,7 +208,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       exitCode = project.createIntellijProject(
           tempFile,
           executionContext.getProcessExecutor(),
-          !options.getArgumentsFormattedAsBuildTargets().isEmpty(),
+          !passedInTargetsSet.isEmpty(),
           console.getStdOut(),
           console.getStdErr());
       if (exitCode != 0) {
@@ -207,7 +218,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       List<String> additionalInitialTargets = ImmutableList.of();
       if (options.shouldProcessAnnotations()) {
         try {
-          additionalInitialTargets = getAnnotationProcessingTargets(fullGraph, options);
+          additionalInitialTargets = getAnnotationProcessingTargets(fullGraph, passedInTargetsSet);
         } catch (BuildTargetException | BuildFileParseException e) {
           throw new HumanReadableException(e);
         }
@@ -235,7 +246,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       }
     }
 
-    if (options.getArguments().isEmpty()) {
+    if (passedInTargetsSet.isEmpty()) {
       String greenStar = console.getAnsi().asHighlightedSuccessText(" * ");
       getStdErr().printf(
           console.getAnsi().asHighlightedSuccessText("=== Did you know ===") + "\n" +
@@ -252,11 +263,12 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
   ImmutableList<String> getAnnotationProcessingTargets(
       TargetGraph fullGraph,
-      ProjectCommandOptions options)
+      ImmutableSet<BuildTarget> passedInTargetsSet)
       throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
-    ImmutableSet<BuildTarget> buildTargets =
-        getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
-    if (buildTargets.isEmpty()) {
+    ImmutableSet<BuildTarget> buildTargets;
+    if (!passedInTargetsSet.isEmpty()) {
+      buildTargets = passedInTargetsSet;
+    } else {
       buildTargets = getRootsFromPredicate(
           fullGraph,
           ANNOTATION_PREDICATE);
@@ -271,22 +283,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    * Run xcode specific project generation actions.
    */
   int runXcodeProjectGenerator(
-      TargetGraph fullGraph,
+      TargetGraphAndTargets targetGraphAndTargets,
+      ImmutableSet<BuildTarget> passedInTargetsSet,
       ProjectCommandOptions options)
       throws IOException, InterruptedException {
-    TargetGraphAndTargets targetGraphAndTargets;
-    targetGraphAndTargets = createTargetGraph(
-        fullGraph,
-        options.getIde(),
-        getBuildTargets(options.getArgumentsFormattedAsBuildTargets()),
-        options.getDefaultExcludePaths(),
-        options.isWithTests());
-
-    ImmutableSet<BuildTarget> passedInTargetsSet;
-
-    ImmutableSet<String> argumentsAsBuildTargets = options.getArgumentsFormattedAsBuildTargets();
-    passedInTargetsSet = ImmutableSet.copyOf(getBuildTargets(argumentsAsBuildTargets));
-
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (options.getReadOnly()) {
       optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
