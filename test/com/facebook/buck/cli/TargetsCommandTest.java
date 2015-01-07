@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
@@ -40,13 +41,16 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -411,4 +415,59 @@ public class TargetsCommandTest {
         ImmutableSet.of("//foo:xctest"),
         matchingBuildRules.keySet());
   }
+
+  @Test
+  public void testPathsUnderDirectories() throws CmdLineException, IOException {
+    Path resDir = Paths.get("some/resources/dir");
+    BuildTarget androidResourceTarget = BuildTargetFactory.newInstance("//:res");
+    TargetNode<?> androidResourceNode = AndroidResourceBuilder.createBuilder(androidResourceTarget)
+        .setRes(resDir)
+        .build();
+
+    Path genSrc = resDir.resolve("foo.txt");
+    BuildTarget genTarget = BuildTargetFactory.newInstance("//:res");
+    TargetNode<?> genNode = GenruleBuilder.newGenruleBuilder(genTarget)
+        .setSrcs(ImmutableList.<SourcePath>of(new PathSourcePath(genSrc)))
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(androidResourceNode, genNode);
+
+    SortedMap<String, TargetNode<?>> matchingBuildRules;
+
+    // Specifying a resource under the resource directory causes a match.
+    matchingBuildRules =
+        targetsCommand.getMatchingNodes(
+            targetGraph,
+            Optional.of(ImmutableSet.of(resDir.resolve("some_resource.txt"))),
+            Optional.<ImmutableSet<BuildTarget>>absent(),
+            Optional.<ImmutableSet<BuildRuleType>>absent());
+    assertEquals(
+        ImmutableSet.of(androidResourceTarget.toString()),
+        matchingBuildRules.keySet());
+
+    // Specifying a resource with the same string-like common prefix, but not under the above
+    // resource dir, should not trigger a match.
+    matchingBuildRules =
+        targetsCommand.getMatchingNodes(
+            targetGraph,
+            Optional.of(
+                ImmutableSet.of(
+                    Paths.get(resDir.toString() + "_extra").resolve("some_resource.txt"))),
+            Optional.<ImmutableSet<BuildTarget>>absent(),
+            Optional.<ImmutableSet<BuildRuleType>>absent());
+    assertTrue(matchingBuildRules.isEmpty());
+
+    // Specifying a resource with the same string-like common prefix, but not under the above
+    // resource dir, should not trigger a match.
+    matchingBuildRules =
+        targetsCommand.getMatchingNodes(
+            targetGraph,
+            Optional.of(ImmutableSet.of(genSrc)),
+            Optional.<ImmutableSet<BuildTarget>>absent(),
+            Optional.<ImmutableSet<BuildRuleType>>absent());
+    assertEquals(
+        ImmutableSet.of(androidResourceTarget.toString(), genTarget.toString()),
+        matchingBuildRules.keySet());
+  }
+
 }

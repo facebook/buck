@@ -487,8 +487,10 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       }
 
       for (Path input : node.getInputs()) {
-        if (referencedInputs.contains(input)) {
-          return true;
+        for (Path referencedInput : referencedInputs) {
+          if (referencedInput.startsWith(input)) {
+            return true;
+          }
         }
       }
 
