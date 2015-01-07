@@ -120,6 +120,21 @@ android_binary(
   ],
 )
 
+android_binary(
+  name = 'app_no_cxx_deps',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:16',
+  keystore = '//keystores:debug',
+  cpu_filters = [
+    'arm',
+    'armv7',
+    'x86',
+  ],
+  deps = [
+    '//res/com/sample/base:base',
+  ],
+)
+
 project_config(
   src_target = ':app',
 )

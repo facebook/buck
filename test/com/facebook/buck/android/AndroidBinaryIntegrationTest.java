@@ -167,8 +167,11 @@ public class AndroidBinaryIntegrationTest {
         workspace.getFile(
             "buck-out/gen/apps/sample/app_cxx_lib_dep.apk"));
     zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
   }
 
   @Test
@@ -181,6 +184,17 @@ public class AndroidBinaryIntegrationTest {
     zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
+  }
+
+  @Test
+  public void testNoCxxDepsDoesNotIncludeNdkRuntime() throws IOException {
+    workspace.runBuckCommand("build", "//apps/sample:app_no_cxx_deps").assertSuccess();
+
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getFile("buck-out/gen/apps/sample/app_no_cxx_deps.apk"));
+    zipInspector.assertFileDoesNotExist("lib/armeabi/libgnustl_shared.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libgnustl_shared.so");
   }
 
 }
