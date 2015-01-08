@@ -151,6 +151,16 @@ public class AaptPackageResourcesTest {
     filesystem.touch(Paths.get("java/src/com/facebook/base/assets2/fonts/Theinhardt-Medium.otf"));
     filesystem.touch(Paths.get("java/src/com/facebook/base/assets2/fonts/Theinhardt-Regular.otf"));
 
+    // Some special files should be ignored.
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/.svn"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/.git"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/.DS_Store"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/Something.scc"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/CVS"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/thumbs.db"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/picasa.ini"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/something~"));
+
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
         assetsDirectories, commands, filesystem);
@@ -221,6 +231,25 @@ public class AaptPackageResourcesTest {
     filesystem.touch(Paths.get("facebook/base/assets1/guava-10.0.1-fork.dex.1.jar"));
     filesystem.touch(Paths.get("facebook/base/assets2/fonts/Theinhardt-Medium.otf"));
     filesystem.touch(Paths.get("facebook/base/assets2/fonts/Theinhardt-Regular.otf"));
+
+    // Some special files should be ignored and shouldn't cause conflicts.
+    filesystem.touch(Paths.get("facebook/base/assets1/fonts/.svn"));
+    filesystem.touch(Paths.get("facebook/base/assets1/fonts/.git"));
+    filesystem.touch(Paths.get("facebook/base/assets1/fonts/.DS_Store"));
+    filesystem.touch(Paths.get("facebook/base/assets1/fonts/Something.scc"));
+    filesystem.touch(Paths.get("facebook/base/assets1/fonts/CVS"));
+    filesystem.touch(Paths.get("facebook/base/assets1/fonts/thumbs.db"));
+    filesystem.touch(Paths.get("facebook/base/assets1/fonts/picasa.ini"));
+    filesystem.touch(Paths.get("facebook/base/assets1/fonts/something~"));
+
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/.svn"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/.git"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/.DS_Store"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/Something.scc"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/CVS"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/thumbs.db"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/picasa.ini"));
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/something~"));
 
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(

@@ -413,7 +413,9 @@ public class AaptPackageResources extends AbstractBuildRule
           assetsDirectory, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-              allAssets.put(assetsDirectory.relativize(file), file);
+              if (!AaptStep.isSilentlyIgnored(file)) {
+                allAssets.put(assetsDirectory.relativize(file), file);
+              }
               return FileVisitResult.CONTINUE;
             }
           });

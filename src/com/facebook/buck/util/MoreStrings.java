@@ -91,4 +91,12 @@ public final class MoreStrings {
   public static String regexPatternForAny(Iterable<String> values) {
     return "((?:" + Joiner.on(")|(?:").join(values) + "))";
   }
+
+  public static boolean endsWithIgnoreCase(String str, String suffix) {
+    if (str.length() < suffix.length()) {
+      return false;
+    }
+
+    return str.substring(str.length() - suffix.length()).equalsIgnoreCase(suffix);
+  }
 }

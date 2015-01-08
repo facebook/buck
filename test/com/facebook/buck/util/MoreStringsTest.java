@@ -106,4 +106,23 @@ public class MoreStringsTest {
     assertTrue(iterabeArgTestPattern.matcher("hello meh").matches());
     assertFalse(iterabeArgTestPattern.matcher("hello meh hi").matches());
   }
+
+  @Test
+  public void testEndsWithIgnoreCase() {
+    assertTrue(MoreStrings.endsWithIgnoreCase("string.suffix", ".suffix"));
+    assertTrue(MoreStrings.endsWithIgnoreCase("string.suffix", ".SUFFIX"));
+    assertTrue(MoreStrings.endsWithIgnoreCase("string.SUFFIX", ".suffix"));
+    assertTrue(MoreStrings.endsWithIgnoreCase("string.SUFFIX", ".SUFFIX"));
+    assertTrue(MoreStrings.endsWithIgnoreCase("StrINg.SufFIx", ".SUffIX"));
+
+    assertTrue(MoreStrings.endsWithIgnoreCase("string", "string"));
+    assertTrue(MoreStrings.endsWithIgnoreCase("StRiNg", "STriNG"));
+    assertTrue(MoreStrings.endsWithIgnoreCase("", ""));
+    assertTrue(MoreStrings.endsWithIgnoreCase("string", ""));
+
+    assertFalse(MoreStrings.endsWithIgnoreCase("string.something", ".suffix"));
+
+    assertFalse(MoreStrings.endsWithIgnoreCase("string", "strin"));
+    assertFalse(MoreStrings.endsWithIgnoreCase("strin", "string"));
+  }
 }
