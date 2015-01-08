@@ -47,6 +47,7 @@ import javax.annotation.Nullable;
  * Note: currently we don't support offsets greater than MAX_SIGNED_INT.
  */
 public class HeaderMap {
+  private static final double MAX_LOAD_FACTOR = 0.75;
 
   /**
    * Bucket in the hashtable that is a {@link HeaderMap}.
@@ -406,6 +407,10 @@ public class HeaderMap {
 
   @SuppressWarnings("PMD.UnusedPrivateMethod") // PMD has a bad heuristic here.
   private AddResult add(String str, String prefix, String suffix) {
+    if ((numEntries + 1) / (double) numBuckets > MAX_LOAD_FACTOR) {
+      return AddResult.FAILURE_FULL;
+    }
+
     int hash0 = hashKey(str) & (numBuckets - 1);
 
     int hash = hash0;

@@ -200,7 +200,7 @@ public class HeaderMapTest {
     HeaderMap hmap = builder.build();
 
     assertEquals(n, hmap.getNumEntries());
-    assertEquals(1024, hmap.getNumBuckets());
+    assertEquals(2048, hmap.getNumBuckets());
     assertEquals("value of foo1000".length(), hmap.getMaxValueLength());
 
     byte[] bytes = hmap.getBytes();
@@ -246,6 +246,34 @@ public class HeaderMapTest {
 
     for (int i = 0; i < n; i++) {
       assertEquals("bar/file" + i, hmap.lookup("foo" + i));
+    }
+  }
+
+  @Test
+  public void loadFactorDoesNotExceedLimit() {
+    {
+      int n = 384; // 384 / 512 = 0.750, ok
+
+      HeaderMap.Builder builder = HeaderMap.builder();
+      for (int i = 0; i < n; i++) {
+        assertTrue(builder.add("foo" + i, "value of foo", (new Integer(i)).toString()));
+      }
+      HeaderMap hmap = builder.build();
+
+      assertEquals(n, hmap.getNumEntries());
+      assertEquals(512, hmap.getNumBuckets());
+    }
+
+    {
+      int n = 385; // 385 / 512 = 0.752, should expand
+      HeaderMap.Builder builder = HeaderMap.builder();
+      for (int i = 0; i < n; i++) {
+        assertTrue(builder.add("foo" + i, "value of foo", (new Integer(i)).toString()));
+      }
+      HeaderMap hmap = builder.build();
+
+      assertEquals(n, hmap.getNumEntries());
+      assertEquals(1024, hmap.getNumBuckets());
     }
   }
 
