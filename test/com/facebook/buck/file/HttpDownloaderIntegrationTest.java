@@ -50,7 +50,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class DownloaderIntegrationTest {
+public class HttpDownloaderIntegrationTest {
 
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
@@ -93,7 +93,7 @@ public class DownloaderIntegrationTest {
 
   @Before
   public void createDownloader() throws IOException {
-    downloader = new Downloader(Optional.<Proxy>absent(), Optional.<String>absent());
+    downloader = new HttpDownloader(Optional.<Proxy>absent(), Optional.<String>absent());
     outputDir = tmp.newFolder().toPath();
   }
 

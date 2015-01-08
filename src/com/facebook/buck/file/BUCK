@@ -4,6 +4,7 @@ java_library(
     'Downloader.java',
     'DownloadEvent.java',
     'DownloadProgressEvent.java',
+    'HttpDownloader.java',
     'MavenUrlDecoder.java',
   ],
   deps = [

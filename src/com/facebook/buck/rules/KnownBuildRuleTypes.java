@@ -58,6 +58,7 @@ import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.extension.BuckExtensionDescription;
 import com.facebook.buck.file.Downloader;
+import com.facebook.buck.file.HttpDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.java.JavaBinaryDescription;
@@ -345,8 +346,9 @@ public class KnownBuildRuleTypes {
 
     // Default maven repo, if set
     Optional<String> defaultMavenRepo = config.getValue("download", "maven_repo");
-    Downloader downloader = new Downloader(Optional.<Proxy>absent(), defaultMavenRepo);
     boolean downloadAtRuntimeOk = config.getBooleanValue("download", "in_build", false);
+    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(), defaultMavenRepo);
+
 
     Builder builder = builder();
 

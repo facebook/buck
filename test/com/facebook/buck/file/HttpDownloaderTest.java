@@ -36,7 +36,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class DownloaderTest {
+public class HttpDownloaderTest {
 
   private final Path neverUsed = Paths.get("never/used");
   private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
@@ -50,7 +50,7 @@ public class DownloaderTest {
     EasyMock.replay(connection);
 
     Downloader downloader =
-        new Downloader(Optional.<Proxy>absent(), Optional.<String>absent()) {
+        new HttpDownloader(Optional.<Proxy>absent(), Optional.<String>absent()) {
           @Override
           protected HttpURLConnection createConnection(URI uri) throws IOException {
             return connection;
@@ -69,7 +69,7 @@ public class DownloaderTest {
   @Test(expected = HumanReadableException.class)
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void shouldThrowIfUrlIsNotHttpOrMaven() throws URISyntaxException, IOException {
-    Downloader downloader = new Downloader(Optional.<Proxy>absent(), Optional.<String>absent());
+    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(), Optional.<String>absent());
 
     downloader.fetch(eventBus, new URI("example:foo/bar/baz"), neverUsed);
   }
