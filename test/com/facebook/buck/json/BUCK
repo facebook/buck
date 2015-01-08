@@ -7,6 +7,8 @@ java_test(
   ],
   deps = [
     '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest-core',
+    '//third-party/java/hamcrest:hamcrest-library',
     '//third-party/java/junit:junit',
     '//src/com/facebook/buck/json:json',
     '//src/com/facebook/buck/json:raw_parser',
