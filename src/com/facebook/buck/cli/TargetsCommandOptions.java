@@ -40,6 +40,11 @@ public class TargetsCommandOptions extends BuildCommandOptions {
   @SuppressFieldNotInitialized
   private Supplier<ImmutableSet<String>> referencedFiles;
 
+  @Option(name = "--detect-test-changes",
+      usage = "Modifies the --referenced-file flag resolution to pretend that targets depend on " +
+          "their tests (experimental)")
+  private boolean isDetectTestChanges;
+
   @Option(name = "--type",
       usage = "The types of target to filter by, --type type1 type2 ... typeN --other_option",
       handler = StringSetOptionHandler.class)
@@ -74,6 +79,11 @@ public class TargetsCommandOptions extends BuildCommandOptions {
   public PathArguments.ReferencedFiles getReferencedFiles(Path projectRoot)
       throws IOException {
     return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, referencedFiles.get());
+  }
+
+  /** @return {@code true} if {@code --detect-test-changes} was specified. */
+  public boolean isDetectTestChanges() {
+    return isDetectTestChanges;
   }
 
   public boolean getPrintJson() {

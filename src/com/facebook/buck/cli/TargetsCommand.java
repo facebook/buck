@@ -22,6 +22,8 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.HasSourceUnderTest;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
@@ -44,6 +46,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -104,9 +107,15 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
     // Parse the entire action graph, or (if targets are specified),
     // only the specified targets and their dependencies..
+    //
+    // TODO(jakubzika):
+    // If --detect-test-changes is specified, we need to load the whole graph, because we cannot
+    // know which targets can refer to the specified targets or their dependencies in their
+    // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
+    // longer be necessary.
     TargetGraph graph;
     try {
-      if (matchingBuildTargets.isEmpty()) {
+      if (matchingBuildTargets.isEmpty() || options.isDetectTestChanges()) {
         graph = getParser().buildTargetGraphForTargetNodeSpecs(
             ImmutableList.of(
                 new TargetNodePredicateSpec(
@@ -151,7 +160,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
               Optional.of(matchingBuildTargets),
           buildRuleTypes.isEmpty() ?
               Optional.<ImmutableSet<BuildRuleType>>absent() :
-              Optional.of(buildRuleTypes));
+              Optional.of(buildRuleTypes),
+          options.isDetectTestChanges());
     }
 
     // Print out matching targets in alphabetical order.
@@ -178,6 +188,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
    * @param matchingBuildTargets If present, the result will be limited to the specified targets.
    * @param buildRuleTypes If present, the result will be limited to targets with the specified
    *                       types.
+   * @param detectTestChanges If true, tests are considered to be dependencies of the targets they
+   *                          are testing.
    * @return A map of target names to target nodes.
    */
   @VisibleForTesting
@@ -185,7 +197,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       TargetGraph graph,
       Optional<ImmutableSet<Path>> referencedFiles,
       final Optional<ImmutableSet<BuildTarget>> matchingBuildTargets,
-      final Optional<ImmutableSet<BuildRuleType>> buildRuleTypes) {
+      final Optional<ImmutableSet<BuildRuleType>> buildRuleTypes,
+      boolean detectTestChanges) {
     ImmutableSet<TargetNode<?>> directOwners;
     if (referencedFiles.isPresent()) {
       BuildFileTree buildFileTree = new InMemoryBuildFileTree(
@@ -204,7 +217,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       directOwners = graph.getNodes();
     }
     ImmutableSet<TargetNode<?>> selectedReferrers = FluentIterable
-        .from(getDependentNodes(graph, directOwners))
+        .from(getDependentNodes(graph, directOwners, detectTestChanges))
         .filter(
             new Predicate<TargetNode<?>>() {
               @Override
@@ -234,19 +247,57 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   /**
    * @param graph A graph used to resolve dependencies between targets.
    * @param nodes A set of nodes.
+   * @param detectTestChanges If true, tests are considered to be dependencies of the targets they
+   *                          are testing.
    * @return A set of all nodes that transitively depend on {@code nodes}
    * (a superset of {@code nodes}).
    */
   private static ImmutableSet<TargetNode<?>> getDependentNodes(
       final TargetGraph graph,
-      ImmutableSet<TargetNode<?>> nodes) {
+      ImmutableSet<TargetNode<?>> nodes,
+      boolean detectTestChanges) {
+    ImmutableMultimap.Builder<TargetNode<?>, TargetNode<?>> extraEdgesBuilder =
+        ImmutableMultimap.builder();
+
+    if (detectTestChanges) {
+      for (TargetNode<?> node : graph.getNodes()) {
+        if (node.getConstructorArg() instanceof HasTests) {
+          ImmutableSortedSet<BuildTarget> tests =
+              ((HasTests) node.getConstructorArg()).getTests();
+          for (BuildTarget testTarget : tests) {
+            TargetNode<?> testNode = graph.get(testTarget);
+            if (testNode == null) {
+              throw new HumanReadableException(
+                  "'%s' (test of '%s') is not in the target graph.",
+                  testTarget,
+                  node);
+            }
+            extraEdgesBuilder.put(testNode, node);
+          }
+        }
+
+        if (node.getConstructorArg() instanceof HasSourceUnderTest) {
+          ImmutableSortedSet<BuildTarget> sourceUnderTest =
+              ((HasSourceUnderTest) node.getConstructorArg()).getSourceUnderTest();
+          for (BuildTarget sourceTarget : sourceUnderTest) {
+            TargetNode<?> sourceNode = Preconditions.checkNotNull(graph.get(sourceTarget));
+            extraEdgesBuilder.put(node, sourceNode);
+          }
+        }
+      }
+    }
+    final ImmutableMultimap<TargetNode<?>, TargetNode<?>> extraEdges = extraEdgesBuilder.build();
+
     final ImmutableSet.Builder<TargetNode<?>> builder = ImmutableSet.builder();
     AbstractBreadthFirstTraversal<TargetNode<?>> traversal =
         new AbstractBreadthFirstTraversal<TargetNode<?>>(nodes) {
           @Override
           public ImmutableSet<TargetNode<?>> visit(TargetNode<?> targetNode) {
             builder.add(targetNode);
-            return graph.getIncomingNodesFor(targetNode);
+            return FluentIterable
+                .from(graph.getIncomingNodesFor(targetNode))
+                .append(extraEdges.get(targetNode))
+                .toSet();
           }
     };
     traversal.start();
