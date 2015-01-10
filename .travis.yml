@@ -23,4 +23,8 @@ before_install:
   # Set up the ndk environment.
   - export ANDROID_NDK=`pwd`/android-ndk-linux
   - export PATH=${ANDROID_NDK}:${PATH}
-script: ant travis
+script:
+  # Use Buck to run the tests first because its output is more
+  # conducive to diagnosing failed tests than Ant's is.
+  - buck test --all
+  - ant travis
