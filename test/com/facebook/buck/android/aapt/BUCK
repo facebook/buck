@@ -4,11 +4,12 @@ java_test(
   deps = [
     '//src/com/facebook/buck/android/aapt:aapt',
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/step:step',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/guava:guava',
-    '//third-party/java/junit:junit',
     '//third-party/java/hamcrest:hamcrest-core',
     '//third-party/java/hamcrest:hamcrest-library',
+    '//third-party/java/junit:junit',
   ],
   source_under_test = [
     '//src/com/facebook/buck/android/aapt:aapt',
