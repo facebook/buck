@@ -1,0 +1,4 @@
+<idea-plugin version="2">
+  <id>com.facebook.buck.java.intellij.plugin</id>
+
+</idea-plugin>
