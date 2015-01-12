@@ -1,4 +1,9 @@
 <idea-plugin version="2">
   <id>com.facebook.buck.java.intellij.plugin</id>
-
+  <name>Buck Build Plugin</name>
+  <description>Buck build plugin for Java / Android build automation</description>
+  <version>0.0.1</version>
+  <vendor>Facebook Plc.</vendor>
+  <idea-version since-build="139.659" until-build="139.*" />
+  <depends>com.intellij.modules.java</depends>
 </idea-plugin>
