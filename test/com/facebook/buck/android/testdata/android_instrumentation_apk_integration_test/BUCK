@@ -1,0 +1,42 @@
+android_binary(
+  name = 'app',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:19',
+  keystore = ':keystore',
+  deps = [
+    '//java/com/sample/lib:lib',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+keystore(
+  name = 'keystore',
+  store = 'debug.keystore',
+  properties = 'debug.keystore.properties',
+  visibility = ['PUBLIC'],
+)
+
+cxx_library(
+  name = 'cxx',
+  headers = [
+    'lib.h',
+  ],
+  srcs = [
+    'lib.cpp',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+android_instrumentation_apk(
+  name = 'app_cxx_lib_dep',
+  manifest = 'AndroidManifest.xml',
+  apk = ':app',
+  deps = [
+    '//java/com/sample/app:app',
+    '//:cxx',
+  ],
+)

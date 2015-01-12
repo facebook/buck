@@ -378,7 +378,8 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidBuildConfigDescription(androidBinaryOptions));
     builder.register(new AndroidInstrumentationApkDescription(
             proGuardConfig,
-            androidBinaryOptions));
+            androidBinaryOptions,
+            ndkCxxPlatforms));
     builder.register(new AndroidLibraryDescription(androidBinaryOptions));
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidPrebuiltAarDescription(androidBinaryOptions));

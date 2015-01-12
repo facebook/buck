@@ -54,12 +54,15 @@ public class AndroidInstrumentationApkDescription
 
   private final ProGuardConfig proGuardConfig;
   private final JavacOptions javacOptions;
+  private final ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   public AndroidInstrumentationApkDescription(
       ProGuardConfig proGuardConfig,
-      JavacOptions androidJavacOptions) {
+      JavacOptions androidJavacOptions,
+      ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> nativePlatforms) {
     this.proGuardConfig = proGuardConfig;
     this.javacOptions = androidJavacOptions;
+    this.nativePlatforms = nativePlatforms;
   }
 
   @Override
@@ -123,7 +126,7 @@ public class AndroidInstrumentationApkDescription
         apkUnderTest.getKeystore(),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
-        ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>of());
+        nativePlatforms);
 
     AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();
