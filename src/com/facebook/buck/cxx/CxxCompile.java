@@ -65,7 +65,7 @@ public class CxxCompile extends AbstractBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of(getResolver().getPath(input));
+    return getResolver().filterInputsToCompareToOutput(input);
   }
 
   @Override

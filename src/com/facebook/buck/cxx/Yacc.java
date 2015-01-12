@@ -64,7 +64,7 @@ public class Yacc extends AbstractBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(ImmutableList.of(input));
+    return getResolver().filterInputsToCompareToOutput(input);
   }
 
   @Override

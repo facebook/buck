@@ -139,12 +139,8 @@ public class CxxLinkableEnhancerTest {
 
     // Verify that the archive inputs are the outputs of the genrules.
     assertEquals(
-        ImmutableSet.of(
-            Paths.get("simple.o"),
-            genrule1.getPathToOutputFile(),
-            genrule2.getPathToOutputFile()),
-        ImmutableSet.copyOf(
-            cxxLink.getInputsToCompareToOutput()));
+        ImmutableSet.of(Paths.get("simple.o")),
+        ImmutableSet.copyOf(cxxLink.getInputsToCompareToOutput()));
   }
 
   @Test

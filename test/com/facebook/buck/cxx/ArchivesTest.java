@@ -86,12 +86,8 @@ public class ArchivesTest {
 
     // Verify that the archive inputs are the outputs of the genrules.
     assertEquals(
-        ImmutableSet.of(
-            Paths.get("simple.o"),
-            genrule1.getPathToOutputFile(),
-            genrule2.getPathToOutputFile()),
-        ImmutableSet.copyOf(
-            archive.getInputsToCompareToOutput()));
+        ImmutableSet.of(Paths.get("simple.o")),
+        ImmutableSet.copyOf(archive.getInputsToCompareToOutput()));
   }
 
   @Test

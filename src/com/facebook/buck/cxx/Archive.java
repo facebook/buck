@@ -55,7 +55,7 @@ public class Archive extends AbstractBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().getAllPaths(inputs);
+    return getResolver().filterInputsToCompareToOutput(inputs);
   }
 
   @Override
