@@ -33,7 +33,7 @@
   <property name="pathlib.dir" value="${third-party.dir}/py/pathlib" />
   <property name="unittest2.dir" value="${third-party.dir}/py/unittest2" />
 
-  <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-standalone-1.0.1.jar" />
+  <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-standalone-1.1.jar" />
   <property name="immutables.gensrc.dir" value="${build.dir}/immutables" />
   <property name="immutables.gensrc.test.dir" value="${build.dir}/immutables-tests" />
 
@@ -86,7 +86,7 @@
     <include name="guice/guice-multibindings-3.0.jar" />
     <include name="gson/gson-2.2.4.jar" />
     <include name="icu4j/icu4j-54.1.1.jar" />
-    <include name="immutables/value-1.0.1.jar" />
+    <include name="immutables/value-1.1.jar" />
     <include name="infer-annotations/infer-annotations-1.3.jar" />
     <include name="jacoco/org.jacoco.core-0.7.2.201409121644.jar" />
     <include name="jacoco/org.jacoco.report-0.7.2.201409121644.jar" />

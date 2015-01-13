@@ -17,12 +17,12 @@ java_library(
 
 prebuilt_jar(
   name = 'annotations-jar',
-  binary_jar = 'value-1.0.1.jar',
+  binary_jar = 'value-1.1.jar',
 )
 
 prebuilt_jar(
   name = 'processor',
-  binary_jar = 'value-standalone-1.0.1.jar',
+  binary_jar = 'value-standalone-1.1.jar',
   visibility = ['PUBLIC'],
   deps = [
     '//third-party/java/auto-service:auto-service',

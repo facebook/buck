@@ -53,7 +53,7 @@
 	<classpathentry kind="lib" path="third-party/java/jsr/javax.inject-1.jar"/>
 	<classpathentry kind="lib" path="third-party/java/closure-templates/soy-excluding-deps.jar"/>
 	<classpathentry kind="lib" path="third-party/java/icu4j/icu4j-54.1.1.jar"/>
-	<classpathentry kind="lib" path="third-party/java/immutables/value-1.0.1.jar"/>
+	<classpathentry kind="lib" path="third-party/java/immutables/value-1.1.jar"/>
 	<classpathentry kind="src" path=".apt_generated">
 		<attributes>
 			<attribute name="optional" value="true"/>
