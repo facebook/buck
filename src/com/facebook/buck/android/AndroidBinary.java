@@ -507,11 +507,11 @@ public class AndroidBinary extends AbstractBuildRule implements
         protected void addEnvironmentVariables(
             ExecutionContext context,
             ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-          Function<Path, Path> aboslutifier = context.getProjectFilesystem().getAbsolutifier();
+          Function<Path, Path> absolutifier = context.getProjectFilesystem().getAbsolutifier();
           environmentVariablesBuilder.put(
-              "IN_JARS_DIR", aboslutifier.apply(preprocessJavaClassesInDir).toString());
+              "IN_JARS_DIR", absolutifier.apply(preprocessJavaClassesInDir).toString());
           environmentVariablesBuilder.put(
-              "OUT_JARS_DIR", aboslutifier.apply(preprocessJavaClassesOutDir).toString());
+              "OUT_JARS_DIR", absolutifier.apply(preprocessJavaClassesOutDir).toString());
 
           Optional<AndroidPlatformTarget> platformTarget =
               context.getAndroidPlatformTargetOptional();
@@ -523,7 +523,7 @@ public class AndroidBinary extends AbstractBuildRule implements
           String bootclasspath = Joiner.on(':').join(
               Iterables.transform(
                   platformTarget.get().getBootclasspathEntries(),
-                  aboslutifier));
+                  absolutifier));
 
           environmentVariablesBuilder.put("ANDROID_BOOTCLASSPATH", bootclasspath);
         }
