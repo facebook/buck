@@ -257,7 +257,8 @@ public class ProjectWorkspace {
         "ANDROID_NDK",
         "ANDROID_NDK_REPOSITORY",
         "ANDROID_SDK",
-        "PATH");
+        "PATH",
+        "PATHEXT");
     ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
     for (String variable : inheritedEnvVars) {
       String value = System.getenv(variable);
