@@ -46,6 +46,7 @@ import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -56,7 +57,9 @@ import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.core.AllOf;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -74,6 +77,9 @@ public class WorkspaceAndProjectGeneratorTest {
   private TargetNode<?> barProjectNode;
   private TargetNode<?> bazProjectNode;
   private TargetNode<?> quxProjectNode;
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() throws IOException {
@@ -526,6 +532,48 @@ public class WorkspaceAndProjectGeneratorTest {
             withNameAndBuildingFor(
                 "_BuckCombinedTest-xctest-0",
                 equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY))));
+  }
+
+  @Test
+  public void targetWithoutProject() throws IOException {
+    TargetNode<AppleNativeTargetDescriptionArg> fooLib = AppleLibraryBuilder
+        .createBuilder(BuildTarget.builder("//foo", "lib").build())
+        .build();
+    TargetNode<AppleNativeTargetDescriptionArg> barLib = AppleLibraryBuilder
+        .createBuilder(BuildTarget.builder("//bar", "lib").build())
+        .setDeps(Optional.of(ImmutableSortedSet.of(fooLib.getBuildTarget())))
+        .build();
+    TargetNode<XcodeProjectConfigDescription.Arg> barProject = XcodeProjectConfigBuilder
+        .createBuilder(BuildTarget.builder("//bar", "project").build())
+        .setProjectName("bar")
+        .setRules(ImmutableSortedSet.of(barLib.getBuildTarget()))
+        .build();
+    TargetNode<XcodeWorkspaceConfigDescription.Arg> workspace = XcodeWorkspaceConfigBuilder
+        .createBuilder(BuildTarget.builder("//bar", "workspace").build())
+        .setSrcTarget(Optional.of(barLib.getBuildTarget()))
+        .setWorkspaceName(Optional.of("workspace"))
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        fooLib,
+        barLib,
+        barProject,
+        workspace);
+
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        targetGraph,
+        workspace,
+        ImmutableSet.<ProjectGenerator.Option>of(),
+        ImmutableMultimap.<BuildTarget, TargetNode<AppleTestDescription.Arg>>of(),
+        false);
+
+    Map<TargetNode<?>, ProjectGenerator> projectGenerators = Maps.newHashMap();
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "No xcode_project_config rule was found for the following targets: [//foo:lib]");
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
   }
 
   private Matcher<XCScheme.BuildActionEntry> buildActionEntryWithName(String name) {

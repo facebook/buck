@@ -202,6 +202,7 @@ public class WorkspaceAndProjectGenerator {
         targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
       }
     } else {
+      ImmutableSet.Builder<BuildTarget> generatedTargetsBuilder = ImmutableSet.builder();
       for (TargetNode<?> targetNode : projectGraph.getNodes()) {
         if (targetNode.getType() != XcodeProjectConfigDescription.TYPE) {
           continue;
@@ -211,6 +212,7 @@ public class WorkspaceAndProjectGenerator {
         if (Sets.intersection(targetsInRequiredProjects, projectArg.rules).isEmpty()) {
           continue;
         }
+        generatedTargetsBuilder.addAll(projectArg.rules);
 
         ProjectGenerator generator = projectGenerators.get(targetNode);
         if (generator == null) {
@@ -236,6 +238,14 @@ public class WorkspaceAndProjectGenerator {
         for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
           targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
         }
+      }
+
+      Sets.SetView<BuildTarget> missedTargets =
+          Sets.difference(targetsInRequiredProjects, generatedTargetsBuilder.build());
+      if (!missedTargets.isEmpty()) {
+        throw new HumanReadableException(
+            "No xcode_project_config rule was found for the following targets: %s",
+            missedTargets);
       }
 
       if (!groupedTestResults.groupedTests.isEmpty()) {
