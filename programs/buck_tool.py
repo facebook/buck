@@ -90,6 +90,12 @@ class BuckTool(object):
     def _use_buckd(self):
         return not os.environ.get('NO_BUCKD')
 
+    def _environ_for_buck(self):
+        env = os.environ.copy()
+        env['CLASSPATH'] = self._get_bootstrap_classpath()
+        env['BUCK_CLASSPATH'] = self._get_java_classpath()
+        return env
+
     def launch_buck(self, build_id):
         with Tracing('BuckRepo.launch_buck'):
             self.kill_autobuild()
@@ -118,7 +124,7 @@ class BuckTool(object):
                 print("Not using buckd because watchman isn't installed.",
                       file=sys.stderr)
 
-            env = os.environ.copy()
+            env = self._environ_for_buck()
             env['BUCK_BUILD_ID'] = build_id
 
             buck_client_file = self._get_resource(CLIENT)
@@ -147,10 +153,7 @@ class BuckTool(object):
             command = ["buck"]
             command.extend(self._get_java_args(buck_version_uid))
             command.append("-Djava.io.tmpdir={0}".format(self._tmp_dir))
-            command.append("-classpath")
-            command.append(self._get_bootstrap_classpath())
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
-            command.append(self._get_java_classpath())
             command.append("com.facebook.buck.cli.Main")
             command.extend(sys.argv[1:])
 
@@ -185,10 +188,7 @@ class BuckTool(object):
             command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
             command.append("-Dcom.martiansoftware.nailgun.NGServer.outputPath={0}".format(
                 ngserver_output_path))
-            command.append("-classpath")
-            command.append(self._get_bootstrap_classpath())
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
-            command.append(self._get_java_classpath())
             command.append("com.martiansoftware.nailgun.NGServer")
             command.append("localhost:0")
             command.append("{0}".format(BUCKD_CLIENT_TIMEOUT_MILLIS))
@@ -216,7 +216,8 @@ class BuckTool(object):
                 executable=which("java"),
                 cwd=self._buck_project.root,
                 close_fds=True,
-                preexec_fn=preexec_func)
+                preexec_fn=preexec_func,
+                env=self._environ_for_buck())
 
             buckd_port = None
             for i in range(100):

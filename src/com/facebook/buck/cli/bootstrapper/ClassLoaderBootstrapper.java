@@ -31,9 +31,13 @@ public final class ClassLoaderBootstrapper {
   }
 
   public static void main(String[] args) throws Exception {
-    String classPath = args[0];
-    String mainClassName = args[1];
-    String[] remainingArgs = Arrays.copyOfRange(args, 2, args.length);
+    String classPath = System.getenv("BUCK_CLASSPATH");
+    if (classPath == null) {
+      throw new RuntimeException("BUCK_CLASSPATH not set");
+    }
+
+    String mainClassName = args[0];
+    String[] remainingArgs = Arrays.copyOfRange(args, 1, args.length);
     classLoader = createClassLoader(classPath);
 
     // Some things (notably Jetty) use the context class loader to load stuff

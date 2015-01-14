@@ -30,10 +30,11 @@ public class EnvironmentFilter {
 
   // Always exclude environment variables with these names.
   private static final ImmutableSet<String> ENV_TO_REMOVE = ImmutableSet.of(
-      // UUID added to environment by OS X.
-      "TERM_SESSION_ID",
-      // Build ID passed in from Python.
-      "BUCK_BUILD_ID");
+      "BUCK_BUILD_ID",  // Build ID passed in from Python.
+      "BUCK_CLASSPATH", // Main classpath; set in Python
+      "CLASSPATH",      // Bootstrap classpath; set in Python.
+      "TERM_SESSION_ID" // UUID added to environment by OS X.
+  );
 
   // Utility class, do not instantiate.
   private EnvironmentFilter() { }
