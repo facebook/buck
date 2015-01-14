@@ -70,6 +70,7 @@ java_test(
     '//src/com/facebook/buck/rules:types',
   ],
   deps = [
+    ':testutil',
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:steps',
@@ -136,6 +137,5 @@ java_test(
     '//third-party/java/hamcrest:hamcrest-library',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/junit:junit',
-    ':testutil',
   ],
 )

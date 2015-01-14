@@ -76,6 +76,8 @@ java_test(
     '//src/com/facebook/buck/cli:cli',
   ],
   deps = [
+    ':FakeBuckConfig',
+    ':testutil',
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:utils',
@@ -133,7 +135,5 @@ java_test(
     '//third-party/java/jsr:jsr305',
     '//third-party/java/junit:junit',
     '//third-party/java/nailgun:nailgun',
-    ':FakeBuckConfig',
-    ':testutil',
   ],
 )
