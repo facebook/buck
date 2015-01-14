@@ -198,15 +198,18 @@ class BuckTool(object):
             script is interrupted, it does not kill buckd.
             '''
             def preexec_func():
-
                 # Close any open file descriptors to further separate buckd from its
                 # invoking context (e.g. otherwise we'd hang when running things like
                 # `ssh localhost buck clean`).
-                os.close(0)
-                os.close(1)
-                os.close(2)
 
+                # N.B. preexec_func is POSIX-only, and any reasonable
+                # POSIX system has a /dev/null
                 os.setpgrp()
+                dev_null_fd = os.open("/dev/null", os.O_RDWR)
+                os.dup2(dev_null_fd, 0)
+                os.dup2(dev_null_fd, 1)
+                os.dup2(dev_null_fd, 2)
+                os.close(dev_null_fd)
 
             process = subprocess.Popen(
                 command,
