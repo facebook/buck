@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -27,8 +28,12 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultPropertyFinder;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
@@ -40,10 +45,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 public class AndroidResourceFilterIntegrationTest {
 
   private static boolean isBuildToolsNew;
+  private static Path pathToAapt;
 
   private static final String APK_PATH_FORMAT = "buck-out/gen/apps/sample/%s.apk";
 
@@ -60,10 +67,10 @@ public class AndroidResourceFilterIntegrationTest {
         filesystem,
         Optional.<String>absent(),
         new DefaultPropertyFinder(filesystem, ImmutableMap.copyOf(System.getenv())));
-    Path aapt = AndroidPlatformTarget.getDefaultPlatformTarget(
+    pathToAapt = AndroidPlatformTarget.getDefaultPlatformTarget(
         resolver,
         Optional.<Path>absent()).getAaptExecutable();
-    String buildToolsVersion = aapt.getParent().getFileName().toString();
+    String buildToolsVersion = pathToAapt.getParent().getFileName().toString();
     isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") >= 0;
   }
 
@@ -232,5 +239,41 @@ public class AndroidResourceFilterIntegrationTest {
     long secondCrc = zipInspector.getCrc("assets/asset_file.txt");
 
     assertNotEquals("Rebuilt APK file must include the new asset file.", firstCrc, secondCrc);
+  }
+
+  @Test
+  public void testEnglishBuildDoesntContainFrenchStrings()
+      throws IOException, InterruptedException {
+    workspace.runBuckBuild("//apps/sample:app").assertSuccess();
+    String apkFilePath = String.format(APK_PATH_FORMAT, "app");
+    File apkFile = workspace.getFile(apkFilePath);
+
+    int matchingLines = runAaptDumpResources(apkFile);
+    assertEquals(2, matchingLines);
+
+    workspace.runBuckBuild("//apps/sample:app_en").assertSuccess();
+    apkFilePath = String.format(APK_PATH_FORMAT, "app_en");
+    apkFile = workspace.getFile(apkFilePath);
+
+    matchingLines = runAaptDumpResources(apkFile);
+    assertEquals(1, matchingLines);
+  }
+
+  private int runAaptDumpResources(File apkFile) throws IOException, InterruptedException {
+    final Pattern pattern = Pattern.compile(".*com.example:string/base_button: t=.*");
+    ProcessExecutor.Result result = workspace.runCommand(
+        pathToAapt.toAbsolutePath().toString(),
+        "dump",
+        "resources",
+        apkFile.getAbsolutePath());
+    assertEquals(0, result.getExitCode());
+    return FluentIterable.from(
+        Splitter.on('\n').split(result.getStdout().or(""))).filter(
+        new Predicate<String>() {
+          @Override
+          public boolean apply(String input) {
+            return pattern.matcher(input).matches();
+          }
+        }).size();
   }
 }

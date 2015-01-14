@@ -116,6 +116,7 @@ public class AndroidInstrumentationApkDescription
         resolver,
         ResourceCompressionMode.DISABLED,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        /* locales */ ImmutableSet.<String>of(),
         args.manifest,
         PackageType.INSTRUMENTED,
         apkUnderTest.getCpuFilters(),

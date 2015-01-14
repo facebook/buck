@@ -56,6 +56,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AndroidBinaryDescription implements Description<AndroidBinaryDescription.Arg> {
 
@@ -73,6 +75,8 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
           ImmutableMap.<String, MacroExpander>of(
               "exe", new ExecutableMacroExpander(BUILD_TARGET_PARSER),
               "location", new LocationMacroExpander(BUILD_TARGET_PARSER)));
+
+  private static final Pattern COUNTRY_LOCALE_PATTERN = Pattern.compile("([a-z]{2})-[A-Z]{2}");
 
   private final Javac javac;
   private final JavacOptions javacOptions;
@@ -164,6 +168,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         resolver,
         compressionMode,
         resourceFilter,
+        addFallbackLocales(args.locales.or(ImmutableSet.<String>of())),
         args.manifest,
         packageType,
         ImmutableSet.copyOf(args.cpuFilters.get()),
@@ -246,6 +251,18 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     return ResourceCompressionMode.valueOf(args.resourceCompression.get().toUpperCase());
   }
 
+  private ImmutableSet<String> addFallbackLocales(ImmutableSet<String> locales) {
+    ImmutableSet.Builder<String> allLocales = ImmutableSet.builder();
+    for (String locale : locales) {
+      allLocales.add(locale);
+      Matcher matcher = COUNTRY_LOCALE_PATTERN.matcher(locale);
+      if (matcher.matches()) {
+        allLocales.add(matcher.group(1));
+      }
+    }
+    return allLocales.build();
+  }
+
   @SuppressFieldNotInitialized
   public static class Arg {
     public SourcePath manifest;
@@ -272,6 +289,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     public Optional<Boolean> primaryDexScenarioOverflowAllowed;
     public Optional<Long> linearAllocHardLimit;
     public Optional<List<String>> resourceFilter;
+    public Optional<ImmutableSet<String>> locales;
     public Optional<Boolean> buildStringSourceMap;
     public Optional<Set<TargetCpuType>> cpuFilters;
     public Optional<ImmutableSortedSet<BuildTarget>> preprocessJavaClassesDeps;

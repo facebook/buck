@@ -10,6 +10,18 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_en',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:19',
+  keystore = '//keystores:debug',
+  locales = ['en'],
+  deps = [
+    '//java/com/sample/lib:lib',
+    '//res/com/sample/base:base',
+  ],
+)
+
+android_binary(
   name = 'app_mdpi',
   manifest = 'AndroidManifest.xml',
   target = 'Google Inc.:Google APIs:19',

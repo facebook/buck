@@ -92,6 +92,7 @@ public class ResourcesFilter extends AbstractBuildRule
 
   private final ImmutableList<Path> resDirectories;
   private final ImmutableSet<Path> whitelistedStringDirs;
+  private final ImmutableSet<String> locales;
   private final ResourceCompressionMode resourceCompressionMode;
   private final FilterResourcesStep.ResourceFilter resourceFilter;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -101,11 +102,13 @@ public class ResourcesFilter extends AbstractBuildRule
       SourcePathResolver resolver,
       ImmutableList<Path> resDirectories,
       ImmutableSet<Path> whitelistedStringDirs,
+      ImmutableSet<String> locales,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesStep.ResourceFilter resourceFilter) {
     super(params, resolver);
     this.resDirectories = resDirectories;
     this.whitelistedStringDirs = whitelistedStringDirs;
+    this.locales = locales;
     this.resourceCompressionMode = resourceCompressionMode;
     this.resourceFilter = resourceFilter;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
@@ -132,7 +135,8 @@ public class ResourcesFilter extends AbstractBuildRule
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
         .set("resourceCompressionMode", resourceCompressionMode.toString())
-        .set("resourceFilter", resourceFilter.getDescription());
+        .set("resourceFilter", resourceFilter.getDescription())
+        .set("locales", locales);
   }
 
   @Override
@@ -145,6 +149,7 @@ public class ResourcesFilter extends AbstractBuildRule
     final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
         resDirectories,
         whitelistedStringDirs,
+        locales,
         filteredResDirectoriesBuilder);
     steps.add(filterResourcesStep);
 
@@ -195,6 +200,7 @@ public class ResourcesFilter extends AbstractBuildRule
   FilterResourcesStep createFilterResourcesStep(
       ImmutableList<Path> resourceDirectories,
       ImmutableSet<Path> whitelistedStringDirs,
+      ImmutableSet<String> locales,
       ImmutableList.Builder<Path> filteredResDirectories) {
     ImmutableBiMap.Builder<Path, Path> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
     String resDestinationBasePath = getResDestinationBasePath();
@@ -214,6 +220,8 @@ public class ResourcesFilter extends AbstractBuildRule
       filterResourcesStepBuilder.enableStringsFilter();
       filterResourcesStepBuilder.setWhitelistedStringDirs(whitelistedStringDirs);
     }
+
+    filterResourcesStepBuilder.setLocales(locales);
 
     return filterResourcesStepBuilder.build();
   }

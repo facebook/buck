@@ -48,6 +48,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -70,10 +71,15 @@ public class FilterResourcesStep implements Step {
   static final Pattern NON_ENGLISH_STRING_PATH = Pattern.compile(
       "(\\b|.*/)res/values-.+/strings.xml", Pattern.CASE_INSENSITIVE);
 
+  @VisibleForTesting
+  static final Pattern VALUES_DIR_PATTERN = Pattern.compile(
+      "\\b|.*/res/values-([a-z]{2})(?:-r([A-Z]{2}))*/.*");
+
   private final ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
   private final boolean filterDrawables;
   private final boolean filterStrings;
   private final ImmutableSet<Path> whitelistedStringDirs;
+  private final ImmutableSet<String> locales;
   private final FilteredDirectoryCopier filteredDirectoryCopier;
   @Nullable
   private final Set<Filters.Density> targetDensities;
@@ -104,18 +110,20 @@ public class FilterResourcesStep implements Step {
       boolean filterDrawables,
       boolean filterStrings,
       ImmutableSet<Path> whitelistedStringDirs,
+      ImmutableSet<String> locales,
       FilteredDirectoryCopier filteredDirectoryCopier,
       @Nullable Set<Filters.Density> targetDensities,
       @Nullable DrawableFinder drawableFinder,
       @Nullable ImageScaler imageScaler) {
 
-    Preconditions.checkArgument(filterDrawables || filterStrings);
+    Preconditions.checkArgument(filterDrawables || filterStrings || !locales.isEmpty());
     Preconditions.checkArgument(!filterDrawables ||
         (targetDensities != null && drawableFinder != null));
     this.inResDirToOutResDirMap = inResDirToOutResDirMap;
     this.filterDrawables = filterDrawables;
     this.filterStrings = filterStrings;
     this.whitelistedStringDirs = whitelistedStringDirs;
+    this.locales = locales;
     this.filteredDirectoryCopier = filteredDirectoryCopier;
     this.targetDensities = targetDensities;
     this.drawableFinder = drawableFinder;
@@ -161,6 +169,24 @@ public class FilterResourcesStep implements Step {
           context.getProjectFilesystem());
       pathPredicates.add(
           Filters.createImageDensityFilter(drawables, targetDensities, canDownscale));
+    }
+
+    if (!locales.isEmpty()) {
+      pathPredicates.add(
+          new Predicate<Path>() {
+            @Override
+            public boolean apply(Path input) {
+              Matcher matcher = VALUES_DIR_PATTERN.matcher(input.toString());
+              if (!matcher.matches()) {
+                return true;
+              }
+              String locale = matcher.group(1);
+              if (matcher.group(2) != null) {
+                locale += "_" + matcher.group(2);
+              }
+              return locales.contains(locale);
+            }
+          });
     }
 
     if (filterStrings) {
@@ -419,6 +445,7 @@ public class FilterResourcesStep implements Step {
     private ResourceFilter resourceFilter;
     private boolean filterStrings = false;
     private ImmutableSet<Path> whitelistedStringDirs = ImmutableSet.of();
+    private ImmutableSet<String> locales = ImmutableSet.of();
 
     private Builder() {
     }
@@ -443,6 +470,11 @@ public class FilterResourcesStep implements Step {
       return this;
     }
 
+    public Builder setLocales(ImmutableSet<String> locales) {
+      this.locales = locales;
+      return this;
+    }
+
     public FilterResourcesStep build() {
       Preconditions.checkNotNull(resourceFilter);
       LOG.info("FilterResourcesStep.Builder: resource filter: %s", resourceFilter);
@@ -452,6 +484,7 @@ public class FilterResourcesStep implements Step {
           resourceFilter.isEnabled(),
           filterStrings,
           whitelistedStringDirs,
+          locales,
           DefaultFilteredDirectoryCopier.getInstance(),
           resourceFilter.getDensities(),
           DefaultDrawableFinder.getInstance(),

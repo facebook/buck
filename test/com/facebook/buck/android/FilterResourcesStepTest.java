@@ -126,6 +126,7 @@ public class FilterResourcesStepTest {
         /* filterDrawables */ true,
         /* filterStrings */ true,
         /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
+        /* locales */ ImmutableSet.<String>of(),
         copier,
         ImmutableSet.of(targetDensity),
         finder,
@@ -216,6 +217,7 @@ public class FilterResourcesStepTest {
         /* filterDrawables */ false,
         /* filterStrings */ true,
         /* whitelistedStringDirs */ ImmutableSet.of(Paths.get("com/whitelisted/res")),
+        /* locales */ ImmutableSet.<String>of(),
         copier,
         /* targetDensities */ null,
         /* drawableFinder */ null,
@@ -229,6 +231,40 @@ public class FilterResourcesStepTest {
     assertTrue(filePredicate.apply(Paths.get("com/whitelisted/res/values-af/strings.xml")));
 
     assertFalse(filePredicate.apply(Paths.get("com/example/res/values-af/strings.xml")));
+
+    EasyMock.verify(copier);
+  }
+
+  @Test
+  public void testFilterLocales() throws IOException {
+    FilteredDirectoryCopier copier = EasyMock.createMock(FilteredDirectoryCopier.class);
+    Capture<Predicate<Path>> capturedPredicate = new Capture<>();
+    copier.copyDirs(EasyMock.<ProjectFilesystem>anyObject(),
+        EasyMock.<Map<Path, Path>>anyObject(),
+        EasyMock.capture(capturedPredicate));
+    EasyMock.replay(copier);
+
+    FilterResourcesStep step = new FilterResourcesStep(
+        /* inResDirToOutResDirMap */ ImmutableBiMap.<Path, Path>of(),
+        /* filterDrawables */ false,
+        /* filterStrings */ false,
+        /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
+        ImmutableSet.of("es", "es_US"),
+        copier,
+        /* targetDensities */ null,
+        /* drawableFinder */ null,
+        /* imageScaler */ null);
+
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+    Predicate<Path> filePredicate = capturedPredicate.getValue();
+
+    assertTrue(filePredicate.apply(Paths.get("com/example/res/drawables/image.png")));
+    assertTrue(filePredicate.apply(Paths.get("com/example/res/values/strings.xml")));
+    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-es/strings.xml")));
+    assertTrue(filePredicate.apply(Paths.get("com/example/res/values-es-rUS/strings.xml")));
+
+    assertFalse(filePredicate.apply(Paths.get("com/example/res/values-en/strings.xml")));
+    assertFalse(filePredicate.apply(Paths.get("com/example/res/values-es-rES/strings.xml")));
 
     EasyMock.verify(copier);
   }

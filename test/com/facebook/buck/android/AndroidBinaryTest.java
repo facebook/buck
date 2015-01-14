@@ -330,7 +330,8 @@ public class AndroidBinaryTest {
     ((ResourcesFilter) resourcesProvider)
         .createFilterResourcesStep(
             resourceDirectories,
-                /* whitelistedStringsDir */ ImmutableSet.<Path>of(),
+            /* whitelistedStringsDir */ ImmutableSet.<Path>of(),
+            /* locales */ ImmutableSet.<String>of(),
             filteredDirs);
 
     assertEquals(

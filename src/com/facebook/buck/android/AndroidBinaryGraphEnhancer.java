@@ -72,6 +72,7 @@ public class AndroidBinaryGraphEnhancer {
   private final SourcePathResolver pathResolver;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ResourceFilter resourceFilter;
+  private final ImmutableSet<String> locales;
   private final SourcePath manifest;
   private final PackageType packageType;
   private final ImmutableSet<TargetCpuType> cpuFilters;
@@ -99,6 +100,7 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleResolver ruleResolver,
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourcesFilter,
+      ImmutableSet<String> locales,
       SourcePath manifest,
       PackageType packageType,
       ImmutableSet<TargetCpuType> cpuFilters,
@@ -122,6 +124,7 @@ public class AndroidBinaryGraphEnhancer {
     this.pathResolver = new SourcePathResolver(ruleResolver);
     this.resourceCompressionMode = resourceCompressionMode;
     this.resourceFilter = resourcesFilter;
+    this.locales = locales;
     this.manifest = manifest;
     this.packageType = packageType;
     this.cpuFilters = cpuFilters;
@@ -158,8 +161,9 @@ public class AndroidBinaryGraphEnhancer {
         getTargetsAsRules(resourceDetails.resourcesWithNonEmptyResDir());
 
     FilteredResourcesProvider filteredResourcesProvider;
-    boolean needsResourceFiltering =
-        resourceFilter.isEnabled() || resourceCompressionMode.isStoreStringsAsAssets();
+    boolean needsResourceFiltering = resourceFilter.isEnabled() ||
+        resourceCompressionMode.isStoreStringsAsAssets() ||
+        !locales.isEmpty();
 
     if (needsResourceFiltering) {
       BuildRuleParams paramsForResourcesFilter = buildRuleParams.copyWithChanges(
@@ -172,6 +176,7 @@ public class AndroidBinaryGraphEnhancer {
           pathResolver,
           resourceDetails.resourceDirectories(),
           resourceDetails.whitelistedStringDirectories(),
+          locales,
           resourceCompressionMode,
           resourceFilter);
       ruleResolver.addToIndex(resourcesFilter);

@@ -190,6 +190,20 @@ public class ProjectWorkspace {
         .add(jar.toString())
         .addAll(ImmutableList.copyOf(args))
         .build();
+    return doRunCommand(command);
+  }
+
+  public ProcessExecutor.Result runCommand(String exe, String... args)
+      throws IOException, InterruptedException {
+    List<String> command = ImmutableList.<String>builder()
+        .add(exe)
+        .addAll(ImmutableList.copyOf(args))
+        .build();
+    return doRunCommand(command);
+  }
+
+  private ProcessExecutor.Result doRunCommand(List<String> command)
+      throws IOException, InterruptedException {
     String[] commandArray = command.toArray(new String[command.size()]);
     Process process = Runtime.getRuntime().exec(commandArray);
     ProcessExecutor executor = new ProcessExecutor(new TestConsole());
