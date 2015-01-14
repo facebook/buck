@@ -502,6 +502,25 @@ public class ProjectFilesystemTest {
   }
 
   @Test
+  public void testCreateZipWithEmptyDir() throws IOException {
+    tmp.newFolder("foo");
+    tmp.newFile("foo/bar.txt");
+    tmp.newFile("foo/baz.txt");
+    tmp.newFolder("empty");
+
+    File output = tmp.newFile("out.zip");
+
+    filesystem.createZip(
+        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt"), Paths.get("empty")),
+        output);
+
+    ZipInspector zipInspector = new ZipInspector(output);
+    assertEquals(
+        ImmutableSet.of("foo/bar.txt", "foo/baz.txt", "empty/"),
+        zipInspector.getZipFileEntries());
+  }
+
+  @Test
   public void testCreateZipWithAdditionalFiles() throws IOException {
     tmp.newFolder("foo");
     tmp.newFile("foo/bar.txt");

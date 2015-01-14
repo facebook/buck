@@ -225,6 +225,10 @@ public class BuildInfoRecorder {
           public void visit(File file, String relativePath) throws IOException {
             entries.add(outputDirectory.resolve(relativePath));
           }
+          @Override
+          public void visitDirectory(File directory, String relativePath) throws IOException {
+            entries.add(outputDirectory.resolve(relativePath));
+          }
     };
     directoryTraverser.traverse(traversal);
     return entries.build();
