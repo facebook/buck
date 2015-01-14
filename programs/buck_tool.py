@@ -144,7 +144,7 @@ class BuckTool(object):
                                   file=sys.stderr)
                         return exit_code
 
-            command = [which("java")]
+            command = ["buck"]
             command.extend(self._get_java_args(buck_version_uid))
             command.append("-Djava.io.tmpdir={0}".format(self._tmp_dir))
             command.append("-classpath")
@@ -154,7 +154,10 @@ class BuckTool(object):
             command.append("com.facebook.buck.cli.Main")
             command.extend(sys.argv[1:])
 
-            return subprocess.call(command, cwd=self._buck_project.root, env=env)
+            return subprocess.call(command,
+                                   cwd=self._buck_project.root,
+                                   env=env,
+                                   executable=which("java"))
 
     def launch_buckd(self, buck_version_uid=None):
         with Tracing('BuckRepo.launch_buckd'):
@@ -173,7 +176,7 @@ class BuckTool(object):
             disconnection occurs. Specify port 0 to allow Nailgun to find an
             available port, then parse the port number out of the first log entry.
             '''
-            command = [which("java")]
+            command = ["buckd"]
             command.extend(self._get_java_args(buck_version_uid))
             command.append("-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()))
             command.append("-Dbuck.buckd_watcher=Watchman")
@@ -207,6 +210,7 @@ class BuckTool(object):
 
             process = subprocess.Popen(
                 command,
+                executable=which("java"),
                 cwd=self._buck_project.root,
                 close_fds=True,
                 preexec_fn=preexec_func)
