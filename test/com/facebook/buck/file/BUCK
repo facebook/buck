@@ -2,13 +2,14 @@ java_test(
   name = 'file',
   srcs = glob(['*.java']),
   deps = [
-    '//third-party/java/easymock:easymock',
-    '//third-party/java/junit:junit',
-    '//third-party/java/guava:guava',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/file:downloader',
     '//src/com/facebook/buck/util:exceptions',
     '//test/com/facebook/buck/event:testutil',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//third-party/java/easymock:easymock',
     '//third-party/java/jetty:jetty',
+    '//third-party/java/junit:junit',
+    '//third-party/java/guava:guava',
   ],
 )

@@ -19,5 +19,6 @@ java_library(
     '//src/com/facebook/buck/httpserver:',
     '//test/com/facebook/buck/file:file',
     '//test/com/facebook/buck/httpserver:',
+    '//test/com/facebook/buck/testutil/integration:integration',
   ],
 )
