@@ -44,18 +44,23 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -71,6 +76,14 @@ import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
 public class Build implements Closeable {
+
+  private static final Predicate<Optional<BuildRuleSuccess>> RULES_FAILED_PREDICATE =
+      new Predicate<Optional<BuildRuleSuccess>>() {
+        @Override
+        public boolean apply(Optional<BuildRuleSuccess> input) {
+          return !input.isPresent();
+        }
+      };
 
   private final ActionGraph actionGraph;
 
@@ -335,6 +348,68 @@ public class Build implements Closeable {
     }
 
     return resultBuilder;
+  }
+
+  public int executeAndPrintFailuresToConsole(
+      Iterable<? extends HasBuildTarget> targetsish,
+      boolean isKeepGoing,
+      Console console,
+      Optional<Path> pathToBuildReport) throws InterruptedException {
+    int exitCode;
+
+    try {
+      LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult = executeBuild(
+          targetsish,
+          isKeepGoing);
+
+      BuildReport buildReport = new BuildReport(ruleToResult);
+
+      if (isKeepGoing) {
+        String buildReportForConsole = buildReport.generateForConsole(console.getAnsi());
+        console.getStdErr().print(buildReportForConsole);
+        exitCode = Iterables.any(ruleToResult.values(), RULES_FAILED_PREDICATE) ? 1 : 0;
+        if (exitCode != 0) {
+          console.printBuildFailure("Not all rules succeeded.");
+        }
+      } else {
+        exitCode = 0;
+      }
+
+      if (pathToBuildReport.isPresent()) {
+        // Note that pathToBuildReport is an absolute path that may exist outside of the project
+        // root, so it is not appropriate to use ProjectFilesystem to write the output.
+        String jsonBuildReport = buildReport.generateJsonBuildReport();
+        try {
+          Files.write(jsonBuildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
+        } catch (IOException e) {
+          e.printStackTrace(console.getStdErr());
+          exitCode = 1;
+        }
+      }
+    } catch (IOException e) {
+      console.printBuildFailureWithoutStacktrace(e);
+      exitCode = 1;
+    } catch (StepFailedException e) {
+      console.printBuildFailureWithoutStacktrace(e);
+      exitCode = e.getExitCode();
+    } catch (ExecutionException e) {
+      // This is likely a checked exception that was caught while building a build rule.
+      Throwable cause = e.getCause();
+      if (cause instanceof HumanReadableException) {
+        throw ((HumanReadableException) cause);
+      } else if (cause instanceof ExceptionWithHumanReadableMessage) {
+        throw new HumanReadableException((ExceptionWithHumanReadableMessage) cause);
+      } else {
+        if (cause instanceof RuntimeException) {
+          console.printBuildFailureWithStacktrace(e);
+        } else {
+          console.printBuildFailureWithoutStacktrace(e);
+        }
+        exitCode = 1;
+      }
+    }
+
+    return exitCode;
   }
 
   @Override

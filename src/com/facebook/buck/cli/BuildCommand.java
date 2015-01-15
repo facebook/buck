@@ -20,53 +20,25 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
-import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
-import com.facebook.buck.util.HumanReadableException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
-import com.google.common.io.Files;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
 public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
-
-  public static final Predicate<Optional<BuildRuleSuccess>> RULES_FAILED_PREDICATE =
-      new Predicate<Optional<BuildRuleSuccess>>() {
-    @Override
-    public boolean apply(Optional<BuildRuleSuccess> input) {
-      return !input.isPresent();
-    }
-  };
 
   private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
   @Nullable private Build build;
@@ -150,145 +122,17 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
         getCommandRunnerParams().getClock());
     int exitCode = 0;
     try {
-      exitCode = executeBuildAndPrintAnyFailuresToConsole(buildTargets, build, options, console);
+      exitCode = build.executeAndPrintFailuresToConsole(
+          buildTargets,
+          options.isKeepGoing(),
+          console,
+          options.getPathToBuildReport());
     } finally {
       build.close(); // Can't use try-with-resources as build is returned by getBuild.
     }
     getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
 
     return exitCode;
-  }
-
-  static int executeBuildAndPrintAnyFailuresToConsole(
-      Iterable<? extends HasBuildTarget> buildTargetsToBuild,
-      Build build,
-      BuildCommandOptions options,
-      Console console) throws InterruptedException {
-    int exitCode;
-    boolean isKeepGoing = options.isKeepGoing();
-    try {
-      LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult = build.executeBuild(
-          buildTargetsToBuild,
-          isKeepGoing);
-
-      if (isKeepGoing) {
-        String buildReportForConsole = generateBuildReportForConsole(
-            ruleToResult,
-            console.getAnsi());
-        console.getStdErr().print(buildReportForConsole);
-        exitCode = Iterables.any(ruleToResult.values(), RULES_FAILED_PREDICATE) ? 1 : 0;
-        if (exitCode != 0) {
-          console.printBuildFailure("Not all rules succeeded.");
-        }
-      } else {
-        exitCode = 0;
-      }
-
-      Optional<Path> pathToBuildReport = options.getPathToBuildReport();
-      if (pathToBuildReport.isPresent()) {
-        // Note that pathToBuildReport is an absolute path that may exist outside of the project
-        // root, so it is not appropriate to use ProjectFilesystem to write the output.
-        String jsonBuildReport = generateJsonBuildReport(ruleToResult);
-        try {
-          Files.write(jsonBuildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
-        } catch (IOException e) {
-          e.printStackTrace(console.getStdErr());
-          exitCode = 1;
-        }
-      }
-    } catch (IOException e) {
-      console.printBuildFailureWithoutStacktrace(e);
-      exitCode = 1;
-    } catch (StepFailedException e) {
-      console.printBuildFailureWithoutStacktrace(e);
-      exitCode = e.getExitCode();
-    } catch (ExecutionException e) {
-      // This is likely a checked exception that was caught while building a build rule.
-      Throwable cause = e.getCause();
-      if (cause instanceof HumanReadableException) {
-        throw ((HumanReadableException) cause);
-      } else if (cause instanceof ExceptionWithHumanReadableMessage) {
-        throw new HumanReadableException((ExceptionWithHumanReadableMessage) cause);
-      } else {
-        if (cause instanceof RuntimeException) {
-          console.printBuildFailureWithStacktrace(e);
-        } else {
-          console.printBuildFailureWithoutStacktrace(e);
-        }
-        exitCode = 1;
-      }
-    }
-
-    return exitCode;
-  }
-
-  /**
-   * @param ruleToResult Keys are build rules built during this invocation of Buck. Values reflect
-   *     the success of each build rule, if it succeeded. ({@link Optional#absent()} represents a
-   *     failed build rule.)
-   */
-  @VisibleForTesting
-  static String generateBuildReportForConsole(
-      LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult,
-      Ansi ansi) {
-    StringBuilder report = new StringBuilder();
-    for (Map.Entry<BuildRule, Optional<BuildRuleSuccess>> entry : ruleToResult.entrySet()) {
-      BuildRule rule = entry.getKey();
-      Optional<BuildRuleSuccess> success = entry.getValue();
-
-      String successIndicator;
-      String successType;
-      Path outputFile;
-      if (success.isPresent()) {
-        successIndicator = ansi.asHighlightedSuccessText("OK  ");
-        successType = success.get().getType().name();
-        outputFile = rule.getPathToOutputFile();
-      } else {
-        successIndicator = ansi.asHighlightedFailureText("FAIL");
-        successType = null;
-        outputFile = null;
-      }
-
-      report.append(String.format(
-          "%s %s%s%s\n",
-          successIndicator,
-          rule.getBuildTarget(),
-          successType != null ? " " + successType : "",
-          outputFile != null ? " " + outputFile : ""));
-    }
-
-    return report.toString();
-  }
-
-  /**
-   * @param ruleToResult Keys are build rules built during this invocation of Buck. Values reflect
-   *     the success of each build rule, if it succeeded. ({@link Optional#absent()} represents a
-   *     failed build rule.)
-   */
-  @VisibleForTesting
-  static String generateJsonBuildReport(
-      LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult) throws IOException {
-    LinkedHashMap<String, Object> results = Maps.newLinkedHashMap();
-    for (Map.Entry<BuildRule, Optional<BuildRuleSuccess>> entry : ruleToResult.entrySet()) {
-      BuildRule rule = entry.getKey();
-      Optional<BuildRuleSuccess> success = entry.getValue();
-      Map<String, Object> value = Maps.newLinkedHashMap();
-      if (success.isPresent()) {
-        value.put("success", true);
-        value.put("type", success.get().getType().name());
-        Path outputFile = rule.getPathToOutputFile();
-        value.put("output", outputFile != null ? outputFile.toString() : null);
-      } else {
-        value.put("success", false);
-      }
-      results.put(rule.getFullyQualifiedName(), value);
-    }
-
-    Map<String, Object> report = Maps.newHashMap();
-    report.put("results", results);
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-    return objectMapper.writeValueAsString(report);
   }
 
   Build getBuild() {
