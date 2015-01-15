@@ -26,4 +26,7 @@ before_install:
 script:
   # Use Buck to run the tests first because its output is more
   # conducive to diagnosing failed tests than Ant's is.
-  - ./bin/buck test --all && ant travis
+  # We build with `--verbose 0` to hide the SuperConsole,
+  # which does not play well for Travis.
+  # Travis doesn't understand curses, so it sends us over the 10000 line limit.
+  - buck build buck --verbose 0 && ./bin/buck test --all && ant travis
