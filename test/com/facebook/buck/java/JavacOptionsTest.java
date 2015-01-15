@@ -158,6 +158,15 @@ public class JavacOptionsTest {
     assertOptionsContains(copy, "-bootclasspath some-magic.jar:also.jar");
   }
 
+  @Test
+  public void shouldIncoporateExtraOptionsInOutput() {
+    JavacOptions options = createStandardBuilder()
+        .setExtraArguments(ImmutableList.<String>of("-Xfoobar"))
+        .build();
+
+    assertOptionsContains(options, "-Xfoobar");
+  }
+
   private void assertOptionsContains(JavacOptions options, String param) {
     String output = optionsAsString(options);
 

@@ -38,7 +38,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg>,
@@ -134,6 +133,14 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       builder.setTargetLevel(args.target.get());
     }
 
+    if (args.extraArguments.isPresent()) {
+      builder.setExtraArguments(
+          ImmutableList.<String>builder()
+          .addAll(defaultOptions.getExtraArguments())
+          .addAll(args.extraArguments.get())
+          .build());
+    }
+
     return builder;
   }
 
@@ -143,6 +150,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<ImmutableSortedSet<SourcePath>> resources;
     public Optional<String> source;
     public Optional<String> target;
+    public Optional<ImmutableList<String>> extraArguments;
     public Optional<Path> proguardConfig;
     public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps;
     public Optional<ImmutableList<String>> annotationProcessorParams;

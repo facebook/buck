@@ -7,6 +7,7 @@
   "buck.base_path" : "test/com/facebook/buck/cli/testdata/target_command",
   "deps" : [ ],
   "exportedDeps": [],
+  "extraArguments": [],
   "name" : "test-library",
   "postprocessClassesCommands" : [ ],
   "proguardConfig" : null,

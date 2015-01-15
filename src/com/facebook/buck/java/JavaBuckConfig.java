@@ -27,11 +27,14 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.base.Splitter;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+
+import java.util.regex.Pattern;
 
 /**
  * A java-specific "view" of BuckConfig.
@@ -49,6 +52,13 @@ public class JavaBuckConfig {
       throws InterruptedException {
     Optional<String> sourceLevel = delegate.getValue("java", "source_level");
     Optional<String> targetLevel = delegate.getValue("java", "target_level");
+    Optional<String> extraArgumentsString = delegate.getValue("java", "extra_arguments");
+
+    ImmutableList<String> extraArguments =
+        ImmutableList.copyOf(
+            Splitter.on(Pattern.compile("[ ,]+"))
+            .omitEmptyStrings()
+            .split(extraArgumentsString.or("")));
 
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection("java");
     ImmutableMap.Builder<String, String> bootclasspaths = ImmutableMap.builder();
@@ -63,6 +73,7 @@ public class JavaBuckConfig {
         .setSourceLevel(sourceLevel.or(TARGETED_JAVA_VERSION))
         .setTargetLevel(targetLevel.or(TARGETED_JAVA_VERSION))
         .setBootclasspathMap(bootclasspaths.build())
+        .setExtraArguments(extraArguments)
         .build();
   }
 

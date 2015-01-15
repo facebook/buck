@@ -114,6 +114,7 @@ public class KnownBuildRuleTypesTest {
     arg.resources = Optional.of(ImmutableSortedSet.<SourcePath>of());
     arg.source = Optional.absent();
     arg.target = Optional.absent();
+    arg.extraArguments = Optional.absent();
     arg.proguardConfig = Optional.absent();
     arg.annotationProcessorDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.annotationProcessorParams = Optional.of(ImmutableList.<String>of());

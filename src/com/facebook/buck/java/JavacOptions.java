@@ -46,6 +46,7 @@ public class JavacOptions {
   private final String sourceLevel;
   private final String targetLevel;
   private final AnnotationProcessingData annotationProcessingData;
+  private final ImmutableList<String> extraArguments;
   private final Optional<String> bootclasspath;
   private final ImmutableMap<String, String> sourceToBootclasspath;
 
@@ -55,6 +56,7 @@ public class JavacOptions {
       boolean verbose,
       String sourceLevel,
       String targetLevel,
+      ImmutableList<String> extraArguments,
       Optional<String> bootclasspath,
       ImmutableMap<String, String> sourceToBootclasspath,
       AnnotationProcessingData annotationProcessingData) {
@@ -63,6 +65,7 @@ public class JavacOptions {
     this.verbose = verbose;
     this.sourceLevel = sourceLevel;
     this.targetLevel = targetLevel;
+    this.extraArguments = extraArguments;
     this.bootclasspath = bootclasspath;
     this.sourceToBootclasspath = sourceToBootclasspath;
     this.annotationProcessingData = annotationProcessingData;
@@ -137,12 +140,16 @@ public class JavacOptions {
         optionsBuilder.add("-proc:only");
       }
     }
+
+    // Add extra arguments.
+    optionsBuilder.addAll(extraArguments);
   }
 
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(simons): Include bootclasspath params.
     builder.set("sourceLevel", sourceLevel)
         .set("targetLevel", targetLevel)
+        .set("extraArguments", Joiner.on(',').join(extraArguments))
         .set("debug", debug)
         .set("javacVersion", javacEnv.getJavacVersion().transform(
             Functions.toStringFunction()).orNull());
@@ -161,6 +168,10 @@ public class JavacOptions {
   @VisibleForTesting
   String getTargetLevel() {
     return targetLevel;
+  }
+
+  public ImmutableList<String> getExtraArguments() {
+    return extraArguments;
   }
 
   static Builder builderForUseInJavaBuckConfig() {
@@ -182,6 +193,7 @@ public class JavacOptions {
     builder.setBootclasspath(options.bootclasspath.orNull());
     builder.setSourceLevel(options.getSourceLevel());
     builder.setTargetLevel(options.getTargetLevel());
+    builder.setExtraArguments(options.getExtraArguments());
 
     builder.setJavaCompilerEnvironment(options.getJavaCompilerEnvironment());
 
@@ -191,6 +203,7 @@ public class JavacOptions {
   public static class Builder {
     private String sourceLevel;
     private String targetLevel;
+    private ImmutableList<String> extraArguments = ImmutableList.of();
     private boolean debug = true;
     private boolean verbose = false;
     private Optional<String> bootclasspath = Optional.absent();
@@ -209,6 +222,11 @@ public class JavacOptions {
 
     public Builder setTargetLevel(String targetLevel) {
       this.targetLevel = Preconditions.checkNotNull(targetLevel);
+      return this;
+    }
+
+    public Builder setExtraArguments(ImmutableList<String> extraArguments) {
+      this.extraArguments = extraArguments;
       return this;
     }
 
@@ -249,6 +267,7 @@ public class JavacOptions {
           verbose,
           Preconditions.checkNotNull(sourceLevel),
           Preconditions.checkNotNull(targetLevel),
+          extraArguments,
           bootclasspath,
           sourceToBootclasspath,
           annotationProcessingData);
