@@ -43,7 +43,6 @@ public class AppleBinaryDescription
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       CompilationDatabase.COMPILATION_DATABASE,
-      Flavor.DEFAULT,
       AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS);
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {

@@ -29,14 +29,9 @@ import java.util.regex.Pattern;
 @JsonSerialize(using = Flavor.FlavorSerializer.class)
 public class Flavor implements Comparable<Flavor> {
 
-  public static final Flavor DEFAULT = new Flavor();
   private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z0-9_\\.]+");
 
   private final String flavor;
-
-  private Flavor() {
-    this.flavor = "";
-  }
 
   public Flavor(String flavor) {
     Preconditions.checkArgument(

@@ -60,11 +60,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    boolean match = true;
-    for (Flavor flavor : flavors) {
-      match &= JavaLibrary.SRC_JAR.equals(flavor) || Flavor.DEFAULT.equals(flavor);
-    }
-    return match;
+    return flavors.equals(ImmutableSet.of(JavaLibrary.SRC_JAR)) || flavors.isEmpty();
   }
 
   @Override

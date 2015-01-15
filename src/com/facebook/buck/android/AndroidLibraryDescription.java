@@ -119,7 +119,7 @@ public class AndroidLibraryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return flavors.contains(JavaLibrary.SRC_JAR) || flavors.contains(Flavor.DEFAULT);
+    return flavors.contains(JavaLibrary.SRC_JAR) || flavors.isEmpty();
   }
 
   @SuppressFieldNotInitialized

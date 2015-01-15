@@ -123,12 +123,12 @@ public class CxxBinaryDescription implements
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
 
-    if (flavors.equals(ImmutableSet.of(Flavor.DEFAULT))) {
+    if (flavors.isEmpty()) {
       return true;
     }
 
     for (Flavor flavor : cxxPlatforms.getFlavors()) {
-      if (flavors.equals(ImmutableSet.of(Flavor.DEFAULT, flavor))) {
+      if (flavors.equals(ImmutableSet.of(flavor))) {
         return true;
       }
     }

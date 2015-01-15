@@ -24,10 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,9 +38,6 @@ import javax.annotation.Nullable;
 public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarget {
 
   public static final String BUILD_TARGET_PREFIX = "//";
-
-  private static final ImmutableSortedSet<Flavor> JUST_DEFAULT =
-      ImmutableSortedSet.of(Flavor.DEFAULT);
 
   private final Optional<String> repository;
   private final String baseName;
@@ -97,7 +92,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
   }
 
   public String getFlavorPostfix() {
-    if (flavors.isEmpty() || JUST_DEFAULT.equals(flavors)) {
+    if (flavors.isEmpty()) {
       return "";
     }
     return "#" + getFlavorsAsString();
@@ -110,8 +105,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
 
   @JsonProperty("flavor")
   private String getFlavorsAsString() {
-    return Joiner.on(",")
-        .join(Sets.filter(flavors, Predicates.not(Predicates.equalTo(Flavor.DEFAULT))));
+    return Joiner.on(",").join(flavors);
   }
 
   public ImmutableSet<Flavor> getFlavors() {
@@ -176,7 +170,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
 
   @JsonIgnore
   public boolean isFlavored() {
-    return !(flavors.isEmpty() || JUST_DEFAULT.equals(flavors));
+    return !(flavors.isEmpty());
   }
 
   @JsonIgnore
@@ -196,7 +190,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
           repository,
           baseName,
           shortName,
-          ImmutableSortedSet.of(Flavor.DEFAULT));
+          ImmutableSortedSet.<Flavor>of());
     }
   }
 
@@ -248,7 +242,6 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     private Builder(String baseName, String shortName) {
       this.baseName = baseName;
       this.shortName = shortName;
-      flavors.add(Flavor.DEFAULT);
     }
 
     private Builder(BuildTarget buildTarget) {

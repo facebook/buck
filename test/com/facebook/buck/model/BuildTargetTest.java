@@ -99,7 +99,7 @@ public class BuildTargetTest {
   public void testBuildTargetWithoutFlavor() {
     BuildTarget target = BuildTarget.builder("//foo/bar", "baz").build();
     assertEquals(target.getShortNameAndFlavorPostfix(), "baz");
-    assertEquals(ImmutableSortedSet.of(Flavor.DEFAULT), target.getFlavors());
+    assertEquals(ImmutableSortedSet.<Flavor>of(), target.getFlavors());
     assertFalse(target.isFlavored());
   }
 
@@ -129,9 +129,9 @@ public class BuildTargetTest {
   }
 
   @Test
-  public void testFlavorDefaultsToTheEmptyStringIfNotSet() {
+  public void testFlavorDefaultsToNoneIfNotSet() {
     assertEquals(
-        ImmutableSet.of(Flavor.DEFAULT),
+        ImmutableSet.<Flavor>of(),
         BuildTarget.builder("//foo/bar", "baz").build().getFlavors());
   }
 
@@ -142,18 +142,6 @@ public class BuildTargetTest {
 
     BuildTarget flavoredTarget = BuildTarget.builder("//foo/bar", "baz").addFlavor("biz").build();
     assertEquals(unflavoredTarget, flavoredTarget.getUnflavoredTarget());
-  }
-
-  @Test
-  public void testCanUnflavorATarget() {
-    BuildTarget flavored = BuildTarget.builder("//foo", "bar")
-        .addFlavor(new Flavor("cake"))
-        .build();
-
-    // This might throw an exception if it fails to parse
-    BuildTarget unflavored = BuildTarget.builder(flavored).setFlavor(Flavor.DEFAULT).build();
-
-    assertEquals(ImmutableSet.of(Flavor.DEFAULT), unflavored.getFlavors());
   }
 
   @Test
