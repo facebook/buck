@@ -68,15 +68,6 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
     this.incomingEdges = HashMultimap.create();
   }
 
-  /**
-   * Creates a mutable copy of the specified graph.
-   */
-  public MutableDirectedGraph(MutableDirectedGraph<T> graph) {
-    this.nodes = Sets.newHashSet(graph.nodes);
-    this.outgoingEdges = HashMultimap.create(graph.outgoingEdges);
-    this.incomingEdges = HashMultimap.create(graph.incomingEdges);
-  }
-
   /** @return the number of nodes in the graph */
   public int getNodeCount() {
     return nodes.size();

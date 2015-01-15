@@ -36,14 +36,14 @@ public class MutableDirectedGraphTest {
     assertFalse(graph.containsNode("A"));
     assertFalse(graph.containsEdge("A", "B"));
     assertTrue(graph.isAcyclic());
-    assertEquals(ImmutableSet.of(), graph.getNodes());
+    assertEquals(ImmutableSet.<String>of(), graph.getNodes());
   }
 
   @Test
   public void testCreateGraphWithOneEdge() {
     MutableDirectedGraph<String> graph = new MutableDirectedGraph<String>();
     Set<String> nodesView = graph.getNodes();
-    assertEquals(ImmutableSet.of(), nodesView);
+    assertEquals(ImmutableSet.<String>of(), nodesView);
     graph.addEdge("A", "B");
     assertEquals(2, graph.getNodeCount());
     assertEquals(1, graph.getEdgeCount());
@@ -76,8 +76,8 @@ public class MutableDirectedGraphTest {
     assertEquals(0, graph.getEdgeCount());
     assertFalse(graph.containsNode("A"));
     assertFalse(graph.containsEdge("A", "A"));
-    assertEquals(ImmutableSet.of(), graph.getOutgoingNodesFor("A"));
-    assertEquals(ImmutableSet.of(), graph.getIncomingNodesFor("A"));
+    assertEquals(ImmutableSet.<String>of(), graph.getOutgoingNodesFor("A"));
+    assertEquals(ImmutableSet.<String>of(), graph.getIncomingNodesFor("A"));
     assertTrue(graph.isAcyclic());
   }
 
@@ -125,18 +125,5 @@ public class MutableDirectedGraphTest {
     graph.addNode("B");
     graph.addNode("C");
     assertTrue(graph.isAcyclic());
-  }
-
-  @Test
-  public void testCopyConstructor() {
-    MutableDirectedGraph<String> originalGraph = new MutableDirectedGraph<>();
-    originalGraph.addEdge("A", "B");
-
-    MutableDirectedGraph<String> copyOfGraph = new MutableDirectedGraph<>(originalGraph);
-    assertEquals(ImmutableSet.of("A", "B"), copyOfGraph.getNodes());
-
-    originalGraph.addEdge("B", "C");
-    assertEquals(2, originalGraph.getEdgeCount());
-    assertEquals(1, copyOfGraph.getEdgeCount());
   }
 }
