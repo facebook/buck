@@ -18,6 +18,8 @@ package com.facebook.buck.command;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
+import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.HasAndroidPlatformTarget;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
@@ -26,11 +28,14 @@ import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildEngine;
+import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -38,23 +43,30 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.timing.Clock;
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -82,7 +94,6 @@ public class Build implements Closeable {
 
   /**
    * @param buildDependencies How to include dependencies when building rules.
-   * @param environment
    */
   public Build(
       ActionGraph actionGraph,
@@ -234,12 +245,13 @@ public class Build implements Closeable {
    * succeed, even if individual rules fail to build. In that case, a failed build rule is indicated
    * by a {@code null} value in the corresponding position in the iteration order of
    * {@code rulesToBuild}.
-   * @param rulesToBuild The rules to build. All build rules in this iterable must be unique.
+   * @param targetish The targets to build. All targets in this iterable must be unique.
    */
-  public ListenableFuture<List<BuildRuleSuccess>> executeBuild(
-      Iterable<BuildRule> rulesToBuild,
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> executeBuild(
+      Iterable<? extends HasBuildTarget> targetish,
       boolean isKeepGoing)
-      throws IOException, StepFailedException {
+      throws IOException, StepFailedException, ExecutionException, InterruptedException {
     buildContext = BuildContext.builder()
         .setActionGraph(actionGraph)
         .setStepRunner(stepRunner)
@@ -255,23 +267,115 @@ public class Build implements Closeable {
         .setEnvironment(executionContext.getEnvironment())
         .build();
 
-    Iterable<ListenableFuture<BuildRuleSuccess>> futures = Iterables.transform(
-        rulesToBuild,
+    ImmutableSet<BuildTarget> targetsToBuild = FluentIterable.from(targetish)
+        .transform(HasBuildTarget.TO_TARGET)
+        .toSet();
+
+    // It is important to use this logic to determine the set of rules to build rather than
+    // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
+    // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
+    ImmutableList<BuildRule> rulesToBuild = ImmutableList.copyOf(
+        FluentIterable
+            .from(targetsToBuild)
+            .transform(new Function<HasBuildTarget, BuildRule>() {
+                         @Override
+                         public BuildRule apply(HasBuildTarget hasBuildTarget) {
+                           return Preconditions.checkNotNull(
+                               actionGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget()));
+                         }
+                       })
+            .toSet());
+
+    // Calculate and post the number of rules that need to built.
+    int numRules = getNumRulesToBuild(targetsToBuild, actionGraph);
+    getExecutionContext().getBuckEventBus().post(
+        BuildEvent.ruleCountCalculated(
+            targetsToBuild,
+            numRules));
+
+
+    List<ListenableFuture<BuildRuleSuccess>> futures = FluentIterable.from(rulesToBuild)
+        .transform(
         new Function<BuildRule, ListenableFuture<BuildRuleSuccess>>() {
           @Override
           public ListenableFuture<BuildRuleSuccess> apply(BuildRule rule) {
             return buildEngine.build(buildContext, rule);
           }
-        });
+        }).toList();
+
+    // Get the Future representing the build and then block until everything is built.
+    ListenableFuture<List<BuildRuleSuccess>> buildFuture;
     if (isKeepGoing) {
-      return Futures.successfulAsList(futures);
+      buildFuture = Futures.successfulAsList(futures);
     } else {
-      return Futures.allAsList(futures);
+      buildFuture = Futures.allAsList(futures);
     }
+
+    List<BuildRuleSuccess> results;
+    try {
+      results = buildFuture.get();
+    } catch (InterruptedException e) {
+      try {
+        buildFuture.cancel(true);
+      } catch (CancellationException ignored) {
+        // Rethrow original InterruptedException instead.
+      }
+      Thread.currentThread().interrupt();
+      throw e;
+    }
+
+    // Insertion order matters
+    LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> resultBuilder = new LinkedHashMap<>();
+
+    Preconditions.checkState(rulesToBuild.size() == results.size());
+    for (int i = 0, len = rulesToBuild.size(); i < len; i++) {
+      BuildRule rule = rulesToBuild.get(i);
+      BuildRuleSuccess success = results.get(i);
+      resultBuilder.put(rule, Optional.fromNullable(success));
+    }
+
+    return resultBuilder;
   }
 
   @Override
   public void close() throws IOException {
     stepRunner.close();
+  }
+
+  private int getNumRulesToBuild(
+      Iterable<BuildTarget> buildTargets,
+      final ActionGraph actionGraph) {
+    Set<BuildRule> baseBuildRules = FluentIterable
+        .from(buildTargets)
+        .transform(new Function<HasBuildTarget, BuildRule>() {
+                     @Override
+                     public BuildRule apply(HasBuildTarget hasBuildTarget) {
+                       return Preconditions.checkNotNull(
+                           actionGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget()));
+                     }
+                   })
+        .toSet();
+
+    Set<BuildRule> allBuildRules = Sets.newHashSet();
+    for (BuildRule rule : baseBuildRules) {
+      addTransitiveDepsForRule(rule, allBuildRules);
+    }
+    allBuildRules.addAll(baseBuildRules);
+    return allBuildRules.size();
+  }
+
+  private static void addTransitiveDepsForRule(
+      BuildRule buildRule,
+      Set<BuildRule> transitiveDeps) {
+    ImmutableSortedSet<BuildRule> deps = buildRule.getDeps();
+    if (deps.isEmpty()) {
+      return;
+    }
+    for (BuildRule dep : deps) {
+      if (!transitiveDeps.contains(dep)) {
+        transitiveDeps.add(dep);
+        addTransitiveDepsForRule(dep, transitiveDeps);
+      }
+    }
   }
 }

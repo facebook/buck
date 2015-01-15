@@ -39,34 +39,34 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
 public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
+
+  public static final Predicate<Optional<BuildRuleSuccess>> RULES_FAILED_PREDICATE =
+      new Predicate<Optional<BuildRuleSuccess>>() {
+    @Override
+    public boolean apply(Optional<BuildRuleSuccess> input) {
+      return !input.isPresent();
+    }
+  };
 
   private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
   @Nullable private Build build;
@@ -133,10 +133,6 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return 1;
     }
 
-    // Calculate and post the number of rules that need to built.
-    int numRules = getNumRulesToBuild(buildTargets, actionGraph);
-    getBuckEventBus().post(BuildEvent.ruleCountCalculated(buildTargets, numRules));
-
     // Create and execute the build.
     build = options.createBuild(
         options.getBuckConfig(),
@@ -163,98 +159,24 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     return exitCode;
   }
 
-  private static int getNumRulesToBuild(
-      ImmutableSet<BuildTarget> buildTargets,
-      final ActionGraph actionGraph) {
-    Set<BuildRule> baseBuildRules = FluentIterable
-        .from(buildTargets)
-        .transform(new Function<HasBuildTarget, BuildRule>() {
-                     @Override
-                     public BuildRule apply(HasBuildTarget hasBuildTarget) {
-                       return Preconditions.checkNotNull(
-                           actionGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget()));
-                     }
-                   })
-        .toSet();
-
-    Set<BuildRule> allBuildRules = Sets.newHashSet();
-    for (BuildRule rule : baseBuildRules) {
-      addTransitiveDepsForRule(rule, allBuildRules);
-    }
-    allBuildRules.addAll(baseBuildRules);
-    return allBuildRules.size();
-  }
-
-  private static void addTransitiveDepsForRule(
-      BuildRule buildRule,
-      Set<BuildRule> transitiveDeps) {
-    ImmutableSortedSet<BuildRule> deps = buildRule.getDeps();
-    if (deps.isEmpty()) {
-      return;
-    }
-    for (BuildRule dep : deps) {
-      if (!transitiveDeps.contains(dep)) {
-        transitiveDeps.add(dep);
-        addTransitiveDepsForRule(dep, transitiveDeps);
-      }
-    }
-  }
-
-  @SuppressWarnings("PMD.EmptyCatchBlock")
   static int executeBuildAndPrintAnyFailuresToConsole(
       Iterable<? extends HasBuildTarget> buildTargetsToBuild,
       Build build,
       BuildCommandOptions options,
       Console console) throws InterruptedException {
-    final ActionGraph actionGraph = build.getActionGraph();
-    // It is important to use this logic to determine the set of rules to build rather than
-    // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
-    // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
-    ImmutableList<BuildRule> rulesToBuild = ImmutableList.copyOf(FluentIterable
-        .from(buildTargetsToBuild)
-        .transform(new Function<HasBuildTarget, BuildRule>() {
-          @Override
-          public BuildRule apply(HasBuildTarget hasBuildTarget) {
-            return Preconditions.checkNotNull(
-                actionGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget()));
-          }
-        })
-        .toSet());
-
     int exitCode;
     boolean isKeepGoing = options.isKeepGoing();
     try {
-      // Get the Future representing the build and then block until everything is built.
-      ListenableFuture<List<BuildRuleSuccess>> buildFuture = build.executeBuild(
-          rulesToBuild,
+      LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult = build.executeBuild(
+          buildTargetsToBuild,
           isKeepGoing);
-      List<BuildRuleSuccess> results;
-      try {
-        results = buildFuture.get();
-      } catch (InterruptedException e) {
-        try {
-          buildFuture.cancel(true);
-        } catch (CancellationException ignored) {
-          // Rethrow original InterruptedException instead.
-        }
-        Thread.currentThread().interrupt();
-        throw e;
-      }
-
-      LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult = Maps.newLinkedHashMap();
-      Preconditions.checkState(rulesToBuild.size() == results.size());
-      for (int i = 0, len = rulesToBuild.size(); i < len; i++) {
-        BuildRule rule = rulesToBuild.get(i);
-        BuildRuleSuccess success = results.get(i);
-        ruleToResult.put(rule, Optional.fromNullable(success));
-      }
 
       if (isKeepGoing) {
         String buildReportForConsole = generateBuildReportForConsole(
             ruleToResult,
             console.getAnsi());
         console.getStdErr().print(buildReportForConsole);
-        exitCode = Iterables.any(results, Predicates.isNull()) ? 1 : 0;
+        exitCode = Iterables.any(ruleToResult.values(), RULES_FAILED_PREDICATE) ? 1 : 0;
         if (exitCode != 0) {
           console.printBuildFailure("Not all rules succeeded.");
         }

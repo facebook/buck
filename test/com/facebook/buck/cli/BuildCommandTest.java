@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.collect.Maps;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +47,8 @@ public class BuildCommandTest {
   public void setUp() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
-    ruleToResult = Maps.newLinkedHashMap();
+
+    ruleToResult = new LinkedHashMap<>();
 
     BuildRule rule1 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule1"),
