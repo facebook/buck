@@ -49,8 +49,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -138,7 +136,7 @@ public class AndroidBinaryGraphEnhancer {
     this.nativePlatforms = nativePlatforms;
   }
 
-  EnhancementResult createAdditionalBuildables() {
+  AndroidGraphEnhancementResult createAdditionalBuildables() {
     ImmutableSortedSet.Builder<BuildRule> enhancedDeps = ImmutableSortedSet.naturalOrder();
     enhancedDeps.addAll(originalDeps);
 
@@ -350,7 +348,7 @@ public class AndroidBinaryGraphEnhancer {
       finalDeps = enhancedDeps.build();
     }
 
-    return ImmutableEnhancementResult.builder()
+    return ImmutableAndroidGraphEnhancementResult.builder()
         .packageableCollection(packageableCollection)
         .aaptPackageResources(aaptPackageResources)
         .copyNativeLibraries(copyNativeLibraries)
@@ -518,25 +516,6 @@ public class AndroidBinaryGraphEnhancer {
     ruleResolver.addToIndex(preDexMerge);
 
     return preDexMerge;
-  }
-
-  @Value.Immutable
-  static interface EnhancementResult {
-    ImmutableAndroidPackageableCollection packageableCollection();
-    AaptPackageResources aaptPackageResources();
-    Optional<CopyNativeLibraries> copyNativeLibraries();
-    Optional<PackageStringAssets> packageStringAssets();
-    Optional<PreDexMerge> preDexMerge();
-    Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi();
-
-    /**
-     * This includes everything from the corresponding
-     * {@link AndroidPackageableCollection#classpathEntriesToDex}, and may include additional
-     * entries due to {@link AndroidBuildConfig}s.
-     */
-    ImmutableSet<Path> classpathEntriesToDex();
-
-    ImmutableSortedSet<BuildRule> finalDeps();
   }
 
   private BuildTarget createBuildTargetWithFlavor(Flavor flavor) {

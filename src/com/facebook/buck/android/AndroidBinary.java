@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
-import com.facebook.buck.android.AndroidBinaryGraphEnhancer.EnhancementResult;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.AccumulateClassNamesStep;
@@ -183,7 +182,7 @@ public class AndroidBinary extends AbstractBuildRule implements
   private final Function<String, String> macroExpander;
   private final Optional<String> preprocessJavaClassesBash;
   protected final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
-  protected final EnhancementResult enhancementResult;
+  protected final AndroidGraphEnhancementResult enhancementResult;
 
   /**
    * @param target the Android platform version to target, e.g., "Google Inc.:Google APIs:16". You
@@ -212,7 +211,7 @@ public class AndroidBinary extends AbstractBuildRule implements
       Function<String, String> macroExpander,
       Optional<String> preprocessJavaClassesBash,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
-      EnhancementResult enhancementResult) {
+      AndroidGraphEnhancementResult enhancementResult) {
     super(params, resolver);
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
@@ -330,7 +329,7 @@ public class AndroidBinary extends AbstractBuildRule implements
   }
 
   @VisibleForTesting
-  EnhancementResult getEnhancementResult() {
+  AndroidGraphEnhancementResult getEnhancementResult() {
     return enhancementResult;
   }
 

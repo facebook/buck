@@ -175,7 +175,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         args.buildConfigValues.get(),
         args.buildConfigValuesFile,
         nativePlatforms);
-    AndroidBinaryGraphEnhancer.EnhancementResult result =
+    AndroidGraphEnhancementResult result =
         graphEnhancer.createAdditionalBuildables();
 
     return new AndroidBinary(

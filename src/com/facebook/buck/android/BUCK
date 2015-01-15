@@ -39,6 +39,7 @@ RULES_SRCS = [
   'AndroidBuildConfig.java',
   'AndroidBuildConfigDescription.java',
   'AndroidBuildConfigJavaLibrary.java',
+  'AndroidGraphEnhancementResult.java',
   'AndroidInstrumentationApk.java',
   'AndroidInstrumentationApkDescription.java',
   'AndroidLibraryDescription.java',

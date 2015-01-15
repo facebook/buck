@@ -128,7 +128,7 @@ public class AndroidInstrumentationApkDescription
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
         nativePlatforms);
 
-    AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult =
+    AndroidGraphEnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();
 
     return new AndroidInstrumentationApk(

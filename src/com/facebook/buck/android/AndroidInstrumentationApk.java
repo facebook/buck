@@ -53,7 +53,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       SourcePath manifest,
       AndroidBinary apkUnderTest,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
-      AndroidBinaryGraphEnhancer.EnhancementResult enhancementResult) {
+      AndroidGraphEnhancementResult enhancementResult) {
     super(
         buildRuleParams,
         resolver,
