@@ -125,7 +125,8 @@ public class AndroidExopackageBinaryIntegrationTest {
         workspace.getFile(
             "buck-out/gen/apps/multidex/app-native-exo.apk"));
 
-    zipInspector.assertFileExists("assets/secondary-program-dex-jars/metadata.txt");
+    zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
+
     zipInspector.assertFileExists("classes2.dex");
 
     zipInspector.assertFileExists("classes.dex");
