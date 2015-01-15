@@ -45,7 +45,7 @@ public class Archives {
   public static Path getArchiveOutputPath(BuildTarget target) {
     return BuildTargets.getGenPath(
         target,
-        "%s/lib" + target.getShortNameOnly() + ".a");
+        "%s/lib" + target.getShortName() + ".a");
   }
 
   /**

@@ -81,7 +81,7 @@ public class CxxPythonExtensionDescription implements
 
   @VisibleForTesting
   protected String getExtensionName(BuildTarget target) {
-    return String.format("%s.so", target.getShortNameOnly());
+    return String.format("%s.so", target.getShortName());
   }
 
   @VisibleForTesting

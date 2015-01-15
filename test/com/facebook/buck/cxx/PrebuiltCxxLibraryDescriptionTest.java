@@ -48,20 +48,20 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
   private static Path getStaticLibraryPath(PrebuiltCxxLibraryDescription.Arg arg) {
     String libDir = arg.libDir.or("lib");
-    String libName = arg.libName.or(TARGET.getShortNameOnly());
+    String libName = arg.libName.or(TARGET.getShortName());
     return TARGET.getBasePath().resolve(libDir).resolve(
         String.format("lib%s.a", libName));
   }
 
   private static Path getSharedLibraryPath(PrebuiltCxxLibraryDescription.Arg arg) {
     String libDir = arg.libDir.or("lib");
-    String libName = arg.libName.or(TARGET.getShortNameOnly());
+    String libName = arg.libName.or(TARGET.getShortName());
     return TARGET.getBasePath().resolve(libDir).resolve(
         String.format("lib%s.so", libName));
   }
 
   private static String getSharedLibrarySoname(PrebuiltCxxLibraryDescription.Arg arg) {
-    String libName = arg.libName.or(TARGET.getShortNameOnly());
+    String libName = arg.libName.or(TARGET.getShortName());
     return arg.soname.or(String.format("lib%s.so", libName));
   }
 

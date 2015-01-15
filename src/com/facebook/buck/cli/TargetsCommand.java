@@ -350,7 +350,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       Map<String, Object> targetRule = null;
       for (Map<String, Object> rule : rules) {
         String name = (String) Preconditions.checkNotNull(rule.get("name"));
-        if (name.equals(buildTarget.getShortName())) {
+        if (name.equals(buildTarget.getShortNameAndFlavorPostfix())) {
           targetRule = rule;
           break;
         }
@@ -497,7 +497,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     // Check that the given target is a valid target.
     for (Map<String, Object> rule : ruleObjects) {
       String name = (String) Preconditions.checkNotNull(rule.get("name"));
-      if (name.equals(buildTarget.getShortName())) {
+      if (name.equals(buildTarget.getShortNameAndFlavorPostfix())) {
         return buildTarget.getFullyQualifiedName();
       }
     }

@@ -61,7 +61,7 @@ public class PrebuiltOCamlLibraryDescription
 
     final String libDir = args.libDir.or("lib");
 
-    final String libName = args.libName.or(target.getShortNameOnly());
+    final String libName = args.libName.or(target.getShortName());
 
     final String nativeLib = args.nativeLib.or(String.format("%s.cmxa", libName));
     final String bytecodeLib = args.bytecodeLib.or(String.format("%s.cma", libName));

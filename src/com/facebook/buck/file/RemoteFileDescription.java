@@ -58,7 +58,7 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
       A args) {
     HashCode sha1 = HashCode.fromString(args.sha1);
 
-    String out = args.out.or(params.getBuildTarget().getShortName());
+    String out = args.out.or(params.getBuildTarget().getShortNameAndFlavorPostfix());
 
     return new RemoteFile(
         params,

@@ -98,7 +98,7 @@ public class GwtBinary extends AbstractBuildRule {
     BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     this.outputFile = BuildTargets.getGenPath(
         buildTarget,
-        "__gwt_binary_%s__/" + buildTarget.getShortName() + ".zip");
+        "__gwt_binary_%s__/" + buildTarget.getShortNameAndFlavorPostfix() + ".zip");
     this.modules = modules;
     Preconditions.checkArgument(
         !modules.isEmpty(),

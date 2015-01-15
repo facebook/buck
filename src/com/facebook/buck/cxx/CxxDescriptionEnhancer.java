@@ -410,7 +410,7 @@ public class CxxDescriptionEnhancer {
   public static Path getStaticLibraryPath(
       BuildTarget target,
       Flavor platform) {
-    String name = String.format("lib%s.a", target.getShortNameOnly());
+    String name = String.format("lib%s.a", target.getShortName());
     return BuildTargets.getBinPath(createStaticLibraryBuildTarget(target, platform), "%s")
         .resolve(name);
   }
@@ -423,7 +423,7 @@ public class CxxDescriptionEnhancer {
                     FluentIterable.from(target.getBasePath())
                         .transform(Functions.toStringFunction())
                         .filter(Predicates.not(Predicates.equalTo(""))))
-                .add(target.getShortNameOnly())
+                .add(target.getShortName())
                 .build());
     String extension = platform.getSharedLibraryExtension();
     return String.format("lib%s.%s", libName, extension);
@@ -433,7 +433,7 @@ public class CxxDescriptionEnhancer {
       BuildTarget target,
       CxxPlatform platform) {
     String extension = platform.getSharedLibraryExtension();
-    String name = String.format("lib%s.%s", target.getShortNameOnly(), extension);
+    String name = String.format("lib%s.%s", target.getShortName(), extension);
     return BuildTargets.getBinPath(
         createSharedLibraryBuildTarget(target, platform.asFlavor()),
         "%s/" + name);
@@ -441,7 +441,7 @@ public class CxxDescriptionEnhancer {
 
   @VisibleForTesting
   protected static Path getOutputPath(BuildTarget target) {
-    return BuildTargets.getBinPath(target, "%s/" + target.getShortName());
+    return BuildTargets.getBinPath(target, "%s/" + target.getShortNameAndFlavorPostfix());
   }
 
   @VisibleForTesting

@@ -1229,7 +1229,7 @@ public class ProjectGenerator {
   }
 
   private static String getProductName(BuildTarget buildTarget) {
-    return buildTarget.getShortNameOnly();
+    return buildTarget.getShortName();
   }
 
   private String getHeaderOutputPath(Optional<String> headerPathPrefix) {
@@ -1620,7 +1620,7 @@ public class ProjectGenerator {
 
   private String getXcodeTargetName(BuildTarget target) {
     return options.contains(Option.USE_SHORT_NAMES_FOR_TARGETS)
-        ? target.getShortNameOnly()
+        ? target.getShortName()
         : target.getFullyQualifiedName();
   }
 

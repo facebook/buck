@@ -180,7 +180,7 @@ public class MissingSymbolsHandler {
       Set<BuildTarget> sortedDeps = ImmutableSortedSet.copyOf(neededDependencies.get(target));
       for (BuildTarget neededDep : sortedDeps) {
         if (neededDep.getBaseName().equals(target.getBaseName())) {
-          samePackageDeps.add(":" + neededDep.getShortNameOnly());
+          samePackageDeps.add(":" + neededDep.getShortName());
         } else {
           otherPackageDeps.add(neededDep.toString());
         }
@@ -201,7 +201,7 @@ public class MissingSymbolsHandler {
   private String formatTarget(BuildTarget buildTarget) {
     return String.format("%s (:%s)",
         buildTarget.getBuildFilePath(),
-        buildTarget.getShortNameOnly());
+        buildTarget.getShortName());
   }
 
   private void print(String line) {

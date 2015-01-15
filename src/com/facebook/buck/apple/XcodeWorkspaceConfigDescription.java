@@ -65,7 +65,7 @@ public class XcodeWorkspaceConfigDescription
     if (arg.workspaceName.isPresent()) {
       return arg.workspaceName.get();
     } else if (arg.srcTarget.isPresent()) {
-      return arg.srcTarget.get().getShortName();
+      return arg.srcTarget.get().getShortNameAndFlavorPostfix();
     } else {
       throw new HumanReadableException(
           "Either workspace_name or src_target is required for xcode_workspace_config");

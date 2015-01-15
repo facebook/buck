@@ -52,7 +52,7 @@ public class BuildTargets {
     return Paths.get(String.format("%s/%s" + format,
         BuckConstant.BIN_DIR,
         target.getBasePathWithSlash(),
-        target.getShortName()));
+        target.getShortNameAndFlavorPostfix()));
   }
 
   /**
@@ -70,7 +70,7 @@ public class BuildTargets {
     return Paths.get(String.format("%s/%s" + format,
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
-        target.getShortName()));
+        target.getShortNameAndFlavorPostfix()));
   }
 
   /**

@@ -139,7 +139,7 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
       headersToCopy = ImmutableSortedMap.of();
     } else {
       // This is a heuristic to get the right header path prefix. Note that ProjectGenerator uses a
-      // slightly different heuristic, which is buildTarget.getShortNameOnly(), though that is only
+      // slightly different heuristic, which is buildTarget.getShortName(), though that is only
       // a fallback when an apple_library() does not specify a header_path_prefix when
       // use_buck_header_maps is True.
       Path headerPathPrefix = params.getBuildTarget().getBasePath().getFileName();

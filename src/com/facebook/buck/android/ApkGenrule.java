@@ -74,7 +74,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
         cmd,
         bash,
         cmdExe,
-        /* out */ params.getBuildTarget().getShortName() + ".apk",
+        /* out */ params.getBuildTarget().getShortNameAndFlavorPostfix() + ".apk",
         relativeToAbsolutePathFunction);
 
     this.apk = apk;

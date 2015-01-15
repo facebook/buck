@@ -91,7 +91,7 @@ public class LocationMacroExpanderTest {
 
     String originalCmd = String.format(
         "$(location :%s) $(location %s) $OUT",
-        javaBinary.getBuildTarget().getShortName(),
+        javaBinary.getBuildTarget().getShortNameAndFlavorPostfix(),
         javaBinary.getBuildTarget().getFullyQualifiedName());
 
     // Interpolate the build target in the genrule cmd string.

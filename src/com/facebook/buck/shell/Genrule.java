@@ -159,14 +159,14 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
     this.pathToTmpDirectory = Paths.get(
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
-        String.format("%s__tmp", target.getShortName()));
+        String.format("%s__tmp", target.getShortNameAndFlavorPostfix()));
     // TODO(simons): pathToTmpDirectory.toAbsolutePath() should be enough
     this.absolutePathToTmpDirectory = relativeToAbsolutePathFunction.apply(pathToTmpDirectory);
 
     this.pathToSrcDirectory = Paths.get(
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
-        String.format("%s__srcs", target.getShortName()));
+        String.format("%s__srcs", target.getShortNameAndFlavorPostfix()));
     // TODO(simons): And here.
     this.absolutePathToSrcDirectory = relativeToAbsolutePathFunction.apply(pathToSrcDirectory);
 

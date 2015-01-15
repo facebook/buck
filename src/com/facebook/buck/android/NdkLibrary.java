@@ -93,7 +93,7 @@ public class NdkLibrary extends AbstractBuildRule
     BuildTarget buildTarget = params.getBuildTarget();
     this.root = buildTarget.getBasePath();
     this.makefile = Preconditions.checkNotNull(makefile);
-    this.lastPathComponent = "__lib" + buildTarget.getShortName();
+    this.lastPathComponent = "__lib" + buildTarget.getShortNameAndFlavorPostfix();
     this.buildArtifactsDirectory = getBuildArtifactsDirectory(buildTarget, true /* isScratchDir */);
     this.genDirectory = getBuildArtifactsDirectory(buildTarget, false /* isScratchDir */);
 

@@ -110,7 +110,7 @@ public class AppleBinaryDescription
     delegateArg.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     delegateArg.deps = args.deps;
     delegateArg.headerNamespace = args.headerPathPrefix.or(
-        Optional.of(params.getBuildTarget().getShortNameOnly()));
+        Optional.of(params.getBuildTarget().getShortName()));
 
     return delegate.createBuildRule(params, resolver, delegateArg);
   }

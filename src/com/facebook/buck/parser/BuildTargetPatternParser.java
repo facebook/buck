@@ -109,7 +109,7 @@ public abstract class BuildTargetPatternParser {
     }
 
     BuildTarget target = buildTargetParser.parse(buildTargetPattern, this);
-    if (target.getShortName().isEmpty()) {
+    if (target.getShortNameAndFlavorPostfix().isEmpty()) {
       return new ImmediateDirectoryBuildTargetPattern(target.getBasePathWithSlash());
     } else {
       return new SingletonBuildTargetPattern(target.getFullyQualifiedName());

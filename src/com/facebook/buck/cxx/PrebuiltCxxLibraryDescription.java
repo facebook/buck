@@ -84,7 +84,7 @@ public class PrebuiltCxxLibraryDescription
 
     BuildTarget target = params.getBuildTarget();
     String libDir = args.libDir.or("lib");
-    String libName = args.libName.or(target.getShortNameOnly());
+    String libName = args.libName.or(target.getShortName());
     String soname = args.soname.or(String.format("lib%s.so", libName));
     Path staticLibraryPath =
         target.getBasePath()
@@ -148,7 +148,7 @@ public class PrebuiltCxxLibraryDescription
     boolean provided = args.provided.or(false);
     boolean linkWhole = args.linkWhole.or(false);
     String libDir = args.libDir.or("lib");
-    String libName = args.libName.or(target.getShortNameOnly());
+    String libName = args.libName.or(target.getShortName());
     String soname = args.soname.or(String.format("lib%s.so", libName));
 
     Path staticLibraryPath =

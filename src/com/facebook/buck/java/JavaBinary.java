@@ -170,7 +170,10 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule,
   @Override
   public Path getPathToOutputFile() {
     return Paths.get(
-        String.format("%s/%s.jar", getOutputDirectory(), getBuildTarget().getShortName()));
+        String.format(
+            "%s/%s.jar",
+            getOutputDirectory(),
+            getBuildTarget().getShortNameAndFlavorPostfix()));
   }
 
   @Override

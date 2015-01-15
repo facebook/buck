@@ -36,7 +36,7 @@ public class BuildTargetTest {
   @Test
   public void testRootBuildTarget() {
     BuildTarget rootTarget = BuildTarget.builder("//", "fb4a").build();
-    assertEquals("fb4a", rootTarget.getShortName());
+    assertEquals("fb4a", rootTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", rootTarget.getBaseName());
     assertEquals("//", rootTarget.getBaseNameWithSlash());
     assertEquals(Paths.get(""), rootTarget.getBasePath());
@@ -48,7 +48,7 @@ public class BuildTargetTest {
   @Test
   public void testBuildTargetTwoLevelsDeep() {
     BuildTarget rootTarget = BuildTarget.builder("//java/com/facebook", "fb4a").build();
-    assertEquals("fb4a", rootTarget.getShortName());
+    assertEquals("fb4a", rootTarget.getShortNameAndFlavorPostfix());
     assertEquals("//java/com/facebook", rootTarget.getBaseName());
     assertEquals("//java/com/facebook/", rootTarget.getBaseNameWithSlash());
     assertEquals(Paths.get("java/com/facebook"), rootTarget.getBasePath());
@@ -90,7 +90,7 @@ public class BuildTargetTest {
   @Test
   public void testBuildTargetWithFlavor() {
     BuildTarget target = BuildTarget.builder("//foo/bar", "baz").setFlavor("dex").build();
-    assertEquals("baz#dex", target.getShortName());
+    assertEquals("baz#dex", target.getShortNameAndFlavorPostfix());
     assertEquals(ImmutableSortedSet.of(new Flavor("dex")), target.getFlavors());
     assertTrue(target.isFlavored());
   }
@@ -98,7 +98,7 @@ public class BuildTargetTest {
   @Test
   public void testBuildTargetWithoutFlavor() {
     BuildTarget target = BuildTarget.builder("//foo/bar", "baz").build();
-    assertEquals(target.getShortName(), "baz");
+    assertEquals(target.getShortNameAndFlavorPostfix(), "baz");
     assertEquals(ImmutableSortedSet.of(Flavor.DEFAULT), target.getFlavors());
     assertFalse(target.isFlavored());
   }

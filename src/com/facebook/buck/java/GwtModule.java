@@ -55,7 +55,7 @@ public class GwtModule extends AbstractBuildRule {
     BuildTarget target = params.getBuildTarget();
     this.outputFile = BuildTargets.getGenPath(
         target,
-        "__gwt_module_%s__/" + target.getShortName() + ".jar");
+        "__gwt_module_%s__/" + target.getShortNameAndFlavorPostfix() + ".jar");
     this.filesForGwtModule = filesForGwtModule;
   }
 

@@ -330,7 +330,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         String.format(
             "%s/%s.jar",
             getOutputJarDirPath(target),
-            target.getShortName()));
+            target.getShortNameAndFlavorPostfix()));
   }
 
   /**
@@ -576,7 +576,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(getOutputJarDirPath(target)));
 
     Path abiJar = getOutputJarDirPath(target)
-        .resolve(String.format("%s-abi.jar", target.getShortName()));
+        .resolve(String.format("%s-abi.jar", target.getShortNameAndFlavorPostfix()));
     steps.add(new MkdirStep(abiJar.getParent()));
 
     if (outputJar.isPresent()) {
@@ -595,7 +595,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     } else {
       Path scratch = BuildTargets.getBinPath(
           target,
-          String.format("%%s/%s-temp-abi.jar", target.getShortName()));
+          String.format("%%s/%s-temp-abi.jar", target.getShortNameAndFlavorPostfix()));
       steps.add(new MakeCleanDirectoryStep(scratch.getParent()));
       steps.add(new TouchStep(scratch));
       steps.add(new CalculateAbiStep(buildableContext, scratch, abiJar));

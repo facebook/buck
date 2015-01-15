@@ -63,7 +63,7 @@ public class ShBinary extends AbstractBuildRule
     BuildTarget target = params.getBuildTarget();
     this.output = BuildTargets.getGenPath(
         target,
-        String.format("__%%s__/%s.sh", target.getShortName()));
+        String.format("__%%s__/%s.sh", target.getShortNameAndFlavorPostfix()));
     this.buildOutputInitializer = new BuildOutputInitializer<>(target, this);
   }
 

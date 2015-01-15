@@ -258,7 +258,7 @@ public class SourcePathResolverTest {
     String actual2 = pathResolver.getSourcePathName(
         BuildTargetFactory.newInstance("//:test"),
         buildTargetSourcePath2);
-    assertEquals(fakeBuildTarget.getShortNameOnly(), actual2);
+    assertEquals(fakeBuildTarget.getShortName(), actual2);
   }
 
   @Test

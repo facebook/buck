@@ -1062,7 +1062,7 @@ public class Parser {
       List<Map<String, Object>> rules = state.getRawRules(buildFilePath);
       for (Map<String, Object> map : rules) {
 
-        if (!buildTarget.getShortNameOnly().equals(map.get("name"))) {
+        if (!buildTarget.getShortName().equals(map.get("name"))) {
           continue;
         }
 

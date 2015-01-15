@@ -46,7 +46,7 @@ public class BuildTargetParserTest {
     // Parse "//:fb4a" with the BuildTargetParser and test all of its observers.
     BuildTargetParser parser = new BuildTargetParser();
     BuildTarget buildTarget = parser.parse("//:fb4a", fullyQualifiedParser);
-    assertEquals("fb4a", buildTarget.getShortName());
+    assertEquals("fb4a", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName());
     assertEquals(Paths.get(""), buildTarget.getBasePath());
     assertEquals("", buildTarget.getBasePathWithSlash());
@@ -58,7 +58,7 @@ public class BuildTargetParserTest {
     BuildTargetParser parser = new BuildTargetParser();
     BuildTarget buildTarget = parser.parse("//:lib#foo,bar", fullyQualifiedParser);
     // Note the sort order.
-    assertEquals("lib#bar,foo", buildTarget.getShortName());
+    assertEquals("lib#bar,foo", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName());
     assertEquals(Paths.get(""), buildTarget.getBasePath());
     assertEquals("", buildTarget.getBasePathWithSlash());
@@ -128,7 +128,7 @@ public class BuildTargetParserTest {
     BuildTargetParser parser = new BuildTargetParser();
     BuildTarget buildTarget = parser.parse("//facebook/orca:assets", fullyQualifiedParser);
     assertEquals("//facebook/orca", buildTarget.getBaseName());
-    assertEquals("assets", buildTarget.getShortName());
+    assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
   }
 
   @Test
@@ -138,7 +138,7 @@ public class BuildTargetParserTest {
         ":assets",
         BuildTargetPatternParser.forBaseName(new BuildTargetParser(), "//facebook/orca"));
     assertEquals("//facebook/orca", buildTarget.getBaseName());
-    assertEquals("assets", buildTarget.getShortName());
+    assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
   }
 
   @Test

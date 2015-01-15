@@ -163,7 +163,7 @@ public class SourcePathResolver {
     }
 
     // Otherwise, fall back to using the short name of rule's build target.
-    return rule.getBuildTarget().getShortNameOnly();
+    return rule.getBuildTarget().getShortName();
   }
 
   /**

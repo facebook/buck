@@ -92,7 +92,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
    * If this build target were //third_party/java/guava:guava-latest, then this would return
    * "guava-latest". Note that the flavor of the target is included here.
    */
-  public String getShortName() {
+  public String getShortNameAndFlavorPostfix() {
     return shortName + getFlavorPostfix();
   }
 
@@ -104,7 +104,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
   }
 
   @JsonProperty("shortName")
-  public String getShortNameOnly() {
+  public String getShortName() {
     return shortName;
   }
 

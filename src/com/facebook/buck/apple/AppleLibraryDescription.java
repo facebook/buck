@@ -118,7 +118,7 @@ public class AppleLibraryDescription implements
     delegateArg.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     delegateArg.deps = args.deps;
     delegateArg.headerNamespace = args.headerPathPrefix.or(
-        Optional.of(params.getBuildTarget().getShortNameOnly()));
+        Optional.of(params.getBuildTarget().getShortName()));
     delegateArg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
     delegateArg.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());

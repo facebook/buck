@@ -292,7 +292,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
   public Path getPathToTestOutputDirectory() {
     List<String> pathsList = Lists.newArrayList();
     pathsList.add(getBuildTarget().getBaseNameWithSlash());
-    pathsList.add(String.format("__java_test_%s_output__", getBuildTarget().getShortName()));
+    pathsList.add(
+        String.format("__java_test_%s_output__", getBuildTarget().getShortNameAndFlavorPostfix()));
 
     // Putting the one-time test-sub-directory below the usual directory has the nice property that
     // doing a test run without "--one-time-output" will tidy up all the old one-time directories!

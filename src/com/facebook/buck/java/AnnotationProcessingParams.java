@@ -92,7 +92,7 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
             "%s/%s__%s_gen__",
             BuckConstant.ANNOTATION_DIR,
             Preconditions.checkNotNull(ownerTarget).getBasePathWithSlash(),
-            ownerTarget.getShortName()));
+            ownerTarget.getShortNameAndFlavorPostfix()));
   }
 
   @Override

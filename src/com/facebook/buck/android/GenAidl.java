@@ -78,7 +78,8 @@ public class GenAidl extends AbstractBuildRule {
     this.importPath = importPath;
     BuildTarget buildTarget = params.getBuildTarget();
     this.genPath = BuildTargets.getGenPath(buildTarget, "%s");
-    this.output = genPath.resolve(String.format("lib%s%s", buildTarget.getShortName(), SRC_ZIP));
+    this.output = genPath.resolve(
+        String.format("lib%s%s", buildTarget.getShortNameAndFlavorPostfix(), SRC_ZIP));
   }
 
   @Override
