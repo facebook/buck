@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Set;
 
-public interface Compiler {
+public interface Javac {
 
   /**
    * An escaper for arguments written to @argfiles.

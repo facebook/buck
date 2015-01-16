@@ -42,9 +42,9 @@ public class JavacStepUtil {
       BuildTarget buildTarget,
       Optional<Path> workingDirectory) {
 
-    Compiler compiler;
+    Javac javac;
     if (javacOptions.getJavaCompilerEnvironment().getJavacPath().isPresent()) {
-      compiler = new ExternalJavacCompiler(
+      javac = new ExternalJavac(
           javaSourceFilePaths,
           javacOptions,
           invokingRule,
@@ -52,14 +52,14 @@ public class JavacStepUtil {
           buildTarget,
           workingDirectory);
     } else {
-      compiler = new Jsr199Compiler(
+      javac = new Jsr199Javac(
           javaSourceFilePaths,
           invokingRule,
           pathToSrcsList);
     }
 
     return new JavacStep(
-        compiler,
+        javac,
         outputDirectory,
         javaSourceFilePaths,
         transitiveClasspathEntries,

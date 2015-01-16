@@ -45,7 +45,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class Jsr199CompilerIntegrationTest {
+public class Jsr199JavacIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
@@ -58,7 +58,7 @@ public class Jsr199CompilerIntegrationTest {
 
   @Test
   public void testGetDescription() throws IOException {
-    Jsr199Compiler javac = createJavac(/* withSyntaxError */ false);
+    Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = createExecutionContext();
     String pathToOutputDir = new File(tmp.getRoot(), "out").getAbsolutePath();
 
@@ -84,13 +84,13 @@ public class Jsr199CompilerIntegrationTest {
 
   @Test
   public void testGetShortName() throws IOException {
-    Jsr199Compiler javac = createJavac(/* withSyntaxError */ false);
+    Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     assertEquals("javac", javac.getShortName());
   }
 
   @Test
   public void testClassesFile() throws IOException, InterruptedException {
-    Jsr199Compiler javac = createJavac(/* withSyntaxError */ false);
+    Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.buildWithClasspath(
         executionContext,
@@ -120,7 +120,7 @@ public class Jsr199CompilerIntegrationTest {
         rule.getBuildTarget(),
         Paths.get("Example.java"));
 
-    Jsr199Compiler javac = createJavac(
+    Jsr199Javac javac = createJavac(
         /* javaSourceFilePaths */ ImmutableSet.of(pathResolver.getPath(sourcePath)),
         /* withSyntaxError */ false);
     ExecutionContext executionContext = createExecutionContext();
@@ -136,7 +136,7 @@ public class Jsr199CompilerIntegrationTest {
     assertEquals("Example.java", Files.toString(srcsListFile, Charsets.UTF_8).trim());
   }
 
-  private Jsr199Compiler createJavac(
+  private Jsr199Javac createJavac(
       ImmutableSet<Path> javaSourceFilePaths,
       boolean withSyntaxError)
       throws IOException {
@@ -153,13 +153,13 @@ public class Jsr199CompilerIntegrationTest {
 
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());
-    return new Jsr199Compiler(
+    return new Jsr199Javac(
         javaSourceFilePaths,
         Optional.<BuildTarget>absent(),
         Optional.of(pathToSrcsList));
   }
 
-  private Jsr199Compiler createJavac(boolean withSyntaxError) throws IOException {
+  private Jsr199Javac createJavac(boolean withSyntaxError) throws IOException {
     return createJavac(
         /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("Example.java")),
         withSyntaxError);

@@ -35,7 +35,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class ExternalJavacCompilerTest extends EasyMockSupport {
+public class ExternalJavacTest extends EasyMockSupport {
   private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
 
   @Rule
@@ -49,9 +49,9 @@ public class ExternalJavacCompilerTest extends EasyMockSupport {
   public void testJavacCommand() {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    ExternalJavacCompiler firstOrder = createTestStep();
-    ExternalJavacCompiler warn = createTestStep();
-    ExternalJavacCompiler transitive = createTestStep();
+    ExternalJavac firstOrder = createTestStep();
+    ExternalJavac warn = createTestStep();
+    ExternalJavac transitive = createTestStep();
 
     assertEquals("fakeJavac -source 6 -target 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
         firstOrder.getDescription(context, getArgs().add("foo.jar").build()));
@@ -73,8 +73,8 @@ public class ExternalJavacCompilerTest extends EasyMockSupport {
           "-classpath");
   }
 
-  private ExternalJavacCompiler createTestStep() {
-    return new ExternalJavacCompiler(
+  private ExternalJavac createTestStep() {
+    return new ExternalJavac(
         /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("foobar.java")),
         JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
             .setJavaCompilerEnvironment(

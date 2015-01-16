@@ -56,7 +56,7 @@ public class JavacStep implements Step {
 
   public static final String SRC_ZIP = ".src.zip";
 
-  private Compiler compiler;
+  private Javac javac;
 
   private final Path outputDirectory;
 
@@ -75,7 +75,7 @@ public class JavacStep implements Step {
   private final Optional<SuggestBuildRules> suggestBuildRules;
 
   /**
-   * Will be {@code true} once {@link Compiler#buildWithClasspath(ExecutionContext, ImmutableList,
+   * Will be {@code true} once {@link Javac#buildWithClasspath(ExecutionContext, ImmutableList,
    * Set)} has been invoked.
    */
   private AtomicBoolean isExecuted = new AtomicBoolean(false);
@@ -111,7 +111,7 @@ public class JavacStep implements Step {
   }
 
   public JavacStep(
-      Compiler compiler,
+      Javac javac,
       Path outputDirectory,
       Set<Path> javaSourceFilePaths,
       Set<Path> transitiveClasspathEntries,
@@ -120,7 +120,7 @@ public class JavacStep implements Step {
       Optional<BuildTarget> invokingRule,
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules) {
-    this.compiler = compiler;
+    this.javac = javac;
     this.outputDirectory = outputDirectory;
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
     this.transitiveClasspathEntries = ImmutableSet.copyOf(transitiveClasspathEntries);
@@ -144,14 +144,14 @@ public class JavacStep implements Step {
   public int executeBuild(ExecutionContext context) throws InterruptedException {
     // Build up the compilation task.
     if (buildDependencies == BuildDependencies.FIRST_ORDER_ONLY) {
-      return getCompiler().buildWithClasspath(
+      return getJavac().buildWithClasspath(
           context,
           getOptions(context, getClasspathEntries()),
           ImmutableSet.copyOf(declaredClasspathEntries));
     } else if (buildDependencies == BuildDependencies.WARN_ON_TRANSITIVE) {
       return tryBuildWithFirstOrderDeps(context);
     } else {
-      return getCompiler().buildWithClasspath(
+      return getJavac().buildWithClasspath(
           context,
           getOptions(context, getClasspathEntries()),
           getClasspathEntries());
@@ -163,7 +163,7 @@ public class JavacStep implements Step {
     CapturingPrintStream stderr = new CapturingPrintStream();
     ExecutionContext firstOrderContext = context.createSubContext(stdout, stderr);
 
-    int declaredDepsResult = getCompiler().buildWithClasspath(
+    int declaredDepsResult = getJavac().buildWithClasspath(
         firstOrderContext,
         getOptions(context, declaredClasspathEntries),
         ImmutableSet.copyOf(declaredClasspathEntries));
@@ -172,7 +172,7 @@ public class JavacStep implements Step {
     String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
 
     if (declaredDepsResult != 0) {
-      int transitiveResult = getCompiler().buildWithClasspath(
+      int transitiveResult = getJavac().buildWithClasspath(
           context,
           getOptions(context, transitiveClasspathEntries),
           ImmutableSet.copyOf(transitiveClasspathEntries));
@@ -205,18 +205,18 @@ public class JavacStep implements Step {
   }
 
   @VisibleForTesting
-  Compiler getCompiler() {
-    return compiler;
+  Javac getJavac() {
+    return javac;
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return getCompiler().getDescription(context, getOptions(context, getClasspathEntries()));
+    return getJavac().getDescription(context, getOptions(context, getClasspathEntries()));
   }
 
   @Override
   public String getShortName() {
-    return getCompiler().getShortName();
+    return getJavac().getShortName();
   }
 
   @VisibleForTesting

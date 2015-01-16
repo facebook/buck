@@ -1157,7 +1157,7 @@ public class DefaultJavaLibraryTest {
 
     List<Step> steps = stepsBuilder.build();
     assertEquals(steps.size(), 3);
-    assertTrue(((JavacStep) steps.get(2)).getCompiler() instanceof Jsr199Compiler);
+    assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
   }
 
   @Test
@@ -1192,7 +1192,7 @@ public class DefaultJavaLibraryTest {
 
     List<Step> steps = stepsBuilder.build();
     assertEquals(steps.size(), 4);
-    assertTrue(((JavacStep) steps.get(3)).getCompiler() instanceof ExternalJavacCompiler);
+    assertTrue(((JavacStep) steps.get(3)).getJavac() instanceof ExternalJavac);
   }
 
   @Test

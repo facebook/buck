@@ -33,7 +33,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class Jsr199CompilerTest extends EasyMockSupport {
+public class Jsr199JavacTest extends EasyMockSupport {
   private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
 
 
@@ -41,9 +41,9 @@ public class Jsr199CompilerTest extends EasyMockSupport {
   public void testJavacCommand() {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    Jsr199Compiler firstOrder = createTestStep();
-    Jsr199Compiler warn = createTestStep();
-    Jsr199Compiler transitive = createTestStep();
+    Jsr199Javac firstOrder = createTestStep();
+    Jsr199Javac warn = createTestStep();
+    Jsr199Javac transitive = createTestStep();
 
     assertEquals(
         String.format("javac -source %s -target %s -g -d . -classpath foo.jar @%s",
@@ -61,8 +61,8 @@ public class Jsr199CompilerTest extends EasyMockSupport {
             getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build()));
   }
 
-  private Jsr199Compiler createTestStep() {
-    return new Jsr199Compiler(
+  private Jsr199Javac createTestStep() {
+    return new Jsr199Javac(
           /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("foobar.java")),
           /* invokingRule */ Optional.<BuildTarget>absent(),
           /* pathToSrcsList */ Optional.of(PATH_TO_SRCS_LIST));

@@ -72,15 +72,15 @@ import javax.tools.ToolProvider;
  * {@code transitiveClasspathEntries} but warn the developer about which dependencies were in
  * the transitive classpath but not in the declared classpath.
  */
-public class Jsr199Compiler implements Compiler {
+public class Jsr199Javac implements Javac {
 
-  private static final Logger LOG = Logger.get(Jsr199Compiler.class);
+  private static final Logger LOG = Logger.get(Jsr199Javac.class);
 
   private final Set<Path> javaSourceFilePaths;
   private final Optional<BuildTarget> invokingRule;
   private final Optional<Path> pathToSrcsList;
 
-  public Jsr199Compiler(
+  public Jsr199Javac(
       Set<Path> javaSourceFilePaths,
       Optional<BuildTarget> invokingRule,
       Optional<Path> pathToSrcsList) {

@@ -35,7 +35,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
-public class ExternalJavacCompiler implements Compiler {
+public class ExternalJavac implements Javac {
 
   private final Path pathToJavac;
   private final BuildTarget target;
@@ -44,7 +44,7 @@ public class ExternalJavacCompiler implements Compiler {
   private final Optional<BuildTarget> invokingRule;
   private final Optional<Path> pathToSrcsList;
 
-  public ExternalJavacCompiler(
+  public ExternalJavac(
       Set<Path> javaSourceFilePaths,
       JavacOptions javacOptions,
       Optional<BuildTarget> invokingRule,
