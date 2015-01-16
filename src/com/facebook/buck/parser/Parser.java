@@ -970,7 +970,12 @@ public class Parser {
     private synchronized boolean invalidateCacheOnEnvironmentChange(
         ImmutableMap<String, String> environment) {
       if (!environment.equals(cacheEnvironment)) {
-        LOG.debug("Parser invalidating entire cache on environment change.");
+        if (cacheEnvironment != null) {
+          LOG.warn(
+              "Environment variables changed (%s). Discarding cache to avoid effects on build. " +
+              "This will make builds very slow.",
+              Maps.difference(cacheEnvironment, environment));
+        }
         invalidateCache();
         this.cacheEnvironment = environment;
         return true;
