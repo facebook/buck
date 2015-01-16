@@ -126,7 +126,7 @@ public class ExternalJavacCompiler implements Compiler {
     Map<String, String> env = processBuilder.environment();
     env.clear();
     env.putAll(context.getEnvironment());
-    env.put( "BUCK_INVOKING_RULE", (invokingRule.isPresent() ? invokingRule.get().toString() : ""));
+    env.put("BUCK_INVOKING_RULE", (invokingRule.isPresent() ? invokingRule.get().toString() : ""));
     env.put("BUCK_TARGET", target.toString());
     env.put("BUCK_DIRECTORY_ROOT", context.getProjectDirectoryRoot().toString());
 

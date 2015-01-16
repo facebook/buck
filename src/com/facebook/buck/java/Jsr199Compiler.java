@@ -113,7 +113,7 @@ public class Jsr199Compiler implements Compiler {
   public int buildWithClasspath(
       ExecutionContext context,
       ImmutableList<String> options,
-          Set<Path> buildClasspathEntries) {
+      Set<Path> buildClasspathEntries) {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     Preconditions.checkNotNull(
         compiler,
