@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.android.AndroidAarDescription;
 import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidBuildConfigDescription;
@@ -375,6 +376,7 @@ public class KnownBuildRuleTypes {
         new AppleLibraryDescription(appleConfig, cxxLibraryDescription);
     builder.register(appleLibraryDescription);
 
+    builder.register(new AndroidAarDescription());
     builder.register(
         new AndroidBinaryDescription(
             androidBinaryOptions,

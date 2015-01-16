@@ -33,6 +33,8 @@ java_immutables_library(
 
 RULES_SRCS = [
   'AaptPackageResources.java',
+  'AndroidAar.java',
+  'AndroidAarDescription.java',
   'AndroidBinaryGraphEnhancer.java',
   'AndroidBinary.java',
   'AndroidBinaryDescription.java',
