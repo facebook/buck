@@ -18,14 +18,11 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 import org.junit.Test;
 
@@ -50,6 +47,9 @@ public class CxxPreprocessStepTest {
     ImmutableList<Path> systemIncludes = ImmutableList.of(
         Paths.get("/usr/include"),
         Paths.get("/include"));
+    ImmutableList<Path> frameworkRoots = ImmutableList.of(
+        Paths.get("/absolute/path/to/frameworks"),
+        Paths.get("relative/path/to/frameworks"));
     ImmutableMap<Path, Path> replacementPaths = ImmutableMap.of();
 
     // Create our CxxPreprocessStep to test.
@@ -60,6 +60,7 @@ public class CxxPreprocessStepTest {
         input,
         includes,
         systemIncludes,
+        frameworkRoots,
         replacementPaths,
         Optional.<DebugPathSanitizer>absent());
 
@@ -68,14 +69,12 @@ public class CxxPreprocessStepTest {
         .addAll(compiler)
         .add("-E")
         .addAll(flags)
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-I"),
-                Iterables.transform(includes, Functions.toStringFunction())))
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-isystem"),
-                Iterables.transform(systemIncludes, Functions.toStringFunction())))
+        .add("-I", "foo/bar")
+        .add("-I", "test")
+        .add("-isystem", "/usr/include")
+        .add("-isystem", "/include")
+        .add("-F", "/absolute/path/to/frameworks")
+        .add("-F", "relative/path/to/frameworks")
         .add(input.toString())
         .build();
     ImmutableList<String> actual = cxxPreprocessStep.getCommand();
@@ -127,6 +126,7 @@ public class CxxPreprocessStepTest {
     Path input = Paths.get("test.cpp");
     ImmutableList<Path> includes = ImmutableList.of();
     ImmutableList<Path> systemIncludes = ImmutableList.of();
+    ImmutableList<Path> frameworkRoots = ImmutableList.of();
     ImmutableMap<Path, Path> replacementPaths = ImmutableMap.of(original, replacement);
 
     // Create our CxxPreprocessStep to test.
@@ -137,6 +137,7 @@ public class CxxPreprocessStepTest {
         input,
         includes,
         systemIncludes,
+        frameworkRoots,
         replacementPaths,
         Optional.<DebugPathSanitizer>absent());
 

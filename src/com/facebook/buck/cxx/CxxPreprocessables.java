@@ -310,6 +310,7 @@ public class CxxPreprocessables {
         source.getPath(),
         preprocessorInput.getIncludeRoots(),
         preprocessorInput.getSystemIncludeRoots(),
+        preprocessorInput.getFrameworkRoots(),
         preprocessorInput.getIncludes(),
         cxxPlatform.getDebugPathSanitizer());
     resolver.addToIndex(cxxPreprocess);

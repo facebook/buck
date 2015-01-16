@@ -25,12 +25,14 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -46,6 +48,7 @@ public class CxxPreprocess extends AbstractBuildRule {
   private final SourcePath input;
   private final ImmutableList<Path> includeRoots;
   private final ImmutableList<Path> systemIncludeRoots;
+  private final ImmutableList<Path> frameworkRoots;
   private final CxxHeaders includes;
   private final Optional<DebugPathSanitizer> sanitizer;
 
@@ -58,6 +61,7 @@ public class CxxPreprocess extends AbstractBuildRule {
       SourcePath input,
       ImmutableList<Path> includeRoots,
       ImmutableList<Path> systemIncludeRoots,
+      ImmutableList<Path> frameworkRoots,
       CxxHeaders includes,
       Optional<DebugPathSanitizer> sanitizer) {
     super(params, resolver);
@@ -67,6 +71,7 @@ public class CxxPreprocess extends AbstractBuildRule {
     this.input = input;
     this.includeRoots = includeRoots;
     this.systemIncludeRoots = systemIncludeRoots;
+    this.frameworkRoots = frameworkRoots;
     this.includes = includes;
     this.sanitizer = sanitizer;
   }
@@ -101,6 +106,12 @@ public class CxxPreprocess extends AbstractBuildRule {
       builder.setInput("include(" + path + ")", getResolver().getPath(source));
     }
 
+    builder.set(
+        "frameworkRoots",
+        FluentIterable.from(frameworkRoots)
+            .transform(Functions.toStringFunction())
+            .toSortedSet(Ordering.natural()));
+
     return builder;
   }
 
@@ -126,6 +137,7 @@ public class CxxPreprocess extends AbstractBuildRule {
             getResolver().getPath(input),
             includeRoots,
             systemIncludeRoots,
+            frameworkRoots,
             replacementPaths,
             sanitizer));
   }
@@ -157,6 +169,10 @@ public class CxxPreprocess extends AbstractBuildRule {
 
   public ImmutableList<Path> getSystemIncludeRoots() {
     return systemIncludeRoots;
+  }
+
+  public ImmutableList<Path> getFrameworkRoots() {
+    return frameworkRoots;
   }
 
   public CxxHeaders getIncludes() {

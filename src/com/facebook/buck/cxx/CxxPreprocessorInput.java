@@ -44,17 +44,22 @@ public class CxxPreprocessorInput {
   // Include directories where system headers.
   private final ImmutableList<Path> systemIncludeRoots;
 
+  // Directories where frameworks are stored.
+  private final ImmutableList<Path> frameworkRoots;
+
   private CxxPreprocessorInput(
       ImmutableSet<BuildTarget> rules,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableCxxHeaders includes,
       ImmutableList<Path> includeRoots,
-      ImmutableList<Path> systemIncludeRoots) {
+      ImmutableList<Path> systemIncludeRoots,
+      ImmutableList<Path> frameworkRoots) {
     this.rules = rules;
     this.preprocessorFlags = preprocessorFlags;
     this.includes = includes;
     this.includeRoots = includeRoots;
     this.systemIncludeRoots = systemIncludeRoots;
+    this.frameworkRoots = frameworkRoots;
   }
 
   /**
@@ -66,6 +71,7 @@ public class CxxPreprocessorInput {
     private ImmutableCxxHeaders includes = ImmutableCxxHeaders.builder().build();
     private ImmutableList<Path> includeRoots = ImmutableList.of();
     private ImmutableList<Path> systemIncludeRoots = ImmutableList.of();
+    private ImmutableList<Path> frameworkRoots = ImmutableList.of();
 
     public CxxPreprocessorInput build() {
       return new CxxPreprocessorInput(
@@ -73,7 +79,8 @@ public class CxxPreprocessorInput {
           preprocessorFlags,
           includes,
           includeRoots,
-          systemIncludeRoots);
+          systemIncludeRoots,
+          frameworkRoots);
     }
 
     public Builder setRules(Iterable<BuildTarget> rules) {
@@ -100,6 +107,11 @@ public class CxxPreprocessorInput {
       this.systemIncludeRoots = ImmutableList.copyOf(systemIncludeRoots);
       return this;
     }
+
+    public Builder setFrameworkRoots(Iterable<Path> frameworkRoots) {
+      this.frameworkRoots = ImmutableList.copyOf(frameworkRoots);
+      return this;
+    }
   }
 
   public static Builder builder() {
@@ -115,6 +127,7 @@ public class CxxPreprocessorInput {
     ImmutableCxxHeaders.Builder includes = ImmutableCxxHeaders.builder();
     ImmutableList.Builder<Path> includeRoots = ImmutableList.builder();
     ImmutableList.Builder<Path> systemIncludeRoots = ImmutableList.builder();
+    ImmutableList.Builder<Path> frameworkRoots = ImmutableList.builder();
 
     for (CxxPreprocessorInput input : inputs) {
       rules.addAll(input.getRules());
@@ -123,6 +136,7 @@ public class CxxPreprocessorInput {
       includes.putAllFullNameToPathMap(input.getIncludes().fullNameToPathMap());
       includeRoots.addAll(input.getIncludeRoots());
       systemIncludeRoots.addAll(input.getSystemIncludeRoots());
+      frameworkRoots.addAll(input.getFrameworkRoots());
     }
 
     return new CxxPreprocessorInput(
@@ -130,7 +144,8 @@ public class CxxPreprocessorInput {
         preprocessorFlags.build(),
         includes.build(),
         includeRoots.build(),
-        systemIncludeRoots.build());
+        systemIncludeRoots.build(),
+        frameworkRoots.build());
   }
 
   public ImmutableSet<BuildTarget> getRules() {
@@ -151,6 +166,10 @@ public class CxxPreprocessorInput {
 
   public ImmutableList<Path> getSystemIncludeRoots() {
     return systemIncludeRoots;
+  }
+
+  public ImmutableList<Path> getFrameworkRoots() {
+    return frameworkRoots;
   }
 
   @Override
@@ -186,6 +205,10 @@ public class CxxPreprocessorInput {
       return false;
     }
 
+    if (!frameworkRoots.equals(that.frameworkRoots)) {
+      return false;
+    }
+
     return true;
   }
 
@@ -196,7 +219,8 @@ public class CxxPreprocessorInput {
         preprocessorFlags,
         includes,
         includeRoots,
-        systemIncludeRoots);
+        systemIncludeRoots,
+        frameworkRoots);
   }
 
   @Override
@@ -207,6 +231,7 @@ public class CxxPreprocessorInput {
         .add("includes", includes)
         .add("includeRoots", includeRoots)
         .add("systemIncludeRoots", systemIncludeRoots)
+        .add("frameworkRoots", frameworkRoots)
         .toString();
   }
 

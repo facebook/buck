@@ -61,6 +61,7 @@ public class CxxPreprocessTest {
   private static final ImmutableList<Path> DEFAULT_SYSTEM_INCLUDE_ROOTS = ImmutableList.of(
       Paths.get("/usr/include"),
       Paths.get("/include"));
+  private static final ImmutableList<Path> DEFAULT_FRAMEWORK_ROOTS = ImmutableList.of();
   private static final Optional<DebugPathSanitizer> DEFAULT_SANITIZER = Optional.absent();
 
   private RuleKey.Builder.RuleKeyPair generateRuleKey(
@@ -104,6 +105,7 @@ public class CxxPreprocessTest {
             DEFAULT_INPUT,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
 
@@ -120,6 +122,7 @@ public class CxxPreprocessTest {
             DEFAULT_INPUT,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, compilerChange);
@@ -137,6 +140,7 @@ public class CxxPreprocessTest {
             DEFAULT_INPUT,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, flagsChange);
@@ -154,6 +158,7 @@ public class CxxPreprocessTest {
             new TestSourcePath("different"),
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, inputChange);
@@ -172,6 +177,7 @@ public class CxxPreprocessTest {
             DEFAULT_INPUT,
             ImmutableList.of(Paths.get("different")),
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertEquals(defaultRuleKey, includesChange);
@@ -190,9 +196,28 @@ public class CxxPreprocessTest {
             DEFAULT_INPUT,
             DEFAULT_INCLUDE_ROOTS,
             ImmutableList.of(Paths.get("different")),
+            DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertEquals(defaultRuleKey, systemIncludesChange);
+
+    // Verify that changing the framework roots causes a rulekey change.
+    RuleKey.Builder.RuleKeyPair frameworkRootsChange = generateRuleKey(
+        ruleKeyBuilderFactory,
+        pathResolver,
+        new CxxPreprocess(
+            params,
+            pathResolver,
+            DEFAULT_COMPILER,
+            DEFAULT_FLAGS,
+            DEFAULT_OUTPUT,
+            DEFAULT_INPUT,
+            DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            ImmutableList.of(Paths.get("different")),
+            DEFAULT_INCLUDES,
+            DEFAULT_SANITIZER));
+    assertNotEquals(defaultRuleKey, frameworkRootsChange);
   }
 
   @Test
@@ -240,6 +265,7 @@ public class CxxPreprocessTest {
             DEFAULT_INPUT,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             Optional.of(sanitizer1)));
 
@@ -257,6 +283,7 @@ public class CxxPreprocessTest {
             DEFAULT_INPUT,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             Optional.of(sanitizer2)));
 

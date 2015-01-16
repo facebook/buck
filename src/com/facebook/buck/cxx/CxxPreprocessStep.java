@@ -52,6 +52,7 @@ public class CxxPreprocessStep implements Step {
   private final Path input;
   private final ImmutableList<Path> includes;
   private final ImmutableList<Path> systemIncludes;
+  private final ImmutableList<Path> frameworkRoots;
   private final ImmutableMap<Path, Path> replacementPaths;
   private final Optional<DebugPathSanitizer> sanitizer;
 
@@ -62,6 +63,7 @@ public class CxxPreprocessStep implements Step {
       Path input,
       ImmutableList<Path> includes,
       ImmutableList<Path> systemIncludes,
+      ImmutableList<Path> frameworkRoots,
       ImmutableMap<Path, Path> replacementPaths,
       Optional<DebugPathSanitizer> sanitizer) {
     this.preprocessor = preprocessor;
@@ -70,6 +72,7 @@ public class CxxPreprocessStep implements Step {
     this.input = input;
     this.includes = includes;
     this.systemIncludes = systemIncludes;
+    this.frameworkRoots = frameworkRoots;
     this.replacementPaths = replacementPaths;
     this.sanitizer = sanitizer;
   }
@@ -93,6 +96,10 @@ public class CxxPreprocessStep implements Step {
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-isystem"),
                 Iterables.transform(systemIncludes, Functions.toStringFunction())))
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-F"),
+                Iterables.transform(frameworkRoots, Functions.toStringFunction())))
         .add(input.toString())
         .build();
   }
