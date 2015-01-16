@@ -107,6 +107,7 @@ public class MainTest {
         "  build       builds the specified target",
         "  cache       makes calls to the artifact cache",
         "  clean       deletes any generated files",
+        "  fetch       downloads remote resources to your local machine",
         "  install     builds and installs an APK",
         "  project     generates project configuration files for an IDE",
         "  quickstart  generates a default project directory",

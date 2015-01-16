@@ -1,0 +1,12 @@
+genrule(
+  name = 'no-download',
+  cmd = 'echo "hello world" > $OUT',
+  out = 'greeting.txt',
+)
+
+genrule(
+  name = 'needs-download',
+  cmd = 'cat $(location :remote) > $OUT',
+  out = 'greeting2.txt',
+)
+

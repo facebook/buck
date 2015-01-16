@@ -259,6 +259,26 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     return getBuildTarget().getFullyQualifiedName();
   }
 
+  /**
+   * Return a copy of the current TargetNode, with the {@link Description} used for creating
+   * {@link BuildRule} instances switched out.
+   */
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  public TargetNode<?> amend(Description<?> description) {
+    try {
+      return new TargetNode(
+          description,
+          constructorArg,
+          ruleFactoryParams,
+          declaredDeps,
+          visibilityPatterns);
+    } catch (InvalidSourcePathInputException | NoSuchBuildTargetException e) {
+      // This is extremely unlikely to happen --- we've already created a TargetNode with these
+      // values before.
+      throw new RuntimeException(e);
+    }
+  }
+
   @SuppressWarnings("serial")
   public static class InvalidSourcePathInputException extends Exception
       implements ExceptionWithHumanReadableMessage{

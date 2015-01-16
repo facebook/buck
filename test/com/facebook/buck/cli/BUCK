@@ -132,6 +132,7 @@ java_test(
     '//third-party/java/ini4j:ini4j',
     '//third-party/java/jackson:jackson-core',
     '//third-party/java/jackson:jackson-databind',
+    '//third-party/java/jetty:jetty',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/junit:junit',
     '//third-party/java/nailgun:nailgun',

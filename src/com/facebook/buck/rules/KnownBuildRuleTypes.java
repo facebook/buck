@@ -58,6 +58,7 @@ import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.extension.BuckExtensionDescription;
 import com.facebook.buck.file.Downloader;
+import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.HttpDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
@@ -347,8 +348,12 @@ public class KnownBuildRuleTypes {
     // Default maven repo, if set
     Optional<String> defaultMavenRepo = config.getValue("download", "maven_repo");
     boolean downloadAtRuntimeOk = config.getBooleanValue("download", "in_build", false);
-    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(), defaultMavenRepo);
-
+    Downloader downloader;
+    if (downloadAtRuntimeOk) {
+      downloader = new HttpDownloader(Optional.<Proxy>absent(), defaultMavenRepo);
+    } else {
+      downloader = new ExplodingDownloader();
+    }
 
     Builder builder = builder();
 
@@ -429,7 +434,7 @@ public class KnownBuildRuleTypes {
             pythonEnv,
             defaultCxxPlatform,
             cxxPlatforms));
-    builder.register(new RemoteFileDescription(downloadAtRuntimeOk, downloader));
+    builder.register(new RemoteFileDescription(downloader));
     builder.register(new RobolectricTestDescription(androidBinaryOptions, testRuleTimeoutMs));
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription());

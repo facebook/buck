@@ -48,7 +48,8 @@ public class DownloadStep implements Step {
   public int execute(ExecutionContext context) throws InterruptedException {
     BuckEventBus eventBus = context.getBuckEventBus();
     try {
-      downloader.fetch(eventBus, url, output);
+      Path resolved = context.getProjectFilesystem().resolve(output);
+      downloader.fetch(eventBus, url, resolved);
 
       HashCode readHash = Files.asByteSource(output.toFile()).hash(Hashing.sha1());
       if (!sha1.equals(readHash)) {

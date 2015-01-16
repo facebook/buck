@@ -31,13 +31,9 @@ import java.net.URI;
 public class RemoteFileDescription implements Description<RemoteFileDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("remote_file");
-  private final boolean isBuildTimeDownloadingOk;
   private final Downloader downloader;
 
-  public RemoteFileDescription(
-      boolean isBuildTimeDownloadingOk,
-      Downloader downloader) {
-    this.isBuildTimeDownloadingOk = isBuildTimeDownloadingOk;
+  public RemoteFileDescription(Downloader downloader) {
     this.downloader = downloader;
   }
 
@@ -63,7 +59,6 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
     return new RemoteFile(
         params,
         new SourcePathResolver(resolver),
-        isBuildTimeDownloadingOk,
         downloader,
         args.url,
         sha1,

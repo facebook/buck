@@ -26,7 +26,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -41,7 +40,6 @@ import java.nio.file.Path;
  * build.
  */
 public class RemoteFile extends AbstractBuildRule {
-  private final boolean isBuildTimeDownloadingOk;
   private final URI uri;
   private final HashCode sha1;
   private final Path output;
@@ -50,13 +48,12 @@ public class RemoteFile extends AbstractBuildRule {
   public RemoteFile(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      boolean isBuildTimeDownloadingOk,
       Downloader downloader,
       URI uri,
       HashCode sha1,
       String out) {
     super(params, resolver);
-    this.isBuildTimeDownloadingOk = isBuildTimeDownloadingOk;
+
     this.uri = uri;
     this.sha1 = sha1;
     this.downloader = downloader;
@@ -74,7 +71,6 @@ public class RemoteFile extends AbstractBuildRule {
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .setReflectively("donwnload-at-runtime", isBuildTimeDownloadingOk)
         .setReflectively("sha1", sha1.toString())
         .setReflectively("out", output.toString())
         .setReflectively("url", uri.toString());
@@ -83,11 +79,6 @@ public class RemoteFile extends AbstractBuildRule {
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    if (!isBuildTimeDownloadingOk) {
-      throw new HumanReadableException(
-          "Downloading files at runtime is disabled, please run 'buck fetch' before your build");
-    }
-
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path tempFile = BuildTargets.getBinPath(

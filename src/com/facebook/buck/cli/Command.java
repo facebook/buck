@@ -43,6 +43,10 @@ public enum Command {
       "deletes any generated files",
       CleanCommand.class,
       false),
+  FETCH(
+      "downloads remote resources to your local machine",
+      FetchCommand.class,
+      false),
   INSTALL(
       "builds and installs an APK",
       InstallCommand.class,
