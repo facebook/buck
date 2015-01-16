@@ -210,6 +210,9 @@ point.
 <p>
 This section may also contain an "extra_arguments" property, which provides
 a comma-separated list of options to give to the Java compiler.
+<p>
+"source_level" and "target_level" specify the version of Java for source files
+and generated code, respectively.  Both default to "7".
 
 {call .section}{param title: 'httpserver' /}{/call}
 
@@ -374,8 +377,8 @@ The value given is in milliseconds.
 
 {literal}<pre class="prettyprint lang-ini">
 [test]
-  # This specifies a maximum timeout of 5 minutes (300000 
-  # milliseconds) per test. A JUnit test can override this 
+  # This specifies a maximum timeout of 5 minutes (300000
+  # milliseconds) per test. A JUnit test can override this
   # via its `@Test` annotation.
   timeout = 300000
 </pre>{/literal}

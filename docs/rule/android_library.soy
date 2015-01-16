@@ -64,11 +64,36 @@ compiled class files and resources.
 {/call}
 
 {call buck.arg}
+  {param name: 'source' /}
+  {param default : '<global value>' /}
+  {param desc}
+  Specifies the version of Java (as a string) to interpret source
+  files as.
+  Overrides the value in "source_level" in the "java" section
+  of <a
+  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'target' /}
+  {param default : '<global value>' /}
+  {param desc}
+  Specifies the version of Java (as a string) for which to
+  generate code.
+  Overrides the value in "target_level" in the "java" section
+  of <a
+  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'extra_arguments' /}
   {param default : '[]' /}
   {param desc}
   List of additional arguments to pass into the Java compiler.  These
-  arguments follow the ones specified in <code>.buckconfig</code>.
+  arguments follow the ones specified in <a
+  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>.
   {/param}
 {/call}
 
