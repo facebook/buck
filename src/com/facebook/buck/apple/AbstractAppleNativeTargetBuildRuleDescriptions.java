@@ -16,12 +16,15 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxConstructorArg;
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -31,12 +34,14 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -315,6 +320,31 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
 
     return Optional.of(
         BuildTargets.getGenPath(targetNode.getBuildTarget(), "%s" + headerMapType.getSuffix()));
+  }
+
+  public static void populateCxxConstructorArg(
+      CxxConstructorArg output,
+      AppleNativeTargetDescriptionArg arg,
+      BuildTarget buildTarget,
+      TargetSources targetSources) {
+    output.srcs = Optional.of(
+        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
+            ImmutableList.copyOf(targetSources.srcPaths)));
+    output.headers = Optional.of(
+        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
+            ImmutableList.copyOf(targetSources.headerPaths)));
+    output.compilerFlags = Optional.of(ImmutableList.<String>of());
+    output.linkerFlags = Optional.of(ImmutableList.<String>of());
+    output.platformLinkerFlags = Optional.of(
+        ImmutableList.<Pair<String, ImmutableList<String>>>of());
+    output.preprocessorFlags = Optional.of(ImmutableList.<String>of());
+    output.langPreprocessorFlags = Optional.of(
+        ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
+    output.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
+    output.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
+    output.deps = arg.deps;
+    output.headerNamespace = arg.headerPathPrefix.or(
+        Optional.of(buildTarget.getShortName()));
   }
 
 }

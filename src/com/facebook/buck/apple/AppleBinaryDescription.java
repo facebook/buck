@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxBinaryDescription;
-import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
@@ -25,14 +24,10 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Set;
@@ -95,21 +90,11 @@ public class AppleBinaryDescription
     }
 
     CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
-    delegateArg.srcs = Optional.of(
-        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-            ImmutableList.copyOf(targetSources.srcPaths)));
-    delegateArg.headers = Optional.of(
-        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-            ImmutableList.copyOf(targetSources.headerPaths)));
-    delegateArg.compilerFlags = Optional.of(ImmutableList.<String>of());
-    delegateArg.preprocessorFlags = Optional.of(ImmutableList.<String>of());
-    delegateArg.langPreprocessorFlags = Optional.of(
-        ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
-    delegateArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
-    delegateArg.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
-    delegateArg.deps = args.deps;
-    delegateArg.headerNamespace = args.headerPathPrefix.or(
-        Optional.of(params.getBuildTarget().getShortName()));
+    AbstractAppleNativeTargetBuildRuleDescriptions.populateCxxConstructorArg(
+        delegateArg,
+        args,
+        params.getBuildTarget(),
+        targetSources);
 
     return delegate.createBuildRule(params, resolver, delegateArg);
   }

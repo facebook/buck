@@ -27,10 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.model.Pair;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -103,27 +100,14 @@ public class AppleLibraryDescription implements
     }
 
     CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
-    delegateArg.srcs = Optional.of(
-        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-            ImmutableList.copyOf(targetSources.srcPaths)));
-    delegateArg.headers = Optional.of(
-        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-            ImmutableList.copyOf(targetSources.headerPaths)));
-    delegateArg.compilerFlags = Optional.of(ImmutableList.<String>of());
-    delegateArg.preprocessorFlags = Optional.of(ImmutableList.<String>of());
-    delegateArg.langPreprocessorFlags = Optional.of(
-        ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
-    delegateArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
-    delegateArg.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
-    delegateArg.deps = args.deps;
-    delegateArg.headerNamespace = args.headerPathPrefix.or(
-        Optional.of(params.getBuildTarget().getShortName()));
+    AbstractAppleNativeTargetBuildRuleDescriptions.populateCxxConstructorArg(
+        delegateArg,
+        args,
+        params.getBuildTarget(),
+        targetSources);
     delegateArg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
     delegateArg.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
-    delegateArg.linkerFlags = Optional.of(ImmutableList.<String>of());
-    delegateArg.platformLinkerFlags =
-        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     delegateArg.soname = Optional.absent();
     delegateArg.linkWhole = Optional.of(!isSharedLibraryTarget(params.getBuildTarget()));
 
