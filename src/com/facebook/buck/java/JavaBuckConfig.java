@@ -119,9 +119,15 @@ public class JavaBuckConfig {
       ProcessExecutor.Result versionResult = executor.launchAndExecute(
           build,
           ImmutableSet.of(EXPECTING_STD_OUT),
-          Optional.<String>absent());
+          /* stdin */ Optional.<String>absent(),
+          /* timeOutMs */ Optional.<Long>absent());
       if (versionResult.getExitCode() == 0) {
-        return new JavacVersion(versionResult.getStderr().get());
+        String stderr = versionResult.getStderr().get();
+        int firstNewline = stderr.indexOf('\n');
+        if (firstNewline != -1) {
+          stderr = stderr.substring(0, firstNewline);
+        }
+        return new JavacVersion(stderr);
       } else {
         throw new HumanReadableException(versionResult.getStderr().get());
       }

@@ -64,6 +64,7 @@ public class ExecutionContext {
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
+      ProcessExecutor processExecutor,
       BuckEventBus eventBus,
       Platform platform,
       ImmutableMap<String, String> environment,
@@ -77,7 +78,7 @@ public class ExecutionContext {
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
     this.isDebugEnabled = isDebugEnabled;
-    this.processExecutor = new ProcessExecutor(console);
+    this.processExecutor = processExecutor;
     this.eventBus = eventBus;
     this.platform = platform;
     this.environment = environment;
@@ -90,14 +91,21 @@ public class ExecutionContext {
    *    redirected to the provided {@link PrintStream}s.
    */
   public ExecutionContext createSubContext(PrintStream newStdout, PrintStream newStderr) {
+    Console console = new Console(
+        this.console.getVerbosity(),
+        newStdout,
+        newStderr,
+        this.console.getAnsi());
+
     return new ExecutionContext(
         getProjectFilesystem(),
-        new Console(console.getVerbosity(), newStdout, newStderr, console.getAnsi()),
+        console,
         getAndroidPlatformTargetOptional(),
         getTargetDeviceOptional(),
         getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
         isDebugEnabled,
+        new ProcessExecutor(console),
         eventBus,
         platform,
         this.environment,
@@ -229,6 +237,7 @@ public class ExecutionContext {
     private long defaultTestTimeoutMillis = 0L;
     private boolean isCodeCoverageEnabled = false;
     private boolean isDebugEnabled = false;
+    @Nullable private ProcessExecutor processExecutor;
     @Nullable private BuckEventBus eventBus = null;
     @Nullable private Platform platform = null;
     @Nullable private ImmutableMap<String, String> environment = null;
@@ -246,6 +255,7 @@ public class ExecutionContext {
           defaultTestTimeoutMillis,
           isCodeCoverageEnabled,
           isDebugEnabled,
+          Preconditions.checkNotNull(processExecutor),
           Preconditions.checkNotNull(eventBus),
           Preconditions.checkNotNull(platform),
           Preconditions.checkNotNull(environment),
@@ -276,6 +286,9 @@ public class ExecutionContext {
 
     public Builder setConsole(Console console) {
       this.console = console;
+      if (this.processExecutor == null) {
+        this.processExecutor = new ProcessExecutor(console);
+      }
       return this;
     }
 
@@ -305,6 +318,11 @@ public class ExecutionContext {
 
     public Builder setDebugEnabled(boolean isDebugEnabled) {
       this.isDebugEnabled = isDebugEnabled;
+      return this;
+    }
+
+    public Builder setProcessExecutor(ProcessExecutor processExecutor) {
+      this.processExecutor = processExecutor;
       return this;
     }
 

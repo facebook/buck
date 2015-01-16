@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -30,6 +31,7 @@ import java.io.OutputStream;
 public class FakeProcess extends Process {
   private final int exitValue;
   private final OutputStream outputStream;
+  private final ByteArrayOutputStream outputMirror;
   private final InputStream inputStream;
   private final InputStream errorStream;
   private boolean isDestroyed;
@@ -57,6 +59,7 @@ public class FakeProcess extends Process {
       InputStream errorStream) {
     this.exitValue = exitValue;
     this.outputStream = Preconditions.checkNotNull(outputStream);
+    this.outputMirror = new ByteArrayOutputStream();
     this.inputStream = Preconditions.checkNotNull(inputStream);
     this.errorStream = Preconditions.checkNotNull(errorStream);
   }
@@ -73,7 +76,25 @@ public class FakeProcess extends Process {
 
   @Override
   public OutputStream getOutputStream() {
-    return outputStream;
+    return new OutputStream() {
+      @Override
+      public void write(int b) throws IOException {
+        outputStream.write(b);
+        outputMirror.write(b);
+      }
+
+      @Override
+      public void flush() throws IOException {
+        outputStream.flush();
+        outputMirror.flush();
+      }
+
+      @Override
+      public void close() throws IOException {
+        outputStream.close();
+        outputMirror.close();
+      }
+    };
   }
 
   @Override
@@ -104,5 +125,12 @@ public class FakeProcess extends Process {
    */
   public boolean isWaitedFor() {
     return isWaitedFor;
+  }
+
+  /**
+   * Returns what has been written to {@link #getOutputStream()} so far.
+   */
+  public String getOutput() {
+    return outputMirror.toString();
   }
 }

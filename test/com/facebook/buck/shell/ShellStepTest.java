@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.getCurrentArguments;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.BuckEvent;
@@ -27,7 +28,10 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.FakeProcess;
+import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
@@ -35,25 +39,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-import org.easymock.EasyMockSupport;
+import org.easymock.EasyMock;
 import org.easymock.IAnswer;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Map;
 import java.util.logging.Level;
 
-public class ShellStepTest extends EasyMockSupport {
-
-  private ExecutionContext context;
-  private TestConsole console;
-  private Process process;
+public class ShellStepTest {
 
   private static final ImmutableList<String> ARGS = ImmutableList.of("bash", "-c", "echo $V1 $V2");
 
@@ -67,27 +61,15 @@ public class ShellStepTest extends EasyMockSupport {
   private static final int EXIT_FAILURE = 1;
   private static final int EXIT_SUCCESS = 0;
 
-  @Before
-  public void setUp() {
-    context = createMock(ExecutionContext.class);
-    replayAll();
-  }
-
-  @After
-  public void tearDown() {
-    verifyAll();
-  }
-
-  private void prepareContextForOutput(Verbosity verbosity) {
-    resetAll();
-
-    console = new TestConsole(verbosity);
-    ProcessExecutor processExecutor = new ProcessExecutor(console);
-
-    expect(context.getStdErr()).andStubReturn(console.getStdErr());
-    expect(context.getVerbosity()).andStubReturn(verbosity);
-    expect(context.getProcessExecutor()).andStubReturn(processExecutor);
-
+  private static ExecutionContext createContext(
+      ImmutableMap<ProcessExecutorParams, FakeProcess> processes,
+      final Console console) {
+    ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
+    expect(context.getProcessExecutor())
+        .andReturn(new FakeProcessExecutor(processes, console))
+        .anyTimes();
+    expect(context.getConsole()).andReturn(console).anyTimes();
+    expect(context.getVerbosity()).andReturn(console.getVerbosity()).anyTimes();
     context.postEvent(anyObject(BuckEvent.class));
     expectLastCall().andStubAnswer(
         new IAnswer<Void>() {
@@ -100,75 +82,15 @@ public class ShellStepTest extends EasyMockSupport {
             return null;
           }
         });
-
-    replayAll();
+    replay(context);
+    return context;
   }
 
-  private void prepareContextAndProcessForInput(
-      Verbosity verbosity,
-      final Optional<OutputStream> stdin) throws Exception {
-
-    resetAll();
-
-    console = new TestConsole(verbosity);
-    ProcessExecutor processExecutor = new ProcessExecutor(console);
-    expect(context.getVerbosity()).andStubReturn(verbosity);
-    expect(context.getProcessExecutor()).andStubReturn(processExecutor);
-
-    // Setup a mocked process object.
-    process = createMock(Process.class);
-
-    // If a stdin stream was specified, then make the mocked process return it.
-    if (stdin.isPresent()) {
-      expect(process.getOutputStream()).andReturn(stdin.get());
-    }
-
-    // Set defaults for the output and exit values.
-    expect(process.getInputStream()).andStubReturn(new ByteArrayInputStream(new byte[0]));
-    expect(process.getErrorStream()).andStubReturn(new ByteArrayInputStream(new byte[0]));
-    process.destroy();
-    expect(process.waitFor()).andStubReturn(0);
-    expect(process.exitValue()).andStubReturn(0);
-
-    replayAll();
-  }
-
-  private static Process createProcess(
-      final int exitValue,
-      final String stdout,
-      final String stderr) {
-    return new Process() {
-
-      @Override
-      public OutputStream getOutputStream() {
-        return null;
-      }
-
-      @Override
-      public InputStream getInputStream() {
-        return new ByteArrayInputStream(stdout.getBytes(Charsets.US_ASCII));
-      }
-
-      @Override
-      public InputStream getErrorStream() {
-        return new ByteArrayInputStream(stderr.getBytes(Charsets.US_ASCII));
-      }
-
-      @Override
-      public int waitFor() {
-        return exitValue;
-      }
-
-      @Override
-      public int exitValue() {
-        return exitValue;
-      }
-
-      @Override
-      public void destroy() {
-      }
-
-    };
+  private static ProcessExecutorParams createParams() {
+    return ProcessExecutorParams
+        .builder()
+        .setCommand(ImmutableList.of("test"))
+        .build();
   }
 
   private static ShellStep createCommand(
@@ -233,6 +155,10 @@ public class ShellStepTest extends EasyMockSupport {
   @Test
   public void testDescriptionWithEnvironment() {
     ShellStep command = createCommand(ENV, ARGS, null);
+    ExecutionContext context = TestExecutionContext
+        .newBuilder()
+        .setProcessExecutor(new FakeProcessExecutor())
+        .build();
     assertEquals("V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2'",
         command.getDescription(context));
   }
@@ -240,6 +166,10 @@ public class ShellStepTest extends EasyMockSupport {
   @Test
   public void testDescriptionWithEnvironmentAndPath() {
     ShellStep command = createCommand(ENV, ARGS, PATH);
+    ExecutionContext context = TestExecutionContext
+        .newBuilder()
+        .setProcessExecutor(new FakeProcessExecutor())
+        .build();
     assertEquals(
         String.format("(cd '%s' && V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2')",
             PATH.getPath()),
@@ -249,6 +179,10 @@ public class ShellStepTest extends EasyMockSupport {
   @Test
   public void testDescriptionWithPath() {
     ShellStep command = createCommand(ImmutableMap.<String, String>of(), ARGS, PATH);
+    ExecutionContext context = TestExecutionContext
+        .newBuilder()
+        .setProcessExecutor(new FakeProcessExecutor())
+        .build();
     assertEquals(String.format("(cd '%s' && bash -c 'echo $V1 $V2')", PATH.getPath()),
         command.getDescription(context));
   }
@@ -256,60 +190,76 @@ public class ShellStepTest extends EasyMockSupport {
   @Test
   public void testDescription() {
     ShellStep command = createCommand(ImmutableMap.<String, String>of(), ARGS, null);
+    ExecutionContext context = TestExecutionContext
+        .newBuilder()
+        .setProcessExecutor(new FakeProcessExecutor())
+        .build();
     assertEquals("bash -c 'echo $V1 $V2'", command.getDescription(context));
   }
 
   @Test
   public void testStdErrPrintedOnErrorIfNotSilentEvenIfNotShouldPrintStdErr() throws Exception {
     ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldPrintStdOut*/ false);
-    Process process = createProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
-    prepareContextForOutput(Verbosity.STANDARD_INFORMATION);
-    command.interactWithProcess(context, process);
+    ProcessExecutorParams params = createParams();
+    FakeProcess process = new FakeProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
+    TestConsole console = new TestConsole(Verbosity.STANDARD_INFORMATION);
+    ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
+    command.launchAndInteractWithProcess(context, params);
     assertEquals(ERROR_MSG, console.getTextWrittenToStdErr());
   }
 
   @Test
   public void testStdErrNotPrintedOnErrorIfSilentAndNotShouldPrintStdErr() throws Exception {
     ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldPrintStdOut*/ false);
-    Process process = createProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
-    prepareContextForOutput(Verbosity.SILENT);
-    command.interactWithProcess(context, process);
+    ProcessExecutorParams params = createParams();
+    FakeProcess process = new FakeProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
+    TestConsole console = new TestConsole(Verbosity.SILENT);
+    ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
+    command.launchAndInteractWithProcess(context, params);
     assertEquals("", console.getTextWrittenToStdErr());
   }
 
   @Test
   public void testStdErrPrintedOnErrorIfShouldPrintStdErrEvenIfSilent() throws Exception {
     ShellStep command = createCommand(/*shouldPrintStdErr*/ true, /*shouldPrintStdOut*/ false);
-    Process process = createProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
-    prepareContextForOutput(Verbosity.SILENT);
-    command.interactWithProcess(context, process);
+    ProcessExecutorParams params = createParams();
+    FakeProcess process = new FakeProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
+    TestConsole console = new TestConsole(Verbosity.SILENT);
+    ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
+    command.launchAndInteractWithProcess(context, params);
     assertEquals(ERROR_MSG, console.getTextWrittenToStdErr());
   }
 
   @Test
   public void testStdErrNotPrintedOnSuccessIfNotShouldPrintStdErr() throws Exception {
     ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldPrintStdOut*/ false);
-    Process process = createProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
-    prepareContextForOutput(Verbosity.STANDARD_INFORMATION);
-    command.interactWithProcess(context, process);
+    ProcessExecutorParams params = createParams();
+    FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
+    TestConsole console = new TestConsole(Verbosity.STANDARD_INFORMATION);
+    ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
+    command.launchAndInteractWithProcess(context, params);
     assertEquals("", console.getTextWrittenToStdErr());
   }
 
   @Test
   public void testStdErrPrintedOnSuccessIfShouldPrintStdErrEvenIfSilent() throws Exception {
     ShellStep command = createCommand(/*shouldPrintStdErr*/ true, /*shouldPrintStdOut*/ false);
-    Process process = createProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
-    prepareContextForOutput(Verbosity.SILENT);
-    command.interactWithProcess(context, process);
+    ProcessExecutorParams params = createParams();
+    FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
+    TestConsole console = new TestConsole(Verbosity.SILENT);
+    ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
+    command.launchAndInteractWithProcess(context, params);
     assertEquals(ERROR_MSG, console.getTextWrittenToStdErr());
   }
 
   @Test
   public void testStdOutNotPrintedIfNotShouldRecordStdoutEvenIfVerbose() throws Exception {
     ShellStep command = createCommand(/*shouldPrintStdErr*/ false, /*shouldPrintStdOut*/ false);
-    Process process = createProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
-    prepareContextForOutput(Verbosity.ALL);
-    command.interactWithProcess(context, process);
+    ProcessExecutorParams params = createParams();
+    FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
+    TestConsole console = new TestConsole(Verbosity.ALL);
+    ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
+    command.launchAndInteractWithProcess(context, params);
     assertEquals("", console.getTextWrittenToStdErr());
   }
 
@@ -322,15 +272,17 @@ public class ShellStepTest extends EasyMockSupport {
     Map<String, String> subProcessEnvironment = Maps.newHashMap();
     subProcessEnvironment.put("PROCESS_ENVIRONMENT_VARIABLE", "PROCESS_VALUE");
     command.setProcessEnvironment(context, subProcessEnvironment);
-    assertEquals("Sub-process environment should be union of client and step environments.",
+    assertEquals(
+        "Sub-process environment should be union of client and step environments.",
         subProcessEnvironment,
-        ImmutableMap.builder().putAll(context.getEnvironment()).putAll(ENV).build());
+        ImmutableMap.<String, String>builder()
+            .putAll(context.getEnvironment())
+            .putAll(ENV).build());
   }
 
   @Test
   public void testStdinGetsToProcessWhenPresent() throws Exception {
     final Optional<String> stdin = Optional.of("hello world!");
-    final ByteArrayOutputStream output = new ByteArrayOutputStream();
     ShellStep command = createCommand(
         ImmutableMap.<String, String>of(),
         ImmutableList.of("cat", "-"),
@@ -338,8 +290,12 @@ public class ShellStepTest extends EasyMockSupport {
         /*shouldPrintStdErr*/ true,
         /*shouldPrintStdOut*/ true,
         stdin);
-    prepareContextAndProcessForInput(Verbosity.ALL, Optional.<OutputStream>of(output));
-    command.interactWithProcess(context, process);
+    ProcessExecutorParams params = createParams();
+    FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
+    TestConsole console = new TestConsole(Verbosity.ALL);
+    ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
+    command.launchAndInteractWithProcess(context, params);
+    assertEquals(stdin.get(), process.getOutput());
   }
 
   @Test
@@ -352,8 +308,12 @@ public class ShellStepTest extends EasyMockSupport {
         /*shouldPrintStdErr*/ true,
         /*shouldPrintStdOut*/ true,
         stdin);
-    prepareContextAndProcessForInput(Verbosity.ALL, Optional.<OutputStream>absent());
-    command.interactWithProcess(context, process);
+    ProcessExecutorParams params = createParams();
+    FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
+    TestConsole console = new TestConsole(Verbosity.ALL);
+    ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
+    command.launchAndInteractWithProcess(context, params);
+    assertEquals("", process.getOutput());
   }
 
 }

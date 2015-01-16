@@ -86,7 +86,8 @@ public class AppleConfig {
           result = processExecutor.launchAndExecute(
               processExecutorParams,
               options,
-              /* stdin */ Optional.<String>absent());
+              /* stdin */ Optional.<String>absent(),
+              /* timeOutMs */ Optional.<Long>absent());
         } catch (InterruptedException | IOException e) {
           throw new RuntimeException(e);
         }

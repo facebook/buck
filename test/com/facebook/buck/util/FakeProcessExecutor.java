@@ -16,11 +16,8 @@
 
 package com.facebook.buck.util;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.ByteStreams;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -37,40 +34,23 @@ public class FakeProcessExecutor extends ProcessExecutor {
   }
 
   public FakeProcessExecutor(Map<ProcessExecutorParams, FakeProcess> processMap) {
-    super(new Console(Verbosity.ALL,
-        System.out,
-        System.err,
-        Ansi.withoutTty()));
+    this(processMap, new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()));
+  }
+
+  public FakeProcessExecutor(
+      Map<ProcessExecutorParams, FakeProcess> processMap,
+      Console console) {
+    super(console);
     this.processMap = ImmutableMap.copyOf(processMap);
     this.launchedProcesses = new HashSet<>();
   }
 
   @Override
-  public Result launchAndExecute(
-      ProcessExecutorParams params,
-      Set<Option> options,
-      Optional<String> stdin) {
-    FakeProcess fakeProcess = processMap.get(params);
-    if (fakeProcess == null) {
-      throw new RuntimeException(String.format("Unexpected params: %s", params));
-    }
+  Process launchProcess(ProcessExecutorParams params) throws IOException {
+    Preconditions.checkArgument(processMap.keySet().contains(params));
+    FakeProcess fakeProcess = Preconditions.checkNotNull(processMap.get(params));
     launchedProcesses.add(params);
-    try {
-      String stderr = new String(ByteStreams.toByteArray(fakeProcess.getErrorStream()), UTF_8);
-      String stdout = new String(ByteStreams.toByteArray(fakeProcess.getInputStream()), UTF_8);
-      return new Result(fakeProcess.waitFor(), stdout, stderr);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Override
-  public Result execute(
-      Process process,
-      Set<Option> options,
-      Optional<String> stdin,
-      Optional<Long> timeOutMs) {
-    return new Result(0, "", "");
+    return fakeProcess;
   }
 
   public boolean isProcessLaunched(ProcessExecutorParams params) {

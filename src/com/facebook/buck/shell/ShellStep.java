@@ -23,6 +23,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Option;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -33,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -93,27 +95,28 @@ public abstract class ShellStep implements Step {
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
     // Kick off a Process in which this ShellCommand will be run.
-    ProcessBuilder processBuilder = new ProcessBuilder(getShellCommand(context));
+    ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
 
-    setProcessEnvironment(context, processBuilder.environment());
+    builder.setCommand(getShellCommand(context));
+    Map<String, String> environment = Maps.newHashMap();
+    setProcessEnvironment(context, environment);
+    builder.setEnvironment(environment);
 
     if (workingDirectory != null) {
-      processBuilder.directory(workingDirectory);
+      builder.setDirectory(workingDirectory);
     } else {
-      processBuilder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
+      builder.setDirectory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
     }
 
     Optional<String> stdin = getStdin();
     if (stdin.isPresent()) {
-      processBuilder.redirectInput(ProcessBuilder.Redirect.PIPE);
+      builder.setRedirectInput(ProcessBuilder.Redirect.PIPE);
     }
 
-    Process process;
     int exitCode;
     try {
       startTime = System.currentTimeMillis();
-      process = processBuilder.start();
-      exitCode = interactWithProcess(context, process);
+      exitCode = launchAndInteractWithProcess(context, builder.build());
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
       exitCode = 1;
@@ -146,14 +149,18 @@ public abstract class ShellStep implements Step {
   }
 
   @VisibleForTesting
-  int interactWithProcess(ExecutionContext context, Process process) throws InterruptedException {
+  int launchAndInteractWithProcess(ExecutionContext context, ProcessExecutorParams params)
+      throws InterruptedException, IOException {
     ImmutableSet.Builder<Option> options = ImmutableSet.builder();
 
     addOptions(context, options);
 
     ProcessExecutor executor = context.getProcessExecutor();
-    ProcessExecutor.Result result =
-        executor.execute(process, options.build(), getStdin(), getTimeout());
+    ProcessExecutor.Result result = executor.launchAndExecute(
+        params,
+        options.build(),
+        getStdin(),
+        getTimeout());
     stdout = result.getStdout();
     stderr = result.getStderr();
 

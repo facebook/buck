@@ -69,7 +69,7 @@ public class ProcessExecutor {
   }
 
   /**
-   * Convenience method for {@link #launchAndExecute(ProcessExecutorParams, Set, Optional)}
+   * Convenience method for {@link #launchAndExecute(ProcessExecutorParams, Set, Optional, Optional)}
    * with boolean values set to {@code false} and optional values set to absent.
    */
   public Result launchAndExecute(ProcessExecutorParams params)
@@ -77,7 +77,8 @@ public class ProcessExecutor {
     return launchAndExecute(
         params,
         ImmutableSet.<Option>of(),
-        /* stdin */ Optional.<String>absent());
+        /* stdin */ Optional.<String>absent(),
+        /* timeOutMs */ Optional.<Long>absent());
   }
 
   /**
@@ -94,14 +95,15 @@ public class ProcessExecutor {
   public Result launchAndExecute(
       ProcessExecutorParams params,
       Set<Option> options,
-      Optional<String> stdin) throws InterruptedException, IOException {
-    return execute(launchProcess(params), options, stdin, /* timeOutMs */ Optional.<Long>absent());
+      Optional<String> stdin,
+      Optional<Long> timeOutMs) throws InterruptedException, IOException {
+    return execute(launchProcess(params), options, stdin, timeOutMs);
   }
 
   /**
    * Launches a {@link java.lang.Process} given {@link ProcessExecutorParams}.
    */
-  private Process launchProcess(ProcessExecutorParams params) throws IOException {
+  Process launchProcess(ProcessExecutorParams params) throws IOException {
 
     ProcessBuilder pb = new ProcessBuilder(params.getCommand());
     if (params.getDirectory().isPresent()) {
