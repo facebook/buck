@@ -33,7 +33,8 @@ public class EnvironmentFilter {
       "BUCK_BUILD_ID",  // Build ID passed in from Python.
       "BUCK_CLASSPATH", // Main classpath; set in Python
       "CLASSPATH",      // Bootstrap classpath; set in Python.
-      "TERM_SESSION_ID" // UUID added to environment by OS X.
+      "TERM_SESSION_ID", // UUID added to environment by OS X.
+      "CMD_DURATION"    // Added to environment by 'fish' shell.
   );
 
   // Utility class, do not instantiate.
