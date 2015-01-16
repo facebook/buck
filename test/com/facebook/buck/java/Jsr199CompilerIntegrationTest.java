@@ -16,13 +16,11 @@
 
 package com.facebook.buck.java;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -34,6 +32,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
@@ -46,7 +45,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class JavacInMemoryStepIntegrationTest {
+public class Jsr199CompilerIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
@@ -59,9 +58,11 @@ public class JavacInMemoryStepIntegrationTest {
 
   @Test
   public void testGetDescription() throws IOException {
-    JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
+    Jsr199Compiler javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = createExecutionContext();
     String pathToOutputDir = new File(tmp.getRoot(), "out").getAbsolutePath();
+
+
     assertEquals(
         String.format("javac -source %s -target %s -g " +
             "-d %s " +
@@ -70,20 +71,31 @@ public class JavacInMemoryStepIntegrationTest {
             JavaBuckConfig.TARGETED_JAVA_VERSION,
             JavaBuckConfig.TARGETED_JAVA_VERSION,
             pathToOutputDir),
-        javac.getDescription(executionContext));
+        javac.getDescription(
+            executionContext,
+            ImmutableList.of(
+                "-source", JavaBuckConfig.TARGETED_JAVA_VERSION,
+                "-target", JavaBuckConfig.TARGETED_JAVA_VERSION,
+                "-g",
+                "-d", pathToOutputDir,
+                "-classpath", "''"
+            )));
   }
 
   @Test
   public void testGetShortName() throws IOException {
-    JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
+    Jsr199Compiler javac = createJavac(/* withSyntaxError */ false);
     assertEquals("javac", javac.getShortName());
   }
 
   @Test
   public void testClassesFile() throws IOException, InterruptedException {
-    JavacInMemoryStep javac = createJavac(/* withSyntaxError */ false);
+    Jsr199Compiler javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = createExecutionContext();
-    int exitCode = javac.execute(executionContext);
+    int exitCode = javac.buildWithClasspath(
+        executionContext,
+        ImmutableList.<String>of(),
+        ImmutableSet.<Path>of());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     File srcsListFile = pathToSrcsList.toFile();
@@ -108,11 +120,14 @@ public class JavacInMemoryStepIntegrationTest {
         rule.getBuildTarget(),
         Paths.get("Example.java"));
 
-    JavacInMemoryStep javac = createJavac(
+    Jsr199Compiler javac = createJavac(
         /* javaSourceFilePaths */ ImmutableSet.of(pathResolver.getPath(sourcePath)),
         /* withSyntaxError */ false);
     ExecutionContext executionContext = createExecutionContext();
-    int exitCode = javac.execute(executionContext);
+    int exitCode = javac.buildWithClasspath(
+        executionContext,
+        ImmutableList.<String>of(),
+        ImmutableSet.<Path>of());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     File srcsListFile = pathToSrcsList.toFile();
@@ -121,7 +136,7 @@ public class JavacInMemoryStepIntegrationTest {
     assertEquals("Example.java", Files.toString(srcsListFile, Charsets.UTF_8).trim());
   }
 
-  private JavacInMemoryStep createJavac(
+  private Jsr199Compiler createJavac(
       ImmutableSet<Path> javaSourceFilePaths,
       boolean withSyntaxError)
       throws IOException {
@@ -138,19 +153,13 @@ public class JavacInMemoryStepIntegrationTest {
 
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());
-    return new JavacInMemoryStep(
-        pathToOutputDirectory,
+    return new Jsr199Compiler(
         javaSourceFilePaths,
-        /* transitive classpathEntries */ ImmutableSet.<Path>of(),
-        /* declated classpathEntries */ ImmutableSet.<Path>of(),
-        DEFAULT_JAVAC_OPTIONS,
         Optional.<BuildTarget>absent(),
-        BuildDependencies.FIRST_ORDER_ONLY,
-        Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
         Optional.of(pathToSrcsList));
   }
 
-  private JavacInMemoryStep createJavac(boolean withSyntaxError) throws IOException {
+  private Jsr199Compiler createJavac(boolean withSyntaxError) throws IOException {
     return createJavac(
         /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("Example.java")),
         withSyntaxError);

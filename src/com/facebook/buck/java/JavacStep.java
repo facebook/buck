@@ -22,9 +22,7 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.Escaper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -54,32 +52,33 @@ import java.util.regex.Pattern;
  * {@code transitiveClasspathEntries} but warn the developer about which dependencies were in
  * the transitive classpath but not in the declared classpath.
  */
-public abstract class JavacStep implements Step {
+public class JavacStep implements Step {
 
   public static final String SRC_ZIP = ".src.zip";
-  // TODO(user) s/protected/get...()/g
-  protected final Path outputDirectory;
 
-  protected final Set<Path> javaSourceFilePaths;
+  private Compiler compiler;
 
-  protected final JavacOptions javacOptions;
+  private final Path outputDirectory;
 
-  protected final ImmutableSet<Path> transitiveClasspathEntries;
+  private final Set<Path> javaSourceFilePaths;
 
-  protected final ImmutableSet<Path> declaredClasspathEntries;
+  private final JavacOptions javacOptions;
 
-  protected final Optional<BuildTarget> invokingRule;
+  private final ImmutableSet<Path> transitiveClasspathEntries;
 
-  protected final BuildDependencies buildDependencies;
+  private final ImmutableSet<Path> declaredClasspathEntries;
 
-  protected final Optional<SuggestBuildRules> suggestBuildRules;
+  private final Optional<BuildTarget> invokingRule;
 
-  protected final Optional<Path> pathToSrcsList;
+  private final BuildDependencies buildDependencies;
+
+  private final Optional<SuggestBuildRules> suggestBuildRules;
 
   /**
-   * Will be {@code true} once {@link #buildWithClasspath(ExecutionContext, Set)} has been invoked.
+   * Will be {@code true} once {@link Compiler#buildWithClasspath(ExecutionContext, ImmutableList,
+   * Set)} has been invoked.
    */
-  protected AtomicBoolean isExecuted = new AtomicBoolean(false);
+  private AtomicBoolean isExecuted = new AtomicBoolean(false);
 
   private static final Pattern IMPORT_FAILURE =
       Pattern.compile("import ([\\w\\.\\*]*);");
@@ -97,7 +96,8 @@ public abstract class JavacStep implements Step {
       Pattern.compile(".*?symbol:\\s*class\\s*([\\w\\.\\*]*)");
 
   private static final ImmutableList<Pattern> MISSING_IMPORT_PATTERNS =
-      ImmutableList.of(IMPORT_FAILURE,
+      ImmutableList.of(
+          IMPORT_FAILURE,
           PACKAGE_FAILURE,
           ACCESS_FAILURE,
           CLASS_NOT_FOUND,
@@ -105,20 +105,13 @@ public abstract class JavacStep implements Step {
 
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
-  /**
-   * An escaper for arguments written to @argfiles.
-   */
-  protected static final Function<String, String> ARGFILES_ESCAPER =
-      Escaper.escaper(
-          Escaper.Quoter.DOUBLE,
-          CharMatcher.anyOf("#\"'").or(CharMatcher.WHITESPACE));
-
   public static interface SuggestBuildRules {
     public ImmutableSet<String> suggest(ProjectFilesystem filesystem,
         ImmutableSet<String> failedImports);
   }
 
   public JavacStep(
+      Compiler compiler,
       Path outputDirectory,
       Set<Path> javaSourceFilePaths,
       Set<Path> transitiveClasspathEntries,
@@ -126,8 +119,8 @@ public abstract class JavacStep implements Step {
       JavacOptions javacOptions,
       Optional<BuildTarget> invokingRule,
       BuildDependencies buildDependencies,
-      Optional<SuggestBuildRules> suggestBuildRules,
-      Optional<Path> pathToSrcsList) {
+      Optional<SuggestBuildRules> suggestBuildRules) {
+    this.compiler = compiler;
     this.outputDirectory = outputDirectory;
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
     this.transitiveClasspathEntries = ImmutableSet.copyOf(transitiveClasspathEntries);
@@ -137,7 +130,6 @@ public abstract class JavacStep implements Step {
     this.invokingRule = invokingRule;
     this.buildDependencies = buildDependencies;
     this.suggestBuildRules = suggestBuildRules;
-    this.pathToSrcsList = pathToSrcsList;
   }
 
   @Override
@@ -152,12 +144,17 @@ public abstract class JavacStep implements Step {
   public int executeBuild(ExecutionContext context) throws InterruptedException {
     // Build up the compilation task.
     if (buildDependencies == BuildDependencies.FIRST_ORDER_ONLY) {
-      return buildWithClasspath(context,
+      return getCompiler().buildWithClasspath(
+          context,
+          getOptions(context, getClasspathEntries()),
           ImmutableSet.copyOf(declaredClasspathEntries));
     } else if (buildDependencies == BuildDependencies.WARN_ON_TRANSITIVE) {
       return tryBuildWithFirstOrderDeps(context);
     } else {
-      return buildWithClasspath(context, getClasspathEntries());
+      return getCompiler().buildWithClasspath(
+          context,
+          getOptions(context, getClasspathEntries()),
+          getClasspathEntries());
     }
   }
 
@@ -166,14 +163,18 @@ public abstract class JavacStep implements Step {
     CapturingPrintStream stderr = new CapturingPrintStream();
     ExecutionContext firstOrderContext = context.createSubContext(stdout, stderr);
 
-    int declaredDepsResult = buildWithClasspath(firstOrderContext,
+    int declaredDepsResult = getCompiler().buildWithClasspath(
+        firstOrderContext,
+        getOptions(context, declaredClasspathEntries),
         ImmutableSet.copyOf(declaredClasspathEntries));
 
     String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
     String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
 
     if (declaredDepsResult != 0) {
-      int transitiveResult = buildWithClasspath(context,
+      int transitiveResult = getCompiler().buildWithClasspath(
+          context,
+          getOptions(context, transitiveClasspathEntries),
           ImmutableSet.copyOf(transitiveClasspathEntries));
       if (transitiveResult == 0) {
         ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
@@ -203,9 +204,20 @@ public abstract class JavacStep implements Step {
     return declaredDepsResult;
   }
 
-  protected abstract int buildWithClasspath(
-      ExecutionContext context,
-      Set<Path> buildClasspathEntries) throws InterruptedException;
+  @VisibleForTesting
+  Compiler getCompiler() {
+    return compiler;
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return getCompiler().getDescription(context, getOptions(context, getClasspathEntries()));
+  }
+
+  @Override
+  public String getShortName() {
+    return getCompiler().getShortName();
+  }
 
   @VisibleForTesting
   static ImmutableSet<String> findFailedImports(String output) {
@@ -231,8 +243,9 @@ public abstract class JavacStep implements Step {
    * @return list of String command-line options.
    */
   @VisibleForTesting
-  protected ImmutableList<String> getOptions(ExecutionContext context,
-                                             Set<Path> buildClasspathEntries) {
+  ImmutableList<String> getOptions(
+      ExecutionContext context,
+      Set<Path> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     ProjectFilesystem filesystem = context.getProjectFilesystem();
@@ -266,7 +279,8 @@ public abstract class JavacStep implements Step {
   /**
    * @return The classpath entries used to invoke javac.
    */
-  protected ImmutableSet<Path> getClasspathEntries() {
+  @VisibleForTesting
+  ImmutableSet<Path> getClasspathEntries() {
     if (buildDependencies == BuildDependencies.TRANSITIVE) {
       return transitiveClasspathEntries;
     } else {
@@ -283,3 +297,4 @@ public abstract class JavacStep implements Step {
     return outputDirectory.toString();
   }
 }
+

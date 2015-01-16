@@ -33,7 +33,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 
-public class ExternalJavacIntegrationTest {
+public class ExternalJavacCompilerIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();

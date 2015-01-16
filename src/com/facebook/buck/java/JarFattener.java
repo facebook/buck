@@ -127,15 +127,17 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     Path fatJarMainSource = outputDir.resolve(Paths.get(FAT_JAR_MAIN_SRC_RESOURCE).getFileName());
     steps.add(writeFromResource(fatJarMainSource, FAT_JAR_MAIN_SRC_RESOURCE));
     steps.add(
-        new JavacInMemoryStep(
+        JavacStepUtil.createJavacStep(
             fatJarDir,
             ImmutableSet.of(fatJarSource, fatJarMainSource),
-            ImmutableSet.<Path>of(),
-            ImmutableSet.<Path>of(),
+            /* transitive classpath */ ImmutableSet.<Path>of(),
+            /* declared classpath */ ImmutableSet.<Path>of(),
             javacOptions,
             Optional.of(getBuildTarget()),
             BuildDependencies.FIRST_ORDER_ONLY,
             Optional.<JavacStep.SuggestBuildRules>absent(),
+            Optional.<Path>absent(),
+            getBuildTarget(),
             Optional.<Path>absent()));
 
     // Symlink the inner JAR into it's place in the fat JAR.

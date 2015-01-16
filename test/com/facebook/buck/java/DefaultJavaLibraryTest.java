@@ -33,6 +33,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidLibraryDescription;
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.MorePaths;
@@ -73,7 +74,6 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
@@ -159,15 +159,15 @@ public class DefaultJavaLibraryTest {
 
     List<Step> steps = javaLibrary.getBuildSteps(context, new FakeBuildableContext());
 
-    // Find the JavacInMemoryCommand and verify its bootclasspath.
+    // Find the JavacStep and verify its bootclasspath.
     Step step = Iterables.find(steps, new Predicate<Step>() {
       @Override
       public boolean apply(Step command) {
-        return command instanceof JavacInMemoryStep;
+        return command instanceof JavacStep;
       }
     });
-    assertNotNull("Expected a JavacInMemoryCommand in the command list.", step);
-    JavacInMemoryStep javac = (JavacInMemoryStep) step;
+    assertNotNull("Expected a JavacStep in the steplist.", step);
+    JavacStep javac = (JavacStep) step;
     assertEquals("Should compile Main.java rather than generated R.java.",
         ImmutableSet.of(src),
         javac.getSrcs());
@@ -410,12 +410,12 @@ public class DefaultJavaLibraryTest {
 
     EasyMock.verify(buildContext, javaPackageFinder);
 
-    ImmutableList<JavacInMemoryStep> javacSteps = FluentIterable
+    ImmutableList<JavacStep> javacSteps = FluentIterable
         .from(steps)
-        .filter(JavacInMemoryStep.class)
+        .filter(JavacStep.class)
         .toList();
     assertEquals("There should be only one javac step.", 1, javacSteps.size());
-    JavacInMemoryStep javacStep = javacSteps.get(0);
+    JavacStep javacStep = javacSteps.get(0);
     assertEquals(
         "The classpath to use when compiling //:libtwo according to getDeclaredClasspathEntries()" +
             " should contain only bar.jar.",
@@ -998,7 +998,7 @@ public class DefaultJavaLibraryTest {
         libraryOne.getTransitiveClasspathEntries();
 
     assertEquals(
-        Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
+        Optional.<JavacStep.SuggestBuildRules>absent(),
         ((DefaultJavaLibrary) libraryOne).createSuggestBuildFunction(
             context,
             classpathEntries,
@@ -1054,7 +1054,7 @@ public class DefaultJavaLibraryTest {
         Iterables.getFirst(transitive.get((JavaLibrary) libraryTwo), null),
         "com.facebook.Foo");
 
-    Optional<JavacInMemoryStep.SuggestBuildRules> suggestFn =
+    Optional<JavacStep.SuggestBuildRules> suggestFn =
         ((DefaultJavaLibrary) grandparent).createSuggestBuildFunction(
             context,
             transitive,
@@ -1157,7 +1157,7 @@ public class DefaultJavaLibraryTest {
 
     List<Step> steps = stepsBuilder.build();
     assertEquals(steps.size(), 3);
-    assertTrue(steps.get(2) instanceof JavacInMemoryStep);
+    assertTrue(((JavacStep) steps.get(2)).getCompiler() instanceof Jsr199Compiler);
   }
 
   @Test
@@ -1192,7 +1192,7 @@ public class DefaultJavaLibraryTest {
 
     List<Step> steps = stepsBuilder.build();
     assertEquals(steps.size(), 4);
-    assertTrue(steps.get(3) instanceof ExternalJavacStep);
+    assertTrue(((JavacStep) steps.get(3)).getCompiler() instanceof ExternalJavacCompiler);
   }
 
   @Test
@@ -1369,7 +1369,7 @@ public class DefaultJavaLibraryTest {
       buildContext = createBuildContext(javaLibrary, /* bootclasspath */ null, projectFilesystem);
       List<Step> steps = javaLibrary.getBuildSteps(
           buildContext, new FakeBuildableContext());
-      JavacInMemoryStep javacCommand = lastJavacCommand(steps);
+      JavacStep javacCommand = lastJavacCommand(steps);
 
       executionContext = TestExecutionContext.newBuilder()
           .setProjectFilesystem(projectFilesystem)
@@ -1420,16 +1420,16 @@ public class DefaultJavaLibraryTest {
           /* isPrebuiltAar */ false);
     }
 
-    private JavacInMemoryStep lastJavacCommand(Iterable<Step> commands) {
+    private JavacStep lastJavacCommand(Iterable<Step> commands) {
       Step javac = null;
       for (Step step : commands) {
-        if (step instanceof JavacInMemoryStep) {
+        if (step instanceof JavacStep) {
           javac = step;
           // Intentionally no break here, since we want the last one.
         }
       }
-      assertNotNull("Expected a JavacInMemoryCommand in command list", javac);
-      return (JavacInMemoryStep) javac;
+      assertNotNull("Expected a JavacStep in step list", javac);
+      return (JavacStep) javac;
     }
   }
 

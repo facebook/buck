@@ -16,15 +16,12 @@
 
 package com.facebook.buck.java;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static com.facebook.buck.java.JavaBuckConfig.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -36,59 +33,47 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class JavacInMemoryStepTest extends EasyMockSupport {
+public class Jsr199CompilerTest extends EasyMockSupport {
   private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
 
-  @Test
-  public void testFindFailedImports() throws Exception {
-    String lineSeperator = System.getProperty("line.separator");
-
-    String stderrOutput = Joiner.on(lineSeperator).join(ImmutableList.of(
-        "java/com/foo/bar.java:5: package javax.annotation.concurrent does not exist",
-        "java/com/foo/bar.java:99: error: cannot access com.facebook.Raz",
-        "java/com/foo/bar.java:142: cannot find symbol: class ImmutableSet",
-        "java/com/foo/bar.java:999: you are a clown"));
-
-    ImmutableSet<String> missingImports =
-        JavacInMemoryStep.findFailedImports(stderrOutput);
-    assertEquals(
-        ImmutableSet.of("javax.annotation.concurrent", "com.facebook.Raz", "ImmutableSet"),
-        missingImports);
-  }
 
   @Test
   public void testJavacCommand() {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    JavacInMemoryStep firstOrder = createTestStep(BuildDependencies.FIRST_ORDER_ONLY);
-    JavacInMemoryStep warn = createTestStep(BuildDependencies.WARN_ON_TRANSITIVE);
-    JavacInMemoryStep transitive = createTestStep(BuildDependencies.TRANSITIVE);
+    Jsr199Compiler firstOrder = createTestStep();
+    Jsr199Compiler warn = createTestStep();
+    Jsr199Compiler transitive = createTestStep();
 
     assertEquals(
         String.format("javac -source %s -target %s -g -d . -classpath foo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, PATH_TO_SRCS_LIST),
-        firstOrder.getDescription(context));
+        firstOrder.getDescription(context, getArgs().add("foo.jar").build()));
     assertEquals(
         String.format("javac -source %s -target %s -g -d . -classpath foo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, PATH_TO_SRCS_LIST),
-        warn.getDescription(context));
+        warn.getDescription(context, getArgs().add("foo.jar").build()));
     assertEquals(
         String.format("javac -source %s -target %s -g -d . -classpath bar.jar%sfoo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, File.pathSeparator, PATH_TO_SRCS_LIST),
-        transitive.getDescription(context));
+        transitive.getDescription(
+            context,
+            getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build()));
   }
 
-  private JavacInMemoryStep createTestStep(BuildDependencies buildDependencies) {
-    return new JavacInMemoryStep(
-          /* outputDirectory */ Paths.get("."),
+  private Jsr199Compiler createTestStep() {
+    return new Jsr199Compiler(
           /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("foobar.java")),
-          /* transitiveClasspathEntries */
-            ImmutableSet.of(Paths.get("bar.jar"), Paths.get("foo.jar")),
-          /* declaredClasspathEntries */ ImmutableSet.of(Paths.get("foo.jar")),
-          DEFAULT_JAVAC_OPTIONS,
           /* invokingRule */ Optional.<BuildTarget>absent(),
-          /* buildDependencies */ buildDependencies,
-          /* suggestBuildRules */ Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
           /* pathToSrcsList */ Optional.of(PATH_TO_SRCS_LIST));
+  }
+
+  private ImmutableList.Builder<String> getArgs() {
+    return ImmutableList.<String>builder().add(
+        "-source", TARGETED_JAVA_VERSION,
+        "-target", TARGETED_JAVA_VERSION,
+        "-g",
+        "-d", ".",
+        "-classpath");
   }
 }

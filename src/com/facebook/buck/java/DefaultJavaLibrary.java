@@ -253,7 +253,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSet<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       BuildDependencies buildDependencies,
-      Optional<JavacInMemoryStep.SuggestBuildRules> suggestBuildRules,
+      Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
       ImmutableList.Builder<Step> commands,
       BuildTarget target) {
     // Make sure that this directory exists because ABI information will be written here.
@@ -261,38 +261,32 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     commands.add(mkdir);
 
     // Only run javac if there are .java files to compile.
-    final JavacStep javacStep;
     if (!getJavaSrcs().isEmpty()) {
       Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
       commands.add(new MkdirStep(pathToSrcsList.getParent()));
 
+      Optional<Path> workingDirectory;
       if (javacOptions.getJavaCompilerEnvironment().getJavacPath().isPresent()) {
-        Path workingDirectory = BuildTargets.getGenPath(target, "lib__%s____working_directory");
-        commands.add(new MakeCleanDirectoryStep(workingDirectory));
-        javacStep = new ExternalJavacStep(
-            outputDirectory,
-            getJavaSrcs(),
-            transitiveClasspathEntries,
-            declaredClasspathEntries,
-            javacOptions,
-            Optional.of(target),
-            buildDependencies,
-            suggestBuildRules,
-            Optional.of(pathToSrcsList),
-            target,
-            Optional.of(workingDirectory));
+        Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
+        commands.add(new MakeCleanDirectoryStep(scratchDir));
+        workingDirectory = Optional.of(scratchDir);
       } else {
-        javacStep = new JavacInMemoryStep(
-            outputDirectory,
-            getJavaSrcs(),
-            transitiveClasspathEntries,
-            declaredClasspathEntries,
-            javacOptions,
-            Optional.of(target),
-            buildDependencies,
-            suggestBuildRules,
-            Optional.of(pathToSrcsList));
+        workingDirectory = Optional.absent();
       }
+
+      JavacStep javacStep = JavacStepUtil.createJavacStep(
+          outputDirectory,
+          getJavaSrcs(),
+          transitiveClasspathEntries,
+          declaredClasspathEntries,
+          javacOptions,
+          Optional.of(target),
+          buildDependencies,
+          suggestBuildRules,
+          Optional.of(pathToSrcsList),
+          target,
+          workingDirectory);
+
       commands.add(javacStep);
     }
   }
@@ -518,7 +512,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     Path outputDirectory = getClassesDir(target);
     steps.add(new MakeCleanDirectoryStep(outputDirectory));
 
-    Optional<JavacInMemoryStep.SuggestBuildRules> suggestBuildRule =
+    Optional<JavacStep.SuggestBuildRules> suggestBuildRule =
         createSuggestBuildFunction(context,
             transitiveClasspathEntries,
             declaredClasspathEntries,
@@ -652,7 +646,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    *    set of rules to suggest that the developer import to satisfy those imports.
    */
   @VisibleForTesting
-  Optional<JavacInMemoryStep.SuggestBuildRules> createSuggestBuildFunction(
+  Optional<JavacStep.SuggestBuildRules> createSuggestBuildFunction(
       BuildContext context,
       ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries,
       ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries,
@@ -672,8 +666,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         .toList()
         .reverse();
 
-    JavacInMemoryStep.SuggestBuildRules suggestBuildRuleFn =
-        new JavacInMemoryStep.SuggestBuildRules() {
+    JavacStep.SuggestBuildRules suggestBuildRuleFn =
+        new JavacStep.SuggestBuildRules() {
       @Override
       public ImmutableSet<String> suggest(ProjectFilesystem filesystem,
           ImmutableSet<String> failedImports) {

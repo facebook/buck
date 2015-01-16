@@ -42,30 +42,31 @@ public class JavacStepUtil {
       BuildTarget buildTarget,
       Optional<Path> workingDirectory) {
 
+    Compiler compiler;
     if (javacOptions.getJavaCompilerEnvironment().getJavacPath().isPresent()) {
-      return new ExternalJavacStep(
-          outputDirectory,
+      compiler = new ExternalJavacCompiler(
           javaSourceFilePaths,
-          transitiveClasspathEntries,
-          declaredClasspathEntries,
           javacOptions,
           invokingRule,
-          buildDependencies,
-          suggestBuildRules,
           pathToSrcsList,
           buildTarget,
           workingDirectory);
     } else {
-      return new JavacInMemoryStep(
-          outputDirectory,
+      compiler = new Jsr199Compiler(
           javaSourceFilePaths,
-          transitiveClasspathEntries,
-          declaredClasspathEntries,
-          javacOptions,
           invokingRule,
-          buildDependencies,
-          suggestBuildRules,
           pathToSrcsList);
     }
+
+    return new JavacStep(
+        compiler,
+        outputDirectory,
+        javaSourceFilePaths,
+        transitiveClasspathEntries,
+        declaredClasspathEntries,
+        javacOptions,
+        invokingRule,
+        buildDependencies,
+        suggestBuildRules);
   }
 }

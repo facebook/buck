@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.JavacInMemoryStep;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.java.JavacStepUtil;
@@ -71,7 +70,7 @@ public class RDotJava {
             .build(),
         Optional.<BuildTarget>absent(),
         BuildDependencies.FIRST_ORDER_ONLY,
-        Optional.<JavacInMemoryStep.SuggestBuildRules>absent(),
+        Optional.<JavacStep.SuggestBuildRules>absent(),
         /* pathToSrcsList */ Optional.<Path>absent(),
         buildTarget,
         /* workingDirectory */ Optional.<Path>absent());

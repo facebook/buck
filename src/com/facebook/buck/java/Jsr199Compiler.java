@@ -19,7 +19,6 @@ package com.facebook.buck.java;
 import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
@@ -63,44 +62,37 @@ import javax.tools.ToolProvider;
 /**
  * Command used to compile java libraries with a variety of ways to handle dependencies.
  * <p>
- * If {@code buildDependencies} is set to {@link BuildDependencies#FIRST_ORDER_ONLY}, this class
- * will invoke javac using {@code declaredClasspathEntries} for the classpath.
- * If {@code buildDependencies} is set to {@link BuildDependencies#TRANSITIVE}, this class will
- * invoke javac using {@code transitiveClasspathEntries} for the classpath.
- * If {@code buildDependencies} is set to {@link BuildDependencies#WARN_ON_TRANSITIVE}, this class
- * will first compile using {@code declaredClasspathEntries}, and should that fail fall back to
+ * If {@code buildDependencies} is set to
+ * {@link com.facebook.buck.rules.BuildDependencies#FIRST_ORDER_ONLY}, this class will invoke javac
+ * using {@code declaredClasspathEntries} for the classpath. If {@code buildDependencies} is set to
+ * {@link com.facebook.buck.rules.BuildDependencies#TRANSITIVE}, this class will invoke javac using
+ * {@code transitiveClasspathEntries} for the classpath. If {@code buildDependencies} is set to
+ * {@link com.facebook.buck.rules.BuildDependencies#WARN_ON_TRANSITIVE}, this class will first
+ * compile using {@code declaredClasspathEntries}, and should that fail fall back to
  * {@code transitiveClasspathEntries} but warn the developer about which dependencies were in
  * the transitive classpath but not in the declared classpath.
  */
-public class JavacInMemoryStep extends JavacStep {
+public class Jsr199Compiler implements Compiler {
 
-  private static final Logger LOG = Logger.get(JavacInMemoryStep.class);
+  private static final Logger LOG = Logger.get(Jsr199Compiler.class);
 
-  public JavacInMemoryStep(
-      Path outputDirectory,
+  private final Set<Path> javaSourceFilePaths;
+  private final Optional<BuildTarget> invokingRule;
+  private final Optional<Path> pathToSrcsList;
+
+  public Jsr199Compiler(
       Set<Path> javaSourceFilePaths,
-      Set<Path> transitiveClasspathEntries,
-      Set<Path> declaredClasspathEntries,
-      JavacOptions javacOptions,
       Optional<BuildTarget> invokingRule,
-      BuildDependencies buildDependencies,
-      Optional<SuggestBuildRules> suggestBuildRules,
       Optional<Path> pathToSrcsList) {
-    super(outputDirectory,
-        javaSourceFilePaths,
-        transitiveClasspathEntries,
-        declaredClasspathEntries,
-        javacOptions,
-        invokingRule,
-        buildDependencies,
-        suggestBuildRules,
-        pathToSrcsList);
+    this.javaSourceFilePaths = javaSourceFilePaths;
+    this.invokingRule = invokingRule;
+    this.pathToSrcsList = pathToSrcsList;
   }
 
   @Override
-  public String getDescription(ExecutionContext context) {
+  public String getDescription(ExecutionContext context, ImmutableList<String> options) {
     StringBuilder builder = new StringBuilder("javac ");
-    Joiner.on(" ").appendTo(builder, getOptions(context, getClasspathEntries()));
+    Joiner.on(" ").appendTo(builder, options);
     builder.append(" ");
 
     if (pathToSrcsList.isPresent()) {
@@ -118,9 +110,13 @@ public class JavacInMemoryStep extends JavacStep {
   }
 
   @Override
-  protected int buildWithClasspath(ExecutionContext context, Set<Path> buildClasspathEntries) {
+  public int buildWithClasspath(
+      ExecutionContext context,
+      ImmutableList<String> options,
+          Set<Path> buildClasspathEntries) {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    Preconditions.checkNotNull(compiler,
+    Preconditions.checkNotNull(
+        compiler,
         "If using JRE instead of JDK, ToolProvider.getSystemJavaCompiler() may be null.");
     StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
     Iterable<? extends JavaFileObject> compilationUnits = ImmutableSet.of();
@@ -145,15 +141,15 @@ public class JavacInMemoryStep extends JavacStep {
             pathToSrcsList.get());
       } catch (IOException e) {
         close(fileManager, compilationUnits, null);
-        context.logError(e,
+        context.logError(
+            e,
             "Cannot write list of .java files to compile to %s file! Terminating compilation.",
             pathToSrcsList.get());
         return 1;
       }
     }
 
-    DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
-    List<String> options = getOptions(context, buildClasspathEntries);
+    DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();
     Writer compilerOutputWriter = new PrintWriter(context.getStdErr());
     JavaCompiler.CompilationTask compilationTask = compiler.getTask(
@@ -164,10 +160,10 @@ public class JavacInMemoryStep extends JavacStep {
         classNamesForAnnotationProcessing,
         compilationUnits);
 
-    // Ensure annotation processors are loaded from their own classloader. If we don't do this, then
-    // the evidence suggests that they get one polluted with Buck's own classpath, which means that
-    // libraries that have dependencies on different versions of Buck's deps may choke with novel
-    // errors that don't occur on the command line.
+    // Ensure annotation processors are loaded from their own classloader. If we don't do this,
+    // then the evidence suggests that they get one polluted with Buck's own classpath, which
+    // means that libraries that have dependencies on different versions of Buck's deps may choke
+    // with novel errors that don't occur on the command line.
     ProcessorBundle bundle = null;
     boolean isSuccess;
 
@@ -192,7 +188,8 @@ public class JavacInMemoryStep extends JavacStep {
           if (kind == Diagnostic.Kind.ERROR) {
             ++numErrors;
             handleMissingSymbolError(diagnostic, context);
-          } else if (kind == Diagnostic.Kind.WARNING || kind == Diagnostic.Kind.MANDATORY_WARNING) {
+          } else if (kind == Diagnostic.Kind.WARNING ||
+              kind == Diagnostic.Kind.MANDATORY_WARNING) {
             ++numWarnings;
           }
 
@@ -263,15 +260,17 @@ public class JavacInMemoryStep extends JavacStep {
                 try {
                   return Paths.get(pathRelativeToProjectRoot).toUri().toURL();
                 } catch (MalformedURLException e) {
-                  // The paths we're being given should have all been resolved from the file system
-                  // already. We'd need to be unfortunate to get here. Bubble up a runtime
+                  // The paths we're being given should have all been resolved from the file
+                  // system already. We'd need to be unfortunate to get here. Bubble up a runtime
                   // exception.
                   throw new RuntimeException(e);
                 }
               }
             })
         .toArray(URL.class);
-    processorBundle.classLoader = new URLClassLoader(urls, ToolProvider.getSystemToolClassLoader());
+    processorBundle.classLoader = new URLClassLoader(
+        urls,
+        ToolProvider.getSystemToolClassLoader());
 
     Iterable<String> names = Splitter.on(",")
         .trimResults()
@@ -281,9 +280,10 @@ public class JavacInMemoryStep extends JavacStep {
       try {
         LOG.debug("Loading %s from own classloader", name);
 
-        Class<? extends Processor> aClass = Preconditions.checkNotNull(processorBundle.classLoader)
-            .loadClass(name)
-            .asSubclass(Processor.class);
+        Class<? extends Processor> aClass =
+            Preconditions.checkNotNull(processorBundle.classLoader)
+                .loadClass(name)
+                .asSubclass(Processor.class);
         processorBundle.processors.add(aClass.newInstance());
       } catch (ReflectiveOperationException e) {
         processorBundle.close();
@@ -308,7 +308,7 @@ public class JavacInMemoryStep extends JavacStep {
         Iterable<? extends JavaFileObject> javaFileObjects = fileManager.getJavaFileObjects(
             absolutifier.apply(path).toFile());
         compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
-      } else if (path.toString().endsWith(SRC_ZIP)) {
+      } else if (path.toString().endsWith(JavacStep.SRC_ZIP)) {
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
         ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
         for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
