@@ -34,12 +34,16 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer<ActionGr
   private static final Logger LOG = Logger.get(TargetGraphToActionGraph.class);
 
   private final BuckEventBus eventBus;
+  private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
   @Nullable
   private volatile ActionGraph actionGraph;
   private volatile int hashOfTargetGraph;
 
-  public TargetGraphToActionGraph(BuckEventBus eventBus) {
+  public TargetGraphToActionGraph(
+      BuckEventBus eventBus,
+      TargetNodeToBuildRuleTransformer buildRuleGenerator) {
     this.eventBus = eventBus;
+    this.buildRuleGenerator = buildRuleGenerator;
   }
 
   @Override
@@ -63,9 +67,6 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer<ActionGr
     final BuildRuleResolver ruleResolver = new BuildRuleResolver();
     final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
 
-    final TargetNodeToBuildRuleTransformer transformer =
-        new TargetNodeToBuildRuleTransformer();
-
     AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(targetGraph) {
 
@@ -73,7 +74,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer<ActionGr
           public void visit(TargetNode<?> node) {
             BuildRule rule;
             try {
-              rule = transformer.transform(targetGraph, ruleResolver, node);
+              rule = buildRuleGenerator.transform(targetGraph, ruleResolver, node);
             } catch (NoSuchBuildTargetException e) {
               throw new HumanReadableException(e);
             }

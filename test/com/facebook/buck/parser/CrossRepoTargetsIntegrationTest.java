@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RepositoryFactory;
@@ -92,7 +93,9 @@ public class CrossRepoTargetsIntegrationTest {
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         /* enableProfiling */ false);
-    ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+    ActionGraph graph = new TargetGraphToActionGraph(
+        eventBus, new BuildTargetNodeToBuildRuleTransformer())
+        .apply(targetGraph);
 
     BuildRule mainRule = graph.findBuildRuleByTarget(mainTarget);
     assertEquals(mainTarget, mainRule.getBuildTarget());

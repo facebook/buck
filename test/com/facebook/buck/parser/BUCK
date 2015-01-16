@@ -7,6 +7,7 @@ java_test(
   ],
   resources = glob(['testdata/**'], include_dotfiles=True),
   deps = [
+    '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',

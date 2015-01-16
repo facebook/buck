@@ -42,6 +42,7 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -69,8 +70,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 import com.google.common.hash.HashCode;
+import com.google.common.io.Files;
 
 import org.easymock.EasyMockSupport;
 import org.junit.Before;
@@ -242,7 +243,7 @@ public class ParserTest extends EasyMockSupport {
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         /* enableProfiling */ false);
-    ActionGraph actionGraph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+    ActionGraph actionGraph = buildActionGraph(eventBus, targetGraph);
     BuildRule fooRule = actionGraph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
     BuildRule barRule = actionGraph.findBuildRuleByTarget(barTarget);
@@ -1014,7 +1015,7 @@ public class ParserTest extends EasyMockSupport {
         new TestConsole(),
         ImmutableMap.<String, String>of(),
         /* enableProfiling */ false);
-    ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+    ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
     BuildRule fooRule = graph.findBuildRuleByTarget(fooTarget);
     assertNotNull(fooRule);
@@ -1270,7 +1271,7 @@ public class ParserTest extends EasyMockSupport {
           new TestConsole(),
           ImmutableMap.<String, String>of(),
           /* enableProfiling */ false);
-      ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+      ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(ImmutableList.of(Paths.get("foo/bar/Bar.java")), libRule.getInputs());
@@ -1293,7 +1294,7 @@ public class ParserTest extends EasyMockSupport {
           new TestConsole(),
           ImmutableMap.<String, String>of(),
           /* enableProfiling */ false);
-      ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+      ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(ImmutableList.of(Paths.get("foo/bar/Bar.java")), libRule.getInputs());
@@ -1310,7 +1311,7 @@ public class ParserTest extends EasyMockSupport {
           new TestConsole(),
           ImmutableMap.<String, String>of(),
           /* enableProfiling */ false);
-      ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+      ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
@@ -1352,7 +1353,7 @@ public class ParserTest extends EasyMockSupport {
           new TestConsole(),
           ImmutableMap.<String, String>of(),
           /* enableProfiling */ false);
-      ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+      ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
@@ -1377,7 +1378,7 @@ public class ParserTest extends EasyMockSupport {
           new TestConsole(),
           ImmutableMap.<String, String>of(),
           /* enableProfiling */ false);
-      ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+      ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
@@ -1396,7 +1397,7 @@ public class ParserTest extends EasyMockSupport {
           new TestConsole(),
           ImmutableMap.<String, String>of(),
           /* enableProfiling */ false);
-      ActionGraph graph = new TargetGraphToActionGraph(eventBus).apply(targetGraph);
+      ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
       BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
       assertEquals(
@@ -1615,6 +1616,11 @@ public class ParserTest extends EasyMockSupport {
         /* enableProfiling */ false);
 
     return parser.getBuildTargetHashCodeCache().getAll(buildTargetsList);
+  }
+
+  private ActionGraph buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
+    return new TargetGraphToActionGraph(eventBus, new BuildTargetNodeToBuildRuleTransformer())
+        .apply(targetGraph);
   }
 
   private Iterable<Map<String, Object>> emptyBuildTargets() {
