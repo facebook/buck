@@ -37,10 +37,8 @@ public class StepFailedExceptionTest {
   @Before
   public void setUp() {
     ExecutionContext context = TestExecutionContext.newInstance();
-    TestConsole verboseConsole = new TestConsole();
-    verboseConsole.setVerbosity(Verbosity.ALL);
-    TestConsole silentConsole = new TestConsole();
-    silentConsole.setVerbosity(Verbosity.SILENT);
+    TestConsole verboseConsole = new TestConsole(Verbosity.ALL);
+    TestConsole silentConsole = new TestConsole(Verbosity.SILENT);
 
     verboseContext = ExecutionContext.builder()
         .setExecutionContext(context)

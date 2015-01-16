@@ -239,9 +239,8 @@ public class DxStepTest extends EasyMockSupport {
   }
 
   private ExecutionContext createExecutionContext(int verbosityLevel) {
-    TestConsole console = new TestConsole();
     Verbosity verbosity = VerbosityParser.getVerbosityForLevel(verbosityLevel);
-    console.setVerbosity(verbosity);
+    TestConsole console = new TestConsole(verbosity);
     return TestExecutionContext.newBuilder()
         .setConsole(console)
         .setAndroidPlatformTarget(androidPlatformTargetOptional)

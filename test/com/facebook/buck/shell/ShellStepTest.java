@@ -81,8 +81,7 @@ public class ShellStepTest extends EasyMockSupport {
   private void prepareContextForOutput(Verbosity verbosity) {
     resetAll();
 
-    console = new TestConsole();
-    console.setVerbosity(verbosity);
+    console = new TestConsole(verbosity);
     ProcessExecutor processExecutor = new ProcessExecutor(console);
 
     expect(context.getStdErr()).andStubReturn(console.getStdErr());
@@ -111,8 +110,7 @@ public class ShellStepTest extends EasyMockSupport {
 
     resetAll();
 
-    console = new TestConsole();
-    console.setVerbosity(verbosity);
+    console = new TestConsole(verbosity);
     ProcessExecutor processExecutor = new ProcessExecutor(console);
     expect(context.getVerbosity()).andStubReturn(verbosity);
     expect(context.getProcessExecutor()).andStubReturn(processExecutor);

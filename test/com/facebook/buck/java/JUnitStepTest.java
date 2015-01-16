@@ -146,8 +146,7 @@ public class JUnitStepTest {
         testRunnerClasspath,
         /* testRuleTimeoutMs*/ Optional.<Long>absent());
 
-    TestConsole console = new TestConsole();
-    console.setVerbosity(Verbosity.ALL);
+    TestConsole console = new TestConsole(Verbosity.ALL);
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
         .setConsole(console)
         .setDebugEnabled(true)
