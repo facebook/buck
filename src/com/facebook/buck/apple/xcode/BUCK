@@ -46,7 +46,6 @@ java_library(
     'XCScheme.java',
   ] + glob(['util/*.java', 'xcodeproj/*.java']),
   deps = [
-    '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/log:log',
     '//third-party/java/dd-plist:dd-plist',
     '//third-party/java/guava:guava',

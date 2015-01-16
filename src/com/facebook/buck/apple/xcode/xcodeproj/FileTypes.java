@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;

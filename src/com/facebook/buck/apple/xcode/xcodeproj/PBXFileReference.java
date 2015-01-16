@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
-import com.facebook.buck.apple.FileTypes;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.base.Optional;
 import com.google.common.io.Files;

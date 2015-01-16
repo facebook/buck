@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.xcode.xcodeproj;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
