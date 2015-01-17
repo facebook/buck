@@ -21,6 +21,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.annotations.VisibleForTesting;
@@ -94,7 +95,13 @@ public final class ProGuardObfuscateStep extends ShellStep {
     buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
     buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
 
-    steps.add(commandLineHelperStep, proGuardStep);
+    steps.add(
+        commandLineHelperStep,
+        proGuardStep,
+        // Some proguard configs can propagate the "-dontobfuscate" flag which disables
+        // obfuscation and prevents the mapping.txt file from being generated.  So touch it
+        // here to guarantee it's around when we go to cache this rule.
+        new TouchStep(commandLineHelperStep.getMappingTxt()));
   }
 
   /**

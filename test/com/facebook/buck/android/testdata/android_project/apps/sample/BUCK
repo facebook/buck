@@ -135,6 +135,19 @@ android_binary(
   ],
 )
 
+android_binary(
+  name = 'app_proguard_dontobfuscate',
+  proguard_config = 'dontobfuscate.pro',
+  package_type = 'release',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:19',
+  keystore = '//keystores:debug',
+  deps = [
+    '//java/com/sample/lib:lib',
+    '//res/com/sample/base:base',
+  ],
+)
+
 project_config(
   src_target = ':app',
 )

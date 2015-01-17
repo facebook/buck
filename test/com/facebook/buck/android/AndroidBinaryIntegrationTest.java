@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -32,6 +33,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class AndroidBinaryIntegrationTest {
 
@@ -195,6 +198,16 @@ public class AndroidBinaryIntegrationTest {
     zipInspector.assertFileDoesNotExist("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libgnustl_shared.so");
+  }
+
+  @Test
+  public void testProguardDontObfuscateGeneratesMappingFile() throws IOException {
+    workspace.runBuckCommand("build", "//apps/sample:app_proguard_dontobfuscate").assertSuccess();
+
+    Path mapping = workspace.resolve(
+        "buck-out/gen/apps/sample/__app_proguard_dontobfuscate#aapt_package__proguard__/" +
+            ".proguard/mapping.txt");
+    assertTrue(Files.exists(mapping));
   }
 
 }

@@ -44,4 +44,25 @@ public class TouchStep extends ShellStep {
         "touch",
         context.getProjectFilesystem().resolve(fileToTouch).toString());
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (!(o instanceof TouchStep)) {
+      return false;
+    }
+
+    TouchStep touchStep = (TouchStep) o;
+
+    return fileToTouch.equals(touchStep.fileToTouch);
+  }
+
+  @Override
+  public int hashCode() {
+    return fileToTouch.hashCode();
+  }
+
 }
