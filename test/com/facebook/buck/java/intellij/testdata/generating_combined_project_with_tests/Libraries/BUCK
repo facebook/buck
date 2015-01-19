@@ -1,0 +1,67 @@
+EMPTY_CONFIGS = {
+  'Debug': {},
+  'Release': {},
+}
+
+apple_library(
+  name = 'Dep1',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [],
+  visibility = ['PUBLIC'],
+  tests = [':Dep1Tests'],
+)
+
+apple_library(
+  name = 'Dep2',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [],
+  visibility = ['PUBLIC'],
+  tests = [':Dep2Tests'],
+)
+
+apple_library(
+  name = 'Dep3',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [],
+  visibility = ['PUBLIC'],
+  tests = [':Dep3Tests'],
+)
+
+apple_test(
+  name = 'Dep1Tests',
+  extension = 'octest',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    ':Dep1',
+  ],
+)
+
+apple_test(
+  name = 'Dep2Tests',
+  extension = 'octest',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    ':Dep2',
+  ],
+)
+
+apple_test(
+  name = 'Dep3Tests',
+  extension = 'octest',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    ':Dep3',
+  ],
+)

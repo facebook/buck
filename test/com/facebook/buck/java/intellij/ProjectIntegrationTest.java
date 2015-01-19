@@ -502,6 +502,41 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void generatingCombinedProject() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "generating_combined_project",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--combined-project",
+        "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void generatingCombinedProjectWithTests() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "generating_combined_project_with_tests",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--combined-project",
+        "--with-tests",
+        "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
   public void testNonexistentTarget() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

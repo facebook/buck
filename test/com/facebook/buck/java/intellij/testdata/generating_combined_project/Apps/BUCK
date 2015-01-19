@@ -1,0 +1,40 @@
+EMPTY_CONFIGS = {
+  'Debug': {},
+  'Release': {},
+}
+
+apple_binary(
+  name = 'TestAppBinary',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    '//Libraries:Dep1',
+    '//Libraries:Dep2',
+  ],
+)
+
+apple_bundle(
+  name = 'TestApp',
+  deps = [':TestAppBinary'],
+  binary = ':TestAppBinary',
+  extension = 'app',
+  tests = [':TestAppTests'],
+)
+
+apple_test(
+  name = 'TestAppTests',
+  extension = 'octest',
+  configs = EMPTY_CONFIGS,
+  srcs = [],
+  frameworks = [],
+  deps = [
+    '//Libraries:Dep1',
+    '//Libraries:Dep2',
+  ],
+)
+
+xcode_workspace_config(
+  name = 'workspace',
+  src_target = '//Apps:TestApp'
+)
