@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -26,13 +27,11 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.model.Pair;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -80,14 +79,14 @@ public class CxxLibrary extends AbstractCxxLibrary {
     Preconditions.checkState(rule instanceof SymlinkTree);
     SymlinkTree symlinkTree = (SymlinkTree) rule;
     return CxxPreprocessorInput.builder()
-        .setRules(ImmutableSet.of(symlinkTree.getBuildTarget()))
-        .setPreprocessorFlags(exportedPreprocessorFlags)
+        .addRules(symlinkTree.getBuildTarget())
+        .putAllPreprocessorFlags(exportedPreprocessorFlags)
         .setIncludes(
             ImmutableCxxHeaders.builder()
                 .putAllNameToPathMap(symlinkTree.getLinks())
                 .putAllFullNameToPathMap(symlinkTree.getFullLinks())
                 .build())
-        .setIncludeRoots(ImmutableList.of(symlinkTree.getRoot()))
+        .addIncludeRoots(symlinkTree.getRoot())
         .build();
   }
 

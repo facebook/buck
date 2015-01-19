@@ -23,6 +23,7 @@ def java_immutables_library(
     ):
     deps = kwargs.get('deps', [])
     needed_deps = [
+      '//src/com/facebook/buck/util/immutables:immutables',
       '//third-party/java/immutables:annotations',
       '//third-party/java/guava:guava',
       '//third-party/java/jsr:jsr305',

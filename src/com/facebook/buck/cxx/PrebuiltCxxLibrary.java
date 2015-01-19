@@ -104,7 +104,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
     return CxxPreprocessorInput.builder()
         // Just pass the include dirs as system includes.
-        .setSystemIncludeRoots(includeDirs)
+        .addAllSystemIncludeRoots(includeDirs)
         .build();
   }
 

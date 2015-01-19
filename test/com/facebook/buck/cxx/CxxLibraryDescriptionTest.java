@@ -106,11 +106,10 @@ public class CxxLibraryDescriptionTest {
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
         return CxxPreprocessorInput.builder()
-            .setRules(
-                ImmutableSet.of(
-                    header.getBuildTarget(),
-                    headerSymlinkTree.getBuildTarget()))
-            .setIncludeRoots(headerSymlinkTreeRoot)
+            .addRules(
+                header.getBuildTarget(),
+                headerSymlinkTree.getBuildTarget())
+            .addIncludeRoots(headerSymlinkTreeRoot)
             .build();
       }
 
@@ -175,11 +174,10 @@ public class CxxLibraryDescriptionTest {
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target, cxxPlatform.asFlavor());
     assertEquals(
         CxxPreprocessorInput.builder()
-            .setRules(
-                ImmutableSet.of(
-                    CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                        target,
-                        cxxPlatform.asFlavor())))
+            .addRules(
+                CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                    target,
+                    cxxPlatform.asFlavor()))
             .setIncludes(
                 ImmutableCxxHeaders.builder()
                     .putNameToPathMap(
@@ -195,11 +193,10 @@ public class CxxLibraryDescriptionTest {
                         headerRoot.resolve(genHeaderName),
                         new BuildTargetSourcePath(genHeaderTarget))
                     .build())
-            .setIncludeRoots(
-                ImmutableList.of(
-                    CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-                        target,
-                        cxxPlatform.asFlavor())))
+            .addIncludeRoots(
+                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                    target,
+                    cxxPlatform.asFlavor()))
             .build(),
         rule.getCxxPreprocessorInput(cxxPlatform));
 
@@ -415,11 +412,10 @@ public class CxxLibraryDescriptionTest {
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
         return CxxPreprocessorInput.builder()
-            .setRules(
-                ImmutableSet.of(
-                    header.getBuildTarget(),
-                    headerSymlinkTree.getBuildTarget()))
-            .setIncludeRoots(headerSymlinkTreeRoot)
+            .addRules(
+                header.getBuildTarget(),
+                headerSymlinkTree.getBuildTarget())
+            .addIncludeRoots(headerSymlinkTreeRoot)
             .build();
       }
 
@@ -497,11 +493,10 @@ public class CxxLibraryDescriptionTest {
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target, cxxPlatform.asFlavor());
     assertEquals(
         CxxPreprocessorInput.builder()
-            .setRules(
-                ImmutableSet.of(
-                    CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                        target,
-                        cxxPlatform.asFlavor())))
+            .addRules(
+                CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                    target,
+                    cxxPlatform.asFlavor()))
             .setIncludes(
                 ImmutableCxxHeaders.builder()
                     .putNameToPathMap(
@@ -511,11 +506,10 @@ public class CxxLibraryDescriptionTest {
                         headerRoot.resolve(genHeaderName),
                         new BuildTargetSourcePath(genHeaderTarget))
                     .build())
-            .setIncludeRoots(
-                ImmutableList.of(
-                    CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-                        target,
-                        cxxPlatform.asFlavor())))
+            .addIncludeRoots(
+                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                    target,
+                    cxxPlatform.asFlavor()))
             .build(),
         rule.getCxxPreprocessorInput(cxxPlatform));
 

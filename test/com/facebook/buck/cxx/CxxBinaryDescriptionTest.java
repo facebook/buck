@@ -97,11 +97,10 @@ public class CxxBinaryDescriptionTest {
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
         return CxxPreprocessorInput.builder()
-            .setRules(
-                ImmutableSet.of(
-                    header.getBuildTarget(),
-                    headerSymlinkTree.getBuildTarget()))
-            .setIncludeRoots(headerSymlinkTreeRoot)
+            .addRules(
+                header.getBuildTarget(),
+                headerSymlinkTree.getBuildTarget())
+            .addIncludeRoots(headerSymlinkTreeRoot)
             .build();
       }
 

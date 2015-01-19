@@ -17,108 +17,55 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
+import org.immutables.value.Value;
+
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The components that get contributed to a top-level run of the C++ preprocessor.
  */
-public class CxxPreprocessorInput {
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class CxxPreprocessorInput {
 
   // The build rules which produce headers found in the includes below.
-  private final ImmutableSet<BuildTarget> rules;
+  @Value.Parameter
+  public abstract Set<BuildTarget> getRules();
 
-  private final ImmutableMultimap<CxxSource.Type, String> preprocessorFlags;
+  @Value.Parameter
+  public abstract Multimap<CxxSource.Type, String> getPreprocessorFlags();
 
-  private final ImmutableCxxHeaders includes;
+  @Value.Parameter
+  @Value.Default
+  public CxxHeaders getIncludes() {
+    return ImmutableCxxHeaders.builder().build();
+  }
 
   // Normal include directories where headers are found.
-  private final ImmutableList<Path> includeRoots;
+  @Value.Parameter
+  public abstract List<Path> getIncludeRoots();
 
   // Include directories where system headers.
-  private final ImmutableList<Path> systemIncludeRoots;
+  @Value.Parameter
+  public abstract List<Path> getSystemIncludeRoots();
 
   // Directories where frameworks are stored.
-  private final ImmutableList<Path> frameworkRoots;
+  @Value.Parameter
+  public abstract List<Path> getFrameworkRoots();
 
-  private CxxPreprocessorInput(
-      ImmutableSet<BuildTarget> rules,
-      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
-      ImmutableCxxHeaders includes,
-      ImmutableList<Path> includeRoots,
-      ImmutableList<Path> systemIncludeRoots,
-      ImmutableList<Path> frameworkRoots) {
-    this.rules = rules;
-    this.preprocessorFlags = preprocessorFlags;
-    this.includes = includes;
-    this.includeRoots = includeRoots;
-    this.systemIncludeRoots = systemIncludeRoots;
-    this.frameworkRoots = frameworkRoots;
+  public static final CxxPreprocessorInput EMPTY = ImmutableCxxPreprocessorInput.builder().build();
+
+  public static ImmutableCxxPreprocessorInput.Builder builder() {
+    return ImmutableCxxPreprocessorInput.builder();
   }
-
-  /**
-   * Builder used to construct {@link CxxPreprocessorInput} instances.
-   */
-  public static class Builder {
-    private ImmutableSet<BuildTarget> rules = ImmutableSet.of();
-    private ImmutableMultimap<CxxSource.Type, String> preprocessorFlags = ImmutableMultimap.of();
-    private ImmutableCxxHeaders includes = ImmutableCxxHeaders.builder().build();
-    private ImmutableList<Path> includeRoots = ImmutableList.of();
-    private ImmutableList<Path> systemIncludeRoots = ImmutableList.of();
-    private ImmutableList<Path> frameworkRoots = ImmutableList.of();
-
-    public CxxPreprocessorInput build() {
-      return new CxxPreprocessorInput(
-          rules,
-          preprocessorFlags,
-          includes,
-          includeRoots,
-          systemIncludeRoots,
-          frameworkRoots);
-    }
-
-    public Builder setRules(Iterable<BuildTarget> rules) {
-      this.rules = ImmutableSet.copyOf(rules);
-      return this;
-    }
-
-    public Builder setPreprocessorFlags(Multimap<CxxSource.Type, String> preprocessorFlags) {
-      this.preprocessorFlags = ImmutableMultimap.copyOf(preprocessorFlags);
-      return this;
-    }
-
-    public Builder setIncludes(ImmutableCxxHeaders includes) {
-      this.includes = includes;
-      return this;
-    }
-
-    public Builder setIncludeRoots(Iterable<Path> includeRoots) {
-      this.includeRoots = ImmutableList.copyOf(includeRoots);
-      return this;
-    }
-
-    public Builder setSystemIncludeRoots(Iterable<Path> systemIncludeRoots) {
-      this.systemIncludeRoots = ImmutableList.copyOf(systemIncludeRoots);
-      return this;
-    }
-
-    public Builder setFrameworkRoots(Iterable<Path> frameworkRoots) {
-      this.frameworkRoots = ImmutableList.copyOf(frameworkRoots);
-      return this;
-    }
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static final CxxPreprocessorInput EMPTY = builder().build();
 
   public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs) {
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();
@@ -139,100 +86,13 @@ public class CxxPreprocessorInput {
       frameworkRoots.addAll(input.getFrameworkRoots());
     }
 
-    return new CxxPreprocessorInput(
+    return ImmutableCxxPreprocessorInput.of(
         rules.build(),
         preprocessorFlags.build(),
         includes.build(),
         includeRoots.build(),
         systemIncludeRoots.build(),
         frameworkRoots.build());
-  }
-
-  public ImmutableSet<BuildTarget> getRules() {
-    return rules;
-  }
-
-  public ImmutableMultimap<CxxSource.Type, String> getPreprocessorFlags() {
-    return preprocessorFlags;
-  }
-
-  public CxxHeaders getIncludes() {
-    return includes;
-  }
-
-  public ImmutableList<Path> getIncludeRoots() {
-    return includeRoots;
-  }
-
-  public ImmutableList<Path> getSystemIncludeRoots() {
-    return systemIncludeRoots;
-  }
-
-  public ImmutableList<Path> getFrameworkRoots() {
-    return frameworkRoots;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-
-    if (this == o) {
-      return true;
-    }
-
-    if (!(o instanceof CxxPreprocessorInput)) {
-      return false;
-    }
-
-    CxxPreprocessorInput that = (CxxPreprocessorInput) o;
-
-    if (!rules.equals(that.rules)) {
-      return false;
-    }
-
-    if (!preprocessorFlags.equals(that.preprocessorFlags)) {
-      return false;
-    }
-
-    if (!includes.equals(that.includes)) {
-      return false;
-    }
-
-    if (!includeRoots.equals(that.includeRoots)) {
-      return false;
-    }
-
-    if (!systemIncludeRoots.equals(that.systemIncludeRoots)) {
-      return false;
-    }
-
-    if (!frameworkRoots.equals(that.frameworkRoots)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(
-        rules,
-        preprocessorFlags,
-        includes,
-        includeRoots,
-        systemIncludeRoots,
-        frameworkRoots);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("rules", rules)
-        .add("preprocessorFlags", preprocessorFlags)
-        .add("includes", includes)
-        .add("includeRoots", includeRoots)
-        .add("systemIncludeRoots", systemIncludeRoots)
-        .add("frameworkRoots", frameworkRoots)
-        .toString();
   }
 
 }

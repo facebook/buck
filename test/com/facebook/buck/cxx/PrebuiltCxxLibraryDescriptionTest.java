@@ -88,7 +88,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .setSystemIncludeRoots(getIncludeDirs(arg))
+        .addAllSystemIncludeRoots(getIncludeDirs(arg))
         .build();
     assertEquals(
         expectedCxxPreprocessorInput,
@@ -133,7 +133,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .setSystemIncludeRoots(getIncludeDirs(arg))
+        .addAllSystemIncludeRoots(getIncludeDirs(arg))
         .build();
     assertEquals(
         expectedCxxPreprocessorInput,
@@ -176,7 +176,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .setSystemIncludeRoots(getIncludeDirs(arg))
+        .addAllSystemIncludeRoots(getIncludeDirs(arg))
         .build();
     assertEquals(
         expectedCxxPreprocessorInput,
@@ -219,7 +219,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify the preprocessable input is as expected.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .setSystemIncludeRoots(getIncludeDirs(arg))
+        .addAllSystemIncludeRoots(getIncludeDirs(arg))
         .build();
     assertEquals(
         expectedCxxPreprocessorInput,

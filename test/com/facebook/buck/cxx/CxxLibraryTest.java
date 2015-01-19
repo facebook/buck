@@ -38,7 +38,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -74,8 +73,8 @@ public class CxxLibraryTest {
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
         return CxxPreprocessorInput.builder()
-            .setRules(ImmutableSet.of(headerTarget, headerSymlinkTreeTarget))
-            .setIncludeRoots(headerSymlinkTreeRoot)
+            .addRules(headerTarget, headerSymlinkTreeTarget)
+            .addIncludeRoots(headerSymlinkTreeRoot)
             .build();
       }
 
@@ -121,8 +120,8 @@ public class CxxLibraryTest {
     // Verify that we get the header/symlink targets and root via the CxxPreprocessorDep
     // interface.
     CxxPreprocessorInput expectedCxxPreprocessorInput = CxxPreprocessorInput.builder()
-        .setRules(ImmutableSet.of(headerTarget, headerSymlinkTreeTarget))
-        .setIncludeRoots(headerSymlinkTreeRoot)
+        .addRules(headerTarget, headerSymlinkTreeTarget)
+        .addIncludeRoots(headerSymlinkTreeRoot)
         .build();
     assertEquals(expectedCxxPreprocessorInput, cxxLibrary.getCxxPreprocessorInput(cxxPlatform));
 

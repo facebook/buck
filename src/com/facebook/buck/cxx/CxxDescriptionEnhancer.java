@@ -347,14 +347,14 @@ public class CxxDescriptionEnhancer {
     return CxxPreprocessorInput.concat(
         ImmutableList.of(
             CxxPreprocessorInput.builder()
-                .setRules(ImmutableSet.of(headerSymlinkTree.getBuildTarget()))
-                .setPreprocessorFlags(preprocessorFlags)
+                .addRules(headerSymlinkTree.getBuildTarget())
+                .putAllPreprocessorFlags(preprocessorFlags)
                 .setIncludes(
                     ImmutableCxxHeaders.builder()
                         .putAllNameToPathMap(headerSymlinkTree.getLinks())
                         .putAllFullNameToPathMap(headerSymlinkTree.getFullLinks())
                         .build())
-                .setIncludeRoots(ImmutableList.of(headerSymlinkTree.getRoot()))
+                .addIncludeRoots(headerSymlinkTree.getRoot())
                 .build(),
             cxxPreprocessorInputFromDeps));
 

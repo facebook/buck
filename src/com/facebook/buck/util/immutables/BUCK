@@ -1,0 +1,8 @@
+java_library(
+  name = 'immutables',
+  srcs = glob(['*.java']),
+  deps = [
+    '//third-party/java/immutables:annotations',
+  ],
+  visibility = ['PUBLIC'],
+)
