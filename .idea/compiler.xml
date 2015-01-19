@@ -28,7 +28,7 @@
         <outputRelativeToContentRoot value="true" />
         <processor name="org.immutables.value.internal.processor.Processor" />
         <processorPath useClasspath="false">
-          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-standalone-1.1.jar" />
+          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-standalone-1.1.1.jar" />
         </processorPath>
       </profile>
     </annotationProcessing>
