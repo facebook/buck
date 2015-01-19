@@ -16,8 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import static org.junit.Assert.assertEquals;
-
 import com.facebook.buck.io.FakeDirectoryTraverser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -40,6 +38,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
@@ -67,10 +66,24 @@ public class AppleResourceTest {
         new FakeDirectoryTraverser(),
         args);
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
     List<Step> steps = appleResource.getBuildSteps(
         FakeBuildContext.NOOP_CONTEXT,
         new FakeBuildableContext());
-    assertEquals(0, steps.size());
+    ExecutionContext executionContext = TestExecutionContext
+        .newBuilder()
+        .setProjectFilesystem(projectFilesystem)
+        .build();
+
+    Path outputDir = projectFilesystem.resolve(Paths.get("buck-out/bin/path/to/app/MyApp.app"));
+
+    MoreAsserts.assertSteps(
+        "There are no copy steps",
+        ImmutableList.of(
+            String.format("rm -r -f %s && mkdir -p %s", outputDir, outputDir)),
+        steps,
+        executionContext);
   }
 
   /**
@@ -100,9 +113,12 @@ public class AppleResourceTest {
         .setProjectFilesystem(projectFilesystem)
         .build();
 
+    Path outputDir = projectFilesystem.resolve(Paths.get("buck-out/bin/path/to/app/MyApp.app"));
+
     MoreAsserts.assertSteps("Copy the resources to the expected location",
         ImmutableList.of(
-            "cp image.png buck-out/bin/path/to/app/MyApp.app"),
+            String.format("rm -r -f %s && mkdir -p %s", outputDir, outputDir),
+            "cp image.png buck-out/bin/path/to/app/MyApp.app/image.png"),
         steps,
         executionContext);
   }
@@ -135,8 +151,11 @@ public class AppleResourceTest {
         .setProjectFilesystem(projectFilesystem)
         .build();
 
+    Path outputDir = projectFilesystem.resolve(Paths.get("buck-out/bin/path/to/app/MyApp.app"));
+
     MoreAsserts.assertSteps("Copy the resources to the expected location",
         ImmutableList.of(
+            String.format("rm -r -f %s && mkdir -p %s", outputDir, outputDir),
             "cp -R MyLibrary.bundle buck-out/bin/path/to/app/MyApp.app"),
         steps,
         executionContext);

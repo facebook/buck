@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -157,6 +158,8 @@ public class AppleResource extends AbstractBuildRule {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
+    steps.add(new MakeCleanDirectoryStep(outputDirectory));
+
     for (Path dir : dirs) {
       steps.add(
           CopyStep.forDirectory(
@@ -166,7 +169,8 @@ public class AppleResource extends AbstractBuildRule {
     }
 
     for (SourcePath file : files) {
-      steps.add(CopyStep.forFile(getResolver().getPath(file), outputDirectory));
+      Path path = getResolver().getPath(file);
+      steps.add(CopyStep.forFile(path, outputDirectory.resolve(path.getFileName())));
     }
 
     // TODO(grp): Support copying variant resources like Xcode.
