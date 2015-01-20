@@ -54,17 +54,18 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 public class CxxLibraryDescriptionTest {
 
-  private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
+  private static <T> void assertContains(List<T> container, Iterable<T> items) {
     for (T item : items) {
       assertThat(container, Matchers.hasItem(item));
     }
   }
 
-  private static <T> void assertNotContains(ImmutableList<T> container, Iterable<T> items) {
+  private static <T> void assertNotContains(List<T> container, Iterable<T> items) {
     for (T item : items) {
       assertThat(container, Matchers.not(Matchers.hasItem(item)));
     }
@@ -117,7 +118,7 @@ public class CxxLibraryDescriptionTest {
       public NativeLinkableInput getNativeLinkableInput(
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
-        return new NativeLinkableInput(
+        return ImmutableNativeLinkableInput.of(
             ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()));
       }
@@ -315,7 +316,7 @@ public class CxxLibraryDescriptionTest {
         cxxPlatform,
         Linker.LinkableDepType.SHARED);
 
-    ImmutableList<SourcePath> inputs = input.getInputs();
+    ImmutableList<SourcePath> inputs = ImmutableList.copyOf(input.getInputs());
     assertEquals(inputs.size(), 1);
     SourcePath sourcePath = inputs.get(0);
     assertTrue(sourcePath instanceof BuildTargetSourcePath);
@@ -424,11 +425,11 @@ public class CxxLibraryDescriptionTest {
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return type == Linker.LinkableDepType.STATIC ?
-            new NativeLinkableInput(
+            ImmutableNativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(staticLibraryDep.getBuildTarget())),
                 ImmutableList.of(staticLibraryOutput.toString())) :
-            new NativeLinkableInput(
+            ImmutableNativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(sharedLibraryDep.getBuildTarget())),
                 ImmutableList.of(sharedLibraryOutput.toString()));

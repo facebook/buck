@@ -17,59 +17,21 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+
+import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Map;
 
-public class CxxHeaderSourceSpec {
+@Value.Immutable
+@BuckStyleImmutable
+public interface CxxHeaderSourceSpec {
 
-  private final ImmutableMap<Path, SourcePath> cxxHeaders;
-  private final ImmutableMap<String, CxxSource> cxxSources;
+  @Value.Parameter
+  Map<Path, SourcePath> getCxxHeaders();
 
-  public CxxHeaderSourceSpec(
-      ImmutableMap<Path, SourcePath> cxxHeaders,
-      ImmutableMap<String, CxxSource> cxxSources) {
-
-    this.cxxHeaders = cxxHeaders;
-    this.cxxSources = cxxSources;
-  }
-
-  public ImmutableMap<Path, SourcePath> getCxxHeaders() {
-    return cxxHeaders;
-  }
-
-  public ImmutableMap<String, CxxSource> getCxxSources() {
-    return cxxSources;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-
-    if (this == o) {
-      return true;
-    }
-
-    if (!(o instanceof CxxHeaderSourceSpec)) {
-      return false;
-    }
-
-    CxxHeaderSourceSpec that = (CxxHeaderSourceSpec) o;
-
-    if (!cxxHeaders.equals(that.cxxHeaders)) {
-      return false;
-    }
-
-    if (!cxxSources.equals(that.cxxSources)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(cxxHeaders, cxxSources);
-  }
+  @Value.Parameter
+  Map<String, CxxSource> getCxxSources();
 
 }

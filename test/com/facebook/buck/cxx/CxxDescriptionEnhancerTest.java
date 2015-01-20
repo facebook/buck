@@ -112,19 +112,19 @@ public class CxxDescriptionEnhancerTest {
     Path yaccOutputPrefix = CxxDescriptionEnhancer.getYaccOutputPrefix(target, yaccSourceName);
     Path yaccOutputSource = Yacc.getSourceOutputPath(yaccOutputPrefix);
     Path yaccOutputHeader = Yacc.getHeaderOutputPath(yaccOutputPrefix);
-    CxxHeaderSourceSpec expected = new CxxHeaderSourceSpec(
+    CxxHeaderSourceSpec expected = ImmutableCxxHeaderSourceSpec.of(
         ImmutableMap.<Path, SourcePath>of(
             target.getBasePath().resolve(lexSourceName + ".h"),
             new BuildTargetSourcePath(lex.getBuildTarget(), lexOutputHeader),
             target.getBasePath().resolve(yaccSourceName + ".h"),
             new BuildTargetSourcePath(yacc.getBuildTarget(), yaccOutputHeader)),
-        ImmutableMap.of(
+        ImmutableMap.<String, CxxSource>of(
             lexSourceName + ".cc",
-            new CxxSource(
+            ImmutableCxxSource.of(
                 CxxSource.Type.CXX,
                 new BuildTargetSourcePath(lex.getBuildTarget(), lexOutputSource)),
             yaccSourceName + ".cc",
-            new CxxSource(
+            ImmutableCxxSource.of(
                 CxxSource.Type.CXX,
                 new BuildTargetSourcePath(yacc.getBuildTarget(), yaccOutputSource))));
     assertEquals(expected, actual);

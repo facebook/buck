@@ -273,7 +273,7 @@ public class CxxPreprocessablesTest {
 
     String name = "foo/bar.cpp";
     SourcePath input = new PathSourcePath(target.getBasePath().resolve(name));
-    CxxSource cxxSource = new CxxSource(CxxSource.Type.CXX, input);
+    CxxSource cxxSource = ImmutableCxxSource.of(CxxSource.Type.CXX, input);
 
     Map.Entry<String, CxxSource> entry =
         CxxPreprocessables.createPreprocessBuildRule(
@@ -298,7 +298,7 @@ public class CxxPreprocessablesTest {
     CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.EMPTY;
 
     String name = "source.cpp";
-    CxxSource cxxSource = new CxxSource(CxxSource.Type.CXX, new TestSourcePath(name));
+    CxxSource cxxSource = ImmutableCxxSource.of(CxxSource.Type.CXX, new TestSourcePath(name));
 
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
     CxxPlatform platform = new DefaultCxxPlatform(
@@ -361,7 +361,7 @@ public class CxxPreprocessablesTest {
     DefaultCxxPlatform platform = new DefaultCxxPlatform(buckConfig);
 
     String cSourceName = "test.c";
-    CxxSource cSource = new CxxSource(CxxSource.Type.C, new TestSourcePath(cSourceName));
+    CxxSource cSource = ImmutableCxxSource.of(CxxSource.Type.C, new TestSourcePath(cSourceName));
     Map.Entry<String, CxxSource> cPreprocessEntry =
         CxxPreprocessables.createPreprocessBuildRule(
             params,
@@ -377,7 +377,9 @@ public class CxxPreprocessablesTest {
     assertContains(cPreprocess.getFlags(), cppflags);
 
     String cxxSourceName = "test.cpp";
-    CxxSource cxxSource = new CxxSource(CxxSource.Type.CXX, new TestSourcePath(cxxSourceName));
+    CxxSource cxxSource = ImmutableCxxSource.of(
+        CxxSource.Type.CXX,
+        new TestSourcePath(cxxSourceName));
     Map.Entry<String, CxxSource> cxxPreprocessEntry =
         CxxPreprocessables.createPreprocessBuildRule(
             params,
@@ -393,7 +395,7 @@ public class CxxPreprocessablesTest {
     assertContains(cxxPreprocess.getFlags(), cxxppflags);
 
     String assemblerWithCppSourceName = "test.S";
-    CxxSource assemblerWithCppSource = new CxxSource(
+    CxxSource assemblerWithCppSource = ImmutableCxxSource.of(
         CxxSource.Type.ASSEMBLER_WITH_CPP,
         new TestSourcePath(assemblerWithCppSourceName));
     Map.Entry<String, CxxSource> assemblerWithCppCompileEntry =
@@ -420,7 +422,7 @@ public class CxxPreprocessablesTest {
 
     String name = "foo/bar.cpp";
     SourcePath input = new PathSourcePath(target.getBasePath().resolve(name));
-    CxxSource cxxSource = new CxxSource(CxxSource.Type.CXX, input);
+    CxxSource cxxSource = ImmutableCxxSource.of(CxxSource.Type.CXX, input);
 
     Map.Entry<String, CxxSource> cxxPreprocessEntry =
         CxxPreprocessables.createPreprocessBuildRule(
@@ -438,7 +440,7 @@ public class CxxPreprocessablesTest {
 
     name = "foo/bar.m";
     input = new PathSourcePath(target.getBasePath().resolve(name));
-    cxxSource = new CxxSource(CxxSource.Type.OBJC, input);
+    cxxSource = ImmutableCxxSource.of(CxxSource.Type.OBJC, input);
 
     cxxPreprocessEntry =
         CxxPreprocessables.createPreprocessBuildRule(
@@ -456,7 +458,7 @@ public class CxxPreprocessablesTest {
 
     name = "foo/bar.mm";
     input = new PathSourcePath(target.getBasePath().resolve(name));
-    cxxSource = new CxxSource(CxxSource.Type.OBJCXX, input);
+    cxxSource = ImmutableCxxSource.of(CxxSource.Type.OBJCXX, input);
 
     cxxPreprocessEntry =
         CxxPreprocessables.createPreprocessBuildRule(
@@ -474,7 +476,7 @@ public class CxxPreprocessablesTest {
 
     name = "foo/bar.c";
     input = new PathSourcePath(target.getBasePath().resolve(name));
-    cxxSource = new CxxSource(CxxSource.Type.C, input);
+    cxxSource = ImmutableCxxSource.of(CxxSource.Type.C, input);
 
     cxxPreprocessEntry =
         CxxPreprocessables.createPreprocessBuildRule(

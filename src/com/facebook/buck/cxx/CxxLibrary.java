@@ -132,7 +132,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     }
     final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
-    return new NativeLinkableInput(
+    return ImmutableNativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new BuildTargetSourcePath(libraryRule.getBuildTarget())),
         linkerArgs);
   }

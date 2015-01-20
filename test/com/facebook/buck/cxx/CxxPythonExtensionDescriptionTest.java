@@ -145,10 +145,10 @@ public class CxxPythonExtensionDescriptionTest {
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return type == Linker.LinkableDepType.STATIC ?
-            new NativeLinkableInput(
+            ImmutableNativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(),
                 ImmutableList.<String>of()) :
-            new NativeLinkableInput(
+            ImmutableNativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
                         sharedLibraryDep.getBuildTarget(),

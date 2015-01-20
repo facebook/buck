@@ -80,7 +80,7 @@ public class CxxCompilableEnhancer {
       }
       cxxSources.put(
           ent.getKey(),
-          new CxxSource(
+          ImmutableCxxSource.of(
               type.get(),
               ent.getValue()));
     }

@@ -255,7 +255,7 @@ public class CxxDescriptionEnhancer {
       // Record the output source and header as {@link BuildRuleSourcePath} objects.
       lexYaccCxxSourcesBuilder.put(
           name + ".cc",
-          new CxxSource(
+          ImmutableCxxSource.of(
               CxxSource.Type.CXX,
               new BuildTargetSourcePath(lex.getBuildTarget(), outputSource)));
       lexYaccHeadersBuilder.put(
@@ -293,7 +293,7 @@ public class CxxDescriptionEnhancer {
       // Record the output source and header as {@link BuildRuleSourcePath} objects.
       lexYaccCxxSourcesBuilder.put(
           name + ".cc",
-          new CxxSource(
+          ImmutableCxxSource.of(
               CxxSource.Type.CXX,
               new BuildTargetSourcePath(
                   yacc.getBuildTarget(),
@@ -304,7 +304,7 @@ public class CxxDescriptionEnhancer {
           new BuildTargetSourcePath(yacc.getBuildTarget(), Yacc.getHeaderOutputPath(outputPrefix)));
     }
 
-    return new CxxHeaderSourceSpec(
+    return ImmutableCxxHeaderSourceSpec.of(
         lexYaccHeadersBuilder.build(),
         lexYaccCxxSourcesBuilder.build());
   }

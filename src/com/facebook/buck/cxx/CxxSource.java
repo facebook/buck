@@ -17,16 +17,20 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Objects;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+
+import org.immutables.value.Value;
 
 /**
  * Describes a source file written in the C programming language or a
  * derivative (C++, Objective-C, Objective-C++, etc.) and the various
  * paths it uses from input to output.
  */
-public class CxxSource {
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class CxxSource {
 
   public static enum Type {
 
@@ -69,49 +73,10 @@ public class CxxSource {
 
   }
 
-  private final Type type;
-  private final SourcePath path;
+  @Value.Parameter
+  public abstract Type getType();
 
-  public CxxSource(Type type, SourcePath path) {
-    this.type = type;
-    this.path = path;
-  }
-
-  public Type getType() {
-    return type;
-  }
-
-  public SourcePath getPath() {
-    return path;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-
-    if (this == o) {
-      return true;
-    }
-
-    if (!(o instanceof CxxSource)) {
-      return false;
-    }
-
-    CxxSource cxxSource = (CxxSource) o;
-
-    if (!type.equals(cxxSource.type)) {
-      return false;
-    }
-
-    if (!path.equals(cxxSource.path)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(type, path);
-  }
+  @Value.Parameter
+  public abstract SourcePath getPath();
 
 }

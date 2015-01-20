@@ -108,7 +108,7 @@ public class CxxBinaryDescriptionTest {
       public NativeLinkableInput getNativeLinkableInput(
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
-        return new NativeLinkableInput(
+        return ImmutableNativeLinkableInput.of(
             ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()));
       }

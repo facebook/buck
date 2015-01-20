@@ -83,10 +83,10 @@ public class CxxLibraryTest {
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return type == Linker.LinkableDepType.STATIC ?
-            new NativeLinkableInput(
+            ImmutableNativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
                 ImmutableList.of(archiveOutput.toString())) :
-            new NativeLinkableInput(
+            ImmutableNativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
                 ImmutableList.of(sharedLibraryOutput.toString()));
@@ -127,7 +127,7 @@ public class CxxLibraryTest {
 
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
-    NativeLinkableInput expectedStaticNativeLinkableInput = new NativeLinkableInput(
+    NativeLinkableInput expectedStaticNativeLinkableInput = ImmutableNativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
         ImmutableList.of(archiveOutput.toString()));
     assertEquals(
@@ -138,7 +138,7 @@ public class CxxLibraryTest {
 
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
-    NativeLinkableInput expectedSharedNativeLinkableInput = new NativeLinkableInput(
+    NativeLinkableInput expectedSharedNativeLinkableInput = ImmutableNativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
         ImmutableList.of(sharedLibraryOutput.toString()));
     assertEquals(

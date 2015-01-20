@@ -316,9 +316,11 @@ public class CxxPreprocessables {
     resolver.addToIndex(cxxPreprocess);
 
     // Return the output name and source pair.
-    return new AbstractMap.SimpleEntry<>(
+    return new AbstractMap.SimpleEntry<String, CxxSource>(
         name,
-        new CxxSource(outputType, new BuildTargetSourcePath(cxxPreprocess.getBuildTarget())));
+        ImmutableCxxSource.of(
+            outputType,
+            new BuildTargetSourcePath(cxxPreprocess.getBuildTarget())));
   }
 
   /**
