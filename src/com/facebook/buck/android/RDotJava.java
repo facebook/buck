@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
-import com.facebook.buck.java.JavacStepUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildDependencies;
@@ -64,19 +63,19 @@ public class RDotJava {
       JavacOptions javacOptions,
       BuildTarget buildTarget) {
 
-    return JavacStepUtil.createJavacStep(
+    return new JavacStep(
         javac,
         outputDirectory,
+        Optional.<Path>absent(),
         javaSourceFilePaths,
-        ImmutableSet.<Path>of(),
-        /* classpathEntries */ ImmutableSet.<Path>of(),
+        Optional.<Path>absent(),
+        /* transitive classpath */ ImmutableSet.<Path>of(),
+        /* declared classpath */ ImmutableSet.<Path>of(),
         JavacOptions.builder(javacOptions)
             .setAnnotationProcessingData(AnnotationProcessingData.EMPTY)
             .build(),
         buildTarget,
         BuildDependencies.FIRST_ORDER_ONLY,
-        Optional.<JavacStep.SuggestBuildRules>absent(),
-        /* pathToSrcsList */ Optional.<Path>absent(),
-        /* workingDirectory */ Optional.<Path>absent());
+        Optional.<JavacStep.SuggestBuildRules>absent());
   }
 }

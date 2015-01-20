@@ -215,7 +215,6 @@ java_library(
     'JarDirectoryStep.java',
     'JarDirectoryStepHelper.java',
     'JavacStep.java',
-    'JavacStepUtil.java',
     'JUnitStep.java',
     'TestType.java',
   ],

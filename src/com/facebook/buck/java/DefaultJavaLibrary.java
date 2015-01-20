@@ -278,18 +278,18 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         workingDirectory = Optional.absent();
       }
 
-      JavacStep javacStep = JavacStepUtil.createJavacStep(
+      JavacStep javacStep = new JavacStep(
           javac,
           outputDirectory,
+          workingDirectory,
           getJavaSrcs(),
+          Optional.of(pathToSrcsList),
           transitiveClasspathEntries,
           declaredClasspathEntries,
           javacOptions,
           target,
           buildDependencies,
-          suggestBuildRules,
-          Optional.of(pathToSrcsList),
-          workingDirectory);
+          suggestBuildRules);
 
       commands.add(javacStep);
     }
