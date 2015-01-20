@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -41,9 +42,11 @@ public class AndroidBuildConfigDescription
   private static final BuildRuleType GEN_JAVA_TYPE = new BuildRuleType(
       "gen_java_android_build_config");
   private static final Flavor GEN_JAVA_FLAVOR = new Flavor(GEN_JAVA_TYPE.getName());
-  private JavacOptions androidJavacOptions;
+  private final Javac javac;
+  private final JavacOptions androidJavacOptions;
 
-  public AndroidBuildConfigDescription(JavacOptions androidJavacOptions) {
+  public AndroidBuildConfigDescription(Javac javac, JavacOptions androidJavacOptions) {
+    this.javac = javac;
     this.androidJavacOptions = androidJavacOptions;
   }
 
@@ -68,6 +71,7 @@ public class AndroidBuildConfigDescription
         args.values.get(),
         args.valuesFile,
         /* useConstantExpressions */ false,
+        javac,
         androidJavacOptions,
         resolver);
   }
@@ -86,6 +90,7 @@ public class AndroidBuildConfigDescription
       BuildConfigFields values,
       Optional<SourcePath> valuesFile,
       boolean useConstantExpressions,
+      Javac javac,
       JavacOptions javacOptions,
       BuildRuleResolver ruleResolver) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
@@ -147,6 +152,7 @@ public class AndroidBuildConfigDescription
     return new AndroidBuildConfigJavaLibrary(
         javaLibraryParams,
         pathResolver,
+        javac,
         javacOptions,
         androidBuildConfig);
   }

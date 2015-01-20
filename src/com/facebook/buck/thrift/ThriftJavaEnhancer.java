@@ -18,8 +18,8 @@ package com.facebook.buck.thrift;
 
 import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavaLibraryDescription;
+import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
-import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -47,12 +47,15 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
   private static final BuildRuleType SOURCE_ZIP_TYPE = new BuildRuleType("thrift-java-source-zip");
 
   private final ThriftBuckConfig thriftBuckConfig;
+  private final Javac javac;
   private final JavacOptions templateOptions;
 
   public ThriftJavaEnhancer(
       ThriftBuckConfig thriftBuckConfig,
+      Javac javac,
       JavacOptions templateOptions) {
     this.thriftBuckConfig = thriftBuckConfig;
+    this.javac = javac;
     this.templateOptions = templateOptions;
   }
 
@@ -78,7 +81,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
   private Path getSourceZipOutputPath(BuildTarget target, String name) {
     BuildTarget flavoredTarget = getSourceZipBuildTarget(target, name);
-    return BuildTargets.getBinPath(flavoredTarget, "%s" + JavacStep.SRC_ZIP);
+    return BuildTargets.getBinPath(flavoredTarget, "%s" + Javac.SRC_ZIP);
   }
 
   @Override
@@ -126,7 +129,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
             .addAll(deps)
             .build(),
         ImmutableSortedSet.<BuildRule>of());
-    DefaultJavaLibrary defaultJavaLibrary = new DefaultJavaLibrary(
+    return new DefaultJavaLibrary(
         javaParams,
         pathResolver,
         FluentIterable.from(sourceZips)
@@ -138,10 +141,9 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+        javac,
         templateOptions,
         /* resourcesRoot */ Optional.<Path>absent());
-
-    return defaultJavaLibrary;
   }
 
   private ImmutableSet<BuildTarget> getImplicitDeps() {

@@ -23,6 +23,7 @@ import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
@@ -73,14 +74,17 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
               "exe", new ExecutableMacroExpander(BUILD_TARGET_PARSER),
               "location", new LocationMacroExpander(BUILD_TARGET_PARSER)));
 
+  private final Javac javac;
   private final JavacOptions javacOptions;
   private final ProGuardConfig proGuardConfig;
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   public AndroidBinaryDescription(
+      Javac javac,
       JavacOptions javacOptions,
       ProGuardConfig proGuardConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms) {
+    this.javac = javac;
     this.javacOptions = javacOptions;
     this.proGuardConfig = proGuardConfig;
     this.nativePlatforms = nativePlatforms;
@@ -169,6 +173,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         dexSplitMode,
         ImmutableSet.copyOf(args.noDx.or(ImmutableSet.<BuildTarget>of())),
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        javac,
         javacOptions,
         exopackageModes,
         (Keystore) keystore,

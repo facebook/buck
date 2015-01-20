@@ -17,6 +17,7 @@
 package com.facebook.buck.extension;
 
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertTrue;
 
@@ -47,6 +48,7 @@ public class BuckExtensionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//example:extension");
     BuckExtension buildable = new BuckExtension(
         new FakeBuildRuleParamsBuilder(target).build(),
+        DEFAULT_JAVAC,
         DEFAULT_JAVAC_OPTIONS,
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.of(new TestSourcePath("ExampleExtension.java")),

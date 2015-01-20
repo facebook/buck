@@ -59,7 +59,7 @@ public class JavaSourceJarTest {
 
     Path output = rule.getPathToOutputFile();
 
-    assertTrue(output.toString().endsWith(JavacStep.SRC_ZIP));
+    assertTrue(output.toString().endsWith(Javac.SRC_ZIP));
   }
 
   @Test

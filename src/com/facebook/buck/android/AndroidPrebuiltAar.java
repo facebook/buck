@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.rules.BuildRule;
@@ -42,6 +43,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
       Path proguardConfig,
       PrebuiltJar prebuiltJar,
       AndroidResource androidResource,
+      Javac javac,
       JavacOptions javacOptions) {
     super(
         androidLibraryParams,
@@ -53,6 +55,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
         ImmutableSortedSet.<BuildRule>of(prebuiltJar),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+        javac,
         javacOptions,
         /* resourcesRoot */ Optional.<Path>absent(),
         /* manifestFile */ Optional.<SourcePath>absent(),

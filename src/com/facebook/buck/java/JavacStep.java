@@ -54,8 +54,6 @@ import java.util.regex.Pattern;
  */
 public class JavacStep implements Step {
 
-  public static final String SRC_ZIP = ".src.zip";
-
   private Javac javac;
 
   private final Path outputDirectory;

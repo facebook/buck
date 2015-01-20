@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.replay;
@@ -117,6 +118,7 @@ public class AndroidBinaryGraphEnhancerTest {
         DexSplitMode.NO_SPLIT,
         buildRulesToExcludeFromDex,
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         EnumSet.noneOf(ExopackageMode.class),
         createStrictMock(Keystore.class),
@@ -137,6 +139,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableSet.<Path>of(),
         AndroidBinary.PackageType.DEBUG,
         ImmutableSet.<TargetCpuType>of(),
+        DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         false,
         false);
@@ -200,6 +203,7 @@ public class AndroidBinaryGraphEnhancerTest {
           /* values */ BuildConfigFields.empty(),
           /* valuesFile */ Optional.<SourcePath>absent(),
           /* useConstantExpressions */ false,
+          DEFAULT_JAVAC,
           ANDROID_JAVAC_OPTIONS,
           ruleResolver);
 
@@ -224,6 +228,7 @@ public class AndroidBinaryGraphEnhancerTest {
         DexSplitMode.NO_SPLIT,
         /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         keystore,

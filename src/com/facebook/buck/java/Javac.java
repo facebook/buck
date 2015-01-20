@@ -36,6 +36,7 @@ public interface Javac {
       Escaper.escaper(
           Escaper.Quoter.DOUBLE,
           CharMatcher.anyOf("#\"'").or(CharMatcher.WHITESPACE));
+  String SRC_ZIP = ".src.zip";
 
   int buildWithClasspath(
       ExecutionContext context,

@@ -19,7 +19,7 @@ package com.facebook.buck.parser;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.java.JavacStep;
+import com.facebook.buck.java.Javac;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -54,7 +54,7 @@ public class FlavoredTargetsParserIntegrationTest {
     // The output of the rule should be a normal jar. Verify that.
     assertTrue(output.getName().endsWith(".jar"));
     // And just in case we ever rename "src.zip" to "sources.jar" to look like a maven output.
-    assertFalse(output.getName().endsWith(JavacStep.SRC_ZIP));
+    assertFalse(output.getName().endsWith(Javac.SRC_ZIP));
   }
 
   @Test
@@ -69,7 +69,7 @@ public class FlavoredTargetsParserIntegrationTest {
     File output = workspace.buildAndReturnOutput("//:example#src");
 
     // The output of the rule should be a src zip. Verify that.
-    assertTrue(output.getName(), output.getName().endsWith(JavacStep.SRC_ZIP));
+    assertTrue(output.getName(), output.getName().endsWith(Javac.SRC_ZIP));
   }
 
   @Test

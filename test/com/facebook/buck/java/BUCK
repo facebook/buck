@@ -55,6 +55,7 @@ java_library(
   name = 'javac-env',
   srcs = [ 'JavaCompilationConstants.java', ],
   deps = [
+    '//src/com/facebook/buck/java:javac',
     '//src/com/facebook/buck/java:support',
     '//third-party/java/guava:guava',
   ],
@@ -90,6 +91,7 @@ java_test(
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:steps',
     '//src/com/facebook/buck/java:support',
+    '//src/com/facebook/buck/java:javac',
     '//src/com/facebook/buck/java/abi:protocol',
     '//src/com/facebook/buck/java/classes:classes',
     '//src/com/facebook/buck/json:json',

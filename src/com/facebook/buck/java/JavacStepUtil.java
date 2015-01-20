@@ -30,6 +30,7 @@ public class JavacStepUtil {
   private JavacStepUtil() {}
 
   public static JavacStep createJavacStep(
+      Javac javac,
       Path outputDirectory,
       Set<Path> javaSourceFilePaths,
       Set<Path> transitiveClasspathEntries,
@@ -40,13 +41,6 @@ public class JavacStepUtil {
       Optional<SuggestBuildRules> suggestBuildRules,
       Optional<Path> pathToSrcsList,
       Optional<Path> workingDirectory) {
-
-    Javac javac;
-    if (javacOptions.getJavaCompilerEnvironment().getJavacPath().isPresent()) {
-      javac = new ExternalJavac(javacOptions.getJavaCompilerEnvironment().getJavacPath().get());
-    } else {
-      javac = new Jsr199Javac();
-    }
 
     return new JavacStep(
         javac,

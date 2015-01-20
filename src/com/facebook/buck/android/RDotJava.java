@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.java.JavacStepUtil;
@@ -45,11 +46,13 @@ public class RDotJava {
   static JavacStep createJavacStepForUberRDotJavaFiles(
       Set<Path> javaSourceFilePaths,
       Path outputDirectory,
+      Javac javac,
       JavacOptions javacOptions,
       BuildTarget buildTarget) {
     return createJavacStepForDummyRDotJavaFiles(
         javaSourceFilePaths,
         outputDirectory,
+        javac,
         javacOptions,
         buildTarget);
   }
@@ -57,10 +60,12 @@ public class RDotJava {
   static JavacStep createJavacStepForDummyRDotJavaFiles(
       Set<Path> javaSourceFilePaths,
       Path outputDirectory,
+      Javac javac,
       JavacOptions javacOptions,
       BuildTarget buildTarget) {
 
     return JavacStepUtil.createJavacStep(
+        javac,
         outputDirectory,
         javaSourceFilePaths,
         ImmutableSet.<Path>of(),

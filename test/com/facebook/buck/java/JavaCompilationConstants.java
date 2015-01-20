@@ -27,6 +27,8 @@ public class JavaCompilationConstants {
       Optional.<Path>absent(),
       Optional.<JavacVersion>absent());
 
+  public static final Javac DEFAULT_JAVAC = new Jsr199Javac();
+
   public static final JavacOptions DEFAULT_JAVAC_OPTIONS =
       JavacOptions.builderForUseInJavaBuckConfig()
           .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)

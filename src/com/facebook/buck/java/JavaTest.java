@@ -100,6 +100,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       Optional<Path> proguardConfig,
       ImmutableSet<Path> addtionalClasspathEntries,
       TestType testType,
+      Javac javac,
       JavacOptions javacOptions,
       List<String> vmArgs,
       ImmutableSet<BuildRule> sourceUnderTest,
@@ -115,6 +116,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
         /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         addtionalClasspathEntries,
+        javac,
         javacOptions,
         resourcesRoot);
     this.vmArgs = ImmutableList.copyOf(vmArgs);

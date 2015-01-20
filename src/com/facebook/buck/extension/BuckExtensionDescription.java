@@ -17,6 +17,7 @@
 package com.facebook.buck.extension;
 
 
+import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -34,10 +35,12 @@ public class BuckExtensionDescription implements Description<BuckExtensionDescri
   public static final BuildRuleType TYPE = new BuildRuleType("buck_extension");
   private static final String BUCK_TARGET_VERSION = "7";
 
+  private final Javac javac;
   private final JavacOptions javacOptions;
 
-  public BuckExtensionDescription(JavacOptions defaultOptions) {
-    javacOptions = JavacOptions.builder(defaultOptions)
+  public BuckExtensionDescription(Javac javac, JavacOptions defaultOptions) {
+    this.javac = javac;
+    this.javacOptions = JavacOptions.builder(defaultOptions)
         .setTargetLevel(BUCK_TARGET_VERSION)
         .setSourceLevel(BUCK_TARGET_VERSION)
         .build();
@@ -60,6 +63,7 @@ public class BuckExtensionDescription implements Description<BuckExtensionDescri
       A args) {
     return new BuckExtension(
         params,
+        javac,
         javacOptions,
         new SourcePathResolver(resolver),
         args.srcs,

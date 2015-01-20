@@ -77,9 +77,17 @@ public class JavaBuckConfig {
         .build();
   }
 
+  public Javac getJavac() {
+    Optional<Path> externalJavac = getJavacPath();
+    if (externalJavac.isPresent()) {
+      return new ExternalJavac(externalJavac.get());
+    }
+    return new Jsr199Javac();
+  }
+
   private JavaCompilerEnvironment getJavaCompilerEnvironment(ProcessExecutor processExecutor)
       throws InterruptedException {
-    Optional<Path> javac = getJavac();
+    Optional<Path> javac = getJavacPath();
     Optional<JavacVersion> javacVersion = Optional.absent();
     if (javac.isPresent()) {
       javacVersion = Optional.of(getJavacVersion(processExecutor, javac.get()));
@@ -90,7 +98,7 @@ public class JavaBuckConfig {
   }
 
   @VisibleForTesting
-  Optional<Path> getJavac() {
+  Optional<Path> getJavacPath() {
     Optional<String> path = delegate.getValue("tools", "javac");
     if (path.isPresent()) {
       File javac = new File(path.get());

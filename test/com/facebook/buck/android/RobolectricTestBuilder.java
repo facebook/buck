@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -31,6 +32,7 @@ public class RobolectricTestBuilder
   private RobolectricTestBuilder(BuildTarget target) {
     super(
         new RobolectricTestDescription(
+            DEFAULT_JAVAC,
             ANDROID_JAVAC_OPTIONS,
             /* testRuleTimeoutMs */ Optional.<Long>absent()),
         target);

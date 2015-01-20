@@ -23,6 +23,7 @@ import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.AccumulateClassNamesStep;
 import com.facebook.buck.java.HasJavaClassHashes;
+import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
@@ -90,6 +91,7 @@ public class AaptPackageResources extends AbstractBuildRule
   private final PackageType packageType;
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
+  private final Javac javac;
   private final JavacOptions javacOptions;
   private final boolean rDotJavaNeedsDexing;
   private final boolean shouldBuildStringSourceMap;
@@ -104,6 +106,7 @@ public class AaptPackageResources extends AbstractBuildRule
       ImmutableSet<Path> assetsDirectories,
       PackageType packageType,
       ImmutableSet<TargetCpuType> cpuFilters,
+      Javac javac,
       JavacOptions javacOptions,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap) {
@@ -114,6 +117,7 @@ public class AaptPackageResources extends AbstractBuildRule
     this.assetsDirectories = assetsDirectories;
     this.packageType = packageType;
     this.cpuFilters = cpuFilters;
+    this.javac = javac;
     this.javacOptions = javacOptions;
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
@@ -351,12 +355,13 @@ public class AaptPackageResources extends AbstractBuildRule
     Path rDotJavaBin = getPathToCompiledRDotJavaFiles();
     steps.add(new MakeCleanDirectoryStep(rDotJavaBin));
 
-    JavacStep javac = RDotJava.createJavacStepForUberRDotJavaFiles(
+    JavacStep javacStep = RDotJava.createJavacStepForUberRDotJavaFiles(
         ImmutableSet.copyOf(getResolver().getAllPaths(mergeStep.getRDotJavaFiles())),
         rDotJavaBin,
+        javac,
         javacOptions,
         getBuildTarget());
-    steps.add(javac);
+    steps.add(javacStep);
 
     Path rDotJavaClassesTxt = getPathToRDotJavaClassesTxt();
     steps.add(new MakeCleanDirectoryStep(rDotJavaClassesTxt.getParent()));

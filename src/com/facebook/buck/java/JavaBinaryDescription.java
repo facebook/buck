@@ -47,12 +47,15 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
 
   private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = new Flavor("inner-jar");
 
+  private final Javac javac;
   private final JavacOptions javacOptions;
   private final CxxPlatform cxxPlatform;
 
   public JavaBinaryDescription(
+      Javac javac,
       JavacOptions javacOptions,
       CxxPlatform cxxPlatform) {
+    this.javac = javac;
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
   }
@@ -138,6 +141,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
                       .addAll(nativeLibraries.values())
                       .build())),
           pathResolver,
+          javac,
           javacOptions,
           innerJar,
           nativeLibraries);

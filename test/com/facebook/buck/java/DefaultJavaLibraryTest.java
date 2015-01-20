@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_ENV;
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static com.facebook.buck.util.BuckConstant.BIN_PATH;
@@ -968,6 +969,7 @@ public class DefaultJavaLibraryTest {
         exportedDeps,
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+        DEFAULT_JAVAC,
         DEFAULT_JAVAC_OPTIONS,
         /* resourcesRoot */ Optional.<Path>absent()) {
       @Override
@@ -1158,41 +1160,6 @@ public class DefaultJavaLibraryTest {
     List<Step> steps = stepsBuilder.build();
     assertEquals(steps.size(), 3);
     assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
-  }
-
-  @Test
-  public void testWhenJavacIsProvidedAnExternalJavacStepIsAdded() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-
-    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    BuildRule rule = JavaLibraryBuilder
-        .createBuilder(libraryOneTarget)
-        .addSrc(Paths.get("java/src/com/libone/Bar.java"))
-        .build(ruleResolver);
-
-    ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    JavacOptions javacOptions = JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
-        .setJavaCompilerEnvironment(
-            new JavaCompilerEnvironment(
-                Optional.of(Paths.get("javac")),
-                Optional.<JavacVersion>absent()))
-        .build();
-    ((DefaultJavaLibrary) rule).createCommandsForJavac(
-        rule.getPathToOutputFile(),
-        ImmutableSet.copyOf(
-            ((HasClasspathEntries) rule).getTransitiveClasspathEntries().values()),
-        ImmutableSet.copyOf(
-            ((JavaLibrary) rule).getDeclaredClasspathEntries().values()),
-        javacOptions,
-        BuildDependencies.FIRST_ORDER_ONLY,
-        Optional.<JavacStep.SuggestBuildRules>absent(),
-        stepsBuilder,
-        libraryOneTarget
-    );
-
-    List<Step> steps = stepsBuilder.build();
-    assertEquals(steps.size(), 4);
-    assertTrue(((JavacStep) steps.get(3)).getJavac() instanceof ExternalJavac);
   }
 
   @Test
@@ -1414,6 +1381,7 @@ public class DefaultJavaLibraryTest {
           /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
           /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
           /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+          DEFAULT_JAVAC,
           options.build(),
           /* resourcesRoot */ Optional.<Path>absent(),
           /* manifestFile */ Optional.<SourcePath>absent(),

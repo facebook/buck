@@ -38,12 +38,16 @@ import java.nio.file.Path;
 public class JavaTestDescription implements Description<JavaTestDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("java_test");
+
+  private final Javac javac;
   private final JavacOptions templateOptions;
   private final Optional<Long> testRuleTimeoutMs;
 
   public JavaTestDescription(
+      Javac javac,
       JavacOptions templateOptions,
       Optional<Long> testRuleTimeoutMs) {
+    this.javac = javac;
     this.templateOptions = templateOptions;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
@@ -87,6 +91,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         args.proguardConfig,
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         args.testType.or(TestType.JUNIT),
+        javac,
         javacOptions.build(),
         args.vmArgs.get(),
         validateAndGetSourcesUnderTest(

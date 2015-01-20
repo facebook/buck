@@ -107,6 +107,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
+  private final Javac javac;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final ImmutableSortedSet<SourcePath> resources;
   private final Optional<Path> outputJar;
@@ -175,9 +176,12 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
       ImmutableSet<Path> additionalClasspathEntries,
+      Javac javac,
       JavacOptions javacOptions,
       Optional<Path> resourcesRoot) {
     super(params, resolver);
+
+    this.javac = javac;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -275,6 +279,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       }
 
       JavacStep javacStep = JavacStepUtil.createJavacStep(
+          javac,
           outputDirectory,
           getJavaSrcs(),
           transitiveClasspathEntries,

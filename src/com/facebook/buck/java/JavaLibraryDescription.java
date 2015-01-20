@@ -45,10 +45,12 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
   public static final BuildRuleType TYPE = new BuildRuleType("java_library");
 
+  private final Javac javac;
   @VisibleForTesting
   final JavacOptions defaultOptions;
 
-  public JavaLibraryDescription(JavacOptions defaultOptions) {
+  public JavaLibraryDescription(Javac javac, JavacOptions defaultOptions) {
+    this.javac = javac;
     this.defaultOptions = defaultOptions;
   }
 
@@ -100,6 +102,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         resolver.getAllRules(args.exportedDeps.get()),
         resolver.getAllRules(args.providedDeps.get()),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+        javac,
         javacOptions.build(),
         args.resourcesRoot);
   }

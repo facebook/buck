@@ -54,7 +54,7 @@ public class JavaBuckConfigTest {
   @Test
   public void whenJavacIsNotSetThenAbsentIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-    assertEquals(Optional.absent(), config.getJavac());
+    assertEquals(Optional.absent(), config.getJavacPath());
   }
 
   @Test
@@ -68,7 +68,7 @@ public class JavaBuckConfigTest {
             "    javac = " + javac.toPath().toString()));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
 
-    assertEquals(Optional.of(javac.toPath()), config.getJavac());
+    assertEquals(Optional.of(javac.toPath()), config.getJavacPath());
   }
 
   @Test
@@ -79,7 +79,7 @@ public class JavaBuckConfigTest {
         "    javac = " + invalidPath));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
-      config.getJavac();
+      config.getJavacPath();
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
       assertEquals(e.getHumanReadableErrorMessage(), "Javac does not exist: " + invalidPath);
@@ -96,7 +96,7 @@ public class JavaBuckConfigTest {
         "    javac = " + javac.toPath().toString()));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
-      config.getJavac();
+      config.getJavacPath();
       fail("Should throw exception as javac file is not executable.");
     } catch (HumanReadableException e) {
       assertEquals(e.getHumanReadableErrorMessage(), "Javac is not executable: " + javac.getPath());
@@ -158,6 +158,26 @@ public class JavaBuckConfigTest {
     String joined = Joiner.on(" ").join(builder.build());
 
     return joined.contains(expectedParameter);
+  }
+
+  @Test
+  public void shouldDefaultToCreatingAnInMemoryJavac() throws IOException {
+    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
+
+    Javac actualJavac = config.getJavac();
+    assertTrue(actualJavac instanceof Jsr199Javac);
+  }
+
+  @Test
+  public void shouldCreateAnExternalJavaWhenTheJavacPathIsSet() throws IOException {
+    File javac = temporaryFolder.newFile();
+    javac.setExecutable(true);
+
+    String localConfig = "[tools]\njavac = " + javac;
+    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
+
+    Javac actualJavac = config.getJavac();
+    assertTrue(actualJavac instanceof ExternalJavac);
   }
 
   private JavaBuckConfig createWithDefaultFilesystem(Reader reader)

@@ -150,7 +150,7 @@ public class ExternalJavac implements Javac {
     for (Path path : javaSourceFilePaths) {
       if (path.toString().endsWith(".java")) {
         sources.add(path);
-      } else if (path.toString().endsWith(JavacStep.SRC_ZIP)) {
+      } else if (path.toString().endsWith(SRC_ZIP)) {
         if (!workingDirectory.isPresent()) {
           throw new HumanReadableException(
               "Attempting to compile target %s which specified a .src.zip input %s but no " +

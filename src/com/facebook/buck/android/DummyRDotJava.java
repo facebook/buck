@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.CalculateAbiStep;
 import com.facebook.buck.java.HasJavaAbi;
+import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
@@ -59,6 +60,7 @@ public class DummyRDotJava extends AbstractBuildRule
     implements AbiRule, HasJavaAbi, InitializableFromDisk<DummyRDotJava.BuildOutput> {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
+  private final Javac javac;
   private final JavacOptions javacOptions;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -66,11 +68,13 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathResolver resolver,
       Set<HasAndroidResourceDeps> androidResourceDeps,
+      Javac javac,
       JavacOptions javacOptions) {
     super(params, resolver);
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps = FluentIterable.from(androidResourceDeps)
         .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
+    this.javac = javac;
     this.javacOptions = javacOptions;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
@@ -126,6 +130,7 @@ public class DummyRDotJava extends AbstractBuildRule
         RDotJava.createJavacStepForDummyRDotJavaFiles(
             javaSourceFilePaths,
             rDotJavaClassesFolder,
+            javac,
             javacOptions,
             getBuildTarget());
     steps.add(javacStep);

@@ -16,6 +16,9 @@
 
 package com.facebook.buck.java;
 
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
+import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
+
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.DefaultCxxPlatform;
 import com.facebook.buck.model.BuildTarget;
@@ -28,7 +31,8 @@ public class JavaBinaryRuleBuilder extends AbstractNodeBuilder<JavaBinaryDescrip
   public JavaBinaryRuleBuilder(BuildTarget target) {
     super(
         new JavaBinaryDescription(
-            JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS,
+            DEFAULT_JAVAC,
+            DEFAULT_JAVAC_OPTIONS,
             new DefaultCxxPlatform(new FakeBuckConfig())),
         target);
   }

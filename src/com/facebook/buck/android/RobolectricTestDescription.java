@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyM
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
+import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -37,12 +38,16 @@ import java.nio.file.Path;
 public class RobolectricTestDescription implements Description<RobolectricTestDescription.Arg> {
 
   public static final BuildRuleType TYPE = new BuildRuleType("robolectric_test");
+
+  private final Javac javac;
   private final JavacOptions templateOptions;
   private final Optional<Long> testRuleTimeoutMs;
 
   public RobolectricTestDescription(
+      Javac javac,
       JavacOptions templateOptions,
       Optional<Long> testRuleTimeoutMs) {
+    this.javac = javac;
     this.templateOptions = templateOptions;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
@@ -77,6 +82,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
         params.copyWithExtraDeps(resolver.getAllRules(args.exportedDeps.get())),
+        javac,
         javacOptions.build(),
         ResourceDependencyMode.TRANSITIVE);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
@@ -104,6 +110,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         args.contacts.get(),
         args.proguardConfig,
         additionalClasspathEntries,
+        javac,
         javacOptions.build(),
         args.vmArgs.get(),
         JavaTestDescription.validateAndGetSourcesUnderTest(
