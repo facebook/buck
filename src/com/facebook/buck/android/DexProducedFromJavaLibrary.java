@@ -118,13 +118,10 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
       // To be conservative, use --force-jumbo for these intermediate .dex files so that they can be
       // merged into a final classes.dex that uses jumbo instructions.
-      DxStep dx = new DxStep(getPathToDex(),
+      DxStep dx = new DxStep(
+          getPathToDex(),
           Collections.singleton(pathToOutputFile),
-          EnumSet.of(
-              DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
-              DxStep.Option.RUN_IN_PROCESS,
-              DxStep.Option.NO_OPTIMIZE,
-              DxStep.Option.FORCE_JUMBO));
+          EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
       steps.add(dx);
     } else {
       linearAllocEstimate = Suppliers.ofInstance(0);

@@ -80,8 +80,6 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
   /** Options to use with {@link DxStep} when merging pre-dexed files. */
   private static final EnumSet<DxStep.Option> DX_MERGE_OPTIONS = EnumSet.of(
-      DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
-      DxStep.Option.RUN_IN_PROCESS,
       DxStep.Option.NO_OPTIMIZE);
 
   private static final String PRIMARY_DEX_HASH_KEY = "primary_dex_hash";
