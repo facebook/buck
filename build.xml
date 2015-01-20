@@ -169,6 +169,8 @@
     <javac srcdir="${src.dir}"
            classpathref="classpath"
            includeAntRuntime="no">
+      <!-- Speed up the build by only running javac on files containing Immutables. -->
+      <contains text="org.immutables" />
       <src path="${aosp.src.dir}" />
       <exclude name="com/facebook/buck/android/support/**" />
       <exclude name="com/facebook/buck/cli/quickstart/**" />
@@ -451,6 +453,8 @@
     <javac srcdir="${test.dir}"
            classpathref="tests.classpath"
            includeAntRuntime="no">
+      <!-- Speed up the build by only running javac on files containing Immutables. -->
+      <contains text="org.immutables" />
       <exclude name="**/testdata/**" />
       <compilerarg value="-processorpath" />
       <compilerarg value="${immutables-value-standalone.jar}" />
