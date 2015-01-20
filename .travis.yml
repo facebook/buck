@@ -6,6 +6,8 @@ before_install:
   - sudo apt-get update -qq
   # Travis is on 64bit and there will be a cryptic aapt error w/o these libs.
   - if [ `uname -m` = x86_64 ]; then sudo apt-get install -qq --force-yes libgd2-xpm ia32-libs ia32-libs-multiarch > /dev/null; fi
+  # For native code tests, we need some additional libraries if we are in a 64-bit environment.
+  - if [ `uname -m` = x86_64 ]; then sudo apt-get install -qq --force-yes gcc-multilib > /dev/null; fi
   # Download the Android sdk and unzip.
   - wget http://dl.google.com/android/android-sdk_r23-linux.tgz
   - tar -zxf android-sdk_r23-linux.tgz
