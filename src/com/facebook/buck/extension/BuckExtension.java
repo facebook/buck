@@ -106,11 +106,10 @@ public class BuckExtension extends AbstractBuildRule {
             /* transitive classpath */ ImmutableSortedSet.<Path>of(),
             declaredClasspath,
             javacOptions,
-            Optional.of(getBuildTarget()),
+            getBuildTarget(),
             BuildDependencies.FIRST_ORDER_ONLY,
             Optional.<JavacStep.SuggestBuildRules>absent(),
             /* path to sources list */ Optional.<Path>absent(),
-            getBuildTarget(),
             Optional.<Path>absent()));
     steps.add(new CopyResourcesStep(
             getResolver(),

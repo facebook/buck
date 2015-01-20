@@ -68,7 +68,7 @@ public class JavacStep implements Step {
 
   private final ImmutableSet<Path> declaredClasspathEntries;
 
-  private final Optional<BuildTarget> invokingRule;
+  private final BuildTarget invokingRule;
 
   private final BuildDependencies buildDependencies;
 
@@ -117,7 +117,7 @@ public class JavacStep implements Step {
       Set<Path> transitiveClasspathEntries,
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
-      Optional<BuildTarget> invokingRule,
+      BuildTarget invokingRule,
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules) {
     this.javac = javac;
@@ -180,7 +180,7 @@ public class JavacStep implements Step {
         ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
         ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
 
-        String invoker = invokingRule.isPresent() ? invokingRule.get().toString() : "";
+        String invoker = invokingRule.toString();
         errorMessage.add(String.format("Rule %s builds with its transitive " +
             "dependencies but not with its first order dependencies.", invoker));
         errorMessage.add("The following packages were missing:");

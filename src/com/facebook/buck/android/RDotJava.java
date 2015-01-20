@@ -68,11 +68,10 @@ public class RDotJava {
         JavacOptions.builder(javacOptions)
             .setAnnotationProcessingData(AnnotationProcessingData.EMPTY)
             .build(),
-        Optional.<BuildTarget>absent(),
+        buildTarget,
         BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacStep.SuggestBuildRules>absent(),
         /* pathToSrcsList */ Optional.<Path>absent(),
-        buildTarget,
         /* workingDirectory */ Optional.<Path>absent());
   }
 }

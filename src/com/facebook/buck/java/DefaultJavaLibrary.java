@@ -280,11 +280,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           transitiveClasspathEntries,
           declaredClasspathEntries,
           javacOptions,
-          Optional.of(target),
+          target,
           buildDependencies,
           suggestBuildRules,
           Optional.of(pathToSrcsList),
-          target,
           workingDirectory);
 
       commands.add(javacStep);

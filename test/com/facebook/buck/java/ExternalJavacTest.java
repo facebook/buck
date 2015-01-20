@@ -84,10 +84,10 @@ public class ExternalJavacTest extends EasyMockSupport {
             .setTargetLevel("6")
             .setSourceLevel("6")
             .build(),
-        /* invokingRule */ Optional.<BuildTarget>absent(),
+        BuildTarget.builder("//fake", "target").build(),
         /* pathToSrcsList */ Optional.of(PATH_TO_SRCS_LIST),
-        /* target */ BuildTarget.builder("//fake", "target").build(),
         Optional.of(tmpFolder.getRoot().toPath()));
+
   }
 
 }

@@ -38,21 +38,18 @@ import java.util.Set;
 public class ExternalJavac implements Javac {
 
   private final Path pathToJavac;
-  private final BuildTarget target;
   private final Optional<Path> workingDirectory;
   private final Set<Path> javaSourceFilePaths;
-  private final Optional<BuildTarget> invokingRule;
+  private final BuildTarget invokingRule;
   private final Optional<Path> pathToSrcsList;
 
   public ExternalJavac(
       Set<Path> javaSourceFilePaths,
       JavacOptions javacOptions,
-      Optional<BuildTarget> invokingRule,
+      BuildTarget invokingRule,
       Optional<Path> pathToSrcsList,
-      BuildTarget target,
       Optional<Path> workingDirectory) {
     this.pathToJavac = javacOptions.getJavaCompilerEnvironment().getJavacPath().get();
-    this.target = target;
     this.workingDirectory = workingDirectory;
 
     this.javaSourceFilePaths = javaSourceFilePaths;
@@ -96,7 +93,7 @@ public class ExternalJavac implements Javac {
     } catch (IOException e) {
       throw new HumanReadableException(
           "Unable to expand sources for %s into %s",
-          target,
+          invokingRule,
           workingDirectory);
     }
     if (pathToSrcsList.isPresent()) {
@@ -126,8 +123,8 @@ public class ExternalJavac implements Javac {
     Map<String, String> env = processBuilder.environment();
     env.clear();
     env.putAll(context.getEnvironment());
-    env.put("BUCK_INVOKING_RULE", (invokingRule.isPresent() ? invokingRule.get().toString() : ""));
-    env.put("BUCK_TARGET", target.toString());
+    env.put("BUCK_INVOKING_RULE", invokingRule.toString());
+    env.put("BUCK_TARGET", invokingRule.toString());
     env.put("BUCK_DIRECTORY_ROOT", context.getProjectDirectoryRoot().toString());
 
     processBuilder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
@@ -158,7 +155,7 @@ public class ExternalJavac implements Javac {
           throw new HumanReadableException(
               "Attempting to compile target %s which specified a .src.zip input %s but no " +
                   "working directory was specified.",
-              target.toString(),
+              invokingRule.toString(),
               path);
         }
         // For a Zip of .java files, create a JavaFileObject for each .java entry.

@@ -35,11 +35,10 @@ public class JavacStepUtil {
       Set<Path> transitiveClasspathEntries,
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
-      Optional<BuildTarget> invokingRule,
+      BuildTarget invokingRule,
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules,
       Optional<Path> pathToSrcsList,
-      BuildTarget buildTarget,
       Optional<Path> workingDirectory) {
 
     Javac javac;
@@ -49,7 +48,6 @@ public class JavacStepUtil {
           javacOptions,
           invokingRule,
           pathToSrcsList,
-          buildTarget,
           workingDirectory);
     } else {
       javac = new Jsr199Javac(

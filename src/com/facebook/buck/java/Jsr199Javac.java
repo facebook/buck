@@ -77,12 +77,12 @@ public class Jsr199Javac implements Javac {
   private static final Logger LOG = Logger.get(Jsr199Javac.class);
 
   private final Set<Path> javaSourceFilePaths;
-  private final Optional<BuildTarget> invokingRule;
+  private final BuildTarget invokingRule;
   private final Optional<Path> pathToSrcsList;
 
   public Jsr199Javac(
       Set<Path> javaSourceFilePaths,
-      Optional<BuildTarget> invokingRule,
+      BuildTarget invokingRule,
       Optional<Path> pathToSrcsList) {
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.invokingRule = invokingRule;
@@ -168,7 +168,7 @@ public class Jsr199Javac implements Javac {
     boolean isSuccess;
 
     try {
-      bundle = prepareProcessors(invokingRule.orNull(), options);
+      bundle = prepareProcessors(invokingRule, options);
       compilationTask.setProcessors(bundle.processors);
 
       // Invoke the compilation and inspect the result.
@@ -230,7 +230,7 @@ public class Jsr199Javac implements Javac {
     }
   }
 
-  private ProcessorBundle prepareProcessors(@Nullable BuildTarget target, List<String> options) {
+  private ProcessorBundle prepareProcessors(BuildTarget target, List<String> options) {
     String processorClassPath = null;
     String processorNames = null;
 
@@ -329,10 +329,6 @@ public class Jsr199Javac implements Javac {
   private void handleMissingSymbolError(
       Diagnostic<? extends JavaFileObject> diagnostic,
       ExecutionContext context) {
-    if (!invokingRule.isPresent()) {
-      // This compile isn't associated with any rule, so don't bother reporting missing symbols.
-      return;
-    }
     JavacErrorParser javacErrorParser = new JavacErrorParser(
         context.getProjectFilesystem(),
         context.getJavaPackageFinder());
@@ -343,7 +339,7 @@ public class Jsr199Javac implements Javac {
       return;
     }
     MissingSymbolEvent event = MissingSymbolEvent.create(
-        invokingRule.get(),
+        invokingRule,
         symbol.get(),
         MissingSymbolEvent.SymbolType.Java);
     context.getBuckEventBus().post(event);

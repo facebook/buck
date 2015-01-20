@@ -133,11 +133,10 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
             /* transitive classpath */ ImmutableSet.<Path>of(),
             /* declared classpath */ ImmutableSet.<Path>of(),
             javacOptions,
-            Optional.of(getBuildTarget()),
+            getBuildTarget(),
             BuildDependencies.FIRST_ORDER_ONLY,
             Optional.<JavacStep.SuggestBuildRules>absent(),
             Optional.<Path>absent(),
-            getBuildTarget(),
             Optional.<Path>absent()));
 
     // Symlink the inner JAR into it's place in the fat JAR.

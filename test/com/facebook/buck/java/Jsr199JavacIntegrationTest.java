@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -155,7 +155,7 @@ public class Jsr199JavacIntegrationTest {
     tmp.newFolder(pathToOutputDirectory.toString());
     return new Jsr199Javac(
         javaSourceFilePaths,
-        Optional.<BuildTarget>absent(),
+        BuildTargetFactory.newInstance("//some:example"),
         Optional.of(pathToSrcsList));
   }
 

@@ -19,7 +19,7 @@ package com.facebook.buck.java;
 import static com.facebook.buck.java.JavaBuckConfig.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Optional;
@@ -64,7 +64,7 @@ public class Jsr199JavacTest extends EasyMockSupport {
   private Jsr199Javac createTestStep() {
     return new Jsr199Javac(
           /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("foobar.java")),
-          /* invokingRule */ Optional.<BuildTarget>absent(),
+        BuildTargetFactory.newInstance("//some:example"),
           /* pathToSrcsList */ Optional.of(PATH_TO_SRCS_LIST));
   }
 
