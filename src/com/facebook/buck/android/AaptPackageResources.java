@@ -92,6 +92,7 @@ public class AaptPackageResources extends AbstractBuildRule
   private final JavacOptions javacOptions;
   private final boolean rDotJavaNeedsDexing;
   private final boolean shouldBuildStringSourceMap;
+  private final boolean shouldWarnIfMissingResource;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   AaptPackageResources(
@@ -106,7 +107,8 @@ public class AaptPackageResources extends AbstractBuildRule
       Javac javac,
       JavacOptions javacOptions,
       boolean rDotJavaNeedsDexing,
-      boolean shouldBuildStringSourceMap) {
+      boolean shouldBuildStringSourceMap,
+      boolean shouldWarnIfMissingResources) {
     super(params, resolver);
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
@@ -118,6 +120,7 @@ public class AaptPackageResources extends AbstractBuildRule
     this.javacOptions = javacOptions;
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
+    this.shouldWarnIfMissingResource = shouldWarnIfMissingResources;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
@@ -325,9 +328,10 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(rDotJavaSrc));
 
     Path rDotTxtDir = getPathToRDotTxtDir();
-    MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
+    MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForUberRDotJava(
         resourceDeps,
-        Optional.of(rDotTxtDir.resolve("R.txt")),
+        rDotTxtDir.resolve("R.txt"),
+        shouldWarnIfMissingResource,
         rDotJavaSrc);
     steps.add(mergeStep);
 

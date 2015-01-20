@@ -51,6 +51,7 @@ public class MergeAndroidResourcesStep implements Step {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Optional<Path> uberRDotTxt;
+  private final boolean warnMissingResource;
   private final Path outputDir;
 
   /**
@@ -59,13 +60,38 @@ public class MergeAndroidResourcesStep implements Step {
    * the output directory. Also, if {@code uberRDotTxt} is present, the IDs in the output
    * {@code R.java} file will be taken from the {@code R.txt} file.
    */
-  public MergeAndroidResourcesStep(
+  @VisibleForTesting
+  MergeAndroidResourcesStep(
       List<HasAndroidResourceDeps> androidResourceDeps,
       Optional<Path> uberRDotTxt,
+      boolean warnMissingResource,
       Path outputDir) {
     this.androidResourceDeps = ImmutableList.copyOf(androidResourceDeps);
     this.uberRDotTxt = uberRDotTxt;
+    this.warnMissingResource = warnMissingResource;
     this.outputDir = outputDir;
+  }
+
+  public static MergeAndroidResourcesStep createStepForDummyRDotJava(
+      List<HasAndroidResourceDeps> androidResourceDeps,
+      Path outputDir) {
+    return new MergeAndroidResourcesStep(
+        androidResourceDeps,
+        Optional.<Path>absent(),
+        false,
+        outputDir);
+  }
+
+  public static MergeAndroidResourcesStep createStepForUberRDotJava(
+      List<HasAndroidResourceDeps> androidResourceDeps,
+      Path uberRDotTxt,
+      boolean warnMissingResource,
+      Path outputDir) {
+    return new MergeAndroidResourcesStep(
+        androidResourceDeps,
+        Optional.of(uberRDotTxt),
+        warnMissingResource,
+        outputDir);
   }
 
   public ImmutableSet<SourcePath> getRDotJavaFiles() {
@@ -135,6 +161,7 @@ public class MergeAndroidResourcesStep implements Step {
     SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToResources = sortSymbols(
         symbolsFileToRDotJavaPackage,
         uberRDotTxtIds,
+        warnMissingResource,
         context);
 
     writePerPackageRDotJava(rDotJavaPackageToResources, filesystem);
@@ -211,6 +238,7 @@ public class MergeAndroidResourcesStep implements Step {
   static SortedSetMultimap<String, RDotTxtEntry> sortSymbols(
       Map<Path, String> symbolsFileToRDotJavaPackage,
       Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds,
+      boolean warnMissingResource,
       ExecutionContext context) {
     // If we're reenumerating, start at 0x7f01001 so that the resulting file is human readable.
     // This value range (0x7f010001 - ...) is easier to spot as an actual resource id instead of
@@ -251,8 +279,10 @@ public class MergeAndroidResourcesStep implements Step {
         if (uberRDotTxtIds.isPresent()) {
           Preconditions.checkNotNull(finalIds);
           if (!finalIds.containsKey(resource)) {
-            context.postEvent(ConsoleEvent.warning(
-                    "Cannot find resource '%s' in the uber R.txt.", resource));
+            if (warnMissingResource) {
+              context.postEvent(ConsoleEvent.warning(
+                      "Cannot find resource '%s' in the uber R.txt.", resource));
+            }
             continue;
           }
           resource = resource.copyWithNewIdValue(finalIds.get(resource));

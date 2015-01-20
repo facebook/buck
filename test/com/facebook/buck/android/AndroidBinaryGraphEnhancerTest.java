@@ -143,7 +143,8 @@ public class AndroidBinaryGraphEnhancerTest {
         DEFAULT_JAVAC,
         ANDROID_JAVAC_OPTIONS,
         false,
-        false);
+        false,
+        /* warnMissingResource */ false);
     ruleResolver.addToIndex(aaptPackageResources);
 
     ImmutableAndroidPackageableCollection collection = new AndroidPackageableCollector(

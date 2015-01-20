@@ -74,6 +74,7 @@ public class MergeAndroidResourcesStepTest {
         MergeAndroidResourcesStep.sortSymbols(
             entriesBuilder.buildFilePathToPackageNameSet(),
             Optional.<ImmutableMap<RDotTxtEntry, String>>absent(),
+            /* warnMissingResource */ false,
             executionContext);
 
     assertEquals(1, packageNameToResources.keySet().size());
@@ -129,6 +130,7 @@ public class MergeAndroidResourcesStepTest {
     MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
         ImmutableList.of(resource),
         Optional.of(uberRDotTxt),
+        /* warnMissingResource */ false,
         Paths.get("output"));
 
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
