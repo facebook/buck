@@ -16,10 +16,8 @@
 
 package com.facebook.buck.java;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -37,6 +35,7 @@ import java.nio.file.Paths;
 
 public class ExternalJavacTest extends EasyMockSupport {
   private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
+  public static final ImmutableSet<Path> SOURCE_PATHS = ImmutableSet.of(Paths.get("foobar.java"));
 
   @Rule
   public DebuggableTemporaryFolder root = new DebuggableTemporaryFolder();
@@ -54,14 +53,24 @@ public class ExternalJavacTest extends EasyMockSupport {
     ExternalJavac transitive = createTestStep();
 
     assertEquals("fakeJavac -source 6 -target 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
-        firstOrder.getDescription(context, getArgs().add("foo.jar").build()));
+        firstOrder.getDescription(
+            context,
+            getArgs().add("foo.jar").build(),
+            SOURCE_PATHS,
+            Optional.of(PATH_TO_SRCS_LIST)));
     assertEquals("fakeJavac -source 6 -target 6 -g -d . -classpath foo.jar @" + PATH_TO_SRCS_LIST,
-        warn.getDescription(context, getArgs().add("foo.jar").build()));
+        warn.getDescription(
+            context,
+            getArgs().add("foo.jar").build(),
+            SOURCE_PATHS,
+            Optional.of(PATH_TO_SRCS_LIST)));
     assertEquals("fakeJavac -source 6 -target 6 -g -d . -classpath bar.jar" + File.pathSeparator +
         "foo.jar @" + PATH_TO_SRCS_LIST,
         transitive.getDescription(
             context,
-            getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build()));
+            getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build(),
+            SOURCE_PATHS,
+            Optional.of(PATH_TO_SRCS_LIST)));
   }
 
   private ImmutableList.Builder<String> getArgs() {
@@ -74,20 +83,8 @@ public class ExternalJavacTest extends EasyMockSupport {
   }
 
   private ExternalJavac createTestStep() {
-    return new ExternalJavac(
-        /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("foobar.java")),
-        JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
-            .setJavaCompilerEnvironment(
-                new JavaCompilerEnvironment(
-                    Optional.of(Paths.get("fakeJavac")),
-                    Optional.<JavacVersion>absent()))
-            .setTargetLevel("6")
-            .setSourceLevel("6")
-            .build(),
-        BuildTarget.builder("//fake", "target").build(),
-        /* pathToSrcsList */ Optional.of(PATH_TO_SRCS_LIST),
-        Optional.of(tmpFolder.getRoot().toPath()));
-
+    Path fakeJavac = Paths.get("fakeJavac");
+    return new ExternalJavac(fakeJavac);
   }
 
 }

@@ -19,7 +19,6 @@ package com.facebook.buck.java;
 import static com.facebook.buck.java.JavaBuckConfig.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Optional;
@@ -35,7 +34,7 @@ import java.nio.file.Paths;
 
 public class Jsr199JavacTest extends EasyMockSupport {
   private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
-
+  public static final ImmutableSet<Path> SOURCE_FILES = ImmutableSet.of(Paths.get("foobar.java"));
 
   @Test
   public void testJavacCommand() {
@@ -48,24 +47,31 @@ public class Jsr199JavacTest extends EasyMockSupport {
     assertEquals(
         String.format("javac -source %s -target %s -g -d . -classpath foo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, PATH_TO_SRCS_LIST),
-        firstOrder.getDescription(context, getArgs().add("foo.jar").build()));
+        firstOrder.getDescription(
+            context,
+            getArgs().add("foo.jar").build(),
+            SOURCE_FILES,
+            Optional.of(PATH_TO_SRCS_LIST)));
     assertEquals(
         String.format("javac -source %s -target %s -g -d . -classpath foo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, PATH_TO_SRCS_LIST),
-        warn.getDescription(context, getArgs().add("foo.jar").build()));
+        warn.getDescription(
+            context,
+            getArgs().add("foo.jar").build(),
+            SOURCE_FILES,
+            Optional.of(PATH_TO_SRCS_LIST)));
     assertEquals(
         String.format("javac -source %s -target %s -g -d . -classpath bar.jar%sfoo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, File.pathSeparator, PATH_TO_SRCS_LIST),
         transitive.getDescription(
             context,
-            getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build()));
+            getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build(),
+            SOURCE_FILES,
+            Optional.of(PATH_TO_SRCS_LIST)));
   }
 
   private Jsr199Javac createTestStep() {
-    return new Jsr199Javac(
-          /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("foobar.java")),
-        BuildTargetFactory.newInstance("//some:example"),
-          /* pathToSrcsList */ Optional.of(PATH_TO_SRCS_LIST));
+    return new Jsr199Javac();
   }
 
   private ImmutableList.Builder<String> getArgs() {

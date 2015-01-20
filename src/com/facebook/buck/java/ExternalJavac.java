@@ -29,36 +29,26 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Set;
 
 public class ExternalJavac implements Javac {
 
   private final Path pathToJavac;
-  private final Optional<Path> workingDirectory;
-  private final Set<Path> javaSourceFilePaths;
-  private final BuildTarget invokingRule;
-  private final Optional<Path> pathToSrcsList;
 
-  public ExternalJavac(
-      Set<Path> javaSourceFilePaths,
-      JavacOptions javacOptions,
-      BuildTarget invokingRule,
-      Optional<Path> pathToSrcsList,
-      Optional<Path> workingDirectory) {
-    this.pathToJavac = javacOptions.getJavaCompilerEnvironment().getJavacPath().get();
-    this.workingDirectory = workingDirectory;
-
-    this.javaSourceFilePaths = javaSourceFilePaths;
-    this.invokingRule = invokingRule;
-    this.pathToSrcsList = pathToSrcsList;
+  public ExternalJavac(Path pathToJavac) {
+    this.pathToJavac = pathToJavac;
   }
 
   @Override
-  public String getDescription(ExecutionContext context, ImmutableList<String> options) {
+  public String getDescription(
+      ExecutionContext context,
+      ImmutableList<String> options,
+      ImmutableSet<Path> javaSourceFilePaths,
+      Optional<Path> pathToSrcsList) {
     StringBuilder builder = new StringBuilder(pathToJavac.toString());
     builder.append(" ");
     Joiner.on(" ").appendTo(builder, options);
@@ -81,15 +71,22 @@ public class ExternalJavac implements Javac {
   @Override
   public int buildWithClasspath(
       ExecutionContext context,
+      BuildTarget invokingRule,
       ImmutableList<String> options,
-      Set<Path> buildClasspathEntries) throws InterruptedException {
+      ImmutableSet<Path> javaSourceFilePaths,
+      Optional<Path> pathToSrcsList,
+      Optional<Path> workingDirectory) throws InterruptedException {
     ImmutableList.Builder<String> command = ImmutableList.builder();
     command.add(pathToJavac.toString());
     command.addAll(options);
 
     ImmutableList<Path> expandedSources;
     try {
-      expandedSources = getExpandedSourcePaths(context);
+      expandedSources = getExpandedSourcePaths(
+          context,
+          invokingRule,
+          javaSourceFilePaths,
+          workingDirectory);
     } catch (IOException e) {
       throw new HumanReadableException(
           "Unable to expand sources for %s into %s",
@@ -141,8 +138,11 @@ public class ExternalJavac implements Javac {
     return exitCode;
   }
 
-  private ImmutableList<Path> getExpandedSourcePaths(ExecutionContext context)
-      throws IOException {
+  private ImmutableList<Path> getExpandedSourcePaths(
+      ExecutionContext context,
+      BuildTarget invokingRule,
+      ImmutableSet<Path> javaSourceFilePaths,
+      Optional<Path> workingDirectory) throws IOException {
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     // Add sources file or sources list to command

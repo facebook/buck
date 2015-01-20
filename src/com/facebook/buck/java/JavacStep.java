@@ -60,7 +60,11 @@ public class JavacStep implements Step {
 
   private final Path outputDirectory;
 
-  private final Set<Path> javaSourceFilePaths;
+  private final Optional<Path> workingDirectory;
+
+  private final ImmutableSet<Path> javaSourceFilePaths;
+
+  private final Optional<Path> pathToSrcsList;
 
   private final JavacOptions javacOptions;
 
@@ -75,8 +79,8 @@ public class JavacStep implements Step {
   private final Optional<SuggestBuildRules> suggestBuildRules;
 
   /**
-   * Will be {@code true} once {@link Javac#buildWithClasspath(ExecutionContext, ImmutableList,
-   * Set)} has been invoked.
+   * Will be {@code true} once {@link Javac#buildWithClasspath(ExecutionContext, BuildTarget,
+   * ImmutableList, ImmutableSet, Optional, Optional)} has been invoked.
    */
   private AtomicBoolean isExecuted = new AtomicBoolean(false);
 
@@ -113,7 +117,9 @@ public class JavacStep implements Step {
   public JavacStep(
       Javac javac,
       Path outputDirectory,
+      Optional<Path> workingDirectory,
       Set<Path> javaSourceFilePaths,
+      Optional<Path> pathToSrcsList,
       Set<Path> transitiveClasspathEntries,
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
@@ -122,7 +128,9 @@ public class JavacStep implements Step {
       Optional<SuggestBuildRules> suggestBuildRules) {
     this.javac = javac;
     this.outputDirectory = outputDirectory;
+    this.workingDirectory = workingDirectory;
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
+    this.pathToSrcsList = pathToSrcsList;
     this.transitiveClasspathEntries = ImmutableSet.copyOf(transitiveClasspathEntries);
     this.javacOptions = javacOptions;
 
@@ -146,15 +154,21 @@ public class JavacStep implements Step {
     if (buildDependencies == BuildDependencies.FIRST_ORDER_ONLY) {
       return getJavac().buildWithClasspath(
           context,
-          getOptions(context, getClasspathEntries()),
-          ImmutableSet.copyOf(declaredClasspathEntries));
+          invokingRule,
+          getOptions(context, declaredClasspathEntries),
+          javaSourceFilePaths,
+          pathToSrcsList,
+          workingDirectory);
     } else if (buildDependencies == BuildDependencies.WARN_ON_TRANSITIVE) {
       return tryBuildWithFirstOrderDeps(context);
     } else {
       return getJavac().buildWithClasspath(
           context,
-          getOptions(context, getClasspathEntries()),
-          getClasspathEntries());
+          invokingRule,
+          getOptions(context, transitiveClasspathEntries),
+          javaSourceFilePaths,
+          pathToSrcsList,
+          workingDirectory);
     }
   }
 
@@ -165,8 +179,11 @@ public class JavacStep implements Step {
 
     int declaredDepsResult = getJavac().buildWithClasspath(
         firstOrderContext,
+        invokingRule,
         getOptions(context, declaredClasspathEntries),
-        ImmutableSet.copyOf(declaredClasspathEntries));
+        javaSourceFilePaths,
+        pathToSrcsList,
+        workingDirectory);
 
     String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
     String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
@@ -174,8 +191,11 @@ public class JavacStep implements Step {
     if (declaredDepsResult != 0) {
       int transitiveResult = getJavac().buildWithClasspath(
           context,
+          invokingRule,
           getOptions(context, transitiveClasspathEntries),
-          ImmutableSet.copyOf(transitiveClasspathEntries));
+          javaSourceFilePaths,
+          pathToSrcsList,
+          workingDirectory);
       if (transitiveResult == 0) {
         ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
         ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
@@ -211,7 +231,11 @@ public class JavacStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return getJavac().getDescription(context, getOptions(context, getClasspathEntries()));
+    return getJavac().getDescription(
+        context,
+        getOptions(context, getClasspathEntries()),
+        javaSourceFilePaths,
+        pathToSrcsList);
   }
 
   @Override

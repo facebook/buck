@@ -23,7 +23,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -46,6 +45,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Jsr199JavacIntegrationTest {
+  public static final ImmutableSet<Path> SOURCE_PATHS = ImmutableSet.of(Paths.get("Example.java"));
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
@@ -62,7 +62,6 @@ public class Jsr199JavacIntegrationTest {
     ExecutionContext executionContext = createExecutionContext();
     String pathToOutputDir = new File(tmp.getRoot(), "out").getAbsolutePath();
 
-
     assertEquals(
         String.format("javac -source %s -target %s -g " +
             "-d %s " +
@@ -78,8 +77,9 @@ public class Jsr199JavacIntegrationTest {
                 "-target", JavaBuckConfig.TARGETED_JAVA_VERSION,
                 "-g",
                 "-d", pathToOutputDir,
-                "-classpath", "''"
-            )));
+                "-classpath", "''"),
+            SOURCE_PATHS,
+            Optional.of(pathToSrcsList)));
   }
 
   @Test
@@ -94,8 +94,11 @@ public class Jsr199JavacIntegrationTest {
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.buildWithClasspath(
         executionContext,
+        BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.<String>of(),
-        ImmutableSet.<Path>of());
+        SOURCE_PATHS,
+        Optional.of(pathToSrcsList),
+        Optional.<Path>absent());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     File srcsListFile = pathToSrcsList.toFile();
@@ -116,18 +119,16 @@ public class Jsr199JavacIntegrationTest {
     BuildRule rule = new FakeBuildRule("//:fake", pathResolver);
     resolver.addToIndex(rule);
 
-    BuildTargetSourcePath sourcePath = new BuildTargetSourcePath(
-        rule.getBuildTarget(),
-        Paths.get("Example.java"));
-
     Jsr199Javac javac = createJavac(
-        /* javaSourceFilePaths */ ImmutableSet.of(pathResolver.getPath(sourcePath)),
         /* withSyntaxError */ false);
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.buildWithClasspath(
         executionContext,
+        BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.<String>of(),
-        ImmutableSet.<Path>of());
+        SOURCE_PATHS,
+        Optional.of(pathToSrcsList),
+        Optional.<Path>absent());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     File srcsListFile = pathToSrcsList.toFile();
@@ -136,10 +137,7 @@ public class Jsr199JavacIntegrationTest {
     assertEquals("Example.java", Files.toString(srcsListFile, Charsets.UTF_8).trim());
   }
 
-  private Jsr199Javac createJavac(
-      ImmutableSet<Path> javaSourceFilePaths,
-      boolean withSyntaxError)
-      throws IOException {
+  private Jsr199Javac createJavac(boolean withSyntaxError) throws IOException {
 
     File exampleJava = tmp.newFile("Example.java");
     Files.write(Joiner.on('\n').join(
@@ -153,16 +151,7 @@ public class Jsr199JavacIntegrationTest {
 
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());
-    return new Jsr199Javac(
-        javaSourceFilePaths,
-        BuildTargetFactory.newInstance("//some:example"),
-        Optional.of(pathToSrcsList));
-  }
-
-  private Jsr199Javac createJavac(boolean withSyntaxError) throws IOException {
-    return createJavac(
-        /* javaSourceFilePaths */ ImmutableSet.of(Paths.get("Example.java")),
-        withSyntaxError);
+    return new Jsr199Javac();
   }
 
   private ExecutionContext createExecutionContext() {

@@ -16,14 +16,16 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
-import java.util.Set;
 
 public interface Javac {
 
@@ -37,10 +39,17 @@ public interface Javac {
 
   int buildWithClasspath(
       ExecutionContext context,
+      BuildTarget invokingRule,
       ImmutableList<String> options,
-      Set<Path> buildClasspathEntries) throws InterruptedException;
+      ImmutableSet<Path> javaSourceFilePaths,
+      Optional<Path> pathToSrcsList,
+      Optional<Path> workingDirectory) throws InterruptedException;
 
-  String getDescription(ExecutionContext context, ImmutableList<String> options);
+  String getDescription(
+      ExecutionContext context,
+      ImmutableList<String> options,
+      ImmutableSet<Path> javaSourceFilePaths,
+      Optional<Path> pathToSrcsList);
 
   String getShortName();
 }

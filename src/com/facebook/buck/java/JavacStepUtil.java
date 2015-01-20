@@ -43,23 +43,17 @@ public class JavacStepUtil {
 
     Javac javac;
     if (javacOptions.getJavaCompilerEnvironment().getJavacPath().isPresent()) {
-      javac = new ExternalJavac(
-          javaSourceFilePaths,
-          javacOptions,
-          invokingRule,
-          pathToSrcsList,
-          workingDirectory);
+      javac = new ExternalJavac(javacOptions.getJavaCompilerEnvironment().getJavacPath().get());
     } else {
-      javac = new Jsr199Javac(
-          javaSourceFilePaths,
-          invokingRule,
-          pathToSrcsList);
+      javac = new Jsr199Javac();
     }
 
     return new JavacStep(
         javac,
         outputDirectory,
+        workingDirectory,
         javaSourceFilePaths,
+        pathToSrcsList,
         transitiveClasspathEntries,
         declaredClasspathEntries,
         javacOptions,

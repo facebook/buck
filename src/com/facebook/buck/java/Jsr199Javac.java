@@ -76,21 +76,12 @@ public class Jsr199Javac implements Javac {
 
   private static final Logger LOG = Logger.get(Jsr199Javac.class);
 
-  private final Set<Path> javaSourceFilePaths;
-  private final BuildTarget invokingRule;
-  private final Optional<Path> pathToSrcsList;
-
-  public Jsr199Javac(
-      Set<Path> javaSourceFilePaths,
-      BuildTarget invokingRule,
-      Optional<Path> pathToSrcsList) {
-    this.javaSourceFilePaths = javaSourceFilePaths;
-    this.invokingRule = invokingRule;
-    this.pathToSrcsList = pathToSrcsList;
-  }
-
   @Override
-  public String getDescription(ExecutionContext context, ImmutableList<String> options) {
+  public String getDescription(
+      ExecutionContext context,
+      ImmutableList<String> options,
+      ImmutableSet<Path> javaSourceFilePaths,
+      Optional<Path> pathToSrcsList) {
     StringBuilder builder = new StringBuilder("javac ");
     Joiner.on(" ").appendTo(builder, options);
     builder.append(" ");
@@ -112,8 +103,11 @@ public class Jsr199Javac implements Javac {
   @Override
   public int buildWithClasspath(
       ExecutionContext context,
+      BuildTarget invokingRule,
       ImmutableList<String> options,
-      Set<Path> buildClasspathEntries) {
+      ImmutableSet<Path> javaSourceFilePaths,
+      Optional<Path> pathToSrcsList,
+      Optional<Path> workingDirectory) {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     Preconditions.checkNotNull(
         compiler,
@@ -122,7 +116,9 @@ public class Jsr199Javac implements Javac {
     Iterable<? extends JavaFileObject> compilationUnits = ImmutableSet.of();
     try {
       compilationUnits = createCompilationUnits(
-          fileManager, context.getProjectFilesystem().getAbsolutifier());
+          fileManager,
+          context.getProjectFilesystem().getAbsolutifier(),
+          javaSourceFilePaths);
     } catch (IOException e) {
       close(fileManager, compilationUnits, null);
       e.printStackTrace(context.getStdErr());
@@ -187,7 +183,7 @@ public class Jsr199Javac implements Javac {
           Diagnostic.Kind kind = diagnostic.getKind();
           if (kind == Diagnostic.Kind.ERROR) {
             ++numErrors;
-            handleMissingSymbolError(diagnostic, context);
+            handleMissingSymbolError(invokingRule, diagnostic, context);
           } else if (kind == Diagnostic.Kind.WARNING ||
               kind == Diagnostic.Kind.MANDATORY_WARNING) {
             ++numWarnings;
@@ -300,7 +296,8 @@ public class Jsr199Javac implements Javac {
 
   private Iterable<? extends JavaFileObject> createCompilationUnits(
       StandardJavaFileManager fileManager,
-      Function<Path, Path> absolutifier) throws IOException {
+      Function<Path, Path> absolutifier,
+      Set<Path> javaSourceFilePaths) throws IOException {
     List<JavaFileObject> compilationUnits = Lists.newArrayList();
     for (Path path : javaSourceFilePaths) {
       if (path.toString().endsWith(".java")) {
@@ -327,6 +324,7 @@ public class Jsr199Javac implements Javac {
   }
 
   private void handleMissingSymbolError(
+      BuildTarget invokingRule,
       Diagnostic<? extends JavaFileObject> diagnostic,
       ExecutionContext context) {
     JavacErrorParser javacErrorParser = new JavacErrorParser(
