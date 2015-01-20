@@ -87,6 +87,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -573,7 +574,7 @@ public class ProjectGenerator {
         .setGid(targetGid)
         .setShouldGenerateCopyHeadersPhase(
             !targetNode.getConstructorArg().getUseBuckHeaderMaps())
-        .setSources(sources.srcs, sources.perFileFlags)
+        .setSources(sources.getSrcs(), sources.getPerFileFlags())
         .setResources(resources);
 
     if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE)) {
@@ -712,8 +713,8 @@ public class ProjectGenerator {
       addHeaderMapsForHeaders(
           targetNode,
           targetNode.getConstructorArg().headerPathPrefix,
-          sources.srcs,
-          sources.perFileFlags);
+          sources.getSrcs(),
+          ImmutableSortedMap.copyOf(sources.getPerFileFlags()));
     }
 
     // Use Core Data models from immediate dependencies only.
@@ -978,10 +979,10 @@ public class ProjectGenerator {
       switch (groupedSource.getType()) {
         case SOURCE_PATH:
           if (sourcePathResolver.isSourcePathExtensionInSet(
-              groupedSource.getSourcePath(),
+              groupedSource.getSourcePath().get(),
               FileExtensions.CLANG_HEADERS)) {
             addSourcePathToHeaderMaps(
-                groupedSource.getSourcePath(),
+                groupedSource.getSourcePath().get(),
                 prefix,
                 publicHeaderMap,
                 targetHeaderMap,
@@ -995,7 +996,7 @@ public class ProjectGenerator {
               targetHeaderMap,
               targetUserHeaderMap,
               prefix,
-              groupedSource.getSourceGroup(),
+              groupedSource.getSourceGroup().get(),
               sourceFlags);
           break;
         default:

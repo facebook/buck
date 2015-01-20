@@ -254,16 +254,16 @@ public class NewNativeTargetProjectMutator {
       switch (groupedSource.getType()) {
         case SOURCE_PATH:
           if (sourcePathResolver.isSourcePathExtensionInSet(
-              groupedSource.getSourcePath(),
+              groupedSource.getSourcePath().get(),
               FileExtensions.CLANG_HEADERS)) {
             addSourcePathToHeadersBuildPhase(
-                groupedSource.getSourcePath(),
+                groupedSource.getSourcePath().get(),
                 sourcesGroup,
                 headersBuildPhase,
                 sourceFlags);
           } else {
             addSourcePathToSourcesBuildPhase(
-                groupedSource.getSourcePath(),
+                groupedSource.getSourcePath().get(),
                 sourcesGroup,
                 sourcesBuildPhase,
                 sourceFlags);
@@ -271,14 +271,14 @@ public class NewNativeTargetProjectMutator {
           break;
         case SOURCE_GROUP:
           PBXGroup newSourceGroup = sourcesGroup.getOrCreateChildGroupByName(
-              groupedSource.getSourceGroupName());
+              groupedSource.getSourceGroupName().get());
           // Sources groups stay in the order in which they're declared in the BUCK file.
           newSourceGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
           traverseGroupsTreeAndHandleSources(
               newSourceGroup,
               sourcesBuildPhase,
               headersBuildPhase,
-              groupedSource.getSourceGroup(),
+              groupedSource.getSourceGroup().get(),
               sourceFlags);
           break;
         default:

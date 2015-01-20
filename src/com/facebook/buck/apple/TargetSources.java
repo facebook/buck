@@ -19,49 +19,49 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.AppleSource;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.immutables.value.Value;
+
 import java.util.Collection;
-import java.util.Objects;
+import java.util.List;
+import java.util.SortedMap;
+import java.util.SortedSet;
 
 /**
  * Immutable value type which holds information on source file(s)
  * used to build an Apple binary target.
  */
-public class TargetSources {
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class TargetSources {
   /**
    * The tree of source files and source groups comprising the target.
    */
-  public final ImmutableList<GroupedSource> srcs;
+  @Value.Parameter
+  public abstract List<GroupedSource> getSrcs();
 
   /**
    * A map of (source path : flags) pairs containing flags to
    * apply to each source or header path.
    */
-  public final ImmutableSortedMap<SourcePath, String> perFileFlags;
+  @Value.Parameter
+  public abstract SortedMap<SourcePath, String> getPerFileFlags();
 
   /**
    * Paths to each source code file in the target to be compiled.
    */
-  public final ImmutableSortedSet<SourcePath> srcPaths;
+  @Value.Parameter
+  public abstract SortedSet<SourcePath> getSrcPaths();
 
   /**
    * Paths to each header file in the target.
    */
-  public final ImmutableSortedSet<SourcePath> headerPaths;
-
-  private TargetSources(
-      ImmutableList<GroupedSource> srcs,
-      ImmutableSortedMap<SourcePath, String> perFileFlags,
-      ImmutableSortedSet<SourcePath> srcPaths,
-      ImmutableSortedSet<SourcePath> headerPaths) {
-    this.srcs = srcs;
-    this.perFileFlags = perFileFlags;
-    this.srcPaths = srcPaths;
-    this.headerPaths = headerPaths;
-  }
+  @Value.Parameter
+  public abstract SortedSet<SourcePath> getHeaderPaths();
 
   /**
    * Creates a {@link TargetSources} given a list of {@link AppleSource}s.
@@ -81,27 +81,11 @@ public class TargetSources {
         srcPathsBuilder,
         headerPathsBuilder,
         appleSources);
-    return new TargetSources(
+    return ImmutableTargetSources.of(
         srcsBuilder.build(),
         perFileFlagsBuilder.build(),
         srcPathsBuilder.build(),
         headerPathsBuilder.build());
   }
 
-  @Override
-  public boolean equals(Object other) {
-    if (other instanceof TargetSources) {
-      TargetSources that = (TargetSources) other;
-      return Objects.equals(this.srcs, that.srcs) &&
-          Objects.equals(this.perFileFlags, that.perFileFlags) &&
-          Objects.equals(this.srcPaths, that.srcPaths) &&
-          Objects.equals(this.headerPaths, that.headerPaths);
-    }
-    return false;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(srcs, perFileFlags, srcPaths, headerPaths);
-  }
 }

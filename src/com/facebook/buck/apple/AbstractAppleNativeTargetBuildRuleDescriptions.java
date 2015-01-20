@@ -117,7 +117,8 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
         params.getExtraDeps());
 
     TargetSources targetSources = TargetSources.ofAppleSources(resolver, args.srcs.get());
-    ImmutableSortedMap<SourcePath, String> perFileFlags = targetSources.perFileFlags;
+    ImmutableSortedMap<SourcePath, String> perFileFlags =
+        ImmutableSortedMap.copyOf(targetSources.getPerFileFlags());
     boolean useBuckHeaderMaps = args.useBuckHeaderMaps.or(Boolean.FALSE);
     return createSymlinkTree(
         headerRuleParams,
@@ -329,10 +330,10 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
       TargetSources targetSources) {
     output.srcs = Optional.of(
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-            ImmutableList.copyOf(targetSources.srcPaths)));
+            ImmutableList.copyOf(targetSources.getSrcPaths())));
     output.headers = Optional.of(
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-            ImmutableList.copyOf(targetSources.headerPaths)));
+            ImmutableList.copyOf(targetSources.getHeaderPaths())));
     output.compilerFlags = Optional.of(ImmutableList.<String>of());
     output.linkerFlags = Optional.of(ImmutableList.<String>of());
     output.platformLinkerFlags = Optional.of(

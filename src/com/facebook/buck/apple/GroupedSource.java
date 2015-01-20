@@ -17,15 +17,19 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import org.immutables.value.Value;
+
 import java.util.Collection;
-import java.util.Objects;
+import java.util.List;
 
-import javax.annotation.Nullable;
-
-public class GroupedSource {
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class GroupedSource {
   /**
    * The type of grouped source entry this object represents.
    */
@@ -38,71 +42,47 @@ public class GroupedSource {
        * A source group (group name and one or more GroupedSource objects).
        */
       SOURCE_GROUP
-  };
+  }
 
-  private final Type type;
-  @Nullable private final SourcePath sourcePath;
-  @Nullable private final String sourceGroupName;
-  @Nullable private final ImmutableList<GroupedSource> sourceGroup;
+  @Value.Parameter
+  public abstract Type getType();
 
-  private GroupedSource(
-      Type type,
-      @Nullable SourcePath sourcePath,
-      @Nullable String sourceGroupName,
-      @Nullable ImmutableList<GroupedSource> sourceGroup) {
-    this.type = type;
-    switch (this.type) {
+  @Value.Parameter
+  public abstract Optional<SourcePath> getSourcePath();
+
+  @Value.Parameter
+  public abstract Optional<String> getSourceGroupName();
+
+  @Value.Parameter
+  public abstract Optional<List<GroupedSource>> getSourceGroup();
+
+  @Value.Check
+  protected void check() {
+    switch (getType()) {
       case SOURCE_PATH:
-        Preconditions.checkNotNull(sourcePath);
-        Preconditions.checkArgument(sourceGroupName == null);
-        Preconditions.checkArgument(sourceGroup == null);
+        Preconditions.checkArgument(getSourcePath().isPresent());
+        Preconditions.checkArgument(!getSourceGroupName().isPresent());
+        Preconditions.checkArgument(!getSourceGroup().isPresent());
         break;
       case SOURCE_GROUP:
-        Preconditions.checkArgument(sourcePath == null);
-        Preconditions.checkNotNull(sourceGroupName);
-        Preconditions.checkNotNull(sourceGroup);
+        Preconditions.checkArgument(!getSourcePath().isPresent());
+        Preconditions.checkArgument(getSourceGroupName().isPresent());
+        Preconditions.checkArgument(getSourceGroup().isPresent());
         break;
       default:
-        throw new RuntimeException("Unhandled type: " + type);
+        throw new RuntimeException("Unhandled type: " + getType());
     }
-    this.sourcePath = sourcePath;
-    this.sourceGroupName = sourceGroupName;
-    this.sourceGroup = sourceGroup;
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    if (other instanceof GroupedSource) {
-      GroupedSource that = (GroupedSource) other;
-      return Objects.equals(this.type, that.type) &&
-          Objects.equals(this.sourcePath, that.sourcePath) &&
-          Objects.equals(this.sourceGroupName, that.sourceGroupName) &&
-          Objects.equals(this.sourceGroup, that.sourceGroup);
-    }
-    return false;
-  }
-
-  public Type getType() {
-    return type;
-  }
-
-  public SourcePath getSourcePath() {
-    return Preconditions.checkNotNull(sourcePath);
-  }
-
-  public String getSourceGroupName() {
-    return Preconditions.checkNotNull(sourceGroupName);
-  }
-
-  public ImmutableList<GroupedSource> getSourceGroup() {
-    return Preconditions.checkNotNull(sourceGroup);
   }
 
   /**
    * Creates a {@link GroupedSource} given a {@link SourcePath}.
    */
   public static GroupedSource ofSourcePath(SourcePath sourcePath) {
-    return new GroupedSource(Type.SOURCE_PATH, sourcePath, null, null);
+    return ImmutableGroupedSource.of(
+        Type.SOURCE_PATH,
+        Optional.of(sourcePath),
+        Optional.<String>absent(),
+        Optional.<List<GroupedSource>>absent());
   }
 
   /**
@@ -112,16 +92,11 @@ public class GroupedSource {
   public static GroupedSource ofSourceGroup(
       String sourceGroupName,
       Collection<GroupedSource> sourceGroup) {
-    return new GroupedSource(
+    return ImmutableGroupedSource.of(
         Type.SOURCE_GROUP,
-        null,
-        sourceGroupName,
-        ImmutableList.copyOf(sourceGroup));
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(type, sourcePath, sourceGroupName, sourceGroup);
+        Optional.<SourcePath>absent(),
+        Optional.of(sourceGroupName),
+        Optional.of((List<GroupedSource>) ImmutableList.copyOf(sourceGroup)));
   }
 
   public static interface Visitor {
@@ -132,11 +107,11 @@ public class GroupedSource {
   public void visit(Visitor visitor) {
     switch (this.getType()) {
     case SOURCE_PATH:
-      visitor.visitSourcePath(Preconditions.checkNotNull(sourcePath));
+      visitor.visitSourcePath(getSourcePath().get());
       break;
     case SOURCE_GROUP:
-      visitor.visitSourceGroup(Preconditions.checkNotNull(sourceGroupName));
-      for (GroupedSource group : Preconditions.checkNotNull(sourceGroup)) {
+      visitor.visitSourceGroup(getSourceGroupName().get());
+      for (GroupedSource group : getSourceGroup().get()) {
         group.visit(visitor);
       }
       break;

@@ -42,10 +42,10 @@ public class GroupedSources {
       GroupedSource groupedSource) {
     switch (groupedSource.getType()) {
       case SOURCE_PATH:
-        sourcePathsBuilder.add(groupedSource.getSourcePath());
+        sourcePathsBuilder.add(groupedSource.getSourcePath().get());
         break;
       case SOURCE_GROUP:
-        for (GroupedSource sourceGroupEntry : groupedSource.getSourceGroup()) {
+        for (GroupedSource sourceGroupEntry : groupedSource.getSourceGroup().get()) {
           addSourcePathsToBuilder(sourcePathsBuilder, sourceGroupEntry);
         }
         break;

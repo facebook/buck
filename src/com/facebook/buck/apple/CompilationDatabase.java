@@ -82,8 +82,9 @@ public class CompilationDatabase extends AbstractBuildRule {
   /**
    * @param buildRuleParams As needed by superclass constructor.
    * @param resolver As needed by superclass constructor.
-   * @param targetSources The {@link TargetSources#headerPaths} and {@link TargetSources#srcPaths}
-   *     will be the entries in the generated compilation database.
+   * @param targetSources The {@link TargetSources#getHeaderPaths()} and
+   *     {@link TargetSources#getSrcPaths()} will be the entries in the generated compilation
+   *     database.
    * @param frameworks Paths to frameworks to link against. Each may start with {@code "$SDKROOT"},
    *     in which case the appropriate path will be substituted.
    * @param includePaths Paths that should be passed as clang args with {@code -I}.
@@ -123,13 +124,13 @@ public class CompilationDatabase extends AbstractBuildRule {
     steps.add(new AbstractExecutionStep("generate_internal_header_map") {
       @Override
       public int execute(ExecutionContext context) {
-        if (targetSources.headerPaths.isEmpty()) {
+        if (targetSources.getHeaderPaths().isEmpty()) {
           return 0;
         }
 
         HeaderMap.Builder builder = HeaderMap.builder();
         ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-        for (SourcePath headerPath : targetSources.headerPaths) {
+        for (SourcePath headerPath : targetSources.getHeaderPaths()) {
           Path relativePath = getResolver().getPath(headerPath);
           Path absolutePath = projectFilesystem.resolve(relativePath);
           builder.add(relativePath.getFileName().toString(), absolutePath);
@@ -163,7 +164,7 @@ public class CompilationDatabase extends AbstractBuildRule {
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
     return getResolver().filterInputsToCompareToOutput(
-        Iterables.concat(targetSources.headerPaths, targetSources.srcPaths));
+        Iterables.concat(targetSources.getHeaderPaths(), targetSources.getSrcPaths()));
   }
 
   @Override
@@ -194,8 +195,8 @@ public class CompilationDatabase extends AbstractBuildRule {
       BuildTarget target = getBuildTarget();
       List<JsonSerializableDatabaseEntry> entries = Lists.newArrayList();
       Iterable<SourcePath> allSources = Iterables.concat(
-          targetSources.srcPaths,
-          targetSources.headerPaths);
+          targetSources.getSrcPaths(),
+          targetSources.getHeaderPaths());
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       for (SourcePath srcPath : allSources) {
         String fileToCompile = projectFilesystem.resolve(getResolver().getPath(srcPath))
@@ -287,7 +288,7 @@ public class CompilationDatabase extends AbstractBuildRule {
 
         // Currently, perFileFlags is a single string rather than a list, so we concatenate it
         // to the end of the command string without escaping or splitting.
-        String perFileFlags = Strings.nullToEmpty(targetSources.perFileFlags.get(srcPath));
+        String perFileFlags = Strings.nullToEmpty(targetSources.getPerFileFlags().get(srcPath));
         if (!perFileFlags.isEmpty() && FileExtensions.CLANG_SOURCES.contains(
             Files.getFileExtension(fileToCompile))) {
           commandArgs.add(perFileFlags);
