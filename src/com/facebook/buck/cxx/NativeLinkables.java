@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.graph.ImmutableDirectedAcyclicGraph;
+import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRule;
@@ -58,7 +58,7 @@ public class NativeLinkables {
       final Predicate<Object> traverse,
       boolean reverse) {
 
-    final ImmutableDirectedAcyclicGraph<BuildRule> graph =
+    final DirectedAcyclicGraph<BuildRule> graph =
         BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
             inputs,
             Predicates.instanceOf(NativeLinkable.class),

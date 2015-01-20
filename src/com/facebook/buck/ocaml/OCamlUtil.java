@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.graph.ImmutableDirectedAcyclicGraph;
+import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRule;
@@ -80,7 +80,7 @@ public class OCamlUtil {
   public static ImmutableList<OCamlLibrary> getTransitiveOCamlInput(
       Iterable<? extends BuildRule> inputs) {
 
-    final ImmutableDirectedAcyclicGraph<BuildRule> graph =
+    final DirectedAcyclicGraph<BuildRule> graph =
         BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
             inputs,
             Predicates.instanceOf(OCamlLibrary.class),

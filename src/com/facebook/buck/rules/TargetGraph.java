@@ -18,7 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
+import com.facebook.buck.graph.DefaultDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Function;
@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  * Represents the graph of {@link com.facebook.buck.rules.TargetNode}s constructed
  * by parsing the build files.
  */
-public class TargetGraph extends DefaultImmutableDirectedAcyclicGraph<TargetNode<?>> {
+public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
 
   public static final TargetGraph EMPTY = new TargetGraph(
       new MutableDirectedGraph<TargetNode<?>>(),

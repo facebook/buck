@@ -24,13 +24,13 @@ import javax.annotation.Nullable;
 
 public class Dot<T> {
 
-  private final ImmutableDirectedAcyclicGraph<T> graph;
+  private final DirectedAcyclicGraph<T> graph;
   private final String graphName;
   private final Function<T, String> nodeToName;
   private final Appendable output;
 
   public Dot(
-      ImmutableDirectedAcyclicGraph<T> graph,
+      DirectedAcyclicGraph<T> graph,
       String graphName,
       Function<T, String> nodeToName,
       Appendable output) {

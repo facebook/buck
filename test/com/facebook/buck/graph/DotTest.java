@@ -40,7 +40,7 @@ public class DotTest {
     mutableGraph.addEdge("C", "E");
     mutableGraph.addEdge("D", "E");
     mutableGraph.addEdge("A", "E");
-    ImmutableDirectedAcyclicGraph<String> graph = new DefaultImmutableDirectedAcyclicGraph<>(
+    DirectedAcyclicGraph<String> graph = new DefaultDirectedAcyclicGraph<>(
         mutableGraph);
 
     StringBuilder output = new StringBuilder();

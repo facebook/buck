@@ -17,8 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
-import com.facebook.buck.graph.ImmutableDirectedAcyclicGraph;
+import com.facebook.buck.graph.DefaultDirectedAcyclicGraph;
+import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
@@ -39,7 +39,7 @@ public class BuildRuleDependencyVisitors {
    *
    * @see com.facebook.buck.rules.BuildRule
    */
-  public static <T> ImmutableDirectedAcyclicGraph<BuildRule> getBuildRuleDirectedGraphFilteredBy(
+  public static <T> DirectedAcyclicGraph<BuildRule> getBuildRuleDirectedGraphFilteredBy(
       final Iterable<? extends BuildRule> inputs,
       final Predicate<Object> filter,
       final Predicate<Object> traverse) {
@@ -63,7 +63,7 @@ public class BuildRuleDependencyVisitors {
           }
         };
     visitor.start();
-    return new DefaultImmutableDirectedAcyclicGraph<>(graph);
+    return new DefaultDirectedAcyclicGraph<>(graph);
   }
 
   public static ImmutableSet<BuildRule> maybeVisitAllDeps(BuildRule rule, boolean visitDeps) {

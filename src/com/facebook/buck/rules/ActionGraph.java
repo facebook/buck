@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.graph.DefaultImmutableDirectedAcyclicGraph;
+import com.facebook.buck.graph.DefaultDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
@@ -25,7 +25,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class ActionGraph extends DefaultImmutableDirectedAcyclicGraph<BuildRule> {
+public class ActionGraph extends DefaultDirectedAcyclicGraph<BuildRule> {
 
   @Nullable
   private Map<BuildTarget, BuildRule> index;

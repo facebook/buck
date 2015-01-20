@@ -23,13 +23,13 @@ import com.google.common.collect.Sets;
 
 import java.util.Objects;
 
-public class DefaultImmutableDirectedAcyclicGraph<T> implements ImmutableDirectedAcyclicGraph<T> {
+public class DefaultDirectedAcyclicGraph<T> implements DirectedAcyclicGraph<T> {
 
   private final ImmutableSet<T> nodes;
   private final ImmutableSetMultimap<T, T> outgoingEdges;
   private final ImmutableSetMultimap<T, T> incomingEdges;
 
-  public DefaultImmutableDirectedAcyclicGraph(MutableDirectedGraph<T> graph) {
+  public DefaultDirectedAcyclicGraph(MutableDirectedGraph<T> graph) {
     Preconditions.checkArgument(graph.isAcyclic());
     this.nodes = graph.createImmutableCopyOfNodes();
     this.outgoingEdges = graph.createImmutableCopyOfOutgoingEdges();
@@ -63,11 +63,11 @@ public class DefaultImmutableDirectedAcyclicGraph<T> implements ImmutableDirecte
 
   @Override
   public boolean equals(Object other) {
-    if (!(other instanceof DefaultImmutableDirectedAcyclicGraph)) {
+    if (!(other instanceof DefaultDirectedAcyclicGraph)) {
       return false;
     }
 
-    DefaultImmutableDirectedAcyclicGraph<?> that = (DefaultImmutableDirectedAcyclicGraph<?>) other;
+    DefaultDirectedAcyclicGraph<?> that = (DefaultDirectedAcyclicGraph<?>) other;
     return Objects.equals(this.nodes, that.nodes) &&
         Objects.equals(this.outgoingEdges, that.outgoingEdges) &&
         Objects.equals(this.incomingEdges, that.incomingEdges);

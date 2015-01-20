@@ -53,8 +53,8 @@ public class AbstractBottomUpTraversalTest {
     mutableGraph.addEdge("D", "F");
     mutableGraph.addEdge("E", "F");
 
-    ImmutableDirectedAcyclicGraph<String> immutableGraph =
-        new DefaultImmutableDirectedAcyclicGraph<String>(mutableGraph);
+    DirectedAcyclicGraph<String> immutableGraph =
+        new DefaultDirectedAcyclicGraph<String>(mutableGraph);
 
     AbstractBottomUpTraversal<String, List<String>> traversal =
         new AbstractBottomUpTraversal<String, List<String>>(immutableGraph) {
@@ -105,8 +105,8 @@ public class AbstractBottomUpTraversalTest {
     mutableGraph.addEdge("Y", "Z");
     mutableGraph.addEdge("V", "A");
 
-    ImmutableDirectedAcyclicGraph<String> immutableGraph =
-        new DefaultImmutableDirectedAcyclicGraph<String>(mutableGraph);
+    DirectedAcyclicGraph<String> immutableGraph =
+        new DefaultDirectedAcyclicGraph<String>(mutableGraph);
     AbstractBottomUpTraversal<String, List<String>> traversal =
         new AbstractBottomUpTraversal<String, List<String>>(immutableGraph) {
 
