@@ -180,6 +180,9 @@ public class HttpArtifactCache implements ArtifactCache {
       connection = getConnection(urlStore);
       connection.setConnectTimeout(1000 * timeoutSeconds);
       connection.setRequestMethod(method);
+      // Use "chunked" streaming mode so that we don't buffer the entire contents of the artifact
+      // in memory.  Using "0" here as the value causes an internal default to be used (4096).
+      connection.setChunkedStreamingMode(0);
       prepareFileUpload(connection, file, ruleKey.toString());
     } catch (NotSerializableException e) {
       logger.error(e, "store(%s): could not write hash code: %s", ruleKey);
