@@ -349,7 +349,15 @@
     <fileset refid="dx.jars" />
   </path>
 
-  <target name="dx">
+  <target name="dx-check-build">
+    <uptodate property="dx-build-not-required" targetfile="${build.dir}/dx.jar">
+      <srcfiles dir="${dx.src.dir}" includes="**/*.java" />
+      <srcfiles dir="${third-party.dir}/java/guava" includes="guava-*.jar" />
+      <srcfiles dir="${third-party.dir}/java/junit" includes="junit-*.jar" />
+    </uptodate>
+  </target>
+
+  <target name="dx" depends="dx-check-build" unless="dx-build-not-required">
     <mkdir dir="${dx.classes.dir}" />
 
     <javac destdir="${dx.classes.dir}"
