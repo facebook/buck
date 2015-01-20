@@ -30,12 +30,12 @@ public class TypeTest {
   @Test
   public void testBuilder() {
     Type t = ImmutableType.builder()
-        .name("Jenny")
+        .setName("Jenny")
         .addPhoneNumbers(8675309L)
         .build();
 
-    assertEquals("Jenny", t.name());
-    assertEquals(ImmutableList.of(8675309L), t.phoneNumbers());
-    assertFalse(t.description().isPresent());
+    assertEquals("Jenny", t.getName());
+    assertEquals(ImmutableList.of(8675309L), t.getPhoneNumbers());
+    assertFalse(t.getDescription().isPresent());
   }
 }

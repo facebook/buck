@@ -51,18 +51,20 @@ java_immutables_library(
 
 <p>Then, declare an <code>interface</code> or <code>abstract</code> class
 containing the type and data accessors. Make sure to annotate it
-with <code>@org.immutables.value.Value.Immutable</code>:</p>
+with <code>@org.immutables.value.Value.Immutable</code> and <code>@com.facebook.buck.util.immutables.BuckStyleImmutable</code>:</p>
 
 {literal}<pre class="prettyprint lang-java">
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import org.immutables.value.Value;
 import java.util.List;
 
 @Value.Immutable
+@BuckStyleImmutable
 public interface Type {
-  String name();
-  List&lt;Long&gt; phoneNumbers();
-  Optional&lt;String&gt; description();
+  String getName();
+  List&lt;Long&gt; getPhoneNumbers();
+  Optional&lt;String&gt; getDescription();
 }
 </pre>
 {/literal}
@@ -82,13 +84,13 @@ the general type in the interface.)</p>
 
 {literal}<pre class="prettyprint lang-java">
     Type t = ImmutableType.builder()
-        .name("Jenny")
+        .setName("Jenny")
         .addPhoneNumbers(8675309L)
         .build();
 
-    assertEquals("Jenny", t.name());
-    assertEquals(ImmutableList.of(8675309L), t.phoneNumbers());
-    assertFalse(t.description().isPresent());
+    assertEquals("Jenny", t.getName());
+    assertEquals(ImmutableList.of(8675309L), t.getPhoneNumbers());
+    assertFalse(t.getDescription().isPresent());
 </pre>
 {/literal}
 

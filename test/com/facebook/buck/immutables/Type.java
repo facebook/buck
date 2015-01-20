@@ -16,6 +16,7 @@
 
 package com.facebook.buck.immutables;
 
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
@@ -27,8 +28,9 @@ import java.util.List;
  * will be generated, along with an {@link ImmutableType.Builder}.
  */
 @Value.Immutable
+@BuckStyleImmutable
 public interface Type {
-  String name();
-  List<Long> phoneNumbers();
-  Optional<String> description();
+  String getName();
+  List<Long> getPhoneNumbers();
+  Optional<String> getDescription();
 }
