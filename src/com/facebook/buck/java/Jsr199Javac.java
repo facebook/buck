@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
@@ -98,6 +99,12 @@ public class Jsr199Javac implements Javac {
   @Override
   public String getShortName() {
     return "javac";
+  }
+
+  @Override
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return builder.set("javac", "jsr199")
+        .set("javac.version", "in-memory");
   }
 
   @Override

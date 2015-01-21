@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.CharMatcher;
@@ -53,4 +54,6 @@ public interface Javac {
       Optional<Path> pathToSrcsList);
 
   String getShortName();
+
+  RuleKey.Builder appendToRuleKey(RuleKey.Builder builder);
 }

@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -66,6 +67,11 @@ public class ExternalJavac implements Javac {
   @Override
   public String getShortName() {
     return pathToJavac.toString();
+  }
+
+  @Override
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return builder.setInput("javac", pathToJavac);
   }
 
   @Override

@@ -147,6 +147,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+    builder = javac.appendToRuleKey(builder);
     return javacOptions.appendToRuleKey(builder);
   }
 

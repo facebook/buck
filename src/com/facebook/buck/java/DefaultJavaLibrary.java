@@ -409,6 +409,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         // out as "provided" because changing a dep from provided to transtitive should result in a
         // re-build (otherwise, we'd get a rule key match).
         .setReflectively("provided_deps", providedDeps);
+    builder = javac.appendToRuleKey(builder);
     return javacOptions.appendToRuleKey(builder);
   }
 
