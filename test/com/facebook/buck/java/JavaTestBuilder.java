@@ -16,7 +16,6 @@
 
 package com.facebook.buck.java;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 
 import com.facebook.buck.model.BuildTarget;
@@ -34,7 +33,6 @@ public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg
   private JavaTestBuilder(BuildTarget target) {
     super(
         new JavaTestDescription(
-            DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             /* testRuleTimeoutMs */ Optional.<Long>absent()),
         target);

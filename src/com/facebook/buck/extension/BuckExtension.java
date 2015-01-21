@@ -19,7 +19,6 @@ package com.facebook.buck.extension;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.CopyResourcesStep;
 import com.facebook.buck.java.JarDirectoryStep;
-import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
@@ -57,7 +56,6 @@ import java.util.Collection;
  */
 public class BuckExtension extends AbstractBuildRule {
 
-  private final Javac javac;
   private final JavacOptions javacOptions;
   private final ImmutableSortedSet<? extends SourcePath> srcs;
   private final ImmutableSortedSet<? extends SourcePath> resources;
@@ -66,14 +64,12 @@ public class BuckExtension extends AbstractBuildRule {
 
   public BuckExtension(
       BuildRuleParams params,
-      Javac javac,
       JavacOptions javacOptions,
       SourcePathResolver resolver,
       ImmutableSortedSet<? extends SourcePath> srcs,
       ImmutableSortedSet<? extends SourcePath> resources) {
     super(params, resolver);
 
-    this.javac = javac;
     this.javacOptions = javacOptions;
     this.srcs = srcs;
     this.resources = resources;
@@ -106,7 +102,6 @@ public class BuckExtension extends AbstractBuildRule {
 
     steps.add(
         new JavacStep(
-            javac,
             working,
             Optional.<Path>absent(),
             ImmutableSet.copyOf(getResolver().getAllPaths(srcs)),

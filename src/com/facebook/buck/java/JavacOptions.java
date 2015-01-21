@@ -39,6 +39,7 @@ import javax.annotation.Nullable;
  */
 public class JavacOptions {
 
+  private final Optional<Path> javacPath;
   private final boolean debug;
   private final boolean verbose;
   private final String sourceLevel;
@@ -49,6 +50,7 @@ public class JavacOptions {
   private final ImmutableMap<String, String> sourceToBootclasspath;
 
   private JavacOptions(
+      Optional<Path> javacPath,
       boolean debug,
       boolean verbose,
       String sourceLevel,
@@ -57,6 +59,7 @@ public class JavacOptions {
       Optional<String> bootclasspath,
       ImmutableMap<String, String> sourceToBootclasspath,
       AnnotationProcessingParams annotationProcessingParams) {
+    this.javacPath = javacPath;
     this.debug = debug;
     this.verbose = verbose;
     this.sourceLevel = sourceLevel;
@@ -133,6 +136,7 @@ public class JavacOptions {
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(simons): Include bootclasspath params.
     builder.set("sourceLevel", sourceLevel)
+        .set("javacPath", javacPath.transform(Functions.toStringFunction()).orNull())
         .set("targetLevel", targetLevel)
         .set("extraArguments", Joiner.on(',').join(extraArguments))
         .set("debug", debug);
@@ -157,6 +161,10 @@ public class JavacOptions {
     return extraArguments;
   }
 
+  public Optional<Path> getJavacPath() {
+    return javacPath;
+  }
+
   static Builder builderForUseInJavaBuckConfig() {
     return new Builder();
   }
@@ -171,6 +179,7 @@ public class JavacOptions {
       builder.setProductionBuild();
     }
 
+    builder.setJavacPath(options.javacPath);
     builder.setAnnotationProcessingParams(options.annotationProcessingParams);
     builder.sourceToBootclasspath = options.sourceToBootclasspath;
     builder.setBootclasspath(options.bootclasspath.orNull());
@@ -182,6 +191,7 @@ public class JavacOptions {
   }
 
   public static class Builder {
+    private Optional<Path> javacPath = Optional.<Path>absent();
     private String sourceLevel;
     private String targetLevel;
     private ImmutableList<String> extraArguments = ImmutableList.of();
@@ -193,6 +203,11 @@ public class JavacOptions {
     private ImmutableMap<String, String> sourceToBootclasspath;
 
     private Builder() {
+    }
+
+    public Builder setJavacPath(Optional<Path> javacPath) {
+      this.javacPath = javacPath;
+      return this;
     }
 
     public Builder setSourceLevel(String sourceLevel) {
@@ -238,6 +253,7 @@ public class JavacOptions {
 
     public JavacOptions build() {
       return new JavacOptions(
+          javacPath,
           debug,
           verbose,
           Preconditions.checkNotNull(sourceLevel),

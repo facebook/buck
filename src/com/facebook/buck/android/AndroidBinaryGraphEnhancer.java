@@ -24,7 +24,6 @@ import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaNativeLinkable;
-import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
@@ -84,7 +83,6 @@ public class AndroidBinaryGraphEnhancer {
   private final DexSplitMode dexSplitMode;
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ImmutableSet<BuildTarget> resourcesToExclude;
-  private final Javac javac;
   private final JavacOptions javacOptions;
   private final EnumSet<ExopackageMode> exopackageModes;
   private final Keystore keystore;
@@ -112,7 +110,6 @@ public class AndroidBinaryGraphEnhancer {
       DexSplitMode dexSplitMode,
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
       ImmutableSet<BuildTarget> resourcesToExclude,
-      Javac javac,
       JavacOptions javacOptions,
       EnumSet<ExopackageMode> exopackageModes,
       Keystore keystore,
@@ -136,7 +133,6 @@ public class AndroidBinaryGraphEnhancer {
     this.dexSplitMode = dexSplitMode;
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
-    this.javac = javac;
     this.javacOptions = javacOptions;
     this.exopackageModes = exopackageModes;
     this.keystore = keystore;
@@ -207,7 +203,6 @@ public class AndroidBinaryGraphEnhancer {
         packageableCollection.getAssetsDirectories(),
         packageType,
         cpuFilters,
-        javac,
         javacOptions,
         shouldPreDex,
         shouldBuildStringSourceMap,
@@ -426,7 +421,6 @@ public class AndroidBinaryGraphEnhancer {
           totalBuildConfigValues,
           buildConfigValuesFile,
           /* useConstantExpressions */ true,
-          javac,
           javacOptions,
           ruleResolver);
       ruleResolver.addToIndex(buildConfigJavaLibrary);

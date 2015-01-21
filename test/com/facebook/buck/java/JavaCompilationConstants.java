@@ -20,8 +20,6 @@ import com.google.common.collect.ImmutableMap;
 
 public class JavaCompilationConstants {
 
-  public static final Javac DEFAULT_JAVAC = new Jsr199Javac();
-
   public static final JavacOptions DEFAULT_JAVAC_OPTIONS =
       JavacOptions.builderForUseInJavaBuckConfig()
           .setSourceLevel("7")

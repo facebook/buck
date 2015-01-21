@@ -16,7 +16,6 @@
 
 package com.facebook.buck.java;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static com.facebook.buck.util.BuckConstant.BIN_PATH;
 import static org.easymock.EasyMock.createNiceMock;
@@ -969,7 +968,6 @@ public class DefaultJavaLibraryTest {
         exportedDeps,
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        DEFAULT_JAVAC,
         DEFAULT_JAVAC_OPTIONS,
         /* resourcesRoot */ Optional.<Path>absent()) {
       @Override
@@ -1380,7 +1378,6 @@ public class DefaultJavaLibraryTest {
           /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
           /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
           /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-          DEFAULT_JAVAC,
           options.build(),
           /* resourcesRoot */ Optional.<Path>absent(),
           /* manifestFile */ Optional.<SourcePath>absent(),

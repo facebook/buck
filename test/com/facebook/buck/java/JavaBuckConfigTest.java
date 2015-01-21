@@ -159,34 +159,6 @@ public class JavaBuckConfigTest {
     return joined.contains(expectedParameter);
   }
 
-  @Test
-  public void shouldDefaultToCreatingAnInMemoryJavac() throws IOException, InterruptedException {
-    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-
-    Javac actualJavac = config.getJavac(new FakeProcessExecutor());
-    assertTrue(actualJavac instanceof Jsr199Javac);
-  }
-
-  @Test
-  public void shouldCreateAnExternalJavaWhenTheJavacPathIsSet()
-      throws IOException, InterruptedException {
-    File javac = temporaryFolder.newFile();
-    javac.setExecutable(true);
-
-    String localConfig = "[tools]\njavac = " + javac;
-    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
-
-    ProcessExecutorParams params = ProcessExecutorParams.builder()
-        .setCommand(ImmutableList.of(javac.toString(), "-version"))
-        .build();
-    FakeProcess result = new FakeProcess(0, "", "woohoo");
-
-    FakeProcessExecutor processExecutor = new FakeProcessExecutor(ImmutableMap.of(params, result));
-    Javac actualJavac = config.getJavac(processExecutor);
-    assertTrue(actualJavac instanceof ExternalJavac);
-    assertEquals("woohoo", actualJavac.getVersion().getVersionString());
-  }
-
   private JavaBuckConfig createWithDefaultFilesystem(Reader reader)
       throws IOException {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());

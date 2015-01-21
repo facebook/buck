@@ -107,7 +107,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  private final Javac javac;
   private final ImmutableSortedSet<SourcePath> srcs;
   private final ImmutableSortedSet<SourcePath> resources;
   private final Optional<Path> outputJar;
@@ -176,12 +175,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
       ImmutableSet<Path> additionalClasspathEntries,
-      Javac javac,
       JavacOptions javacOptions,
       Optional<Path> resourcesRoot) {
     super(params, resolver);
-
-    this.javac = javac;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -270,7 +266,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       commands.add(new MkdirStep(pathToSrcsList.getParent()));
 
       Optional<Path> workingDirectory;
-      if (javac.isUsingWorkspace()) {
+      if (getJavac().isUsingWorkspace()) {
         Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
         commands.add(new MakeCleanDirectoryStep(scratchDir));
         workingDirectory = Optional.of(scratchDir);
@@ -279,7 +275,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       }
 
       JavacStep javacStep = new JavacStep(
-          javac,
           outputDirectory,
           workingDirectory,
           getJavaSrcs(),
@@ -411,7 +406,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         // out as "provided" because changing a dep from provided to transtitive should result in a
         // re-build (otherwise, we'd get a rule key match).
         .setReflectively("provided_deps", providedDeps);
-    builder = javac.appendToRuleKey(builder);
     return javacOptions.appendToRuleKey(builder);
   }
 
@@ -748,9 +742,12 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     }
   }
 
-  @VisibleForTesting
   public Javac getJavac() {
-    return javac;
+    Optional<Path> externalJavac = javacOptions.getJavacPath();
+    if (externalJavac.isPresent()) {
+      return new ExternalJavac(externalJavac.get());
+    }
+    return new Jsr199Javac();
   }
 
   @Override

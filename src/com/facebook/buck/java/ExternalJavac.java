@@ -39,16 +39,21 @@ import java.util.Map;
 public class ExternalJavac implements Javac {
 
   private final Path pathToJavac;
-  private final JavacVersion version;
 
-  public ExternalJavac(Path pathToJavac, JavacVersion version) {
+  private static final JavacVersion VERSION = new JavacVersion() {
+      @Override
+      public String getVersionString() {
+        return "external";
+      }
+    };
+
+  public ExternalJavac(Path pathToJavac) {
     this.pathToJavac = pathToJavac;
-    this.version = version;
   }
 
   @Override
   public JavacVersion getVersion() {
-    return version;
+    return VERSION;
   }
 
   @Override
@@ -84,7 +89,7 @@ public class ExternalJavac implements Javac {
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return builder.setInput("javac", pathToJavac)
-        .set("javac.version", version.toString());
+        .set("javac.version", getVersion().toString());
   }
 
   public Path getPath() {

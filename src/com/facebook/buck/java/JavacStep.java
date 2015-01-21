@@ -54,8 +54,6 @@ import java.util.regex.Pattern;
  */
 public class JavacStep implements Step {
 
-  private Javac javac;
-
   private final Path outputDirectory;
 
   private final Optional<Path> workingDirectory;
@@ -113,7 +111,6 @@ public class JavacStep implements Step {
   }
 
   public JavacStep(
-      Javac javac,
       Path outputDirectory,
       Optional<Path> workingDirectory,
       Set<Path> javaSourceFilePaths,
@@ -124,7 +121,6 @@ public class JavacStep implements Step {
       BuildTarget invokingRule,
       BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules) {
-    this.javac = javac;
     this.outputDirectory = outputDirectory;
     this.workingDirectory = workingDirectory;
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
@@ -175,7 +171,9 @@ public class JavacStep implements Step {
     CapturingPrintStream stderr = new CapturingPrintStream();
     ExecutionContext firstOrderContext = context.createSubContext(stdout, stderr);
 
-    int declaredDepsResult = getJavac().buildWithClasspath(
+    Javac javac = getJavac();
+
+    int declaredDepsResult = javac.buildWithClasspath(
         firstOrderContext,
         invokingRule,
         getOptions(context, declaredClasspathEntries),
@@ -187,7 +185,7 @@ public class JavacStep implements Step {
     String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
 
     if (declaredDepsResult != 0) {
-      int transitiveResult = getJavac().buildWithClasspath(
+      int transitiveResult = javac.buildWithClasspath(
           context,
           invokingRule,
           getOptions(context, transitiveClasspathEntries),
@@ -224,7 +222,11 @@ public class JavacStep implements Step {
 
   @VisibleForTesting
   Javac getJavac() {
-    return javac;
+    Optional<Path> externalJavac = javacOptions.getJavacPath();
+    if (externalJavac.isPresent()) {
+      return new ExternalJavac(externalJavac.get());
+    }
+    return new Jsr199Javac();
   }
 
   @Override
@@ -316,4 +318,3 @@ public class JavacStep implements Step {
     return outputDirectory.toString();
   }
 }
-

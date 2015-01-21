@@ -22,7 +22,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
 import com.android.common.annotations.Nullable;
 import com.facebook.buck.java.JavaTest;
-import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.TestType;
 import com.facebook.buck.rules.BuildRule;
@@ -81,7 +80,6 @@ public class RobolectricTest extends JavaTest {
       Set<String> contacts,
       Optional<Path> proguardConfig,
       ImmutableSet<Path> additionalClasspathEntries,
-      Javac javac,
       JavacOptions javacOptions,
       List<String> vmArgs,
       ImmutableSet<BuildRule> sourceTargetsUnderTest,
@@ -98,7 +96,6 @@ public class RobolectricTest extends JavaTest {
         proguardConfig,
         additionalClasspathEntries,
         TestType.JUNIT,
-        javac,
         javacOptions,
         vmArgs,
         sourceTargetsUnderTest,

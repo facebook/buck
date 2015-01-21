@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
@@ -126,7 +125,6 @@ public class AndroidInstrumentationApkTest {
     AndroidInstrumentationApk androidInstrumentationApk = (AndroidInstrumentationApk)
         new AndroidInstrumentationApkDescription(
             new ProGuardConfig(new FakeBuckConfig()),
-            DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>of())
                 .createBuildRule(params, ruleResolver, arg);

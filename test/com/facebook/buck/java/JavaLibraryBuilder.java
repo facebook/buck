@@ -16,7 +16,6 @@
 
 package com.facebook.buck.java;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 
 import com.facebook.buck.model.BuildTarget;
@@ -30,7 +29,7 @@ import java.nio.file.Path;
 public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescription.Arg> {
 
   protected JavaLibraryBuilder(BuildTarget target) {
-    super(new JavaLibraryDescription(DEFAULT_JAVAC, DEFAULT_JAVAC_OPTIONS), target);
+    super(new JavaLibraryDescription(DEFAULT_JAVAC_OPTIONS), target);
   }
 
   public static JavaLibraryBuilder createBuilder(BuildTarget target) {

@@ -16,21 +16,15 @@
 
 package com.facebook.buck.java;
 
-import static com.facebook.buck.util.ProcessExecutor.Option.EXPECTING_STD_OUT;
-
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -67,20 +61,12 @@ public class JavaBuckConfig {
     }
 
     return JavacOptions.builderForUseInJavaBuckConfig()
+        .setJavacPath(getJavacPath())
         .setSourceLevel(sourceLevel.or(TARGETED_JAVA_VERSION))
         .setTargetLevel(targetLevel.or(TARGETED_JAVA_VERSION))
         .setBootclasspathMap(bootclasspaths.build())
         .setExtraArguments(extraArguments)
         .build();
-  }
-
-  public Javac getJavac(ProcessExecutor processExecutor) throws InterruptedException {
-    Optional<Path> externalJavac = getJavacPath();
-    if (externalJavac.isPresent()) {
-      JavacVersion version = getJavacVersion(processExecutor, externalJavac.get());
-      return new ExternalJavac(externalJavac.get(), version);
-    }
-    return new Jsr199Javac();
   }
 
   @VisibleForTesting
@@ -98,36 +84,4 @@ public class JavaBuckConfig {
     }
     return Optional.absent();
   }
-
-  /**
-   * @param executor ProcessExecutor to run the java compiler
-   * @param javac path to the java compiler
-   * @return the version of the passed in java compiler
-   */
-  private JavacVersion getJavacVersion(ProcessExecutor executor, Path javac)
-      throws InterruptedException {
-    try {
-      ProcessExecutorParams build = ProcessExecutorParams.builder()
-          .setCommand(ImmutableList.of(javac.toAbsolutePath().toString(), "-version"))
-          .build();
-      ProcessExecutor.Result versionResult = executor.launchAndExecute(
-          build,
-          ImmutableSet.of(EXPECTING_STD_OUT),
-          /* stdin */ Optional.<String>absent(),
-          /* timeOutMs */ Optional.<Long>absent());
-      if (versionResult.getExitCode() == 0) {
-        String stderr = versionResult.getStderr().get();
-        int firstNewline = stderr.indexOf('\n');
-        if (firstNewline != -1) {
-          stderr = stderr.substring(0, firstNewline);
-        }
-        return ImmutableJavacVersion.of(stderr);
-      } else {
-        throw new HumanReadableException(versionResult.getStderr().get());
-      }
-    } catch (IOException e) {
-      throw new HumanReadableException("Could not run " + javac + " -version");
-    }
-  }
-
 }

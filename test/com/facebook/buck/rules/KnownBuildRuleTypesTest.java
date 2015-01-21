@@ -184,30 +184,6 @@ public class KnownBuildRuleTypesTest {
   }
 
   @Test
-  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJavacVersionSet()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
-    final File javac = temporaryFolder.newFile();
-    javac.setExecutable(true);
-
-    Map<String, Map<String, String>> sections = ImmutableMap.of(
-        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
-    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
-
-    JavacVersion javacVersion = ImmutableJavacVersion.of("fakeVersion 0.1");
-
-    ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
-
-    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
-        buckConfig,
-        processExecutor,
-        new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT)
-        .build();
-    DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
-    assertEquals(javacVersion, libraryRule.getJavac().getVersion());
-  }
-
-  @Test
   public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithDifferentRuleKey()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     final File javac = temporaryFolder.newFile();
@@ -231,37 +207,6 @@ public class KnownBuildRuleTypesTest {
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
     assertNotEquals(libraryRule.getRuleKey(), configuredRule.getRuleKey());
-  }
-
-  @Test
-  public void differentExternalJavacCreateJavaLibraryRulesWithDifferentRuleKey()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
-    final File javac = temporaryFolder.newFile();
-    javac.setExecutable(true);
-
-    Map<String, Map<String, String>> sections = ImmutableMap.of(
-        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
-    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
-    ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
-
-    KnownBuildRuleTypes configuredBuildRuleTypes1 = KnownBuildRuleTypes.createBuilder(
-        buckConfig,
-        processExecutor,
-        new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT)
-        .build();
-    DefaultJavaLibrary configuredRule1 = createJavaLibrary(configuredBuildRuleTypes1);
-
-    ProcessExecutor processExecutor2 = createExecutor(javac.toString(), "fakeVersion 0.2");
-    KnownBuildRuleTypes configuredBuildRuleTypes2 = KnownBuildRuleTypes.createBuilder(
-        buckConfig,
-        processExecutor2,
-        new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT)
-        .build();
-    DefaultJavaLibrary configuredRule2 = createJavaLibrary(configuredBuildRuleTypes2);
-
-    assertNotEquals(configuredRule1.getRuleKey(), configuredRule2.getRuleKey());
   }
 
   @Test

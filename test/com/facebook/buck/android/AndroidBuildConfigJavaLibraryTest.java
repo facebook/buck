@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
@@ -50,7 +49,6 @@ public class AndroidBuildConfigJavaLibraryTest {
                 Collections.singleton("String foo = \"bar\"")),
             /* valuesFile */ Optional.<SourcePath>absent(),
             /* useConstantExpressions */ false,
-            DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             buildRuleResolver);
 
@@ -79,7 +77,6 @@ public class AndroidBuildConfigJavaLibraryTest {
             /* values */ fields,
             /* valuesFile */ Optional.<SourcePath>absent(),
             /* useConstantExpressions */ false,
-            DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             buildRuleResolver);
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();

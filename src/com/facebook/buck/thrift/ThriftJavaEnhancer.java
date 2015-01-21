@@ -50,15 +50,12 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
       ImmutableBuildRuleType.of("thrift-java-source-zip");
 
   private final ThriftBuckConfig thriftBuckConfig;
-  private final Javac javac;
   private final JavacOptions templateOptions;
 
   public ThriftJavaEnhancer(
       ThriftBuckConfig thriftBuckConfig,
-      Javac javac,
       JavacOptions templateOptions) {
     this.thriftBuckConfig = thriftBuckConfig;
-    this.javac = javac;
     this.templateOptions = templateOptions;
   }
 
@@ -144,7 +141,6 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        javac,
         templateOptions,
         /* resourcesRoot */ Optional.<Path>absent());
   }

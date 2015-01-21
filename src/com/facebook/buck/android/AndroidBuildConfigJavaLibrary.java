@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -48,7 +47,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary
   AndroidBuildConfigJavaLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Javac javac,
       JavacOptions javacOptions,
       AndroidBuildConfig androidBuildConfig) {
     super(
@@ -62,7 +60,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        javac,
         javacOptions,
         /* resourcesRoot */ Optional.<Path>absent());
     this.androidBuildConfig = androidBuildConfig;

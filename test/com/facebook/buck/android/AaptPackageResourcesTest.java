@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static com.facebook.buck.util.BuckConstant.BIN_DIR;
 import static com.facebook.buck.util.BuckConstant.BIN_PATH;
@@ -78,7 +77,6 @@ public class AaptPackageResourcesTest {
         ImmutableSet.<Path>of(),
         PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
-        DEFAULT_JAVAC,
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false,
@@ -143,7 +141,6 @@ public class AaptPackageResourcesTest {
         ImmutableSet.<Path>of(),
         PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
-        DEFAULT_JAVAC,
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false,
@@ -217,7 +214,6 @@ public class AaptPackageResourcesTest {
         ImmutableSet.<Path>of(),
         PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
-        DEFAULT_JAVAC,
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false,

@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.java.AnnotationProcessingParams;
-import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -43,14 +42,12 @@ public class AndroidLibraryGraphEnhancer {
 
   private final BuildTarget dummyRDotJavaBuildTarget;
   private final BuildRuleParams originalBuildRuleParams;
-  private final Javac javac;
   private final JavacOptions javacOptions;
   private final ResourceDependencyMode resourceDependencyMode;
 
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
       BuildRuleParams buildRuleParams,
-      Javac javac,
       JavacOptions javacOptions,
       ResourceDependencyMode resourceDependencyMode) {
     this.dummyRDotJavaBuildTarget = BuildTarget.builder(buildTarget)
@@ -58,7 +55,6 @@ public class AndroidLibraryGraphEnhancer {
         .build();
     this.originalBuildRuleParams = buildRuleParams;
     // Override javacoptions because DummyRDotJava doesn't require annotation processing.
-    this.javac = javac;
     this.javacOptions = JavacOptions.builder(javacOptions)
         .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
         .build();
@@ -112,7 +108,6 @@ public class AndroidLibraryGraphEnhancer {
         dummyRDotJavaParams,
         new SourcePathResolver(ruleResolver),
         androidResourceDeps,
-        javac,
         javacOptions);
     ruleResolver.addToIndex(dummyRDotJava);
     return Optional.of(dummyRDotJava);

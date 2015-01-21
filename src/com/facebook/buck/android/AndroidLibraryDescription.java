@@ -21,7 +21,6 @@ import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaSourceJar;
-import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -45,11 +44,9 @@ public class AndroidLibraryDescription
 
   public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("android_library");
 
-  private final Javac javac;
   private final JavacOptions defaultOptions;
 
-  public AndroidLibraryDescription(Javac javac, JavacOptions defaultOptions) {
-    this.javac = javac;
+  public AndroidLibraryDescription(JavacOptions defaultOptions) {
     this.defaultOptions = defaultOptions;
   }
 
@@ -86,7 +83,6 @@ public class AndroidLibraryDescription
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
         params.copyWithExtraDeps(resolver.getAllRules(args.exportedDeps.get())),
-        javac,
         javacOptions.build(),
         ResourceDependencyMode.FIRST_ORDER);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
@@ -116,7 +112,6 @@ public class AndroidLibraryDescription
         resolver.getAllRules(args.exportedDeps.get()),
         resolver.getAllRules(args.providedDeps.get()),
         additionalClasspathEntries,
-        javac,
         javacOptions.build(),
         args.resourcesRoot,
         args.manifest,

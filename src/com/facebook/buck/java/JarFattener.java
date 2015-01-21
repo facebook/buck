@@ -60,7 +60,6 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
   public static final String FAT_JAR_SRC_RESOURCE = "com/facebook/buck/java/FatJar.java";
   public static final String FAT_JAR_MAIN_SRC_RESOURCE = "com/facebook/buck/java/FatJarMain.java";
 
-  private final Javac javac;
   private final JavacOptions javacOptions;
   private final SourcePath innerJar;
   private final ImmutableMap<String, SourcePath> nativeLibraries;
@@ -69,12 +68,10 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
   public JarFattener(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Javac javac,
       JavacOptions javacOptions,
       SourcePath innerJar,
       ImmutableMap<String, SourcePath> nativeLibraries) {
     super(params, resolver);
-    this.javac = javac;
     this.javacOptions = javacOptions;
     this.innerJar = innerJar;
     this.nativeLibraries = nativeLibraries;
@@ -132,7 +129,6 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
     steps.add(
         new JavacStep(
-            javac,
             fatJarDir,
             Optional.<Path>absent(),
             ImmutableSet.of(fatJarSource, fatJarMainSource),

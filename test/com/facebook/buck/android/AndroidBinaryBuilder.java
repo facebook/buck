@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
 import static com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import static com.facebook.buck.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
@@ -38,7 +37,6 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
   private AndroidBinaryBuilder(BuildTarget target) {
     super(
         new AndroidBinaryDescription(
-            DEFAULT_JAVAC,
             ANDROID_JAVAC_OPTIONS,
             new ProGuardConfig(new FakeBuckConfig()),
             ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>of()),

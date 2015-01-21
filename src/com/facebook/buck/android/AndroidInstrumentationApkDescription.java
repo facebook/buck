@@ -23,7 +23,6 @@ import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.java.Classpaths;
 import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
@@ -55,17 +54,14 @@ public class AndroidInstrumentationApkDescription
   public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("android_instrumentation_apk");
 
   private final ProGuardConfig proGuardConfig;
-  private final Javac javac;
   private final JavacOptions javacOptions;
   private final ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   public AndroidInstrumentationApkDescription(
       ProGuardConfig proGuardConfig,
-      Javac javac,
       JavacOptions androidJavacOptions,
       ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> nativePlatforms) {
     this.proGuardConfig = proGuardConfig;
-    this.javac = javac;
     this.javacOptions = androidJavacOptions;
     this.nativePlatforms = nativePlatforms;
   }
@@ -127,7 +123,6 @@ public class AndroidInstrumentationApkDescription
         DexSplitMode.NO_SPLIT,
         FluentIterable.from(rulesToExcludeFromDex).transform(TO_TARGET).toSet(),
         resourcesToExclude,
-        javac,
         javacOptions,
         EnumSet.noneOf(ExopackageMode.class),
         apkUnderTest.getKeystore(),

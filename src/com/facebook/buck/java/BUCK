@@ -171,6 +171,7 @@ java_library(
     'FatJarMain.java',
   ],
   deps = [
+    ':javac',
     ':classhash',
     ':fat-jar-main',
     ':nativelinkable',
@@ -219,6 +220,7 @@ java_library(
     'TestType.java',
   ],
   deps = [
+    ':javac',
     ':packagefinder',
     ':report-generator',
     ':support',

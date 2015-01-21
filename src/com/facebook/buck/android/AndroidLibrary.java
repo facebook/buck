@@ -20,7 +20,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.java.DefaultJavaLibrary;
-import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -60,7 +59,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
       ImmutableSet<Path> additionalClasspathEntries,
-      Javac javac,
       JavacOptions javacOptions,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
@@ -75,7 +73,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         exportedDeps,
         providedDeps,
         additionalClasspathEntries,
-        javac,
         javacOptions,
         resourcesRoot);
     this.manifestFile = manifestFile;
