@@ -16,36 +16,23 @@
 
 package com.facebook.buck.rules;
 
-public class Label implements Comparable<Label> {
-  private final String labelString;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
-  public Label(String labelString) {
-    this.labelString = labelString;
-  }
+import org.immutables.value.Value;
+
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class Label implements Comparable<Label> {
+
+  @Value.Parameter
+  public abstract String getLabelString();
 
   @Override
   public int compareTo(Label that) {
     if (that == this) {
       return 0;
     }
-    return labelString.compareTo(that.labelString);
+    return getLabelString().compareTo(that.getLabelString());
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Label)) {
-      return false;
-    }
-    return labelString.equals(((Label) obj).labelString);
-  }
-
-  @Override
-  public int hashCode() {
-    return labelString.hashCode();
-  }
-
-  @Override
-  public String toString() {
-    return labelString;
-  }
 }

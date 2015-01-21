@@ -387,8 +387,11 @@ public class TypeCoercerTest {
     ImmutableList<String> input = ImmutableList.of("cheese", "cake", "tastes", "good");
 
     Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
-    ImmutableSortedSet<Label> expected = ImmutableSortedSet.of(
-        new Label("cake"), new Label("cheese"), new Label("good"), new Label("tastes"));
+    ImmutableSortedSet<Label> expected = ImmutableSortedSet.<Label>of(
+        ImmutableLabel.of("cake"),
+        ImmutableLabel.of("cheese"),
+        ImmutableLabel.of("good"),
+        ImmutableLabel.of("tastes"));
 
     assertEquals(expected, result);
   }

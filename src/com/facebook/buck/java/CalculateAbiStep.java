@@ -21,6 +21,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.abi.StubJar;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -55,7 +56,7 @@ public class CalculateAbiStep implements Step {
       return 1;
     }
 
-    Sha1HashCode abiKey = new Sha1HashCode(fileSha1);
+    Sha1HashCode abiKey = ImmutableSha1HashCode.of(fileSha1);
     buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
 
     return 0;

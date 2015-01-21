@@ -22,6 +22,7 @@ import com.facebook.buck.dalvik.CanaryFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.classes.FileLike;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -255,7 +256,7 @@ public class PreDexedFilesSorter {
         // The only thing unique to canary classes is the index, which is captured by canaryDirName.
         Hasher hasher = Hashing.sha1().newHasher();
         hasher.putString(canaryDirName, Charsets.UTF_8);
-        return new Sha1HashCode(hasher.hash().toString());
+        return ImmutableSha1HashCode.of(hasher.hash().toString());
       }
     };
   }

@@ -44,6 +44,7 @@ import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.ImmutableBuildRuleType;
+import com.facebook.buck.rules.ImmutableLabel;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
@@ -353,7 +354,7 @@ public class TestCommandTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FakeTestRule rule1 = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("windows"), new Label("linux")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows"), ImmutableLabel.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
         ImmutableSortedSet.<BuildRule>of()
@@ -361,7 +362,7 @@ public class TestCommandTest {
 
     FakeTestRule rule2 = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("android")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("android")),
         BuildTargetFactory.newInstance("//:teh"),
         pathResolver,
         ImmutableSortedSet.<BuildRule>of(rule1)
@@ -369,7 +370,7 @@ public class TestCommandTest {
 
     FakeTestRule rule3 = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("windows")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
         ImmutableSortedSet.<BuildRule>of(rule2)
@@ -391,7 +392,7 @@ public class TestCommandTest {
 
     TestRule rule1 = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("windows"), new Label("linux")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows"), ImmutableLabel.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
         ImmutableSortedSet.<BuildRule>of()
@@ -399,7 +400,7 @@ public class TestCommandTest {
 
     TestRule rule2 = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("android")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("android")),
         BuildTargetFactory.newInstance("//:teh"),
         pathResolver,
         ImmutableSortedSet.<BuildRule>of()
@@ -407,7 +408,7 @@ public class TestCommandTest {
 
     TestRule rule3 = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("windows")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
         ImmutableSortedSet.<BuildRule>of()
@@ -426,7 +427,7 @@ public class TestCommandTest {
 
     TestRule rule1 = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("windows"), new Label("linux")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows"), ImmutableLabel.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
         ImmutableSortedSet.<BuildRule>of()
@@ -434,7 +435,7 @@ public class TestCommandTest {
 
     TestRule rule2 = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("windows")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
         ImmutableSortedSet.<BuildRule>of()
@@ -453,7 +454,7 @@ public class TestCommandTest {
 
     TestRule rule1 = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("windows"), new Label("linux")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows"), ImmutableLabel.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
         ImmutableSortedSet.<BuildRule>of()
@@ -461,7 +462,7 @@ public class TestCommandTest {
 
     TestRule rule2 = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("windows")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
         ImmutableSortedSet.<BuildRule>of()
@@ -479,7 +480,10 @@ public class TestCommandTest {
 
     TestRule rule = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("a"), new Label("b"), new Label("c")),
+        ImmutableSet.<Label>of(
+            ImmutableLabel.of("a"),
+            ImmutableLabel.of("b"),
+            ImmutableLabel.of("c")),
         BuildTargetFactory.newInstance("//:for"),
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.<BuildRule>of()
@@ -497,7 +501,10 @@ public class TestCommandTest {
 
     TestRule rule = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("a"), new Label("b"), new Label("c")),
+        ImmutableSet.<Label>of(
+            ImmutableLabel.of("a"),
+            ImmutableLabel.of("b"),
+            ImmutableLabel.of("c")),
         BuildTargetFactory.newInstance("//:for"),
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.<BuildRule>of()
@@ -539,7 +546,7 @@ public class TestCommandTest {
 
     FakeTestRule testRule = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("windows")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.<BuildRule>of()
@@ -572,7 +579,7 @@ public class TestCommandTest {
 
     FakeTestRule testRule = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("windows")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.<BuildRule>of()
@@ -604,7 +611,7 @@ public class TestCommandTest {
 
     FakeTestRule testRule = new FakeTestRule(
         JavaTestDescription.TYPE,
-        ImmutableSet.of(new Label("windows")),
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.<BuildRule>of()
@@ -649,7 +656,7 @@ public class TestCommandTest {
 
     new CmdLineParserAdditionalOptions(options).parseArgument();
 
-    assertFalse(options.isMatchedByLabelOptions(ImmutableSet.of(new Label("e2e"))));
+    assertFalse(options.isMatchedByLabelOptions(ImmutableSet.<Label>of(ImmutableLabel.of("e2e"))));
   }
 
   @Test
@@ -664,7 +671,7 @@ public class TestCommandTest {
 
     new CmdLineParserAdditionalOptions(options).parseArgument("--include", "e2e");
 
-    assertTrue(options.isMatchedByLabelOptions(ImmutableSet.of(new Label("e2e"))));
+    assertTrue(options.isMatchedByLabelOptions(ImmutableSet.<Label>of(ImmutableLabel.of("e2e"))));
   }
 
   @Test
@@ -681,7 +688,7 @@ public class TestCommandTest {
 
     FakeTestRule rule = new FakeTestRule(
         ImmutableBuildRuleType.of("java_test"),
-        /* labels */ ImmutableSet.of(new Label(excludedLabel)),
+        /* labels */ ImmutableSet.<Label>of(ImmutableLabel.of(excludedLabel)),
         BuildTargetFactory.newInstance("//example:test"),
         new SourcePathResolver(new BuildRuleResolver()),
         /* deps */ ImmutableSortedSet.<BuildRule>of()

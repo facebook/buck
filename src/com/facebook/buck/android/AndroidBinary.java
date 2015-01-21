@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.ImmutableExopackageInfo;
+import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -456,7 +457,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     // Returning our RuleKey has this effect because we will never get an ABI match after a
     // RuleKey miss.
     if (exopackageModes.isEmpty()) {
-      return new Sha1HashCode(getRuleKey().toString());
+      return ImmutableSha1HashCode.of(getRuleKey().toString());
     }
 
     return enhancementResult.getComputeExopackageDepsAbi().get().getAndroidBinaryAbiHash();

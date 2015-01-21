@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.CacheResult;
+import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -114,7 +115,7 @@ public class BuckBuildLog {
       BuildRuleStatus status = BuildRuleStatus.valueOf(statusRaw);
 
       String ruleKeyRaw = matcher.group("RuleKey");
-      Sha1HashCode ruleKey = new Sha1HashCode(ruleKeyRaw);
+      Sha1HashCode ruleKey = ImmutableSha1HashCode.of(ruleKeyRaw);
 
       CacheResult cacheResult = null;
       BuildRuleSuccess.Type successType = null;

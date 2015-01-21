@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -68,7 +69,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
       @Override
       public Sha1HashCode getAbiKey() {
-        return new Sha1HashCode("f7f34ed13b881c6c6f663533cde4a436ea84435e");
+        return ImmutableSha1HashCode.of("f7f34ed13b881c6c6f663533cde4a436ea84435e");
       }
     };
     javaLibraryRule.setOutputFile("buck-out/gen/foo/bar.jar");

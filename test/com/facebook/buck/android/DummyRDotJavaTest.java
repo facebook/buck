@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
+import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
@@ -180,7 +181,7 @@ public class DummyRDotJavaTest {
     if (resourceRule instanceof AndroidResource) {
       ((AndroidResource) resourceRule)
           .getBuildOutputInitializer()
-          .setBuildOutput(new BuildOutput(new Sha1HashCode(sha1HashCode)));
+          .setBuildOutput(new BuildOutput(ImmutableSha1HashCode.of(sha1HashCode)));
     }
   }
 }

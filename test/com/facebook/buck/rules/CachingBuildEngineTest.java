@@ -824,7 +824,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     @Override
     public Sha1HashCode getAbiKeyForDeps() {
-      return new Sha1HashCode(ABI_KEY_FOR_DEPS_HASH);
+      return ImmutableSha1HashCode.of(ABI_KEY_FOR_DEPS_HASH);
     }
   }
 

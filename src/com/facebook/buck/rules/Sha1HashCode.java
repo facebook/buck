@@ -16,21 +16,23 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Charsets;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
-import java.util.UUID;
+import org.immutables.value.Value;
+
 import java.util.regex.Pattern;
 
 /**
  * A typesafe representation of a SHA-1 hash. It is safer to pass this around than a {@link String}.
  */
-public final class Sha1HashCode {
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class Sha1HashCode {
 
   /**
    * Takes a string and uses it to construct a {@link Sha1HashCode}.
@@ -41,61 +43,33 @@ public final class Sha1HashCode {
       new Function<String, Sha1HashCode>() {
         @Override
         public Sha1HashCode apply(String hash) {
-          return new Sha1HashCode(hash);
+          return ImmutableSha1HashCode.of(hash);
         }
   };
 
   private static final Pattern SHA1_PATTERN = Pattern.compile("[a-f0-9]{40}");
 
-  private final String hash;
-
-  /**
-   * @param hash Must be a 40-character string from the alphabet [a-f0-9].
-   */
-  public Sha1HashCode(String hash) {
-    Preconditions.checkArgument(SHA1_PATTERN.matcher(hash).matches(),
-        "Should be 40 lowercase hex chars: %s.",
-        hash);
-    this.hash = hash;
-  }
-
-  public static Sha1HashCode fromHashCode(HashCode hashCode) {
-    return new Sha1HashCode(
-        Hashing.sha1().newHasher().putBytes(hashCode.asBytes()).hash().toString());
-  }
-
   /**
    * @return the hash as a 40-character string from the alphabet [a-f0-9].
    */
-  public String getHash() {
-    return hash;
+  @Value.Parameter
+  public abstract String getHash();
+
+  @Value.Check
+  protected void check() {
+    Preconditions.checkArgument(SHA1_PATTERN.matcher(getHash()).matches(),
+        "Should be 40 lowercase hex chars: %s.",
+        getHash());
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Sha1HashCode)) {
-      return false;
-    }
-
-    Sha1HashCode that = (Sha1HashCode) obj;
-    return Objects.equal(this.hash, that.hash);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(hash);
+  public static Sha1HashCode fromHashCode(HashCode hashCode) {
+    return ImmutableSha1HashCode.of(
+        Hashing.sha1().newHasher().putBytes(hashCode.asBytes()).hash().toString());
   }
 
   /** Same as {@link #getHash()}. */
   @Override
   public String toString() {
     return getHash();
-  }
-
-  public static Sha1HashCode newRandomHashCode() {
-    HashCode randomHashCode = Hashing.sha1().newHasher()
-        .putString(UUID.randomUUID().toString(), Charsets.UTF_8)
-        .hash();
-    return new Sha1HashCode(randomHashCode.toString());
   }
 }

@@ -56,6 +56,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
+import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -365,7 +366,7 @@ public class DefaultJavaLibraryTest {
         new SourcePathResolver(new BuildRuleResolver())) {
       @Override
       public Sha1HashCode getAbiKey() {
-        return new Sha1HashCode(Strings.repeat("cafebabe", 5));
+        return ImmutableSha1HashCode.of(Strings.repeat("cafebabe", 5));
       }
 
       @Override
@@ -660,7 +661,7 @@ public class DefaultJavaLibraryTest {
     hasher.putUnencodedChars(javaAbiRuleKeyHash);
 
     assertEquals(
-        new Sha1HashCode(hasher.hash().toString()),
+        ImmutableSha1HashCode.of(hasher.hash().toString()),
         ((AbiRule) defaultJavaLibary).getAbiKeyForDeps());
   }
 
@@ -727,7 +728,7 @@ public class DefaultJavaLibraryTest {
 
     // This differs from the EMPTY_ABI_KEY in that the value of that comes from the SHA1 of an empty
     // jar file, whereas this is constructed from the empty set of values.
-    Sha1HashCode noAbiDeps = new Sha1HashCode(Hashing.sha1().newHasher().hash().toString());
+    Sha1HashCode noAbiDeps = ImmutableSha1HashCode.of(Hashing.sha1().newHasher().hash().toString());
     assertEquals(
         "The ABI of the deps of //:consumer_no_export should be the empty ABI.",
         noAbiDeps,
@@ -977,7 +978,7 @@ public class DefaultJavaLibraryTest {
         if (partialAbiHash == null) {
           return super.getAbiKey();
         } else {
-          return createTotalAbiKey(new Sha1HashCode(partialAbiHash));
+          return createTotalAbiKey(ImmutableSha1HashCode.of(partialAbiHash));
         }
       }
     };
@@ -1411,7 +1412,7 @@ public class DefaultJavaLibraryTest {
 
     @Override
     public Sha1HashCode getAbiKey() {
-      return new Sha1HashCode(abiKeyHash);
+      return ImmutableSha1HashCode.of(abiKeyHash);
     }
   }
 }

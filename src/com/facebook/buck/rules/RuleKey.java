@@ -20,10 +20,10 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -34,6 +34,8 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+
+import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -448,58 +450,15 @@ public class RuleKey {
       return set(key, String.valueOf(val));
     }
 
-    public static class RuleKeyPair {
-      private final RuleKey totalRuleKey;
-      private final RuleKey ruleKeyWithoutDeps;
+    @Value.Immutable
+    @BuckStyleImmutable
+    public interface RuleKeyPair {
 
-      private RuleKeyPair(RuleKey totalRuleKey, RuleKey ruleKeyWithoutDeps) {
-        this.totalRuleKey = totalRuleKey;
-        this.ruleKeyWithoutDeps = ruleKeyWithoutDeps;
-      }
+      @Value.Parameter
+      public RuleKey getTotalRuleKey();
 
-      public RuleKey getTotalRuleKey() {
-        return totalRuleKey;
-      }
-
-      public RuleKey getRuleKeyWithoutDeps() {
-        return ruleKeyWithoutDeps;
-      }
-
-      @Override
-      public boolean equals(Object o) {
-        if (this == o) {
-          return true;
-        }
-
-        if (!(o instanceof RuleKeyPair)) {
-          return false;
-        }
-
-        RuleKeyPair that = (RuleKeyPair) o;
-
-        if (!ruleKeyWithoutDeps.equals(that.ruleKeyWithoutDeps)) {
-          return false;
-        }
-
-        if (!totalRuleKey.equals(that.totalRuleKey)) {
-          return false;
-        }
-
-        return true;
-      }
-
-      @Override
-      public int hashCode() {
-        return Objects.hashCode(totalRuleKey, ruleKeyWithoutDeps);
-      }
-
-      @Override
-      public String toString() {
-        return MoreObjects.toStringHelper(this.getClass())
-            .add("totalRuleKey", totalRuleKey)
-            .add("ruleKeyWithoutDeps", ruleKeyWithoutDeps)
-            .toString();
-      }
+      @Value.Parameter
+      public RuleKey getRuleKeyWithoutDeps();
 
     }
 
@@ -527,7 +486,7 @@ public class RuleKey {
         logger.verbose("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms));
       }
 
-      return new RuleKeyPair(totalRuleKey, ruleKeyWithoutDeps);
+      return ImmutableRuleKeyPair.of(totalRuleKey, ruleKeyWithoutDeps);
     }
   }
 }

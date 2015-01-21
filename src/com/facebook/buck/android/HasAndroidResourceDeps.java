@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -46,7 +47,7 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
             hasher.putUnencodedChars(dep.getRDotJavaPackage());
             hasher.putChar('\0');
           }
-          return new Sha1HashCode(hasher.hash().toString());
+          return ImmutableSha1HashCode.of(hasher.hash().toString());
         }
       };
 

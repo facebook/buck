@@ -127,7 +127,7 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.of(new Sha1HashCode(hash)), onDiskBuildInfo.getHash("KEY"));
+    assertEquals(Optional.of(ImmutableSha1HashCode.of(hash)), onDiskBuildInfo.getHash("KEY"));
 
     EasyMock.verify(projectFilesystem);
   }

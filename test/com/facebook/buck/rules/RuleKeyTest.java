@@ -144,7 +144,8 @@ public class RuleKeyTest {
 
   @Test
   public void ensureListsDefaultToSettingStringValues() {
-    ImmutableList<Label> labels = ImmutableList.of(new Label("one"), new Label("two"));
+    ImmutableList<Label> labels =
+        ImmutableList.<Label>of(ImmutableLabel.of("one"), ImmutableLabel.of("two"));
 
     RuleKey.Builder.RuleKeyPair reflective = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
@@ -192,7 +193,8 @@ public class RuleKeyTest {
 
   @Test
   public void ensureSetsDefaultToSettingStringValues() {
-    ImmutableSortedSet<Label> labels = ImmutableSortedSet.of(new Label("one"), new Label("two"));
+    ImmutableSortedSet<Label> labels =
+        ImmutableSortedSet.<Label>of(ImmutableLabel.of("one"), ImmutableLabel.of("two"));
     ImmutableSortedSet<String> stringLabels = ImmutableSortedSet.copyOf(
         Iterables.transform(
             labels,

@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.classes.ClasspathTraversal;
 import com.facebook.buck.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.java.classes.FileLike;
+import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -91,7 +92,7 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
                 }
               }
             });
-        dexInputsToHashes.put(path, new Sha1HashCode(hasher.hash().toString()));
+        dexInputsToHashes.put(path, ImmutableSha1HashCode.of(hasher.hash().toString()));
       } catch (IOException e) {
         context.logError(e, "Error hashing smart dex input: %s", path);
         return 1;
