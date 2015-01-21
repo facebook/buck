@@ -19,15 +19,19 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.ExternalJavac;
 import com.facebook.buck.java.ImmutableJavacVersion;
 import com.facebook.buck.java.JavaLibraryDescription;
+import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacVersion;
+import com.facebook.buck.java.Jsr199Javac;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -141,7 +145,7 @@ public class KnownBuildRuleTypesTest {
   }
 
   @Test
-  public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithAbsentJavac()
+  public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJsr199Javac()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     FakeBuckConfig buckConfig = new FakeBuckConfig();
 
@@ -151,7 +155,9 @@ public class KnownBuildRuleTypesTest {
         new FakeAndroidDirectoryResolver(),
         DUMMY_PYTHON_ENVIRONMENT).build();
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
-    assertEquals(Optional.<String> absent(), libraryRule.getJavac());
+
+    Javac javac = libraryRule.getJavac();
+    assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
   }
 
   @Test
@@ -174,7 +180,7 @@ public class KnownBuildRuleTypesTest {
         .build();
 
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
-    assertEquals(javac.toPath(), libraryRule.getJavac().get());
+    assertEquals(javac.toPath(), ((ExternalJavac) libraryRule.getJavac()).getPath());
   }
 
   @Test
@@ -198,7 +204,7 @@ public class KnownBuildRuleTypesTest {
         DUMMY_PYTHON_ENVIRONMENT)
         .build();
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
-    assertEquals(javacVersion, libraryRule.getJavacVersion().get());
+    assertEquals(javacVersion, libraryRule.getJavac().getVersion());
   }
 
   @Test
@@ -259,7 +265,7 @@ public class KnownBuildRuleTypesTest {
   }
 
   @Test
-  public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateAndroidLibraryRuleWithAbsentJavac()
+  public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateAndroidLibraryRuleWithJsr199Javac()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     FakeBuckConfig buckConfig = new FakeBuckConfig();
 
@@ -280,7 +286,10 @@ public class KnownBuildRuleTypesTest {
         buildRuleParams,
         new BuildRuleResolver(),
         arg);
-    assertEquals(Optional.absent(), rule.getJavac());
+
+
+    Javac javac = rule.getJavac();
+    assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
   }
 
   @Test
@@ -311,7 +320,7 @@ public class KnownBuildRuleTypesTest {
         buildRuleParams,
         new BuildRuleResolver(),
         arg);
-    assertEquals(javac.toPath(), rule.getJavac().get());
+    assertEquals(javac.toPath(), ((ExternalJavac) rule.getJavac()).getPath());
   }
 
   @Test

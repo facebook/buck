@@ -39,7 +39,6 @@ import javax.annotation.Nullable;
  */
 public class JavacOptions {
 
-  private final JavaCompilerEnvironment javacEnv;
   private final boolean debug;
   private final boolean verbose;
   private final String sourceLevel;
@@ -50,7 +49,6 @@ public class JavacOptions {
   private final ImmutableMap<String, String> sourceToBootclasspath;
 
   private JavacOptions(
-      JavaCompilerEnvironment javacEnv,
       boolean debug,
       boolean verbose,
       String sourceLevel,
@@ -59,7 +57,6 @@ public class JavacOptions {
       Optional<String> bootclasspath,
       ImmutableMap<String, String> sourceToBootclasspath,
       AnnotationProcessingParams annotationProcessingParams) {
-    this.javacEnv = Preconditions.checkNotNull(javacEnv);
     this.debug = debug;
     this.verbose = verbose;
     this.sourceLevel = sourceLevel;
@@ -68,10 +65,6 @@ public class JavacOptions {
     this.bootclasspath = bootclasspath;
     this.sourceToBootclasspath = sourceToBootclasspath;
     this.annotationProcessingParams = annotationProcessingParams;
-  }
-
-  public JavaCompilerEnvironment getJavaCompilerEnvironment() {
-    return javacEnv;
   }
 
   public void appendOptionsToList(
@@ -142,9 +135,7 @@ public class JavacOptions {
     builder.set("sourceLevel", sourceLevel)
         .set("targetLevel", targetLevel)
         .set("extraArguments", Joiner.on(',').join(extraArguments))
-        .set("debug", debug)
-        .set("javacVersion", javacEnv.getJavacVersion().transform(
-            Functions.toStringFunction()).orNull());
+        .set("debug", debug);
 
     return annotationProcessingParams.appendToRuleKey(builder);
   }
@@ -187,8 +178,6 @@ public class JavacOptions {
     builder.setTargetLevel(options.getTargetLevel());
     builder.setExtraArguments(options.getExtraArguments());
 
-    builder.setJavaCompilerEnvironment(options.getJavaCompilerEnvironment());
-
     return builder;
   }
 
@@ -201,8 +190,6 @@ public class JavacOptions {
     private Optional<String> bootclasspath = Optional.absent();
     private AnnotationProcessingParams annotationProcessingParams =
         AnnotationProcessingParams.EMPTY;
-    @Nullable
-    private JavaCompilerEnvironment javacEnv;
     private ImmutableMap<String, String> sourceToBootclasspath;
 
     private Builder() {
@@ -249,14 +236,8 @@ public class JavacOptions {
       return this;
     }
 
-    public Builder setJavaCompilerEnvironment(JavaCompilerEnvironment javacEnv) {
-      this.javacEnv = javacEnv;
-      return this;
-    }
-
     public JavacOptions build() {
       return new JavacOptions(
-          Preconditions.checkNotNull(javacEnv),
           debug,
           verbose,
           Preconditions.checkNotNull(sourceLevel),

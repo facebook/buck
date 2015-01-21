@@ -76,6 +76,17 @@ import javax.tools.ToolProvider;
 public class Jsr199Javac implements Javac {
 
   private static final Logger LOG = Logger.get(Jsr199Javac.class);
+  private static final JavacVersion VERSION = new JavacVersion() {
+    @Override
+    public String getVersionString() {
+      return "in memory";
+    }
+  };
+
+  @Override
+  public JavacVersion getVersion() {
+    return VERSION;
+  }
 
   @Override
   public String getDescription(
@@ -99,6 +110,11 @@ public class Jsr199Javac implements Javac {
   @Override
   public String getShortName() {
     return "javac";
+  }
+
+  @Override
+  public boolean isUsingWorkspace() {
+    return false;
   }
 
   @Override

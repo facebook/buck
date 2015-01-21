@@ -16,22 +16,14 @@
 
 package com.facebook.buck.java;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
-import java.nio.file.Path;
-
 public class JavaCompilationConstants {
-
-  public static final JavaCompilerEnvironment DEFAULT_JAVAC_ENV = new JavaCompilerEnvironment(
-      Optional.<Path>absent(),
-      Optional.<JavacVersion>absent());
 
   public static final Javac DEFAULT_JAVAC = new Jsr199Javac();
 
   public static final JavacOptions DEFAULT_JAVAC_OPTIONS =
       JavacOptions.builderForUseInJavaBuckConfig()
-          .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
           .setSourceLevel("7")
           .setTargetLevel("7")
           .setBootclasspathMap(ImmutableMap.<String, String>of())
@@ -39,7 +31,6 @@ public class JavaCompilationConstants {
 
   public static final JavacOptions ANDROID_JAVAC_OPTIONS =
       JavacOptions.builderForUseInJavaBuckConfig()
-          .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
           .setSourceLevel("7")
           .setTargetLevel("6")
           .setBootclasspathMap(ImmutableMap.<String, String>of())

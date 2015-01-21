@@ -270,7 +270,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       commands.add(new MkdirStep(pathToSrcsList.getParent()));
 
       Optional<Path> workingDirectory;
-      if (javacOptions.getJavaCompilerEnvironment().getJavacPath().isPresent()) {
+      if (javac.isUsingWorkspace()) {
         Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
         commands.add(new MakeCleanDirectoryStep(scratchDir));
         workingDirectory = Optional.of(scratchDir);
@@ -749,13 +749,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @VisibleForTesting
-  public Optional<Path> getJavac() {
-    return javacOptions.getJavaCompilerEnvironment().getJavacPath();
-  }
-
-  @VisibleForTesting
-  public Optional<JavacVersion> getJavacVersion() {
-    return javacOptions.getJavaCompilerEnvironment().getJavacVersion();
+  public Javac getJavac() {
+    return javac;
   }
 
   @Override

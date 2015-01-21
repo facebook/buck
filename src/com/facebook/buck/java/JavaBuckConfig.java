@@ -47,8 +47,7 @@ public class JavaBuckConfig {
     this.delegate = delegate;
   }
 
-  public JavacOptions getDefaultJavacOptions(ProcessExecutor processExecutor)
-      throws InterruptedException {
+  public JavacOptions getDefaultJavacOptions() {
     Optional<String> sourceLevel = delegate.getValue("java", "source_level");
     Optional<String> targetLevel = delegate.getValue("java", "target_level");
     Optional<String> extraArgumentsString = delegate.getValue("java", "extra_arguments");
@@ -68,7 +67,6 @@ public class JavaBuckConfig {
     }
 
     return JavacOptions.builderForUseInJavaBuckConfig()
-        .setJavaCompilerEnvironment(getJavaCompilerEnvironment(processExecutor))
         .setSourceLevel(sourceLevel.or(TARGETED_JAVA_VERSION))
         .setTargetLevel(targetLevel.or(TARGETED_JAVA_VERSION))
         .setBootclasspathMap(bootclasspaths.build())
@@ -76,24 +74,13 @@ public class JavaBuckConfig {
         .build();
   }
 
-  public Javac getJavac() {
+  public Javac getJavac(ProcessExecutor processExecutor) throws InterruptedException {
     Optional<Path> externalJavac = getJavacPath();
     if (externalJavac.isPresent()) {
-      return new ExternalJavac(externalJavac.get());
+      JavacVersion version = getJavacVersion(processExecutor, externalJavac.get());
+      return new ExternalJavac(externalJavac.get(), version);
     }
     return new Jsr199Javac();
-  }
-
-  private JavaCompilerEnvironment getJavaCompilerEnvironment(ProcessExecutor processExecutor)
-      throws InterruptedException {
-    Optional<Path> javac = getJavacPath();
-    Optional<JavacVersion> javacVersion = Optional.absent();
-    if (javac.isPresent()) {
-      javacVersion = Optional.of(getJavacVersion(processExecutor, javac.get()));
-    }
-    return new JavaCompilerEnvironment(
-        javac,
-        javacVersion);
   }
 
   @VisibleForTesting

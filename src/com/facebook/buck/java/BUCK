@@ -75,12 +75,13 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
-java_library(
+java_immutables_library(
   name = 'javac',
   srcs = [
     'ExternalJavac.java',
     'Javac.java',
     'JavacErrorParser.java',
+    'JavacVersion.java',
     'Jsr199Javac.java',
     'ZipEntryJavaFileObject.java',
   ],
@@ -111,12 +112,11 @@ java_immutables_library(
     'HasJavaAbi.java',
     'Javac.java',
     'JavaLibrary.java',
-    'JavacVersion.java',
     'JavacOptions.java',
-    'JavaCompilerEnvironment.java',
   ],
   deps = [
     ':classhash',
+    ':javac',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java/abi:protocol',
     '//src/com/facebook/buck/model:model',

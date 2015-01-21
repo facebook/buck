@@ -361,8 +361,8 @@ public class KnownBuildRuleTypes {
     Builder builder = builder();
 
     JavaBuckConfig javaConfig = new JavaBuckConfig(config);
-    Javac javac = javaConfig.getJavac();
-    JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions(processExecutor);
+    Javac javac = javaConfig.getJavac(processExecutor);
+    JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
     JavacOptions androidBinaryOptions = JavacOptions.builder(defaultJavacOptions)
         .build();
 

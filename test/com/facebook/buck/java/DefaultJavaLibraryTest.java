@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC;
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_ENV;
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static com.facebook.buck.util.BuckConstant.BIN_PATH;
 import static org.easymock.EasyMock.createNiceMock;
@@ -1364,7 +1363,6 @@ public class DefaultJavaLibraryTest {
 
       AnnotationProcessingParams params = annotationProcessingParamsBuilder.build();
       JavacOptions.Builder options = JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
-          .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
           .setAnnotationProcessingParams(params);
 
       BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)

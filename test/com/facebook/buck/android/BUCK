@@ -74,6 +74,7 @@ java_test(
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java:classhash',
+    '//src/com/facebook/buck/java:javac',
     '//src/com/facebook/buck/java:packagefinder',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:steps',

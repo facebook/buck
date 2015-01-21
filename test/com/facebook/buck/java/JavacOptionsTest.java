@@ -16,7 +16,6 @@
 
 package com.facebook.buck.java;
 
-import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_ENV;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -196,7 +195,6 @@ public class JavacOptionsTest {
     return JavacOptions.builderForUseInJavaBuckConfig()
         .setSourceLevel("5")
         .setTargetLevel("5")
-        .setBootclasspathMap(ImmutableMap.<String, String>of())
-        .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV);
+        .setBootclasspathMap(ImmutableMap.<String, String>of());
   }
 }

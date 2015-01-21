@@ -26,10 +26,11 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.util.FakeProcess;
+import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -116,8 +117,7 @@ public class JavaBuckConfigTest {
 
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    JavacOptions options = config.getDefaultJavacOptions(
-        new ProcessExecutor(new TestConsole()));
+    JavacOptions options = config.getDefaultJavacOptions();
 
     assertEquals(sourceLevel, options.getSourceLevel());
     assertEquals(targetLevel, options.getTargetLevel());
@@ -128,8 +128,7 @@ public class JavaBuckConfigTest {
       throws IOException, InterruptedException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
 
-    JavacOptions options = config.getDefaultJavacOptions(
-        new ProcessExecutor(new TestConsole()));
+    JavacOptions options = config.getDefaultJavacOptions();
 
     assertEquals(TARGETED_JAVA_VERSION, options.getSourceLevel());
     assertEquals(TARGETED_JAVA_VERSION, options.getTargetLevel());
@@ -141,7 +140,7 @@ public class JavaBuckConfigTest {
     String localConfig = "[java]\nbootclasspath-6 = one.jar\nbootclasspath-7 = two.jar";
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    JavacOptions options = config.getDefaultJavacOptions(new ProcessExecutor(new TestConsole()));
+    JavacOptions options = config.getDefaultJavacOptions();
 
     JavacOptions jse5 = JavacOptions.builder(options).setSourceLevel("5").build();
     JavacOptions jse6 = JavacOptions.builder(options).setSourceLevel("6").build();
@@ -161,23 +160,31 @@ public class JavaBuckConfigTest {
   }
 
   @Test
-  public void shouldDefaultToCreatingAnInMemoryJavac() throws IOException {
+  public void shouldDefaultToCreatingAnInMemoryJavac() throws IOException, InterruptedException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
 
-    Javac actualJavac = config.getJavac();
+    Javac actualJavac = config.getJavac(new FakeProcessExecutor());
     assertTrue(actualJavac instanceof Jsr199Javac);
   }
 
   @Test
-  public void shouldCreateAnExternalJavaWhenTheJavacPathIsSet() throws IOException {
+  public void shouldCreateAnExternalJavaWhenTheJavacPathIsSet()
+      throws IOException, InterruptedException {
     File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 
     String localConfig = "[tools]\njavac = " + javac;
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    Javac actualJavac = config.getJavac();
+    ProcessExecutorParams params = ProcessExecutorParams.builder()
+        .setCommand(ImmutableList.of(javac.toString(), "-version"))
+        .build();
+    FakeProcess result = new FakeProcess(0, "", "woohoo");
+
+    FakeProcessExecutor processExecutor = new FakeProcessExecutor(ImmutableMap.of(params, result));
+    Javac actualJavac = config.getJavac(processExecutor);
     assertTrue(actualJavac instanceof ExternalJavac);
+    assertEquals("woohoo", actualJavac.getVersion().getVersionString());
   }
 
   private JavaBuckConfig createWithDefaultFilesystem(Reader reader)

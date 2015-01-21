@@ -39,6 +39,8 @@ public interface Javac {
           CharMatcher.anyOf("#\"'").or(CharMatcher.WHITESPACE));
   String SRC_ZIP = ".src.zip";
 
+  JavacVersion getVersion();
+
   int buildWithClasspath(
       ExecutionContext context,
       BuildTarget invokingRule,
@@ -54,6 +56,8 @@ public interface Javac {
       Optional<Path> pathToSrcsList);
 
   String getShortName();
+
+  boolean isUsingWorkspace();
 
   RuleKey.Builder appendToRuleKey(RuleKey.Builder builder);
 }

@@ -39,9 +39,16 @@ import java.util.Map;
 public class ExternalJavac implements Javac {
 
   private final Path pathToJavac;
+  private final JavacVersion version;
 
-  public ExternalJavac(Path pathToJavac) {
+  public ExternalJavac(Path pathToJavac, JavacVersion version) {
     this.pathToJavac = pathToJavac;
+    this.version = version;
+  }
+
+  @Override
+  public JavacVersion getVersion() {
+    return version;
   }
 
   @Override
@@ -70,8 +77,18 @@ public class ExternalJavac implements Javac {
   }
 
   @Override
+  public boolean isUsingWorkspace() {
+    return true;
+  }
+
+  @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
-    return builder.setInput("javac", pathToJavac);
+    return builder.setInput("javac", pathToJavac)
+        .set("javac.version", version.toString());
+  }
+
+  public Path getPath() {
+    return pathToJavac;
   }
 
   @Override

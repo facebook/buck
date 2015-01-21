@@ -47,7 +47,7 @@ public class FakeProcessExecutor extends ProcessExecutor {
 
   @Override
   Process launchProcess(ProcessExecutorParams params) throws IOException {
-    Preconditions.checkArgument(processMap.keySet().contains(params));
+    Preconditions.checkArgument(processMap.keySet().contains(params), params.toString());
     FakeProcess fakeProcess = Preconditions.checkNotNull(processMap.get(params));
     launchedProcesses.add(params);
     return fakeProcess;

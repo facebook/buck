@@ -24,10 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
-import com.facebook.buck.java.ImmutableJavacVersion;
-import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavacOptions;
-import com.facebook.buck.java.JavacVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -141,10 +138,7 @@ public class AndroidLibraryGraphEnhancerTest {
         buildTarget,
         buildRuleParams,
         DEFAULT_JAVAC,
-        JavacOptions.builder(ANDROID_JAVAC_OPTIONS).setJavaCompilerEnvironment(
-            new JavaCompilerEnvironment(
-                Optional.of(Paths.get("javac")),
-                Optional.<JavacVersion>of(ImmutableJavacVersion.of("1.7"))))
+        JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
             .setSourceLevel("7")
             .setTargetLevel("7")
                     .build(),
@@ -155,11 +149,6 @@ public class AndroidLibraryGraphEnhancerTest {
 
     assertTrue(dummyRDotJava.isPresent());
     JavacOptions javacOptions = dummyRDotJava.get().getJavacOptions();
-    assertEquals(
-        Paths.get("javac"),
-        javacOptions.getJavaCompilerEnvironment().getJavacPath().get());
-    assertEquals(
-        ImmutableJavacVersion.of("1.7"),
-        javacOptions.getJavaCompilerEnvironment().getJavacVersion().get());
+    assertEquals("7", javacOptions.getSourceLevel());
   }
 }
