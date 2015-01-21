@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.coercer.OCamlSource;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -30,7 +31,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class OCamlLibraryDescription implements Description<OCamlLibraryDescription.Arg> {
 
-  public static final BuildRuleType TYPE = new BuildRuleType("ocaml_library");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("ocaml_library");
 
   private final OCamlBuckConfig ocamlBuckConfig;
 

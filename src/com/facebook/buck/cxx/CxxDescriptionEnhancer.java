@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -59,8 +60,8 @@ public class CxxDescriptionEnhancer {
 
   public static final Flavor CXX_LINK_BINARY_FLAVOR = new Flavor("binary");
 
-  public static final BuildRuleType LEX_TYPE = new BuildRuleType("lex");
-  public static final BuildRuleType YACC_TYPE = new BuildRuleType("yacc");
+  public static final BuildRuleType LEX_TYPE = ImmutableBuildRuleType.of("lex");
+  public static final BuildRuleType YACC_TYPE = ImmutableBuildRuleType.of("yacc");
 
   private CxxDescriptionEnhancer() {}
 

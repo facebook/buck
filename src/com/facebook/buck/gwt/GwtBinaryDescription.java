@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -37,7 +38,7 @@ import java.nio.file.Path;
 
 public class GwtBinaryDescription implements Description<GwtBinaryDescription.Arg> {
 
-  public static final BuildRuleType TYPE = new BuildRuleType("gwt_binary");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("gwt_binary");
 
   /** Default value for {@link Arg#style}. */
   private static final String DEFAULT_STYLE = GwtBinary.Style.OBF.name();

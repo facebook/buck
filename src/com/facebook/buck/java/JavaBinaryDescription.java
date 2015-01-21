@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -43,7 +44,7 @@ import java.nio.file.Path;
 
 public class JavaBinaryDescription implements Description<JavaBinaryDescription.Args> {
 
-  public static final BuildRuleType TYPE = new BuildRuleType("java_binary");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("java_binary");
 
   private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = new Flavor("inner-jar");
 

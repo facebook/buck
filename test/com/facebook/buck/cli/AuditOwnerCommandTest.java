@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeRepositoryFactory;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
@@ -74,7 +75,7 @@ public class AuditOwnerCommandTest {
 
     @Override
     public BuildRuleType getBuildRuleType() {
-      return new BuildRuleType("fake_rule");
+      return ImmutableBuildRuleType.of("fake_rule");
     }
 
     @Override

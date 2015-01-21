@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -31,7 +32,7 @@ import com.google.common.collect.ImmutableSortedSet;
  */
 public class ContainerBuildRule<T> extends NoopBuildRule {
 
-  private static final BuildRuleType TYPE = new BuildRuleType("container");
+  private static final BuildRuleType TYPE = ImmutableBuildRuleType.of("container");
 
   private final T item;
 

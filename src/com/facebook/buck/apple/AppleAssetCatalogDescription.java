@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -35,7 +36,7 @@ import java.util.Set;
  * catalog for an iOS or Mac OS X library or binary.
  */
 public class AppleAssetCatalogDescription implements Description<AppleAssetCatalogDescription.Arg> {
-  public static final BuildRuleType TYPE = new BuildRuleType("apple_asset_catalog");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("apple_asset_catalog");
 
   @Override
   public BuildRuleType getBuildRuleType() {

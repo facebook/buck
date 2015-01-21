@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
@@ -39,7 +40,7 @@ import com.google.common.collect.ImmutableMap;
 public class IosPostprocessResourcesDescription
   implements Description<IosPostprocessResourcesDescription.Arg> {
 
-  public static final BuildRuleType TYPE = new BuildRuleType("ios_postprocess_resources");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("ios_postprocess_resources");
 
   private static final BuildTargetParser BUILD_TARGET_PARSER = new BuildTargetParser();
   private static final MacroHandler MACRO_HANDLER =

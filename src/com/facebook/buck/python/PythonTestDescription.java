@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -55,7 +56,7 @@ import java.nio.file.Paths;
 
 public class PythonTestDescription implements Description<PythonTestDescription.Arg> {
 
-  private static final BuildRuleType TYPE = new BuildRuleType("python_test");
+  private static final BuildRuleType TYPE = ImmutableBuildRuleType.of("python_test");
 
   private static final Flavor BINARY_FLAVOR = new Flavor("binary");
 
@@ -135,7 +136,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
     // Modify the build rule params to change the target, type, and remove all deps.
     BuildRuleParams newParams = params.copyWithChanges(
-        new BuildRuleType("create_test_modules_list"),
+        ImmutableBuildRuleType.of("create_test_modules_list"),
         BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget(),
             new Flavor("test_module")),

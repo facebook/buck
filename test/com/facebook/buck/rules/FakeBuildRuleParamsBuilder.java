@@ -37,7 +37,7 @@ public class FakeBuildRuleParamsBuilder {
       new DefaultFileHashCache(new ProjectFilesystem(Paths.get(".")));
   private TargetGraph targetGraph = TargetGraph.EMPTY;
 
-  private BuildRuleType buildRuleType = new BuildRuleType("fake_build_rule");
+  private BuildRuleType buildRuleType = ImmutableBuildRuleType.of("fake_build_rule");
 
   public FakeBuildRuleParamsBuilder(BuildTarget buildTarget) {
     this.buildTarget = buildTarget;

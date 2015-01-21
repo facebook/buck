@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -42,7 +43,7 @@ public class CxxTestDescription implements
     Flavored,
     ImplicitDepsInferringDescription<CxxTestDescription.Arg> {
 
-  private static final BuildRuleType TYPE = new BuildRuleType("cxx_test");
+  private static final BuildRuleType TYPE = ImmutableBuildRuleType.of("cxx_test");
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
 
   private final CxxBuckConfig cxxBuckConfig;

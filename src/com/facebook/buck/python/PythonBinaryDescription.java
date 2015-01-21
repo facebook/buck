@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
@@ -45,7 +46,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
               "src/com/facebook/buck/python/pex.py"))
           .toAbsolutePath();
 
-  public static final BuildRuleType TYPE = new BuildRuleType("python_binary");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("python_binary");
 
   private final Path pathToPex;
   private final PythonEnvironment pythonEnvironment;

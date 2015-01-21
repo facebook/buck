@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -37,9 +38,9 @@ import com.google.common.collect.ImmutableSortedSet;
 public class AndroidBuildConfigDescription
     implements Description<AndroidBuildConfigDescription.Arg> {
 
-  public static final BuildRuleType TYPE = new BuildRuleType("android_build_config");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("android_build_config");
 
-  private static final BuildRuleType GEN_JAVA_TYPE = new BuildRuleType(
+  private static final BuildRuleType GEN_JAVA_TYPE = ImmutableBuildRuleType.of(
       "gen_java_android_build_config");
   private static final Flavor GEN_JAVA_FLAVOR = new Flavor(GEN_JAVA_TYPE.getName());
   private final Javac javac;

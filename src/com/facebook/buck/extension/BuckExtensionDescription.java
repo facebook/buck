@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -32,7 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class BuckExtensionDescription implements Description<BuckExtensionDescription.Arg> {
 
-  public static final BuildRuleType TYPE = new BuildRuleType("buck_extension");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("buck_extension");
   private static final String BUCK_TARGET_VERSION = "7";
 
   private final Javac javac;

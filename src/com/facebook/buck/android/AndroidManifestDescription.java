@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -34,7 +35,7 @@ import java.util.Collections;
 
 public class AndroidManifestDescription implements Description<AndroidManifestDescription.Arg> {
 
-  public static final BuildRuleType TYPE = new BuildRuleType("android_manifest");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("android_manifest");
 
   @Override
   public BuildRuleType getBuildRuleType() {

@@ -51,7 +51,7 @@ java_library(
 # Ideally, BuildRule.java would require only a handful of other source files
 # in order to compile it. Because BuildContext is referenced in the BuildRule
 # interface, its dependencies are much broader than desired.
-java_library(
+java_immutables_library(
   name = 'build_rule',
   srcs = [
     'ActionGraph.java',

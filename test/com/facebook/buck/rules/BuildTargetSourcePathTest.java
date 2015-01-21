@@ -35,7 +35,7 @@ public class BuildTargetSourcePathTest {
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    BuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target, pathResolver);
+    BuildRule rule = new FakeBuildRule(ImmutableBuildRuleType.of("example"), target, pathResolver);
     resolver.addToIndex(rule);
     BuildTargetSourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
 
@@ -51,7 +51,7 @@ public class BuildTargetSourcePathTest {
   public void mustUseProjectFilesystemToResolvePathToFile() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    BuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target, pathResolver) {
+    BuildRule rule = new FakeBuildRule(ImmutableBuildRuleType.of("example"), target, pathResolver) {
       @Override
       public Path getPathToOutputFile() {
         return Paths.get("cheese");
@@ -78,7 +78,10 @@ public class BuildTargetSourcePathTest {
   public void explicitlySetPath() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    FakeBuildRule rule = new FakeBuildRule(new BuildRuleType("example"), target, pathResolver);
+    FakeBuildRule rule = new FakeBuildRule(
+        ImmutableBuildRuleType.of("example"),
+        target,
+        pathResolver);
     Path path = Paths.get("blah");
     BuildTargetSourcePath buildTargetSourcePath = new BuildTargetSourcePath(
         rule.getBuildTarget(),

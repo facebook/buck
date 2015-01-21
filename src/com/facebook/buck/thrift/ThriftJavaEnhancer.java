@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -44,7 +45,8 @@ import java.nio.file.Path;
 public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
   private static final Flavor JAVA_FLAVOR = new Flavor("java");
-  private static final BuildRuleType SOURCE_ZIP_TYPE = new BuildRuleType("thrift-java-source-zip");
+  private static final BuildRuleType SOURCE_ZIP_TYPE =
+      ImmutableBuildRuleType.of("thrift-java-source-zip");
 
   private final ThriftBuckConfig thriftBuckConfig;
   private final Javac javac;

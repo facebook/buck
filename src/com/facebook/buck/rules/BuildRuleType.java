@@ -16,56 +16,50 @@
 
 package com.facebook.buck.rules;
 
-public final class BuildRuleType {
-  // Internal rule types. Denoted by leading trailing underscore.
-  public static final BuildRuleType AAPT_PACKAGE = new BuildRuleType("_aapt_package");
-  public static final BuildRuleType COPY_NATIVE_LIBS = new BuildRuleType("_copy_native_libs");
-  public static final BuildRuleType EXOPACKAGE_DEPS_ABI = new BuildRuleType("_exopackage_deps_abi");
-  public static final BuildRuleType DUMMY_R_DOT_JAVA = new BuildRuleType("_dummy_r_dot_java");
-  public static final BuildRuleType GWT_MODULE = new BuildRuleType("_gwt_module");
-  public static final BuildRuleType RESOURCES_FILTER = new BuildRuleType("_resources_filter");
-  public static final BuildRuleType PRE_DEX = new BuildRuleType("_pre_dex");
-  public static final BuildRuleType DEX_MERGE = new BuildRuleType("_dex_merge");
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Preconditions;
+
+import org.immutables.value.Value;
+
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class BuildRuleType {
+  // Internal rule types. Denoted by leading underscore.
+  public static final BuildRuleType AAPT_PACKAGE = ImmutableBuildRuleType.of("_aapt_package");
+  public static final BuildRuleType COPY_NATIVE_LIBS =
+      ImmutableBuildRuleType.of("_copy_native_libs");
+  public static final BuildRuleType EXOPACKAGE_DEPS_ABI =
+      ImmutableBuildRuleType.of("_exopackage_deps_abi");
+  public static final BuildRuleType DUMMY_R_DOT_JAVA =
+      ImmutableBuildRuleType.of("_dummy_r_dot_java");
+  public static final BuildRuleType GWT_MODULE = ImmutableBuildRuleType.of("_gwt_module");
+  public static final BuildRuleType RESOURCES_FILTER =
+      ImmutableBuildRuleType.of("_resources_filter");
+  public static final BuildRuleType PRE_DEX = ImmutableBuildRuleType.of("_pre_dex");
+  public static final BuildRuleType DEX_MERGE = ImmutableBuildRuleType.of("_dex_merge");
   public static final BuildRuleType PACKAGE_STRING_ASSETS =
-      new BuildRuleType("_package_string_assets");
-
-  private final String name;
-  private final boolean isTestRule;
-
-  /**
-   * @param name must match the name of a type of build rule used in a build file (eg. "genrule").
-   */
-  public BuildRuleType(String name)  {
-    this.name = name.toLowerCase();
-    this.isTestRule = name.endsWith("_test");
-  }
+      ImmutableBuildRuleType.of("_package_string_assets");
 
   /**
    * @return the name as displayed in a build file, such as "java_library"
    */
-  public String getName() {
-    return name;
-  }
+  @Value.Parameter
+  public abstract String getName();
 
+  @Value.Derived
   public boolean isTestRule() {
-    return isTestRule;
+    return getName().endsWith("_test");
   }
 
-  @Override
-  public int hashCode() {
-    return name.hashCode();
-  }
-
-  @Override
-  public boolean equals(Object that) {
-    if (that == null || !(that instanceof BuildRuleType)) {
-      return false;
-    }
-    return getName().equals(((BuildRuleType) that).getName());
+  @Value.Check
+  protected void check() {
+    String name = getName();
+    Preconditions.checkArgument(name.toLowerCase().equals(name));
   }
 
   @Override
   public String toString() {
-    return name;
+    return getName();
   }
+
 }

@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
 
 public class EmptyDescription implements Description<EmptyDescription.Arg> {
 
-  private static final BuildRuleType TYPE = new BuildRuleType("empty");
+  private static final BuildRuleType TYPE = ImmutableBuildRuleType.of("empty");
 
   @Override
   public BuildRuleType getBuildRuleType() {

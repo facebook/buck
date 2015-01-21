@@ -26,22 +26,22 @@ public class BuildRuleTypeTest {
 
   @Test(expected = NullPointerException.class)
   public void typeNamesMustNotBeNull() {
-    new BuildRuleType(null);
+    ImmutableBuildRuleType.of(null);
   }
 
   @Test
   public void ruleNamesEndingWithUnderscoreTestAreTestRules() {
-    assertFalse(new BuildRuleType("java_library").isTestRule());
-    assertFalse(new BuildRuleType("genrule").isTestRule());
+    assertFalse(ImmutableBuildRuleType.of("java_library").isTestRule());
+    assertFalse(ImmutableBuildRuleType.of("genrule").isTestRule());
 
     // Does not end with _test
-    assertFalse(new BuildRuleType("gentest").isTestRule());
+    assertFalse(ImmutableBuildRuleType.of("gentest").isTestRule());
 
-    assertTrue(new BuildRuleType("java_test").isTestRule());
+    assertTrue(ImmutableBuildRuleType.of("java_test").isTestRule());
   }
 
   @Test
   public void equalityIsBasedOnName() {
-    assertEquals(new BuildRuleType("foo"), new BuildRuleType("foo"));
+    assertEquals(ImmutableBuildRuleType.of("foo"), ImmutableBuildRuleType.of("foo"));
   }
 }

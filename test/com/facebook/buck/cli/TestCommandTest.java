@@ -41,9 +41,9 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSuccess;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.FakeTestRule;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
@@ -680,7 +680,7 @@ public class TestCommandTest {
     new CmdLineParserAdditionalOptions(options).parseArgument("//example:test");
 
     FakeTestRule rule = new FakeTestRule(
-        new BuildRuleType("java_test"),
+        ImmutableBuildRuleType.of("java_test"),
         /* labels */ ImmutableSet.of(new Label(excludedLabel)),
         BuildTargetFactory.newInstance("//example:test"),
         new SourcePathResolver(new BuildRuleResolver()),

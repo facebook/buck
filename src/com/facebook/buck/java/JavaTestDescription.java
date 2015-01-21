@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
@@ -37,7 +38,7 @@ import java.nio.file.Path;
 
 public class JavaTestDescription implements Description<JavaTestDescription.Arg> {
 
-  public static final BuildRuleType TYPE = new BuildRuleType("java_test");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("java_test");
 
   private final Javac javac;
   private final JavacOptions templateOptions;

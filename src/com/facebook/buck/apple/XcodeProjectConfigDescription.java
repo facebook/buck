@@ -21,13 +21,14 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class XcodeProjectConfigDescription
     implements Description<XcodeProjectConfigDescription.Arg> {
-  public static final BuildRuleType TYPE = new BuildRuleType("xcode_project_config");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("xcode_project_config");
 
   @Override
   public BuildRuleType getBuildRuleType() {

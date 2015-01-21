@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -34,7 +35,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class AppleTestDescription implements Description<AppleTestDescription.Arg> {
-  public static final BuildRuleType TYPE = new BuildRuleType("apple_test");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("apple_test");
 
   /**
    * Flavors for the additional generated build rules.

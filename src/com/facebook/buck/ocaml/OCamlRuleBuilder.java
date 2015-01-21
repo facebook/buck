@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.OCamlSource;
@@ -63,7 +64,7 @@ import java.nio.file.Path;
  */
 public class OCamlRuleBuilder {
 
-  public static final BuildRuleType TYPE = new BuildRuleType("ocaml_library");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("ocaml_library");
   private static final Flavor OCAML_STATIC_FLAVOR = new Flavor("static");
   private static final Flavor OCAML_LINK_BINARY_FLAVOR = new Flavor("binary");
 

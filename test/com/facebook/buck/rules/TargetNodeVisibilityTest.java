@@ -205,7 +205,7 @@ public class TargetNodeVisibilityTest {
 
     @Override
     public BuildRuleType getBuildRuleType() {
-      return new BuildRuleType("fake_rule");
+      return ImmutableBuildRuleType.of("fake_rule");
     }
 
     @Override

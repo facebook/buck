@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
@@ -73,9 +74,10 @@ import java.util.regex.Pattern;
 
 public class NdkLibraryDescription implements Description<NdkLibraryDescription.Arg> {
 
-  public static final BuildRuleType TYPE = new BuildRuleType("ndk_library");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("ndk_library");
 
-  private static final BuildRuleType MAKEFILE_TYPE = new BuildRuleType("ndk_library_makefile");
+  private static final BuildRuleType MAKEFILE_TYPE =
+      ImmutableBuildRuleType.of("ndk_library_makefile");
   private static final Flavor MAKEFILE_FLAVOR = new Flavor("makefile");
 
   private static final Pattern EXTENSIONS_REGEX =

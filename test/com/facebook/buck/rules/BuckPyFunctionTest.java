@@ -45,7 +45,9 @@ public class BuckPyFunctionTest {
   public void nameWillBeAddedIfMissing() {
     class NoName { public String random; }
 
-    String definition = buckPyFunction.toPythonFunction(new BuildRuleType("bad"), new NoName());
+    String definition = buckPyFunction.toPythonFunction(
+        ImmutableBuildRuleType.of("bad"),
+        new NoName());
 
     assertTrue(definition.contains("name"));
   }
@@ -54,7 +56,9 @@ public class BuckPyFunctionTest {
   public void visibilityWillBeAddedIfMissing() {
     class NoVis { public String random; }
 
-    String definition = buckPyFunction.toPythonFunction(new BuildRuleType("bad"), new NoVis());
+    String definition = buckPyFunction.toPythonFunction(
+        ImmutableBuildRuleType.of("bad"),
+        new NoVis());
 
     assertTrue(definition.contains("visibility=[]"));
   }
@@ -63,7 +67,9 @@ public class BuckPyFunctionTest {
   public void shouldOnlyIncludeTheNameFieldOnce() {
     class Named { public String name; }
 
-    String definition = buckPyFunction.toPythonFunction(new BuildRuleType("named"), new Named());
+    String definition = buckPyFunction.toPythonFunction(
+        ImmutableBuildRuleType.of("named"),
+        new Named());
 
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
@@ -83,7 +89,9 @@ public class BuckPyFunctionTest {
     @TargetName(name = "lollerskates")
     class NoName { public String foobar; }
 
-    String definition = buckPyFunction.toPythonFunction(new BuildRuleType("noname"), new NoName());
+    String definition = buckPyFunction.toPythonFunction(
+        ImmutableBuildRuleType.of("noname"),
+        new NoName());
 
     assertEquals(Joiner.on("\n").join(
             "@provide_for_build",
@@ -103,7 +111,7 @@ public class BuckPyFunctionTest {
   public void theNameFieldMustBeAString() {
     class BadName { public int name; }
 
-    buckPyFunction.toPythonFunction(new BuildRuleType("nope"), new BadName());
+    buckPyFunction.toPythonFunction(ImmutableBuildRuleType.of("nope"), new BadName());
   }
 
   @Test
@@ -115,7 +123,7 @@ public class BuckPyFunctionTest {
     }
 
     String definition = buckPyFunction.toPythonFunction(
-        new BuildRuleType("optional"), new LotsOfOptions());
+        ImmutableBuildRuleType.of("optional"), new LotsOfOptions());
 
     assertTrue(definition, definition.contains("targets=[], thing=None, version=None"));
   }
@@ -130,7 +138,9 @@ public class BuckPyFunctionTest {
       public String fake;
     }
 
-    String definition = buckPyFunction.toPythonFunction(new BuildRuleType("either"), new Either());
+    String definition = buckPyFunction.toPythonFunction(
+        ImmutableBuildRuleType.of("either"),
+        new Either());
 
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
@@ -155,7 +165,7 @@ public class BuckPyFunctionTest {
       public Set<BuildTargetPattern> visibility;
     }
 
-    buckPyFunction.toPythonFunction(new BuildRuleType("nope"), new Visible());
+    buckPyFunction.toPythonFunction(ImmutableBuildRuleType.of("nope"), new Visible());
   }
 
   @Test
@@ -167,7 +177,9 @@ public class BuckPyFunctionTest {
       public String hintedField;
     }
 
-    String definition = buckPyFunction.toPythonFunction(new BuildRuleType("case"), new Dto());
+    String definition = buckPyFunction.toPythonFunction(
+        ImmutableBuildRuleType.of("case"),
+        new Dto());
 
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
@@ -190,7 +202,9 @@ public class BuckPyFunctionTest {
       public Optional<Boolean> field;
     }
 
-    String definition = buckPyFunction.toPythonFunction(new BuildRuleType("boolean"), new Dto());
+    String definition = buckPyFunction.toPythonFunction(
+        ImmutableBuildRuleType.of("boolean"),
+        new Dto());
 
     assertTrue(definition, definition.contains(", field=None,"));
   }

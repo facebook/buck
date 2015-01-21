@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.OutputOnlyBuildRule;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.SourcePath;
@@ -60,7 +61,7 @@ import javax.annotation.Nullable;
 
 class AndroidPrebuiltAarGraphEnhancer {
 
-  private static final BuildRuleType UNZIP_AAR_TYPE = new BuildRuleType("unzip_aar");
+  private static final BuildRuleType UNZIP_AAR_TYPE = ImmutableBuildRuleType.of("unzip_aar");
 
   private static final Flavor AAR_UNZIP_FLAVOR = new Flavor("aar_unzip");
   private static final Flavor AAR_CLASSES_JAR_FLAVOR = new Flavor("aar_classes_jar");

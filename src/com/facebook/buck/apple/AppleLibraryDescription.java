@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -39,7 +40,7 @@ import java.util.Set;
 
 public class AppleLibraryDescription implements
     Description<AppleNativeTargetDescriptionArg>, Flavored {
-  public static final BuildRuleType TYPE = new BuildRuleType("apple_library");
+  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("apple_library");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       CompilationDatabase.COMPILATION_DATABASE,
