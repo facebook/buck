@@ -16,16 +16,15 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.python.ImmutablePythonVersion;
 import com.facebook.buck.python.PythonEnvironment;
-import com.facebook.buck.python.PythonVersion;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
+import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -52,7 +51,7 @@ public class DefaultKnownBuildRuleTypes {
         config,
         new FakeProcessExecutor(ImmutableMap.of(XCODE_SELECT_PARAMS, XCODE_SELECT_PROCESS)),
         new FakeAndroidDirectoryResolver(),
-        new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")));
+        new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7")));
   }
 
 }

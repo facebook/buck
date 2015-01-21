@@ -22,18 +22,19 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryDescription;
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.ImmutableJavacVersion;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavacVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.python.ImmutablePythonVersion;
 import com.facebook.buck.python.PythonEnvironment;
-import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -64,7 +65,7 @@ public class KnownBuildRuleTypesTest {
   @Rule public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   private static final PythonEnvironment DUMMY_PYTHON_ENVIRONMENT =
-      new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7"));
+      new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7"));
 
   private static final String FAKE_XCODE_DEV_PATH = "/Fake/Path/To/Xcode.app/Contents/Developer";
 
@@ -186,7 +187,7 @@ public class KnownBuildRuleTypesTest {
         "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
     FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
 
-    JavacVersion javacVersion = new JavacVersion("fakeVersion 0.1");
+    JavacVersion javacVersion = ImmutableJavacVersion.of("fakeVersion 0.1");
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
 
@@ -266,7 +267,9 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
-        new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7"))).build();
+        new PythonEnvironment(
+            Paths.get("fake_python"),
+            ImmutablePythonVersion.of("Python 2.7"))).build();
     AndroidLibraryDescription description =
         (AndroidLibraryDescription) buildRuleTypes.getDescription(AndroidLibraryDescription.TYPE);
 

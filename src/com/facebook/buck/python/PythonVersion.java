@@ -16,30 +16,20 @@
 
 package com.facebook.buck.python;
 
-public class PythonVersion {
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
-  private final String version;
+import org.immutables.value.Value;
 
-  public PythonVersion(String version) {
-    this.version = version;
-  }
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class PythonVersion {
+
+  @Value.Parameter
+  public abstract String getVersionString();
 
   @Override
   public String toString() {
-    return version;
+    return getVersionString();
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof PythonVersion)) {
-      return false;
-    }
-    PythonVersion that = (PythonVersion) o;
-    return this.version.equals(that.version);
-  }
-
-  @Override
-  public int hashCode() {
-    return version.hashCode();
-  }
 }

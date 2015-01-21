@@ -99,7 +99,7 @@ public class PythonBuckConfig {
             pythonPath,
             versionString);
       }
-      return new PythonVersion(matcher.group(1));
+      return ImmutablePythonVersion.of(matcher.group(1));
     } else {
       throw new HumanReadableException(versionResult.getStderr().get());
     }

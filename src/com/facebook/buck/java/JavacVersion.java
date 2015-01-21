@@ -16,31 +16,20 @@
 
 package com.facebook.buck.java;
 
-public class JavacVersion {
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
-  private final String version;
+import org.immutables.value.Value;
 
-  public JavacVersion(String version) {
-    this.version = version;
-  }
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class JavacVersion {
+
+  @Value.Parameter
+  public abstract String getVersionString();
 
   @Override
   public String toString() {
-    return version;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof JavacVersion)) {
-      return false;
-    }
-    JavacVersion that = (JavacVersion) o;
-    return this.version.equals(that.version);
-  }
-
-  @Override
-  public int hashCode() {
-    return version.hashCode();
+    return getVersionString();
   }
 
 }

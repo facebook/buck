@@ -135,7 +135,7 @@ public class JavaBuckConfig {
         if (firstNewline != -1) {
           stderr = stderr.substring(0, firstNewline);
         }
-        return new JavacVersion(stderr);
+        return ImmutableJavacVersion.of(stderr);
       } else {
         throw new HumanReadableException(versionResult.getStderr().get());
       }

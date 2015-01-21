@@ -101,7 +101,7 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
-java_library(
+java_immutables_library(
   name = 'support',
   srcs = [
     'AnnotationProcessingDataDecorator.java',

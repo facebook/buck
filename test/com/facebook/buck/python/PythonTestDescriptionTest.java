@@ -60,7 +60,7 @@ public class PythonTestDescriptionTest {
     PythonTestDescription desc = new PythonTestDescription(
         PEX_PATH,
         TEST_MAIN,
-        new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")),
+        new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7")),
         CXX_PLATFORM,
         CXX_PLATFORMS);
     PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
@@ -95,7 +95,7 @@ public class PythonTestDescriptionTest {
     PythonTestDescription desc = new PythonTestDescription(
         PEX_PATH,
         TEST_MAIN,
-        new PythonEnvironment(Paths.get("python"), new PythonVersion("2.5")),
+        new PythonEnvironment(Paths.get("python"), ImmutablePythonVersion.of("2.5")),
         CXX_PLATFORM,
         CXX_PLATFORMS);
     PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();

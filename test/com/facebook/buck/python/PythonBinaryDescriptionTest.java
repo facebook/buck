@@ -75,7 +75,7 @@ public class PythonBinaryDescriptionTest {
             .build();
     PythonBinaryDescription desc = new PythonBinaryDescription(
         PEX_PATH,
-        new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")),
+        new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7")),
         CXX_PLATFORM,
         CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
@@ -101,7 +101,7 @@ public class PythonBinaryDescriptionTest {
         BuildTargetFactory.newInstance("//:bin"));
     PythonBinaryDescription desc = new PythonBinaryDescription(
         PEX_PATH,
-        new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")),
+        new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7")),
         CXX_PLATFORM,
         CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
@@ -123,7 +123,7 @@ public class PythonBinaryDescriptionTest {
     String mainName = "main.py";
     PythonBinaryDescription desc = new PythonBinaryDescription(
         PEX_PATH,
-        new PythonEnvironment(Paths.get("python"), new PythonVersion("2.5")),
+        new PythonEnvironment(Paths.get("python"), ImmutablePythonVersion.of("2.5")),
         CXX_PLATFORM,
         CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
+import com.facebook.buck.java.ImmutableJavacVersion;
 import com.facebook.buck.java.JavaCompilerEnvironment;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacVersion;
@@ -143,7 +144,7 @@ public class AndroidLibraryGraphEnhancerTest {
         JavacOptions.builder(ANDROID_JAVAC_OPTIONS).setJavaCompilerEnvironment(
             new JavaCompilerEnvironment(
                 Optional.of(Paths.get("javac")),
-                Optional.of(new JavacVersion("1.7"))))
+                Optional.<JavacVersion>of(ImmutableJavacVersion.of("1.7"))))
             .setSourceLevel("7")
             .setTargetLevel("7")
                     .build(),
@@ -158,7 +159,7 @@ public class AndroidLibraryGraphEnhancerTest {
         Paths.get("javac"),
         javacOptions.getJavaCompilerEnvironment().getJavacPath().get());
     assertEquals(
-        new JavacVersion("1.7"),
+        ImmutableJavacVersion.of("1.7"),
         javacOptions.getJavaCompilerEnvironment().getJavacVersion().get());
   }
 }

@@ -60,7 +60,7 @@ public class PythonBinaryTest {
             BuildTargetFactory.newInstance("//:bin")),
         resolver,
         Paths.get("dummy_path_to_pex"),
-        new PythonEnvironment(Paths.get("fake_python"), new PythonVersion("Python 2.7")),
+        new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7")),
         Paths.get("main.py"),
         new PythonPackageComponents(
             ImmutableMap.<Path, SourcePath>of(
