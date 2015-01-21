@@ -48,8 +48,8 @@ import java.util.Collections;
 
 import javax.annotation.Nullable;
 
-public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule,
-    HasClasspathEntries {
+@BuildsAnnotationProcessor
+public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, HasClasspathEntries {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 

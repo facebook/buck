@@ -106,6 +106,7 @@ java_immutables_library(
   name = 'support',
   srcs = [
     'AnnotationProcessingParams.java',
+    'BuildsAnnotationProcessor.java',
     'HasClasspathEntries.java',
     'HasJavaAbi.java',
     'Javac.java',

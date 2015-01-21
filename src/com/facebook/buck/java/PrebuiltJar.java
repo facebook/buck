@@ -51,9 +51,10 @@ import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
+@BuildsAnnotationProcessor
 public class PrebuiltJar extends AbstractBuildRule
-    implements JavaLibrary, HasClasspathEntries, ExportDependencies,
-    InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable {
+    implements AndroidPackageable, ExportDependencies, HasClasspathEntries,
+    InitializableFromDisk<JavaLibrary.Data>, JavaLibrary {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 

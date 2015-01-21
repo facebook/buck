@@ -188,23 +188,16 @@ public class AnnotationProcessingParams {
       }
 
       Set<Path> searchPathElements = Sets.newHashSet();
-      ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
 
       for (BuildRule rule : this.rules) {
-        String type = rule.getType().getName();
-
-        rules.add(rule);
-
-        // We're using raw strings here to avoid circular dependencies.
-        // TODO(simons): don't use raw strings.
-        HasClasspathEntries hasClasspathEntries = getRuleAsHasClasspathEntries(rule);
-        if ("java_binary".equals(type) || "prebuilt_jar".equals(type)) {
+        if (rule.getClass().isAnnotationPresent(BuildsAnnotationProcessor.class)) {
           Path pathToOutput = rule.getPathToOutputFile();
           if (pathToOutput != null) {
             searchPathElements.add(pathToOutput);
           }
-        } else if (hasClasspathEntries != null) {
-          searchPathElements.addAll(hasClasspathEntries.getTransitiveClasspathEntries().values());
+        } else if (rule instanceof HasClasspathEntries) {
+          searchPathElements.addAll(
+              ((HasClasspathEntries) rule).getTransitiveClasspathEntries().values());
         } else {
           throw new HumanReadableException(
               "%1$s: Error adding '%2$s' to annotation_processing_deps: " +
@@ -220,16 +213,8 @@ public class AnnotationProcessingParams {
           searchPathElements,
           names,
           parameters,
-          rules.build(),
+          ImmutableSortedSet.copyOf(this.rules),
           processOnly);
-    }
-
-    @Nullable
-    private HasClasspathEntries getRuleAsHasClasspathEntries(BuildRule rule) {
-      if (rule instanceof HasClasspathEntries) {
-        return (HasClasspathEntries) rule;
-      }
-      return null;
     }
   }
 }
