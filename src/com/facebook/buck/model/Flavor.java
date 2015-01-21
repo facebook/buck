@@ -16,17 +16,10 @@
 
 package com.facebook.buck.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;
 
-import java.io.IOException;
 import java.util.regex.Pattern;
 
-@JsonSerialize(using = Flavor.FlavorSerializer.class)
 public class Flavor implements Comparable<Flavor> {
 
   private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z0-9_\\.]+");
@@ -38,11 +31,6 @@ public class Flavor implements Comparable<Flavor> {
         VALID_FLAVOR_PATTERN.matcher(flavor).matches(),
         "Invalid flavor: " + flavor);
     this.flavor = flavor;
-  }
-
-  @JsonCreator
-  public static Flavor fromJson(String flavor) {
-    return new Flavor(flavor);
   }
 
   @Override
@@ -78,14 +66,4 @@ public class Flavor implements Comparable<Flavor> {
     return flavor.hashCode();
   }
 
-  public static class FlavorSerializer extends JsonSerializer<Flavor> {
-
-    @Override
-    public void serialize(
-        Flavor flavor,
-        JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider) throws IOException {
-      jsonGenerator.writeString(flavor.flavor);
-    }
-  }
 }
