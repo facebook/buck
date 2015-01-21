@@ -54,6 +54,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.result.groups.TestResultsGrouper;
+import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -75,6 +76,7 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -82,6 +84,8 @@ import org.w3c.dom.Element;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -545,10 +549,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
                       /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty(),
                       /*isDryRun*/ options.isDryRun())),
               test.getBuildTarget());
-      FutureCallback<TestResults> onTestFinishedCallback =
-          getFutureCallback(grouper, test, options, printTestResults);
-      Futures.addCallback(testResults, onTestFinishedCallback);
-      results.add(testResults);
+      results.add(
+        transformTestResults(testResults, grouper, test, options, printTestResults));
     }
 
     // Block until all the tests have finished running.
@@ -621,12 +623,28 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     return (failures || significantAssumptionViolations) ? TEST_FAILURES_EXIT_CODE : 0;
   }
 
-  private FutureCallback<TestResults> getFutureCallback(
+  private ListenableFuture<TestResults> transformTestResults(
+      ListenableFuture<TestResults> originalTestResults,
       @Nullable final TestResultsGrouper grouper,
       final TestRule testRule,
       final TestCommandOptions options,
       final boolean printTestResults) {
-    return new FutureCallback<TestResults>() {
+    final SettableFuture<TestResults> transformedTestResults = SettableFuture.create();
+    FutureCallback<TestResults> callback = new FutureCallback<TestResults>() {
+
+      private void postTestResults(TestResults testResults) {
+        getBuckEventBus().post(
+            IndividualTestEvent.finished(
+                options.getArgumentsFormattedAsBuildTargets(),
+                testResults));
+      }
+
+      private String getStackTrace(Throwable throwable) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        throwable.printStackTrace(pw);
+        return sw.toString();
+      }
 
       @Override
       public void onSuccess(TestResults testResults) {
@@ -640,20 +658,35 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
             }
           }
         }
-      }
-
-      private void postTestResults(TestResults testResults) {
-        getBuckEventBus().post(IndividualTestEvent.finished(
-            options.getArgumentsFormattedAsBuildTargets(), testResults));
+        transformedTestResults.set(testResults);
       }
 
       @Override
       public void onFailure(Throwable throwable) {
-        // This should never happen, but if it does, that means that something has gone awry, so
-        // we should bubble it up.
-        throwable.printStackTrace(getStdErr());
+        // If the test command steps themselves fail, report this as special test result.
+        TestResults testResults =
+            new TestResults(
+                ImmutableList.of(
+                    new TestCaseSummary(
+                        testRule.getBuildTarget().toString(),
+                        ImmutableList.of(
+                            new TestResultSummary(
+                                testRule.getBuildTarget().toString(),
+                                "main",
+                                ResultType.FAILURE,
+                                0L,
+                                throwable.getMessage(),
+                                getStackTrace(throwable),
+                                "",
+                                "")))));
+        if (printTestResults) {
+          postTestResults(testResults);
+        }
+        transformedTestResults.set(testResults);
       }
     };
+    Futures.addCallback(originalTestResults, callback);
+    return transformedTestResults;
   }
 
   private Callable<TestResults> getCachingStatusTransformingCallable(

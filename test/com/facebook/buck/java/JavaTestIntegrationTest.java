@@ -45,7 +45,7 @@ public class JavaTestIntegrationTest {
 
     // The bug this addresses was exposed as a missing output XML files. We expect the test to fail
     // with a warning to the user explaining that hamcrest was missing.
-    result.assertFailure();
+    result.assertTestFailure();
     String stderr = result.getStderr();
     assertTrue(
         stderr,
@@ -65,7 +65,7 @@ public class JavaTestIntegrationTest {
 
     // The bug this address was exposed as a missing output XML files. We expect the test to fail
     // with a warning to the user explaining that hamcrest was missing.
-    result.assertFailure();
+    result.assertTestFailure();
     String stderr = result.getStderr();
     assertTrue(
         stderr,
@@ -83,7 +83,7 @@ public class JavaTestIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:no-testng");
 
-    result.assertFailure();
+    result.assertTestFailure();
     String stderr = result.getStderr();
     assertTrue(
         stderr,
@@ -157,6 +157,16 @@ public class JavaTestIntegrationTest {
     workspace.writeContentsToPath("[test]\n  rule_timeout = 10000", ".buckconfig");
 
     workspace.runBuckCommand("test", "//:slow").assertSuccess();
+  }
+
+  @Test
+  public void brokenTestGivesFailedTestResult() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "java_test_broken_test",
+        temp);
+    workspace.setUp();
+    workspace.runBuckCommand("test", "//:simple").assertTestFailure();
   }
 
 }
