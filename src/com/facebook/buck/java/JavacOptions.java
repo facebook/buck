@@ -16,7 +16,6 @@
 
 package com.facebook.buck.java;
 
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -45,7 +44,7 @@ public class JavacOptions {
   private final boolean verbose;
   private final String sourceLevel;
   private final String targetLevel;
-  private final AnnotationProcessingData annotationProcessingData;
+  private final AnnotationProcessingParams annotationProcessingParams;
   private final ImmutableList<String> extraArguments;
   private final Optional<String> bootclasspath;
   private final ImmutableMap<String, String> sourceToBootclasspath;
@@ -59,7 +58,7 @@ public class JavacOptions {
       ImmutableList<String> extraArguments,
       Optional<String> bootclasspath,
       ImmutableMap<String, String> sourceToBootclasspath,
-      AnnotationProcessingData annotationProcessingData) {
+      AnnotationProcessingParams annotationProcessingParams) {
     this.javacEnv = Preconditions.checkNotNull(javacEnv);
     this.debug = debug;
     this.verbose = verbose;
@@ -68,23 +67,16 @@ public class JavacOptions {
     this.extraArguments = extraArguments;
     this.bootclasspath = bootclasspath;
     this.sourceToBootclasspath = sourceToBootclasspath;
-    this.annotationProcessingData = annotationProcessingData;
+    this.annotationProcessingParams = annotationProcessingParams;
   }
 
   public JavaCompilerEnvironment getJavaCompilerEnvironment() {
     return javacEnv;
   }
 
-  public void appendOptionsToList(ImmutableList.Builder<String> optionsBuilder,
-      Function<Path, Path> pathRelativizer) {
-    appendOptionsToList(optionsBuilder,
-        pathRelativizer,
-        AnnotationProcessingDataDecorators.identity());
-  }
-
-  public void appendOptionsToList(ImmutableList.Builder<String> optionsBuilder,
-      final Function<Path, Path> pathRelativizer,
-      AnnotationProcessingDataDecorator decorator) {
+  public void appendOptionsToList(
+      ImmutableList.Builder<String> optionsBuilder,
+      final Function<Path, Path> pathRelativizer) {
 
     // Add some standard options.
     optionsBuilder.add("-source", targetLevel);
@@ -109,12 +101,10 @@ public class JavacOptions {
     }
 
     // Add annotation processors.
-    AnnotationProcessingData annotationProcessingData =
-        decorator.decorate(this.annotationProcessingData);
-    if (!annotationProcessingData.isEmpty()) {
+    if (!annotationProcessingParams.isEmpty()) {
 
       // Specify where to generate sources so IntelliJ can pick them up.
-      Path generateTo = annotationProcessingData.getGeneratedSourceFolderName();
+      Path generateTo = annotationProcessingParams.getGeneratedSourceFolderName();
       if (generateTo != null) {
         optionsBuilder.add("-s").add(pathRelativizer.apply(generateTo).toString());
       }
@@ -122,21 +112,23 @@ public class JavacOptions {
       // Specify processorpath to search for processors.
       optionsBuilder.add("-processorpath",
           Joiner.on(File.pathSeparator).join(
-              FluentIterable.from(annotationProcessingData.getSearchPathElements())
+              FluentIterable.from(annotationProcessingParams.getSearchPathElements())
                   .transform(pathRelativizer)
                   .transform(Functions.toStringFunction())));
 
       // Specify names of processors.
-      if (!annotationProcessingData.getNames().isEmpty()) {
-        optionsBuilder.add("-processor", Joiner.on(',').join(annotationProcessingData.getNames()));
+      if (!annotationProcessingParams.getNames().isEmpty()) {
+        optionsBuilder.add(
+            "-processor",
+            Joiner.on(',').join(annotationProcessingParams.getNames()));
       }
 
       // Add processor parameters.
-      for (String parameter : annotationProcessingData.getParameters()) {
+      for (String parameter : annotationProcessingParams.getParameters()) {
         optionsBuilder.add("-A" + parameter);
       }
 
-      if (annotationProcessingData.getProcessOnly()) {
+      if (annotationProcessingParams.getProcessOnly()) {
         optionsBuilder.add("-proc:only");
       }
     }
@@ -154,11 +146,11 @@ public class JavacOptions {
         .set("javacVersion", javacEnv.getJavacVersion().transform(
             Functions.toStringFunction()).orNull());
 
-    return annotationProcessingData.appendToRuleKey(builder);
+    return annotationProcessingParams.appendToRuleKey(builder);
   }
 
-  public AnnotationProcessingData getAnnotationProcessingData() {
-    return annotationProcessingData;
+  public AnnotationProcessingParams getAnnotationProcessingParams() {
+    return annotationProcessingParams;
   }
 
   public String getSourceLevel() {
@@ -188,7 +180,7 @@ public class JavacOptions {
       builder.setProductionBuild();
     }
 
-    builder.setAnnotationProcessingData(options.annotationProcessingData);
+    builder.setAnnotationProcessingParams(options.annotationProcessingParams);
     builder.sourceToBootclasspath = options.sourceToBootclasspath;
     builder.setBootclasspath(options.bootclasspath.orNull());
     builder.setSourceLevel(options.getSourceLevel());
@@ -207,7 +199,8 @@ public class JavacOptions {
     private boolean debug = true;
     private boolean verbose = false;
     private Optional<String> bootclasspath = Optional.absent();
-    private AnnotationProcessingData annotationProcessingData = AnnotationProcessingData.EMPTY;
+    private AnnotationProcessingParams annotationProcessingParams =
+        AnnotationProcessingParams.EMPTY;
     @Nullable
     private JavaCompilerEnvironment javacEnv;
     private ImmutableMap<String, String> sourceToBootclasspath;
@@ -250,8 +243,9 @@ public class JavacOptions {
       return this;
     }
 
-    public Builder setAnnotationProcessingData(AnnotationProcessingData annotationProcessingData) {
-      this.annotationProcessingData = annotationProcessingData;
+    public Builder setAnnotationProcessingParams(
+        AnnotationProcessingParams annotationProcessingParams) {
+      this.annotationProcessingParams = annotationProcessingParams;
       return this;
     }
 
@@ -270,7 +264,7 @@ public class JavacOptions {
           extraArguments,
           bootclasspath,
           sourceToBootclasspath,
-          annotationProcessingData);
+          annotationProcessingParams);
     }
   }
 }

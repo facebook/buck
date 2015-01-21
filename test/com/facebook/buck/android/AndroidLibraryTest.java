@@ -21,10 +21,10 @@ import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -83,8 +83,8 @@ public class AndroidLibraryTest {
         .addProcessorBuildTarget(processorRule.getBuildTarget())
         .build(ruleResolver);
 
-    AnnotationProcessingData processingData = library.getAnnotationProcessingData();
-    assertNotNull(processingData.getGeneratedSourceFolderName());
+    AnnotationProcessingParams processingParams = library.getAnnotationProcessingParams();
+    assertNotNull(processingParams.getGeneratedSourceFolderName());
   }
 
 

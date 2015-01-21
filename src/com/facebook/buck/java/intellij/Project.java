@@ -27,6 +27,7 @@ import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaPackageFinder;
@@ -35,7 +36,6 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.ProjectConfig;
@@ -448,9 +448,9 @@ public class Project {
       javaLibrary = (JavaLibrary) projectRule;
     }
     if (javaLibrary != null) {
-      AnnotationProcessingData processingData = javaLibrary.getAnnotationProcessingData();
+      AnnotationProcessingParams processingParams = javaLibrary.getAnnotationProcessingParams();
 
-      Path annotationGenSrc = processingData.getGeneratedSourceFolderName();
+      Path annotationGenSrc = processingParams.getGeneratedSourceFolderName();
       if (annotationGenSrc != null) {
         module.annotationGenPath =
             "/" + Paths.get(basePathWithSlash).relativize(annotationGenSrc).toString();

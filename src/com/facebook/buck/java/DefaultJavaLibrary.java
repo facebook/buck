@@ -29,7 +29,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -444,8 +443,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @Override
-  public AnnotationProcessingData getAnnotationProcessingData() {
-    return javacOptions.getAnnotationProcessingData();
+  public AnnotationProcessingParams getAnnotationProcessingParams() {
+    return javacOptions.getAnnotationProcessingParams();
   }
 
   public Optional<Path> getProguardConfig() {
@@ -502,7 +501,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     // Javac requires that the root directory for generated sources already exist.
     Path annotationGenFolder =
-        javacOptions.getAnnotationProcessingData().getGeneratedSourceFolderName();
+        javacOptions.getAnnotationProcessingParams().getGeneratedSourceFolderName();
     if (annotationGenFolder != null) {
       MakeCleanDirectoryStep mkdirGeneratedSources =
           new MakeCleanDirectoryStep(annotationGenFolder);

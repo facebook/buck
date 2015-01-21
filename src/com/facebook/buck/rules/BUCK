@@ -58,7 +58,6 @@ java_library(
     'ActionGraphEvent.java',
     'BuildRuleBuilderParams.java',
     'AbstractSourcePath.java',
-    'AnnotationProcessingData.java',
     'ArtifactCache.java',
     'BinaryBuildRule.java',
     'BuckPyFunction.java',

@@ -17,7 +17,6 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.BuckConstant;
@@ -44,7 +43,7 @@ import javax.annotation.Nullable;
  * threading the information through buck in a more descriptive package rather than passing all
  * the components separately.
  */
-public class AnnotationProcessingParams implements AnnotationProcessingData {
+public class AnnotationProcessingParams {
   public static final AnnotationProcessingParams EMPTY = new AnnotationProcessingParams(
       /* owner target */ null,
       /* project filesystem */ null,
@@ -95,27 +94,22 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
             ownerTarget.getShortNameAndFlavorPostfix()));
   }
 
-  @Override
   public boolean isEmpty() {
     return searchPathElements.isEmpty() && names.isEmpty() && parameters.isEmpty();
   }
 
-  @Override
   public ImmutableSortedSet<Path> getSearchPathElements() {
     return searchPathElements;
   }
 
-  @Override
   public ImmutableSortedSet<String> getNames() {
     return names;
   }
 
-  @Override
   public ImmutableSortedSet<String> getParameters() {
     return parameters;
   }
 
-  @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     if (!isEmpty()) {
       // searchPathElements is not needed here since it comes from rules, which is appended below.
@@ -135,12 +129,10 @@ public class AnnotationProcessingParams implements AnnotationProcessingData {
     return builder;
   }
 
-  @Override
   public boolean getProcessOnly() {
     return processOnly;
   }
 
-  @Override
   @Nullable
   public Path getGeneratedSourceFolderName() {
     if ((ownerTarget != null) && !isEmpty()) {

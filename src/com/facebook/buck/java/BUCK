@@ -104,8 +104,6 @@ java_library(
 java_immutables_library(
   name = 'support',
   srcs = [
-    'AnnotationProcessingDataDecorator.java',
-    'AnnotationProcessingDataDecorators.java',
     'AnnotationProcessingParams.java',
     'HasClasspathEntries.java',
     'HasJavaAbi.java',

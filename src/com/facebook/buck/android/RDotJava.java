@@ -16,11 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
@@ -72,7 +72,7 @@ public class RDotJava {
         /* transitive classpath */ ImmutableSet.<Path>of(),
         /* declared classpath */ ImmutableSet.<Path>of(),
         JavacOptions.builder(javacOptions)
-            .setAnnotationProcessingData(AnnotationProcessingData.EMPTY)
+            .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
             .build(),
         buildTarget,
         BuildDependencies.FIRST_ORDER_ONLY,

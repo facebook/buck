@@ -80,7 +80,7 @@ public class AndroidLibraryDescription
         params.getBuildTarget(),
         params.getProjectFilesystem(),
         resolver);
-    javacOptions.setAnnotationProcessingData(annotationParams);
+    javacOptions.setAnnotationProcessingParams(annotationParams);
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),

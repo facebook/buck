@@ -16,11 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -59,7 +59,7 @@ public class AndroidLibraryGraphEnhancer {
     // Override javacoptions because DummyRDotJava doesn't require annotation processing.
     this.javac = javac;
     this.javacOptions = JavacOptions.builder(javacOptions)
-        .setAnnotationProcessingData(AnnotationProcessingData.EMPTY)
+        .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
         .build();
     this.resourceDependencyMode = resourceDependencyMode;
   }

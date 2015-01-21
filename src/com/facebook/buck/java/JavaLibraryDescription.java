@@ -90,7 +90,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
     AnnotationProcessingParams annotationParams =
         args.buildAnnotationProcessingParams(target, params.getProjectFilesystem(), resolver);
-    javacOptions.setAnnotationProcessingData(annotationParams);
+    javacOptions.setAnnotationProcessingParams(annotationParams);
 
     return new DefaultJavaLibrary(
         params,

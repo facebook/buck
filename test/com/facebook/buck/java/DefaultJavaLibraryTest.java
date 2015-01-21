@@ -1364,7 +1364,7 @@ public class DefaultJavaLibraryTest {
       AnnotationProcessingParams params = annotationProcessingParamsBuilder.build();
       JavacOptions.Builder options = JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
           .setJavaCompilerEnvironment(DEFAULT_JAVAC_ENV)
-          .setAnnotationProcessingData(params);
+          .setAnnotationProcessingParams(params);
 
       BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
           .setProjectFilesystem(projectFilesystem)

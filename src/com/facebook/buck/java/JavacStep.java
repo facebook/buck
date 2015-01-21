@@ -271,10 +271,7 @@ public class JavacStep implements Step {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     ProjectFilesystem filesystem = context.getProjectFilesystem();
-    AnnotationProcessingDataDecorator decorator = AnnotationProcessingDataDecorators.identity();
-    javacOptions.appendOptionsToList(builder,
-        context.getProjectFilesystem().getAbsolutifier(),
-        decorator);
+    javacOptions.appendOptionsToList(builder, context.getProjectFilesystem().getAbsolutifier());
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {

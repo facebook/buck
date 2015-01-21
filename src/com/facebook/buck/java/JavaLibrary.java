@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -83,7 +82,7 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
 
   public ImmutableSortedSet<Path> getJavaSrcs();
 
-  public AnnotationProcessingData getAnnotationProcessingData();
+  public AnnotationProcessingParams getAnnotationProcessingParams();
 
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder);
 

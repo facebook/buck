@@ -78,7 +78,7 @@ public class JavacOptionsTest {
         .build();
 
     JavacOptions options = createStandardBuilder()
-        .setAnnotationProcessingData(params)
+        .setAnnotationProcessingParams(params)
         .build();
 
     assertOptionsContains(options, "-proc:only");
@@ -92,7 +92,7 @@ public class JavacOptionsTest {
         .build();
 
     JavacOptions options = createStandardBuilder()
-        .setAnnotationProcessingData(params)
+        .setAnnotationProcessingParams(params)
         .build();
 
     assertOptionsContains(options, "-processor myproc,theirproc");

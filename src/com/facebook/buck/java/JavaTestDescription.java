@@ -77,7 +77,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         params.getBuildTarget(),
         params.getProjectFilesystem(),
         resolver);
-    javacOptions.setAnnotationProcessingData(annotationParams);
+    javacOptions.setAnnotationProcessingParams(annotationParams);
 
     return new JavaTest(
         params,

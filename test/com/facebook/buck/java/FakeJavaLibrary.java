@@ -22,7 +22,6 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AnnotationProcessingData;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableProperties;
@@ -114,8 +113,8 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public AnnotationProcessingData getAnnotationProcessingData() {
-    return AnnotationProcessingData.EMPTY;
+  public AnnotationProcessingParams getAnnotationProcessingParams() {
+    return AnnotationProcessingParams.EMPTY;
   }
 
   @Override
