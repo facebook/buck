@@ -43,11 +43,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.KeystoreProperties;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
@@ -57,7 +55,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -71,14 +68,12 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashSet;
@@ -121,15 +116,6 @@ public class Project {
       "buck.path_to_intellij_py",
       // Fall back on this value when running Buck from an IDE.
       new File("src/com/facebook/buck/command/intellij.py").getAbsolutePath());
-
-  /**
-   * For now, do not write any project.properties files. We have failed to provide them in the
-   * same format as IntelliJ itself would generate them. That means that IntelliJ overwrites our
-   * generated versions at some point. The next time `buck project` is run, Buck overwrites them
-   * again, which causes IntelliJ to go and index the world. Empirically, it seems that if we do
-   * not write them at all, IntelliJ can live without them.
-   */
-  private static final boolean GENERATE_PROPERTIES_FILES = false;
 
   private final SourcePathResolver resolver;
   private final ImmutableSet<ProjectConfig> rules;
@@ -224,10 +210,6 @@ public class Project {
       Iterables.addAll(modifiedFiles, paths);
     }
 
-    // Write out the project.properties files.
-    List<String> modifiedPropertiesFiles = generateProjectDotPropertiesFiles(modules);
-    modifiedFiles.addAll(modifiedPropertiesFiles);
-
     // Write out the .idea/compiler.xml file (the .idea/ directory is guaranteed to exist).
     CompilerXml compilerXml = new CompilerXml(modules);
     final String pathToCompilerXml = ".idea/compiler.xml";
@@ -258,30 +240,6 @@ public class Project {
     return 0;
   }
 
-  private ImmutableList<String> generateProjectDotPropertiesFiles(List<Module> modules)
-      throws IOException {
-    if (GENERATE_PROPERTIES_FILES) {
-      // Create a map of module names to modules.
-      Map<String, Module> nameToModule = buildNameToModuleMap(modules);
-      ImmutableList.Builder<String> modifiedFiles = ImmutableList.builder();
-
-      for (Module module : modules) {
-        if (!module.isAndroidModule()) {
-          continue;
-        }
-
-        File propertiesFile = writeProjectDotPropertiesFile(module, nameToModule);
-        if (propertiesFile != null) {
-          modifiedFiles.add(propertiesFile.getPath());
-        }
-      }
-
-      return modifiedFiles.build();
-    } else {
-      return ImmutableList.of();
-    }
-  }
-
   @VisibleForTesting
   Map<String, Module> buildNameToModuleMap(List<Module> modules) {
     Map<String, Module> nameToModule = Maps.newHashMap();
@@ -289,80 +247,6 @@ public class Project {
       nameToModule.put(module.name, module);
     }
     return nameToModule;
-  }
-
-   /**
-   * @param module must be an android module
-   * @param nameToModuleIndex
-   * @return the File that was written, or {@code null} if no file was written.
-   * @throws IOException
-   */
-  @VisibleForTesting
-  @Nullable
-  File writeProjectDotPropertiesFile(Module module, Map<String, Module> nameToModuleIndex)
-      throws IOException {
-    SortedSet<String> references = Sets.newTreeSet();
-    for (DependentModule dependency : Preconditions.checkNotNull(module.dependencies)) {
-      if (!dependency.isModule()) {
-        continue;
-      }
-
-      Module dep = nameToModuleIndex.get(dependency.getModuleName());
-      if (dep == null) {
-        throw new HumanReadableException("You must define a project_config() in %s " +
-            "containing %s. The project_config() in %s transitively depends on it.",
-            module.target.getBasePathWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME,
-            dependency.getTargetName(),
-            module.target.getFullyQualifiedName());
-      }
-      if (!dep.isAndroidModule()) {
-        continue;
-      }
-
-      Path pathToImlFile = Paths.get(module.pathToImlFile);
-      Path depPathToImlFile = Paths.get(dep.pathToImlFile);
-
-      String relativePath =
-          pathToImlFile.getParent().relativize(depPathToImlFile.getParent()).toString();
-
-      // This is probably a self-reference. Ignore it.
-      if (relativePath.isEmpty()) {
-        continue;
-      }
-
-      references.add(relativePath);
-    }
-
-    StringBuilder builder = new StringBuilder();
-    builder.append("# This file is automatically generated by Buck.\n");
-    builder.append("# Do not modify this file -- YOUR CHANGES WILL BE ERASED!\n");
-
-    // These are default values that IntelliJ or some other tool may overwrite.
-    builder.append(
-        String.format("target=%s\n", AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET));
-    builder.append("proguard.config=proguard.cfg\n");
-
-    boolean isAndroidLibrary = module.isAndroidLibrary();
-    if (isAndroidLibrary) {
-      // Android does not seem to include this line for non-Android libraries.
-      builder.append("android.library=" + isAndroidLibrary + "\n");
-    }
-
-    int index = 1;
-    for (String path : references) {
-      builder.append(String.format("android.library.reference.%d=%s\n", index, path));
-      ++index;
-    }
-
-    final Charset charset = Charsets.US_ASCII;
-    File outputFile = new File(createPathToProjectDotPropertiesFileFor(module));
-    String properties = builder.toString();
-    if (outputFile.exists() && Files.toString(outputFile, charset).equals(properties)) {
-      return null;
-    } else {
-      Files.write(properties, outputFile, charset);
-      return outputFile;
-    }
   }
 
   @VisibleForTesting

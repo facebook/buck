@@ -19,7 +19,6 @@ package com.facebook.buck.java.intellij;
 import static com.facebook.buck.testutil.MoreAsserts.assertListEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidBinaryBuilder;
@@ -50,7 +49,6 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.RuleMap;
-import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -67,7 +65,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.annotation.Nullable;
@@ -804,52 +801,6 @@ public class ProjectTest {
     assertEquals(
         String.format("../../../../%s", ndkLibrary.getLibraryPath()),
         androidLibraryModule.nativeLibs);
-  }
-
-  @Test
-  public void shouldThrowAnExceptionIfAModuleIsMissingADependencyWhenGeneratingProjectFiles()
-      throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-
-    BuildRule ex1 = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//example/parent:ex1"))
-        .addSrc(Paths.get("DoesNotExist.java"))
-        .build(ruleResolver);
-
-    BuildRule ex2 = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//example/child:ex2"))
-        .addSrc(Paths.get("AlsoDoesNotExist.java"))
-        .addDep(ex1.getBuildTarget())
-        .build(ruleResolver);
-
-    BuildRule tests = JavaTestBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//example/child:tests"))
-        .addSrc(Paths.get("SomeTestFile.java"))
-        .addDep(ex2.getBuildTarget())
-        .build(ruleResolver);
-
-    ProjectConfig config = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(BuildTargetFactory.newInstance("//example/child:config"))
-        .setSrcRule(ex2.getBuildTarget())
-        .setTestRule(tests.getBuildTarget())
-        .build(ruleResolver);
-
-    ProjectWithModules projectWithModules = getModulesForActionGraph(
-        ruleResolver, ImmutableSet.of(config), null);
-
-    Module module = Iterables.getOnlyElement(projectWithModules.modules);
-    List<Module> modules = projectWithModules.project.createModulesForProjectConfigs();
-    Map<String, Module> map = projectWithModules.project.buildNameToModuleMap(modules);
-
-    try {
-      projectWithModules.project.writeProjectDotPropertiesFile(module, map);
-      fail("Should have thrown a HumanReadableException");
-    } catch (HumanReadableException e) {
-      assertEquals("You must define a project_config() in example/child/BUCK containing " +
-          "//example/parent:ex1. The project_config() in //example/child:config transitively " +
-          "depends on it.",
-          e.getHumanReadableErrorMessage().replace("\\", "/"));
-    }
   }
 
   @Test
