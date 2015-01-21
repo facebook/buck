@@ -762,9 +762,9 @@ public class ProjectGenerator {
         sourcePathResolver)
         .setTargetName(productName)
         .setProduct(
-            dylibProductTypeByBundleExtension(key.extension().getLeft()).get(),
+            dylibProductTypeByBundleExtension(key.getExtension().getLeft()).get(),
             productName,
-            Paths.get(productName + "." + getExtensionString(key.extension())))
+            Paths.get(productName + "." + getExtensionString(key.getExtension())))
         .setShouldGenerateCopyHeadersPhase(false)
         .setSources(
             ImmutableList.of(
@@ -797,11 +797,11 @@ public class ProjectGenerator {
         ImmutableMap.<String, String>builder()
             .put("GCC_PREFIX_HEADER", "")
             .put("USE_HEADERMAP", "NO");
-    if (key.infoPlist().isPresent()) {
+    if (key.getInfoPlist().isPresent()) {
       overrideBuildSettingsBuilder.put(
           "INFOPLIST_FILE",
           pathRelativizer.outputDirToRootRelative(
-                sourcePathResolver.getPath(key.infoPlist().get())).toString());
+                sourcePathResolver.getPath(key.getInfoPlist().get())).toString());
     }
     setTargetBuildConfigurations(
         new Function<String, Path>() {
@@ -813,11 +813,11 @@ public class ProjectGenerator {
         },
         result.target,
         result.targetGroup,
-        key.configs().get(),
+        key.getConfigs().get(),
         overrideBuildSettingsBuilder.build(),
         ImmutableMap.of(
             "PRODUCT_NAME", productName,
-            "WRAPPER_EXTENSION", getExtensionString(key.extension())),
+            "WRAPPER_EXTENSION", getExtensionString(key.getExtension())),
         ImmutableMap.of(
             "FRAMEWORK_SEARCH_PATHS", Joiner.on(' ').join(
                 collectRecursiveFrameworkSearchPaths(tests, true)),
@@ -831,7 +831,7 @@ public class ProjectGenerator {
       int combinedTestIndex) {
     return Joiner.on("-").join(
         "_BuckCombinedTest",
-        getExtensionString(key.extension()),
+        getExtensionString(key.getExtension()),
         combinedTestIndex);
 
   }

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
@@ -26,6 +28,7 @@ import java.util.Set;
  * Paths to Apple SDK directories under an installation of Xcode.
  */
 @Value.Immutable
+@BuckStyleImmutable
 public interface AppleSdkPaths {
   /**
    * Absolute paths to tools and files independent of the platform.
@@ -34,7 +37,7 @@ public interface AppleSdkPaths {
    *
    * {@code [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain]}
    */
-  Set<Path> toolchainPaths();
+  Set<Path> getToolchainPaths();
 
   /**
    * Absolute path to tools and files which depend on a particular platform.
@@ -43,7 +46,7 @@ public interface AppleSdkPaths {
    *
    * {@code /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer}
    */
-  Path platformDeveloperPath();
+  Path getPlatformDeveloperPath();
 
   /**
    * Absolute path to tools and files which depend on a particular SDK on a particular platform.
@@ -52,5 +55,5 @@ public interface AppleSdkPaths {
    *
    * {@code /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk}
    */
-  Path sdkPath();
+  Path getSdkPath();
 }

@@ -103,8 +103,8 @@ public class AndroidBinaryTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     androidBinary.addProguardCommands(
-        packageableCollection.classpathEntriesToDex(),
-        packageableCollection.proguardConfigs(),
+        packageableCollection.getClasspathEntriesToDex(),
+        packageableCollection.getProguardConfigs(),
         commands,
         buildableContext);
 
@@ -323,7 +323,7 @@ public class AndroidBinaryTest {
     ImmutableList<Path> resourceDirectories = ImmutableList.of(Paths.get("one"), Paths.get("two"));
 
     FilteredResourcesProvider resourcesProvider = buildRule.getEnhancementResult()
-        .aaptPackageResources()
+        .getAaptPackageResources()
         .getFilteredResourcesProvider();
     assertTrue(resourcesProvider instanceof ResourcesFilter);
     ImmutableList.Builder<Path> filteredDirs = ImmutableList.builder();

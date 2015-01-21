@@ -101,8 +101,8 @@ public class CxxPreprocess extends AbstractBuildRule {
     // We do this here, rather than returning them from `getInputsToCompareToOutput` so
     // that we can match the contents hash up with where it was laid out in the include
     // search path, and therefore can accurately capture header file renames.
-    for (Path path : ImmutableSortedSet.copyOf(includes.nameToPathMap().keySet())) {
-      SourcePath source = includes.nameToPathMap().get(path);
+    for (Path path : ImmutableSortedSet.copyOf(includes.getNameToPathMap().keySet())) {
+      SourcePath source = includes.getNameToPathMap().get(path);
       builder.setInput("include(" + path + ")", getResolver().getPath(source));
     }
 
@@ -123,7 +123,7 @@ public class CxxPreprocess extends AbstractBuildRule {
 
     // Resolve the map of symlinks to real paths to hand off the preprocess step.
     ImmutableMap.Builder<Path, Path> replacementPathsBuilder = ImmutableMap.builder();
-    for (Map.Entry<Path, SourcePath> entry : includes.fullNameToPathMap().entrySet()) {
+    for (Map.Entry<Path, SourcePath> entry : includes.getFullNameToPathMap().entrySet()) {
       replacementPathsBuilder.put(entry.getKey(), getResolver().getPath(entry.getValue()));
     }
     ImmutableMap<Path, Path> replacementPaths = replacementPathsBuilder.build();

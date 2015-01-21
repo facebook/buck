@@ -163,7 +163,7 @@ public class OCamlBuildRulesGenerator {
                   pathResolver.filterBuildRuleInputs(
                       ImmutableList.<SourcePath>builder()
                           .add(cSrc)
-                          .addAll(cxxPreprocessorInput.getIncludes().nameToPathMap().values())
+                          .addAll(cxxPreprocessorInput.getIncludes().getNameToPathMap().values())
                           .build()))
                   // Also add in extra deps from the preprocessor input, such as the symlink tree
                   // rules.
@@ -187,7 +187,7 @@ public class OCamlBuildRulesGenerator {
             outputPath,
             pathResolver.getPath(cSrc),
             cCompileFlags.build(),
-            ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().nameToPathMap())));
+            ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
       resolver.addToIndex(compileRule);
       objects.add(new BuildTargetSourcePath(compileRule.getBuildTarget()));
     }

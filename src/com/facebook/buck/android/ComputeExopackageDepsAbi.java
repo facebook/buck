@@ -155,14 +155,14 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               }
 
               // Same deal for native libs as assets.
-              for (final Path libDir : packageableCollection.nativeLibAssetsDirectories()) {
+              for (final Path libDir : packageableCollection.getNativeLibAssetsDirectories()) {
                 for (Path nativeFile : filesystem.getFilesUnderPath(libDir)) {
                   filesToHash.put(nativeFile, "native_lib_as_asset");
                 }
               }
 
               // Resources get copied from third-party JARs, so hash them.
-              for (Path jar : packageableCollection.pathsToThirdPartyJars()) {
+              for (Path jar : packageableCollection.getPathsToThirdPartyJars()) {
                 filesToHash.put(jar, "third-party jar");
               }
 

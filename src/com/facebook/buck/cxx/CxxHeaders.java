@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
 
@@ -24,18 +25,19 @@ import java.nio.file.Path;
 import java.util.Map;
 
 @Value.Immutable
+@BuckStyleImmutable
 public interface CxxHeaders {
 
   /**
    * Maps the name of the header (e.g. the path used to include it in a C/C++ source) to the
    * real location of the header.
    */
-  Map<Path, SourcePath> nameToPathMap();
+  Map<Path, SourcePath> getNameToPathMap();
 
   /**
    * Maps the full of the header (e.g. the path to the header that appears in error messages) to
    * the real location of the header.
    */
-  Map<Path, SourcePath> fullNameToPathMap();
+  Map<Path, SourcePath> getFullNameToPathMap();
 
 }

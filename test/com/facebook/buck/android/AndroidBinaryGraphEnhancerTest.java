@@ -249,7 +249,7 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableSet.of(Paths.get(
             "buck-out/gen/java/com/example/lib__apk#" + flavor + "__output/apk#" + flavor + ".jar")
         ),
-        result.classpathEntriesToDex());
+        result.getClasspathEntriesToDex());
     BuildTarget enhancedBuildConfigTarget = BuildTarget.builder(apkTarget).setFlavor(flavor)
         .build();
     BuildRule enhancedBuildConfigRule = ruleResolver.getRule(enhancedBuildConfigTarget);
@@ -267,14 +267,14 @@ public class AndroidBinaryGraphEnhancerTest {
             new BuildConfigFields.Field("int", "EXOPACKAGE_FLAGS", "1"))),
         androidBuildConfig.getBuildConfigFields());
 
-    ImmutableSortedSet<BuildRule> finalDeps = result.finalDeps();
+    ImmutableSortedSet<BuildRule> finalDeps = result.getFinalDeps();
     // Verify that the only dep is computeExopackageDepsAbi
     assertEquals(1, finalDeps.size());
     BuildRule computeExopackageDepsAbiRule =
         findRuleOfType(ruleResolver, ComputeExopackageDepsAbi.class);
     assertEquals(computeExopackageDepsAbiRule, finalDeps.first());
 
-    FilteredResourcesProvider resourcesProvider = result.aaptPackageResources()
+    FilteredResourcesProvider resourcesProvider = result.getAaptPackageResources()
         .getFilteredResourcesProvider();
     assertTrue(resourcesProvider instanceof ResourcesFilter);
     BuildRule resourcesFilterRule = findRuleOfType(ruleResolver, ResourcesFilter.class);
@@ -294,7 +294,7 @@ public class AndroidBinaryGraphEnhancerTest {
         aaptPackageResourcesRule);
 
 
-    assertFalse(result.preDexMerge().isPresent());
+    assertFalse(result.getPreDexMerge().isPresent());
 
     MoreAsserts.assertDepends(
         "ComputeExopackageDepsAbi must depend on ResourcesFilter",
@@ -309,8 +309,8 @@ public class AndroidBinaryGraphEnhancerTest {
         computeExopackageDepsAbiRule,
         aaptPackageResourcesRule);
 
-    assertTrue(result.packageStringAssets().isPresent());
-    assertTrue(result.computeExopackageDepsAbi().isPresent());
+    assertTrue(result.getPackageStringAssets().isPresent());
+    assertTrue(result.getComputeExopackageDepsAbi().isPresent());
 
     verify(keystore);
   }

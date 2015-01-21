@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -25,31 +26,34 @@ import java.nio.file.Path;
 
 @Value.Immutable
 @Value.Nested
+@BuckStyleImmutable
 public abstract class ExopackageInfo {
 
   @Value.Immutable
+  @BuckStyleImmutable
   public static interface DexInfo {
     @Value.Parameter
-    Path metadata();
+    Path getMetadata();
     @Value.Parameter
-    Path directory();
+    Path getDirectory();
   }
 
   @Value.Immutable
+  @BuckStyleImmutable
   public static interface NativeLibsInfo {
     @Value.Parameter
-    Path metadata();
+    Path getMetadata();
     @Value.Parameter
-    Path directory();
+    Path getDirectory();
   }
 
-  public abstract Optional<DexInfo> dexInfo();
-  public abstract Optional<NativeLibsInfo> nativeLibsInfo();
+  public abstract Optional<DexInfo> getDexInfo();
+  public abstract Optional<NativeLibsInfo> getNativeLibsInfo();
 
   @Value.Check
   protected void check() {
     Preconditions.checkArgument(
-        dexInfo().isPresent() || nativeLibsInfo().isPresent(),
+        getDexInfo().isPresent() || getNativeLibsInfo().isPresent(),
         "ExopackageInfo must either have secondary dexes or native libraries to install.");
   }
 }

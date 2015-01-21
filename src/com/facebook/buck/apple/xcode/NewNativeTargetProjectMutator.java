@@ -363,12 +363,12 @@ public class NewNativeTargetProjectMutator {
 
     for (FrameworkPath framework : frameworks) {
       SourceTreePath sourceTreePath;
-      if (framework.sourceTreePath().isPresent()) {
-        sourceTreePath = framework.sourceTreePath().get();
-      } else if (framework.sourcePath().isPresent()) {
+      if (framework.getSourceTreePath().isPresent()) {
+        sourceTreePath = framework.getSourceTreePath().get();
+      } else if (framework.getSourcePath().isPresent()) {
         sourceTreePath = new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
-            pathRelativizer.outputPathToSourcePath(framework.sourcePath().get()));
+            pathRelativizer.outputPathToSourcePath(framework.getSourcePath().get()));
       } else {
         throw new RuntimeException();
       }

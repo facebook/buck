@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+
 import org.immutables.value.Value;
 
 import java.util.Set;
@@ -24,30 +26,31 @@ import java.util.Set;
  * Metadata about an Apple SDK.
  */
 @Value.Immutable
+@BuckStyleImmutable
 public interface AppleSdk {
   /**
    * The full name of the SDK. For example: {@code iphonesimulator8.0}.
    */
-  String name();
+  String getName();
 
   /**
    * The version number of the SDK. For example: {@code 8.0}.
    */
-  String version();
+  String getVersion();
 
   /**
    * The platform of the SDK. For example, {@link ApplePlatform#IPHONESIMULATOR}.
    */
-  ApplePlatform applePlatform();
+  ApplePlatform getApplePlatform();
 
   /**
    * The architectures supported by the SDK. For example: {@code [i386, x86_64]}.
    */
-  Set<String> architectures();
+  Set<String> getArchitectures();
 
   /**
    * The identifiers for the toolchains used by the SDK. For example:
    * {@code ["com.apple.dt.toolchain.XcodeDefault"]}
    */
-  Set<String> toolchains();
+  Set<String> getToolchains();
 }

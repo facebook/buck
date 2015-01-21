@@ -253,10 +253,10 @@ public class CompilationDatabase extends AbstractBuildRule {
 
         // TODO(mbolin): Make the sysroot configurable.
         commandArgs.add("-isysroot");
-        Path sysroot = appleSdkPaths.sdkPath();
+        Path sysroot = appleSdkPaths.getSdkPath();
         commandArgs.add(sysroot.toString());
 
-        String sdkRoot = appleSdkPaths.sdkPath().toString();
+        String sdkRoot = appleSdkPaths.getSdkPath().toString();
         for (String framework : frameworks) {
           // TODO(mbolin): Other placeholders are possible, but do not appear to be used yet.
           // Specifically, PBXReference.SourceTree#fromBuildSetting() seems to have more
@@ -338,7 +338,7 @@ public class CompilationDatabase extends AbstractBuildRule {
             .onResultOf(new Function<AppleSdk, String>() {
                 @Override
                 public String apply(AppleSdk appleSdk) {
-                    return appleSdk.version();
+                    return appleSdk.getVersion();
                 }
             });
 
@@ -347,7 +347,7 @@ public class CompilationDatabase extends AbstractBuildRule {
         .filter(new Predicate<AppleSdk>() {
           @Override
           public boolean apply(AppleSdk sdk) {
-            return sdk.applePlatform() == ApplePlatform.IPHONESIMULATOR;
+            return sdk.getApplePlatform() == ApplePlatform.IPHONESIMULATOR;
           }
         })
         .toSortedSet(appleSdkVersionComparator);

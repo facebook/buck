@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -30,16 +31,17 @@ import org.immutables.value.Value;
  * Tests with the same parameters should be able to be linked and bundled into a single executable.
  */
 @Value.Immutable(prehash = true)
+@BuckStyleImmutable
 public abstract class AppleTestBundleParamsKey {
-  public abstract Optional<SourcePath> infoPlist();
-  public abstract Either<AppleBundleExtension, String> extension();
-  public abstract Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs();
+  public abstract Optional<SourcePath> getInfoPlist();
+  public abstract Either<AppleBundleExtension, String> getExtension();
+  public abstract Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> getConfigs();
 
   public static AppleTestBundleParamsKey fromAppleTestDescriptionArg(AppleTestDescription.Arg arg) {
     return ImmutableAppleTestBundleParamsKey.builder()
-        .infoPlist(arg.infoPlist)
-        .configs(arg.configs)
-        .extension(arg.extension)
+        .setInfoPlist(arg.infoPlist)
+        .setConfigs(arg.configs)
+        .setExtension(arg.extension)
         .build();
   }
 }

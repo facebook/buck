@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -26,20 +27,21 @@ import org.immutables.value.Value;
 import java.nio.file.Path;
 
 @Value.Immutable
+@BuckStyleImmutable
 public interface AndroidGraphEnhancementResult {
-  ImmutableAndroidPackageableCollection packageableCollection();
-  AaptPackageResources aaptPackageResources();
-  Optional<CopyNativeLibraries> copyNativeLibraries();
-  Optional<PackageStringAssets> packageStringAssets();
-  Optional<PreDexMerge> preDexMerge();
-  Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi();
+  AndroidPackageableCollection getPackageableCollection();
+  AaptPackageResources getAaptPackageResources();
+  Optional<CopyNativeLibraries> getCopyNativeLibraries();
+  Optional<PackageStringAssets> getPackageStringAssets();
+  Optional<PreDexMerge> getPreDexMerge();
+  Optional<ComputeExopackageDepsAbi> getComputeExopackageDepsAbi();
 
   /**
    * This includes everything from the corresponding
-   * {@link AndroidPackageableCollection#classpathEntriesToDex}, and may include additional
+   * {@link AndroidPackageableCollection#getClasspathEntriesToDex}, and may include additional
    * entries due to {@link AndroidBuildConfig}s.
    */
-  ImmutableSet<Path> classpathEntriesToDex();
+  ImmutableSet<Path> getClasspathEntriesToDex();
 
-  ImmutableSortedSet<BuildRule> finalDeps();
+  ImmutableSortedSet<BuildRule> getFinalDeps();
 }

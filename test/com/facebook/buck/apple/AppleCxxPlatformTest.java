@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecutiveItems;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -23,8 +24,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.environment.Platform;
-
-import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecutiveItems;
 
 import org.junit.Test;
 
@@ -43,8 +42,8 @@ public class AppleCxxPlatformTest {
     AppleSdkPaths appleSdkPaths =
         ImmutableAppleSdkPaths.builder()
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .platformDeveloperPath(root.resolve("Platforms/iPhoneOS.platform/Developer"))
-            .sdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+            .setPlatformDeveloperPath(root.resolve("Platforms/iPhoneOS.platform/Developer"))
+            .setSdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
 
     AppleCxxPlatform appleCxxPlatform =

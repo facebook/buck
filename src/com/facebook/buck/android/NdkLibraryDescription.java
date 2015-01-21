@@ -184,7 +184,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       // it technically should be added to the top-level rule.
       deps.addAll(
           pathResolver.filterBuildRuleInputs(
-              cxxPreprocessorInput.getIncludes().nameToPathMap().values()));
+              cxxPreprocessorInput.getIncludes().getNameToPathMap().values()));
       deps.addAll(resolver.getAllRules(cxxPreprocessorInput.getRules()));
 
       // Add in the transitive preprocessor flags contributed by C/C++ library rules into the

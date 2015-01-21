@@ -138,7 +138,7 @@ public class AndroidPackageableCollectorTest {
             Paths.get("third_party/jsr-305/jsr305.jar"),
             BuckConstant.GEN_PATH.resolve(
                 "java/src/com/facebook/lib__example__output/example.jar")),
-        packageableCollection.classpathEntriesToDex());
+        packageableCollection.getClasspathEntriesToDex());
     assertEquals(
         "Because guava was passed to no_dx, it should not be treated as a third-party JAR whose " +
             "resources need to be extracted and repacked in the APK. If this is done, then code " +
@@ -149,31 +149,31 @@ public class AndroidPackageableCollectorTest {
             "the resource in fb4a. Because the resource was loaded on startup, this introduced a " +
             "substantial regression in the startup time for the fb4a app.",
         ImmutableSet.of(Paths.get("third_party/jsr-305/jsr305.jar")),
-        packageableCollection.pathsToThirdPartyJars());
+        packageableCollection.getPathsToThirdPartyJars());
     assertEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",
         ImmutableSet.of(Paths.get("assets")),
-        packageableCollection.assetsDirectories());
+        packageableCollection.getAssetsDirectories());
     assertEquals(
         "Because manifest file was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",
         ImmutableSet.of(Paths.get("java/src/com/facebook/module/AndroidManifest.xml")),
-        packageableCollection.manifestFiles());
+        packageableCollection.getManifestFiles());
     assertEquals(
         "Because a native library was declared as a dependency, it should be added to the " +
             "transitive dependencies.",
         ImmutableSet.of(((NativeLibraryBuildRule) ndkLibrary).getLibraryPath()),
-        packageableCollection.nativeLibsDirectories());
+        packageableCollection.getNativeLibsDirectories());
     assertEquals(
         "Because a prebuilt native library  was declared as a dependency (and asset), it should " +
             "be added to the transitive dependecies.",
         ImmutableSet.of(((NativeLibraryBuildRule) prebuiltNativeLibraryBuild)
             .getLibraryPath()),
-        packageableCollection.nativeLibAssetsDirectories());
+        packageableCollection.getNativeLibAssetsDirectories());
     assertEquals(
         ImmutableSet.of(Paths.get("debug.pro")),
-        packageableCollection.proguardConfigs());
+        packageableCollection.getProguardConfigs());
   }
 
   /**
@@ -246,7 +246,7 @@ public class AndroidPackageableCollectorTest {
     assertEquals(
         String.format("Android resources should be topologically sorted."),
         result,
-        collector.build().resourceDetails().resourcesWithNonEmptyResDir());
+        collector.build().getResourceDetails().getResourcesWithNonEmptyResDir());
 
     // Introduce an AndroidBinaryRule that depends on A and C and verify that the same topological
     // sort results. This verifies that both AndroidResourceRule.getAndroidResourceDeps does the
@@ -272,8 +272,8 @@ public class AndroidPackageableCollectorTest {
         result,
         androidBinary
             .getAndroidPackageableCollection()
-            .resourceDetails()
-            .resourcesWithNonEmptyResDir());
+            .getResourceDetails()
+            .getResourcesWithNonEmptyResDir());
   }
 
   /**
@@ -320,6 +320,6 @@ public class AndroidPackageableCollectorTest {
         "Classpath entries should include facebook/base but not keystore/base.",
         ImmutableSet.of(
             BuckConstant.GEN_PATH.resolve("java/com/facebook/base/lib__base__output/base.jar")),
-        packageableCollection.classpathEntriesToDex());
+        packageableCollection.getClasspathEntriesToDex());
   }
 }

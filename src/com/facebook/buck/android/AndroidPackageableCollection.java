@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.JavaNativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,107 +37,109 @@ import java.util.Set;
  */
 @Value.Immutable
 @Value.Nested
+@BuckStyleImmutable
 public interface AndroidPackageableCollection {
 
   @Value.Immutable
+  @BuckStyleImmutable
   public abstract static class ResourceDetails {
 
     /**
      * A list of "res" directories that should be passed to the aapt command to build the APK,
      * sorted topologically.
      */
-    public abstract ImmutableList<Path> resourceDirectories();
+    public abstract ImmutableList<Path> getResourceDirectories();
 
     /**
      * A set of "res" directories that contain "whitelisted" strings, i.e. the strings-as-assets
      * resource filter does not affect these directories.
      */
-    public abstract Set<Path> whitelistedStringDirectories();
+    public abstract Set<Path> getWhitelistedStringDirectories();
 
     /**
      * A list of build targets belonging to {@link com.facebook.buck.android.AndroidResource}s with
      * non-empty "res" directory, sorted topologically. Note that these are {@link BuildTarget}s
      * to avoid introducing a circular dependency.
      */
-    public abstract ImmutableList<BuildTarget> resourcesWithNonEmptyResDir();
+    public abstract ImmutableList<BuildTarget> getResourcesWithNonEmptyResDir();
 
     /**
-     * Unlike {@link #resourcesWithNonEmptyResDir}, these resources only contain "assets".
+     * Unlike {@link #getResourcesWithNonEmptyResDir}, these resources only contain "assets".
      */
-    public abstract Set<BuildTarget> resourcesWithEmptyResButNonEmptyAssetsDir();
+    public abstract Set<BuildTarget> getResourcesWithEmptyResButNonEmptyAssetsDir();
 
     @Value.Derived
     public boolean hasResources() {
-      return !resourceDirectories().isEmpty();
+      return !getResourceDirectories().isEmpty();
     }
   }
 
-  ImmutableAndroidPackageableCollection.ResourceDetails resourceDetails();
+  ResourceDetails getResourceDetails();
 
   /**
    * A set of build targets that produce native libraries.
    */
-  Set<BuildTarget> nativeLibsTargets();
+  Set<BuildTarget> getNativeLibsTargets();
 
   /**
    * Native libraries.
    */
-  List<JavaNativeLinkable> nativeLinkables();
+  List<JavaNativeLinkable> getNativeLinkables();
 
   /**
    * Directories containing native libraries.
    */
-  Set<Path> nativeLibsDirectories();
+  Set<Path> getNativeLibsDirectories();
 
   /**
    * Directories containing native libraries to be used as assets.
    */
-  Set<Path> nativeLibAssetsDirectories();
+  Set<Path> getNativeLibAssetsDirectories();
 
   /**
    * Directories containing assets to be included directly in the apk,
    * under the "assets" directory.
    */
-  Set<Path> assetsDirectories();
+  Set<Path> getAssetsDirectories();
 
   /**
    * AndroidManifest.xml files to be included in manifest merging.
    */
-  Set<Path> manifestFiles();
+  Set<Path> getManifestFiles();
 
   /**
    * Proguard configurations to include when running release builds.
    */
-  Set<Path> proguardConfigs();
+  Set<Path> getProguardConfigs();
 
   /**
    * Java classes (jars) to include in the package.
    */
-  Set<Path> classpathEntriesToDex();
+  Set<Path> getClasspathEntriesToDex();
 
   /**
    * Java classes that were used during compilation, but don't got into the package.
    * This is only used by "buck project".  (It's existence is kind of contrary to
    * the purpose of this class, but we make exceptions for "buck project".)
    */
-  Set<Path> noDxClasspathEntries();
+  Set<Path> getNoDxClasspathEntries();
 
-  ImmutableMap<String, BuildConfigFields> buildConfigs();
+  ImmutableMap<String, BuildConfigFields> getBuildConfigs();
 
   /**
    * Prebuild/third-party jars to be included in the package.  For apks, their resources will
    * be placed directly in the apk.
    */
-  Set<Path> pathsToThirdPartyJars();
+  Set<Path> getPathsToThirdPartyJars();
 
   /**
    * {@link com.facebook.buck.java.JavaLibrary} rules whose output will be dexed and included in
    * the package.
    */
-  Set<BuildTarget> javaLibrariesToDex();
+  Set<BuildTarget> getJavaLibrariesToDex();
 
   /**
    * See {@link com.facebook.buck.java.JavaLibrary#getClassNamesToHashes()}
    */
-  Supplier<Map<String, HashCode>> classNamesToHashesSupplier();
+  Supplier<Map<String, HashCode>> getClassNamesToHashesSupplier();
 }

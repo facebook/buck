@@ -79,8 +79,8 @@ public abstract class CxxPreprocessorInput {
     for (CxxPreprocessorInput input : inputs) {
       rules.addAll(input.getRules());
       preprocessorFlags.putAll(input.getPreprocessorFlags());
-      includes.putAllNameToPathMap(input.getIncludes().nameToPathMap());
-      includes.putAllFullNameToPathMap(input.getIncludes().fullNameToPathMap());
+      includes.putAllNameToPathMap(input.getIncludes().getNameToPathMap());
+      includes.putAllFullNameToPathMap(input.getIncludes().getFullNameToPathMap());
       includeRoots.addAll(input.getIncludeRoots());
       systemIncludeRoots.addAll(input.getSystemIncludeRoots());
       frameworkRoots.addAll(input.getFrameworkRoots());

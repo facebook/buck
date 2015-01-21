@@ -63,7 +63,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             BuildConfigFields.fromFields(
                 ImmutableList.of(
                     new BuildConfigFields.Field("String", "foo", "\"bar\"")))),
-        collection.buildConfigs());
+        collection.getBuildConfigs());
   }
 
   @Test

@@ -269,15 +269,15 @@ public class CompilationDatabaseTest {
         "foo/bar.pch")));
     ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths = ImmutableMap.of(
           (AppleSdk) ImmutableAppleSdk.builder()
-              .name("iphonesimulator8.0")
-              .version("8.0")
-              .applePlatform(ApplePlatform.IPHONESIMULATOR)
+              .setName("iphonesimulator8.0")
+              .setVersion("8.0")
+              .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
               .addArchitectures("i386", "x86_64")
               .build(),
           (AppleSdkPaths) ImmutableAppleSdkPaths.builder()
               .addToolchainPaths(Paths.get("toolchainPath"))
-              .platformDeveloperPath(Paths.get("platformDeveloperPath"))
-              .sdkPath(Paths.get("/path/to/somewhere" +
+              .setPlatformDeveloperPath(Paths.get("platformDeveloperPath"))
+              .setSdkPath(Paths.get("/path/to/somewhere" +
                   "/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
               .build());
     appleConfig = new FakeAppleConfig().setAppleSdkPaths(appleSdkPaths);

@@ -224,11 +224,11 @@ public class ExopackageInstaller {
         }
       }
 
-      if (exopackageInfo.dexInfo().isPresent()) {
+      if (exopackageInfo.getDexInfo().isPresent()) {
         installSecondaryDexFiles();
       }
 
-      if (exopackageInfo.nativeLibsInfo().isPresent()) {
+      if (exopackageInfo.getNativeLibsInfo().isPresent()) {
         installNativeLibraryFiles();
       }
 
@@ -258,7 +258,7 @@ public class ExopackageInstaller {
       // hashes in the file names (because we use that to skip re-uploads), so just hack
       // the metadata file to have hash-like names.
       String metadataContents = com.google.common.io.Files.toString(
-          exopackageInfo.dexInfo().get().metadata().toFile(),
+          exopackageInfo.getDexInfo().get().getMetadata().toFile(),
           Charsets.UTF_8)
           .replaceAll(
               "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ",
@@ -500,10 +500,10 @@ public class ExopackageInstaller {
     }
 
     private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
-      ExopackageInfo.DexInfo dexInfo = exopackageInfo.dexInfo().get();
+      ExopackageInfo.DexInfo dexInfo = exopackageInfo.getDexInfo().get();
       ImmutableMultimap<String, Path> multimap = parseExopackageInfoMetadata(
-          dexInfo.metadata(),
-          dexInfo.directory(),
+          dexInfo.getMetadata(),
+          dexInfo.getDirectory(),
           projectFilesystem);
       // Convert multimap to a map, because every key should have only one value.
       ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
@@ -689,10 +689,10 @@ public class ExopackageInstaller {
   }
 
   private ImmutableMultimap<String, Path> getAllLibraries() throws IOException {
-    ExopackageInfo.NativeLibsInfo nativeLibsInfo = exopackageInfo.nativeLibsInfo().get();
+    ExopackageInfo.NativeLibsInfo nativeLibsInfo = exopackageInfo.getNativeLibsInfo().get();
     return parseExopackageInfoMetadata(
-        nativeLibsInfo.metadata(),
-        nativeLibsInfo.directory(),
+        nativeLibsInfo.getMetadata(),
+        nativeLibsInfo.getDirectory(),
         projectFilesystem);
   }
 
@@ -701,7 +701,7 @@ public class ExopackageInstaller {
       String abi,
       ImmutableSet<String> ignoreLibraries) throws IOException {
     return filterLibrariesForAbi(
-        exopackageInfo.nativeLibsInfo().get().directory(),
+        exopackageInfo.getNativeLibsInfo().get().getDirectory(),
         allLibraries,
         abi,
         ignoreLibraries);

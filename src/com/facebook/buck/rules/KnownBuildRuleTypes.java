@@ -256,14 +256,14 @@ public class KnownBuildRuleTypes {
 
     for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {
       AppleSdk sdk = entry.getKey();
-      for (String architecture : sdk.architectures()) {
+      for (String architecture : sdk.getArchitectures()) {
         CxxPlatform appleCxxPlatform = new AppleCxxPlatform(
             buildPlatform,
-            sdk.applePlatform(),
-            sdk.name(),
+            sdk.getApplePlatform(),
+            sdk.getName(),
             // TODO(user): Support targeting earlier OS versions; this
             // targets the exact version of the SDK.
-            sdk.version(),
+            sdk.getVersion(),
             architecture,
             entry.getValue());
         appleCxxPlatformsBuilder.add(appleCxxPlatform);

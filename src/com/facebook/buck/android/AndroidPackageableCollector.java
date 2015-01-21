@@ -216,11 +216,11 @@ public class AndroidPackageableCollector {
   }
 
   public ImmutableAndroidPackageableCollection build() {
-    collectionBuilder.buildConfigs(ImmutableMap.copyOf(buildConfigs));
+    collectionBuilder.setBuildConfigs(ImmutableMap.copyOf(buildConfigs));
     final ImmutableSet<HasJavaClassHashes> javaClassProviders = javaClassHashesProviders.build();
     collectionBuilder.addAllJavaLibrariesToDex(
         FluentIterable.from(javaClassProviders).transform(BuildTarget.TO_TARGET).toSet());
-    collectionBuilder.classNamesToHashesSupplier(Suppliers.memoize(
+    collectionBuilder.setClassNamesToHashesSupplier(Suppliers.memoize(
             new Supplier<Map<String, HashCode>>() {
               @Override
               public Map<String, HashCode> get() {
@@ -243,11 +243,11 @@ public class AndroidPackageableCollector {
     // Reverse the resource directories/targets collections because we perform a post-order
     // traversal of the action graph, and we need to return these collections topologically
     // sorted.
-    resourceDetailsBuilder.resourceDirectories(resourceDirectories.build().reverse());
-    resourceDetailsBuilder.resourcesWithNonEmptyResDir(
+    resourceDetailsBuilder.setResourceDirectories(resourceDirectories.build().reverse());
+    resourceDetailsBuilder.setResourcesWithNonEmptyResDir(
         resourcesWithNonEmptyResDir.build().reverse());
 
-    collectionBuilder.resourceDetails(resourceDetailsBuilder.build());
+    collectionBuilder.setResourceDetails(resourceDetailsBuilder.build());
     return collectionBuilder.build();
   }
 }

@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -38,15 +39,16 @@ import java.nio.file.Paths;
  * Frameworks can be specified as either a path to a file, or a path prefixed by a build setting.
  */
 @Value.Immutable
+@BuckStyleImmutable
 public abstract class FrameworkPath {
-  public abstract Optional<SourceTreePath> sourceTreePath();
-  public abstract Optional<SourcePath> sourcePath();
+  public abstract Optional<SourceTreePath> getSourceTreePath();
+  public abstract Optional<SourcePath> getSourcePath();
 
   @Value.Check
   protected void check() {
     Preconditions.checkState(
-        (sourceTreePath().isPresent() || sourcePath().isPresent()) &&
-            !(sourceTreePath().isPresent() && sourcePath().isPresent()),
+        (getSourceTreePath().isPresent() || getSourcePath().isPresent()) &&
+            !(getSourceTreePath().isPresent() && getSourcePath().isPresent()),
         "Exactly one of sourceTreePath or sourcePath should be set");
   }
 
@@ -61,7 +63,7 @@ public abstract class FrameworkPath {
           PBXReference.SourceTree.fromBuildSetting(firstElement);
       if (sourceTree.isPresent()) {
         return ImmutableFrameworkPath.builder()
-            .sourceTreePath(
+            .setSourceTreePath(
                 new SourceTreePath(sourceTree.get(), path.subpath(1, path.getNameCount())))
             .build();
       } else {
@@ -81,7 +83,7 @@ public abstract class FrameworkPath {
       }
     } else {
       return ImmutableFrameworkPath.builder()
-          .sourcePath(new BuildTargetSourcePath(target, Paths.get(string)))
+          .setSourcePath(new BuildTargetSourcePath(target, Paths.get(string)))
           .build();
     }
   }

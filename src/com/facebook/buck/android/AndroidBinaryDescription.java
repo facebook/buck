@@ -189,7 +189,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         graphEnhancer.createAdditionalBuildables();
 
     return new AndroidBinary(
-        params.copyWithExtraDeps(result.finalDeps()),
+        params.copyWithExtraDeps(result.getFinalDeps()),
         new SourcePathResolver(resolver),
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),

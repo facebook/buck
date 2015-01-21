@@ -104,11 +104,11 @@ public class AndroidInstrumentationApkDescription
     // TODO(natthu): Instrumentation APKs should also exclude native libraries and assets from the
     // apk under test.
     AndroidPackageableCollection.ResourceDetails resourceDetails =
-        apkUnderTest.getAndroidPackageableCollection().resourceDetails();
+        apkUnderTest.getAndroidPackageableCollection().getResourceDetails();
     ImmutableSet<BuildTarget> resourcesToExclude = ImmutableSet.copyOf(
         Iterables.concat(
-            resourceDetails.resourcesWithNonEmptyResDir(),
-            resourceDetails.resourcesWithEmptyResButNonEmptyAssetsDir()));
+            resourceDetails.getResourcesWithNonEmptyResDir(),
+            resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
 
     Path primaryDexPath = AndroidBinary.getPrimaryDexPath(params.getBuildTarget());
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
@@ -138,7 +138,7 @@ public class AndroidInstrumentationApkDescription
         graphEnhancer.createAdditionalBuildables();
 
     return new AndroidInstrumentationApk(
-        params.copyWithExtraDeps(enhancementResult.finalDeps()),
+        params.copyWithExtraDeps(enhancementResult.getFinalDeps()),
         new SourcePathResolver(resolver),
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),

@@ -53,7 +53,7 @@ public class AppleSdkDiscovery {
         .onResultOf(new Function<AppleSdk, String>() {
             @Override
             public String apply(AppleSdk appleSdk) {
-                return appleSdk.version();
+                return appleSdk.getVersion();
             }
         });
 
@@ -69,7 +69,7 @@ public class AppleSdkDiscovery {
    * and builds a map of ({@link AppleSdk}: {@link AppleSdkPaths})
    * objects describing the paths to the SDKs inside.
    *
-   * The {@link AppleSdk#name()} strings match the ones displayed by {@code xcodebuild -showsdks}
+   * The {@link AppleSdk#getName()} strings match the ones displayed by {@code xcodebuild -showsdks}
    * and look like {@code macosx10.9}, {@code iphoneos8.0}, {@code iphonesimulator8.0},
    * etc.
    */
@@ -123,7 +123,7 @@ public class AppleSdkDiscovery {
               LOG.debug("Found SDK %s", sdk);
 
               ImmutableSet.Builder<Path> toolchainPathsBuilder = ImmutableSet.builder();
-              for (String toolchain : sdk.toolchains()) {
+              for (String toolchain : sdk.getToolchains()) {
                 Path toolchainPath = xcodeToolchainPaths.get(toolchain);
                 if (toolchainPath == null) {
                   LOG.debug("Could not find toolchain with ID %s, ignoring", toolchain);
@@ -143,11 +143,11 @@ public class AppleSdkDiscovery {
                 xcodePathsBuilder.addAllToolchainPaths(toolchainPaths);
               }
               ImmutableAppleSdkPaths xcodePaths = xcodePathsBuilder
-                  .platformDeveloperPath(platformDir.resolve("Developer"))
-                  .sdkPath(sdkDir)
+                  .setPlatformDeveloperPath(platformDir.resolve("Developer"))
+                  .setSdkPath(sdkDir)
                   .build();
               appleSdkPathsBuilder.put(sdk, xcodePaths);
-              orderedSdksForPlatform.put(sdk.applePlatform(), sdk);
+              orderedSdksForPlatform.put(sdk.getApplePlatform(), sdk);
             }
           }
         } catch (NoSuchFileException e) {
@@ -219,7 +219,7 @@ public class AppleSdkDiscovery {
       ApplePlatform applePlatform;
       try {
         applePlatform = ApplePlatform.valueOf(platformName.toString().toUpperCase(Locale.US));
-        sdkBuilder.name(name).version(version).applePlatform(applePlatform);
+        sdkBuilder.setName(name).setVersion(version).setApplePlatform(applePlatform);
         addArchitecturesForPlatform(sdkBuilder, applePlatform);
         return true;
       } catch (IllegalArgumentException e) {

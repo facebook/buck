@@ -89,9 +89,9 @@ public class AppleCxxPlatform implements CxxPlatform {
     // Search for tools from most specific to least specific.
     ImmutableList.Builder<Path> toolSearchPathsBuilder =
         ImmutableList.<Path>builder()
-            .add(sdkPaths.sdkPath().resolve(USR_BIN))
-            .add(sdkPaths.platformDeveloperPath().resolve(USR_BIN));
-    for (Path toolchainPath : sdkPaths.toolchainPaths()) {
+            .add(sdkPaths.getSdkPath().resolve(USR_BIN))
+            .add(sdkPaths.getPlatformDeveloperPath().resolve(USR_BIN));
+    for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
       toolSearchPathsBuilder.add(toolchainPath.resolve(USR_BIN));
     }
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
@@ -106,7 +106,7 @@ public class AppleCxxPlatform implements CxxPlatform {
     this.cc = clangPath;
 
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
-    cflagsBuilder.add("-isysroot", sdkPaths.sdkPath().toString());
+    cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
     cflagsBuilder.add("-arch", targetArchitecture);
     switch (targetPlatform) {
       case MACOSX:
