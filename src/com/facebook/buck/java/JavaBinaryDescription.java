@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -46,7 +47,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
 
   public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("java_binary");
 
-  private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = new Flavor("inner-jar");
+  private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = ImmutableFlavor.of("inner-jar");
 
   private final Javac javac;
   private final JavacOptions javacOptions;

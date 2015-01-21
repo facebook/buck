@@ -91,7 +91,7 @@ public class BuildTargetTest {
   public void testBuildTargetWithFlavor() {
     BuildTarget target = BuildTarget.builder("//foo/bar", "baz").setFlavor("dex").build();
     assertEquals("baz#dex", target.getShortNameAndFlavorPostfix());
-    assertEquals(ImmutableSortedSet.of(new Flavor("dex")), target.getFlavors());
+    assertEquals(ImmutableSortedSet.of(ImmutableFlavor.of("dex")), target.getFlavors());
     assertTrue(target.isFlavored());
   }
 
@@ -147,7 +147,7 @@ public class BuildTargetTest {
   @Test
   public void testNumbersAreValidFlavors() {
     BuildTarget.builder("//foo", "bar")
-        .addFlavor(new Flavor("1234"))
+        .addFlavor(ImmutableFlavor.of("1234"))
         .build();
   }
 

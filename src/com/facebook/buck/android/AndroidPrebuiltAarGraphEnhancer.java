@@ -26,6 +26,7 @@ import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -63,11 +64,12 @@ class AndroidPrebuiltAarGraphEnhancer {
 
   private static final BuildRuleType UNZIP_AAR_TYPE = ImmutableBuildRuleType.of("unzip_aar");
 
-  private static final Flavor AAR_UNZIP_FLAVOR = new Flavor("aar_unzip");
-  private static final Flavor AAR_CLASSES_JAR_FLAVOR = new Flavor("aar_classes_jar");
-  private static final Flavor AAR_MANIFEST = new Flavor("aar_manifest");
-  private static final Flavor AAR_PREBUILT_JAR_FLAVOR = new Flavor("aar_prebuilt_jar");
-  private static final Flavor AAR_ANDROID_RESOURCE_FLAVOR = new Flavor("aar_android_resource");
+  private static final Flavor AAR_UNZIP_FLAVOR = ImmutableFlavor.of("aar_unzip");
+  private static final Flavor AAR_CLASSES_JAR_FLAVOR = ImmutableFlavor.of("aar_classes_jar");
+  private static final Flavor AAR_MANIFEST = ImmutableFlavor.of("aar_manifest");
+  private static final Flavor AAR_PREBUILT_JAR_FLAVOR = ImmutableFlavor.of("aar_prebuilt_jar");
+  private static final Flavor AAR_ANDROID_RESOURCE_FLAVOR =
+      ImmutableFlavor.of("aar_android_resource");
 
   /** Utility class: do not instantiate. */
   private AndroidPrebuiltAarGraphEnhancer() {}

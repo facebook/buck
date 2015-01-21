@@ -272,7 +272,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     }
 
     public Builder setFlavor(String flavor) {
-      return setFlavor(new Flavor(flavor));
+      return setFlavor(ImmutableFlavor.of(flavor));
     }
 
     public Builder addFlavor(Flavor flavor) {
@@ -281,7 +281,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     }
 
     public Builder addFlavor(String flavor) {
-      return addFlavor(new Flavor(flavor));
+      return addFlavor(ImmutableFlavor.of(flavor));
     }
 
     public Builder addFlavors(Iterable<Flavor> flavors) {

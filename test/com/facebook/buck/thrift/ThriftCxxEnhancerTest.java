@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
@@ -111,10 +112,10 @@ public class ThriftCxxEnhancerTest {
   @Test
   public void getFlavor() {
     assertEquals(
-        new Flavor("cpp"),
+        ImmutableFlavor.of("cpp"),
         ENHANCER_CPP.getFlavor());
     assertEquals(
-        new Flavor("cpp2"),
+        ImmutableFlavor.of("cpp2"),
         ENHANCER_CPP2.getFlavor());
   }
 

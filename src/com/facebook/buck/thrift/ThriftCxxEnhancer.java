@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -43,8 +44,8 @@ import java.nio.file.Path;
 
 public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
-  private static final Flavor CPP_FLAVOR = new Flavor("cpp");
-  private static final Flavor CPP2_FLAVOR = new Flavor("cpp2");
+  private static final Flavor CPP_FLAVOR = ImmutableFlavor.of("cpp");
+  private static final Flavor CPP2_FLAVOR = ImmutableFlavor.of("cpp2");
 
   private final ThriftBuckConfig thriftBuckConfig;
   private final CxxLibraryDescription cxxLibraryDescription;

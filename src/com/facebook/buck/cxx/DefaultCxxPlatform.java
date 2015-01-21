@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
@@ -41,7 +42,7 @@ public class DefaultCxxPlatform implements CxxPlatform {
     DARWIN,
   }
 
-  private static final Flavor FLAVOR = new Flavor("default");
+  private static final Flavor FLAVOR = ImmutableFlavor.of("default");
 
   private static final Path DEFAULT_AS = Paths.get("/usr/bin/as");
   private static final ImmutableList<String> DEFAULT_ASFLAGS = ImmutableList.of();

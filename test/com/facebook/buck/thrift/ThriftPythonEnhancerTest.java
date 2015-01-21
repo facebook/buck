@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.PythonLibrary;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -95,7 +95,7 @@ public class ThriftPythonEnhancerTest {
   @Test
   public void getFlavor() {
     assertEquals(
-        new Flavor("py"),
+        ImmutableFlavor.of("py"),
         ENHANCER.getFlavor());
   }
 

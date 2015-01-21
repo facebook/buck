@@ -21,6 +21,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -69,7 +70,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class CompilationDatabase extends AbstractBuildRule {
 
-  public static final Flavor COMPILATION_DATABASE = new Flavor("compilation-database");
+  public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");
 
 
   private final AppleConfig appleConfig;

@@ -20,7 +20,7 @@ import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecuti
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.environment.Platform;
@@ -59,7 +59,7 @@ public class AppleCxxPlatformTest {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
 
     assertEquals(
-        new Flavor("iphoneos8.0-armv7"),
+        ImmutableFlavor.of("iphoneos8.0-armv7"),
         appleCxxPlatform.asFlavor());
     assertEquals(
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),

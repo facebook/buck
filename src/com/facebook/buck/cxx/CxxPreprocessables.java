@@ -20,6 +20,7 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -181,7 +182,7 @@ public class CxxPreprocessables {
     return BuildTargets.extendFlavoredBuildTarget(
         target,
         platform,
-        new Flavor(
+        ImmutableFlavor.of(
             String.format(
                 "preprocess-%s%s",
                 pic ? "pic-" : "",

@@ -20,6 +20,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -54,11 +55,11 @@ import java.util.regex.Pattern;
 
 public class CxxDescriptionEnhancer {
 
-  public static final Flavor HEADER_SYMLINK_TREE_FLAVOR = new Flavor("header-symlink-tree");
-  public static final Flavor STATIC_FLAVOR = new Flavor("static");
-  public static final Flavor SHARED_FLAVOR = new Flavor("shared");
+  public static final Flavor HEADER_SYMLINK_TREE_FLAVOR = ImmutableFlavor.of("header-symlink-tree");
+  public static final Flavor STATIC_FLAVOR = ImmutableFlavor.of("static");
+  public static final Flavor SHARED_FLAVOR = ImmutableFlavor.of("shared");
 
-  public static final Flavor CXX_LINK_BINARY_FLAVOR = new Flavor("binary");
+  public static final Flavor CXX_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
   public static final BuildRuleType LEX_TYPE = ImmutableBuildRuleType.of("lex");
   public static final BuildRuleType YACC_TYPE = ImmutableBuildRuleType.of("yacc");
@@ -162,7 +163,7 @@ public class CxxDescriptionEnhancer {
   protected static BuildTarget createLexBuildTarget(BuildTarget target, String name) {
     return BuildTargets.extendFlavoredBuildTarget(
         target.getUnflavoredTarget(),
-        new Flavor(
+        ImmutableFlavor.of(
             String.format(
                 "lex-%s",
                 name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));
@@ -172,7 +173,7 @@ public class CxxDescriptionEnhancer {
   protected static BuildTarget createYaccBuildTarget(BuildTarget target, String name) {
     return BuildTargets.extendFlavoredBuildTarget(
         target.getUnflavoredTarget(),
-        new Flavor(
+        ImmutableFlavor.of(
             String.format(
                 "yacc-%s",
                 name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));

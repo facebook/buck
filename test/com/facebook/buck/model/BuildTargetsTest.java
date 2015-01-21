@@ -32,7 +32,8 @@ public class BuildTargetsTest {
   @Test
   public void testCreateFlavoredBuildTarget() {
     BuildTarget fooBar = BuildTarget.builder("//foo", "bar").build();
-    BuildTarget fooBarBaz = BuildTargets.createFlavoredBuildTarget(fooBar, new Flavor("baz"));
+    BuildTarget fooBarBaz =
+        BuildTargets.createFlavoredBuildTarget(fooBar, ImmutableFlavor.of("baz"));
     assertTrue(fooBarBaz.isFlavored());
     assertEquals("//foo:bar#baz", fooBarBaz.getFullyQualifiedName());
   }
@@ -40,13 +41,14 @@ public class BuildTargetsTest {
   @Test(expected = IllegalArgumentException.class)
   public void testCreateFlavoredBuildTargetRejectsFlavoredBuildTarget() {
     BuildTarget fooBarBaz = BuildTarget.builder("//foo", "bar").addFlavor("baz").build();
-    BuildTargets.createFlavoredBuildTarget(fooBarBaz, new Flavor("buzz"));
+    BuildTargets.createFlavoredBuildTarget(fooBarBaz, ImmutableFlavor.of("buzz"));
   }
 
   @Test
   public void testExtendFlavoredBuildTargetOnFlavorlessTarget() {
     BuildTarget fooBar = BuildTarget.builder("//foo", "bar").build();
-    BuildTarget fooBarBaz = BuildTargets.extendFlavoredBuildTarget(fooBar, new Flavor("baz"));
+    BuildTarget fooBarBaz =
+        BuildTargets.extendFlavoredBuildTarget(fooBar, ImmutableFlavor.of("baz"));
     assertTrue(fooBarBaz.isFlavored());
     assertEquals("//foo:bar#baz", fooBarBaz.getFullyQualifiedName());
   }
@@ -54,9 +56,10 @@ public class BuildTargetsTest {
   @Test
   public void testExtendFlavoredBuildTargetOnFlavoredTarget() {
     BuildTarget fooBar = BuildTarget.builder("//foo", "bar")
-        .addFlavor(new Flavor("hello"))
+        .addFlavor(ImmutableFlavor.of("hello"))
         .build();
-    BuildTarget fooBarBaz = BuildTargets.extendFlavoredBuildTarget(fooBar, new Flavor("baz"));
+    BuildTarget fooBarBaz =
+        BuildTargets.extendFlavoredBuildTarget(fooBar, ImmutableFlavor.of("baz"));
     assertTrue(fooBarBaz.isFlavored());
     assertEquals("//foo:bar#baz,hello", fooBarBaz.getFullyQualifiedName());
   }
@@ -64,7 +67,7 @@ public class BuildTargetsTest {
   @Test
   public void propagateFlavorDomain() {
     BuildTarget parent = BuildTargetFactory.newInstance("//:parent#flavor");
-    Flavor flavor = new Flavor("flavor");
+    Flavor flavor = ImmutableFlavor.of("flavor");
     FlavorDomain<?> domain = new FlavorDomain<>(
         "test",
         ImmutableMap.of(flavor, "something"));
@@ -81,7 +84,7 @@ public class BuildTargetsTest {
   @Test
   public void propagateFlavorDomainFailsIfParentHasNoFlavor() {
     BuildTarget parent = BuildTargetFactory.newInstance("//:parent");
-    Flavor flavor = new Flavor("flavor");
+    Flavor flavor = ImmutableFlavor.of("flavor");
     FlavorDomain<?> domain = new FlavorDomain<>(
         "test",
         ImmutableMap.of(flavor, "something"));
@@ -100,7 +103,7 @@ public class BuildTargetsTest {
   @Test
   public void propagateFlavorDomainFailsIfChildAlreadyFlavored() {
     BuildTarget parent = BuildTargetFactory.newInstance("//:parent#flavor");
-    Flavor flavor = new Flavor("flavor");
+    Flavor flavor = ImmutableFlavor.of("flavor");
     FlavorDomain<?> domain = new FlavorDomain<>(
         "test",
         ImmutableMap.of(flavor, "something"));

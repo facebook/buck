@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasSourceUnderTest;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -40,8 +41,8 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
   /**
    * Flavors for the additional generated build rules.
    */
-  private static final Flavor LIBRARY_FLAVOR = new Flavor("apple-test-library");
-  private static final Flavor BUNDLE_FLAVOR = new Flavor("apple-test-bundle");
+  private static final Flavor LIBRARY_FLAVOR = ImmutableFlavor.of("apple-test-library");
+  private static final Flavor BUNDLE_FLAVOR = ImmutableFlavor.of("apple-test-bundle");
 
   private final AppleLibraryDescription appleLibraryDescription;
 

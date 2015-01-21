@@ -23,6 +23,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.HasSourceUnderTest;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -58,7 +59,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
   private static final BuildRuleType TYPE = ImmutableBuildRuleType.of("python_test");
 
-  private static final Flavor BINARY_FLAVOR = new Flavor("binary");
+  private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
   private final Path pathToPex;
   private final Optional<Path> pathToPythonTestMain;
@@ -139,7 +140,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         ImmutableBuildRuleType.of("create_test_modules_list"),
         BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget(),
-            new Flavor("test_module")),
+            ImmutableFlavor.of("test_module")),
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSortedSet.<BuildRule>of());
 

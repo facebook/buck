@@ -22,6 +22,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -81,7 +82,7 @@ public class CxxLibraryDescription implements
     return cxxPlatforms.containsAnyOf(flavors);
   }
 
-  private static final Flavor LEX_YACC_SOURCE_FLAVOR = new Flavor("lex_yacc_sources");
+  private static final Flavor LEX_YACC_SOURCE_FLAVOR = ImmutableFlavor.of("lex_yacc_sources");
 
   private BuildTarget createLexYaccSourcesBuildTarget(BuildTarget target) {
     return BuildTargets.extendFlavoredBuildTarget(target, LEX_YACC_SOURCE_FLAVOR);

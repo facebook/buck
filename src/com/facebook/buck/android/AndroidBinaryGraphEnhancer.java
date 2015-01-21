@@ -30,6 +30,7 @@ import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -57,13 +58,14 @@ import java.util.Map;
 
 public class AndroidBinaryGraphEnhancer {
 
-  private static final Flavor COPY_NATIVE_LIBS_FLAVOR = new Flavor("copy_native_libs");
-  private static final Flavor DEX_FLAVOR = new Flavor("dex");
-  private static final Flavor DEX_MERGE_FLAVOR = new Flavor("dex_merge");
-  private static final Flavor RESOURCES_FILTER_FLAVOR = new Flavor("resources_filter");
-  private static final Flavor AAPT_PACKAGE_FLAVOR = new Flavor("aapt_package");
-  private static final Flavor CALCULATE_ABI_FLAVOR = new Flavor("calculate_exopackage_abi");
-  private static final Flavor PACKAGE_STRING_ASSETS_FLAVOR = new Flavor("package_string_assets");
+  private static final Flavor COPY_NATIVE_LIBS_FLAVOR = ImmutableFlavor.of("copy_native_libs");
+  private static final Flavor DEX_FLAVOR = ImmutableFlavor.of("dex");
+  private static final Flavor DEX_MERGE_FLAVOR = ImmutableFlavor.of("dex_merge");
+  private static final Flavor RESOURCES_FILTER_FLAVOR = ImmutableFlavor.of("resources_filter");
+  private static final Flavor AAPT_PACKAGE_FLAVOR = ImmutableFlavor.of("aapt_package");
+  private static final Flavor CALCULATE_ABI_FLAVOR = ImmutableFlavor.of("calculate_exopackage_abi");
+  private static final Flavor PACKAGE_STRING_ASSETS_FLAVOR =
+      ImmutableFlavor.of("package_string_assets");
 
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
@@ -409,7 +411,7 @@ public class AndroidBinaryGraphEnhancer {
       // Each enhanced dep needs a unique build target, so we parameterize the build target by the
       // Java package.
       String javaPackage = entry.getKey();
-      Flavor flavor = new Flavor("buildconfig_" + javaPackage.replace('.', '_'));
+      Flavor flavor = ImmutableFlavor.of("buildconfig_" + javaPackage.replace('.', '_'));
       BuildRuleParams buildConfigParams = new BuildRuleParams(
           createBuildTargetWithFlavor(flavor),
           /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(),
@@ -441,7 +443,7 @@ public class AndroidBinaryGraphEnhancer {
         DexProducedFromJavaLibrary buildConfigDex = new DexProducedFromJavaLibrary(
             buildConfigParams.copyWithChanges(
                 BuildRuleType.PRE_DEX,
-                createBuildTargetWithFlavor(new Flavor("dex_" + flavor.getName())),
+                createBuildTargetWithFlavor(ImmutableFlavor.of("dex_" + flavor.getName())),
                 ImmutableSortedSet.<BuildRule>of(buildConfigJavaLibrary),
                 /* extraDeps */ ImmutableSortedSet.<BuildRule>of()),
             pathResolver,

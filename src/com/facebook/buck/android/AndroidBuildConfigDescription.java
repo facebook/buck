@@ -20,6 +20,7 @@ import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -42,7 +43,7 @@ public class AndroidBuildConfigDescription
 
   private static final BuildRuleType GEN_JAVA_TYPE = ImmutableBuildRuleType.of(
       "gen_java_android_build_config");
-  private static final Flavor GEN_JAVA_FLAVOR = new Flavor(GEN_JAVA_TYPE.getName());
+  private static final Flavor GEN_JAVA_FLAVOR = ImmutableFlavor.of(GEN_JAVA_TYPE.getName());
   private final Javac javac;
   private final JavacOptions androidJavacOptions;
 

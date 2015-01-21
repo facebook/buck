@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -107,7 +108,7 @@ public class CxxCompilableEnhancer {
     return BuildTargets.extendFlavoredBuildTarget(
         target,
         platform,
-        new Flavor(String.format(
+        ImmutableFlavor.of(String.format(
             "compile-%s%s",
             pic ? "pic-" : "",
             getOutputName(name)

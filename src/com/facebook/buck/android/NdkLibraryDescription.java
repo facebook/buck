@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -78,7 +79,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
   private static final BuildRuleType MAKEFILE_TYPE =
       ImmutableBuildRuleType.of("ndk_library_makefile");
-  private static final Flavor MAKEFILE_FLAVOR = new Flavor("makefile");
+  private static final Flavor MAKEFILE_FLAVOR = ImmutableFlavor.of("makefile");
 
   private static final Pattern EXTENSIONS_REGEX =
       Pattern.compile(

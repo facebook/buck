@@ -73,6 +73,7 @@ import com.facebook.buck.java.KeystoreDescription;
 import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.ocaml.OCamlBinaryDescription;
 import com.facebook.buck.ocaml.OCamlBuckConfig;
 import com.facebook.buck.ocaml.OCamlLibraryDescription;
@@ -170,7 +171,7 @@ public class KnownBuildRuleTypes {
 
     NdkCxxPlatform armeabi =
         new NdkCxxPlatform(
-            new Flavor("android-arm"),
+            ImmutableFlavor.of("android-arm"),
             platform,
             ndkRoot,
             new NdkCxxPlatform.TargetConfiguration(
@@ -190,7 +191,7 @@ public class KnownBuildRuleTypes {
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARM, armeabi);
     NdkCxxPlatform armeabiv7 =
         new NdkCxxPlatform(
-            new Flavor("android-armv7"),
+            ImmutableFlavor.of("android-armv7"),
             platform,
             ndkRoot,
             new NdkCxxPlatform.TargetConfiguration(
@@ -211,7 +212,7 @@ public class KnownBuildRuleTypes {
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARMV7, armeabiv7);
     NdkCxxPlatform x86 =
         new NdkCxxPlatform(
-            new Flavor("android-x86"),
+            ImmutableFlavor.of("android-x86"),
             platform,
             ndkRoot,
             new NdkCxxPlatform.TargetConfiguration(

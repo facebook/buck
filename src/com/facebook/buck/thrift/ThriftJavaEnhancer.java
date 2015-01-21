@@ -23,6 +23,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -44,7 +45,7 @@ import java.nio.file.Path;
 
 public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
-  private static final Flavor JAVA_FLAVOR = new Flavor("java");
+  private static final Flavor JAVA_FLAVOR = ImmutableFlavor.of("java");
   private static final BuildRuleType SOURCE_ZIP_TYPE =
       ImmutableBuildRuleType.of("thrift-java-source-zip");
 
@@ -75,7 +76,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
   protected BuildTarget getSourceZipBuildTarget(BuildTarget target, String name) {
     return BuildTargets.createFlavoredBuildTarget(
         target.getUnflavoredTarget(),
-        new Flavor(
+        ImmutableFlavor.of(
             String.format(
                 "thrift-java-source-zip-%s",
                 name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));

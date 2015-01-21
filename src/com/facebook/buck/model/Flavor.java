@@ -18,19 +18,23 @@ package com.facebook.buck.model;
 
 import com.google.common.base.Preconditions;
 
+import org.immutables.value.Value;
+
 import java.util.regex.Pattern;
 
-public class Flavor implements Comparable<Flavor> {
+@Value.Immutable
+public abstract class Flavor implements Comparable<Flavor> {
 
   private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z0-9_\\.]+");
 
-  private final String flavor;
+  @Value.Parameter
+  public abstract String getName();
 
-  public Flavor(String flavor) {
+  @Value.Check
+  protected void check() {
     Preconditions.checkArgument(
-        VALID_FLAVOR_PATTERN.matcher(flavor).matches(),
-        "Invalid flavor: " + flavor);
-    this.flavor = flavor;
+        VALID_FLAVOR_PATTERN.matcher(getName()).matches(),
+        "Invalid flavor: " + getName());
   }
 
   @Override
@@ -39,31 +43,12 @@ public class Flavor implements Comparable<Flavor> {
       return 0;
     }
 
-    return this.flavor.compareTo(that.flavor);
+    return this.getName().compareTo(that.getName());
   }
 
   @Override
   public String toString() {
     return getName();
-  }
-
-  public String getName() {
-    return flavor;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Flavor)) {
-      return false;
-    }
-
-    Flavor that = (Flavor) obj;
-    return this.flavor.equals(that.flavor);
-  }
-
-  @Override
-  public int hashCode() {
-    return flavor.hashCode();
   }
 
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -60,7 +61,8 @@ public class ThriftLibraryDescription
     ImplicitDepsInferringDescription<ThriftConstructorArg> {
 
   public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("thrift_library");
-  private static final Flavor INCLUDE_SYMLINK_TREE_FLAVOR = new Flavor("include_symlink_tree");
+  private static final Flavor INCLUDE_SYMLINK_TREE_FLAVOR =
+      ImmutableFlavor.of("include_symlink_tree");
   private static final BuildRuleType INCLUDE_SYMLINK_TREE_TYPE =
       ImmutableBuildRuleType.of("include_symlink_tree");
 
@@ -106,7 +108,7 @@ public class ThriftLibraryDescription
     Preconditions.checkArgument(target.isFlavored());
     return BuildTargets.extendFlavoredBuildTarget(
         target,
-        new Flavor(String.format(
+        ImmutableFlavor.of(String.format(
             "thrift-compile-%s",
             name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));
   }

@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -60,7 +61,7 @@ import java.util.Map;
  */
 public class AbstractAppleNativeTargetBuildRuleDescriptions {
 
-  public static final Flavor HEADERS = new Flavor("headers");
+  public static final Flavor HEADERS = ImmutableFlavor.of("headers");
 
   private static final BuildRuleType HEADERS_RULE_TYPE = ImmutableBuildRuleType.of("headers");
 

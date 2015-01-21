@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.SourcePathTool;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
@@ -84,7 +85,7 @@ public class AppleCxxPlatform implements CxxPlatform {
         hostPlatform.equals(Platform.MACOS),
         String.format("%s can only currently run on Mac OS X.", AppleCxxPlatform.class));
 
-    this.flavor = new Flavor(targetSdkName + "-" + targetArchitecture);
+    this.flavor = ImmutableFlavor.of(targetSdkName + "-" + targetArchitecture);
 
     // Search for tools from most specific to least specific.
     ImmutableList.Builder<Path> toolSearchPathsBuilder =

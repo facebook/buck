@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -65,8 +66,8 @@ import java.nio.file.Path;
 public class OCamlRuleBuilder {
 
   public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("ocaml_library");
-  private static final Flavor OCAML_STATIC_FLAVOR = new Flavor("static");
-  private static final Flavor OCAML_LINK_BINARY_FLAVOR = new Flavor("binary");
+  private static final Flavor OCAML_STATIC_FLAVOR = ImmutableFlavor.of("static");
+  private static final Flavor OCAML_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
   private OCamlRuleBuilder() {
   }

@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
@@ -164,7 +165,7 @@ public class ThriftLibraryDescriptionTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     String language = "fake";
-    Flavor flavor = new Flavor("fake");
+    Flavor flavor = ImmutableFlavor.of("fake");
     ImmutableSet<String> options = ImmutableSet.of();
 
     // Setup the default values returned by the language specific enhancer.
@@ -367,7 +368,7 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup the default values returned by the language specific enhancer.
     String language = "fake";
-    Flavor flavor = new Flavor("fake");
+    Flavor flavor = ImmutableFlavor.of("fake");
     final BuildRule implicitDep = createFakeBuildRule("//implicit:dep", pathResolver);
     resolver.addToIndex(implicitDep);
     filesystem.mkdirs(implicitDep.getBuildTarget().getBasePath());
@@ -526,7 +527,7 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup the default values returned by the language specific enhancer.
     String language = "fake";
-    Flavor flavor = new Flavor("fake");
+    Flavor flavor = ImmutableFlavor.of("fake");
     ImmutableSet<String> options = ImmutableSet.of();
     ImmutableSet<BuildTarget> implicitDeps = ImmutableSet.of(implicitDep.getBuildTarget());
     BuildTarget unflavoredTarget = BuildTargetFactory.newInstance("//:thrift");

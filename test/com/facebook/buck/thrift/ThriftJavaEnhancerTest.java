@@ -26,7 +26,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
@@ -99,7 +99,7 @@ public class ThriftJavaEnhancerTest {
   @Test
   public void getFlavor() {
     assertEquals(
-        new Flavor("java"),
+        ImmutableFlavor.of("java"),
         ENHANCER.getFlavor());
   }
 

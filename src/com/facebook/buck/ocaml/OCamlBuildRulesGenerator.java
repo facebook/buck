@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -59,7 +60,7 @@ public class OCamlBuildRulesGenerator {
       ImmutableBuildRuleType.of("ocaml_ml_compile");
   private static final BuildRuleType OCAML_ML_BYTECODE_COMPILE_TYPE =
       ImmutableBuildRuleType.of("ocaml_ml_bytecode_compile");
-  private static final Flavor DEBUG_FLAVOR = new Flavor("debug");
+  private static final Flavor DEBUG_FLAVOR = ImmutableFlavor.of("debug");
 
   private final BuildRuleParams params;
   private final BuildRuleResolver resolver;
@@ -132,7 +133,7 @@ public class OCamlBuildRulesGenerator {
       String name) {
     return BuildTargets.extendFlavoredBuildTarget(
         target,
-        new Flavor(
+        ImmutableFlavor.of(
             String.format(
                 "compile-%s",
                 getCOutputName(name)
@@ -255,7 +256,7 @@ public class OCamlBuildRulesGenerator {
     return link;
   }
 
-  private static final Flavor BYTECODE_FLAVOR = new Flavor("bytecode");
+  private static final Flavor BYTECODE_FLAVOR = ImmutableFlavor.of("bytecode");
 
   public static BuildTarget addBytecodeFlavor(BuildTarget target) {
     return BuildTargets.extendFlavoredBuildTarget(target, BYTECODE_FLAVOR);
@@ -342,7 +343,7 @@ public class OCamlBuildRulesGenerator {
       String name) {
     return BuildTargets.extendFlavoredBuildTarget(
         target,
-        new Flavor(
+        ImmutableFlavor.of(
             String.format(
                 "ml-compile-%s",
                 getMLOutputName(name)
@@ -357,7 +358,7 @@ public class OCamlBuildRulesGenerator {
       String name) {
     return BuildTargets.extendFlavoredBuildTarget(
         target,
-        new Flavor(
+        ImmutableFlavor.of(
             String.format(
                 "ml-bytecode-compile-%s",
                 getMLBytecodeOutputName(name)

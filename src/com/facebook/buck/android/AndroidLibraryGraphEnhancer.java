@@ -21,6 +21,7 @@ import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -38,7 +39,7 @@ public class AndroidLibraryGraphEnhancer {
     TRANSITIVE,
   }
 
-  private static final Flavor DUMMY_R_DOT_JAVA_FLAVOR = new Flavor("dummy_r_dot_java");
+  private static final Flavor DUMMY_R_DOT_JAVA_FLAVOR = ImmutableFlavor.of("dummy_r_dot_java");
 
   private final BuildTarget dummyRDotJavaBuildTarget;
   private final BuildRuleParams originalBuildRuleParams;

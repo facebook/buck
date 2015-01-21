@@ -30,7 +30,7 @@ public class FlavorDomainTest {
 
   @Test
   public void getFlavor() throws FlavorDomainException {
-    Flavor flavor = new Flavor("hello");
+    Flavor flavor = ImmutableFlavor.of("hello");
     FlavorDomain<String> domain = new FlavorDomain<>(
         "test",
         ImmutableMap.of(flavor, "something"));
@@ -42,8 +42,8 @@ public class FlavorDomainTest {
 
   @Test
   public void multipleFlavorsForSameDomainShouldThrow() {
-    Flavor hello = new Flavor("hello");
-    Flavor goodbye = new Flavor("goodbye");
+    Flavor hello = ImmutableFlavor.of("hello");
+    Flavor goodbye = ImmutableFlavor.of("goodbye");
     FlavorDomain<String> domain = new FlavorDomain<>(
         "test",
         ImmutableMap.of(
@@ -62,14 +62,14 @@ public class FlavorDomainTest {
 
   @Test
   public void getValue() throws FlavorDomainException {
-    Flavor flavor = new Flavor("hello");
+    Flavor flavor = ImmutableFlavor.of("hello");
     FlavorDomain<String> domain = new FlavorDomain<>(
         "test",
         ImmutableMap.of(flavor, "something"));
     String val = domain.getValue(flavor);
     assertEquals("something", val);
     try {
-      domain.getValue(new Flavor("invalid"));
+      domain.getValue(ImmutableFlavor.of("invalid"));
       fail("should have thrown");
     } catch (FlavorDomainException e) {
       assertTrue(e.getMessage().contains("has no flavor"));

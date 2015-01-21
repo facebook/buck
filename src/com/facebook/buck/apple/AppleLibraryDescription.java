@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -48,7 +49,7 @@ public class AppleLibraryDescription implements
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.STATIC_FLAVOR,
       CxxDescriptionEnhancer.SHARED_FLAVOR,
-      new Flavor("default"));
+      ImmutableFlavor.of("default"));
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
     @Override
