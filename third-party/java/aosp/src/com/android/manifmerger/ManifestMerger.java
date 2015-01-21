@@ -31,6 +31,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -180,10 +183,14 @@ public class ManifestMerger {
 
     boolean success = process(mainDoc, libraryFiles);
 
-    if (!XmlUtils.printXmlFile(mainDoc, outputFile, mLog)) {
+    String xmlString = XmlUtils.printXmlString(mainDoc, mLog);
+    try {
+      Files.write(outputFile.toPath(), xmlString.getBytes(StandardCharsets.UTF_8));
+    } catch (IOException e) {
       success = false;
     }
-    return success;
+
+    return (success && xmlString != null && !xmlString.isEmpty());
   }
 
   /**
