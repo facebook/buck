@@ -45,7 +45,9 @@ import java.util.EnumSet;
 
 public class DxStepTest extends EasyMockSupport {
 
-  private static final String EXPECTED_DX_PREFIX = "/usr/bin/dx --dex";
+  private static final String EXPECTED_DX_PREFIX =
+      "/usr/bin/dx" +
+          " --dex";
 
   private static final Path SAMPLE_OUTPUT_PATH =
       Paths.get(".").toAbsolutePath().normalize().resolve("buck-out/gen/classes.dex");
@@ -188,7 +190,7 @@ public class DxStepTest extends EasyMockSupport {
 
     DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
         SAMPLE_FILES_TO_DEX,
-        EnumSet.noneOf(Option.class),
+        EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
         new Supplier<String>() {
           @Override
           public String get() {
@@ -216,7 +218,7 @@ public class DxStepTest extends EasyMockSupport {
 
     DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
         SAMPLE_FILES_TO_DEX,
-        EnumSet.noneOf(Option.class),
+        EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
         new Supplier<String>() {
           @Override
           public String get() {

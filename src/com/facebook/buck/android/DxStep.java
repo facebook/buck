@@ -37,6 +37,11 @@ import javax.annotation.CheckForNull;
 
 public class DxStep extends ShellStep {
 
+  /**
+   */
+  public static final String XMX_OVERRIDE =
+      "";
+
   /** Options to pass to {@code dx}. */
   public static enum Option {
     /** Specify the {@code --no-optimize} flag when running {@code dx}. */
@@ -44,6 +49,18 @@ public class DxStep extends ShellStep {
 
     /** Specify the {@code --force-jumbo} flag when running {@code dx}. */
     FORCE_JUMBO,
+
+    /**
+     * See if the {@code buck.dx} property was specified, and if so, use the executable that that
+     * points to instead of the {@code dx} in the user's Android SDK.
+     */
+    USE_CUSTOM_DX_IF_AVAILABLE,
+
+    /**
+     * Execute DX in-process instead of fork/execing.
+     * This only works with custom dx.
+     */
+    RUN_IN_PROCESS,
     ;
   }
 
@@ -86,6 +103,11 @@ public class DxStep extends ShellStep {
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
     this.getPathToCustomDx = getPathToCustomDx;
+
+    Preconditions.checkArgument(
+        !options.contains(Option.RUN_IN_PROCESS) ||
+            options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE),
+        "In-process dexing is only supported with custom DX");
   }
 
   @Override
@@ -93,11 +115,20 @@ public class DxStep extends ShellStep {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
-    String defaultDx = androidPlatformTarget.getDxExecutable().toString();
-    String customDx = getPathToCustomDx.get();
-    String dx = customDx != null ? customDx : defaultDx;
+    String dx = androidPlatformTarget.getDxExecutable().toString();
+
+    if (options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE)) {
+      String customDx = getPathToCustomDx.get();
+      dx = customDx != null ? customDx : dx;
+    }
 
     builder.add(dx);
+
+    // Add the Xmx override, but not for in-process dexing, since the dexer won't understand it.
+    // Also, if DX works in-process, it probably wouldn't need an enlarged Xmx.
+    if (!XMX_OVERRIDE.isEmpty() && !options.contains(Option.RUN_IN_PROCESS)) {
+      builder.add(XMX_OVERRIDE);
+    }
 
     builder.add("--dex");
 
@@ -130,7 +161,11 @@ public class DxStep extends ShellStep {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    return executeInProcess(context);
+    if (options.contains(Option.RUN_IN_PROCESS)) {
+      return executeInProcess(context);
+    } else {
+      return super.execute(context);
+    }
   }
 
   private int executeInProcess(ExecutionContext context) {
