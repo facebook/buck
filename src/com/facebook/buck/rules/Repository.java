@@ -16,162 +16,104 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.nio.file.Path;
-import java.util.Objects;
+import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
+import java.nio.file.Path;
 
 /**
  * Represents a single checkout of a code base. Two repositories model the same code base if their
  * underlying {@link ProjectFilesystem}s are equal.
  */
-public class Repository {
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class Repository {
 
-  private final Optional<String> name;
-  private final ProjectFilesystem filesystem;
-  private final KnownBuildRuleTypes buildRuleTypes;
-  private final BuckConfig buckConfig;
-  private final RepositoryFactory repositoryFactory;
+  @Value.Auxiliary
+  @Value.Parameter
+  public abstract Optional<String> getName();
 
-  @Nullable
-  private volatile ImmutableMap<Optional<String>, Optional<String>> localToCanonicalRepoNamesMap;
+  @Value.Parameter
+  public abstract ProjectFilesystem getFilesystem();
+
+  @Value.Auxiliary
+  @Value.Parameter
+  public abstract KnownBuildRuleTypes getKnownBuildRuleTypes();
+
+  @Value.Parameter
+  public abstract BuckConfig getBuckConfig();
+
+  @Value.Auxiliary
+  @Value.Parameter
+  public abstract RepositoryFactory getRepositoryFactory();
 
   // TODO(jacko): This is a hack to avoid breaking the build. Get rid of it.
-  public final AndroidDirectoryResolver androidDirectoryResolver;
-
-  @VisibleForTesting
-  public Repository(
-      Optional<String> name,
-      ProjectFilesystem filesystem,
-      KnownBuildRuleTypes buildRuleTypes,
-      BuckConfig buckConfig,
-      RepositoryFactory repositoryFactory,
-      AndroidDirectoryResolver androidDirectoryResolver) {
-    this.name = name;
-    this.filesystem = filesystem;
-    this.buildRuleTypes = buildRuleTypes;
-    this.buckConfig = buckConfig;
-    this.repositoryFactory = repositoryFactory;
-    this.androidDirectoryResolver = androidDirectoryResolver;
-
-    localToCanonicalRepoNamesMap = null;
-  }
-
-  public Optional<String> getName() {
-    return name;
-  }
-
-  public ProjectFilesystem getFilesystem() {
-    return filesystem;
-  }
+  @Value.Parameter
+  public abstract AndroidDirectoryResolver getAndroidDirectoryResolver();
 
   public Description<?> getDescription(BuildRuleType type) {
-    return buildRuleTypes.getDescription(type);
+    return getKnownBuildRuleTypes().getDescription(type);
   }
 
   public BuildRuleType getBuildRuleType(String rawType) {
-    return buildRuleTypes.getBuildRuleType(rawType);
+    return getKnownBuildRuleTypes().getBuildRuleType(rawType);
   }
 
   public ImmutableSet<Description<?>> getAllDescriptions() {
-    return buildRuleTypes.getAllDescriptions();
+    return getKnownBuildRuleTypes().getAllDescriptions();
   }
 
-  public KnownBuildRuleTypes getKnownBuildRuleTypes() {
-    return buildRuleTypes;
-  }
+  @Value.Lazy
+  public ImmutableMap<Optional<String>, Optional<String>> getLocalToCanonicalRepoNamesMap() {
+    ImmutableMap.Builder<Optional<String>, Optional<String>> builder =
+        ImmutableMap.builder();
 
-  public BuckConfig getBuckConfig() {
-    return buckConfig;
-  }
+    // Paths starting with "//" (i.e. no "@repo" prefix) always map to the name of the current
+    // repo. For the root repo where buck is invoked, there is no name, and this mapping is a
+    // no-op.
+    builder.put(Optional.<String>absent(), getName());
 
-  @VisibleForTesting
-  ImmutableMap<Optional<String>, Optional<String>> getLocalToCanonicalRepoNamesMap() {
-    if (localToCanonicalRepoNamesMap != null) {
-      return localToCanonicalRepoNamesMap;
+    // Add mappings for repos listed in the [repositories] section of .buckconfig.
+    ImmutableMap<String, Path> localNamePaths = getBuckConfig().getRepositoryPaths();
+    ImmutableMap<Path, Optional<String>> canonicalPathNames =
+        getRepositoryFactory().getCanonicalPathNames();
+    for (String localName : localNamePaths.keySet()) {
+      Path canonicalPath = localNamePaths.get(localName);
+      Optional<String> canonicalName = canonicalPathNames.get(canonicalPath);
+      Preconditions.checkNotNull(canonicalName);
+      builder.put(Optional.of(localName), canonicalName);
     }
-
-    synchronized (this) {
-      // Double-check locking.
-      if (localToCanonicalRepoNamesMap != null) {
-        return localToCanonicalRepoNamesMap;
-      }
-
-      ImmutableMap.Builder<Optional<String>, Optional<String>> builder =
-          ImmutableMap.builder();
-
-      // Paths starting with "//" (i.e. no "@repo" prefix) always map to the name of the current
-      // repo. For the root repo where buck is invoked, there is no name, and this mapping is a
-      // no-op.
-      builder.put(Optional.<String>absent(), name);
-
-      // Add mappings for repos listed in the [repositories] section of .buckconfig.
-      ImmutableMap<String, Path> localNamePaths = buckConfig.getRepositoryPaths();
-      ImmutableMap<Path, Optional<String>> canonicalPathNames =
-          repositoryFactory.getCanonicalPathNames();
-      for (String localName : localNamePaths.keySet()) {
-        Path canonicalPath = localNamePaths.get(localName);
-        Optional<String> canonicalName = canonicalPathNames.get(canonicalPath);
-        Preconditions.checkNotNull(canonicalName);
-        builder.put(Optional.of(localName), canonicalName);
-      }
-      localToCanonicalRepoNamesMap = builder.build();
-      return localToCanonicalRepoNamesMap;
-    }
+    return builder.build();
   }
 
   public BuildTargetParser getBuildTargetParser() {
     return new BuildTargetParser(getLocalToCanonicalRepoNamesMap());
   }
 
-  @Override
-  public String toString() {
-    return String.format("<Repository (%s)>", filesystem.getRootPath());
-  }
-
-  @Override
-  public int hashCode() {
-    return filesystem.hashCode();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Repository)) {
-      return false;
-    }
-
-    Repository that = (Repository) obj;
-    return
-        Objects.equals(getFilesystem(), that.getFilesystem()) &&
-        Objects.equals(getBuckConfig(), that.getBuckConfig()) &&
-        Objects.equals(androidDirectoryResolver, that.androidDirectoryResolver);
-  }
-
   public Path getAbsolutePathToBuildFile(BuildTarget target)
       throws MissingBuildFileException {
     Preconditions.checkArgument(
-        target.getRepository().equals(name),
+        target.getRepository().equals(getName()),
         "Target %s is not from this repository %s.",
         target,
-        name);
+        getName());
     Path relativePath = target.getBuildFilePath();
-    if (!filesystem.isFile(relativePath)) {
+    if (!getFilesystem().isFile(relativePath)) {
       throw new MissingBuildFileException(target);
     }
-    return filesystem.resolve(relativePath);
+    return getFilesystem().resolve(relativePath);
   }
 
   @SuppressWarnings("serial")

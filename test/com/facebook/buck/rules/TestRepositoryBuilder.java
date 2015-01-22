@@ -86,7 +86,7 @@ public class TestRepositoryBuilder {
         // NOTE: In real code we should use toRealPath() instead of toAbsolutePath(), but for the
         // fake we probably don't care about symlinks, and we'd rather not do IO.
         rootPath.toAbsolutePath());
-    return new Repository(
+    return ImmutableRepository.of(
         name,
         filesystem,
         buildRuleTypes,

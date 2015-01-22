@@ -645,7 +645,7 @@ public final class Main {
           new CommandRunnerParams(
               console,
               rootRepository,
-              rootRepository.androidDirectoryResolver,
+              rootRepository.getAndroidDirectoryResolver(),
               buildEngine,
               artifactCacheFactory,
               buildEventBus,

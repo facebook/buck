@@ -147,7 +147,7 @@ public class RepositoryFactory {
             androidDirectoryResolver,
             pythonEnv);
 
-    Repository repository = new Repository(
+    Repository repository = ImmutableRepository.of(
         name,
         projectFilesystem,
         buildRuleTypes,
