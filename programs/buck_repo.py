@@ -68,7 +68,7 @@ JAVA_CLASSPATHS = [
 RESOURCES = {
     "buck_server": "bin/buck",
     "buck_client": "build/ng",
-    "log4j_config_file": "config/logging.properties",
+    "log4j_config_file": "config/log4j.properties",
 
     "testrunner_classes": "build/testrunner/classes",
     "abi_processor_classes": "build/abi_processor/classes",
