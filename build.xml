@@ -13,6 +13,7 @@
   <property name="buck.path_to_compile_asset_catalogs_py" value="${basedir}/src/com/facebook/buck/apple/compile_asset_catalogs.py" />
   <property name="buck.path_to_compile_asset_catalogs_build_phase_sh" value="${basedir}/src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh" />
   <property name="buck.logging_config_file" value="${basedir}/config/logging.properties" />
+  <property name="buck.log4j_config_file" value="${basedir}/config/log4j.properties" />
   <property name="classes.dir" value="${build.dir}/classes" />
   <property name="testclasses.dir" value="${build.dir}/testclasses" />
   <property name="javadoc.dir" value="${build.dir}/javadoc" />
@@ -499,6 +500,7 @@
       <sysproperty key="buck.path_to_compile_asset_catalogs_py" value="${buck.path_to_compile_asset_catalogs_py}" />
       <sysproperty key="buck.path_to_compile_asset_catalogs_build_phase_sh" value="${buck.path_to_compile_asset_catalogs_build_phase_sh}" />
       <sysproperty key="buck.logging_config_file" value="${buck.logging_config_file}" />
+      <sysproperty key="log4j.configuration" value="file:${buck.log4j_config_file}" />
       <sysproperty key="java.util.logging.config.class" value="com.facebook.buck.log.LogConfig" />
 
       <!-- See DEFS for details on why this property is needed. -->
