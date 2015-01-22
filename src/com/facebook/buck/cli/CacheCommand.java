@@ -16,10 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.RuleKey;
-import com.google.common.base.Optional;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -44,21 +44,19 @@ public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
   @Override
   int runCommandWithOptionsInternal(CacheCommandOptions options)
       throws IOException, InterruptedException {
+
+    if (options.isNoCache()) {
+      console.printErrorText("Caching is disabled.");
+      return 1;
+    }
+
     List<String> arguments = options.getArguments();
     if (arguments.isEmpty()) {
       console.printErrorText("No cache keys specified.");
       return 1;
     }
 
-    BuckConfig buckConfig = options.getBuckConfig();
-    CassandraArtifactCache cassandra = buckConfig.createCassandraArtifactCache(
-        Optional.<String>absent(),
-        getBuckEventBus(),
-        getCommandRunnerParams().getFileHashCache());
-    if (cassandra == null) {
-      console.printErrorText("No cassandra cache defined.");
-      return 1;
-    }
+    ArtifactCache cache = getArtifactCache();
 
     File tmpDir = Files.createTempDir();
     int exitCode = 0;
@@ -66,7 +64,7 @@ public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
       // Do the fetch.
       RuleKey ruleKey = new RuleKey(arg);
       File artifact = new File(tmpDir, arg);
-      CacheResult success = cassandra.fetch(ruleKey, artifact);
+      CacheResult success = cache.fetch(ruleKey, artifact);
 
       // Display the result.
       if (success.isSuccess()) {

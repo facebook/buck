@@ -115,5 +115,11 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
       this.console = console;
       return this;
     }
+
+    public Builder setArtifactCacheFactory(ArtifactCacheFactory factory) {
+      this.artifactCacheFactory = factory;
+      return this;
+    }
+
   }
 }
