@@ -22,12 +22,11 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.TreeMultimap;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -241,7 +240,7 @@ public class CompileStringsStep implements Step {
       Collection<Path> filepaths) throws IOException, SAXException {
     TreeMap<Integer, String> stringsMap = Maps.newTreeMap();
     TreeMap<Integer, ImmutableMap<String, String>> pluralsMap = Maps.newTreeMap();
-    TreeMultimap<Integer, String> arraysMap = TreeMultimap.create();
+    TreeMap<Integer, ImmutableList<String>> arraysMap = Maps.newTreeMap();
 
     for (Path stringFilePath : filepaths) {
       Document dom = XmlDomParser.parse(filesystem.getFileForRelativePath(stringFilePath));
@@ -319,7 +318,7 @@ public class CompileStringsStep implements Step {
    * Similar to {@code scrapeStringNodes}, but for string array nodes.
    */
   @VisibleForTesting
-  void scrapeStringArrayNodes(NodeList arrayNodes, Multimap<Integer, String> arraysMap) {
+  void scrapeStringArrayNodes(NodeList arrayNodes, Map<Integer, ImmutableList<String>> arraysMap) {
     for (int i = 0; i < arrayNodes.getLength(); ++i) {
       Node node = arrayNodes.item(i);
       String resourceName = node.getAttributes().getNamedItem("name").getNodeValue();
@@ -334,10 +333,16 @@ public class CompileStringsStep implements Step {
         continue;
       }
 
+      ImmutableList.Builder<String> arrayValues = ImmutableList.builder();
+
       NodeList itemNodes = ((Element) node).getElementsByTagName("item");
-      for (int j = 0; j < itemNodes.getLength(); ++j) {
-        arraysMap.put(resourceId, itemNodes.item(j).getTextContent());
+      if (itemNodes.getLength() == 0) {
+        continue;
       }
+      for (int j = 0; j < itemNodes.getLength(); ++j) {
+        arrayValues.add(itemNodes.item(j).getTextContent());
+      }
+      arraysMap.put(resourceId, arrayValues.build());
     }
   }
 

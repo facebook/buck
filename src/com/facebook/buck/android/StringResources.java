@@ -19,15 +19,14 @@ package com.facebook.buck.android;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.TreeMultimap;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -48,7 +47,9 @@ public class StringResources {
 
   public final TreeMap<Integer, String> strings;
   public final TreeMap<Integer, ImmutableMap<String, String>> plurals;
-  public final TreeMultimap<Integer, String> arrays;
+  // This is not a TreeMultimap because we only want the keys to be sorted by their natural
+  // ordering, not the values array. The values should be in the same order as insertion.
+  public final TreeMap<Integer, ImmutableList<String>> arrays;
 
   /**
    * These are the 6 fixed plural categories for string resources in Android. This mapping is not
@@ -74,7 +75,7 @@ public class StringResources {
   public StringResources(
       TreeMap<Integer, String> strings,
       TreeMap<Integer, ImmutableMap<String, String>> plurals,
-      TreeMultimap<Integer, String> arrays) {
+      TreeMap<Integer, ImmutableList<String>> arrays) {
     this.strings = strings;
     this.plurals = plurals;
     this.arrays = arrays;
@@ -84,7 +85,7 @@ public class StringResources {
     TreeMap<Integer, String> stringsMap = Maps.newTreeMap(otherResources.strings);
     TreeMap<Integer, ImmutableMap<String, String>> pluralsMap =
         Maps.newTreeMap(otherResources.plurals);
-    TreeMultimap<Integer, String> arraysMap = TreeMultimap.create(otherResources.arrays);
+    TreeMap<Integer, ImmutableList<String>> arraysMap = Maps.newTreeMap(otherResources.arrays);
 
     stringsMap.putAll(strings);
     pluralsMap.putAll(plurals);
@@ -191,12 +192,12 @@ public class StringResources {
     if (arrays.keySet().isEmpty()) {
       return;
     }
-    int previousResourceId = arrays.keySet().first();
+    int previousResourceId = arrays.firstKey();
     outputStream.writeInt(previousResourceId);
     try (ByteArrayOutputStream dataStream = new ByteArrayOutputStream()) {
       for (int resourceId : arrays.keySet()) {
         writeShort(outputStream, resourceId - previousResourceId);
-        Collection<String> arrayValues = arrays.get(resourceId);
+        ImmutableList<String> arrayValues = arrays.get(resourceId);
         outputStream.writeInt(arrayValues.size());
 
         for (String arrayValue : arrayValues) {

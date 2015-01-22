@@ -25,12 +25,11 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMockSupport;
@@ -230,8 +229,8 @@ public class CompileStringsStepTest extends EasyMockSupport {
   public void testScrapeStringArrayNodes() throws IOException, SAXException {
     String xmlInput =
           "<string-array name='name1'>" +
-            "<item>Value11</item>" +
             "<item>Value12</item>" +
+            "<item>Value11</item>" +
           "</string-array>" +
           "<string-array name='name2'>" +
             "<item>Value21</item>" +
@@ -244,7 +243,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     NodeList arrayNodes = XmlDomParser.parse(createResourcesXml(xmlInput))
         .getElementsByTagName("string-array");
 
-    Multimap<Integer, String> arraysMap = ArrayListMultimap.create();
+    Map<Integer, ImmutableList<String>> arraysMap = Maps.newTreeMap();
     CompileStringsStep step = createNonExecutingStep();
     step.addResourceNameToIdMap(ImmutableMap.of(
         "name1", 1,
@@ -254,11 +253,9 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
     assertEquals(
         "Incorrect map of resource id to string arrays.",
-        ImmutableMultimap.builder()
-            .put(1, "Value11")
-            .put(1, "Value12")
-            .put(2, "Value21")
-            .build(),
+        ImmutableMap.of(
+            1, ImmutableList.of("Value12", "Value11"),
+            2, ImmutableList.of("Value21")),
         arraysMap);
   }
 

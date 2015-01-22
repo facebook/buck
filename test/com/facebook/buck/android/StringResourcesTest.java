@@ -18,17 +18,15 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.TreeMultimap;
 
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.TreeMap;
 
 public class StringResourcesTest {
@@ -53,11 +51,10 @@ public class StringResourcesTest {
           12345689, plural1,
           12345692, plural2);
 
-  private static final ImmutableMultimap<Integer, String> arrays =
-      ImmutableMultimap.<Integer, String>builder()
-          .putAll(12345694, Arrays.asList("A1_one", "A1_two"))
-          .putAll(12345699, Arrays.asList("A2_one"))
-          .build();
+  private static final ImmutableMap<Integer, ImmutableList<String>> arrays =
+      ImmutableMap.of(
+          12345694, ImmutableList.of("A1_one", "A1_two"),
+          12345699, ImmutableList.of("A2_one"));
 
 
   @Test
@@ -66,7 +63,7 @@ public class StringResourcesTest {
     stringsMap.putAll(strings);
     TreeMap<Integer, ImmutableMap<String, String>> pluralsMap = Maps.newTreeMap();
     pluralsMap.putAll(plurals);
-    TreeMultimap<Integer, String> arraysMap = TreeMultimap.create();
+    TreeMap<Integer, ImmutableList<String>> arraysMap = Maps.newTreeMap();
     arraysMap.putAll(arrays);
     byte[] binaryOutput = new StringResources(stringsMap, pluralsMap, arraysMap)
         .getBinaryFileContent();
