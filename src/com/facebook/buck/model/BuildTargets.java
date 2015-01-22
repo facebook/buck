@@ -87,7 +87,7 @@ public class BuildTargets {
         flavor,
         buildTarget);
     return BuildTarget.builder(buildTarget)
-        .setFlavor(flavor)
+        .addFlavors(flavor)
         .build();
   }
 
@@ -119,9 +119,9 @@ public class BuildTargets {
    *         given flavor.
    */
   public static BuildTarget extendFlavoredBuildTarget(BuildTarget target, Flavor... flavors) {
-    BuildTarget.Builder builder = BuildTarget.builder(target);
+    ImmutableBuildTarget.Builder builder = BuildTarget.builder(target);
     for (Flavor flavor : flavors) {
-      builder.addFlavor(flavor);
+      builder.addFlavors(flavor);
     }
     return builder.build();
   }
@@ -133,7 +133,7 @@ public class BuildTargets {
   public static BuildTarget extendFlavoredBuildTarget(
       BuildTarget target,
       Iterable<Flavor> flavors) {
-    return BuildTarget.builder(target).addFlavors(flavors).build();
+    return BuildTarget.builder(target).addAllFlavors(flavors).build();
   }
 
   /**
@@ -154,7 +154,7 @@ public class BuildTargets {
       // Now extract all relevant domain flavors from our parent target.
       Optional<Flavor> flavor;
       try {
-        flavor = domain.getFlavor(target.getFlavors());
+        flavor = domain.getFlavor(ImmutableSet.copyOf(target.getFlavors()));
       } catch (FlavorDomainException e) {
         throw new HumanReadableException("%s: %s", target, e.getMessage());
       }
@@ -170,7 +170,7 @@ public class BuildTargets {
       for (BuildTarget dep : deps) {
         Optional<Flavor> depFlavor;
         try {
-          depFlavor = domain.getFlavor(dep.getFlavors());
+          depFlavor = domain.getFlavor(ImmutableSet.copyOf(dep.getFlavors()));
         } catch (FlavorDomainException e) {
           throw new HumanReadableException("%s: dep %s: %s", target, dep, e.getMessage());
         }

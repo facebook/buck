@@ -183,4 +183,13 @@ public class BuildTargetParserTest {
     String zeroLengthRepoTargetStr = "@//foo/bar:baz";
     parser.parse(zeroLengthRepoTargetStr, fullyQualifiedParser);
   }
+
+  @Test
+  public void testParseWithBackslash() {
+    BuildTargetParser parser = new BuildTargetParser();
+    String backslashStr = "//com\\microsoft\\windows:something";
+    BuildTarget buildTarget = parser.parse(backslashStr, fullyQualifiedParser);
+    assertEquals("//com/microsoft/windows", buildTarget.getBaseName());
+  }
+
 }

@@ -649,7 +649,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleLibraryConfiguresSharedLibraryOutputPaths() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder("//hi", "lib")
-        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
@@ -1032,7 +1032,7 @@ public class ProjectGeneratorTest {
 
     BuildTarget sharedLibraryTarget = BuildTarget
         .builder("//dep", "shared")
-        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
         .createBuilder(sharedLibraryTarget)
@@ -1081,7 +1081,7 @@ public class ProjectGeneratorTest {
   public void testAppleBundleRuleForSharedLibaryFramework() throws IOException {
     BuildTarget sharedLibraryTarget = BuildTarget
         .builder("//dep", "shared")
-        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
         .createBuilder(sharedLibraryTarget)
@@ -1212,7 +1212,7 @@ public class ProjectGeneratorTest {
 
     BuildTarget dependentSharedLibraryTarget = BuildTarget
         .builder("//dep", "shared")
-        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> dependentSharedLibraryNode = AppleLibraryBuilder
         .createBuilder(dependentSharedLibraryTarget)
@@ -1221,7 +1221,7 @@ public class ProjectGeneratorTest {
 
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
-        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
@@ -1263,7 +1263,7 @@ public class ProjectGeneratorTest {
 
     BuildTarget dependentSharedLibraryTarget = BuildTarget
         .builder("//dep", "shared")
-        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> dependentSharedLibraryNode = AppleLibraryBuilder
         .createBuilder(dependentSharedLibraryTarget)
@@ -1279,7 +1279,7 @@ public class ProjectGeneratorTest {
 
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
-        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
@@ -1330,7 +1330,7 @@ public class ProjectGeneratorTest {
 
     BuildTarget dependentSharedLibraryTarget = BuildTarget
         .builder("//dep", "shared")
-        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> dependentSharedLibraryNode = AppleLibraryBuilder
         .createBuilder(dependentSharedLibraryTarget)
@@ -1346,7 +1346,7 @@ public class ProjectGeneratorTest {
 
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
-        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
@@ -1385,7 +1385,7 @@ public class ProjectGeneratorTest {
   public void bundlesDontLinkTheirOwnBinary() throws IOException {
     BuildTarget libraryTarget = BuildTarget
         .builder("//foo", "library")
-        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
@@ -1555,7 +1555,7 @@ public class ProjectGeneratorTest {
   public void shouldEmitFilesForBuildSettingPrefixedFrameworks() throws IOException {
     BuildTarget buildTarget = BuildTarget
         .builder("//foo", "rule")
-        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
@@ -1585,7 +1585,7 @@ public class ProjectGeneratorTest {
   public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws IOException {
     BuildTarget buildTarget = BuildTarget
         .builder("//foo", "rule")
-        .setFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)

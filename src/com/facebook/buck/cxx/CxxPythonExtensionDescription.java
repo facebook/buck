@@ -198,8 +198,10 @@ public class CxxPythonExtensionDescription implements
     Optional<Map.Entry<Flavor, Type>> type;
     Optional<Map.Entry<Flavor, CxxPlatform>> platform;
     try {
-      type = LIBRARY_TYPE.getFlavorAndValue(params.getBuildTarget().getFlavors());
-      platform = cxxPlatforms.getFlavorAndValue(params.getBuildTarget().getFlavors());
+      type = LIBRARY_TYPE.getFlavorAndValue(
+          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
+      platform = cxxPlatforms.getFlavorAndValue(
+          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
     }

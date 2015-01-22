@@ -69,9 +69,9 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         params.copyWithChanges(
             AppleLibraryDescription.TYPE,
             BuildTarget.builder(params.getBuildTarget())
-                .addFlavor(LIBRARY_FLAVOR)
-                .addFlavor(CxxDescriptionEnhancer.SHARED_FLAVOR)
-                .addFlavor("default")
+                .addFlavors(LIBRARY_FLAVOR)
+                .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+                .addFlavors(ImmutableFlavor.of("default"))
                 .build(),
             params.getDeclaredDeps(),
             params.getExtraDeps()),
@@ -81,7 +81,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     AppleBundle bundle = new AppleBundle(
         params.copyWithChanges(
             AppleBundleDescription.TYPE,
-            BuildTarget.builder(params.getBuildTarget()).addFlavor(BUNDLE_FLAVOR).build(),
+            BuildTarget.builder(params.getBuildTarget()).addFlavors(BUNDLE_FLAVOR).build(),
             ImmutableSortedSet.of(library),
             ImmutableSortedSet.<BuildRule>of()),
         sourcePathResolver,

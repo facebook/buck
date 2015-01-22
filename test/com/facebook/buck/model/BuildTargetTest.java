@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.file.Paths;
 
 public class BuildTargetTest {
@@ -58,14 +57,6 @@ public class BuildTargetTest {
   }
 
   @Test
-  public void testBuildTargetWithBackslash() throws IOException {
-    BuildTarget rootTargetWithBackslash = BuildTarget.builder(
-        "//com\\microsoft\\windows",
-        "something").build();
-    assertEquals("//com/microsoft/windows", rootTargetWithBackslash.getBaseName());
-  }
-
-  @Test
   public void testEqualsNullReturnsFalse() {
     BuildTarget utilTarget = BuildTarget.builder("//src/com/facebook/buck/util", "util").build();
     assertNotNull(utilTarget);
@@ -89,7 +80,10 @@ public class BuildTargetTest {
 
   @Test
   public void testBuildTargetWithFlavor() {
-    BuildTarget target = BuildTarget.builder("//foo/bar", "baz").setFlavor("dex").build();
+    BuildTarget target = BuildTarget
+        .builder("//foo/bar", "baz")
+        .addFlavors(ImmutableFlavor.of("dex"))
+        .build();
     assertEquals("baz#dex", target.getShortNameAndFlavorPostfix());
     assertEquals(ImmutableSortedSet.of(ImmutableFlavor.of("dex")), target.getFlavors());
     assertTrue(target.isFlavored());
@@ -106,7 +100,7 @@ public class BuildTargetTest {
   @Test
   public void testFlavorIsValid() {
     try {
-      BuildTarget.builder("//foo/bar", "baz").addFlavor("d!x").build();
+      BuildTarget.builder("//foo/bar", "baz").addFlavors(ImmutableFlavor.of("d!x")).build();
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
       assertEquals("Invalid flavor: d!x", e.getMessage());
@@ -116,7 +110,7 @@ public class BuildTargetTest {
   @Test
   public void testShortNameCannotContainHashWhenFlavorSet() {
     try {
-      BuildTarget.builder("//foo/bar", "baz#dex").addFlavor("src-jar").build();
+      BuildTarget.builder("//foo/bar", "baz#dex").addFlavors(ImmutableFlavor.of("src-jar")).build();
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
       assertEquals("Build target name cannot contain '#' but was: baz#dex.", e.getMessage());
@@ -140,14 +134,17 @@ public class BuildTargetTest {
     BuildTarget unflavoredTarget = BuildTarget.builder("//foo/bar", "baz").build();
     assertSame(unflavoredTarget, unflavoredTarget.getUnflavoredTarget());
 
-    BuildTarget flavoredTarget = BuildTarget.builder("//foo/bar", "baz").addFlavor("biz").build();
+    BuildTarget flavoredTarget = BuildTarget
+        .builder("//foo/bar", "baz")
+        .addFlavors(ImmutableFlavor.of("biz"))
+        .build();
     assertEquals(unflavoredTarget, flavoredTarget.getUnflavoredTarget());
   }
 
   @Test
   public void testNumbersAreValidFlavors() {
     BuildTarget.builder("//foo", "bar")
-        .addFlavor(ImmutableFlavor.of("1234"))
+        .addFlavors(ImmutableFlavor.of("1234"))
         .build();
   }
 

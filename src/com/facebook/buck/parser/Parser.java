@@ -55,9 +55,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
-import com.google.common.cache.LoadingCache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -1110,7 +1110,7 @@ public class Parser {
 
         if (buildTarget.isFlavored() &&
             (!(description instanceof Flavored) ||
-            !((Flavored) description).hasFlavors(buildTarget.getFlavors()))) {
+            !((Flavored) description).hasFlavors(ImmutableSet.copyOf(buildTarget.getFlavors())))) {
           throw new HumanReadableException("Unrecognized flavor in target %s while parsing %s%s.",
               buildTarget,
               BuildTarget.BUILD_TARGET_PREFIX,

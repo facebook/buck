@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -47,8 +48,10 @@ public class DexWithClassesTest {
       }
     };
 
-    BuildTarget buildTarget =
-        BuildTarget.builder("//java/com/example", "lib").setFlavor("dex").build();
+    BuildTarget buildTarget = BuildTarget
+        .builder("//java/com/example", "lib")
+        .addFlavors(ImmutableFlavor.of("dex"))
+        .build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
         new DexProducedFromJavaLibrary(params, resolver, javaLibrary) {
@@ -76,8 +79,10 @@ public class DexWithClassesTest {
       }
     };
 
-    BuildTarget buildTarget =
-        BuildTarget.builder("//java/com/example", "lib").setFlavor("dex").build();
+    BuildTarget buildTarget = BuildTarget
+        .builder("//java/com/example", "lib")
+        .addFlavors(ImmutableFlavor.of("dex"))
+        .build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
         new DexProducedFromJavaLibrary(params, resolver, javaLibrary) {

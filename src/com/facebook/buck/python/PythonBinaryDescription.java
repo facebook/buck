@@ -32,6 +32,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -84,8 +85,9 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     // found.
     CxxPlatform cxxPlatform;
     try {
-      cxxPlatform = cxxPlatforms.getValue(
-          params.getBuildTarget().getFlavors()).or(defaultCxxPlatform);
+      cxxPlatform = cxxPlatforms
+          .getValue(ImmutableSet.copyOf(params.getBuildTarget().getFlavors()))
+          .or(defaultCxxPlatform);
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
     }

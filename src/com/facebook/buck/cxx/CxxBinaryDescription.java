@@ -69,8 +69,9 @@ public class CxxBinaryDescription implements
     // found.
     CxxPlatform cxxPlatform;
     try {
-      cxxPlatform = cxxPlatforms.getValue(
-          params.getBuildTarget().getFlavors()).or(defaultCxxPlatform);
+      cxxPlatform = cxxPlatforms
+          .getValue(ImmutableSet.copyOf(params.getBuildTarget().getFlavors()))
+          .or(defaultCxxPlatform);
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
     }

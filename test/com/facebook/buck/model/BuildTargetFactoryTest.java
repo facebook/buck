@@ -32,7 +32,7 @@ public class BuildTargetFactoryTest {
   public void testTargetWithFlavor() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//example/base:one#two");
     assertEquals(
-        BuildTarget.builder("//example/base", "one").addFlavor("two").build(),
+        BuildTarget.builder("//example/base", "one").addFlavors(ImmutableFlavor.of("two")).build(),
         buildTarget);
   }
 
@@ -42,9 +42,9 @@ public class BuildTargetFactoryTest {
         .newInstance("//example/base:shortName#one,two,three");
     assertEquals(
         BuildTarget.builder("//example/base", "shortName")
-            .addFlavor("one")
-            .addFlavor("two")
-            .addFlavor("three")
+            .addFlavors(ImmutableFlavor.of("one"))
+            .addFlavors(ImmutableFlavor.of("two"))
+            .addFlavors(ImmutableFlavor.of("three"))
             .build(),
         buildTarget);
   }

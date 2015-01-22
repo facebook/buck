@@ -18,60 +18,60 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
+
+import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.SortedSet;
 
 import javax.annotation.Nullable;
 
-@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE,
+@JsonAutoDetect(
+    fieldVisibility = JsonAutoDetect.Visibility.NONE,
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE)
-public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarget {
+@BuckStyleImmutable
+@Value.Immutable
+public abstract class BuildTarget implements Comparable<BuildTarget>, HasBuildTarget {
 
   public static final String BUILD_TARGET_PREFIX = "//";
 
-  private final Optional<String> repository;
-  private final String baseName;
-  private final String shortName;
-  private final ImmutableSortedSet<Flavor> flavors;
-  private final String fullyQualifiedName;
-
-  private BuildTarget(
-      Optional<String> repository,
-      String baseName,
-      String shortName,
-      ImmutableSortedSet<Flavor> flavors) {
-
-    Preconditions.checkArgument(baseName.startsWith(BUILD_TARGET_PREFIX),
+  @Value.Check
+  protected void check() {
+    Preconditions.checkArgument(
+        getBaseName().startsWith(BUILD_TARGET_PREFIX),
         "baseName must start with %s but was %s",
         BUILD_TARGET_PREFIX,
-        baseName);
+        getBaseName());
 
-    Preconditions.checkArgument(shortName.lastIndexOf("#") == -1,
+    // On Windows, baseName may contain backslashes, which are not permitted.
+    Preconditions.checkArgument(
+        !getBaseName().contains("\\"),
+        "baseName may not contain backslashes.");
+
+    Preconditions.checkArgument(
+        getShortName().lastIndexOf("#") == -1,
         "Build target name cannot contain '#' but was: %s.",
-        shortName);
+        getShortName());
 
-    Preconditions.checkArgument(!shortName.contains("#"),
+    Preconditions.checkArgument(
+        !getShortName().contains("#"),
         "Build target name cannot contain '#' but was: %s.",
-        shortName);
+        getShortName());
 
-    this.repository = repository;
-    // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
-    this.baseName = baseName.replace("\\", "/");
-    this.shortName = shortName;
-    this.flavors = flavors;
-    this.fullyQualifiedName =
-        (repository.isPresent() ? "@" + repository.get() : "") +
-        baseName + ":" + shortName + getFlavorPostfix();
+    Preconditions.checkArgument(
+        getFlavors().comparator() == Ordering.natural(),
+        "Flavors must be ordered using natural ordering.");
   }
 
   public Path getBuildFilePath() {
@@ -79,47 +79,16 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
   }
 
   @JsonProperty("repository")
-  public Optional<String> getRepository() {
-    return repository;
-  }
-
-  /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
-   * "guava-latest". Note that the flavor of the target is included here.
-   */
-  public String getShortNameAndFlavorPostfix() {
-    return shortName + getFlavorPostfix();
-  }
-
-  public String getFlavorPostfix() {
-    if (flavors.isEmpty()) {
-      return "";
-    }
-    return "#" + getFlavorsAsString();
-  }
-
-  @JsonProperty("shortName")
-  public String getShortName() {
-    return shortName;
-  }
-
-  @JsonProperty("flavor")
-  private String getFlavorsAsString() {
-    return Joiner.on(",").join(flavors);
-  }
-
-  public ImmutableSet<Flavor> getFlavors() {
-    return flavors;
-  }
+  @Value.Parameter
+  public abstract Optional<String> getRepository();
 
   /**
    * If this build target were //third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava".
    */
   @JsonProperty("baseName")
-  public String getBaseName() {
-    return baseName;
-  }
+  @Value.Parameter
+  public abstract String getBaseName();
 
   /**
    * If this build target were //third_party/java/guava:guava-latest, then this would return
@@ -127,7 +96,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
    */
   @Nullable
   public String getBaseNameWithSlash() {
-    return getBaseNameWithSlash(baseName);
+    return getBaseNameWithSlash(getBaseName());
   }
 
   /**
@@ -136,8 +105,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
    * If baseName were //third_party/java/guava, then this would return  "//third_party/java/guava/".
    * If it were //, it would return //.
    */
-  @Nullable
-  public static String getBaseNameWithSlash(@Nullable String baseName) {
+  public static String getBaseNameWithSlash(String baseName) {
     return baseName == null || baseName.equals(BUILD_TARGET_PREFIX) ? baseName : baseName + "/";
   }
 
@@ -147,7 +115,7 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
    * a file path.
    */
   public Path getBasePath() {
-    return Paths.get(baseName.substring(BUILD_TARGET_PREFIX.length()));
+    return Paths.get(getBaseName().substring(BUILD_TARGET_PREFIX.length()));
   }
 
   /**
@@ -161,21 +129,45 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
   }
 
   /**
+   * If this build target were //third_party/java/guava:guava-latest, then this would return
+   * "guava-latest". Note that the flavor of the target is included here.
+   */
+  public String getShortNameAndFlavorPostfix() {
+    return getShortName() + getFlavorPostfix();
+  }
+
+  public String getFlavorPostfix() {
+    if (getFlavors().isEmpty()) {
+      return "";
+    }
+    return "#" + getFlavorsAsString();
+  }
+
+  @JsonProperty("shortName")
+  @Value.Parameter
+  public abstract String getShortName();
+
+  @JsonProperty("flavor")
+  private String getFlavorsAsString() {
+    return Joiner.on(",").join(getFlavors());
+  }
+
+  @Value.NaturalOrder
+  @Value.Parameter
+  public abstract SortedSet<Flavor> getFlavors();
+
+  /**
    * If this build target is //third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava:guava-latest".
    */
   public String getFullyQualifiedName() {
-    return fullyQualifiedName;
+    return (getRepository().isPresent() ? "@" + getRepository().get() : "") +
+        getBaseName() + ":" + getShortName() + getFlavorPostfix();
   }
 
   @JsonIgnore
   public boolean isFlavored() {
-    return !(flavors.isEmpty());
-  }
-
-  @JsonIgnore
-  public boolean isInProjectRoot() {
-    return BUILD_TARGET_PREFIX.equals(baseName);
+    return !(getFlavors().isEmpty());
   }
 
   /**
@@ -186,26 +178,29 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     if (!isFlavored()) {
       return this;
     } else {
-      return new BuildTarget(
-          repository,
-          baseName,
-          shortName,
+      return ImmutableBuildTarget.of(
+          getRepository(),
+          getBaseName(),
+          getShortName(),
           ImmutableSortedSet.<Flavor>of());
     }
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof BuildTarget)) {
-      return false;
-    }
-    BuildTarget that = (BuildTarget) o;
-    return this.fullyQualifiedName.equals(that.fullyQualifiedName);
+  public static ImmutableBuildTarget.Builder builder(BuildTarget buildTarget) {
+    return ImmutableBuildTarget
+        .builder()
+        .setRepository(buildTarget.getRepository())
+        .setBaseName(buildTarget.getBaseName())
+        .setShortName(buildTarget.getShortName())
+        .addAllFlavors(buildTarget.getFlavors());
   }
 
-  @Override
-  public int hashCode() {
-    return fullyQualifiedName.hashCode();
+  public static ImmutableBuildTarget.Builder builder(String baseName, String shortName) {
+    return ImmutableBuildTarget
+        .builder()
+        .setRepository(Optional.<String>absent())
+        .setBaseName(baseName)
+        .setShortName(shortName);
   }
 
   /** @return {@link #getFullyQualifiedName()} */
@@ -220,77 +215,9 @@ public final class BuildTarget implements Comparable<BuildTarget>, HasBuildTarge
     return getFullyQualifiedName().compareTo(target.getFullyQualifiedName());
   }
 
-  public static Builder builder(String baseName, String shortName) {
-    return new Builder(baseName, shortName);
-  }
-
-  public static Builder builder(BuildTarget buildTarget) {
-    return new Builder(buildTarget);
-  }
-
   @Override
   public BuildTarget getBuildTarget() {
     return this;
   }
 
-  public static class Builder {
-    private Optional<String> repository = Optional.absent();
-    private String baseName;
-    private String shortName;
-    private ImmutableSortedSet.Builder<Flavor> flavors = ImmutableSortedSet.naturalOrder();
-
-    private Builder(String baseName, String shortName) {
-      this.baseName = baseName;
-      this.shortName = shortName;
-    }
-
-    private Builder(BuildTarget buildTarget) {
-      this.repository = buildTarget.repository;
-      this.baseName = buildTarget.baseName;
-      this.shortName = buildTarget.shortName;
-      this.flavors.addAll(buildTarget.flavors);
-    }
-
-    /**
-     * Build targets are hashable and equality-comparable, so targets referring to the same
-     * repository <strong>must</strong> use the same name. But build target syntax in BUCK files
-     * does <strong>not</strong> have this property -- repository names are configured in the local
-     * .buckconfig, and one project could use different naming from another. (And of course, targets
-     * within an external project will need a @repo name prepended to them, to distinguish them from
-     * targets in the root project.) It's the caller's responsibility to guarantee that repository
-     * names are disambiguated before BuildTargets are created.
-     */
-    public Builder setRepository(String repo) {
-      this.repository = Optional.of(repo);
-      return this;
-    }
-
-    public Builder setFlavor(Flavor flavor) {
-      flavors = ImmutableSortedSet.naturalOrder();
-      flavors.add(flavor);
-      return this;
-    }
-
-    public Builder setFlavor(String flavor) {
-      return setFlavor(ImmutableFlavor.of(flavor));
-    }
-
-    public Builder addFlavor(Flavor flavor) {
-      this.flavors.add(flavor);
-      return this;
-    }
-
-    public Builder addFlavor(String flavor) {
-      return addFlavor(ImmutableFlavor.of(flavor));
-    }
-
-    public Builder addFlavors(Iterable<Flavor> flavors) {
-      this.flavors.addAll(flavors);
-      return this;
-    }
-
-    public BuildTarget build() {
-      return new BuildTarget(repository, baseName, shortName, flavors.build());
-    }
-  }
 }

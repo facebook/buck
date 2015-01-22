@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -40,9 +41,9 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -286,7 +287,7 @@ public class ParserTest extends EasyMockSupport {
   public void shouldThrowAnExceptionWhenAnUnknownFlavorIsSeen()
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     BuildTarget flavored = BuildTarget.builder("//java/com/facebook", "foo")
-        .addFlavor("doesNotExist")
+        .addFlavors(ImmutableFlavor.of("doesNotExist"))
         .build();
 
     thrown.expect(HumanReadableException.class);
@@ -306,7 +307,7 @@ public class ParserTest extends EasyMockSupport {
   public void shouldThrowAnExceptionWhenAFlavorIsAskedOfATargetThatDoesntSupportFlavors()
     throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     BuildTarget flavored = BuildTarget.builder("//java/com/facebook", "baz")
-        .addFlavor(JavaLibrary.SRC_JAR)
+        .addFlavors(JavaLibrary.SRC_JAR)
         .build();
 
     thrown.expect(HumanReadableException.class);
@@ -372,7 +373,7 @@ public class ParserTest extends EasyMockSupport {
         false /* enableProfiling */);
 
     ImmutableSet<BuildTarget> expectedTargets = ImmutableSet.of(
-        BuildTarget.builder("//java/com/facebook", "foo").build(),
+        (BuildTarget) BuildTarget.builder("//java/com/facebook", "foo").build(),
         BuildTarget.builder("//java/com/facebook", "bar").build(),
         BuildTarget.builder("//java/com/facebook", "baz").build());
     assertEquals("Should have returned all rules.", expectedTargets, targets);
@@ -1201,7 +1202,10 @@ public class ParserTest extends EasyMockSupport {
         Charsets.UTF_8);
 
     // Fetch //bar:bar#src to put it in cache.
-    BuildTarget barTarget = BuildTarget.builder("//bar", "bar").setFlavor("src").build();
+    BuildTarget barTarget = BuildTarget
+        .builder("//bar", "bar")
+        .addFlavors(ImmutableFlavor.of("src"))
+        .build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(barTarget);
     Iterable<String> defaultIncludes = ImmutableList.of();
 

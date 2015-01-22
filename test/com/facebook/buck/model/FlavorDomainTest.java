@@ -35,9 +35,11 @@ public class FlavorDomainTest {
         "test",
         ImmutableMap.of(flavor, "something"));
     BuildTarget target = BuildTargetFactory.newInstance("//:test#hello");
-    assertEquals(Optional.of(flavor), domain.getFlavor(target.getFlavors()));
+    assertEquals(Optional.of(flavor), domain.getFlavor(ImmutableSet.copyOf(target.getFlavors())));
     target = BuildTargetFactory.newInstance("//:test#invalid");
-    assertEquals(Optional.<Flavor>absent(), domain.getFlavor(target.getFlavors()));
+    assertEquals(
+        Optional.<Flavor>absent(),
+        domain.getFlavor(ImmutableSet.copyOf(target.getFlavors())));
   }
 
   @Test
@@ -53,7 +55,7 @@ public class FlavorDomainTest {
         BuildTargetFactory.newInstance("//:test"),
         ImmutableSet.of(hello, goodbye));
     try {
-      domain.getFlavor(target.getFlavors());
+      domain.getFlavor(ImmutableSet.copyOf(target.getFlavors()));
       fail("should have thrown");
     } catch (FlavorDomainException e) {
       assertTrue(e.getMessage().contains("multiple \"test\" flavors"));

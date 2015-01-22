@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules;
 
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -28,11 +28,11 @@ import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 
+import org.junit.Test;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import org.junit.Test;
 
 /**
  * Unit tests for {@link TargetGraphHashing}.
@@ -64,7 +64,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
     ImmutableMap<BuildTarget, HashCode> expectedTargetHashes = ImmutableMap.of(
-        BuildTarget.builder("//foo", "lib").build(),
+        (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
         HashCode.fromString("15bcb369ef1f2c6df995f0538b7d95f4798a16e7")
     );
 
@@ -74,7 +74,7 @@ public class TargetGraphHashingTest {
             targetGraph,
             Functions.forMap(
                 ImmutableMap.of(
-                    BuildTarget.builder("//foo", "lib").build(),
+                    (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
                     HashCode.fromLong(64738))),
             node.getBuildTarget()),
         equalTo(expectedTargetHashes));
@@ -91,7 +91,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
     ImmutableMap<BuildTarget, HashCode> expectedTargetHashes = ImmutableMap.of(
-        BuildTarget.builder("//foo", "lib").build(),
+        (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
         HashCode.fromString("6cb8ac509e591d722c2902a08be8738649a620b9")
     );
 
@@ -101,7 +101,7 @@ public class TargetGraphHashingTest {
             targetGraph,
             Functions.forMap(
                 ImmutableMap.of(
-                    BuildTarget.builder("//foo", "lib").build(),
+                    (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
                     HashCode.fromLong(64738))),
             node.getBuildTarget()),
         equalTo(expectedTargetHashes));
@@ -122,7 +122,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
 
     ImmutableMap<BuildTarget, HashCode> expectedTargetHashes = ImmutableMap.of(
-        BuildTarget.builder("//foo", "lib").build(),
+        (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
         HashCode.fromString("15bcb369ef1f2c6df995f0538b7d95f4798a16e7"),
         BuildTarget.builder("//bar", "lib").build(),
         HashCode.fromString("55f239830db5afd6ee64574eb974e0ec058bb8f8")
@@ -134,7 +134,7 @@ public class TargetGraphHashingTest {
             targetGraph,
             Functions.forMap(
                 ImmutableMap.of(
-                    BuildTarget.builder("//foo", "lib").build(),
+                    (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
                     HashCode.fromLong(64738),
                     BuildTarget.builder("//bar", "lib").build(),
                     HashCode.fromLong(49152))),
@@ -161,7 +161,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
 
     ImmutableMap<BuildTarget, HashCode> expectedTargetHashes = ImmutableMap.of(
-        BuildTarget.builder("//foo", "lib").build(),
+        (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
         HashCode.fromString("15bcb369ef1f2c6df995f0538b7d95f4798a16e7"),
         BuildTarget.builder("//bar", "lib").build(),
         HashCode.fromString("f5441f7d7c2ece03c68bc3c620496dc1195a5a32")
@@ -173,7 +173,7 @@ public class TargetGraphHashingTest {
             targetGraph,
             Functions.forMap(
                 ImmutableMap.of(
-                    BuildTarget.builder("//foo", "lib").build(),
+                    (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
                     HashCode.fromLong(64738),
                     BuildTarget.builder("//bar", "lib").build(),
                     HashCode.fromLong(49152))),

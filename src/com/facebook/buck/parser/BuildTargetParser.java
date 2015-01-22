@@ -18,6 +18,8 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorParser;
+import com.facebook.buck.model.ImmutableBuildTarget;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -131,16 +133,17 @@ public class BuildTargetParser {
     }
 
     Preconditions.checkNotNull(baseName);
-    String fullyQualifiedName = new StringBuilder(baseName.length() + shortName.length() + 2)
-        .append(baseName).append(':').append(shortName).toString();
+    // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
+    baseName = baseName.replace("\\", "/");
+    String fullyQualifiedName = baseName + ':' + shortName;
     if (!fullyQualifiedName.startsWith(BUILD_RULE_PREFIX)) {
       throw new BuildTargetParseException(
           String.format("%s must start with %s", fullyQualifiedName, BUILD_RULE_PREFIX));
     }
 
-    BuildTarget.Builder builder = BuildTarget.builder(baseName, shortName);
+    ImmutableBuildTarget.Builder builder = BuildTarget.builder(baseName, shortName);
     for (String flavor : flavorNames) {
-      builder.addFlavor(flavor);
+      builder.addFlavors(ImmutableFlavor.of(flavor));
     }
     Optional<String> canonicalRepoName = Preconditions.checkNotNull(
         localToCanonicalRepoNamesMap.get(givenRepoName));

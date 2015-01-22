@@ -22,6 +22,7 @@ import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
@@ -85,7 +86,7 @@ public class EventSerializationTest {
   @Test
   public void testParseEventFinished() throws IOException {
     ParseEvent.Finished event = ParseEvent.finished(ImmutableList.<BuildTarget>of(
-        BuildTarget.builder("//base", "short").addFlavor("flv").build()),
+        BuildTarget.builder("//base", "short").addFlavors(ImmutableFlavor.of("flv")).build()),
         Optional.<TargetGraph>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);

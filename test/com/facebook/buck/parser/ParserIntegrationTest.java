@@ -95,7 +95,7 @@ public class ParserIntegrationTest {
     try {
       workspace.runBuckCommand("build", "//:A");
     } catch (HumanReadableException e) {
-      assertEquals(e.getHumanReadableErrorMessage(), "Cycle found: //:F -> //:C -> //:E -> //:F");
+      assertEquals("Cycle found: //:C -> //:E -> //:F -> //:C", e.getHumanReadableErrorMessage());
       return;
     }
     fail("An exception should have been thrown because of a circular dependency.");

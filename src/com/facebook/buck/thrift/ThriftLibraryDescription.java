@@ -254,7 +254,7 @@ public class ThriftLibraryDescription
     // Extract the thrift language we're using from our build target.
     Optional<Map.Entry<Flavor, ThriftLanguageSpecificEnhancer>> enhancerFlavor;
     try {
-      enhancerFlavor = enhancers.getFlavorAndValue(target.getFlavors());
+      enhancerFlavor = enhancers.getFlavorAndValue(ImmutableSet.copyOf(target.getFlavors()));
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", target, e.getMessage());
     }
@@ -396,7 +396,7 @@ public class ThriftLibraryDescription
       ThriftConstructorArg arg) {
     Optional<Map.Entry<Flavor, ThriftLanguageSpecificEnhancer>> enhancerFlavor;
     try {
-      enhancerFlavor = enhancers.getFlavorAndValue(buildTarget.getFlavors());
+      enhancerFlavor = enhancers.getFlavorAndValue(ImmutableSet.copyOf(buildTarget.getFlavors()));
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", buildTarget, e.getMessage());
     }

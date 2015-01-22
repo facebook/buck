@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
 
@@ -43,7 +44,7 @@ public class BuildConfigsTest {
         "}\n";
     BuildTarget source = BuildTarget
         .builder(BuildTargetFactory.newInstance("//java/com/example:build_config"))
-        .setFlavor("graph_enhanced_craziness")
+        .addFlavors(ImmutableFlavor.of("graph_enhanced_craziness"))
         .build();
     String observedJavaCode = BuildConfigs.generateBuildConfigDotJava(source, "com.example.buck");
     assertEquals(
@@ -113,7 +114,7 @@ public class BuildConfigsTest {
         "}\n";
     BuildTarget source = BuildTarget
         .builder(BuildTargetFactory.newInstance("//java/com/example:build_config"))
-        .setFlavor("graph_enhanced_craziness")
+        .addFlavors(ImmutableFlavor.of("graph_enhanced_craziness"))
         .build();
     String observedJavaCode = BuildConfigs.generateBuildConfigDotJava(
         source,

@@ -28,6 +28,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -79,7 +80,10 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").setFlavor("dex").build();
+    BuildTarget buildTarget = BuildTarget
+        .builder("//foo", "bar")
+        .addFlavors(ImmutableFlavor.of("dex"))
+        .build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(params, pathResolver, javaLibraryRule);

@@ -58,7 +58,7 @@ public abstract class BuildFileTree {
    * @param targets targets to return base paths for
    * @return base paths for targets
    */
-  protected static Collection<Path> collectBasePaths(final Iterable<BuildTarget> targets) {
+  protected static Collection<Path> collectBasePaths(Iterable<? extends BuildTarget> targets) {
 
     return FluentIterable.from(targets).transform(
         new Function<BuildTarget, Path>() {

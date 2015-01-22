@@ -35,6 +35,7 @@ import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -125,8 +126,10 @@ public class AndroidBinaryGraphEnhancerTest {
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of());
 
-    BuildTarget aaptPackageResourcesTarget =
-        BuildTarget.builder("//java/com/example", "apk").setFlavor("aapt_package").build();
+    BuildTarget aaptPackageResourcesTarget = BuildTarget
+        .builder("//java/com/example", "apk")
+        .addFlavors(ImmutableFlavor.of("aapt_package"))
+        .build();
     BuildRuleParams aaptPackageResourcesParams =
         new FakeBuildRuleParamsBuilder(aaptPackageResourcesTarget).build();
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
@@ -162,8 +165,10 @@ public class AndroidBinaryGraphEnhancerTest {
         /* preDexRulesNotInThePackageableCollection */ ImmutableList
             .<DexProducedFromJavaLibrary>of(),
         collection);
-    BuildTarget dexMergeTarget =
-        BuildTarget.builder("//java/com/example", "apk").setFlavor("dex_merge").build();
+    BuildTarget dexMergeTarget = BuildTarget
+        .builder("//java/com/example", "apk")
+        .addFlavors(ImmutableFlavor.of("dex_merge"))
+        .build();
     BuildRule dexMergeRule = ruleResolver.getRule(dexMergeTarget);
 
     assertEquals(dexMergeRule, preDexMergeRule);
@@ -245,7 +250,9 @@ public class AndroidBinaryGraphEnhancerTest {
             "buck-out/gen/java/com/example/lib__apk#" + flavor + "__output/apk#" + flavor + ".jar")
         ),
         result.getClasspathEntriesToDex());
-    BuildTarget enhancedBuildConfigTarget = BuildTarget.builder(apkTarget).setFlavor(flavor)
+    BuildTarget enhancedBuildConfigTarget = BuildTarget
+        .builder(apkTarget)
+        .addFlavors(ImmutableFlavor.of(flavor))
         .build();
     BuildRule enhancedBuildConfigRule = ruleResolver.getRule(enhancedBuildConfigTarget);
     assertTrue(enhancedBuildConfigRule instanceof AndroidBuildConfigJavaLibrary);

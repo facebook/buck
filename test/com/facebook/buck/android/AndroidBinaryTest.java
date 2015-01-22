@@ -316,7 +316,7 @@ public class AndroidBinaryTest {
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setKeystore(keystoreRule.getBuildTarget())
         .setTarget("Google Inc:Google APIs:16")
-        .setResourceFilter(new ResourceFilter(ImmutableList.<String>of("mdpi")))
+        .setResourceFilter(new ResourceFilter(ImmutableList.of("mdpi")))
         .setResourceCompressionMode(ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS);
 
     AndroidBinary buildRule = (AndroidBinary) builder.build(resolver);

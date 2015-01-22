@@ -19,10 +19,11 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -33,7 +34,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -507,8 +507,10 @@ public class CxxLibraryDescription implements
     Optional<Map.Entry<Flavor, Type>> type;
     Optional<Map.Entry<Flavor, CxxPlatform>> platform;
     try {
-      type = LIBRARY_TYPE.getFlavorAndValue(params.getBuildTarget().getFlavors());
-      platform = cxxPlatforms.getFlavorAndValue(params.getBuildTarget().getFlavors());
+      type = LIBRARY_TYPE.getFlavorAndValue(
+          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
+      platform = cxxPlatforms.getFlavorAndValue(
+          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
     }

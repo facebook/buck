@@ -39,6 +39,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -126,8 +127,10 @@ public class PrebuiltCxxLibraryDescription
     Optional<Map.Entry<Flavor, Type>> type;
     Optional<Map.Entry<Flavor, CxxPlatform>> platform;
     try {
-      type = LIBRARY_TYPE.getFlavorAndValue(params.getBuildTarget().getFlavors());
-      platform = cxxPlatforms.getFlavorAndValue(params.getBuildTarget().getFlavors());
+      type = LIBRARY_TYPE.getFlavorAndValue(
+          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
+      platform = cxxPlatforms.getFlavorAndValue(
+          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
     }

@@ -27,6 +27,7 @@ import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -63,7 +64,7 @@ public class AaptPackageResourcesTest {
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(
         BuildTarget.builder("//java/src/com/facebook/base", "apk")
-            .setFlavor("aapt_package")
+            .addFlavors(ImmutableFlavor.of("aapt_package"))
             .build())
         .build();
 
@@ -128,7 +129,7 @@ public class AaptPackageResourcesTest {
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(
         BuildTarget.builder("//java/src/com/facebook/base", "apk")
-            .setFlavor("aapt_package")
+            .addFlavors(ImmutableFlavor.of("aapt_package"))
             .build())
         .build();
     // One android_binary rule that depends on the two android_library rules.
@@ -203,7 +204,11 @@ public class AaptPackageResourcesTest {
     EasyMock.replay(resourcesFilter);
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(
-        BuildTarget.builder("//facebook/base", "apk").setFlavor("aapt_package").build()).build();
+        BuildTarget
+            .builder("//facebook/base", "apk")
+            .addFlavors(ImmutableFlavor.of("aapt_package"))
+            .build())
+        .build();
     // One android_binary rule that depends on the two android_library rules.
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         params,

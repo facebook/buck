@@ -51,7 +51,7 @@ public class AndroidLibraryGraphEnhancer {
       JavacOptions javacOptions,
       ResourceDependencyMode resourceDependencyMode) {
     this.dummyRDotJavaBuildTarget = BuildTarget.builder(buildTarget)
-        .addFlavor(DUMMY_R_DOT_JAVA_FLAVOR)
+        .addFlavors(DUMMY_R_DOT_JAVA_FLAVOR)
         .build();
     this.originalBuildRuleParams = buildRuleParams;
     // Override javacoptions because DummyRDotJava doesn't require annotation processing.

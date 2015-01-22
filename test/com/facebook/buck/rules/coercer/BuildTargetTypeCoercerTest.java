@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 
@@ -67,7 +68,9 @@ public class BuildTargetTypeCoercerTest {
         basePath,
         "//foo:bar#baz");
 
-    assertEquals(BuildTarget.builder("//foo", "bar").addFlavor("baz").build(), seen);
+    assertEquals(
+        BuildTarget.builder("//foo", "bar").addFlavors(ImmutableFlavor.of("baz")).build(),
+        seen);
   }
 
   @Test
@@ -79,7 +82,11 @@ public class BuildTargetTypeCoercerTest {
         "//foo:bar#baz,qux");
 
     assertEquals(
-        BuildTarget.builder("//foo", "bar").addFlavor("baz").addFlavor("qux").build(),
+        BuildTarget
+            .builder("//foo", "bar")
+            .addFlavors(ImmutableFlavor.of("baz"))
+            .addFlavors(ImmutableFlavor.of("qux"))
+            .build(),
         seen);
   }
 
@@ -92,7 +99,7 @@ public class BuildTargetTypeCoercerTest {
         ":bar#baz");
 
     BuildTarget expected = BuildTarget.builder("//java/com/facebook/buck/example", "bar")
-        .addFlavor("baz")
+        .addFlavors(ImmutableFlavor.of("baz"))
         .build();
     assertEquals(expected, seen);
   }
