@@ -17,14 +17,29 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.BuildRuleParamsFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.google.common.base.Function;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
@@ -66,6 +81,43 @@ public class CopyNativeLibrariesTest {
             "[ -d /path/to/source/x86 ] && mkdir -p /path/to/destination/x86 " +
                 "&& cp -R /path/to/source/x86/* /path/to/destination/x86",
             "rename_native_executables"));
+  }
+
+  @Test
+  public void testCopyNativeLibrariesCopiesLibDirsInReverseTopoOrder() {
+    BuildTarget target = BuildTargetFactory.newInstance("//:test");
+    CopyNativeLibraries copyNativeLibraries =
+        new CopyNativeLibraries(
+            BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
+            new SourcePathResolver(new BuildRuleResolver()),
+            ImmutableSet.of(Paths.get("lib1"), Paths.get("lib2")),
+            ImmutableSet.<TargetCpuType>of(),
+            ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+            ImmutableMap.<Pair<TargetCpuType, String>, SourcePath>of());
+
+    ImmutableList<Step> steps =
+        copyNativeLibraries.getBuildSteps(
+            FakeBuildContext.NOOP_CONTEXT,
+            new FakeBuildableContext());
+
+    Iterable<String> descriptions =
+        Iterables.transform(
+            steps,
+            new Function<Step, String>() {
+              @Override
+              public String apply(Step step) {
+                return step.getDescription(TestExecutionContext.newInstance());
+              }
+            });
+    assertThat(
+        "lib1 contents should be copied *after* lib2",
+        Iterables.indexOf(
+            descriptions,
+            Predicates.containsPattern("lib1")),
+        Matchers.greaterThan(
+            Iterables.indexOf(
+                descriptions,
+                Predicates.containsPattern("lib2"))));
   }
 
   private void createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(

@@ -135,7 +135,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
     final Path pathToNativeLibs = getPathToNativeLibsDir();
     steps.add(new MakeCleanDirectoryStep(pathToNativeLibs));
 
-    for (Path nativeLibDir : nativeLibDirectories) {
+    for (Path nativeLibDir : nativeLibDirectories.asList().reverse()) {
       copyNativeLibrary(nativeLibDir, pathToNativeLibs, cpuFilters, steps);
     }
 
