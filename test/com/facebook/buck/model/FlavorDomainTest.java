@@ -51,9 +51,10 @@ public class FlavorDomainTest {
         ImmutableMap.of(
             hello, "something",
             goodbye, "something"));
-    BuildTarget target = BuildTargets.extendFlavoredBuildTarget(
-        BuildTargetFactory.newInstance("//:test"),
-        ImmutableSet.of(hello, goodbye));
+    BuildTarget target = BuildTarget
+        .builder(BuildTargetFactory.newInstance("//:test"))
+        .addAllFlavors(ImmutableSet.of(hello, goodbye))
+        .build();
     try {
       domain.getFlavor(ImmutableSet.copyOf(target.getFlavors()));
       fail("should have thrown");

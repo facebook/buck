@@ -95,7 +95,7 @@ public class ThriftLibraryDescription
 
   @VisibleForTesting
   protected BuildTarget createThriftIncludeSymlinkTreeTarget(BuildTarget target) {
-    return BuildTargets.extendFlavoredBuildTarget(target, INCLUDE_SYMLINK_TREE_FLAVOR);
+    return BuildTarget.builder(target).addFlavors(INCLUDE_SYMLINK_TREE_FLAVOR).build();
   }
 
   /**
@@ -106,11 +106,14 @@ public class ThriftLibraryDescription
       BuildTarget target,
       String name) {
     Preconditions.checkArgument(target.isFlavored());
-    return BuildTargets.extendFlavoredBuildTarget(
-        target,
-        ImmutableFlavor.of(String.format(
-            "thrift-compile-%s",
-            name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));
+    return BuildTarget
+        .builder(target)
+        .addFlavors(
+            ImmutableFlavor.of(
+                String.format(
+                    "thrift-compile-%s",
+                    name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))))
+        .build();
   }
 
   /**

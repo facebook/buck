@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
@@ -85,7 +84,7 @@ public class CxxLibraryDescription implements
   private static final Flavor LEX_YACC_SOURCE_FLAVOR = ImmutableFlavor.of("lex_yacc_sources");
 
   private BuildTarget createLexYaccSourcesBuildTarget(BuildTarget target) {
-    return BuildTargets.extendFlavoredBuildTarget(target, LEX_YACC_SOURCE_FLAVOR);
+    return BuildTarget.builder(target).addFlavors(LEX_YACC_SOURCE_FLAVOR).build();
   }
 
   private CxxHeaderSourceSpec requireLexYaccSources(
@@ -520,10 +519,10 @@ public class CxxLibraryDescription implements
     if (type.isPresent()) {
       Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
       flavors.remove(type.get().getKey());
-      BuildTarget target =
-          BuildTargets.extendFlavoredBuildTarget(
-              params.getBuildTarget().getUnflavoredTarget(),
-              flavors);
+      BuildTarget target = BuildTarget
+          .builder(params.getBuildTarget().getUnflavoredTarget())
+          .addAllFlavors(flavors)
+          .build();
       BuildRuleParams typeParams =
           params.copyWithChanges(
               params.getBuildRuleType(),

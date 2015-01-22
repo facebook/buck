@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -30,7 +31,6 @@ import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
@@ -94,10 +94,10 @@ public class PrebuiltCxxLibraryDescription
             .resolve(String.format("lib%s.a", libName));
 
     // Otherwise, we need to build it from the static lib.
-    BuildTarget sharedTarget =
-        BuildTargets.extendFlavoredBuildTarget(
-            params.getBuildTarget(),
-            CxxDescriptionEnhancer.SHARED_FLAVOR);
+    BuildTarget sharedTarget = BuildTarget
+        .builder(params.getBuildTarget())
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .build();
 
     // If not, setup a single link rule to link it from the static lib.
     Path builtSharedLibraryPath = BuildTargets.getBinPath(sharedTarget, "%s").resolve(soname);

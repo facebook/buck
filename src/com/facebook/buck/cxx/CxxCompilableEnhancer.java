@@ -105,17 +105,20 @@ public class CxxCompilableEnhancer {
       Flavor platform,
       String name,
       boolean pic) {
-    return BuildTargets.extendFlavoredBuildTarget(
-        target,
-        platform,
-        ImmutableFlavor.of(String.format(
-            "compile-%s%s",
-            pic ? "pic-" : "",
-            getOutputName(name)
-                .replace('/', '-')
-                .replace('.', '-')
-                .replace('+', '-')
-                .replace(' ', '-'))));
+    return BuildTarget
+        .builder(target)
+        .addFlavors(platform)
+        .addFlavors(
+            ImmutableFlavor.of(
+                String.format(
+                    "compile-%s%s",
+                    pic ? "pic-" : "",
+                    getOutputName(name)
+                        .replace('/', '-')
+                        .replace('.', '-')
+                        .replace('+', '-')
+                        .replace(' ', '-'))))
+        .build();
   }
 
   /**

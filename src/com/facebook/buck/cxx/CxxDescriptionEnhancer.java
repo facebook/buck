@@ -45,7 +45,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
@@ -73,10 +72,11 @@ public class CxxDescriptionEnhancer {
   public static BuildTarget createHeaderSymlinkTreeTarget(
       BuildTarget target,
       Flavor platform) {
-    return BuildTargets.extendFlavoredBuildTarget(
-        target,
-        platform,
-        HEADER_SYMLINK_TREE_FLAVOR);
+    return BuildTarget
+        .builder(target)
+        .addFlavors(platform)
+        .addFlavors(HEADER_SYMLINK_TREE_FLAVOR)
+        .build();
   }
 
   /**
@@ -161,22 +161,26 @@ public class CxxDescriptionEnhancer {
 
   @VisibleForTesting
   protected static BuildTarget createLexBuildTarget(BuildTarget target, String name) {
-    return BuildTargets.extendFlavoredBuildTarget(
-        target.getUnflavoredTarget(),
-        ImmutableFlavor.of(
-            String.format(
-                "lex-%s",
-                name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));
+    return BuildTarget
+        .builder(target.getUnflavoredTarget())
+        .addFlavors(
+            ImmutableFlavor.of(
+                String.format(
+                    "lex-%s",
+                    name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))))
+        .build();
   }
 
   @VisibleForTesting
   protected static BuildTarget createYaccBuildTarget(BuildTarget target, String name) {
-    return BuildTargets.extendFlavoredBuildTarget(
-        target.getUnflavoredTarget(),
-        ImmutableFlavor.of(
-            String.format(
-                "yacc-%s",
-                name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))));
+    return BuildTarget
+        .builder(target.getUnflavoredTarget())
+        .addFlavors(
+            ImmutableFlavor.of(
+                String.format(
+                    "yacc-%s",
+                    name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))))
+        .build();
   }
 
   /**
@@ -394,19 +398,13 @@ public class CxxDescriptionEnhancer {
   public static BuildTarget createStaticLibraryBuildTarget(
       BuildTarget target,
       Flavor platform) {
-    return BuildTargets.extendFlavoredBuildTarget(
-        target,
-        platform,
-        STATIC_FLAVOR);
+    return BuildTarget.builder(target).addFlavors(platform).addFlavors(STATIC_FLAVOR).build();
   }
 
   public static BuildTarget createSharedLibraryBuildTarget(
       BuildTarget target,
       Flavor platform) {
-    return BuildTargets.extendFlavoredBuildTarget(
-        target,
-        platform,
-        SHARED_FLAVOR);
+    return BuildTarget.builder(target).addFlavors(platform).addFlavors(SHARED_FLAVOR).build();
   }
 
   public static Path getStaticLibraryPath(
@@ -448,7 +446,7 @@ public class CxxDescriptionEnhancer {
 
   @VisibleForTesting
   protected static BuildTarget createCxxLinkTarget(BuildTarget target) {
-    return BuildTargets.extendFlavoredBuildTarget(target, CXX_LINK_BINARY_FLAVOR);
+    return BuildTarget.builder(target).addFlavors(CXX_LINK_BINARY_FLAVOR).build();
   }
 
   public static CxxLink createBuildRulesForCxxBinaryDescriptionArg(
@@ -551,9 +549,7 @@ public class CxxDescriptionEnhancer {
       BuildRuleResolver ruleResolver,
       TargetNode<T> node,
       Flavor... flavors) {
-    BuildTarget target = BuildTargets.extendFlavoredBuildTarget(
-        params.getBuildTarget(),
-        ImmutableSet.copyOf(flavors));
+    BuildTarget target = BuildTarget.builder(params.getBuildTarget()).addFlavors(flavors).build();
     Optional<BuildRule> rule = ruleResolver.getRuleOptional(target);
     if (!rule.isPresent()) {
       Description<T> description = node.getDescription();

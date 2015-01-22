@@ -24,7 +24,6 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -107,12 +106,12 @@ public class OCamlRuleBuilder {
 
   @VisibleForTesting
   protected static BuildTarget createStaticLibraryBuildTarget(BuildTarget target) {
-    return BuildTargets.extendFlavoredBuildTarget(target, OCAML_STATIC_FLAVOR);
+    return BuildTarget.builder(target).addFlavors(OCAML_STATIC_FLAVOR).build();
   }
 
   @VisibleForTesting
   protected static BuildTarget createOCamlLinkTarget(BuildTarget target) {
-    return BuildTargets.extendFlavoredBuildTarget(target, OCAML_LINK_BINARY_FLAVOR);
+    return BuildTarget.builder(target).addFlavors(OCAML_LINK_BINARY_FLAVOR).build();
   }
 
   public static AbstractBuildRule createBuildRule(

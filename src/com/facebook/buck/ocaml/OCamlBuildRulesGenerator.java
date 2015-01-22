@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
@@ -131,16 +130,18 @@ public class OCamlBuildRulesGenerator {
   public static BuildTarget createCCompileBuildTarget(
       BuildTarget target,
       String name) {
-    return BuildTargets.extendFlavoredBuildTarget(
-        target,
-        ImmutableFlavor.of(
-            String.format(
-                "compile-%s",
-                getCOutputName(name)
-                    .replace('/', '-')
-                    .replace('.', '-')
-                    .replace('+', '-')
-                    .replace(' ', '-'))));
+    return BuildTarget
+        .builder(target)
+        .addFlavors(
+            ImmutableFlavor.of(
+                String.format(
+                    "compile-%s",
+                    getCOutputName(name)
+                        .replace('/', '-')
+                        .replace('.', '-')
+                        .replace('+', '-')
+                        .replace(' ', '-'))))
+        .build();
   }
 
   private ImmutableList<SourcePath> generateCCompilation(ImmutableList<SourcePath> cInput) {
@@ -200,7 +201,7 @@ public class OCamlBuildRulesGenerator {
   }
 
   public static BuildTarget addDebugFlavor(BuildTarget target) {
-    return BuildTargets.extendFlavoredBuildTarget(target, DEBUG_FLAVOR);
+    return BuildTarget.builder(target).addFlavors(DEBUG_FLAVOR).build();
   }
 
   private BuildRule generateDebugLauncherRule() {
@@ -259,7 +260,7 @@ public class OCamlBuildRulesGenerator {
   private static final Flavor BYTECODE_FLAVOR = ImmutableFlavor.of("bytecode");
 
   public static BuildTarget addBytecodeFlavor(BuildTarget target) {
-    return BuildTargets.extendFlavoredBuildTarget(target, BYTECODE_FLAVOR);
+    return BuildTarget.builder(target).addFlavors(BYTECODE_FLAVOR).build();
   }
 
   private BuildRule generateBytecodeLinking(ImmutableList<SourcePath> allInputs) {
@@ -341,31 +342,35 @@ public class OCamlBuildRulesGenerator {
   public static BuildTarget createMLCompileBuildTarget(
       BuildTarget target,
       String name) {
-    return BuildTargets.extendFlavoredBuildTarget(
-        target,
-        ImmutableFlavor.of(
-            String.format(
-                "ml-compile-%s",
-                getMLOutputName(name)
-                    .replace('/', '-')
-                    .replace('.', '-')
-                    .replace('+', '-')
-                    .replace(' ', '-'))));
+    return BuildTarget
+        .builder(target)
+        .addFlavors(
+            ImmutableFlavor.of(
+                String.format(
+                    "ml-compile-%s",
+                    getMLOutputName(name)
+                        .replace('/', '-')
+                        .replace('.', '-')
+                        .replace('+', '-')
+                        .replace(' ', '-'))))
+        .build();
   }
 
   public static BuildTarget createMLBytecodeCompileBuildTarget(
       BuildTarget target,
       String name) {
-    return BuildTargets.extendFlavoredBuildTarget(
-        target,
-        ImmutableFlavor.of(
-            String.format(
-                "ml-bytecode-compile-%s",
-                getMLBytecodeOutputName(name)
-                    .replace('/', '-')
-                    .replace('.', '-')
-                    .replace('+', '-')
-                    .replace(' ', '-'))));
+    return BuildTarget
+        .builder(target)
+        .addFlavors(
+            ImmutableFlavor.of(
+                String.format(
+                    "ml-bytecode-compile-%s",
+                    getMLBytecodeOutputName(name)
+                        .replace('/', '-')
+                        .replace('.', '-')
+                        .replace('+', '-')
+                        .replace(' ', '-'))))
+        .build();
   }
 
   ImmutableList<SourcePath> generateMLCompilation(

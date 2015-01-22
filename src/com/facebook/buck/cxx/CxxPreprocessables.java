@@ -179,18 +179,20 @@ public class CxxPreprocessables {
       CxxSource.Type type,
       boolean pic,
       String name) {
-    return BuildTargets.extendFlavoredBuildTarget(
-        target,
-        platform,
-        ImmutableFlavor.of(
-            String.format(
-                "preprocess-%s%s",
-                pic ? "pic-" : "",
-                getOutputName(type, name)
-                    .replace('/', '-')
-                    .replace('.', '-')
-                    .replace('+', '-')
-                    .replace(' ', '-'))));
+    return BuildTarget
+        .builder(target)
+        .addFlavors(platform)
+        .addFlavors(
+            ImmutableFlavor.of(
+                String.format(
+                    "preprocess-%s%s",
+                    pic ? "pic-" : "",
+                    getOutputName(type, name)
+                        .replace('/', '-')
+                        .replace('.', '-')
+                        .replace('+', '-')
+                        .replace(' ', '-'))))
+        .build();
   }
 
   /**

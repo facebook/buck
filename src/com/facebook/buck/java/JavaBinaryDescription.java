@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.DefaultDirectoryTraverser;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
@@ -110,7 +109,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
     if (!nativeLibraries.isEmpty()) {
       binaryParams = params.copyWithChanges(
           params.getBuildRuleType(),
-          BuildTargets.extendFlavoredBuildTarget(params.getBuildTarget(), FAT_JAR_INNER_JAR_FLAVOR),
+          BuildTarget.builder(params.getBuildTarget()).addFlavors(FAT_JAR_INNER_JAR_FLAVOR).build(),
           params.getDeclaredDeps(),
           params.getExtraDeps());
     }

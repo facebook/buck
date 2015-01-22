@@ -49,10 +49,12 @@ public class BuildTargets {
    */
 
   public static Path getBinPath(BuildTarget target, String format) {
-    return Paths.get(String.format("%s/%s" + format,
-        BuckConstant.BIN_DIR,
-        target.getBasePathWithSlash(),
-        target.getShortNameAndFlavorPostfix()));
+    return Paths.get(
+        String.format(
+            "%s/%s" + format,
+            BuckConstant.BIN_DIR,
+            target.getBasePathWithSlash(),
+            target.getShortNameAndFlavorPostfix()));
   }
 
   /**
@@ -115,28 +117,6 @@ public class BuildTargets {
   }
 
   /**
-   * @return a new flavored {@link BuildTarget} by merging any existing flavors with the
-   *         given flavor.
-   */
-  public static BuildTarget extendFlavoredBuildTarget(BuildTarget target, Flavor... flavors) {
-    ImmutableBuildTarget.Builder builder = BuildTarget.builder(target);
-    for (Flavor flavor : flavors) {
-      builder.addFlavors(flavor);
-    }
-    return builder.build();
-  }
-
-  /**
-   * @return a new flavored {@link BuildTarget} by merging any existing flavors with the
-   *         given flavors.
-   */
-  public static BuildTarget extendFlavoredBuildTarget(
-      BuildTarget target,
-      Iterable<Flavor> flavors) {
-    return BuildTarget.builder(target).addAllFlavors(flavors).build();
-  }
-
-  /**
    * Propagate flavors represented by the given {@link FlavorDomain} objects from a parent
    * target to it's dependencies.
    */
@@ -189,7 +169,7 @@ public class BuildTargets {
 
     // Now flavor each dependency with the relevant flavors.
     for (BuildTarget dep : deps) {
-      flavoredDeps.add(BuildTargets.extendFlavoredBuildTarget(dep, flavors));
+      flavoredDeps.add(BuildTarget.builder(dep).addAllFlavors(flavors).build());
     }
 
     return flavoredDeps.build();

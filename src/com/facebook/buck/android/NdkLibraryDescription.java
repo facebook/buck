@@ -240,9 +240,10 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
     outputLinesBuilder.add("include Android.mk");
 
-    BuildTarget makefileTarget = BuildTargets.extendFlavoredBuildTarget(
-        params.getBuildTarget(),
-        MAKEFILE_FLAVOR);
+    BuildTarget makefileTarget = BuildTarget
+        .builder(params.getBuildTarget())
+        .addFlavors(MAKEFILE_FLAVOR)
+        .build();
     BuildRuleParams makefileParams = params.copyWithChanges(
         MAKEFILE_TYPE,
         makefileTarget,
