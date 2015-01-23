@@ -108,8 +108,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
         "resource", components.getResources(),
         "nativeLibraries", components.getNativeLibraries()).entrySet()) {
       for (Path name : ImmutableSortedSet.copyOf(part.getValue().keySet())) {
-        Path src = getResolver().getPath(part.getValue().get(name));
-        builder.setInput(part.getKey() + ":" + name, src);
+        builder.setInput(part.getKey() + ":" + name, part.getValue().get(name));
       }
     }
 
