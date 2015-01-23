@@ -90,8 +90,7 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
     // We do this here, rather than returning them from `getInputsToCompareToOutput` so that
     // we can match the contents hash up with where it was laid out in the include search path.
     for (Path path : ImmutableSortedSet.copyOf(includes.keySet())) {
-      SourcePath source = includes.get(path);
-      builder.setInput("include(" + path + ")", getResolver().getPath(source));
+      builder.setInput("include(" + path + ")", includes.get(path));
     }
 
     return builder;
