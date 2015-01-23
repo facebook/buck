@@ -1703,7 +1703,7 @@ public class ProjectGeneratorTest {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Targets //foo:lib and //bar:lib have the same hardcoded GID (E66DC04E36F2D8BE00000000)");
+        "Targets [//bar:lib, //foo:lib] have the same hardcoded GID (E66DC04E36F2D8BE00000000)");
 
     projectGenerator.createXcodeProjects();
   }

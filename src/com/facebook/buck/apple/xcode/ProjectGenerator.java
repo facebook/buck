@@ -549,8 +549,9 @@ public class ProjectGenerator {
       String conflictingTargetName = gidsToTargetNames.get(targetGid.get());
       if (conflictingTargetName != null) {
         throw new HumanReadableException(
-            "Targets %s and %s have the same hardcoded GID (%s)",
-            thisTargetName, conflictingTargetName, targetGid.get());
+            "Targets %s have the same hardcoded GID (%s)",
+            ImmutableSortedSet.of(thisTargetName, conflictingTargetName),
+            targetGid.get());
       }
       gidsToTargetNames.put(targetGid.get(), thisTargetName);
     }
