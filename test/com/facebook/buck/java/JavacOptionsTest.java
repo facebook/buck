@@ -98,6 +98,19 @@ public class JavacOptionsTest {
   }
 
   @Test
+  public void shouldSetSourceAndTargetLevels() {
+    JavacOptions original = createStandardBuilder()
+        .setSourceLevel("7")
+        .setTargetLevel("5")
+        .build();
+
+    JavacOptions copy = JavacOptions.builder(original).build();
+
+    assertOptionsContains(copy, "-source 7");
+    assertOptionsContains(copy, "-target 5");
+  }
+
+  @Test
   public void shouldAddABootClasspathIfTheMapContainsOne() {
     JavacOptions options = createStandardBuilder()
         .setSourceLevel("5")

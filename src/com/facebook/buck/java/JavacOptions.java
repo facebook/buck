@@ -75,8 +75,8 @@ public class JavacOptions {
       final Function<Path, Path> pathRelativizer) {
 
     // Add some standard options.
-    optionsBuilder.add("-source", targetLevel);
-    optionsBuilder.add("-target", sourceLevel);
+    optionsBuilder.add("-source", sourceLevel);
+    optionsBuilder.add("-target", targetLevel);
 
     if (debug) {
       optionsBuilder.add("-g");
