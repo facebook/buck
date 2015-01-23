@@ -17,13 +17,17 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
+
+import org.immutables.value.Value;
 
 /**
  * Describes a OCaml source and the various paths it uses from input to output.
  */
-public class OCamlSource {
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class OCamlSource {
   public static final Function<OCamlSource, SourcePath> TO_SOURCE_PATH = new
       Function<OCamlSource, SourcePath>() {
     @Override
@@ -32,43 +36,13 @@ public class OCamlSource {
     }
   };
 
-  private final String name;
-  private final SourcePath source;
+  @Value.Parameter
+  public abstract String getName();
 
-  private OCamlSource(String name, SourcePath source) {
-    this.name = name;
-    this.source = source;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public SourcePath getSource() {
-    return source;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-
-    if (!(o instanceof OCamlSource)) {
-      return false;
-    }
-
-    OCamlSource ocamlSource = (OCamlSource) o;
-
-    return name.equals(ocamlSource.name) && source.equals(ocamlSource.source);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(name, source);
-  }
+  @Value.Parameter
+  public abstract SourcePath getSource();
 
   public static OCamlSource ofNameAndSourcePath(String name, SourcePath sourcePath) {
-    return new OCamlSource(name, sourcePath);
+    return ImmutableOCamlSource.of(name, sourcePath);
   }
 }

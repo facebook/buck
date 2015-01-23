@@ -31,6 +31,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.rules.coercer.ImmutableBuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -106,9 +107,9 @@ public class AndroidBuildConfigTest {
     int exitCode = step.execute(context);
     assertEquals(0, exitCode);
     assertEquals(
-        BuildConfigFields.fromFields(ImmutableList.of(
-            new BuildConfigFields.Field("boolean", "DEBUG", "false"),
-            new BuildConfigFields.Field("String", "FOO", "\"BAR\""))),
+        BuildConfigFields.fromFields(ImmutableList.<BuildConfigFields.Field>of(
+            ImmutableBuildConfigFields.Field.of("boolean", "DEBUG", "false"),
+            ImmutableBuildConfigFields.Field.of("String", "FOO", "\"BAR\""))),
         step.get());
 
     EasyMock.verify(projectFilesystem);

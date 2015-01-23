@@ -40,6 +40,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.rules.coercer.ImmutableBuildConfigFields;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -382,19 +383,20 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSortedSet.Builder<BuildRule> enhancedDeps,
       ImmutableList.Builder<DexProducedFromJavaLibrary> preDexRules,
       ImmutableList.Builder<Path> buildConfigJarFilesBuilder) {
-    BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(ImmutableList.of(
-        new BuildConfigFields.Field(
-            "boolean",
-            BuildConfigs.DEBUG_CONSTANT,
-            String.valueOf(packageType != AndroidBinary.PackageType.RELEASE)),
-        new BuildConfigFields.Field(
-            "boolean",
-            BuildConfigs.IS_EXO_CONSTANT,
-            String.valueOf(!exopackageModes.isEmpty())),
-        new BuildConfigFields.Field(
-            "int",
-            BuildConfigs.EXOPACKAGE_FLAGS,
-            String.valueOf(ExopackageMode.toBitmask(exopackageModes)))));
+    BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(
+        ImmutableList.<BuildConfigFields.Field>of(
+            ImmutableBuildConfigFields.Field.of(
+                "boolean",
+                BuildConfigs.DEBUG_CONSTANT,
+                String.valueOf(packageType != AndroidBinary.PackageType.RELEASE)),
+            ImmutableBuildConfigFields.Field.of(
+                "boolean",
+                BuildConfigs.IS_EXO_CONSTANT,
+                String.valueOf(!exopackageModes.isEmpty())),
+            ImmutableBuildConfigFields.Field.of(
+                "int",
+                BuildConfigs.EXOPACKAGE_FLAGS,
+                String.valueOf(ExopackageMode.toBitmask(exopackageModes)))));
     for (Map.Entry<String, BuildConfigFields> entry :
         packageableCollection.getBuildConfigs().entrySet()) {
       // Merge the user-defined constants with the APK-specific overrides.

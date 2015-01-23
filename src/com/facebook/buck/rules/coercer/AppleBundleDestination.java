@@ -16,11 +16,14 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 
-import java.util.Objects;
+import org.immutables.value.Value;
 
-public class AppleBundleDestination {
+@Value.Immutable
+@BuckStyleImmutable
+public interface AppleBundleDestination {
   public enum SubfolderSpec {
     ABSOLUTE,
     WRAPPER,
@@ -34,36 +37,10 @@ public class AppleBundleDestination {
     PRODUCTS,
   }
 
-  private final SubfolderSpec subfolderSpec;
-  private final Optional<String> subpath;
+  @Value.Parameter
+  SubfolderSpec getSubfolderSpec();
 
-  public AppleBundleDestination(SubfolderSpec subfolderSpec, Optional<String> subpath) {
-    this.subfolderSpec = subfolderSpec;
-    this.subpath = subpath;
-  }
+  @Value.Parameter
+  Optional<String> getSubpath();
 
-  public SubfolderSpec getSubfolderSpec() {
-    return subfolderSpec;
-  }
-
-  public Optional<String> getSubpath() {
-    return subpath;
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    if (!(other instanceof AppleBundleDestination)) {
-      return false;
-    }
-
-    AppleBundleDestination that = (AppleBundleDestination) other;
-
-    return Objects.equals(this.subfolderSpec, that.subfolderSpec) &&
-        Objects.equals(this.subpath, that.subpath);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(subfolderSpec, subpath);
-  }
 }

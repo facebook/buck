@@ -34,9 +34,9 @@ public class BuildConfigFieldsTest {
             "long MEANING_OF_LIFE = 42"));
     MoreAsserts.assertIterablesEquals(
         ImmutableList.of(
-            new BuildConfigFields.Field("boolean", "DEBUG", "false"),
-            new BuildConfigFields.Field("String", "KEYSTORE_TYPE", "\"inhouse\""),
-            new BuildConfigFields.Field("long", "MEANING_OF_LIFE", "42")),
+            ImmutableBuildConfigFields.Field.of("boolean", "DEBUG", "false"),
+            ImmutableBuildConfigFields.Field.of("String", "KEYSTORE_TYPE", "\"inhouse\""),
+            ImmutableBuildConfigFields.Field.of("long", "MEANING_OF_LIFE", "42")),
         buildConfigValues);
   }
 
@@ -56,6 +56,6 @@ public class BuildConfigFieldsTest {
   public void testFieldToString() {
     assertEquals(
         "String KEYSTORE_TYPE = \"inhouse\"",
-        new BuildConfigFields.Field("String", "KEYSTORE_TYPE", "\"inhouse\"").toString());
+        ImmutableBuildConfigFields.Field.of("String", "KEYSTORE_TYPE", "\"inhouse\"").toString());
   }
 }

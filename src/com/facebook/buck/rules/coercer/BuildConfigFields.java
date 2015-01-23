@@ -18,38 +18,42 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import org.immutables.value.Value;
+
 import java.util.Iterator;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.annotation.concurrent.Immutable;
 
 /**
  * List of fields to add to a generated {@code BuildConfig.java} file. Each field knows its Java
  * type, variable name, and value.
  */
-@Immutable
-public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
+@Value.Nested
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
 
   /** An individual field in a {@link BuildConfigFields}. */
-  public static final class Field {
-    private final String type;
-    private final String name;
-    private final String value;
+  @Value.Immutable
+  @BuckStyleImmutable
+  public abstract static class Field {
 
-    /** Creates a new field with the specified parameters. */
-    public Field(String type, String name, String value) {
-      this.type = type;
-      this.name = name;
-      this.value = value;
-    }
+    @Value.Parameter
+    public abstract String getType();
+
+    @Value.Parameter
+    public abstract String getName();
+
+    @Value.Parameter
+    public abstract String getValue();
 
     /**
      * @return a string that could be passed to
@@ -58,25 +62,9 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
      */
     @Override
     public String toString() {
-      return String.format("%s %s = %s", type, name, value);
+      return String.format("%s %s = %s", getType(), getName(), getValue());
     }
 
-    @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof Field)) {
-        return false;
-      }
-
-      Field that = (Field) obj;
-      return Objects.equal(this.type, that.type) &&
-          Objects.equal(this.name, that.name) &&
-          Objects.equal(this.value, that.value);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(type, name, value);
-    }
   }
 
   private static final Pattern VARIABLE_DEFINITION_PATTERN = Pattern.compile(
@@ -100,24 +88,22 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
     public Field apply(String input) {
       Matcher matcher = VARIABLE_DEFINITION_PATTERN.matcher(input);
       if (matcher.matches()) {
-        String type = matcher.group("type");
-        String name = matcher.group("name");
-        String value = matcher.group("value");
-        return new Field(type, name, value);
+        return ImmutableBuildConfigFields.Field.builder()
+            .setType(matcher.group("type"))
+            .setName(matcher.group("name"))
+            .setValue(matcher.group("value"))
+            .build();
       } else {
         throw new HumanReadableException("Not a valid BuildConfig variable declaration: %s", input);
       }
     }
   };
 
-  private static final BuildConfigFields EMPTY = new BuildConfigFields(
+  private static final BuildConfigFields EMPTY = ImmutableBuildConfigFields.of(
       ImmutableMap.<String, Field>of());
 
-  private final ImmutableMap<String, Field> nameToField;
-
-  private BuildConfigFields(ImmutableMap<String, Field> entries) {
-    this.nameToField = entries;
-  }
+  @Value.Parameter
+  protected abstract Map<String, Field> getNameToField();
 
   public static BuildConfigFields fromFieldDeclarations(Iterable<String> declarations) {
     return fromFields(FluentIterable.from(declarations).transform(TRANSFORM));
@@ -135,10 +121,12 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
         .uniqueIndex(new Function<Field, String>() {
           @Override
           public String apply(Field field) {
-            return field.name;
+            return field.getName();
           }
         });
-    return new BuildConfigFields(entries);
+    return ImmutableBuildConfigFields.builder()
+        .putAllNameToField(entries)
+        .build();
   }
 
   /**
@@ -149,13 +137,13 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
   public BuildConfigFields putAll(BuildConfigFields fields) {
 
     ImmutableMap.Builder<String, Field> nameToFieldBuilder = ImmutableMap.builder();
-    nameToFieldBuilder.putAll(fields.nameToField);
-    for (Field field : this.nameToField.values()) {
-      if (!fields.nameToField.containsKey(field.name)) {
-        nameToFieldBuilder.put(field.name, field);
+    nameToFieldBuilder.putAll(fields.getNameToField());
+    for (Field field : this.getNameToField().values()) {
+      if (!fields.getNameToField().containsKey(field.getName())) {
+        nameToFieldBuilder.put(field.getName(), field);
       }
     }
-    return new BuildConfigFields(nameToFieldBuilder.build());
+    return ImmutableBuildConfigFields.of(nameToFieldBuilder.build());
   }
 
   /**
@@ -183,13 +171,15 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
     builder.append("  private BuildConfig() {}\n");
 
     final String prefix = "  public static final ";
-    for (Field field : nameToField.values()) {
-      String type = field.type;
+    for (Field field : getNameToField().values()) {
+      String type = field.getType();
       if ("boolean".equals(type)) {
         // type is a non-numeric primitive.
-        boolean isTrue = "true".equals(field.value);
-        if (!(isTrue || "false".equals(field.value))) {
-          throw new HumanReadableException("expected boolean literal but was: %s", field.value);
+        boolean isTrue = "true".equals(field.getValue());
+        if (!(isTrue || "false".equals(field.getValue()))) {
+          throw new HumanReadableException(
+              "expected boolean literal but was: %s",
+              field.getValue());
         }
         String value;
         if (useConstantExpressions) {
@@ -200,14 +190,14 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
             value = "!" + value;
           }
         }
-        builder.append(prefix + "boolean " + field.name + " = " + value + ";\n");
+        builder.append(prefix + "boolean " + field.getName() + " = " + value + ";\n");
       } else {
         String typeSafeZero = PRIMITIVE_NUMERIC_TYPE_NAMES.contains(type) ? "0" : "null";
-        String defaultValue = field.value;
+        String defaultValue = field.getValue();
         if (!useConstantExpressions) {
           defaultValue = "!Boolean.parseBoolean(null) ? " + defaultValue + " : " + typeSafeZero;
         }
-        builder.append(prefix + type + " " + field.name + " = " + defaultValue + ";\n");
+        builder.append(prefix + type + " " + field.getName() + " = " + defaultValue + ";\n");
       }
     }
 
@@ -221,7 +211,7 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
    */
   @Override
   public Iterator<Field> iterator() {
-    return nameToField.values().iterator();
+    return getNameToField().values().iterator();
   }
 
   /**
@@ -230,21 +220,7 @@ public class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
    */
   @Override
   public String toString() {
-    return Joiner.on(';').join(nameToField.values());
+    return Joiner.on(';').join(getNameToField().values());
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof BuildConfigFields)) {
-      return false;
-    }
-
-    BuildConfigFields that = (BuildConfigFields) obj;
-    return Objects.equal(this.nameToField, that.nameToField);
-  }
-
-  @Override
-  public int hashCode() {
-    return nameToField.hashCode();
-  }
 }

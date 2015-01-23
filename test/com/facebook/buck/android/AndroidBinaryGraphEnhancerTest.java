@@ -48,6 +48,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.rules.coercer.ImmutableBuildConfigFields;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
@@ -263,10 +264,10 @@ public class AndroidBinaryGraphEnhancerTest {
     assertTrue(androidBuildConfig.isUseConstantExpressions());
     assertEquals(
         "IS_EXOPACKAGE defaults to false, but should now be true. DEBUG should still be true.",
-        BuildConfigFields.fromFields(ImmutableList.of(
-            new BuildConfigFields.Field("boolean", "DEBUG", "true"),
-            new BuildConfigFields.Field("boolean", "IS_EXOPACKAGE", "true"),
-            new BuildConfigFields.Field("int", "EXOPACKAGE_FLAGS", "1"))),
+        BuildConfigFields.fromFields(ImmutableList.<BuildConfigFields.Field>of(
+            ImmutableBuildConfigFields.Field.of("boolean", "DEBUG", "true"),
+            ImmutableBuildConfigFields.Field.of("boolean", "IS_EXOPACKAGE", "true"),
+            ImmutableBuildConfigFields.Field.of("int", "EXOPACKAGE_FLAGS", "1"))),
         androidBuildConfig.getBuildConfigFields());
 
     ImmutableSortedSet<BuildRule> finalDeps = result.getFinalDeps();

@@ -49,7 +49,9 @@ public class AppleBundleDestinationTypeCoercerTest {
         basePath,
         subfolderSpec.toString());
 
-    assertEquals(destination, new AppleBundleDestination(subfolderSpec, Optional.<String>absent()));
+    assertEquals(
+        destination,
+        ImmutableAppleBundleDestination.of(subfolderSpec, Optional.<String>absent()));
   }
 
   @Test
@@ -72,6 +74,8 @@ public class AppleBundleDestinationTypeCoercerTest {
         basePath,
         ImmutableList.of(subfolderSpec.toString(), subpath));
 
-    assertEquals(destination, new AppleBundleDestination(subfolderSpec, Optional.of(subpath)));
+    assertEquals(
+        destination,
+        ImmutableAppleBundleDestination.of(subfolderSpec, Optional.of(subpath)));
   }
 }

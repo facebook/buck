@@ -18,12 +18,12 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import java.util.Objects;
-
-import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 /**
  * Simple type representing an iOS or OS X source entry, which can be either:
@@ -34,7 +34,9 @@ import javax.annotation.Nullable;
  *     <li>A "source group" (a group name and one or more AppleSource objects)</li>
  *   </ul>
  */
-public class AppleSource {
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class AppleSource {
   /**
    * The type of source entry this object represents.
    */
@@ -51,48 +53,44 @@ public class AppleSource {
        * A source group (group name and one or more AppleSource objects).
        */
       SOURCE_GROUP
-  };
-
-  private final Type type;
-  @Nullable private final SourcePath sourcePath;
-  @Nullable private final Pair<SourcePath, String> sourcePathWithFlags;
-  @Nullable private final Pair<String, ImmutableList<AppleSource>> sourceGroup;
-
-  private AppleSource(
-      Type type,
-      @Nullable SourcePath sourcePath,
-      @Nullable Pair<SourcePath, String> sourcePathWithFlags,
-      @Nullable Pair<String, ImmutableList<AppleSource>> sourceGroup) {
-    this.type = type;
-    switch (type) {
-      case SOURCE_PATH:
-        Preconditions.checkNotNull(sourcePath);
-        Preconditions.checkArgument(sourcePathWithFlags == null);
-        Preconditions.checkArgument(sourceGroup == null);
-        break;
-      case SOURCE_PATH_WITH_FLAGS:
-        Preconditions.checkArgument(sourcePath == null);
-        Preconditions.checkNotNull(sourcePathWithFlags);
-        Preconditions.checkArgument(sourceGroup == null);
-        break;
-      case SOURCE_GROUP:
-        Preconditions.checkArgument(sourcePath == null);
-        Preconditions.checkArgument(sourcePathWithFlags == null);
-        Preconditions.checkNotNull(sourceGroup);
-        break;
-      default:
-        throw new IllegalArgumentException("Unrecognized type: " + type);
-    }
-    this.sourcePath = sourcePath;
-    this.sourcePathWithFlags = sourcePathWithFlags;
-    this.sourceGroup = sourceGroup;
   }
 
   /**
    * Gets the type of source entry this object represents.
    */
-  public Type getType() {
-    return type;
+  @Value.Parameter
+  public abstract Type getType();
+
+  @Value.Parameter
+  protected abstract Optional<SourcePath> getSourcePathOptional();
+
+  @Value.Parameter
+  protected abstract Optional<Pair<SourcePath, String>> getSourcePathWithFlagsOptional();
+
+  @Value.Parameter
+  protected abstract Optional<Pair<String, ImmutableList<AppleSource>>> getSourceGroupOptional();
+
+  @Value.Check
+  protected void check() {
+    switch (getType()) {
+      case SOURCE_PATH:
+        Preconditions.checkArgument(getSourcePathOptional().isPresent());
+        Preconditions.checkArgument(!getSourcePathWithFlagsOptional().isPresent());
+        Preconditions.checkArgument(!getSourceGroupOptional().isPresent());
+        break;
+      case SOURCE_PATH_WITH_FLAGS:
+        Preconditions.checkArgument(!getSourcePathOptional().isPresent());
+        Preconditions.checkArgument(getSourcePathWithFlagsOptional().isPresent());
+        Preconditions.checkArgument(!getSourceGroupOptional().isPresent());
+        break;
+      case SOURCE_GROUP:
+        Preconditions.checkArgument(!getSourcePathOptional().isPresent());
+        Preconditions.checkArgument(!getSourcePathWithFlagsOptional().isPresent());
+        Preconditions.checkArgument(getSourceGroupOptional().isPresent());
+        break;
+      default:
+        throw new IllegalArgumentException("Unrecognized type: " + getType());
+    }
   }
 
   /**
@@ -100,7 +98,7 @@ public class AppleSource {
    * Otherwise, raises an exception.
    */
   public SourcePath getSourcePath() {
-    return Preconditions.checkNotNull(sourcePath);
+    return getSourcePathOptional().get();
   }
 
   /**
@@ -109,7 +107,7 @@ public class AppleSource {
    * exception.
    */
   public Pair<SourcePath, String> getSourcePathWithFlags() {
-    return Preconditions.checkNotNull(sourcePathWithFlags);
+    return getSourcePathWithFlagsOptional().get();
   }
 
   /**
@@ -117,44 +115,37 @@ public class AppleSource {
    * entry represents. Otherwise, raises an exception.
    */
   public Pair<String, ImmutableList<AppleSource>> getSourceGroup() {
-    return Preconditions.checkNotNull(sourceGroup);
+    return getSourceGroupOptional().get();
   }
 
   /**
    * Creates an {@link AppleSource} given a {@link SourcePath}.
    */
   public static AppleSource ofSourcePath(SourcePath sourcePath) {
-    return new AppleSource(Type.SOURCE_PATH, sourcePath, null, null);
+    return ImmutableAppleSource.builder()
+        .setType(Type.SOURCE_PATH)
+        .setSourcePathOptional(sourcePath)
+        .build();
   }
 
   /**
    * Creates an {@link AppleSource} given a ({@link SourcePath}, flags) pair.
    */
   public static AppleSource ofSourcePathWithFlags(Pair<SourcePath, String> sourcePathWithFlags) {
-    return new AppleSource(Type.SOURCE_PATH_WITH_FLAGS, null, sourcePathWithFlags, null);
+    return ImmutableAppleSource.builder()
+        .setType(Type.SOURCE_PATH_WITH_FLAGS)
+        .setSourcePathWithFlagsOptional(sourcePathWithFlags)
+        .build();
   }
 
   /**
    * Creates an {@link AppleSource} given a (group name, [source1, source2, ...]) pair.
    */
   public static AppleSource ofSourceGroup(Pair<String, ImmutableList<AppleSource>> sourceGroup) {
-    return new AppleSource(Type.SOURCE_GROUP, null, null, sourceGroup);
+    return ImmutableAppleSource.builder()
+        .setType(Type.SOURCE_GROUP)
+        .setSourceGroupOptional(sourceGroup)
+        .build();
   }
 
-  @Override
-  public boolean equals(Object other) {
-    if (other instanceof AppleSource) {
-      AppleSource that = (AppleSource) other;
-      return Objects.equals(this.type, that.type) &&
-          Objects.equals(this.sourcePath, that.sourcePath) &&
-          Objects.equals(this.sourcePathWithFlags, that.sourcePathWithFlags) &&
-          Objects.equals(this.sourceGroup, that.sourceGroup);
-    }
-    return false;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(type, sourcePath, sourcePathWithFlags, sourceGroup);
-  }
 }

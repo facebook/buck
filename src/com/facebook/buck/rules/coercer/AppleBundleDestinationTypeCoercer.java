@@ -47,8 +47,8 @@ public class AppleBundleDestinationTypeCoercer implements TypeCoercer<AppleBundl
 
   @Override
   public Optional<AppleBundleDestination> getOptionalValue() {
-    return Optional.of(
-        new AppleBundleDestination(
+    return Optional.<AppleBundleDestination>of(
+        ImmutableAppleBundleDestination.of(
             AppleBundleDestination.SubfolderSpec.RESOURCES,
             Optional.<String>absent()));
   }
@@ -77,7 +77,7 @@ public class AppleBundleDestinationTypeCoercer implements TypeCoercer<AppleBundl
           filesystem,
           pathRelativeToProjectRoot,
           object);
-      return new AppleBundleDestination(subfolderSpec, Optional.<String>absent());
+      return ImmutableAppleBundleDestination.of(subfolderSpec, Optional.<String>absent());
     }
 
     if (object instanceof List<?>) {
@@ -96,7 +96,7 @@ public class AppleBundleDestinationTypeCoercer implements TypeCoercer<AppleBundl
             filesystem,
             pathRelativeToProjectRoot,
             second);
-        return new AppleBundleDestination(subfolderSpec, Optional.of(subpath));
+        return ImmutableAppleBundleDestination.of(subfolderSpec, Optional.of(subpath));
       }
     }
 
