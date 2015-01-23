@@ -16,182 +16,60 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import org.immutables.value.Value;
+
 import java.io.File;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Value type passed to {@link ProcessExecutor} to launch a process.
  */
-public class ProcessExecutorParams {
-  private final ImmutableList<String> command;
-  private final Optional<File> directory;
-  private final Optional<Map<String, String>> environment;
-  private final Optional<ProcessBuilder.Redirect> redirectInput;
-  private final Optional<ProcessBuilder.Redirect> redirectOutput;
-  private final Optional<ProcessBuilder.Redirect> redirectError;
-
-  private ProcessExecutorParams(
-      ImmutableList<String> command,
-      Optional<File> directory,
-      Optional<Map<String, String>> environment,
-      Optional<ProcessBuilder.Redirect> redirectInput,
-      Optional<ProcessBuilder.Redirect> redirectOutput,
-      Optional<ProcessBuilder.Redirect> redirectError) {
-    this.command = command;
-    Preconditions.checkArgument(!command.isEmpty());
-    this.directory = directory;
-    this.environment = environment;
-    this.redirectInput = redirectInput;
-    this.redirectOutput = redirectOutput;
-    this.redirectError = redirectError;
-  }
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class ProcessExecutorParams {
 
   /**
    * The command and arguments to launch.
    */
-  public ImmutableList<String> getCommand() {
-    return command;
-  }
+  @Value.Parameter
+  public abstract ImmutableList<String> getCommand();
 
   /**
    * If present, the current working directory for the launched process.
    */
-  public Optional<File> getDirectory() {
-    return directory;
-  }
+  @Value.Parameter
+  public abstract Optional<File> getDirectory();
 
   /**
    * If present, the map of environment variables used for the launched
    * process. Otherwise, inherits the current process's environment.
    */
-  public Optional<Map<String, String>> getEnvironment() {
-    return environment;
-  }
+  @Value.Parameter
+  public abstract Optional<Map<String, String>> getEnvironment();
 
   /**
    * If present, redirects stdout for the process to this location.
    * Otherwise, opens a pipe for stdout.
    */
-  public Optional<ProcessBuilder.Redirect> getRedirectInput() {
-    return redirectInput;
-  }
+  @Value.Parameter
+  public abstract Optional<ProcessBuilder.Redirect> getRedirectInput();
 
   /**
    * If present, redirects stdin for the process to this location.
    * Otherwise, opens a pipe for stdin.
    */
-  public Optional<ProcessBuilder.Redirect> getRedirectOutput() {
-    return redirectOutput;
-  }
+  @Value.Parameter
+  public abstract Optional<ProcessBuilder.Redirect> getRedirectOutput();
 
   /**
    * If present, redirects stderr for the process to this location.
    * Otherwise, opens a pipe for stderr.
    */
-  public Optional<ProcessBuilder.Redirect> getRedirectError() {
-    return redirectError;
-  }
+  @Value.Parameter
+  public abstract Optional<ProcessBuilder.Redirect> getRedirectError();
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(
-        command,
-        directory,
-        environment,
-        redirectInput,
-        redirectOutput,
-        redirectError);
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    if (this == other) {
-      return true;
-    }
-
-    if (!(other instanceof ProcessExecutorParams)) {
-      return false;
-    }
-
-    ProcessExecutorParams that = (ProcessExecutorParams) other;
-
-    return
-      Objects.equals(command, that.command) &&
-      Objects.equals(directory, that.directory) &&
-      Objects.equals(environment, that.environment) &&
-      Objects.equals(redirectInput, that.redirectInput) &&
-      Objects.equals(redirectOutput, that.redirectOutput) &&
-      Objects.equals(redirectError, that.redirectError);
-  }
-
-  @Override
-  public String toString() {
-    return new StringBuilder("ProcessExecutorParams(")
-        .append(command)
-        .append(" {cwd = ").append(directory).append("}, ")
-        .append(environment)
-        .toString();
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  /**
-   * Builds {@link ProcessExecutorParams} instances.
-   */
-  public static class Builder {
-    private ImmutableList<String> command = ImmutableList.of();
-    private Optional<File> directory = Optional.absent();
-    private Optional<Map<String, String>> environment = Optional.absent();
-    private Optional<ProcessBuilder.Redirect> redirectInput = Optional.absent();
-    private Optional<ProcessBuilder.Redirect> redirectOutput = Optional.absent();
-    private Optional<ProcessBuilder.Redirect> redirectError = Optional.absent();
-
-    public Builder setCommand(List<String> command) {
-      this.command = ImmutableList.copyOf(command);
-      return this;
-    }
-
-    public Builder setDirectory(File directory) {
-      this.directory = Optional.of(directory);
-      return this;
-    }
-
-    public Builder setEnvironment(Map<String, String> environment) {
-      this.environment = Optional.of(environment);
-      return this;
-    }
-
-    public Builder setRedirectInput(ProcessBuilder.Redirect redirectInput) {
-      this.redirectInput = Optional.of(redirectInput);
-      return this;
-    }
-
-    public Builder setRedirectOutput(ProcessBuilder.Redirect redirectOutput) {
-      this.redirectOutput = Optional.of(redirectOutput);
-      return this;
-    }
-
-    public Builder setRedirectError(ProcessBuilder.Redirect redirectError) {
-      this.redirectError = Optional.of(redirectError);
-      return this;
-    }
-
-    public ProcessExecutorParams build() {
-      return new ProcessExecutorParams(
-          command,
-          directory,
-          environment,
-          redirectInput,
-          redirectOutput,
-          redirectError);
-    }
-  }
 }

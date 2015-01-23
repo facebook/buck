@@ -39,6 +39,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.ImmutableProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
@@ -46,7 +47,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -331,8 +331,8 @@ public class KnownBuildRuleTypesTest {
     Map<ProcessExecutorParams, FakeProcess> processMap = new HashMap<>();
 
       FakeProcess process = new FakeProcess(0, "", version);
-      ProcessExecutorParams params = ProcessExecutorParams.builder()
-          .setCommand(Lists.newArrayList(javac, "-version"))
+      ProcessExecutorParams params = ImmutableProcessExecutorParams.builder()
+          .setCommand(ImmutableList.of(javac, "-version"))
           .build();
       processMap.put(params, process);
 
@@ -346,8 +346,8 @@ public class KnownBuildRuleTypesTest {
       String xcodeSelectPath) {
 
     FakeProcess xcodeSelectOutputProcess = new FakeProcess(0, xcodeSelectPath, "");
-    ProcessExecutorParams xcodeSelectParams = ProcessExecutorParams.builder()
-        .setCommand(Lists.newArrayList("xcode-select", "--print-path"))
+    ProcessExecutorParams xcodeSelectParams = ImmutableProcessExecutorParams.builder()
+        .setCommand(ImmutableList.of("xcode-select", "--print-path"))
         .build();
     processMap.put(xcodeSelectParams, xcodeSelectOutputProcess);
   }

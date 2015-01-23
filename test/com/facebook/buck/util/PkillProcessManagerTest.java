@@ -31,7 +31,7 @@ public class PkillProcessManagerTest {
   @Test
   public void processIsRunningIfPkill0Succeeds() throws IOException, InterruptedException {
     ProcessExecutorParams pkill0Params =
-        ProcessExecutorParams.builder()
+        ImmutableProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("pkill", "-0", "processName"))
             .build();
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
@@ -47,7 +47,7 @@ public class PkillProcessManagerTest {
   @Test
   public void processIsNotRunningIfPkill0Fails() throws IOException, InterruptedException {
     ProcessExecutorParams pkill0Params =
-        ProcessExecutorParams.builder()
+        ImmutableProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("pkill", "-0", "processName"))
             .build();
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
@@ -64,7 +64,7 @@ public class PkillProcessManagerTest {
   public void isProcessRunningThrowsOnUnexpectedExitCode()
       throws IOException, InterruptedException {
     ProcessExecutorParams pkill0Params =
-        ProcessExecutorParams.builder()
+        ImmutableProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("pkill", "-0", "processName"))
             .build();
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
@@ -78,7 +78,7 @@ public class PkillProcessManagerTest {
   @Test
   public void killProcessLaunchesProcessWithSuccess() throws IOException, InterruptedException {
     ProcessExecutorParams pkillParams =
-        ProcessExecutorParams.builder()
+        ImmutableProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("pkill", "processName"))
             .build();
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
@@ -93,7 +93,7 @@ public class PkillProcessManagerTest {
   @Test
   public void killProcessLaunchesProcessWithFailure() throws IOException, InterruptedException {
     ProcessExecutorParams pkillParams =
-        ProcessExecutorParams.builder()
+        ImmutableProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("pkill", "processName"))
             .build();
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
@@ -109,7 +109,7 @@ public class PkillProcessManagerTest {
   public void killProcessThrowsWithUnexpectedExitCode()
       throws IOException, InterruptedException {
     ProcessExecutorParams pkillParams =
-        ProcessExecutorParams.builder()
+        ImmutableProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("pkill", "processName"))
             .build();
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(

@@ -21,6 +21,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.ImmutableProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Option;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -95,7 +96,7 @@ public abstract class ShellStep implements Step {
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
     // Kick off a Process in which this ShellCommand will be run.
-    ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
+    ImmutableProcessExecutorParams.Builder builder = ImmutableProcessExecutorParams.builder();
 
     builder.setCommand(getShellCommand(context));
     Map<String, String> environment = Maps.newHashMap();

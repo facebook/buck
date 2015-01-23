@@ -272,6 +272,7 @@
         <include name="com/facebook/buck/util/DirectoryTraverser.java" />
         <include name="com/facebook/buck/util/DirectoryTraversal.java" />
         <include name="com/facebook/buck/util/DirtyPrintStreamDecorator.java" />
+        <include name="com/facebook/buck/util/ImmutableProcessExecutorParams.java" />
         <include name="com/facebook/buck/util/InputStreamConsumer.java" />
         <include name="com/facebook/buck/util/MoreFiles.java" />
         <include name="com/facebook/buck/util/MorePaths.java" />
@@ -290,6 +291,9 @@
         <!-- //src/com/facebook/buck/util/environment:platform -->
         <include name="com/facebook/buck/util/environment/Platform.java" />
 
+        <!-- //src/com/facebook/buck/util/immutables:immutables -->
+        <include name="com/facebook/buck/util/immutables/BuckStyleImmutable.java" />
+
         <!-- //src/com/facebook/buck/zip:stream -->
         <include name="com/facebook/buck/zip/AppendingZipOutputStream.java" />
         <include name="com/facebook/buck/zip/ByteIo.java" />
@@ -302,6 +306,8 @@
 
         <!-- //src/com/facebook/buck/timing:timing -->
         <include name="com/facebook/buck/timing/*.java" />
+
+        <src path="${immutables.gensrc.dir}" />
       </javac-params>
     </ecj>
 

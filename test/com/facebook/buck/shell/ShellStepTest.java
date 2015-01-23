@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.ImmutableProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Charsets;
@@ -87,7 +88,7 @@ public class ShellStepTest {
   }
 
   private static ProcessExecutorParams createParams() {
-    return ProcessExecutorParams
+    return ImmutableProcessExecutorParams
         .builder()
         .setCommand(ImmutableList.of("test"))
         .build();

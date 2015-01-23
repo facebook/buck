@@ -42,7 +42,7 @@ IO_SRCS = [
   'Threads.java',
   'Verbosity.java',
 ]
-java_library(
+java_immutables_library(
   name = 'io',
   srcs = IO_SRCS,
   deps = [

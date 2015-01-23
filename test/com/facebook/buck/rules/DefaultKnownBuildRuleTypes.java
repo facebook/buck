@@ -24,6 +24,7 @@ import com.facebook.buck.python.ImmutablePythonVersion;
 import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.ImmutableProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +39,7 @@ public class DefaultKnownBuildRuleTypes {
   }
 
   private static final ProcessExecutorParams XCODE_SELECT_PARAMS =
-      ProcessExecutorParams.builder()
+      ImmutableProcessExecutorParams.builder()
           .setCommand(ImmutableList.of("xcode-select", "--print-path"))
           .build();
   private static final FakeProcess XCODE_SELECT_PROCESS = new FakeProcess(0, "/path/to/xcode", "");
