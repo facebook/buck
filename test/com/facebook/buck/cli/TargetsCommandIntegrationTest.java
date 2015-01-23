@@ -127,7 +127,7 @@ public class TargetsCommandIntegrationTest {
         "--show-target-hash",
         "//:test");
     result.assertSuccess();
-    assertEquals("//:test 1ee8b3a59144222d0bb9aa886aef036950b93e6a\n", result.getStdout());
+    assertEquals("//:test 0bcaa2af6e9ddf3b46ec09b24e1a8c347a69299c\n", result.getStdout());
   }
 
   @Test

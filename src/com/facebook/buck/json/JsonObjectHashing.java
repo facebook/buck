@@ -17,10 +17,14 @@
 package com.facebook.buck.json;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
 
 import java.util.Collection;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 /**
  * Hashes parsed JSON objects as returned by {@link RawParser}.
@@ -47,14 +51,37 @@ public class JsonObjectHashing {
    * {@link RawParser#parseFromReader(Reader)}, updates the Hasher
    * with the contents of the JSON object.
    */
-  public static void hashJsonObject(Hasher hasher, Object obj) {
+  public static void hashJsonObject(Hasher hasher, @Nullable Object obj) {
     if (obj instanceof Map) {
       Map<?, ?> map = (Map<?, ?>) obj;
-      hasher.putInt(HashedObjectType.MAP.ordinal());
-      hasher.putInt(map.size());
+      ImmutableSortedMap.Builder<String, Optional<Object>> sortedMapBuilder =
+          ImmutableSortedMap.naturalOrder();
       for (Map.Entry<?, ?> entry : map.entrySet()) {
+        Object key = entry.getKey();
+        if (!(key instanceof String)) {
+          throw new RuntimeException(
+              String.format(
+                  "Keys of JSON maps are expected to be strings. Actual type: %s, contents: %s",
+                  key.getClass().getName(),
+                  key));
+        }
+        Object value = entry.getValue();
+        if (value != null) {
+          sortedMapBuilder.put((String) key, Optional.of(value));
+        } else {
+          sortedMapBuilder.put((String) key, Optional.absent());
+        }
+      }
+      ImmutableSortedMap<String, Optional<Object>> sortedMap = sortedMapBuilder.build();
+      hasher.putInt(HashedObjectType.MAP.ordinal());
+      hasher.putInt(sortedMap.size());
+      for (Map.Entry<String, Optional<Object>> entry : sortedMap.entrySet()) {
         hashJsonObject(hasher, entry.getKey());
-        hashJsonObject(hasher, entry.getValue());
+        if (entry.getValue().isPresent()) {
+          hashJsonObject(hasher, entry.getValue().get());
+        } else {
+          hashJsonObject(hasher, null);
+        }
       }
     } else if (obj instanceof Collection) {
       Collection<?> collection = (Collection<?>) obj;

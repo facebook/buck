@@ -16,24 +16,25 @@
 
 package com.facebook.buck.json;
 
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collection;
 import java.util.Map;
-
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.nullValue;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import org.junit.Before;
-import org.junit.Test;
 
 public class JsonObjectHashingTest {
   private Hasher hasher;
@@ -175,6 +176,24 @@ public class JsonObjectHashingTest {
     Float val = 123.456f;
     JsonObjectHashing.hashJsonObject(hasher, val);
     assertEquals("fe1a9e33f321868d26f299524c79bf8753ab100b", hasher.hash().toString());
+  }
+
+  @Test
+  public void mapOrderDoesNotChangeHash() {
+    Map<?, ?> map1 = ImmutableMap.of(
+        "firstKey", new Integer(24),
+        "secondKey", new Float(13.5));
+    Map<?, ?> map2 = ImmutableMap.of(
+        "secondKey", new Float(13.5),
+        "firstKey", new Integer(24));
+
+    Hasher hasher1 = Hashing.sha1().newHasher();
+    Hasher hasher2 = Hashing.sha1().newHasher();
+
+    JsonObjectHashing.hashJsonObject(hasher1, map1);
+    JsonObjectHashing.hashJsonObject(hasher2, map2);
+
+    assertEquals(hasher1.hash().toString(), hasher2.hash().toString());
   }
 
 }
