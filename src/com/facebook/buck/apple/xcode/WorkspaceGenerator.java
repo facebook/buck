@@ -146,7 +146,7 @@ public class WorkspaceGenerator {
         children = group.getChildren();
       }
     }
-    children.put(path.getFileName().toString(), new WorkspaceFileRef(path));
+    children.put(path.toString(), new WorkspaceFileRef(path));
   }
 
   private void walkNodeTree(FileVisitor<Map.Entry<String, WorkspaceNode>> visitor)

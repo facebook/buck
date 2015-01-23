@@ -1,1 +1,1 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><Workspace version="1.0"><FileRef location="container:../Libraries/Dep1.xcodeproj"/><FileRef location="container:../Libraries/Dep2.xcodeproj"/><FileRef location="container:TestApp1.xcodeproj"/></Workspace>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><Workspace version="1.0"><FileRef location="container:TestApp1.xcodeproj"/><FileRef location="container:../Libraries/Dep1.xcodeproj"/><FileRef location="container:../Libraries/Dep2.xcodeproj"/></Workspace>
