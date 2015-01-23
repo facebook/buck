@@ -36,14 +36,11 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
       Object object) throws CoerceFailedException {
     if (object instanceof String) {
       String path = (String) object;
-      final Path normalizedPath;
 
-      // Normalize the path.
-      try {
-        normalizedPath = pathRelativeToProjectRoot.resolve(path).normalize();
-      } catch (RuntimeException e) {
-        throw new CoerceFailedException("invalid path", e);
+      if (path.isEmpty()) {
+        throw new CoerceFailedException("invalid path");
       }
+      final Path normalizedPath = pathRelativeToProjectRoot.resolve(path).normalize();
 
       // Verify that the path exists
       try {
