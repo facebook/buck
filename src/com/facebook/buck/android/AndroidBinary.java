@@ -794,6 +794,8 @@ public class AndroidBinary extends AbstractBuildRule implements
           dexSplitMode,
           dexSplitMode.getPrimaryDexScenarioFile().transform(getResolver().getPathFunction()),
           dexSplitMode.getPrimaryDexClassesFile().transform(getResolver().getPathFunction()),
+          dexSplitMode.getSecondaryDexHeadClassesFile().transform(getResolver().getPathFunction()),
+          dexSplitMode.getSecondaryDexTailClassesFile().transform(getResolver().getPathFunction()),
           zipSplitReportDir);
       steps.add(splitZipCommand);
 

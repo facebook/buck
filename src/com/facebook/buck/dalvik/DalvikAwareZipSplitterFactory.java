@@ -18,6 +18,7 @@ package com.facebook.buck.dalvik;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -43,6 +44,8 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
       File outSecondaryDir,
       String secondaryPattern,
       Predicate<String> requiredInPrimaryZip,
+      ImmutableSet<String> secondaryHeadSet,
+      ImmutableSet<String> secondaryTailSet,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
@@ -55,6 +58,8 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
         linearAllocLimit,
         requiredInPrimaryZip,
         wantedInPrimaryZip,
+        secondaryHeadSet,
+        secondaryTailSet,
         dexSplitStrategy,
         canaryStrategy,
         reportDir);

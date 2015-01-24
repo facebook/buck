@@ -53,7 +53,7 @@ public class DefaultZipSplitter implements ZipSplitter {
 
   /**
    * @see ZipSplitterFactory#newInstance(ProjectFilesystem, Set, File, File, String, Predicate,
-   *     com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy,
+   *     ImmutableSet, ImmutableSet, com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy,
    *     com.facebook.buck.dalvik.ZipSplitter.CanaryStrategy, File)
    */
   private DefaultZipSplitter(

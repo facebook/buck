@@ -230,7 +230,9 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         args.primaryDexPatterns.or(ImmutableList.<String>of()),
         args.primaryDexClassesFile,
         args.primaryDexScenarioFile,
-        args.primaryDexScenarioOverflowAllowed.or(false));
+        args.primaryDexScenarioOverflowAllowed.or(false),
+        args.secondaryDexHeadClassesFile,
+        args.secondaryDexTailClassesFile);
   }
 
   private PackageType getPackageType(Arg args) {
@@ -283,6 +285,8 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     public Optional<SourcePath> primaryDexClassesFile;
     public Optional<SourcePath> primaryDexScenarioFile;
     public Optional<Boolean> primaryDexScenarioOverflowAllowed;
+    public Optional<SourcePath> secondaryDexHeadClassesFile;
+    public Optional<SourcePath> secondaryDexTailClassesFile;
     public Optional<Long> linearAllocHardLimit;
     public Optional<List<String>> resourceFilter;
     public Optional<ImmutableSet<String>> locales;

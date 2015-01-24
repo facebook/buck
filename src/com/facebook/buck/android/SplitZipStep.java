@@ -123,6 +123,8 @@ public class SplitZipStep implements Step {
 
   private final Optional<Path> primaryDexScenarioFile;
   private final Optional<Path> primaryDexClassesFile;
+  private final Optional<Path> secondaryDexHeadClassesFile;
+  private final Optional<Path> secondaryDexTailClassesFile;
 
   @Nullable
   private List<File> outputFiles;
@@ -152,6 +154,8 @@ public class SplitZipStep implements Step {
       DexSplitMode dexSplitMode,
       Optional<Path> primaryDexScenarioFile,
       Optional<Path> primaryDexClassesFile,
+      Optional<Path> secondaryDexHeadClassesFile,
+      Optional<Path> secondaryDexTailClassesFile,
       Path pathToReportDir) {
     this.inputPathsToSplit = ImmutableSet.copyOf(inputPathsToSplit);
     this.secondaryJarMetaPath = secondaryJarMetaPath;
@@ -163,6 +167,8 @@ public class SplitZipStep implements Step {
     this.dexSplitMode = dexSplitMode;
     this.primaryDexScenarioFile = primaryDexScenarioFile;
     this.primaryDexClassesFile = primaryDexClassesFile;
+    this.secondaryDexHeadClassesFile = secondaryDexHeadClassesFile;
+    this.secondaryDexTailClassesFile = secondaryDexTailClassesFile;
     this.pathToReportDir = pathToReportDir;
 
     Preconditions.checkArgument(
@@ -184,6 +190,8 @@ public class SplitZipStep implements Step {
           createRequiredInPrimaryZipPredicate(context, translatorFactory, classes);
       final ImmutableSet<String> wantedInPrimaryZip =
           getWantedPrimaryDexEntries(context, translatorFactory, classes);
+      final ImmutableSet<String> secondaryHeadSet = getSecondaryHeadSet(context, translatorFactory);
+      final ImmutableSet<String> secondaryTailSet = getSecondaryTailSet(context, translatorFactory);
 
       ZipSplitterFactory zipSplitterFactory;
       if (dexSplitMode.useLinearAllocSplitDex()) {
@@ -204,6 +212,8 @@ public class SplitZipStep implements Step {
           secondaryJarDir.toFile(),
           secondaryJarPattern,
           requiredInPrimaryZip,
+          secondaryHeadSet,
+          secondaryTailSet,
           dexSplitMode.getDexSplitStrategy(),
           ZipSplitter.CanaryStrategy.INCLUDE_CANARIES,
           projectFilesystem.getFileForRelativePath(pathToReportDir))
@@ -285,6 +295,53 @@ public class SplitZipStep implements Step {
 
     return ImmutableSet.copyOf(builder.build());
   }
+  /**
+   * Construct a {@link Set} of internal class names that must go into the beginning of
+   * the secondary dexes.
+   * <p/>
+   * @return ImmutableSet of class internal names.
+   */
+  private ImmutableSet<String> getSecondaryHeadSet(
+      ExecutionContext context,
+      ProguardTranslatorFactory translatorFactory)
+      throws IOException {
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+
+    if (secondaryDexHeadClassesFile.isPresent()) {
+      Iterable<String> classes = FluentIterable
+          .from(context.getProjectFilesystem().readLines(secondaryDexHeadClassesFile.get()))
+          .transform(STRING_TRIM)
+          .filter(IS_NEITHER_EMPTY_NOR_COMMENT)
+          .transform(translatorFactory.createObfuscationFunction());
+      builder.addAll(classes);
+    }
+
+    return ImmutableSet.copyOf(builder.build());
+  }
+  /**
+   * Construct a {@link Set} of internal class names that must go into the beginning of
+   * the secondary dexes.
+   * <p/>
+   * @return ImmutableSet of class internal names.
+   */
+  private ImmutableSet<String> getSecondaryTailSet(
+      ExecutionContext context,
+      ProguardTranslatorFactory translatorFactory)
+      throws IOException {
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+
+    if (secondaryDexTailClassesFile.isPresent()) {
+      Iterable<String> classes = FluentIterable
+          .from(context.getProjectFilesystem().readLines(secondaryDexTailClassesFile.get()))
+          .transform(STRING_TRIM)
+          .filter(IS_NEITHER_EMPTY_NOR_COMMENT)
+          .transform(translatorFactory.createObfuscationFunction());
+      builder.addAll(classes);
+    }
+
+    return ImmutableSet.copyOf(builder.build());
+  }
+
 
   /**
    * Construct a {@link Set} of zip file entry names that should go into the primary dex to

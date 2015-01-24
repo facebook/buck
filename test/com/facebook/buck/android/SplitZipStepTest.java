@@ -116,9 +116,13 @@ public class SplitZipStepTest {
             /* primaryDexPatterns */ ImmutableSet.of("List"),
             Optional.<SourcePath>of(new TestSourcePath("the/manifest.txt")),
             /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
-            /* isPrimaryDexScenarioOverflowAllowed */ false),
+            /* isPrimaryDexScenarioOverflowAllowed */ false,
+            /* secondaryDexHeadClassesFile */ Optional.<SourcePath>absent(),
+            /* secondaryDexTailClassesFile */ Optional.<SourcePath>absent()),
         Optional.<Path>absent(),
         Optional.of(Paths.get("the/manifest.txt")),
+        Optional.<Path>absent(),
+        Optional.<Path>absent(),
         /* pathToReportDir */ Paths.get(""));
     List<String> linesInManifestFile = ImmutableList.of(
         "com/google/common/collect/ImmutableSortedSet",
@@ -187,9 +191,13 @@ public class SplitZipStepTest {
             /* primaryDexPatterns */ ImmutableSet.of("/primary/", "x/"),
             Optional.<SourcePath>of(new TestSourcePath("the/manifest.txt")),
             /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
-            /* isPrimaryDexScenarioOverflowAllowed */ false),
+            /* isPrimaryDexScenarioOverflowAllowed */ false,
+            /* secondaryDexHeadClassesFile */ Optional.<SourcePath>absent(),
+            /* secondaryDexTailClassesFile */ Optional.<SourcePath>absent()),
         Optional.<Path>absent(),
         Optional.of(Paths.get("the/manifest.txt")),
+        Optional.<Path>absent(),
+        Optional.<Path>absent(),
         /* pathToReportDir */ Paths.get(""));
     List<String> linesInMappingFile = ImmutableList.of(
         "foo.bar.MappedPrimary -> foo.bar.a:",
@@ -272,7 +280,11 @@ public class SplitZipStepTest {
             /* primaryDexPatterns */ ImmutableSet.of("primary"),
             /* primaryDexClassesFile */ Optional.<SourcePath>absent(),
             /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
-            /* isPrimaryDexScenarioOverflowAllowed */ false),
+            /* isPrimaryDexScenarioOverflowAllowed */ false,
+            /* secondaryDexHeadClassesFile */ Optional.<SourcePath>absent(),
+            /* secondaryDexTailClassesFile */ Optional.<SourcePath>absent()),
+        Optional.<Path>absent(),
+        Optional.<Path>absent(),
         Optional.<Path>absent(),
         Optional.<Path>absent(),
         /* pathToReportDir */ Paths.get(""));

@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -73,6 +74,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   private final long linearAllocLimit;
   private final DalvikStatsCache dalvikStatsCache;
   private final DexSplitStrategy dexSplitStrategy;
+  private final ImmutableSet<String> secondaryHeadSet;
+  private final ImmutableSet<String> secondaryTailSet;
 
   private final MySecondaryDexHelper secondaryDexWriter;
 
@@ -81,7 +84,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
 
   /**
    * @see ZipSplitterFactory#newInstance(ProjectFilesystem, Set, File, File, String, Predicate,
-   *     com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy,
+   *     ImmutableSet, ImmutableSet, com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy,
    *     com.facebook.buck.dalvik.ZipSplitter.CanaryStrategy, File)
    */
   private DalvikAwareZipSplitter(
@@ -93,6 +96,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       long linearAllocLimit,
       Predicate<String> requiredInPrimaryZip,
       Set<String> wantedInPrimaryZip,
+      ImmutableSet<String> secondaryHeadSet,
+      ImmutableSet<String> secondaryTailSet,
       DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
@@ -106,6 +111,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         new MySecondaryDexHelper(outSecondaryDir, secondaryPattern, canaryStrategy);
     this.requiredInPrimaryZip = requiredInPrimaryZip;
     this.wantedInPrimaryZip = ImmutableSet.copyOf(wantedInPrimaryZip);
+    this.secondaryHeadSet = secondaryHeadSet;
+    this.secondaryTailSet = secondaryTailSet;
     this.reportDir = reportDir;
     this.dexSplitStrategy = dexSplitStrategy;
     this.linearAllocLimit = linearAllocLimit;
@@ -121,6 +128,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       long linearAllocLimit,
       Predicate<String> requiredInPrimaryZip,
       Set<String> wantedInPrimaryZip,
+      ImmutableSet<String> secondaryHeadSet,
+      ImmutableSet<String> secondaryTailSet,
       DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
       File reportDir) {
@@ -133,6 +142,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         linearAllocLimit,
         requiredInPrimaryZip,
         wantedInPrimaryZip,
+        secondaryHeadSet,
+        secondaryTailSet,
         dexSplitStrategy,
         canaryStrategy,
         reportDir);
@@ -141,6 +152,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   @Override
   public List<File> execute() throws IOException {
     ClasspathTraverser classpathTraverser = new DefaultClasspathTraverser();
+    final Set<String> secondaryTail = new HashSet<String>();
 
     // Start out by writing the primary zip and recording which entries were added to it.
     primaryOut = newZipOutput(outPrimary);
@@ -157,8 +169,12 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         Preconditions.checkNotNull(primaryOut);
         if (requiredInPrimaryZip.apply(relativePath)) {
           primaryOut.putEntry(entry);
-        } else if (wantedInPrimaryZip.contains(relativePath)) {
+        } else if (wantedInPrimaryZip.contains(relativePath) ||
+                   (secondaryHeadSet != null && secondaryHeadSet.contains(relativePath))) {
           entriesBuilder.put(relativePath, new BufferedFileLike(entry));
+        } else if (secondaryTailSet != null && secondaryTailSet.contains(relativePath)) {
+          entriesBuilder.put(relativePath, new BufferedFileLike(entry));
+          secondaryTail.add(relativePath);
         }
       }
     });
@@ -169,6 +185,15 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       FileLike entry = entries.get(wanted);
       if ((entry != null) && !primaryOut.containsEntry(entry) && primaryOut.canPutEntry(entry)) {
         primaryOut.putEntry(entry);
+      }
+    }
+
+    if (secondaryHeadSet != null) {
+      for (String head : secondaryHeadSet) {
+        FileLike headEntry = entries.get(head);
+        if ((headEntry != null) && !primaryOut.containsEntry(headEntry)) {
+          secondaryDexWriter.getOutputToWriteTo(headEntry).putEntry(headEntry);
+        }
       }
     }
 
@@ -188,11 +213,26 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
             primaryOut.canPutEntry(entry)) {
           primaryOut.putEntry(entry);
         } else {
+          String relativePath = entry.getRelativePath();
+          if (secondaryHeadSet != null && secondaryHeadSet.contains(relativePath)) {
+            return;
+          }
+          if (secondaryTail.contains(relativePath)) {
+            return;
+          }
           secondaryDexWriter.getOutputToWriteTo(entry).putEntry(entry);
         }
       }
     });
-
+    if (secondaryTailSet != null) {
+      for (String tail : secondaryTailSet) {
+        FileLike tailEntry = entries.get(tail);
+        if ((tailEntry != null) && !primaryOut.containsEntry(tailEntry) &&
+            secondaryTail.contains(tail)) {
+          secondaryDexWriter.getOutputToWriteTo(tailEntry).putEntry(tailEntry);
+        }
+      }
+    }
     primaryOut.close();
     secondaryDexWriter.close();
     return secondaryDexWriter.getFiles();
