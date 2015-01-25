@@ -20,7 +20,7 @@ before_install:
   - ./scripts/travisci_install_android_sdk.sh > /dev/null
   # Download the Android NDK and setup the environment.
   - wget https://dl.google.com/android/ndk/android-ndk-r9d-linux-x86_64.tar.bz2
-  - tar xf android-ndk-r9-linux-x86_64.tar.bz2
+  - tar xf android-ndk-r9d-linux-x86_64.tar.bz2
   - export ANDROID_NDK=`pwd`/android-ndk-r9d
 script:
   # Use Buck to run the tests first because its output is more
