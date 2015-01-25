@@ -18,13 +18,10 @@ before_install:
   - export PATH=${PATH}:${ANDROID_HOME}/build-tools
   # Install the sdk bits we need.
   - ./scripts/travisci_install_android_sdk.sh > /dev/null
-  # Download the Android ndk and unzip.
-  - wget http://dl.google.com/android/ndk/android-ndk-r9-linux-x86_64.tar.bz2
+  # Download the Android NDK and setup the environment.
+  - wget https://dl.google.com/android/ndk/android-ndk-r9d-linux-x86_64.tar.bz2
   - tar xf android-ndk-r9-linux-x86_64.tar.bz2
-  - mv android-ndk-r9 android-ndk-linux
-  # Set up the ndk environment.
-  - export ANDROID_NDK=`pwd`/android-ndk-linux
-  - export PATH=${ANDROID_NDK}:${PATH}
+  - export ANDROID_NDK=`pwd`/android-ndk-r9d
 script:
   # Use Buck to run the tests first because its output is more
   # conducive to diagnosing failed tests than Ant's is.
