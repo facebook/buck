@@ -94,15 +94,14 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
 
   @VisibleForTesting
   int printJsonInputs(TargetGraph graph) throws IOException {
-    final Multimap<String, String> targetInputs = TreeMultimap.create();
+    final Multimap<String, Path> targetInputs = TreeMultimap.create();
 
     new AbstractBottomUpTraversal<TargetNode<?>, Void>(graph) {
 
       @Override
       public void visit(TargetNode<?> node) {
         for (Path input : node.getInputs()) {
-          // TODO(user) remove `toString` once Jackson supports serializing Path instances
-          targetInputs.put(node.getBuildTarget().getFullyQualifiedName(), input.toString());
+          targetInputs.put(node.getBuildTarget().getFullyQualifiedName(), input);
         }
       }
 

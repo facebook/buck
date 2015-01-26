@@ -38,6 +38,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk7.Jdk7Module;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -59,6 +60,8 @@ public class AuditInputCommandTest {
     Repository repository = new TestRepositoryBuilder().build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new Jdk7Module());
 
     auditInputCommand = new AuditInputCommand(new CommandRunnerParams(
         console,
@@ -72,7 +75,7 @@ public class AuditInputCommandTest {
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
-        new ObjectMapper(),
+        objectMapper,
         FakeFileHashCache.EMPTY_CACHE));
   }
 
