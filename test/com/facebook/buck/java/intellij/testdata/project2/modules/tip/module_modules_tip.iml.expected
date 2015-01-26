@@ -38,7 +38,7 @@
       <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" scope="TEST" name="__libs:generated_jar" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="__libs_generated_jar" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="libs_junit_jar" level="project" />
     <orderEntry type="library" exported="" name="libs_guava_jar" level="project" />
     <orderEntry type="library" exported="" name="libs_jsr305_jar" level="project" />
