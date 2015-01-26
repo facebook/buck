@@ -148,8 +148,9 @@ public class WorkspaceAndProjectGenerator {
     if (workspaceTargetNode.getConstructorArg().srcTarget.isPresent()) {
       orderedTargetNodes = AppleBuildRules.getSchemeBuildableTargetNodes(
           projectGraph,
-          projectGraph.get(
-              workspaceTargetNode.getConstructorArg().srcTarget.get().getBuildTarget()));
+          Preconditions.checkNotNull(
+              projectGraph.get(
+                  workspaceTargetNode.getConstructorArg().srcTarget.get().getBuildTarget())));
     } else {
       orderedTargetNodes = ImmutableSet.of();
     }

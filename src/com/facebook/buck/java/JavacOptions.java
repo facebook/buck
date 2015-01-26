@@ -209,7 +209,9 @@ public class JavacOptions {
   public static class Builder {
     private Optional<Path> javacPath = Optional.<Path>absent();
     private Optional<Path> javacJarPath = Optional.<Path>absent();
+    @Nullable
     private String sourceLevel;
+    @Nullable
     private String targetLevel;
     private ImmutableList<String> extraArguments = ImmutableList.of();
     private boolean debug = true;
@@ -217,7 +219,7 @@ public class JavacOptions {
     private Optional<String> bootclasspath = Optional.absent();
     private AnnotationProcessingParams annotationProcessingParams =
         AnnotationProcessingParams.EMPTY;
-    private ImmutableMap<String, String> sourceToBootclasspath;
+    private ImmutableMap<String, String> sourceToBootclasspath = ImmutableMap.of();
 
     private Builder() {
     }

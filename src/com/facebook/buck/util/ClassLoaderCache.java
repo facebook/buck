@@ -53,7 +53,7 @@ public final class ClassLoaderCache implements AutoCloseable {
   private int referenceCount = 1;
 
   private synchronized Map<ImmutableList<Path>, ClassLoader> getCacheForParent(
-      ClassLoader parentClassLoader) {
+      @Nullable ClassLoader parentClassLoader) {
     Map<ImmutableList<Path>, ClassLoader> cacheForParent =
         cache.get(parentClassLoader);
 

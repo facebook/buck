@@ -42,6 +42,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
@@ -356,7 +357,7 @@ public class CompilationDatabase extends AbstractBuildRule {
       throw new RuntimeException("No iphonesimulator found in: " + allAppleSdkPaths.keySet());
     }
 
-    return allAppleSdkPaths.get(sortedIphoneSimulatorSdks.last());
+    return Preconditions.checkNotNull(allAppleSdkPaths.get(sortedIphoneSimulatorSdks.last()));
   }
 
   @VisibleForTesting

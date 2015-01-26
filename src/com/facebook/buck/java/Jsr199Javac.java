@@ -152,26 +152,20 @@ public class Jsr199Javac implements Javac {
       Optional<Path> pathToSrcsList,
       Optional<Path> workingDirectory) {
     JavaCompiler compiler;
-    @Nullable ClassLoader compilerClassLoader;
-    ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
 
     if (javacJar.isPresent()) {
-      compilerClassLoader = classLoaderCache.getClassLoaderForClassPath(
+      ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
+      ClassLoader compilerClassLoader = classLoaderCache.getClassLoaderForClassPath(
           ClassLoader.getSystemClassLoader(),
           ImmutableList.of(javacJar.get()));
       try {
         compiler = (JavaCompiler)
             compilerClassLoader.loadClass("com.sun.tools.javac.api.JavacTool")
             .newInstance();
-      } catch (ClassNotFoundException ex) {
-        throw new RuntimeException(ex);
-      } catch (InstantiationException ex) {
-        throw new RuntimeException(ex);
-      } catch (IllegalAccessException ex) {
+      } catch (ClassNotFoundException | IllegalAccessException | InstantiationException ex) {
         throw new RuntimeException(ex);
       }
     } else {
-      compilerClassLoader = ToolProvider.getSystemToolClassLoader();
       compiler = ToolProvider.getSystemJavaCompiler();
 
       if (compiler == null) {
