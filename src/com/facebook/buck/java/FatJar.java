@@ -38,17 +38,35 @@ import javax.xml.stream.XMLInputFactory;
 @XmlRootElement(name = "fatjar")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class FatJar {
+  /**
+   * Since FatJar is going to be embedded in many targets, it cannot have external dependencies, but
+   * we'd like to have {@link javax.annotation.Nullable} and
+   * {@link com.google.common.base.Preconditions#checkNotNull} anyway, so we define these here.
+   */
+  @interface Nullable {}
+  private static class Preconditions {
+    private Preconditions() {}
+
+    public static <T> T checkNotNull(@Nullable T value) {
+      if (value == null) {
+        throw new RuntimeException();
+      }
+      return value;
+    }
+  }
 
   public static final String FAT_JAR_INFO_RESOURCE = "fat_jar_info.dat";
 
   /**
    * The resource name for the real JAR.
    */
+  @Nullable
   private String innerJar;
 
   /**
    * The map of system-specific shared library names to their corresponding resource names.
    */
+  @Nullable
   private Map<String, String> nativeLibraries;
 
   // Required for XML deserialization.
@@ -85,7 +103,7 @@ public class FatJar {
   }
 
   public void unpackNativeLibrariesInto(ClassLoader loader, Path destination) throws IOException {
-    for (Map.Entry<String, String> entry : nativeLibraries.entrySet()) {
+    for (Map.Entry<String, String> entry : Preconditions.checkNotNull(nativeLibraries).entrySet()) {
       try (InputStream input = loader.getResourceAsStream(entry.getValue());
            BufferedInputStream bufferedInput = new BufferedInputStream(input)) {
         Files.copy(bufferedInput, destination.resolve(entry.getKey()));
@@ -94,7 +112,7 @@ public class FatJar {
   }
 
   public void unpackJarTo(ClassLoader loader, Path destination) throws IOException {
-    try (InputStream input = loader.getResourceAsStream(innerJar);
+    try (InputStream input = loader.getResourceAsStream(Preconditions.checkNotNull(innerJar));
          BufferedInputStream bufferedInput = new BufferedInputStream(input)) {
       Files.copy(bufferedInput, destination);
     }
