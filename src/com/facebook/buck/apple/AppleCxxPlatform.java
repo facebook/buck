@@ -165,7 +165,7 @@ public class AppleCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public Flavor asFlavor() {
+  public Flavor getFlavor() {
     return flavor;
   }
 

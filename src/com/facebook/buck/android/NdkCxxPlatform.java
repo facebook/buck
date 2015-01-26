@@ -429,7 +429,7 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public Flavor asFlavor() {
+  public Flavor getFlavor() {
     return flavor;
   }
 
@@ -534,22 +534,22 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   @Override
   public SourcePath getLex() {
-    throw new HumanReadableException("lex is not supported on %s platform", asFlavor());
+    throw new HumanReadableException("lex is not supported on %s platform", getFlavor());
   }
 
   @Override
   public ImmutableList<String> getLexFlags() {
-    throw new HumanReadableException("lex is not supported on %s platform", asFlavor());
+    throw new HumanReadableException("lex is not supported on %s platform", getFlavor());
   }
 
   @Override
   public SourcePath getYacc() {
-    throw new HumanReadableException("yacc is not supported on %s platform", asFlavor());
+    throw new HumanReadableException("yacc is not supported on %s platform", getFlavor());
   }
 
   @Override
   public ImmutableList<String> getYaccFlags() {
-    throw new HumanReadableException("yacc is not supported on %s platform", asFlavor());
+    throw new HumanReadableException("yacc is not supported on %s platform", getFlavor());
   }
 
   @Override

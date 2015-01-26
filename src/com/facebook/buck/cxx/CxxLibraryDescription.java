@@ -138,11 +138,11 @@ public class CxxLibraryDescription implements
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             params.getBuildTarget(),
-            cxxPlatform.asFlavor());
+            cxxPlatform.getFlavor());
     Path headerSymlinkTreeRoot =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             params.getBuildTarget(),
-            cxxPlatform.asFlavor());
+            cxxPlatform.getFlavor());
 
     CxxHeaderSourceSpec lexYaccSources = requireLexYaccSources(
         params,
@@ -181,7 +181,7 @@ public class CxxLibraryDescription implements
     BuildTarget headerTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             params.getBuildTarget(),
-            cxxPlatform.asFlavor());
+            cxxPlatform.getFlavor());
 
     // Check the cache...
     Optional<BuildRule> rule = ruleResolver.getRuleOptional(headerTarget);
@@ -310,11 +310,11 @@ public class CxxLibraryDescription implements
     BuildTarget staticTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
             params.getBuildTarget(),
-            cxxPlatform.asFlavor());
+            cxxPlatform.getFlavor());
     Path staticLibraryPath =
         CxxDescriptionEnhancer.getStaticLibraryPath(
             params.getBuildTarget(),
-            cxxPlatform.asFlavor());
+            cxxPlatform.getFlavor());
     Archive staticLibraryBuildRule = Archives.createArchiveRule(
         pathResolver,
         staticTarget,
@@ -365,7 +365,7 @@ public class CxxLibraryDescription implements
     BuildTarget sharedTarget =
         CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
             params.getBuildTarget(),
-            cxxPlatform.asFlavor());
+            cxxPlatform.getFlavor());
     String sharedLibrarySoname =
         soname.or(
             CxxDescriptionEnhancer.getSharedLibrarySoname(params.getBuildTarget(), cxxPlatform));
@@ -497,7 +497,7 @@ public class CxxLibraryDescription implements
             .addAll(
                 CxxDescriptionEnhancer.getPlatformFlags(
                     args.platformLinkerFlags.get(),
-                    cxxPlatform.asFlavor().toString()))
+                    cxxPlatform.getFlavor().toString()))
             .build(),
         args.frameworkSearchPaths.get(),
         args.soname);

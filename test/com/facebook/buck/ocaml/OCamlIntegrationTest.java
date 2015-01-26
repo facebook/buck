@@ -363,21 +363,21 @@ public class OCamlIntegrationTest {
 
     DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
     BuildTarget cclibbin =
-        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(cclib, cxxPlatform.asFlavor());
+        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(cclib, cxxPlatform.getFlavor());
     String sourceName = "cc/cc.cpp";
     BuildTarget ppObj = CxxPreprocessables.createPreprocessBuildTarget(
         cclib,
-        cxxPlatform.asFlavor(),
+        cxxPlatform.getFlavor(),
         CxxSource.Type.CXX,
         /* pic */ false,
         sourceName);
     BuildTarget ccObj = CxxCompilableEnhancer.createCompileBuildTarget(
         cclib,
-        cxxPlatform.asFlavor(),
+        cxxPlatform.getFlavor(),
         sourceName,
         /* pic */ false);
     BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(cclib, cxxPlatform.asFlavor());
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(cclib, cxxPlatform.getFlavor());
 
     ImmutableSet<BuildTarget> targets = ImmutableSet.of(
         target,

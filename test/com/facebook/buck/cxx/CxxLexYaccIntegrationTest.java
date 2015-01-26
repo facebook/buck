@@ -70,28 +70,28 @@ public class CxxLexYaccIntegrationTest {
     BuildTarget yaccTarget = CxxDescriptionEnhancer.createYaccBuildTarget(target, yaccSourceName);
     BuildTarget yaccPreprocessTarget = CxxPreprocessables.createPreprocessBuildTarget(
         target,
-        cxxPlatform.asFlavor(),
+        cxxPlatform.getFlavor(),
         CxxSource.Type.CXX,
         /* pic */ false,
         yaccSourceName + ".cc");
     BuildTarget yaccCompileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
         target,
-        cxxPlatform.asFlavor(),
+        cxxPlatform.getFlavor(),
         yaccSourceName + ".cc",
         /* pic */ false);
     BuildTarget preprocessTarget = CxxPreprocessables.createPreprocessBuildTarget(
         target,
-        cxxPlatform.asFlavor(),
+        cxxPlatform.getFlavor(),
         CxxSource.Type.CXX,
         /* pic */ false,
         sourceName);
     BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
         target,
-        cxxPlatform.asFlavor(),
+        cxxPlatform.getFlavor(),
         sourceName,
         /* pic */ false);
     BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.asFlavor());
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor());
 
     // Do a clean build, verify that it succeeds, and check that all expected targets built
     // successfully.

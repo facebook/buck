@@ -299,7 +299,7 @@ public class CxxPreprocessables {
     BuildTarget target =
         createPreprocessBuildTarget(
             params.getBuildTarget(),
-            cxxPlatform.asFlavor(),
+            cxxPlatform.getFlavor(),
             source.getType(),
             pic,
             name);

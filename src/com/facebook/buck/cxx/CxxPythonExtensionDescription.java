@@ -125,7 +125,7 @@ public class CxxPythonExtensionDescription implements
     SymlinkTree headerSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTreeBuildRule(
         params,
         ruleResolver,
-        cxxPlatform.asFlavor(),
+        cxxPlatform.getFlavor(),
         ImmutableMap.<Path, SourcePath>builder()
             .putAll(headers)
             .putAll(lexYaccSources.getCxxHeaders())
@@ -165,7 +165,7 @@ public class CxxPythonExtensionDescription implements
 
     // Setup the rules to link the shared library.
     String extensionName = getExtensionName(params.getBuildTarget());
-    Path extensionPath = getExtensionPath(params.getBuildTarget(), cxxPlatform.asFlavor());
+    Path extensionPath = getExtensionPath(params.getBuildTarget(), cxxPlatform.getFlavor());
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
@@ -176,9 +176,9 @@ public class CxxPythonExtensionDescription implements
             .addAll(
                 CxxDescriptionEnhancer.getPlatformFlags(
                     args.platformLinkerFlags.get(),
-                    cxxPlatform.asFlavor().toString()))
+                    cxxPlatform.getFlavor().toString()))
             .build(),
-        getExtensionTarget(params.getBuildTarget(), cxxPlatform.asFlavor()),
+        getExtensionTarget(params.getBuildTarget(), cxxPlatform.getFlavor()),
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
         extensionPath,

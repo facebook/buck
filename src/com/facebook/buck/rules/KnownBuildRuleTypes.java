@@ -318,16 +318,16 @@ public class KnownBuildRuleTypes {
 
     // Add the default, config-defined C/C++ platform.
     DefaultCxxPlatform defaultCxxPlatform = new DefaultCxxPlatform(platform, config);
-    cxxPlatformsBuilder.put(defaultCxxPlatform.asFlavor(), defaultCxxPlatform);
+    cxxPlatformsBuilder.put(defaultCxxPlatform.getFlavor(), defaultCxxPlatform);
 
     // If an Android NDK is present, add platforms for that.  This is mostly useful for
     // testing our Android NDK support for right now.
     for (CxxPlatform ndkCxxPlatform : ndkCxxPlatforms.values()) {
-      cxxPlatformsBuilder.put(ndkCxxPlatform.asFlavor(), ndkCxxPlatform);
+      cxxPlatformsBuilder.put(ndkCxxPlatform.getFlavor(), ndkCxxPlatform);
     }
 
     for (CxxPlatform appleCxxPlatform : appleCxxPlatforms) {
-      cxxPlatformsBuilder.put(appleCxxPlatform.asFlavor(), appleCxxPlatform);
+      cxxPlatformsBuilder.put(appleCxxPlatform.getFlavor(), appleCxxPlatform);
     }
 
     // Build up the final list of C/C++ platforms.

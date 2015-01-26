@@ -47,7 +47,7 @@ public class AbstractCxxBuilder<T> extends AbstractNodeBuilder<T> {
     CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
     FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
         "C/C++ Platform",
-        ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
+        ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform));
     return cxxPlatforms;
   }
 

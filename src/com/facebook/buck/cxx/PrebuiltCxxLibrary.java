@@ -94,7 +94,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
         CxxDescriptionEnhancer.requireBuildRule(
             params,
             ruleResolver,
-            cxxPlatform.asFlavor(),
+            cxxPlatform.getFlavor(),
             CxxDescriptionEnhancer.SHARED_FLAVOR);
 
     return new BuildTargetSourcePath(sharedLibrary.getBuildTarget());
@@ -121,7 +121,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     linkerArgsBuilder.addAll(
         CxxDescriptionEnhancer.getPlatformFlags(
             platformLinkerFlags,
-            cxxPlatform.asFlavor().toString()));
+            cxxPlatform.getFlavor().toString()));
     if (!headerOnly) {
       if (provided || type == Linker.LinkableDepType.SHARED) {
         SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);

@@ -43,7 +43,7 @@ public class AppleLibraryBuilder
     CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
     FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
         "C/C++ Platform",
-        ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
+        ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform));
     return new AppleLibraryDescription(
         new AppleConfig(buckConfig),
         new CxxLibraryDescription(new CxxBuckConfig(buckConfig), cxxPlatforms));

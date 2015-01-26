@@ -60,7 +60,7 @@ public class AppleCxxPlatformTest {
 
     assertEquals(
         ImmutableFlavor.of("iphoneos8.0-armv7"),
-        appleCxxPlatform.asFlavor());
+        appleCxxPlatform.getFlavor());
     assertEquals(
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
         appleCxxPlatform.getCc().getCommandPrefix(resolver).get(0));

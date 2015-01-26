@@ -59,7 +59,7 @@ public class ThriftCxxEnhancerTest {
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       new FlavorDomain<>(
           "C/C++ Platform",
-          ImmutableMap.<Flavor, CxxPlatform>of(CXX_PLATFORM.asFlavor(), CXX_PLATFORM));
+          ImmutableMap.<Flavor, CxxPlatform>of(CXX_PLATFORM.getFlavor(), CXX_PLATFORM));
   private static final ThriftCxxEnhancer ENHANCER_CPP = new ThriftCxxEnhancer(
       THRIFT_BUCK_CONFIG,
       CXX_BUCK_CONFIG,

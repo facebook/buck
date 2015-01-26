@@ -437,7 +437,7 @@ public class CxxDescriptionEnhancer {
     String extension = platform.getSharedLibraryExtension();
     String name = String.format("lib%s.%s", target.getShortName(), extension);
     return BuildTargets.getBinPath(
-        createSharedLibraryBuildTarget(target, platform.asFlavor()),
+        createSharedLibraryBuildTarget(target, platform.getFlavor()),
         "%s/" + name);
   }
 
@@ -478,7 +478,7 @@ public class CxxDescriptionEnhancer {
     SymlinkTree headerSymlinkTree = createHeaderSymlinkTreeBuildRule(
         params,
         resolver,
-        cxxPlatform.asFlavor(),
+        cxxPlatform.getFlavor(),
         ImmutableMap.<Path, SourcePath>builder()
             .putAll(headers)
             .putAll(lexYaccSources.getCxxHeaders())
@@ -533,7 +533,7 @@ public class CxxDescriptionEnhancer {
             .addAll(
                 CxxDescriptionEnhancer.getPlatformFlags(
                     args.platformLinkerFlags.get(),
-                    cxxPlatform.asFlavor().toString()))
+                    cxxPlatform.getFlavor().toString()))
             .build(),
         createCxxLinkTarget(params.getBuildTarget()),
         Linker.LinkType.EXECUTABLE,

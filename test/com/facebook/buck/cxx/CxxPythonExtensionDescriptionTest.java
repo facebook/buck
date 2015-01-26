@@ -197,7 +197,7 @@ public class CxxPythonExtensionDescriptionTest {
 
     // Verify that the shared library dep propagated to the link rule.
     extension.getPythonPackageComponents(cxxPlatform);
-    BuildRule rule = resolver.getRule(desc.getExtensionTarget(target, cxxPlatform.asFlavor()));
+    BuildRule rule = resolver.getRule(desc.getExtensionTarget(target, cxxPlatform.getFlavor()));
     assertEquals(
         ImmutableSortedSet.of(sharedLibraryDep),
         rule.getDeps());
@@ -220,7 +220,7 @@ public class CxxPythonExtensionDescriptionTest {
 
     // Verify that we get the expected view from the python packageable interface.
     PythonPackageComponents actualComponent = extension.getPythonPackageComponents(cxxPlatform);
-    BuildRule rule = resolver.getRule(desc.getExtensionTarget(target, cxxPlatform.asFlavor()));
+    BuildRule rule = resolver.getRule(desc.getExtensionTarget(target, cxxPlatform.getFlavor()));
     PythonPackageComponents expectedComponents = new PythonPackageComponents(
         ImmutableMap.<Path, SourcePath>of(
             target.getBasePath().resolve(desc.getExtensionName(target)),

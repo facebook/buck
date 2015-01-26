@@ -118,7 +118,7 @@ public class DefaultCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public Flavor asFlavor() {
+  public Flavor getFlavor() {
     return FLAVOR;
   }
 

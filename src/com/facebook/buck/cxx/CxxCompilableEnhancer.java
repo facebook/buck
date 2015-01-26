@@ -146,7 +146,7 @@ public class CxxCompilableEnhancer {
 
     BuildTarget target = createCompileBuildTarget(
         params.getBuildTarget(),
-        platform.asFlavor(),
+        platform.getFlavor(),
         name,
         pic);
 

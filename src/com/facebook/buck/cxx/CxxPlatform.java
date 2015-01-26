@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
  */
 public interface CxxPlatform {
 
-  Flavor asFlavor();
+  Flavor getFlavor();
 
   Tool getAs();
   ImmutableList<String> getAsflags();

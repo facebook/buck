@@ -51,7 +51,7 @@ public class CxxPythonExtension extends NoopBuildRule implements PythonPackagabl
         CxxDescriptionEnhancer.requireBuildRule(
             params,
             ruleResolver,
-            cxxPlatform.asFlavor(),
+            cxxPlatform.getFlavor(),
             CxxDescriptionEnhancer.SHARED_FLAVOR);
     SourcePath output = new BuildTargetSourcePath(extension.getBuildTarget());
     return new PythonPackageComponents(

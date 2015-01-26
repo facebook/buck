@@ -45,7 +45,7 @@ public class AppleBundleTest {
   private CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
   private FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
       "C/C++ Platform",
-      ImmutableMap.of(cxxPlatform.asFlavor(), cxxPlatform));
+      ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform));
   private AppleLibraryDescription appleLibraryDescription = new AppleLibraryDescription(
       new AppleConfig(buckConfig),
       new CxxLibraryDescription(new CxxBuckConfig(buckConfig), cxxPlatforms));
