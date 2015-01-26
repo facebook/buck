@@ -1,0 +1,5 @@
+apple_resource(
+  name = 'foo',
+  dirs = ['Foo.bundle'],
+  files = ['bar.txt'],
+)

@@ -17,16 +17,19 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
@@ -36,6 +39,8 @@ import java.nio.file.Path;
 import java.util.Set;
 
 public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions> {
+
+  private static final Logger LOG = Logger.get(AuditInputCommand.class);
 
   public AuditInputCommand(CommandRunnerParams params) {
     super(params);
@@ -72,6 +77,8 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
                    })
         .toSet();
 
+    LOG.debug("Getting input for targets: %s", targets);
+
     TargetGraph graph;
     try {
       graph = getParser().buildTargetGraphForBuildTargets(
@@ -101,7 +108,20 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
       @Override
       public void visit(TargetNode<?> node) {
         for (Path input : node.getInputs()) {
-          targetInputs.put(node.getBuildTarget().getFullyQualifiedName(), input);
+          LOG.debug("Walking input %s", input);
+          try {
+            if (!getProjectFilesystem().exists(input)) {
+              throw new HumanReadableException(
+                  "Target %s refers to non-existent input file: %s", node, input);
+            }
+            ImmutableSortedSet<Path> nodeContents = ImmutableSortedSet.copyOf(
+                getProjectFilesystem().getFilesUnderPath(input));
+            targetInputs.putAll(
+              node.getBuildTarget().getFullyQualifiedName(),
+              nodeContents);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
         }
       }
 
@@ -131,10 +151,29 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
       @Override
       public void visit(TargetNode<?> node) {
         for (Path input : node.getInputs()) {
-          boolean isNewInput = inputs.add(input);
-          if (isNewInput) {
-            getStdOut().println(input);
+          LOG.debug("Walking input %s", input);
+          try {
+            if (!getProjectFilesystem().exists(input)) {
+              throw new HumanReadableException(
+                  "Target %s refers to non-existent input file: %s",
+                  node,
+                  input);
+            }
+            ImmutableSortedSet<Path> nodeContents = ImmutableSortedSet.copyOf(
+                getProjectFilesystem().getFilesUnderPath(input));
+            for (Path path : nodeContents) {
+              putInput(path);
+            }
+          } catch (IOException e) {
+            throw new RuntimeException(e);
           }
+        }
+      }
+
+      private void putInput(Path input) {
+        boolean isNewInput = inputs.add(input);
+        if (isNewInput) {
+          getStdOut().println(input);
         }
       }
 
