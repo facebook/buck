@@ -102,6 +102,7 @@ public class ChromeTraceBuildListenerTest {
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,
         new FakeClock(1409702151000000000L),
+        new ObjectMapper(),
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 3);
@@ -128,9 +129,12 @@ public class ChromeTraceBuildListenerTest {
   public void testBuildJson() throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
+    ObjectMapper mapper = new ObjectMapper();
+
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,
         new FakeClock(1409702151000000000L),
+        mapper,
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 42);
@@ -192,8 +196,6 @@ public class ChromeTraceBuildListenerTest {
     listener.outputTrace(new BuildId("BUILD_ID"));
 
     File resultFile = new File(tmpDir.getRoot(), BuckConstant.BUCK_TRACE_DIR + "/build.trace");
-
-    ObjectMapper mapper = new ObjectMapper();
 
     List<ChromeTraceEvent> resultMap = mapper.readValue(
         resultFile,
@@ -295,6 +297,7 @@ public class ChromeTraceBuildListenerTest {
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,
         new FakeClock(1409702151000000000L),
+        new ObjectMapper(),
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 3);
@@ -319,6 +322,7 @@ public class ChromeTraceBuildListenerTest {
     ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
         projectFilesystem,
         new FakeClock(1409702151000000000L),
+        new ObjectMapper(),
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 1);

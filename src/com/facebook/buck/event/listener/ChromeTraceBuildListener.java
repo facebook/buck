@@ -68,6 +68,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final ProjectFilesystem projectFilesystem;
   private final Clock clock;
   private final int tracesToKeep;
+  private final ObjectMapper mapper;
   private final ThreadLocal<SimpleDateFormat> dateFormat;
   private ConcurrentLinkedQueue<ChromeTraceEvent> eventList =
       new ConcurrentLinkedQueue<ChromeTraceEvent>();
@@ -75,19 +76,22 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   public ChromeTraceBuildListener(
       ProjectFilesystem projectFilesystem,
       Clock clock,
+      ObjectMapper objectMapper,
       int tracesToKeep) {
-    this(projectFilesystem, clock, Locale.US, TimeZone.getDefault(), tracesToKeep);
+    this(projectFilesystem, clock, objectMapper, Locale.US, TimeZone.getDefault(), tracesToKeep);
   }
 
   @VisibleForTesting
   ChromeTraceBuildListener(
       ProjectFilesystem projectFilesystem,
       Clock clock,
+      ObjectMapper objectMapper,
       final Locale locale,
       final TimeZone timeZone,
       int tracesToKeep) {
     this.projectFilesystem = projectFilesystem;
     this.clock = clock;
+    this.mapper = objectMapper;
     this.dateFormat = new ThreadLocal<SimpleDateFormat>() {
       @Override
       protected SimpleDateFormat initialValue() {
@@ -146,7 +150,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       File traceOutput = projectFilesystem.getFileForRelativePath(tracePath);
       projectFilesystem.createParentDirs(tracePath);
 
-      ObjectMapper mapper = new ObjectMapper();
       LOG.debug("Writing Chrome trace to %s", tracePath);
       mapper.writeValue(traceOutput, eventList);
 

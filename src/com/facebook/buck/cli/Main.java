@@ -814,7 +814,11 @@ public final class Main {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
-            .add(new ChromeTraceBuildListener(projectFilesystem, clock, config.getMaxTraces()))
+            .add(new ChromeTraceBuildListener(
+                projectFilesystem,
+                clock,
+                objectMapper,
+                config.getMaxTraces()))
             .add(consoleEventBusListener)
             .add(new LoggingBuildListener());
 
