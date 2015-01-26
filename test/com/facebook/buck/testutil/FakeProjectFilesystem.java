@@ -52,6 +52,7 @@ import java.nio.file.CopyOption;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitor;
+import java.nio.file.FileVisitOption;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -61,6 +62,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -281,11 +283,6 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public ImmutableSet<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException {
-    return ImmutableSet.of();
-  }
-
-  @Override
   public long getLastModifiedTime(Path path) throws IOException {
     Path normalizedPath = path.normalize();
     if (!exists(normalizedPath)) {
@@ -465,7 +462,10 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
    * {@code fileVisitor}.
    */
   @Override
-  public void walkRelativeFileTree(Path path, FileVisitor<Path> fileVisitor) throws IOException {
+  public void walkRelativeFileTree(
+      Path path,
+      EnumSet<FileVisitOption> visitOptions,
+      FileVisitor<Path> fileVisitor) throws IOException {
     for (Path file : filesUnderPath(path)) {
       fileVisitor.visitFile(file, DEFAULT_FILE_ATTRIBUTES);
     }

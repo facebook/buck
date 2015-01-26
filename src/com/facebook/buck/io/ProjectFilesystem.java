@@ -284,7 +284,10 @@ public class ProjectFilesystem {
         fileVisitor);
   }
 
-  private void walkRelativeFileTree(
+  /**
+   * Walks a project-root relative file tree with a visitor and visit options.
+   */
+  public void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
       final FileVisitor<Path> fileVisitor) throws IOException {
@@ -344,7 +347,7 @@ public class ProjectFilesystem {
       EnumSet<FileVisitOption> visitOptions) throws IOException {
     final ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
     walkRelativeFileTree(
-        getPathForRelativePath(pathRelativeToProjectRoot),
+        pathRelativeToProjectRoot,
         visitOptions,
         new SimpleFileVisitor<Path>() {
           @Override

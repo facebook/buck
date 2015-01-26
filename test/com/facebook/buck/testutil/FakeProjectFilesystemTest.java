@@ -344,4 +344,17 @@ public class FakeProjectFilesystemTest {
             Paths.get("foo"),
             "*.txt"));
   }
+
+  @Test
+  public void testGetFilesUnderPath() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path bar = Paths.get("foo/bar.txt");
+    Path baz = Paths.get("foo/baz/blech.txt");
+    filesystem.touch(bar);
+    filesystem.touch(baz);
+
+    assertEquals(
+        ImmutableSet.of(bar, baz),
+        filesystem.getFilesUnderPath(Paths.get("foo")));
+  }
 }
