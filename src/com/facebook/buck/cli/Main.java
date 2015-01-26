@@ -66,6 +66,7 @@ import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk7.Jdk7Module;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -404,6 +405,8 @@ public final class Main {
     this.stdErr = stdErr;
     this.platform = Platform.detect();
     this.objectMapper = new ObjectMapper();
+    // Add support for serializing Path and other JDK 7 objects.
+    this.objectMapper.registerModule(new Jdk7Module());
     this.externalEventsListener = externalEventsListener;
   }
 
