@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -135,7 +136,7 @@ public class JavacStep implements Step {
   }
 
   @Override
-  public final int execute(ExecutionContext context) throws InterruptedException {
+  public final int execute(ExecutionContext context) throws IOException, InterruptedException {
     try {
       return executeBuild(context);
     } finally {
@@ -143,7 +144,7 @@ public class JavacStep implements Step {
     }
   }
 
-  public int executeBuild(ExecutionContext context) throws InterruptedException {
+  public int executeBuild(ExecutionContext context) throws IOException, InterruptedException {
     // Build up the compilation task.
     if (buildDependencies == BuildDependencies.FIRST_ORDER_ONLY) {
       return getJavac().buildWithClasspath(
@@ -166,58 +167,60 @@ public class JavacStep implements Step {
     }
   }
 
-  private int tryBuildWithFirstOrderDeps(ExecutionContext context) throws InterruptedException {
+  private int tryBuildWithFirstOrderDeps(ExecutionContext context)
+      throws InterruptedException, IOException {
     CapturingPrintStream stdout = new CapturingPrintStream();
     CapturingPrintStream stderr = new CapturingPrintStream();
-    ExecutionContext firstOrderContext = context.createSubContext(stdout, stderr);
+    try (ExecutionContext firstOrderContext = context.createSubContext(stdout, stderr)) {
 
-    Javac javac = getJavac();
+      Javac javac = getJavac();
 
-    int declaredDepsResult = javac.buildWithClasspath(
-        firstOrderContext,
-        invokingRule,
-        getOptions(context, declaredClasspathEntries),
-        javaSourceFilePaths,
-        pathToSrcsList,
-        workingDirectory);
-
-    String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
-    String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
-
-    if (declaredDepsResult != 0) {
-      int transitiveResult = javac.buildWithClasspath(
-          context,
+      int declaredDepsResult = javac.buildWithClasspath(
+          firstOrderContext,
           invokingRule,
-          getOptions(context, transitiveClasspathEntries),
+          getOptions(context, declaredClasspathEntries),
           javaSourceFilePaths,
           pathToSrcsList,
           workingDirectory);
-      if (transitiveResult == 0) {
-        ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
-        ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
 
-        String invoker = invokingRule.toString();
-        errorMessage.add(String.format("Rule %s builds with its transitive " +
-            "dependencies but not with its first order dependencies.", invoker));
-        errorMessage.add("The following packages were missing:");
-        errorMessage.add(Joiner.on(LINE_SEPARATOR).join(failedImports));
-        if (suggestBuildRules.isPresent()) {
-          errorMessage.add("Try adding the following deps:");
-          errorMessage.add(Joiner.on(LINE_SEPARATOR)
-              .join(suggestBuildRules.get().suggest(context.getProjectFilesystem(),
-                  failedImports)));
+      String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
+      String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
+
+      if (declaredDepsResult != 0) {
+        int transitiveResult = javac.buildWithClasspath(
+            context,
+            invokingRule,
+            getOptions(context, transitiveClasspathEntries),
+            javaSourceFilePaths,
+            pathToSrcsList,
+            workingDirectory);
+        if (transitiveResult == 0) {
+          ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
+          ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
+
+          String invoker = invokingRule.toString();
+          errorMessage.add(String.format("Rule %s builds with its transitive " +
+                  "dependencies but not with its first order dependencies.", invoker));
+          errorMessage.add("The following packages were missing:");
+          errorMessage.add(Joiner.on(LINE_SEPARATOR).join(failedImports));
+          if (suggestBuildRules.isPresent()) {
+            errorMessage.add("Try adding the following deps:");
+            errorMessage.add(Joiner.on(LINE_SEPARATOR)
+                .join(suggestBuildRules.get().suggest(context.getProjectFilesystem(),
+                        failedImports)));
+          }
+          errorMessage.add("");
+          errorMessage.add("");
+          context.getStdErr().println(Joiner.on("\n").join(errorMessage.build()));
         }
-        errorMessage.add("");
-        errorMessage.add("");
-        context.getStdErr().println(Joiner.on("\n").join(errorMessage.build()));
+        return transitiveResult;
+      } else {
+        context.getStdOut().print(firstOrderStdout);
+        context.getStdErr().print(firstOrderStderr);
       }
-      return transitiveResult;
-    } else {
-      context.getStdOut().print(firstOrderStdout);
-      context.getStdErr().print(firstOrderStderr);
-    }
 
-    return declaredDepsResult;
+      return declaredDepsResult;
+    }
   }
 
   @VisibleForTesting

@@ -10,6 +10,7 @@ java_library(
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/event:testutil',
     '//test/com/facebook/buck/java:fakepackagefinder',

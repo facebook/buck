@@ -177,98 +177,101 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     // configuration files.
     ActionGraph actionGraph = targetGraphTransformer.apply(targetGraphAndTargets.getTargetGraph());
 
-    ExecutionContext executionContext = createExecutionContext(
-        options,
-        actionGraph);
+    try (ExecutionContext executionContext = createExecutionContext(
+            options,
+            actionGraph)) {
 
-    Project project = new Project(
-        new SourcePathResolver(new BuildRuleResolver(actionGraph.getNodes())),
-        ImmutableSet.copyOf(
-            FluentIterable
-                .from(actionGraph.getNodes())
-                .filter(
-                    new Predicate<BuildRule>() {
-                      @Override
-                      public boolean apply(BuildRule input) {
-                        return input instanceof ProjectConfig;
-                      }
-                    })
-                .transform(
-                    new Function<BuildRule, ProjectConfig>() {
-                      @Override
-                      public ProjectConfig apply(BuildRule input) {
-                        return (ProjectConfig) input;
-                      }
+      Project project = new Project(
+          new SourcePathResolver(new BuildRuleResolver(actionGraph.getNodes())),
+          ImmutableSet.copyOf(
+              FluentIterable
+              .from(actionGraph.getNodes())
+              .filter(
+                  new Predicate<BuildRule>() {
+                    @Override
+                    public boolean apply(BuildRule input) {
+                      return input instanceof ProjectConfig;
                     }
-                )),
-        actionGraph,
-        options.getBasePathToAliasMap(),
-        options.getJavaPackageFinder(),
-        executionContext,
-        getProjectFilesystem(),
-        options.getPathToDefaultAndroidManifest(),
-        options.getPathToPostProcessScript(),
-        options.getBuckConfig().getPythonInterpreter(),
-        getObjectMapper());
+                  })
+              .transform(
+                  new Function<BuildRule, ProjectConfig>() {
+                    @Override
+                    public ProjectConfig apply(BuildRule input) {
+                      return (ProjectConfig) input;
+                    }
+                  }
+              )),
+          actionGraph,
+          options.getBasePathToAliasMap(),
+          options.getJavaPackageFinder(),
+          executionContext,
+          getProjectFilesystem(),
+          options.getPathToDefaultAndroidManifest(),
+          options.getPathToPostProcessScript(),
+          options.getBuckConfig().getPythonInterpreter(),
+          getObjectMapper());
 
-    File tempDir = Files.createTempDir();
-    File tempFile = new File(tempDir, "project.json");
-    int exitCode;
-    try {
-      exitCode = project.createIntellijProject(
-          tempFile,
-          executionContext.getProcessExecutor(),
-          !passedInTargetsSet.isEmpty(),
-          console.getStdOut(),
-          console.getStdErr());
-      if (exitCode != 0) {
-        return exitCode;
-      }
-
-      List<String> additionalInitialTargets = ImmutableList.of();
-      if (options.shouldProcessAnnotations()) {
-        try {
-          additionalInitialTargets = getAnnotationProcessingTargets(fullGraph, passedInTargetsSet);
-        } catch (BuildTargetException | BuildFileParseException e) {
-          throw new HumanReadableException(e);
-        }
-      }
-
-      // Build initial targets.
-      if (options.hasInitialTargets() || !additionalInitialTargets.isEmpty()) {
-        BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
-        BuildCommandOptions buildOptions =
-            options.createBuildCommandOptionsWithInitialTargets(additionalInitialTargets);
-
-
-        exitCode = buildCommand.runCommandWithOptions(buildOptions);
+      File tempDir = Files.createTempDir();
+      File tempFile = new File(tempDir, "project.json");
+      int exitCode;
+      try {
+        exitCode = project.createIntellijProject(
+            tempFile,
+            executionContext.getProcessExecutor(),
+            !passedInTargetsSet.isEmpty(),
+            console.getStdOut(),
+            console.getStdErr());
         if (exitCode != 0) {
           return exitCode;
         }
-      }
-    } finally {
-      // Either leave project.json around for debugging or delete it on exit.
-      if (console.getVerbosity().shouldPrintOutput()) {
-        getStdErr().printf("project.json was written to %s", tempFile.getAbsolutePath());
-      } else {
-        tempFile.delete();
-        tempDir.delete();
-      }
-    }
 
-    if (passedInTargetsSet.isEmpty()) {
-      String greenStar = console.getAnsi().asHighlightedSuccessText(" * ");
-      getStdErr().printf(
-          console.getAnsi().asHighlightedSuccessText("=== Did you know ===") + "\n" +
-              greenStar + "You can run `buck project <target>` to generate a minimal project " +
-              "just for that target.\n" +
-              greenStar + "This will make your IDE faster when working on large projects.\n" +
-              greenStar + "See buck project --help for more info.\n" +
-              console.getAnsi().asHighlightedSuccessText(
-                  "--=* Knowing is half the battle!") + "\n");
-    }
+        List<String> additionalInitialTargets = ImmutableList.of();
+        if (options.shouldProcessAnnotations()) {
+          try {
+            additionalInitialTargets = getAnnotationProcessingTargets(
+                fullGraph,
+                passedInTargetsSet);
+          } catch (BuildTargetException | BuildFileParseException e) {
+            throw new HumanReadableException(e);
+          }
+        }
 
-    return 0;
+        // Build initial targets.
+        if (options.hasInitialTargets() || !additionalInitialTargets.isEmpty()) {
+          BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
+          BuildCommandOptions buildOptions =
+              options.createBuildCommandOptionsWithInitialTargets(additionalInitialTargets);
+
+
+          exitCode = buildCommand.runCommandWithOptions(buildOptions);
+          if (exitCode != 0) {
+            return exitCode;
+          }
+        }
+      } finally {
+        // Either leave project.json around for debugging or delete it on exit.
+        if (console.getVerbosity().shouldPrintOutput()) {
+          getStdErr().printf("project.json was written to %s", tempFile.getAbsolutePath());
+        } else {
+          tempFile.delete();
+          tempDir.delete();
+        }
+      }
+
+      if (passedInTargetsSet.isEmpty()) {
+        String greenStar = console.getAnsi().asHighlightedSuccessText(" * ");
+        getStdErr().printf(
+            console.getAnsi().asHighlightedSuccessText("=== Did you know ===") + "\n" +
+            greenStar + "You can run `buck project <target>` to generate a minimal project " +
+            "just for that target.\n" +
+            greenStar + "This will make your IDE faster when working on large projects.\n" +
+            greenStar + "See buck project --help for more info.\n" +
+            console.getAnsi().asHighlightedSuccessText(
+                "--=* Knowing is half the battle!") + "\n");
+      }
+
+      return 0;
+    }
   }
 
   ImmutableList<String> getAnnotationProcessingTargets(

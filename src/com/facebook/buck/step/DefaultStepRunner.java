@@ -95,7 +95,7 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
     int exitCode = 1;
     try {
       exitCode = step.execute(context);
-    } catch (RuntimeException e) {
+    } catch (IOException | RuntimeException e) {
       throw StepFailedException.createForFailingStepWithException(step, e, buildTarget);
     } finally {
       context.getBuckEventBus().logDebugAndPost(

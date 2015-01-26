@@ -27,10 +27,12 @@ import org.junit.Test;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import java.io.IOException;
+
 public class ConditionalStepTest extends EasyMockSupport {
 
   @Test
-  public void testExecuteConditionalStepWhenTrue() throws InterruptedException {
+  public void testExecuteConditionalStepWhenTrue() throws IOException, InterruptedException {
     // Create a Supplier<Boolean> that returns a value once an external condition has been
     // satisfied.
     final AtomicReference<TriState> condition = new AtomicReference<>(
@@ -70,7 +72,7 @@ public class ConditionalStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testExecuteConditionalStepWhenFalse() throws InterruptedException {
+  public void testExecuteConditionalStepWhenFalse() throws IOException, InterruptedException {
     // Create a Supplier<Boolean> that returns a value once an external condition has been
     // satisfied.
     final AtomicReference<TriState> condition = new AtomicReference<>(

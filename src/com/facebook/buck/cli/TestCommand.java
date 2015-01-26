@@ -158,12 +158,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     BuildContext buildContext = Preconditions.checkNotNull(build.getBuildContext());
     ExecutionContext buildExecutionContext = build.getExecutionContext();
-    ExecutionContext testExecutionContext = ExecutionContext.builder().
+
+    try (ExecutionContext testExecutionContext = ExecutionContext.builder().
         setExecutionContext(buildExecutionContext).
         setTargetDevice(options.getTargetDeviceOptional()).
-        build();
-
-    try {
+        build()) {
       return runTestsAndShutdownExecutor(results,
           buildContext,
           testExecutionContext,

@@ -213,7 +213,7 @@ public class AaptPackageResources extends AbstractBuildRule
     // eliminate this now.
     Step collectAssets = new Step() {
       @Override
-      public int execute(ExecutionContext context) throws InterruptedException {
+      public int execute(ExecutionContext context) throws IOException, InterruptedException {
         // This must be done in a Command because the files and directories that are specified may
         // not exist at the time this Command is created because the previous Commands have not run
         // yet.

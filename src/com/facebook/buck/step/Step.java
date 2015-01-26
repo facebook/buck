@@ -15,11 +15,11 @@
  */
 
 package com.facebook.buck.step;
-
+import java.io.IOException;
 
 public interface Step {
 
-  public int execute(ExecutionContext context) throws InterruptedException;
+  public int execute(ExecutionContext context) throws IOException, InterruptedException;
 
   /** @return a short name/description for the command, such as "javac". Should fit on one line. */
   public String getShortName();

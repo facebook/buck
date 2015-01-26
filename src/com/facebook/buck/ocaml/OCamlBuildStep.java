@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.io.IOException;
+
 /**
  * A step that preprocesses, compiles, and assembles OCaml sources.
  */
@@ -68,7 +70,7 @@ public class OCamlBuildStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public int execute(ExecutionContext context) throws IOException, InterruptedException {
     if (hasGeneratedSources) {
       int genExitCode = generateSources(context);
       if (genExitCode != 0) {
@@ -141,7 +143,7 @@ public class OCamlBuildStep implements Step {
 
   private int executeCCompilation(
       ExecutionContext context,
-      ImmutableList.Builder<String> linkerInputs) throws InterruptedException {
+      ImmutableList.Builder<String> linkerInputs) throws IOException, InterruptedException {
 
     ImmutableList.Builder<String> cCompileFlags = ImmutableList.builder();
     cCompileFlags.addAll(ocamlContext.getCCompileFlags());
@@ -170,7 +172,7 @@ public class OCamlBuildStep implements Step {
 
   private int executeLinking(
       ExecutionContext context,
-      ImmutableList<String> linkerInputs) throws InterruptedException {
+      ImmutableList<String> linkerInputs) throws IOException, InterruptedException {
 
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
@@ -191,7 +193,7 @@ public class OCamlBuildStep implements Step {
 
   private int executeBytecodeLinking(
       ExecutionContext context,
-      ImmutableList<String> linkerInputs) throws InterruptedException {
+      ImmutableList<String> linkerInputs) throws IOException, InterruptedException {
 
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
@@ -226,7 +228,7 @@ public class OCamlBuildStep implements Step {
       ExecutionContext context,
       ImmutableList<String> sortedInput,
       ImmutableList.Builder<String> linkerInputs
-  ) throws InterruptedException {
+  ) throws IOException, InterruptedException {
     MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(ocamlContext.getCompileOutputDir());
     int mkDirExitCode = mkDir.execute(context);
     if (mkDirExitCode != 0) {
@@ -262,7 +264,7 @@ public class OCamlBuildStep implements Step {
   private int executeMLCompileBytecode(
       ExecutionContext context,
       ImmutableList<String> sortedInput,
-      ImmutableList.Builder<String> linkerInputs) throws InterruptedException {
+      ImmutableList.Builder<String> linkerInputs) throws IOException, InterruptedException {
     MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(
         ocamlContext.getCompileBytecodeOutputDir());
     int mkDirExitCode = mkDir.execute(context);
@@ -296,7 +298,7 @@ public class OCamlBuildStep implements Step {
     return 0;
   }
 
-  private int generateSources(ExecutionContext context) throws InterruptedException {
+private int generateSources(ExecutionContext context) throws IOException, InterruptedException {
     MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(ocamlContext.getGeneratedSourceDir());
     int mkDirExitCode = mkDir.execute(context);
     if (mkDirExitCode != 0) {

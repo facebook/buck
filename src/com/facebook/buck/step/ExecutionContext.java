@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
@@ -34,12 +35,15 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import java.io.PrintStream;
 import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
-public class ExecutionContext {
+public class ExecutionContext implements Closeable {
 
   private final Verbosity verbosity;
   private final ProjectFilesystem projectFilesystem;
@@ -55,6 +59,7 @@ public class ExecutionContext {
   private final ImmutableMap<String, String> environment;
   private final JavaPackageFinder javaPackageFinder;
   private final ObjectMapper objectMapper;
+  private final ClassLoaderCache classLoaderCache;
 
   private ExecutionContext(
       ProjectFilesystem projectFilesystem,
@@ -69,7 +74,8 @@ public class ExecutionContext {
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      ClassLoaderCache classLoaderCache) {
     this.verbosity = console.getVerbosity();
     this.projectFilesystem = projectFilesystem;
     this.console = console;
@@ -84,6 +90,7 @@ public class ExecutionContext {
     this.environment = environment;
     this.javaPackageFinder = javaPackageFinder;
     this.objectMapper = objectMapper;
+    this.classLoaderCache = classLoaderCache;
   }
 
   /**
@@ -110,7 +117,8 @@ public class ExecutionContext {
         platform,
         this.environment,
         this.javaPackageFinder,
-        this.objectMapper);
+        this.objectMapper,
+        classLoaderCache.addRef());
   }
 
   public void logError(Throwable error, String msg, Object... formatArgs) {
@@ -224,6 +232,15 @@ public class ExecutionContext {
     return environment;
   }
 
+  public ClassLoaderCache getClassLoaderCache() {
+    return classLoaderCache;
+  }
+
+  @Override
+  public void close() throws IOException {
+    classLoaderCache.close();
+  }
+
   public BuildId getBuildId() {
     return eventBus.getBuildId();
   }
@@ -243,6 +260,7 @@ public class ExecutionContext {
     @Nullable private ImmutableMap<String, String> environment = null;
     @Nullable private JavaPackageFinder javaPackageFinder = null;
     @Nullable private ObjectMapper objectMapper = null;
+    private ClassLoaderCache classLoaderCache = new ClassLoaderCache();
 
     private Builder() {}
 
@@ -260,7 +278,8 @@ public class ExecutionContext {
           Preconditions.checkNotNull(platform),
           Preconditions.checkNotNull(environment),
           Preconditions.checkNotNull(javaPackageFinder),
-          Preconditions.checkNotNull(objectMapper));
+          Preconditions.checkNotNull(objectMapper),
+          Preconditions.checkNotNull(classLoaderCache));
     }
 
     public Builder setExecutionContext(ExecutionContext executionContext) {
@@ -348,6 +367,11 @@ public class ExecutionContext {
 
     public Builder setObjectMapper(ObjectMapper objectMapper) {
       this.objectMapper = objectMapper;
+      return this;
+    }
+
+    public Builder setClassLoaderCache(ClassLoaderCache classLoaderCache) {
+      this.classLoaderCache = classLoaderCache;
       return this;
     }
   }

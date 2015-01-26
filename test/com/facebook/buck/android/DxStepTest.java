@@ -43,6 +43,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 
+import java.io.IOException;
+
 public class DxStepTest extends EasyMockSupport {
 
   private static final String EXPECTED_DX_PREFIX =
@@ -67,178 +69,185 @@ public class DxStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testDxCommandNoOptimizeNoJumbo() {
+  public void testDxCommandNoOptimizeNoJumbo() throws IOException {
     // Context with --verbose 2.
-    ExecutionContext context = createExecutionContext(2);
-    Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+    try (ExecutionContext context = createExecutionContext(2)) {
+      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
-        SAMPLE_FILES_TO_DEX,
-        EnumSet.of(Option.NO_OPTIMIZE));
+      DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
+          SAMPLE_FILES_TO_DEX,
+          EnumSet.of(Option.NO_OPTIMIZE));
 
-    String expected = String.format("%s --no-optimize --output %s %s",
-        EXPECTED_DX_PREFIX,
-        SAMPLE_OUTPUT_PATH,
-        Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
-    MoreAsserts.assertShellCommands(
-        "--no-optimize should be present, but --force-jumbo should not.",
-        ImmutableList.of(expected),
-        ImmutableList.<Step>of(dx),
-        context);
-    verifyAll();
+      String expected = String.format("%s --no-optimize --output %s %s",
+          EXPECTED_DX_PREFIX,
+          SAMPLE_OUTPUT_PATH,
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+      MoreAsserts.assertShellCommands(
+          "--no-optimize should be present, but --force-jumbo should not.",
+          ImmutableList.of(expected),
+          ImmutableList.<Step>of(dx),
+          context);
+      verifyAll();
+    }
   }
 
   @Test
-  public void testDxCommandOptimizeNoJumbo() {
+  public void testDxCommandOptimizeNoJumbo() throws IOException {
     // Context with --verbose 2.
-    ExecutionContext context = createExecutionContext(2);
-    Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+    try (ExecutionContext context = createExecutionContext(2)) {
+      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+      DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
 
-    String expected = String.format("%s --output %s %s",
-        EXPECTED_DX_PREFIX,
-        SAMPLE_OUTPUT_PATH,
-        Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
-    MoreAsserts.assertShellCommands(
-        "Neither --no-optimize nor --force-jumbo should be present.",
-        ImmutableList.of(expected),
-        ImmutableList.<Step>of(dx),
-        context);
-    verifyAll();
+      String expected = String.format("%s --output %s %s",
+          EXPECTED_DX_PREFIX,
+          SAMPLE_OUTPUT_PATH,
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+      MoreAsserts.assertShellCommands(
+          "Neither --no-optimize nor --force-jumbo should be present.",
+          ImmutableList.of(expected),
+          ImmutableList.<Step>of(dx),
+          context);
+      verifyAll();
+    }
   }
 
   @Test
-  public void testDxCommandNoOptimizeForceJumbo() {
+  public void testDxCommandNoOptimizeForceJumbo() throws IOException {
     // Context with --verbose 2.
-    ExecutionContext context = createExecutionContext(2);
-    Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+    try (ExecutionContext context = createExecutionContext(2)) {
+      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
-        SAMPLE_FILES_TO_DEX,
-        EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
+      DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
+          SAMPLE_FILES_TO_DEX,
+          EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
 
-    String expected = String.format(
-        "%s --no-optimize --force-jumbo --output %s %s",
-        EXPECTED_DX_PREFIX,
-        SAMPLE_OUTPUT_PATH,
-        Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
-    MoreAsserts.assertShellCommands(
-        "Both --no-optimize and --force-jumbo should be present.",
-        ImmutableList.of(expected),
-        ImmutableList.<Step>of(dx),
-        context);
-    verifyAll();
+      String expected = String.format(
+          "%s --no-optimize --force-jumbo --output %s %s",
+          EXPECTED_DX_PREFIX,
+          SAMPLE_OUTPUT_PATH,
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+      MoreAsserts.assertShellCommands(
+          "Both --no-optimize and --force-jumbo should be present.",
+          ImmutableList.of(expected),
+          ImmutableList.<Step>of(dx),
+          context);
+      verifyAll();
+    }
   }
 
   @Test
-  public void testVerbose3AddsStatisticsFlag() {
+  public void testVerbose3AddsStatisticsFlag() throws IOException {
     // Context with --verbose 3.
-    ExecutionContext context = createExecutionContext(3);
-    Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+    try (ExecutionContext context = createExecutionContext(3)) {
+      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+      DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
 
-    String expected = String.format("%s --statistics --output %s %s",
-        EXPECTED_DX_PREFIX,
-        SAMPLE_OUTPUT_PATH,
-        Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
-    MoreAsserts.assertShellCommands(
-        "Ensure that the --statistics flag is present.",
-        ImmutableList.of(expected),
-        ImmutableList.<Step>of(dx),
-        context);
+      String expected = String.format("%s --statistics --output %s %s",
+          EXPECTED_DX_PREFIX,
+          SAMPLE_OUTPUT_PATH,
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+      MoreAsserts.assertShellCommands(
+          "Ensure that the --statistics flag is present.",
+          ImmutableList.of(expected),
+          ImmutableList.<Step>of(dx),
+          context);
 
-    assertTrue("Should print stdout to show statistics.",
-        dx.shouldPrintStdout(context.getVerbosity()));
-    assertTrue("Should print stderr to show statistics.",
-        dx.shouldPrintStderr(context.getVerbosity()));
-    verifyAll();
+      assertTrue("Should print stdout to show statistics.",
+          dx.shouldPrintStdout(context.getVerbosity()));
+      assertTrue("Should print stderr to show statistics.",
+          dx.shouldPrintStderr(context.getVerbosity()));
+      verifyAll();
+    }
   }
 
   @Test
-  public void testVerbose10AddsVerboseFlagToDx() {
+  public void testVerbose10AddsVerboseFlagToDx() throws IOException {
     // Context with --verbose 10.
-    ExecutionContext context = createExecutionContext(10);
-    Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+    try (ExecutionContext context = createExecutionContext(10)) {
+      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+      DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
 
-    String expected = String.format(
-        "%s --statistics --verbose --output %s %s",
-        EXPECTED_DX_PREFIX,
-        SAMPLE_OUTPUT_PATH,
-        Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
-    MoreAsserts.assertShellCommands(
-        "Ensure that the --statistics flag is present.",
-        ImmutableList.of(expected),
-        ImmutableList.<Step>of(dx),
-        context);
+      String expected = String.format(
+          "%s --statistics --verbose --output %s %s",
+          EXPECTED_DX_PREFIX,
+          SAMPLE_OUTPUT_PATH,
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+      MoreAsserts.assertShellCommands(
+          "Ensure that the --statistics flag is present.",
+          ImmutableList.of(expected),
+          ImmutableList.<Step>of(dx),
+          context);
 
-    assertTrue("Should print stdout since `dx --verbose` is enabled.",
-        dx.shouldPrintStdout(context.getVerbosity()));
-    assertTrue("Should print stdout since `dx --verbose` is enabled.",
-        dx.shouldPrintStderr(context.getVerbosity()));
-    verifyAll();
+      assertTrue("Should print stdout since `dx --verbose` is enabled.",
+          dx.shouldPrintStdout(context.getVerbosity()));
+      assertTrue("Should print stdout since `dx --verbose` is enabled.",
+          dx.shouldPrintStderr(context.getVerbosity()));
+      verifyAll();
+    }
   }
 
   @Test
-  public void testUseCustomDxOption() {
+  public void testUseCustomDxOption() throws IOException {
     // Context with --verbose 2.
-    ExecutionContext context = createExecutionContext(2);
-    Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+    try (ExecutionContext context = createExecutionContext(2)) {
+      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
-        SAMPLE_FILES_TO_DEX,
-        EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
-        new Supplier<String>() {
-          @Override
-          public String get() {
-            return "/home/mbolin/dx";
-          }
-        });
+      DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
+          SAMPLE_FILES_TO_DEX,
+          EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
+          new Supplier<String>() {
+            @Override
+            public String get() {
+              return "/home/mbolin/dx";
+            }
+          });
 
-    String expected = String.format("%s --output %s %s",
-        EXPECTED_DX_PREFIX.replace("/usr/bin/dx", "/home/mbolin/dx"),
-        SAMPLE_OUTPUT_PATH,
-        Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
-    MoreAsserts.assertShellCommands(
-        "/home/mbolin/dx should be used instead of /usr/bin/dx.",
-        ImmutableList.of(expected),
-        ImmutableList.<Step>of(dx),
-        context);
-    verifyAll();
+      String expected = String.format("%s --output %s %s",
+          EXPECTED_DX_PREFIX.replace("/usr/bin/dx", "/home/mbolin/dx"),
+          SAMPLE_OUTPUT_PATH,
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+      MoreAsserts.assertShellCommands(
+          "/home/mbolin/dx should be used instead of /usr/bin/dx.",
+          ImmutableList.of(expected),
+          ImmutableList.<Step>of(dx),
+          context);
+      verifyAll();
+    }
   }
 
   @Test
-  public void testUseCustomDxOptionWithNullSupplier() {
+  public void testUseCustomDxOptionWithNullSupplier() throws IOException {
     // Context with --verbose 2.
-    ExecutionContext context = createExecutionContext(2);
-    Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+    try (ExecutionContext context = createExecutionContext(2)) {
+      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
 
-    DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
-        SAMPLE_FILES_TO_DEX,
-        EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
-        new Supplier<String>() {
-          @Override
-          public String get() {
-            return null;
-          }
-        });
+      DxStep dx = new DxStep(SAMPLE_OUTPUT_PATH,
+          SAMPLE_FILES_TO_DEX,
+          EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
+          new Supplier<String>() {
+            @Override
+            public String get() {
+              return null;
+            }
+          });
 
-    String expected = String.format("%s --output %s %s",
-        EXPECTED_DX_PREFIX,
-        SAMPLE_OUTPUT_PATH,
-        Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
-    MoreAsserts.assertShellCommands(
-        "Should fall back to /usr/bin/dx even though USE_CUSTOM_DX_IF_AVAILABLE is used.",
-        ImmutableList.of(expected),
-        ImmutableList.<Step>of(dx),
-        context);
-    verifyAll();
+      String expected = String.format("%s --output %s %s",
+          EXPECTED_DX_PREFIX,
+          SAMPLE_OUTPUT_PATH,
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+      MoreAsserts.assertShellCommands(
+          "Should fall back to /usr/bin/dx even though USE_CUSTOM_DX_IF_AVAILABLE is used.",
+          ImmutableList.of(expected),
+          ImmutableList.<Step>of(dx),
+          context);
+      verifyAll();
+    }
   }
 
-  private ExecutionContext createExecutionContext(int verbosityLevel) {
+  private ExecutionContext createExecutionContext(int verbosityLevel) throws IOException {
     Verbosity verbosity = VerbosityParser.getVerbosityForLevel(verbosityLevel);
     TestConsole console = new TestConsole(verbosity);
     return TestExecutionContext.newBuilder()

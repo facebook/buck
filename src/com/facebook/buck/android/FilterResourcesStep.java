@@ -331,9 +331,9 @@ public class FilterResourcesStep implements Step {
   }
 
   public interface ImageScaler {
-    public boolean isAvailable(ExecutionContext context) throws InterruptedException;
+    public boolean isAvailable(ExecutionContext context) throws IOException, InterruptedException;
     public void scale(double factor, Path source, Path destination, ExecutionContext context)
-        throws InterruptedException;
+        throws IOException, InterruptedException;
   }
 
   /**
@@ -364,13 +364,15 @@ public class FilterResourcesStep implements Step {
     }
 
     @Override
-    public boolean isAvailable(ExecutionContext context) throws InterruptedException {
-      return 0 == new BashStep("which convert").execute(getContextWithSilentConsole(context));
+    public boolean isAvailable(ExecutionContext context) throws IOException, InterruptedException {
+      try (ExecutionContext silentContext = getContextWithSilentConsole(context)) {
+        return 0 == new BashStep("which convert").execute(silentContext);
+      }
     }
 
     @Override
     public void scale(double factor, Path source, Path destination, ExecutionContext context)
-        throws InterruptedException {
+        throws IOException, InterruptedException {
       Step convertStep = new BashStep(
           "convert",
           "-adaptive-resize", (int) (factor * 100) + "%",

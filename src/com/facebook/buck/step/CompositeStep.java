@@ -26,6 +26,8 @@ import com.google.common.collect.Iterables;
 import java.util.Iterator;
 import java.util.List;
 
+import java.io.IOException;
+
 public class CompositeStep implements Step, Iterable<Step> {
 
   private final ImmutableList<Step> steps;
@@ -36,7 +38,7 @@ public class CompositeStep implements Step, Iterable<Step> {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public int execute(ExecutionContext context) throws IOException, InterruptedException {
     for (Step step : steps) {
       int exitCode = step.execute(context);
       if (exitCode != 0) {

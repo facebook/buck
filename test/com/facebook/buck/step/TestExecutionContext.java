@@ -22,6 +22,7 @@ import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.ClassLoaderCache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
@@ -34,6 +35,10 @@ public class TestExecutionContext {
   private TestExecutionContext() {
     // Utility class.
   }
+
+  // For test code, use a global class loader cache to avoid having to call ExecutionContext.close()
+  // in each test case.
+  private static ClassLoaderCache testClassLoaderCache = new ClassLoaderCache();
 
   public static ExecutionContext.Builder newBuilder() {
     return ExecutionContext.builder()
@@ -53,7 +58,8 @@ public class TestExecutionContext {
         .setPlatform(Platform.detect())
         .setEnvironment(ImmutableMap.copyOf(System.getenv()))
         .setJavaPackageFinder(new FakeJavaPackageFinder())
-        .setObjectMapper(new ObjectMapper());
+        .setObjectMapper(new ObjectMapper())
+        .setClassLoaderCache(testClassLoaderCache);
   }
 
   public static ExecutionContext newInstance() {

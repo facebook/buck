@@ -30,6 +30,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -70,7 +71,7 @@ public class CopyResourcesStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public int execute(ExecutionContext context) throws IOException, InterruptedException {
     for (Step step : buildSteps()) {
       int result = step.execute(context);
       if (result != 0) {

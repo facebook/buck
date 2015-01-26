@@ -415,6 +415,7 @@ public class Build implements Closeable {
   @Override
   public void close() throws IOException {
     stepRunner.close();
+    executionContext.close();
   }
 
   private int getNumRulesToBuild(

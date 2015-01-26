@@ -98,22 +98,22 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
     InstallableApk installableApk = (InstallableApk) buildRule;
 
     // We need this in case adb isn't already running.
-    ExecutionContext context = createExecutionContext(options, actionGraph);
+    try (ExecutionContext context = createExecutionContext(options, actionGraph)) {
+      final AdbHelper adbHelper = new AdbHelper(
+          options.adbOptions(),
+          options.targetDeviceOptions(),
+          context,
+          console,
+          getBuckEventBus(),
+          options.getBuckConfig());
 
-    final AdbHelper adbHelper = new AdbHelper(
-        options.adbOptions(),
-        options.targetDeviceOptions(),
-        context,
-        console,
-        getBuckEventBus(),
-        options.getBuckConfig());
-
-    // Find application package name from manifest and uninstall from matching devices.
-    String appId = AdbHelper.tryToExtractPackageNameFromManifest(installableApk, context);
-    return adbHelper.uninstallApp(
-        appId,
-        options.uninstallOptions()
-    ) ? 0 : 1;
+      // Find application package name from manifest and uninstall from matching devices.
+      String appId = AdbHelper.tryToExtractPackageNameFromManifest(installableApk, context);
+      return adbHelper.uninstallApp(
+          appId,
+          options.uninstallOptions()
+      ) ? 0 : 1;
+    }
   }
 
   @Override

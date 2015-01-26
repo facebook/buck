@@ -931,11 +931,13 @@ public class Project {
         console.getStdOut(),
         console.getStdErr(),
         Ansi.withoutTty());
-    ExecutionContext childContext = ExecutionContext.builder()
+    int exitCode;
+    try (ExecutionContext childContext = ExecutionContext.builder()
         .setExecutionContext(executionContext)
         .setConsole(childConsole)
-        .build();
-    int exitCode = command.execute(childContext);
+        .build()) {
+      exitCode = command.execute(childContext);
+    }
     return new ExitCodeAndOutput(exitCode, command.getStdout(), command.getStderr());
   }
 
