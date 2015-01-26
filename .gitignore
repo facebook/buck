@@ -46,3 +46,7 @@ test/com/facebook/buck/ocaml/testdata/ocaml/.buckconfig
 .*.swp
 .*.swo
 
+
+# Emacs backup files
+*~
+\#*
