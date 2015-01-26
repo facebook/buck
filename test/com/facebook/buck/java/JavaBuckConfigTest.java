@@ -102,6 +102,21 @@ public class JavaBuckConfigTest {
   }
 
   @Test
+  public void whenJavacJarDoesNotExistThenHumanReadableExceptionIsThrown() throws IOException {
+    String invalidPath = temporaryFolder.getRoot().getAbsolutePath() + "DoesNotExist";
+    Reader reader = new StringReader(Joiner.on('\n').join(
+            "[tools]",
+            "    javac_jar = " + invalidPath));
+    JavaBuckConfig config = createWithDefaultFilesystem(reader);
+    try {
+      config.getJavacJarPath();
+      fail("Should throw exception as javac file does not exist.");
+    } catch (HumanReadableException e) {
+      assertEquals(e.getHumanReadableErrorMessage(), "Javac JAR does not exist: " + invalidPath);
+    }
+  }
+
+  @Test
   public void shouldSetJavaTargetAndSourceVersionFromConfig()
       throws IOException, InterruptedException {
     String sourceLevel = "source-level";

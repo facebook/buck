@@ -385,4 +385,19 @@ The value given is in milliseconds.
 
     {/param}
   {/call}
+
+{call .section}{param title: 'tools' /}{/call}
+This section tells Buck how to find certain tools.
+<p>
+
+The "javac" option is a path to a program that acts like Java javac.
+When set, buck uses this program instead of the system Java compiler.
+
+The "javac_jar" option is like "javac", except that it points to a JAR
+containing a javac-like compiler.
+
+When "javac_jar" is set, Buck loads the referenced compiler in-memory.
+When neither option is set, Buck defaults to using the system compiler
+in-memory.
+
 {/template}

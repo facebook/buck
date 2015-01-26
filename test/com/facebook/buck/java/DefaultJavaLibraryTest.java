@@ -1161,6 +1161,38 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
+  public void testWhenJavacJarIsProvidedAJavacInMemoryStepIsAdded() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
+    Path javacJarPath = Paths.get("java/src/com/libone/JavacJar.jar");
+    BuildRule rule = JavaLibraryBuilder
+        .createBuilder(libraryOneTarget)
+        .addSrc(Paths.get("java/src/com/libone/Bar.java"))
+        .setJavacJar(javacJarPath)
+        .build(ruleResolver);
+    DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule;
+
+    ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
+    buildable.createCommandsForJavac(
+        buildable.getPathToOutputFile(),
+        ImmutableSet.copyOf(buildable.getTransitiveClasspathEntries().values()),
+        ImmutableSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
+        buildable.getJavacOptions(),
+        BuildDependencies.FIRST_ORDER_ONLY,
+        Optional.<JavacStep.SuggestBuildRules>absent(),
+        stepsBuilder,
+        libraryOneTarget);
+
+    List<Step> steps = stepsBuilder.build();
+    assertEquals(steps.size(), 3);
+    assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
+    Jsr199Javac jsrJavac = ((Jsr199Javac) (((JavacStep) steps.get(2)).getJavac()));
+    assertTrue(jsrJavac.getJavacJar().isPresent());
+    assertEquals(jsrJavac.getJavacJar().get(), javacJarPath);
+  }
+
+  @Test
   public void testAddPostprocessClassesCommands() {
     ImmutableList<String> postprocessClassesCommands = ImmutableList.of("tool arg1", "tool2");
     Path outputDirectory = BIN_PATH.resolve("android/java/lib__java__classes");

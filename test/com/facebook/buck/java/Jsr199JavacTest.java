@@ -71,7 +71,7 @@ public class Jsr199JavacTest extends EasyMockSupport {
   }
 
   private Jsr199Javac createTestStep() {
-    return new Jsr199Javac();
+    return new Jsr199Javac(Optional.<Path>absent());
   }
 
   private ImmutableList.Builder<String> getArgs() {

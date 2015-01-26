@@ -40,6 +40,7 @@ import javax.annotation.Nullable;
 public class JavacOptions {
 
   private final Optional<Path> javacPath;
+  private final Optional<Path> javacJarPath;
   private final boolean debug;
   private final boolean verbose;
   private final String sourceLevel;
@@ -51,6 +52,7 @@ public class JavacOptions {
 
   private JavacOptions(
       Optional<Path> javacPath,
+      Optional<Path> javacJarPath,
       boolean debug,
       boolean verbose,
       String sourceLevel,
@@ -60,6 +62,7 @@ public class JavacOptions {
       ImmutableMap<String, String> sourceToBootclasspath,
       AnnotationProcessingParams annotationProcessingParams) {
     this.javacPath = javacPath;
+    this.javacJarPath = javacJarPath;
     this.debug = debug;
     this.verbose = verbose;
     this.sourceLevel = sourceLevel;
@@ -133,10 +136,18 @@ public class JavacOptions {
     optionsBuilder.addAll(extraArguments);
   }
 
+  @Nullable
+  private static String optionalPathFileName(Optional<Path> path) {
+    return path.isPresent()
+        ? path.get().getFileName().toString()
+        : null;
+  }
+
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(simons): Include bootclasspath params.
     builder.set("sourceLevel", sourceLevel)
         .set("javacPath", javacPath.transform(Functions.toStringFunction()).orNull())
+        .set("javacJarPath", javacJarPath.transform(Functions.toStringFunction()).orNull())
         .set("targetLevel", targetLevel)
         .set("extraArguments", Joiner.on(',').join(extraArguments))
         .set("debug", debug);
@@ -165,6 +176,10 @@ public class JavacOptions {
     return javacPath;
   }
 
+  public Optional<Path> getJavacJarPath() {
+    return javacJarPath;
+  }
+
   static Builder builderForUseInJavaBuckConfig() {
     return new Builder();
   }
@@ -180,6 +195,7 @@ public class JavacOptions {
     }
 
     builder.setJavacPath(options.javacPath);
+    builder.setJavacJarPath(options.javacJarPath);
     builder.setAnnotationProcessingParams(options.annotationProcessingParams);
     builder.sourceToBootclasspath = options.sourceToBootclasspath;
     builder.setBootclasspath(options.bootclasspath.orNull());
@@ -192,6 +208,7 @@ public class JavacOptions {
 
   public static class Builder {
     private Optional<Path> javacPath = Optional.<Path>absent();
+    private Optional<Path> javacJarPath = Optional.<Path>absent();
     private String sourceLevel;
     private String targetLevel;
     private ImmutableList<String> extraArguments = ImmutableList.of();
@@ -207,6 +224,11 @@ public class JavacOptions {
 
     public Builder setJavacPath(Optional<Path> javacPath) {
       this.javacPath = javacPath;
+      return this;
+    }
+
+    public Builder setJavacJarPath(Optional<Path> javacJarPath) {
+      this.javacJarPath = javacJarPath;
       return this;
     }
 
@@ -254,6 +276,7 @@ public class JavacOptions {
     public JavacOptions build() {
       return new JavacOptions(
           javacPath,
+          javacJarPath,
           debug,
           verbose,
           Preconditions.checkNotNull(sourceLevel),

@@ -88,6 +88,34 @@ compiled class files and resources.
 {/call}
 
 {call buck.arg}
+  {param name: 'javac' /}
+  {param default : '<global value>' /}
+  {param desc}
+  Specifies the Java compiler program to use for this rule.
+  The value is a source path (e.g., //foo/bar:bar).
+  Only one of "javac" and "javac_jar" may be set for a given rule.
+  Overrides the value in "javac" in the "tools" section
+  of <a
+  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>.
+  {/param}  See the <code>.buckconfig</code> documentation for
+  details.
+{/call}
+
+{call buck.arg}
+  {param name: 'javac_jar' /}
+  {param default : '<global value>' /}
+  {param desc}
+  Specifies the Java compiler program to use for this rule.
+  The value is a source path (e.g., //foo/bar:bar).
+  Only one of "javac_jar" and "javac" may be set for a given rule.
+  Overrides the value in "javac_jar" in the "tools" section
+  of <a
+  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>.
+  {/param}  See the <code>.buckconfig</code> documentation for
+  details.
+{/call}
+
+{call buck.arg}
   {param name: 'extra_arguments' /}
   {param default : '[]' /}
   {param desc}

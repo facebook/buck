@@ -68,6 +68,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
+        pathResolver,
         args,
         templateOptions);
 

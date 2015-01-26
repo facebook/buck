@@ -85,6 +85,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     }
 
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
+        pathResolver,
         args,
         defaultOptions);
 
@@ -124,7 +125,10 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     return arg.resources.get();
   }
 
-  public static JavacOptions.Builder getJavacOptions(Arg args, JavacOptions defaultOptions) {
+  public static JavacOptions.Builder getJavacOptions(
+      SourcePathResolver resolver,
+      Arg args,
+      JavacOptions defaultOptions) {
     JavacOptions.Builder builder = JavacOptions.builder(defaultOptions);
 
     if (args.source.isPresent()) {
@@ -143,6 +147,15 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
           .build());
     }
 
+    if (args.javac.isPresent() || args.javacJar.isPresent()) {
+      if (args.javac.isPresent() && args.javacJar.isPresent()) {
+        throw new HumanReadableException("Cannot set both javac and javacjar");
+      }
+
+      builder.setJavacPath(args.javac.transform(resolver.getPathFunction()));
+      builder.setJavacJarPath(args.javacJar.transform(resolver.getPathFunction()));
+    }
+
     return builder;
   }
 
@@ -152,6 +165,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<ImmutableSortedSet<SourcePath>> resources;
     public Optional<String> source;
     public Optional<String> target;
+    public Optional<SourcePath> javac;
+    public Optional<SourcePath> javacJar;
     public Optional<ImmutableList<String>> extraArguments;
     public Optional<Path> proguardConfig;
     public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps;

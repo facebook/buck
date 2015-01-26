@@ -33,7 +33,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
+import com.facebook.buck.util.MockClassLoader;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,6 +45,19 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import javax.tools.JavaCompiler;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.JavaFileManager;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileObject;
+import javax.lang.model.SourceVersion;
+import java.nio.charset.Charset;
+import java.io.Writer;
+import java.util.Locale;
+import java.util.Set;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class Jsr199JavacIntegrationTest {
   public static final ImmutableSet<Path> SOURCE_PATHS = ImmutableSet.of(Paths.get("Example.java"));
@@ -137,7 +152,96 @@ public class Jsr199JavacIntegrationTest {
     assertEquals("Example.java", Files.toString(srcsListFile, Charsets.UTF_8).trim());
   }
 
-  private Jsr199Javac createJavac(boolean withSyntaxError) throws IOException {
+  public static final class MockJavac implements JavaCompiler {
+
+    public MockJavac() {
+    }
+
+    @Override
+    public Set<SourceVersion> getSourceVersions() {
+      return ImmutableSet.of(SourceVersion.RELEASE_7);
+    }
+
+    @Override
+    public int run(
+        InputStream in,
+        OutputStream out,
+        OutputStream err,
+        String... arguments) {
+      throw new UnsupportedOperationException("abcdef");
+    }
+
+    @Override
+    public int isSupportedOption(String option) {
+      return -1;
+    }
+
+    @Override
+    public StandardJavaFileManager
+    getStandardFileManager(
+        DiagnosticListener<? super JavaFileObject> diagnosticListener,
+        Locale locale,
+        Charset charset) {
+      throw new UnsupportedOperationException("abcdef");
+    }
+
+    @Override
+    public CompilationTask getTask(
+        Writer out,
+        JavaFileManager fileManager,
+        DiagnosticListener<? super JavaFileObject> diagnosticListener,
+        Iterable<String> options,
+        Iterable<String> classes,
+        Iterable<? extends JavaFileObject> compilationUnits) {
+      throw new UnsupportedOperationException("abcdef");
+    }
+  }
+
+  @Test
+  public void shouldUseSpecifiedJavacJar() throws Exception {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRule rule = new FakeBuildRule("//:fake", pathResolver);
+    resolver.addToIndex(rule);
+
+    Path fakeJavacJar = Paths.get("ae036e57-77a7-4356-a79c-0f85b1a3290d", "fakeJavac.jar");
+    ExecutionContext executionContext = createExecutionContext();
+    MockClassLoader mockClassLoader = new MockClassLoader(
+        ClassLoader.getSystemClassLoader(),
+        ImmutableMap.<String, Class<?>>of(
+            "com.sun.tools.javac.api.JavacTool",
+            MockJavac.class));
+    executionContext.getClassLoaderCache().injectClassLoader(
+        ClassLoader.getSystemClassLoader(),
+        ImmutableList.of(fakeJavacJar),
+        mockClassLoader);
+
+    Jsr199Javac javac = createJavac(
+        /* withSyntaxError */ false,
+        Optional.of(fakeJavacJar));
+
+    boolean caught = false;
+
+    try {
+      javac.buildWithClasspath(
+          executionContext,
+          BuildTargetFactory.newInstance("//some:example"),
+          ImmutableList.<String>of(),
+          SOURCE_PATHS,
+          Optional.of(pathToSrcsList),
+          Optional.<Path>absent());
+    } catch (UnsupportedOperationException ex) {
+      if (ex.toString().contains("abcdef")) {
+        caught = true;
+      }
+    }
+
+    assertTrue("mock Java compiler should throw", caught);
+  }
+
+  private Jsr199Javac createJavac(
+      boolean withSyntaxError,
+      Optional<Path> javacJar) throws IOException {
 
     File exampleJava = tmp.newFile("Example.java");
     Files.write(Joiner.on('\n').join(
@@ -151,7 +255,11 @@ public class Jsr199JavacIntegrationTest {
 
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());
-    return new Jsr199Javac();
+    return new Jsr199Javac(javacJar);
+  }
+
+  private Jsr199Javac createJavac(boolean withSyntaxError) throws IOException {
+    return createJavac(withSyntaxError, Optional.<Path>absent());
   }
 
   private ExecutionContext createExecutionContext() {

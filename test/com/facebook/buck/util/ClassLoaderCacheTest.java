@@ -46,8 +46,8 @@ public class ClassLoaderCacheTest {
     };
 
   @Test
-  public void cacheLoaderReturnsSameClassLoader() {
-    ClassLoaderCache clc = new ClassLoaderCache();
+  public void cacheLoaderReturnsSameClassLoader() throws Exception {
+    try (ClassLoaderCache clc = new ClassLoaderCache()) {
     ClassLoader dummyParent = ClassLoader.getSystemClassLoader();
     ImmutableList<Path> dummyClassPath = ImmutableList.of(
         Paths.get(DUMMYDIR, "foo"),
@@ -66,5 +66,6 @@ public class ClassLoaderCacheTest {
     assertArrayEquals(
         dummyUrls,
         ((URLClassLoader) cl1).getURLs());
+    }
   }
 }

@@ -229,7 +229,7 @@ public class JavacStep implements Step {
     if (externalJavac.isPresent()) {
       return new ExternalJavac(externalJavac.get());
     }
-    return new Jsr199Javac();
+    return new Jsr199Javac(javacOptions.getJavacJarPath());
   }
 
   @Override

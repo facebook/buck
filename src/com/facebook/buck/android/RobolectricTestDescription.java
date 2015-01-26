@@ -67,6 +67,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
+        pathResolver,
         args,
         templateOptions);
 

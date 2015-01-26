@@ -60,4 +60,9 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
     arg.proguardConfig = Optional.of(proguardConfig);
     return this;
   }
+
+  public JavaLibraryBuilder setJavacJar(Path javacJar) {
+    arg.javacJar = Optional.<SourcePath>of(new PathSourcePath(javacJar));
+    return this;
+  }
 }

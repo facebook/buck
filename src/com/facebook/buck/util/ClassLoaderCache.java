@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.HashMap;
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
+
 /**
  * Maintain a cache mapping class paths to class loaders that load from these class paths.  The
  * class loaders remain active until ClassLoaderCache itself is unloaded.
@@ -50,9 +52,8 @@ public final class ClassLoaderCache implements AutoCloseable {
 
   private int referenceCount = 1;
 
-  public synchronized ClassLoader getClassLoaderForClassPath(
-      @Nullable ClassLoader parentClassLoader,
-      ImmutableList<Path> classPath) {
+  private synchronized Map<ImmutableList<Path>, ClassLoader> getCacheForParent(
+      ClassLoader parentClassLoader) {
     Map<ImmutableList<Path>, ClassLoader> cacheForParent =
         cache.get(parentClassLoader);
 
@@ -60,6 +61,16 @@ public final class ClassLoaderCache implements AutoCloseable {
       cacheForParent = new HashMap<>();
       cache.put(parentClassLoader, cacheForParent);
     }
+
+    return cacheForParent;
+  }
+
+  public synchronized ClassLoader getClassLoaderForClassPath(
+      @Nullable ClassLoader parentClassLoader,
+      ImmutableList<Path> classPath) {
+
+    Map<ImmutableList<Path>, ClassLoader> cacheForParent =
+        getCacheForParent(parentClassLoader);
 
     ClassLoader classLoader = cacheForParent.get(classPath);
     if (classLoader == null) {
@@ -71,6 +82,17 @@ public final class ClassLoaderCache implements AutoCloseable {
     }
 
     return classLoader;
+  }
+
+  @VisibleForTesting
+  public synchronized void injectClassLoader(
+      @Nullable ClassLoader parentClassLoader,
+      ImmutableList<Path> classPath,
+      ClassLoader injectedClassLoader) {
+    Map<ImmutableList<Path>, ClassLoader> cacheForParent =
+        getCacheForParent(parentClassLoader);
+
+    cacheForParent.put(classPath, injectedClassLoader);
   }
 
   public synchronized ClassLoaderCache addRef() {

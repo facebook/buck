@@ -62,6 +62,7 @@ public class JavaBuckConfig {
 
     return JavacOptions.builderForUseInJavaBuckConfig()
         .setJavacPath(getJavacPath())
+        .setJavacJarPath(getJavacJarPath())
         .setSourceLevel(sourceLevel.or(TARGETED_JAVA_VERSION))
         .setTargetLevel(targetLevel.or(TARGETED_JAVA_VERSION))
         .setBootclasspathMap(bootclasspaths.build())
@@ -82,6 +83,21 @@ public class JavaBuckConfig {
       }
       return Optional.of(javac.toPath());
     }
+    return Optional.absent();
+  }
+
+  Optional<Path> getJavacJarPath() {
+    Optional<String> path = delegate.getValue("tools", "javac_jar");
+    if (path.isPresent()) {
+      File javacJar = new File(path.get());
+      if (!javacJar.exists()) {
+        throw new HumanReadableException(
+            "Javac JAR does not exist: " + javacJar.getPath());
+      }
+
+      return Optional.of(javacJar.toPath());
+    }
+
     return Optional.absent();
   }
 }

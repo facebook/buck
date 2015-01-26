@@ -1428,7 +1428,7 @@ public class ParserTest extends EasyMockSupport {
     assertEquals(
         ImmutableMap.of(
             fooLibTarget,
-            HashCode.fromString("603135088672350587d5c28aedd6990842ec27b2")),
+            HashCode.fromString("89ea162462da33de83d3ceed77bf3e87dc4e9a24")),
         buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
   }
 
@@ -1456,7 +1456,7 @@ public class ParserTest extends EasyMockSupport {
     assertEquals(
         ImmutableMap.of(
             fooLibTarget,
-            HashCode.fromString("36c997c6ea1580d8eb6816b97eede918c6bf7791")),
+            HashCode.fromString("d57f85b354fba3fc10722747c2048af7d88b7625")),
         buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
   }
 
@@ -1490,7 +1490,7 @@ public class ParserTest extends EasyMockSupport {
     assertEquals(
         ImmutableMap.of(
             fooLibTarget,
-            HashCode.fromString("5e5dcd431b4862c7d0f2fe04e8af2c2cd89185c9")),
+            HashCode.fromString("576a2a847bd78def7ac842d40735aa0a358d82a4")),
         buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
 
     testBarJavaFile.delete();
@@ -1502,7 +1502,7 @@ public class ParserTest extends EasyMockSupport {
     assertEquals(
         ImmutableMap.of(
             fooLibTarget,
-            HashCode.fromString("36c997c6ea1580d8eb6816b97eede918c6bf7791")),
+            HashCode.fromString("d57f85b354fba3fc10722747c2048af7d88b7625")),
         buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
   }
 
@@ -1530,7 +1530,7 @@ public class ParserTest extends EasyMockSupport {
     assertEquals(
         ImmutableMap.of(
             fooLibTarget,
-            HashCode.fromString("36c997c6ea1580d8eb6816b97eede918c6bf7791")),
+            HashCode.fromString("d57f85b354fba3fc10722747c2048af7d88b7625")),
         buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
 
     Path testFooJavaFilePath = testFooJavaFile.toPath();
@@ -1547,7 +1547,7 @@ public class ParserTest extends EasyMockSupport {
     assertEquals(
         ImmutableMap.of(
             fooLibTarget,
-            HashCode.fromString("e4b7b2c0efbeb285b3655c912e8bb8172b92413d")),
+            HashCode.fromString("361b267b0c9a71296fca5d3f11aec39912289c42")),
         buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
   }
 
@@ -1570,9 +1570,9 @@ public class ParserTest extends EasyMockSupport {
     assertEquals(
         ImmutableMap.of(
             fooLibTarget,
-            HashCode.fromString("603135088672350587d5c28aedd6990842ec27b2"),
+            HashCode.fromString("89ea162462da33de83d3ceed77bf3e87dc4e9a24"),
             fooLib2Target,
-            HashCode.fromString("3fafb8b650251f4264af02227c52ae75f94e8dfd")),
+            HashCode.fromString("6ba2b4d75e848ed204579d55ad616c2776596f7d")),
         buildTargetGraphAndGetHashCodes(parser, fooLibTarget, fooLib2Target));
   }
 
@@ -1595,9 +1595,9 @@ public class ParserTest extends EasyMockSupport {
     assertEquals(
         ImmutableMap.of(
             fooLibTarget,
-            HashCode.fromString("c116d53f8789387c63cb79ad1fa0a1c23bee3524"),
+            HashCode.fromString("0176c450c8f85c1a2a4942923488c3552e03a42f"),
             fooLib2Target,
-            HashCode.fromString("3fafb8b650251f4264af02227c52ae75f94e8dfd")),
+            HashCode.fromString("6ba2b4d75e848ed204579d55ad616c2776596f7d")),
         buildTargetGraphAndGetHashCodes(parser, fooLibTarget, fooLib2Target));
   }
 

@@ -8,6 +8,8 @@
   "deps" : [ ],
   "exportedDeps": [],
   "extraArguments": [],
+  "javac": null,
+  "javacJar": null,
   "name" : "test-library",
   "postprocessClassesCommands" : [ ],
   "proguardConfig" : null,
