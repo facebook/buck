@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidResourceBuilder;
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
@@ -37,6 +37,7 @@ import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeRepositoryFactory;
@@ -51,7 +52,6 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
@@ -122,8 +122,7 @@ public class TargetsCommandTest {
             androidDirectoryResolver,
             new InstanceArtifactCacheFactory(artifactCache),
             eventBus,
-            BuckTestConstant.PYTHON_INTERPRETER,
-            BuckTestConstant.ALLOW_EMPTY_GLOBS,
+            new ParserConfig(new FakeBuckConfig()),
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
             new FakeJavaPackageFinder(),
@@ -141,7 +140,7 @@ public class TargetsCommandTest {
         "//" + testDataPath(""),
         "test-library");
 
-    targetsCommand.printJsonForTargets(nodes, /* includes */ ImmutableList.<String>of());
+    targetsCommand.printJsonForTargets(nodes, new ParserConfig(new FakeBuckConfig()));
     String observedOutput = console.getTextWrittenToStdOut();
     JsonNode observed = objectMapper.readTree(
         objectMapper.getJsonFactory().createJsonParser(observedOutput));
@@ -163,7 +162,7 @@ public class TargetsCommandTest {
       throws BuildFileParseException, IOException, InterruptedException {
     // nonexistent target should not exist.
     SortedMap<String, TargetNode<?>> buildRules = buildTargetNodes("//", "nonexistent");
-    targetsCommand.printJsonForTargets(buildRules, /* includes */ ImmutableList.<String>of());
+    targetsCommand.printJsonForTargets(buildRules, new ParserConfig(new FakeBuckConfig()));
 
     String output = console.getTextWrittenToStdOut();
     assertEquals("[\n]\n", output);

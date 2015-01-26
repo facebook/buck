@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.BuckConstant;
@@ -114,6 +115,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       throws IOException, InterruptedException {
     OwnersReport report = OwnersReport.emptyReport();
     Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
+    ParserConfig parserConfig = new ParserConfig(options.getBuckConfig());
 
     for (Path filePath : options.getArgumentsAsPaths(getProjectFilesystem().getRootPath())) {
       Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(filePath);
@@ -143,7 +145,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
 
           List<Map<String, Object>> buildFileTargets = parser.parseBuildFile(
               buckFile,
-              options.getDefaultIncludes(),
+              parserConfig,
               environment,
               console,
               getBuckEventBus());

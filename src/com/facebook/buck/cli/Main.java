@@ -34,6 +34,7 @@ import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -180,10 +181,7 @@ public final class Main {
       this.hashCache = new DefaultFileHashCache(repository.getFilesystem());
       this.parser = Parser.createParser(
           repositoryFactory,
-          repository.getBuckConfig().getPythonInterpreter(),
-          repository.getBuckConfig().getAllowEmptyGlobs(),
-          repository.getBuckConfig().enforceBuckPackageBoundary(),
-          repository.getBuckConfig().getTempFilePatterns(),
+          new ParserConfig(repository.getBuckConfig()),
           createRuleKeyBuilderFactory(hashCache));
 
       this.fileEventBus = new EventBus("file-change-events");
@@ -628,10 +626,7 @@ public final class Main {
       if (parser == null) {
         parser = Parser.createParser(
             repositoryFactory,
-            rootRepository.getBuckConfig().getPythonInterpreter(),
-            rootRepository.getBuckConfig().getAllowEmptyGlobs(),
-            rootRepository.getBuckConfig().enforceBuckPackageBoundary(),
-            rootRepository.getBuckConfig().getTempFilePatterns(),
+            new ParserConfig(rootRepository.getBuckConfig()),
             createRuleKeyBuilderFactory(fileHashCache));
       }
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootRepository.getFilesystem());

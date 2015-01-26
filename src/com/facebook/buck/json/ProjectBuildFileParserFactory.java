@@ -28,11 +28,9 @@ public interface ProjectBuildFileParserFactory {
   /**
    * Construct a new parser on demand using the provided common project build files.
    *
-   * @param commonIncludes Common build files to be imported into each build file parsed.xs
    * @return Parser instance.
    */
   public ProjectBuildFileParser createParser(
-      Iterable<String> commonIncludes,
       Console console,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus);

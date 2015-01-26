@@ -16,9 +16,11 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
@@ -30,7 +32,6 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FileHashCache;
@@ -42,10 +43,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.util.regex.Pattern;
 
 /**
  * {@link CommandRunnerParams} is the collection of parameters needed to create a
@@ -76,8 +75,7 @@ class CommandRunnerParams {
       AndroidDirectoryResolver androidDirectoryResolver,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
-      String pythonInterpreter,
-      boolean allowEmptyGlobs,
+      ParserConfig parserConfig,
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
@@ -93,10 +91,7 @@ class CommandRunnerParams {
         eventBus,
         Parser.createParser(
             repositoryFactory,
-            pythonInterpreter,
-            allowEmptyGlobs,
-            /* enforceBuckPackageBoundary */ true,
-            /* tempFilePatterns */ ImmutableSet.<Pattern>of(),
+            parserConfig,
             new RuleKeyBuilderFactory() {
               @Override
               public Builder newInstance(BuildRule buildRule, SourcePathResolver resolver) {

@@ -21,6 +21,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
@@ -91,16 +92,13 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
 
     ProjectBuildFileParserFactory factory = new DefaultProjectBuildFileParserFactory(
         projectFilesystem,
-        options.getBuckConfig().getPythonInterpreter(),
-        options.getBuckConfig().getAllowEmptyGlobs(),
+        new ParserConfig(options.getBuckConfig()),
         // TODO(simons): When we land dynamic loading, this MUST change.
         getRepository().getAllDescriptions());
-    try (ProjectBuildFileParser parser =
-             factory.createParser(
-                 options.getBuckConfig().getDefaultIncludes(),
-                 console,
-                 environment,
-                 getBuckEventBus())) {
+    try (ProjectBuildFileParser parser = factory.createParser(
+        console,
+        environment,
+        getBuckEventBus())) {
       PrintStream out = console.getStdOut();
       for (String pathToBuildFile : options.getArguments()) {
         // Print a comment with the path to the build file.

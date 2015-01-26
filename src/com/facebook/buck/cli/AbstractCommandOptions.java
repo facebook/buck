@@ -16,11 +16,11 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 
@@ -86,10 +86,6 @@ public abstract class AbstractCommandOptions {
 
   protected BuckConfig getBuckConfig() {
     return buckConfig;
-  }
-
-  public Iterable<String> getDefaultIncludes() {
-    return this.buckConfig.getDefaultIncludes();
   }
 
   public boolean showHelp() {

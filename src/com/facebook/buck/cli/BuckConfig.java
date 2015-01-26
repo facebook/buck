@@ -52,7 +52,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -112,7 +111,6 @@ public class BuckConfig {
   private static final String DEFAULT_HTTP_CACHE_PORT = "8080";
   private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "10";
   private static final String DEFAULT_MAX_TRACES = "25";
-  private static final String DEFAULT_ALLOW_EMPTY_GLOBS = "true";
 
   // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
   private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
@@ -340,16 +338,6 @@ public class BuckConfig {
   }
 
   /**
-   * A (possibly empty) sequence of paths to files that should be included by default when
-   * evaluating a build file.
-   */
-  public Iterable<String> getDefaultIncludes() {
-    ImmutableMap<String, String> entries = getEntriesForSection("buildfile");
-    String includes = Strings.nullToEmpty(entries.get("includes"));
-    return Splitter.on(' ').trimResults().omitEmptyStrings().split(includes);
-  }
-
-  /**
    * A set of paths to subtrees that do not contain source files, build files or files that could
    * affect either (buck-out, .idea, .buckd, buck-cache, .git, etc.).  May return absolute paths
    * as well as relative paths.
@@ -409,18 +397,8 @@ public class BuckConfig {
         .toList();
   }
 
-  private ImmutableList<String> asListWithoutComments(Optional<String> value) {
+  public ImmutableList<String> asListWithoutComments(Optional<String> value) {
     return asListWithoutComments(value.orNull());
-  }
-
-  public ImmutableSet<Pattern> getTempFilePatterns() {
-    final ImmutableMap<String, String> projectConfig = getEntriesForSection("project");
-    final String tempFilesKey = "temp_files";
-    ImmutableSet.Builder<Pattern> builder = ImmutableSet.builder();
-    for (String regex : asListWithoutComments(projectConfig.get(tempFilesKey))) {
-      builder.add(Pattern.compile(regex));
-    }
-    return builder.build();
   }
 
   @Nullable
@@ -582,12 +560,6 @@ public class BuckConfig {
 
   public int getMaxTraces() {
     return Integer.parseInt(getValue("log", "max_traces").or(DEFAULT_MAX_TRACES));
-  }
-
-  public boolean getAllowEmptyGlobs() {
-    return Boolean.parseBoolean(
-        getValue("build", "allow_empty_globs").or(DEFAULT_ALLOW_EMPTY_GLOBS)
-    );
   }
 
   public boolean getRestartAdbOnFailure() {
@@ -827,10 +799,6 @@ public class BuckConfig {
     return getValue("ndk", "ndk_version");
   }
 
-  public boolean enforceBuckPackageBoundary() {
-    return getBooleanValue("project", "check_package_boundary", true);
-  }
-
   public Optional<String> getValue(String sectionName, String propertyName) {
     ImmutableMap<String, String> properties = this.getEntriesForSection(sectionName);
     return Optional.fromNullable(properties.get(propertyName));
@@ -916,26 +884,32 @@ public class BuckConfig {
    */
   public String getPythonInterpreter() {
     Optional<String> configPath = getValue("tools", "python");
+    ImmutableList<String> pythonInterpreterNames = PYTHON_INTERPRETER_NAMES;
     if (configPath.isPresent()) {
       // Python path in config. Use it or report error if invalid.
       File python = new File(configPath.get());
       if (isExecutableFile(python)) {
         return python.getAbsolutePath();
       }
-      throw new HumanReadableException("Not a python executable: " + configPath.get());
-    } else {
-      for (String interpreterName : PYTHON_INTERPRETER_NAMES) {
-        // For each path in PATH, test "python" with each PATHEXT suffix to allow
-        // for file extensions.
-        for (String path : getEnv("PATH", File.pathSeparator)) {
-          for (String pathExt : getEnv("PATHEXT", File.pathSeparator)) {
-            File python = new File(path, interpreterName + pathExt);
-            if (isExecutableFile(python)) {
-              return python.getAbsolutePath();
-            }
+      pythonInterpreterNames = ImmutableList.of(configPath.get());
+    }
+
+    for (String interpreterName : pythonInterpreterNames) {
+      // For each path in PATH, test "python" with each PATHEXT suffix to allow
+      // for file extensions.
+      for (String path : getEnv("PATH", File.pathSeparator)) {
+        for (String pathExt : getEnv("PATHEXT", File.pathSeparator)) {
+          File python = new File(path, interpreterName + pathExt);
+          if (isExecutableFile(python)) {
+            return python.getAbsolutePath();
           }
         }
       }
+    }
+
+    if (configPath.isPresent()) {
+      throw new HumanReadableException("Not a python executable: " + configPath.get());
+    } else {
       throw new HumanReadableException("No python2 or python found.");
     }
   }

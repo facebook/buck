@@ -23,6 +23,7 @@ java_library(
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/parser:config',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/util:constants',

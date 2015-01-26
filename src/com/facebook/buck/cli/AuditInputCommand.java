@@ -22,6 +22,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
@@ -83,7 +84,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
     try {
       graph = getParser().buildTargetGraphForBuildTargets(
           targets,
-          options.getDefaultIncludes(),
+          new ParserConfig(options.getBuckConfig()),
           getBuckEventBus(),
           console,
           environment,

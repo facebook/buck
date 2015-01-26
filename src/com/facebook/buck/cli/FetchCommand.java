@@ -23,6 +23,7 @@ import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.Description;
@@ -76,7 +77,7 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
     try {
       TargetGraph targetGraph = getParser().buildTargetGraphForBuildTargets(
           buildTargets,
-          options.getDefaultIncludes(),
+          new ParserConfig(options.getBuckConfig()),
           getBuckEventBus(),
           console,
           environment,

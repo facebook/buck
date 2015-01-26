@@ -20,6 +20,7 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvent;
@@ -96,7 +97,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     try {
       TargetGraph targetGraph = getParser().buildTargetGraphForBuildTargets(
           buildTargets,
-          options.getDefaultIncludes(),
+          new ParserConfig(options.getBuckConfig()),
           getBuckEventBus(),
           console,
           environment,

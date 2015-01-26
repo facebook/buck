@@ -29,6 +29,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
@@ -120,7 +121,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
               new TargetNodePredicateSpec(
                   Predicates.<TargetNode<?>>alwaysTrue(),
                   getProjectFilesystem().getIgnorePaths())),
-          options.getDefaultIncludes(),
+          new ParserConfig(options.getBuckConfig()),
           getBuckEventBus(),
           console,
           environment,

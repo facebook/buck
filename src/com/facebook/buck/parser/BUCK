@@ -1,4 +1,19 @@
 java_library(
+  name = 'config',
+  srcs = [
+    'ParserConfig.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/cli:config',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_library(
   name = 'parser',
   srcs = [
     'BuildFileSpec.java',
@@ -10,6 +25,7 @@ java_library(
     'TargetNodeSpec.java',
   ],
   deps = [
+    ':config',
     ':rule_pattern',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/json:json',

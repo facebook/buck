@@ -26,6 +26,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.testutil.TestConsole;
@@ -70,8 +71,7 @@ public class JavaSymbolFinderIntegrationTest {
     ProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             projectFilesystem,
-            config.getPythonInterpreter(),
-            config.getAllowEmptyGlobs(),
+            new ParserConfig(config),
             allDescriptions);
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     JavaSymbolFinder finder = new JavaSymbolFinder(

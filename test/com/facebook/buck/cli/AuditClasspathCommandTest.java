@@ -20,7 +20,9 @@ import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBinaryBuilder;
+import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidLibraryBuilder;
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.FakeJavaPackageFinder;
@@ -29,6 +31,7 @@ import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -36,12 +39,9 @@ import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
@@ -79,8 +79,7 @@ public class AuditClasspathCommandTest {
         androidDirectoryResolver,
         new InstanceArtifactCacheFactory(artifactCache),
         eventBus,
-        BuckTestConstant.PYTHON_INTERPRETER,
-        BuckTestConstant.ALLOW_EMPTY_GLOBS,
+        new ParserConfig(new FakeBuckConfig()),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),

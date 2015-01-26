@@ -28,6 +28,7 @@ import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
@@ -294,6 +295,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // The first step is to parse all of the build files. This will populate the parser and find all
     // of the test rules.
+    ParserConfig parserConfig = new ParserConfig(options.getBuckConfig());
     TargetGraph targetGraph = getParser().buildTargetGraphForTargetNodeSpecs(
         ImmutableList.of(
             new TargetNodePredicateSpec(
@@ -303,8 +305,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
                     return input.getType().isTestRule();
                   }
                 },
-                getProjectFilesystem().getIgnorePaths())),
-        options.getDefaultIncludes(),
+            getProjectFilesystem().getIgnorePaths())),
+        parserConfig,
         getBuckEventBus(),
         console,
         environment,

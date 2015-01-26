@@ -145,8 +145,6 @@ public class JavaSymbolFinder {
     ImmutableSetMultimap.Builder<Path, BuildTarget> sourceFileTargetsMultimap =
         ImmutableSetMultimap.builder();
     try (ProjectBuildFileParser parser = projectBuildFileParserFactory.createParser(
-        // TODO(jacko): Get this from the right place when plugins are working.
-        config.getDefaultIncludes(),
         console,
         environment,
         buckEventBus)) {
