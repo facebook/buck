@@ -28,6 +28,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/jackson/jackson-annotations-2.0.5.jar",
     "third-party/java/jackson/jackson-core-2.0.5.jar",
     "third-party/java/jackson/jackson-databind-2.0.5.jar",
+    "third-party/java/jackson/jackson-datatype-jdk7-2.5.0.jar",
     "third-party/java/jsr/javax.inject-1.jar",
     "third-party/java/jsr/jsr305.jar",
     "third-party/java/icu4j/icu4j-54.1.1.jar",

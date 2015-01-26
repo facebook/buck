@@ -39,6 +39,15 @@ prebuilt_jar(
 )
 
 prebuilt_jar(
+  name = 'jackson-datatype-jdk7',
+  binary_jar = 'jackson-datatype-jdk7-2.5.0.jar',
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+    '//test/...',
+  ],
+)
+
+prebuilt_jar(
   name = 'jackson-databind',
   binary_jar = 'jackson-databind-2.0.5.jar',
   visibility = [
