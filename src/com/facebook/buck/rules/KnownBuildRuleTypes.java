@@ -37,7 +37,7 @@ import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
-import com.facebook.buck.apple.AppleCxxPlatform;
+import com.facebook.buck.apple.AppleCxxPlatforms;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleSdk;
@@ -258,7 +258,7 @@ public class KnownBuildRuleTypes {
     for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {
       AppleSdk sdk = entry.getKey();
       for (String architecture : sdk.getArchitectures()) {
-        CxxPlatform appleCxxPlatform = new AppleCxxPlatform(
+        CxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
             buildPlatform,
             sdk.getApplePlatform(),
             sdk.getName(),

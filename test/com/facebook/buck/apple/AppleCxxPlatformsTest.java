@@ -20,6 +20,7 @@ import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecuti
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -31,9 +32,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Unit tests for {@link AppleCxxPlatform}.
+ * Unit tests for {@link AppleCxxPlatforms}.
  */
-public class AppleCxxPlatformTest {
+public class AppleCxxPlatformsTest {
 
   @Test
   public void appleSdkPathsBuiltFromDirectory() throws Exception {
@@ -46,8 +47,8 @@ public class AppleCxxPlatformTest {
             .setSdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
 
-    AppleCxxPlatform appleCxxPlatform =
-        new AppleCxxPlatform(
+    CxxPlatform appleCxxPlatform =
+        AppleCxxPlatforms.build(
             Platform.MACOS,
             ApplePlatform.IPHONEOS,
             "iphoneos8.0",
