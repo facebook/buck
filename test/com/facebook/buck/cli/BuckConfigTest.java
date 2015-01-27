@@ -342,7 +342,7 @@ public class BuckConfigTest {
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[project]",
         "ignore = .git, foo, bar/, baz//, a/b/c"));
-    BuckConfig config = BuckConfig.createFromReader(
+    BuckConfig config = BuckConfigTestUtils.createFromReader(
         reader,
         filesystem,
         parser,
@@ -376,7 +376,7 @@ public class BuckConfigTest {
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[cache]",
         "dir = cache_dir"));
-    BuckConfig config = BuckConfig.createFromReader(
+    BuckConfig config = BuckConfigTestUtils.createFromReader(
         reader,
         filesystem,
         parser,
@@ -660,7 +660,7 @@ public class BuckConfigTest {
     };
     BuildTargetParser parser = new BuildTargetParser();
     StringReader reader = new StringReader(Joiner.on('\n').join(lines));
-    return BuckConfig.createFromReader(
+    return BuckConfigTestUtils.createFromReader(
         reader,
         projectFilesystem,
         parser,

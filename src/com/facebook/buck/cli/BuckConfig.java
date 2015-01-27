@@ -244,22 +244,6 @@ public class BuckConfig {
   }
 
   @VisibleForTesting
-  public static BuckConfig createFromReader(
-      Reader reader,
-      ProjectFilesystem projectFilesystem,
-      BuildTargetParser buildTargetParser,
-      Platform platform,
-      ImmutableMap<String, String> environment)
-      throws IOException {
-    return createFromReaders(
-        ImmutableList.of(reader),
-        projectFilesystem,
-        buildTargetParser,
-        platform,
-        environment);
-  }
-
-  @VisibleForTesting
   static Map<String, Map<String, String>> createFromReaders(Iterable<Reader> readers)
       throws IOException {
 

@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
@@ -39,11 +40,26 @@ public class BuckConfigTestUtils {
     if (parser == null) {
       parser = new BuildTargetParser();
     }
-    return BuckConfig.createFromReader(
+    return createFromReader(
         reader,
         projectFilesystem,
         parser,
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
+  }
+
+  public static BuckConfig createFromReader(
+      Reader reader,
+      ProjectFilesystem projectFilesystem,
+      BuildTargetParser buildTargetParser,
+      Platform platform,
+      ImmutableMap<String, String> environment)
+      throws IOException {
+    return BuckConfig.createFromReaders(
+        ImmutableList.of(reader),
+        projectFilesystem,
+        buildTargetParser,
+        platform,
+        environment);
   }
 }

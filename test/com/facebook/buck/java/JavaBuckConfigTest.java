@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -175,7 +176,7 @@ public class JavaBuckConfigTest {
       throws IOException {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     BuildTargetParser parser = new BuildTargetParser();
-    BuckConfig raw = BuckConfig.createFromReader(
+    BuckConfig raw = BuckConfigTestUtils.createFromReader(
         reader,
         filesystem,
         parser,
