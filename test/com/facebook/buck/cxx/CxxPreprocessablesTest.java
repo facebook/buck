@@ -57,7 +57,7 @@ import java.util.Map;
 
 public class CxxPreprocessablesTest {
 
-  private static final CxxPlatform CXX_PLATFORM = new DefaultCxxPlatform(new FakeBuckConfig());
+  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(new FakeBuckConfig());
 
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
     for (T item : items) {
@@ -139,7 +139,7 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveCxxPreprocessorInput() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
 
     // Setup a simple CxxPreprocessorDep which contributes components to preprocessing.
     BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance("//:cpp1");
@@ -227,7 +227,7 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
 
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinal = "bottom";
@@ -301,7 +301,7 @@ public class CxxPreprocessablesTest {
     CxxSource cxxSource = ImmutableCxxSource.of(CxxSource.Type.CXX, new TestSourcePath(name));
 
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
-    CxxPlatform platform = new DefaultCxxPlatform(
+    CxxPlatform platform = DefaultCxxPlatforms.build(
         new FakeBuckConfig(
             ImmutableMap.<String, Map<String, String>>of(
                 "cxx", ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags)))));
@@ -358,7 +358,7 @@ public class CxxPreprocessablesTest {
                 .put("cxxppflags", space.join(cxxppflags))
                 .build()),
         filesystem);
-    DefaultCxxPlatform platform = new DefaultCxxPlatform(buckConfig);
+    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
 
     String cSourceName = "test.c";
     CxxSource cSource = ImmutableCxxSource.of(CxxSource.Type.C, new TestSourcePath(cSourceName));

@@ -27,16 +27,19 @@ import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * A C/C++ platform described in the "cxx" section of .buckconfig, with reasonable system defaults.
+ * Utility class to create a C/C++ platform described in the "cxx"
+ * section of .buckconfig, with reasonable system defaults.
  */
-public class DefaultCxxPlatform implements CxxPlatform {
+public class DefaultCxxPlatforms {
+
+  // Utility class, do not instantiate.
+  private DefaultCxxPlatforms() { }
 
   private static enum LinkerType {
     GNU,
@@ -77,10 +80,7 @@ public class DefaultCxxPlatform implements CxxPlatform {
   private static final Path DEFAULT_YACC = Paths.get("/usr/bin/bison");
   private static final ImmutableList<String> DEFAULT_YACC_FLAGS = ImmutableList.of("-y");
 
-  private final Platform platform;
-  private final BuckConfig delegate;
-
-  private final Optional<DebugPathSanitizer> debugPathSanitizer =
+  private static final Optional<DebugPathSanitizer> DEBUG_PATH_SANITIZER =
       Optional.of(
           new DebugPathSanitizer(
               250,
@@ -88,16 +88,47 @@ public class DefaultCxxPlatform implements CxxPlatform {
               Paths.get("."),
               ImmutableBiMap.<Path, Path>of()));
 
-  public DefaultCxxPlatform(Platform platform, BuckConfig delegate) {
-    this.platform = platform;
-    this.delegate = delegate;
+  public static CxxPlatform build(BuckConfig delegate) {
+    return build(Platform.detect(), delegate);
   }
 
-  public DefaultCxxPlatform(BuckConfig delegate) {
-    this(Platform.detect(), delegate);
+  public static CxxPlatform build(Platform platform, BuckConfig delegate) {
+    ImmutableCxxPlatform.Builder builder = ImmutableCxxPlatform.builder();
+    // TODO(user, agallagher): Generalize this so we don't need all these setters.
+    builder
+        .setFlavor(FLAVOR)
+        .setAs(getTool("cxx", "as", DEFAULT_AS, delegate))
+        .addAllAsflags(getFlags("cxx", "asflags", DEFAULT_ASFLAGS, delegate))
+        .setAspp(getTool("cxx", "aspp", DEFAULT_ASPP, delegate))
+        .addAllAsppflags(getFlags("cxx", "asppflags", DEFAULT_ASPPFLAGS, delegate))
+        .setCc(getTool("cxx", "cc", DEFAULT_CC, delegate))
+        .addAllCflags(getFlags("cxx", "cflags", DEFAULT_CFLAGS, delegate))
+        .setCxx(getTool("cxx", "cxx", DEFAULT_CXX, delegate))
+        .addAllCxxflags(getFlags("cxx", "cxxflags", DEFAULT_CXXFLAGS, delegate))
+        .setCpp(getTool("cxx", "cpp", DEFAULT_CPP, delegate))
+        .addAllCppflags(getFlags("cxx", "cppflags", DEFAULT_CPPFLAGS, delegate))
+        .setCxxpp(getTool("cxx", "cxxpp", DEFAULT_CXXPP, delegate))
+        .addAllCxxppflags(getFlags("cxx", "cxxppflags", DEFAULT_CXXPPFLAGS, delegate))
+        .setCxxld(getTool("cxx", "cxxld", DEFAULT_CXXLD, delegate))
+        .addAllCxxldflags(getFlags("cxx", "cxxldflags", DEFAULT_CXXLDFLAGS, delegate))
+        .setLd(getLd(platform, delegate))
+        .addAllLdflags(getFlags("cxx", "ldflags", DEFAULT_LDFLAGS, delegate))
+        .setAr(getTool("cxx", "ar", DEFAULT_AR, delegate))
+        .addAllArflags(getFlags("cxx", "arflags", DEFAULT_ARFLAGS, delegate))
+        .setLex(getSourcePath("cxx", "lex", DEFAULT_LEX, delegate))
+        .addAllLexFlags(getFlags("cxx", "lexflags", DEFAULT_LEX_FLAGS, delegate))
+        .setYacc(getSourcePath("cxx", "yacc", DEFAULT_YACC, delegate))
+        .addAllYaccFlags(getFlags("cxx", "yaccflags", DEFAULT_YACC_FLAGS, delegate))
+        .setSharedLibraryExtension(getSharedLibraryExtension(platform))
+        .setDebugPathSanitizer(DEBUG_PATH_SANITIZER);
+    return builder.build();
   }
 
-  private ImmutableList<String> getFlags(String section, String field, ImmutableList<String> def) {
+  private static ImmutableList<String> getFlags(
+      String section,
+      String field,
+      ImmutableList<String> def,
+      BuckConfig delegate) {
     Optional<String> value = delegate.getValue(section, field);
     if (!value.isPresent()) {
       return def;
@@ -109,91 +140,24 @@ public class DefaultCxxPlatform implements CxxPlatform {
     return split.build();
   }
 
-  private SourcePath getSourcePath(String section, String field, Path def) {
+  private static SourcePath getSourcePath(
+      String section,
+      String field,
+      Path def,
+      BuckConfig delegate) {
     Optional<Path> path = delegate.getPath(section, field);
     return new PathSourcePath(path.or(def));
   }
 
-  private Tool getTool(String section, String field, Path def) {
-    return new SourcePathTool(getSourcePath(section, field, def));
+  private static Tool getTool(
+      String section,
+      String field,
+      Path def,
+      BuckConfig delegate) {
+    return new SourcePathTool(getSourcePath(section, field, def, delegate));
   }
 
-  @Override
-  public Flavor getFlavor() {
-    return FLAVOR;
-  }
-
-  @Override
-  public Tool getAs() {
-    return getTool("cxx", "as", DEFAULT_AS);
-  }
-
-  @Override
-  public ImmutableList<String> getAsflags() {
-    return getFlags("cxx", "asflags", DEFAULT_ASFLAGS);
-  }
-
-  @Override
-  public Tool getAspp() {
-    return getTool("cxx", "aspp", DEFAULT_ASPP);
-  }
-
-  @Override
-  public ImmutableList<String> getAsppflags() {
-    return getFlags("cxx", "asppflags", DEFAULT_ASPPFLAGS);
-  }
-
-  @Override
-  public Tool getCc() {
-    return getTool("cxx", "cc", DEFAULT_CC);
-  }
-
-  @Override
-  public ImmutableList<String> getCflags() {
-    return getFlags("cxx", "cflags", DEFAULT_CFLAGS);
-  }
-
-  @Override
-  public Tool getCxx() {
-    return getTool("cxx", "cxx", DEFAULT_CXX);
-  }
-
-  @Override
-  public ImmutableList<String> getCxxflags() {
-    return getFlags("cxx", "cxxflags", DEFAULT_CXXFLAGS);
-  }
-
-  @Override
-  public Tool getCpp() {
-    return getTool("cxx", "cpp", DEFAULT_CPP);
-  }
-
-  @Override
-  public ImmutableList<String> getCppflags() {
-    return getFlags("cxx", "cppflags", DEFAULT_CPPFLAGS);
-  }
-
-  @Override
-  public Tool getCxxpp() {
-    return getTool("cxx", "cxxpp", DEFAULT_CXXPP);
-  }
-
-  @Override
-  public ImmutableList<String> getCxxppflags() {
-    return getFlags("cxx", "cxxppflags", DEFAULT_CXXPPFLAGS);
-  }
-
-  @Override
-  public Tool getCxxld() {
-    return getTool("cxx", "cxxld", DEFAULT_CXXLD);
-  }
-
-  @Override
-  public ImmutableList<String> getCxxldflags() {
-    return getFlags("cxx", "cxxldflags", DEFAULT_CXXLDFLAGS);
-  }
-
-  private LinkerType getLinkerTypeForPlatform() {
+  private static LinkerType getLinkerTypeForPlatform(Platform platform) {
     switch (platform) {
       case LINUX:
         return LinkerType.GNU;
@@ -207,15 +171,14 @@ public class DefaultCxxPlatform implements CxxPlatform {
     }
   }
 
-  private LinkerType getLinkerType() {
+  private static LinkerType getLinkerType(Platform platform, BuckConfig delegate) {
     Optional<LinkerType> type = delegate.getEnum("cxx", "ld_type", LinkerType.class);
-    return type.or(getLinkerTypeForPlatform());
+    return type.or(getLinkerTypeForPlatform(platform));
   }
 
-  @Override
-  public Linker getLd() {
-    Tool tool = new SourcePathTool(getSourcePath("cxx", "ld", DEFAULT_LD));
-    LinkerType type = getLinkerType();
+  private static Linker getLd(Platform platform, BuckConfig delegate) {
+    Tool tool = new SourcePathTool(getSourcePath("cxx", "ld", DEFAULT_LD, delegate));
+    LinkerType type = getLinkerType(platform, delegate);
     switch (type) {
       case GNU:
         return new GnuLinker(tool);
@@ -228,48 +191,7 @@ public class DefaultCxxPlatform implements CxxPlatform {
     }
   }
 
-  @Override
-  public ImmutableList<String> getLdflags() {
-    return getFlags("cxx", "ldflags", DEFAULT_LDFLAGS);
-  }
-
-  @Override
-  public ImmutableMultimap<Linker.LinkableDepType, String> getRuntimeLdflags() {
-    return ImmutableMultimap.of();
-  }
-
-  @Override
-  public Tool getAr() {
-    return getTool("cxx", "ar", DEFAULT_AR);
-  }
-
-  @Override
-  public ImmutableList<String> getArflags() {
-    return getFlags("cxx", "arflags", DEFAULT_ARFLAGS);
-  }
-
-  @Override
-  public SourcePath getLex() {
-    return getSourcePath("cxx", "lex", DEFAULT_LEX);
-  }
-
-  @Override
-  public ImmutableList<String> getLexFlags() {
-    return getFlags("cxx", "lexflags", DEFAULT_LEX_FLAGS);
-  }
-
-  @Override
-  public SourcePath getYacc() {
-    return getSourcePath("cxx", "yacc", DEFAULT_YACC);
-  }
-
-  @Override
-  public ImmutableList<String> getYaccFlags() {
-    return getFlags("cxx", "yaccflags", DEFAULT_YACC_FLAGS);
-  }
-
-  @Override
-  public String getSharedLibraryExtension() {
+  private static String getSharedLibraryExtension(Platform platform) {
     switch (platform) {
       case MACOS:
         return "dylib";
@@ -280,10 +202,4 @@ public class DefaultCxxPlatform implements CxxPlatform {
         return "so";
     }
   }
-
-  @Override
-  public Optional<DebugPathSanitizer> getDebugPathSanitizer() {
-    return debugPathSanitizer;
-  }
-
 }

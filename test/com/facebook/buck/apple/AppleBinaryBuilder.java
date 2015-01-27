@@ -21,7 +21,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.DefaultCxxPlatform;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.google.common.collect.ImmutableMap;
@@ -40,7 +40,7 @@ public class AppleBinaryBuilder
 
   private static AppleBinaryDescription createDescription() {
     BuckConfig buckConfig = new FakeBuckConfig();
-    CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(buckConfig);
     FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
         "C/C++ Platform",
         ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform));

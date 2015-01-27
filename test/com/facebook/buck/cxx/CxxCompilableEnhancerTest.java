@@ -50,7 +50,7 @@ import java.util.Map;
 
 public class CxxCompilableEnhancerTest {
 
-  private static final CxxPlatform CXX_PLATFORM = new DefaultCxxPlatform(new FakeBuckConfig());
+  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(new FakeBuckConfig());
 
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
     for (T item : items) {
@@ -156,7 +156,7 @@ public class CxxCompilableEnhancerTest {
         new TestSourcePath(name));
 
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
-    CxxPlatform platform = new DefaultCxxPlatform(
+    CxxPlatform platform = DefaultCxxPlatforms.build(
         new FakeBuckConfig(
             ImmutableMap.<String, Map<String, String>>of(
                 "cxx", ImmutableMap.of("cxxflags", Joiner.on(" ").join(platformFlags)))));
@@ -206,7 +206,7 @@ public class CxxCompilableEnhancerTest {
                 .put("cxxflags", space.join(cxxflags))
                 .build()),
         filesystem);
-    DefaultCxxPlatform platform = new DefaultCxxPlatform(buckConfig);
+    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
 
     String cSourceName = "test.i";
     CxxSource cSource = ImmutableCxxSource.of(

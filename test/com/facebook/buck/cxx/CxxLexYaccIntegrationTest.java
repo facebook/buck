@@ -50,7 +50,7 @@ public class CxxLexYaccIntegrationTest {
   @Before
   public void setUp() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    DefaultCxxPlatform cxxBuckConfig = new DefaultCxxPlatform(new FakeBuckConfig());
+    CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(new FakeBuckConfig());
     assumeExists(pathResolver.getPath(cxxBuckConfig.getLex()));
     assumeExists(pathResolver.getPath(cxxBuckConfig.getYacc()));
   }
@@ -61,7 +61,7 @@ public class CxxLexYaccIntegrationTest {
         this, "lexyacc", tmp);
     workspace.setUp();
 
-    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:main");
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "main.cpp";

@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.DefaultCxxPlatform;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -48,7 +48,7 @@ import java.nio.file.Paths;
 public class PythonBinaryDescriptionTest {
 
   private static final Path PEX_PATH = Paths.get("pex");
-  private static final CxxPlatform CXX_PLATFORM = new DefaultCxxPlatform(new FakeBuckConfig());
+  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(new FakeBuckConfig());
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of());
 

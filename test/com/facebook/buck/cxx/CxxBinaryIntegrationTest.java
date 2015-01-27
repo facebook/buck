@@ -50,7 +50,7 @@ public class CxxBinaryIntegrationTest {
         this, "simple", tmp);
     workspace.setUp();
 
-    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "simple.cpp";
@@ -167,7 +167,7 @@ public class CxxBinaryIntegrationTest {
         this, "simple", tmp);
     workspace.setUp();
 
-    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple_with_header");
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "simple_with_header.cpp";
@@ -245,7 +245,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
 
     // Setup variables pointing to the sources and targets of the top-level binary rule.
-    CxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:binary_with_dep");
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "foo.cpp";
@@ -403,7 +403,7 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void resolveHeadersBehindSymlinkTreesInPreprocessedOutput() throws IOException {
     BuckConfig buckConfig = new FakeBuckConfig();
-    CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(buckConfig);
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "resolved", tmp);

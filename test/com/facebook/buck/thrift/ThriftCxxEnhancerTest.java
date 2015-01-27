@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.DefaultCxxPlatform;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -54,8 +54,8 @@ public class ThriftCxxEnhancerTest {
   private static final FakeBuckConfig BUCK_CONFIG = new FakeBuckConfig();
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
   private static final CxxBuckConfig CXX_BUCK_CONFIG = new CxxBuckConfig(BUCK_CONFIG);
-  private static final DefaultCxxPlatform CXX_PLATFORM =
-      new DefaultCxxPlatform(BUCK_CONFIG);
+  private static final CxxPlatform CXX_PLATFORM =
+      DefaultCxxPlatforms.build(BUCK_CONFIG);
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       new FlavorDomain<>(
           "C/C++ Platform",

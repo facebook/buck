@@ -33,7 +33,8 @@ import com.facebook.buck.cxx.CxxCompilableEnhancer;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxSource;
-import com.facebook.buck.cxx.DefaultCxxPlatform;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -361,7 +362,7 @@ public class OCamlIntegrationTest {
     BuildTarget libplusStatic = createStaticLibraryBuildTarget(libplus);
     BuildTarget cclib = BuildTargetFactory.newInstance("//clib:cc");
 
-    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
     BuildTarget cclibbin =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(cclib, cxxPlatform.getFlavor());
     String sourceName = "cc/cc.cpp";

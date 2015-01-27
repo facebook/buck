@@ -55,7 +55,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPythonExtensionDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
-import com.facebook.buck.cxx.DefaultCxxPlatform;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.extension.BuckExtensionDescription;
 import com.facebook.buck.file.Downloader;
@@ -317,7 +317,7 @@ public class KnownBuildRuleTypes {
     ImmutableMap.Builder<Flavor, CxxPlatform> cxxPlatformsBuilder = ImmutableMap.builder();
 
     // Add the default, config-defined C/C++ platform.
-    DefaultCxxPlatform defaultCxxPlatform = new DefaultCxxPlatform(platform, config);
+    CxxPlatform defaultCxxPlatform = DefaultCxxPlatforms.build(platform, config);
     cxxPlatformsBuilder.put(defaultCxxPlatform.getFlavor(), defaultCxxPlatform);
 
     // If an Android NDK is present, add platforms for that.  This is mostly useful for

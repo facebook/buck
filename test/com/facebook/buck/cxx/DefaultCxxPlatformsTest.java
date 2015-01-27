@@ -26,11 +26,11 @@ import org.junit.Test;
 
 import java.util.Map;
 
-public class DefaultCxxPlatformTest {
+public class DefaultCxxPlatformsTest {
 
   @Test
   public void lexYaccFlags() {
-    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new FakeBuckConfig(
             ImmutableMap.<String, Map<String, String>>of(
                 "cxx", ImmutableMap.of(

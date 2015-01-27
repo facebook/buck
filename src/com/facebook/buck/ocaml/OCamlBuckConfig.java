@@ -18,7 +18,7 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.DefaultCxxPlatform;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.util.environment.Platform;
@@ -34,7 +34,7 @@ public class OCamlBuckConfig {
 
   public OCamlBuckConfig(Platform platform, BuckConfig delegate) {
     this.delegate = delegate;
-    cxxPlatform = new DefaultCxxPlatform(platform, delegate);
+    cxxPlatform = DefaultCxxPlatforms.build(platform, delegate);
   }
 
   public Optional<Path> getOCamlCompiler() {

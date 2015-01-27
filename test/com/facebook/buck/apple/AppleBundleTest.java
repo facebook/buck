@@ -24,7 +24,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.DefaultCxxPlatform;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRule;
@@ -42,7 +42,7 @@ public class AppleBundleTest {
 
   private AppleBundleDescription description = new AppleBundleDescription();
   private BuckConfig buckConfig = new FakeBuckConfig();
-  private CxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
+  private CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(buckConfig);
   private FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
       "C/C++ Platform",
       ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform));

@@ -44,7 +44,7 @@ public class CxxTestDescriptionTest {
             "cxx",
             ImmutableMap.of("gtest_dep", gtest.toString())));
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
-    DefaultCxxPlatform cxxPlatform = new DefaultCxxPlatform(buckConfig);
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(buckConfig);
     CxxTestDescription desc = new CxxTestDescription(
         cxxBuckConfig,
         cxxPlatform,
