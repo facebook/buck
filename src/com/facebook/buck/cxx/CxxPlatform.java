@@ -63,10 +63,10 @@ public interface CxxPlatform {
   Tool getAr();
   List<String> getArflags();
 
-  SourcePath getLex();
+  Optional<SourcePath> getLex();
   List<String> getLexFlags();
 
-  SourcePath getYacc();
+  Optional<SourcePath> getYacc();
   List<String> getYaccFlags();
 
   String getSharedLibraryExtension();

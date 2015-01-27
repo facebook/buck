@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -224,6 +225,20 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<String, SourcePath> lexSrcs,
       ImmutableList<String> yaccFlags,
       ImmutableMap<String, SourcePath> yaccSrcs) {
+    if (!lexSrcs.isEmpty() && !cxxPlatform.getLex().isPresent()) {
+      throw new HumanReadableException(
+          "Platform %s must support lex to compile srcs %s",
+          cxxPlatform,
+          lexSrcs);
+    }
+
+    if (!yaccSrcs.isEmpty() && !cxxPlatform.getYacc().isPresent()) {
+      throw new HumanReadableException(
+          "Platform %s must support yacc to compile srcs %s",
+          cxxPlatform,
+          yaccSrcs);
+    }
+
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     ImmutableMap.Builder<String, CxxSource> lexYaccCxxSourcesBuilder = ImmutableMap.builder();
@@ -248,7 +263,7 @@ public class CxxDescriptionEnhancer {
                   pathResolver.filterBuildRuleInputs(ImmutableList.of(source))),
               ImmutableSortedSet.<BuildRule>of()),
           pathResolver,
-          cxxPlatform.getLex(),
+          cxxPlatform.getLex().get(),
           ImmutableList.<String>builder()
               .addAll(cxxPlatform.getLexFlags())
               .addAll(lexFlags)
@@ -287,7 +302,7 @@ public class CxxDescriptionEnhancer {
                   pathResolver.filterBuildRuleInputs(ImmutableList.of(source))),
               ImmutableSortedSet.<BuildRule>of()),
           pathResolver,
-          cxxPlatform.getYacc(),
+          cxxPlatform.getYacc().get(),
           ImmutableList.<String>builder()
               .addAll(cxxPlatform.getYaccFlags())
               .addAll(yaccFlags)

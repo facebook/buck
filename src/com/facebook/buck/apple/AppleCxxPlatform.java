@@ -63,9 +63,9 @@ public class AppleCxxPlatform implements CxxPlatform {
   private final ImmutableList<String> cxxppflags;
   private final Tool cxxld;
   private final ImmutableList<String> cxxldflags;
-  private final SourcePath lex;
+  private final Optional<SourcePath> lex;
   private final ImmutableList<String> lexflags;
-  private final SourcePath yacc;
+  private final Optional<SourcePath> yacc;
   private final ImmutableList<String> yaccflags;
   private final Linker ld;
   private final ImmutableList<String> ldflags;
@@ -131,9 +131,9 @@ public class AppleCxxPlatform implements CxxPlatform {
     this.cxxld = clangXxPath;
     this.cxxldflags = cflagsBuilder.build();
 
-    this.lex = getTool("lex", toolSearchPaths);
+    this.lex = Optional.of(getTool("lex", toolSearchPaths));
     this.lexflags = ImmutableList.of(); // TODO
-    this.yacc = getTool("yacc", toolSearchPaths);
+    this.yacc = Optional.of(getTool("yacc", toolSearchPaths));
     this.yaccflags = ImmutableList.of(); // TODO
 
     this.ld = new DarwinLinker(new SourcePathTool(getTool("libtool", toolSearchPaths)));
@@ -266,7 +266,7 @@ public class AppleCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getLex() {
+  public Optional<SourcePath> getLex() {
     return lex;
   }
 
@@ -276,7 +276,7 @@ public class AppleCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getYacc() {
+  public Optional<SourcePath> getYacc() {
     return yacc;
   }
 

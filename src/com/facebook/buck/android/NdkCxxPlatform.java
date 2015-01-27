@@ -533,23 +533,23 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public SourcePath getLex() {
-    throw new HumanReadableException("lex is not supported on %s platform", getFlavor());
+  public Optional<SourcePath> getLex() {
+    return Optional.absent();
   }
 
   @Override
   public ImmutableList<String> getLexFlags() {
-    throw new HumanReadableException("lex is not supported on %s platform", getFlavor());
+    return ImmutableList.of();
   }
 
   @Override
-  public SourcePath getYacc() {
-    throw new HumanReadableException("yacc is not supported on %s platform", getFlavor());
+  public Optional<SourcePath> getYacc() {
+    return Optional.absent();
   }
 
   @Override
   public ImmutableList<String> getYaccFlags() {
-    throw new HumanReadableException("yacc is not supported on %s platform", getFlavor());
+    return ImmutableList.of();
   }
 
   @Override

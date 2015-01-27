@@ -51,8 +51,10 @@ public class CxxLexYaccIntegrationTest {
   public void setUp() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(new FakeBuckConfig());
-    assumeExists(pathResolver.getPath(cxxBuckConfig.getLex()));
-    assumeExists(pathResolver.getPath(cxxBuckConfig.getYacc()));
+    assumeTrue(cxxBuckConfig.getLex().isPresent());
+    assumeTrue(cxxBuckConfig.getYacc().isPresent());
+    assumeExists(pathResolver.getPath(cxxBuckConfig.getLex().get()));
+    assumeExists(pathResolver.getPath(cxxBuckConfig.getYacc().get()));
   }
 
   @Test
