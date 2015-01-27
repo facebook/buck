@@ -28,6 +28,7 @@ import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkCxxPlatform;
+import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
 import com.facebook.buck.android.ProGuardConfig;
@@ -173,11 +174,11 @@ public class KnownBuildRuleTypes {
             ImmutableFlavor.of("android-arm"),
             platform,
             ndkRoot,
-            new NdkCxxPlatform.TargetConfiguration(
-                NdkCxxPlatform.Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
-                NdkCxxPlatform.ToolchainPrefix.ARM_LINUX_ANDROIDEABI,
-                NdkCxxPlatform.TargetArch.ARM,
-                NdkCxxPlatform.TargetArchAbi.ARMEABI,
+            new NdkCxxPlatforms.TargetConfiguration(
+                NdkCxxPlatforms.Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
+                NdkCxxPlatforms.ToolchainPrefix.ARM_LINUX_ANDROIDEABI,
+                NdkCxxPlatforms.TargetArch.ARM,
+                NdkCxxPlatforms.TargetArchAbi.ARMEABI,
                 /* androidPlatform */ "android-9",
                 /* compilerVersion */ "4.8",
                 /* compilerFlags */ ImmutableList.of(
@@ -186,18 +187,18 @@ public class KnownBuildRuleTypes {
                     "-msoft-float",
                     "-mthumb",
                     "-Os")),
-            NdkCxxPlatform.CxxRuntime.GNUSTL);
+            NdkCxxPlatforms.CxxRuntime.GNUSTL);
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARM, armeabi);
     NdkCxxPlatform armeabiv7 =
         new NdkCxxPlatform(
             ImmutableFlavor.of("android-armv7"),
             platform,
             ndkRoot,
-            new NdkCxxPlatform.TargetConfiguration(
-                NdkCxxPlatform.Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
-                NdkCxxPlatform.ToolchainPrefix.ARM_LINUX_ANDROIDEABI,
-                NdkCxxPlatform.TargetArch.ARM,
-                NdkCxxPlatform.TargetArchAbi.ARMEABI_V7A,
+            new NdkCxxPlatforms.TargetConfiguration(
+                NdkCxxPlatforms.Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
+                NdkCxxPlatforms.ToolchainPrefix.ARM_LINUX_ANDROIDEABI,
+                NdkCxxPlatforms.TargetArch.ARM,
+                NdkCxxPlatforms.TargetArchAbi.ARMEABI_V7A,
                 /* androidPlatform */ "android-9",
                 /* compilerVersion */ "4.8",
                 /* compilerFlags */ ImmutableList.of(
@@ -207,25 +208,25 @@ public class KnownBuildRuleTypes {
                     "-mfloat-abi=softfp",
                     "-mthumb",
                     "-Os")),
-            NdkCxxPlatform.CxxRuntime.GNUSTL);
+            NdkCxxPlatforms.CxxRuntime.GNUSTL);
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARMV7, armeabiv7);
     NdkCxxPlatform x86 =
         new NdkCxxPlatform(
             ImmutableFlavor.of("android-x86"),
             platform,
             ndkRoot,
-            new NdkCxxPlatform.TargetConfiguration(
-                NdkCxxPlatform.Toolchain.X86_4_8,
-                NdkCxxPlatform.ToolchainPrefix.I686_LINUX_ANDROID,
-                NdkCxxPlatform.TargetArch.X86,
-                NdkCxxPlatform.TargetArchAbi.X86,
+            new NdkCxxPlatforms.TargetConfiguration(
+                NdkCxxPlatforms.Toolchain.X86_4_8,
+                NdkCxxPlatforms.ToolchainPrefix.I686_LINUX_ANDROID,
+                NdkCxxPlatforms.TargetArch.X86,
+                NdkCxxPlatforms.TargetArchAbi.X86,
                 /* androidPlatform */ "android-9",
                 /* compilerVersion */ "4.8",
                 /* compilerFlags */ ImmutableList.of(
                     "-funswitch-loops",
                     "-finline-limit=300",
                     "-O2")),
-            NdkCxxPlatform.CxxRuntime.GNUSTL);
+            NdkCxxPlatforms.CxxRuntime.GNUSTL);
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.X86, x86);
 
     return ndkCxxPlatformBuilder.build();

@@ -296,9 +296,9 @@ public class AndroidBinaryGraphEnhancer {
       }
 
       // If we're using a C/C++ runtime other than the system one, add it to the APK.
-      NdkCxxPlatform.CxxRuntime cxxRuntime = platform.getCxxRuntime();
+      NdkCxxPlatforms.CxxRuntime cxxRuntime = platform.getCxxRuntime();
       if (!packageableCollection.getNativeLinkables().isEmpty() &&
-          !cxxRuntime.equals(NdkCxxPlatform.CxxRuntime.SYSTEM)) {
+          !cxxRuntime.equals(NdkCxxPlatforms.CxxRuntime.SYSTEM)) {
         nativeLinkableLibsBuilder.put(
             new Pair<>(
                 targetCpuType,

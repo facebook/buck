@@ -48,10 +48,10 @@ import java.nio.file.Paths;
  */
 public class NdkCxxPlatform implements CxxPlatform {
 
-  private static final ImmutableMap<Platform, Host> BUILD_PLATFORMS =
+  private static final ImmutableMap<Platform, NdkCxxPlatforms.Host> BUILD_PLATFORMS =
       ImmutableMap.of(
-          Platform.MACOS, Host.DARWIN_X86_64,
-          Platform.LINUX, Host.LINUX_X86_64);
+          Platform.MACOS, NdkCxxPlatforms.Host.DARWIN_X86_64,
+          Platform.LINUX, NdkCxxPlatforms.Host.LINUX_X86_64);
 
   private final Flavor flavor;
 
@@ -80,22 +80,22 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private final SourcePath objcopy;
 
-  private final CxxRuntime cxxRuntime;
+  private final NdkCxxPlatforms.CxxRuntime cxxRuntime;
   private final Path cxxSharedRuntimePath;
 
   public NdkCxxPlatform(
       Flavor flavor,
       Platform platform,
       Path ndkRoot,
-      TargetConfiguration targetConfiguration,
-      CxxRuntime cxxRuntime) {
+      NdkCxxPlatforms.TargetConfiguration targetConfiguration,
+      NdkCxxPlatforms.CxxRuntime cxxRuntime) {
 
     String version = readVersion(ndkRoot);
 
     Preconditions.checkArgument(
         platform.equals(Platform.MACOS) || platform.equals(Platform.LINUX),
         "NDKCxxPlatform can only currently run on MacOS or Linux.");
-    Host host = Preconditions.checkNotNull(BUILD_PLATFORMS.get(platform));
+    NdkCxxPlatforms.Host host = Preconditions.checkNotNull(BUILD_PLATFORMS.get(platform));
 
     this.flavor = Preconditions.checkNotNull(flavor);
 
@@ -132,11 +132,11 @@ public class NdkCxxPlatform implements CxxPlatform {
     );
 
     this.sharedRuntimeLdflags =
-        cxxRuntime != CxxRuntime.SYSTEM ?
+        cxxRuntime != NdkCxxPlatforms.CxxRuntime.SYSTEM ?
             ImmutableList.of("-l" + cxxRuntime.getSharedName()) :
             ImmutableList.<String>of();
     this.staticRuntimeLdflags =
-        cxxRuntime != CxxRuntime.SYSTEM ?
+        cxxRuntime != NdkCxxPlatforms.CxxRuntime.SYSTEM ?
             ImmutableList.of("-l" + cxxRuntime.getStaticName()) :
             ImmutableList.<String>of();
 
@@ -179,8 +179,8 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private static Path getNdkToolRoot(
       Path ndkRoot,
-      TargetConfiguration targetConfiguration,
-      Host host) {
+      NdkCxxPlatforms.TargetConfiguration targetConfiguration,
+      NdkCxxPlatforms.Host host) {
     return ndkRoot
         .resolve("toolchains")
         .resolve(targetConfiguration.toolchain.toString())
@@ -190,8 +190,8 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private static SourcePath getSourcePath(
       Path ndkRoot,
-      TargetConfiguration targetConfiguration,
-      Host host,
+      NdkCxxPlatforms.TargetConfiguration targetConfiguration,
+      NdkCxxPlatforms.Host host,
       String tool) {
     return new PathSourcePath(
         getNdkToolRoot(ndkRoot, targetConfiguration, host)
@@ -202,8 +202,8 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private static Tool getTool(
       Path ndkRoot,
-      TargetConfiguration targetConfiguration,
-      Host host,
+      NdkCxxPlatforms.TargetConfiguration targetConfiguration,
+      NdkCxxPlatforms.Host host,
       String tool,
       String version) {
     return new VersionedTool(
@@ -215,8 +215,8 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private static Tool getCppTool(
       Path ndkRoot,
-      TargetConfiguration targetConfiguration,
-      Host host,
+      NdkCxxPlatforms.TargetConfiguration targetConfiguration,
+      NdkCxxPlatforms.Host host,
       String tool,
       String version) {
     return new VersionedTool(
@@ -246,7 +246,7 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private static Path getCxxRuntimeDirectory(
       Path ndkRoot,
-      TargetConfiguration targetConfiguration) {
+      NdkCxxPlatforms.TargetConfiguration targetConfiguration) {
     return ndkRoot
         .resolve("sources")
         .resolve("cxx-stl")
@@ -258,9 +258,9 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private static Tool getCcLinkTool(
       Path ndkRoot,
-      TargetConfiguration targetConfiguration,
-      Host host,
-      CxxRuntime cxxRuntime,
+      NdkCxxPlatforms.TargetConfiguration targetConfiguration,
+      NdkCxxPlatforms.Host host,
+      NdkCxxPlatforms.CxxRuntime cxxRuntime,
       String tool,
       String version) {
     return new VersionedTool(
@@ -333,7 +333,7 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private static ImmutableList<String> getCommonIncludes(
       Path ndkRoot,
-      TargetConfiguration targetConfiguration) {
+      NdkCxxPlatforms.TargetConfiguration targetConfiguration) {
     return ImmutableList.of(
         "-isystem", ndkRoot
             .resolve("platforms")
@@ -354,7 +354,7 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private static ImmutableList<String> getCppflags(
       Path ndkRoot,
-      TargetConfiguration targetConfiguration) {
+      NdkCxxPlatforms.TargetConfiguration targetConfiguration) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.compilerFlags)
         .addAll(getCommonPreprocessorFlags())
@@ -366,7 +366,7 @@ public class NdkCxxPlatform implements CxxPlatform {
 
   private static ImmutableList<String> getCxxppflags(
       Path ndkRoot,
-      TargetConfiguration targetConfiguration) {
+      NdkCxxPlatforms.TargetConfiguration targetConfiguration) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.compilerFlags)
         .addAll(getCommonPreprocessorFlags())
@@ -410,7 +410,7 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   private static ImmutableList<String> getCflagsInternal(
-      TargetConfiguration targetConfiguration) {
+      NdkCxxPlatforms.TargetConfiguration targetConfiguration) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.compilerFlags)
         .addAll(getCommonCFlags())
@@ -420,7 +420,7 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   private static ImmutableList<String> getCxxflagsInternal(
-      TargetConfiguration targetConfiguration) {
+      NdkCxxPlatforms.TargetConfiguration targetConfiguration) {
     return ImmutableList.<String>builder()
         .addAll(targetConfiguration.compilerFlags)
         .addAll(getCommonCxxFlags())
@@ -566,7 +566,7 @@ public class NdkCxxPlatform implements CxxPlatform {
     return objcopy;
   }
 
-  public CxxRuntime getCxxRuntime() {
+  public NdkCxxPlatforms.CxxRuntime getCxxRuntime() {
     return cxxRuntime;
   }
 
@@ -575,182 +575,6 @@ public class NdkCxxPlatform implements CxxPlatform {
    */
   public Path getCxxSharedRuntimePath() {
     return cxxSharedRuntimePath;
-  }
-
-  /**
-   * The build toolchain, named (including compiler version) after the target platform/arch.
-   */
-  public static enum Toolchain {
-
-    X86_4_8("x86-4.8"),
-    ARM_LINUX_ADNROIDEABI_4_8("arm-linux-androideabi-4.8"),
-    ;
-
-    private final String value;
-
-    private Toolchain(String value) {
-      this.value = Preconditions.checkNotNull(value);
-    }
-
-    @Override
-    public String toString() {
-      return value;
-    }
-
-  }
-
-  /**
-   * The prefix used for tools built for the above toolchain.
-   */
-  public static enum ToolchainPrefix {
-
-    I686_LINUX_ANDROID("i686-linux-android"),
-    ARM_LINUX_ANDROIDEABI("arm-linux-androideabi"),
-    ;
-
-    private final String value;
-
-    private ToolchainPrefix(String value) {
-      this.value = Preconditions.checkNotNull(value);
-    }
-
-    @Override
-    public String toString() {
-      return value;
-    }
-
-  }
-
-  /**
-   * Name of the target CPU architecture.
-   */
-  public static enum TargetArch {
-
-    X86("x86"),
-    ARM("arm"),
-    ;
-
-    private final String value;
-
-    private TargetArch(String value) {
-      this.value = Preconditions.checkNotNull(value);
-    }
-
-    @Override
-    public String toString() {
-      return value;
-    }
-
-  }
-
-  /**
-   * Name of the target CPU + ABI.
-   */
-  public static enum TargetArchAbi {
-
-    X86("x86"),
-    ARMEABI("armeabi"),
-    ARMEABI_V7A("armeabi-v7a"),
-    ;
-
-    private final String value;
-
-    private TargetArchAbi(String value) {
-      this.value = Preconditions.checkNotNull(value);
-    }
-
-    @Override
-    public String toString() {
-      return value;
-    }
-
-  }
-
-  /**
-   * The OS and Architecture that we're building on.
-   */
-  public static enum Host {
-
-    DARWIN_X86_64("darwin-x86_64"),
-    LINUX_X86_64("linux-x86_64"),
-    ;
-
-    private final String value;
-
-    private Host(String value) {
-      this.value = Preconditions.checkNotNull(value);
-    }
-
-    @Override
-    public String toString() {
-      return value;
-    }
-
-  }
-
-  /**
-   * A container for all configuration settings needed to define a build target.
-   */
-  public static class TargetConfiguration {
-
-    public final Toolchain toolchain;
-    public final ToolchainPrefix toolchainPrefix;
-    public final TargetArch targetArch;
-    public final TargetArchAbi targetArchAbi;
-    public final String targetPlatform;
-    public final String compilerVersion;
-    public final ImmutableList<String> compilerFlags;
-
-    public TargetConfiguration(
-        Toolchain toolchain,
-        ToolchainPrefix toolchainPrefix,
-        TargetArch targetArch,
-        TargetArchAbi targetArchAbi,
-        String targetPlatform,
-        String compilerVersion,
-        ImmutableList<String> compilerFlags) {
-      this.toolchain = Preconditions.checkNotNull(toolchain);
-      this.toolchainPrefix = Preconditions.checkNotNull(toolchainPrefix);
-      this.targetArch = Preconditions.checkNotNull(targetArch);
-      this.targetArchAbi = Preconditions.checkNotNull(targetArchAbi);
-      this.targetPlatform = Preconditions.checkNotNull(targetPlatform);
-      this.compilerVersion = Preconditions.checkNotNull(compilerVersion);
-      this.compilerFlags = Preconditions.checkNotNull(compilerFlags);
-    }
-
-  }
-
-  /**
-   * The C/C++ runtime library to link against.
-   */
-  public static enum CxxRuntime {
-
-    SYSTEM("system", "system"),
-    GABIXX("gabi++_shared", "gabi++_static"),
-    STLPORT("stlport_shared", "stlport_static"),
-    GNUSTL("gnustl_shared", "gnustl_static"),
-    ;
-
-    private final String sharedName;
-    private final String staticName;
-
-    private CxxRuntime(String sharedName, String staticName) {
-      this.sharedName = sharedName;
-      this.staticName = staticName;
-    }
-
-    public String getStaticName() {
-      return staticName;
-    }
-
-    public String getSharedName() {
-      return sharedName;
-    }
-
-    public String getSoname() {
-      return "lib" + sharedName + ".so";
-    }
-
   }
 
 }
