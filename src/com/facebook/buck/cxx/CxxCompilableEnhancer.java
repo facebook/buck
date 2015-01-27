@@ -174,13 +174,15 @@ public class CxxCompilableEnhancer {
     //args.add("-x", source.getType().getLanguage());
 
     // If we're dealing with a C source that can be compiled, add the platform C compiler flags.
-    if (source.getType() == CxxSource.Type.C_CPP_OUTPUT) {
+    if (source.getType() == CxxSource.Type.C_CPP_OUTPUT ||
+        source.getType() == CxxSource.Type.OBJC_CPP_OUTPUT) {
       args.addAll(platform.getCflags());
     }
 
     // If we're dealing with a C++ source that can be compiled, add the platform C++ compiler
     // flags.
-    if (source.getType() == CxxSource.Type.CXX_CPP_OUTPUT) {
+    if (source.getType() == CxxSource.Type.CXX_CPP_OUTPUT ||
+        source.getType() == CxxSource.Type.OBJCXX_CPP_OUTPUT) {
       args.addAll(platform.getCxxflags());
     }
 

@@ -272,11 +272,13 @@ public class CxxPreprocessables {
         break;
       case OBJC:
         preprocessor = cxxPlatform.getCpp();
+        args.addAll(cxxPlatform.getCppflags());
         args.addAll(preprocessorInput.getPreprocessorFlags().get(CxxSource.Type.OBJC));
         outputType = CxxSource.Type.OBJC_CPP_OUTPUT;
         break;
       case OBJCXX:
         preprocessor = cxxPlatform.getCxxpp();
+        args.addAll(cxxPlatform.getCxxppflags());
         args.addAll(preprocessorInput.getPreprocessorFlags().get(CxxSource.Type.OBJCXX));
         outputType = CxxSource.Type.OBJCXX_CPP_OUTPUT;
         break;
