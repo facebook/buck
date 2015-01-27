@@ -11,7 +11,7 @@ PLATFORM_SRCS = [
   'SourcePathTool.java',
   'VersionedTool.java',
 ]
-java_library(
+java_immutables_library(
   name = 'platform',
   srcs = PLATFORM_SRCS,
   deps = [

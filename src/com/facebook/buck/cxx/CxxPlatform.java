@@ -18,50 +18,56 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+
+import org.immutables.value.Value;
+
+import java.util.List;
 
 /**
  * Interface describing a C/C++ toolchain and platform to build for.
  */
+@Value.Immutable
+@BuckStyleImmutable
 public interface CxxPlatform {
 
   Flavor getFlavor();
 
   Tool getAs();
-  ImmutableList<String> getAsflags();
+  List<String> getAsflags();
 
   Tool getAspp();
-  ImmutableList<String> getAsppflags();
+  List<String> getAsppflags();
 
   Tool getCc();
-  ImmutableList<String> getCflags();
+  List<String> getCflags();
 
   Tool getCxx();
-  ImmutableList<String> getCxxflags();
+  List<String> getCxxflags();
 
   Tool getCpp();
-  ImmutableList<String> getCppflags();
+  List<String> getCppflags();
 
   Tool getCxxpp();
-  ImmutableList<String> getCxxppflags();
+  List<String> getCxxppflags();
 
   Tool getCxxld();
-  ImmutableList<String> getCxxldflags();
+  List<String> getCxxldflags();
 
   Linker getLd();
-  ImmutableList<String> getLdflags();
-  ImmutableMultimap<Linker.LinkableDepType, String> getRuntimeLdflags();
+  List<String> getLdflags();
+  Multimap<Linker.LinkableDepType, String> getRuntimeLdflags();
 
   Tool getAr();
-  ImmutableList<String> getArflags();
+  List<String> getArflags();
 
   SourcePath getLex();
-  ImmutableList<String> getLexFlags();
+  List<String> getLexFlags();
 
   SourcePath getYacc();
-  ImmutableList<String> getYaccFlags();
+  List<String> getYaccFlags();
 
   String getSharedLibraryExtension();
 

@@ -23,9 +23,9 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+import java.util.List;
 
 public class OCamlBuckConfig {
 
@@ -69,15 +69,15 @@ public class OCamlBuckConfig {
     return cxxPlatform.getCxx();
   }
 
-  public ImmutableList<String> getCFlags() {
+  public List<String> getCFlags() {
     return cxxPlatform.getCppflags();
   }
 
-  public ImmutableList<String> getCLinkerFlags() {
+  public List<String> getCLinkerFlags() {
     return cxxPlatform.getCxxldflags();
   }
 
-  public ImmutableList<String> getLdFlags() {
+  public List<String> getLdFlags() {
     return cxxPlatform.getLdflags();
   }
 
