@@ -32,6 +32,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.io.Files;
 
 import java.io.File;
@@ -514,12 +515,11 @@ public class NdkCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public ImmutableList<String> getRuntimeLdflags(
-      Linker.LinkType linkType,
-      Linker.LinkableDepType linkableDepType) {
-    return linkableDepType == Linker.LinkableDepType.SHARED ?
-        sharedRuntimeLdflags :
-        staticRuntimeLdflags;
+  public ImmutableMultimap<Linker.LinkableDepType, String> getRuntimeLdflags() {
+    return ImmutableMultimap.<Linker.LinkableDepType, String>builder()
+        .putAll(Linker.LinkableDepType.SHARED, sharedRuntimeLdflags)
+        .putAll(Linker.LinkableDepType.STATIC, staticRuntimeLdflags)
+        .build();
   }
 
   @Override

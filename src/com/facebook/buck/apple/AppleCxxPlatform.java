@@ -33,6 +33,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -250,10 +251,8 @@ public class AppleCxxPlatform implements CxxPlatform {
   }
 
   @Override
-  public ImmutableList<String> getRuntimeLdflags(
-      Linker.LinkType linkType,
-      Linker.LinkableDepType linkableDepType) {
-    return ImmutableList.of();
+  public ImmutableMultimap<Linker.LinkableDepType, String> getRuntimeLdflags() {
+    return ImmutableMultimap.of();
   }
 
   @Override

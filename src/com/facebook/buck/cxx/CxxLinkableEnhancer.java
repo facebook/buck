@@ -125,7 +125,7 @@ public class CxxLinkableEnhancer {
     argsBuilder.addAll(iXlinker(linkableInput.getArgs()));
 
     // Add all arguments needed to link in the C/C++ platform runtime.
-    argsBuilder.addAll(iXlinker(cxxPlatform.getRuntimeLdflags(linkType, depType)));
+    argsBuilder.addAll(iXlinker(cxxPlatform.getRuntimeLdflags().get(depType)));
 
     ImmutableList<String> args = argsBuilder.build();
 

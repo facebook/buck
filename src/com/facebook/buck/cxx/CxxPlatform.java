@@ -20,6 +20,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 
 /**
  * Interface describing a C/C++ toolchain and platform to build for.
@@ -51,9 +52,7 @@ public interface CxxPlatform {
 
   Linker getLd();
   ImmutableList<String> getLdflags();
-  ImmutableList<String> getRuntimeLdflags(
-      Linker.LinkType linkType,
-      Linker.LinkableDepType linkableDepType);
+  ImmutableMultimap<Linker.LinkableDepType, String> getRuntimeLdflags();
 
   Tool getAr();
   ImmutableList<String> getArflags();
