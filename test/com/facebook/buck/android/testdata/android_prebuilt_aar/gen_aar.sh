@@ -32,7 +32,7 @@ public class Utils {
 }
 " > Utils.java
 mkdir classes
-javac -d classes Utils.java
+javac -source 1.7 -target 1.7 -d classes Utils.java
 jar -cf classes.jar -C classes .
 rm -rf classes Utils.java
 
