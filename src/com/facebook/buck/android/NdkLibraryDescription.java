@@ -171,7 +171,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     for (Map.Entry<AndroidBinary.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       AndroidBinary.TargetCpuType targetCpuType = entry.getKey();
       String targetArchAbi = getTargetArchAbi(targetCpuType);
-      CxxPlatform cxxPlatform = entry.getValue();
+      CxxPlatform cxxPlatform = entry.getValue().getCxxPlatform();
 
       // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
       // NDK library rules.

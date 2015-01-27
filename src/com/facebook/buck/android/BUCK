@@ -173,7 +173,7 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
-java_library(
+java_immutables_library(
   name = 'steps',
   srcs = glob(['*.java'],
               excludes = EXCEPTION_SRCS + PACKAGEABLE_SOURCES + RULES_SRCS + SPLIT_DEX_SRCS + UTILS_SRCS),

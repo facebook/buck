@@ -170,7 +170,7 @@ public class KnownBuildRuleTypes {
         ImmutableMap.builder();
 
     NdkCxxPlatform armeabi =
-        new NdkCxxPlatform(
+        NdkCxxPlatforms.build(
             ImmutableFlavor.of("android-arm"),
             platform,
             ndkRoot,
@@ -190,7 +190,7 @@ public class KnownBuildRuleTypes {
             NdkCxxPlatforms.CxxRuntime.GNUSTL);
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARM, armeabi);
     NdkCxxPlatform armeabiv7 =
-        new NdkCxxPlatform(
+        NdkCxxPlatforms.build(
             ImmutableFlavor.of("android-armv7"),
             platform,
             ndkRoot,
@@ -211,7 +211,7 @@ public class KnownBuildRuleTypes {
             NdkCxxPlatforms.CxxRuntime.GNUSTL);
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARMV7, armeabiv7);
     NdkCxxPlatform x86 =
-        new NdkCxxPlatform(
+        NdkCxxPlatforms.build(
             ImmutableFlavor.of("android-x86"),
             platform,
             ndkRoot,
@@ -323,8 +323,10 @@ public class KnownBuildRuleTypes {
 
     // If an Android NDK is present, add platforms for that.  This is mostly useful for
     // testing our Android NDK support for right now.
-    for (CxxPlatform ndkCxxPlatform : ndkCxxPlatforms.values()) {
-      cxxPlatformsBuilder.put(ndkCxxPlatform.getFlavor(), ndkCxxPlatform);
+    for (NdkCxxPlatform ndkCxxPlatform : ndkCxxPlatforms.values()) {
+      cxxPlatformsBuilder.put(
+          ndkCxxPlatform.getCxxPlatform().getFlavor(),
+          ndkCxxPlatform.getCxxPlatform());
     }
 
     for (CxxPlatform appleCxxPlatform : appleCxxPlatforms) {

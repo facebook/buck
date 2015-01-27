@@ -287,7 +287,8 @@ public class AndroidBinaryGraphEnhancer {
       NdkCxxPlatform platform = Preconditions.checkNotNull(nativePlatforms.get(targetCpuType));
 
       for (JavaNativeLinkable nativeLinkable : packageableCollection.getNativeLinkables()) {
-        ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(platform);
+        ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(
+            platform.getCxxPlatform());
         for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
           nativeLinkableLibsBuilder.put(
               new Pair<>(targetCpuType, entry.getKey()),
