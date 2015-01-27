@@ -16,11 +16,10 @@
 
 package com.facebook.buck.android;
 
-import static org.junit.Assert.assertEquals;
-
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.testutil.integration.ZipInspector;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,7 +41,7 @@ public class AndroidAarIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:app").assertSuccess();
 
-    String aarContent = workspace.getFileContents("buck-out/gen/app.aar");
-    assertEquals(aarContent, "");
+    ZipInspector zipInspector = new ZipInspector(workspace.getFile("buck-out/gen/app.aar"));
+    zipInspector.assertFileExists("AndroidManifest.xml");
   }
 }

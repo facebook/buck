@@ -16,6 +16,10 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -24,6 +28,8 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSortedSet;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 /**
@@ -40,6 +46,16 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
 
   public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("android_aar");
 
+  private static final Flavor AAR_ANDROID_MANIFEST_FLAVOR =
+      ImmutableFlavor.of("aar_android_manifest");
+
+  private final AndroidManifestDescription androidManifestDescription;
+
+  public AndroidAarDescription(
+      AndroidManifestDescription androidManifestDescription) {
+    this.androidManifestDescription = androidManifestDescription;
+  }
+
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
@@ -52,17 +68,48 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
 
   @Override
   public <A extends Arg> BuildRule createBuildRule(
-      BuildRuleParams params,
+      BuildRuleParams originalBuildRuleParams,
       BuildRuleResolver resolver,
       A args) {
 
+    BuildTarget originalBuildTarget = originalBuildRuleParams.getBuildTarget();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    // android_manifest
+    AndroidManifestDescription.Arg androidManifestArgs =
+        androidManifestDescription.createUnpopulatedConstructorArg();
+    androidManifestArgs.skeleton = args.manifestSkeleton;
+    androidManifestArgs.deps = args.deps;
+
+    BuildRuleParams androidManifestParams = originalBuildRuleParams.copyWithChanges(
+        AndroidManifestDescription.TYPE,
+        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_MANIFEST_FLAVOR),
+        originalBuildRuleParams.getDeclaredDeps(),
+        originalBuildRuleParams.getExtraDeps());
+
+    AndroidManifest manifest = androidManifestDescription.createBuildRule(
+        androidManifestParams,
+        resolver,
+        androidManifestArgs);
+
+    resolver.addToIndex(manifest);
+
+    // android_aar
+    BuildRuleParams androidAarParams = originalBuildRuleParams.copyWithChanges(
+        TYPE,
+        originalBuildTarget,
+        /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(manifest),
+        /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
+
     return new AndroidAar(
-        params,
-        new SourcePathResolver(resolver));
+        androidAarParams,
+        pathResolver,
+        manifest);
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
-
+    public SourcePath manifestSkeleton;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

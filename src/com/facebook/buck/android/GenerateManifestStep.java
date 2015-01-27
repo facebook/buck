@@ -21,6 +21,7 @@ import com.android.manifmerger.ICallback;
 import com.android.manifmerger.IMergerLog;
 import com.android.manifmerger.ManifestMerger;
 import com.android.manifmerger.MergerLog;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
@@ -70,6 +71,9 @@ public class GenerateManifestStep implements Step {
       return 1;
     }
 
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
+
+    outManifestPath = filesystem.resolve(outManifestPath);
     try {
       Files.createParentDirs(outManifestPath.toFile());
     } catch (IOException e) {
@@ -80,10 +84,12 @@ public class GenerateManifestStep implements Step {
     List<File> libraryManifestFiles = Lists.newArrayList();
 
     for (Path path : libraryManifestPaths) {
-      libraryManifestFiles.add(path.toFile());
+      Path manifestPath = filesystem.getPathForRelativeExistingPath(path).toAbsolutePath();
+      libraryManifestFiles.add(manifestPath.toFile());
     }
 
-    File skeletonManifestFile = skeletonManifestPath.toFile();
+    File skeletonManifestFile =
+        filesystem.getPathForRelativeExistingPath(skeletonManifestPath).toAbsolutePath().toFile();
 
     ICallback callback = new ICallback() {
       @Override

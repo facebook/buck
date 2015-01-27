@@ -25,24 +25,31 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
 public class AndroidAar extends AbstractBuildRule {
 
   private final Path pathToOutputFile;
+  private final Path temp;
+  private final AndroidManifest manifest;
 
   public AndroidAar(
       BuildRuleParams params,
-      SourcePathResolver resolver) {
+      SourcePathResolver resolver,
+      AndroidManifest manifest) {
     super(params, resolver);
     BuildTarget buildTarget = params.getBuildTarget();
     this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, "%s.aar");
+    this.temp = BuildTargets.getBinPath(buildTarget, "__temp__%s");
+    this.manifest = manifest;
   }
 
   @Override
@@ -61,16 +68,26 @@ public class AndroidAar extends AbstractBuildRule {
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
-    // Clear out the old file, if it exists.
-    commands.add(new RmStep(pathToOutputFile,
-        /* shouldForceDeletion */ true,
-        /* shouldRecurse */ false));
+    // Create temp folder to store the files going to be zipped
+    commands.add(new MakeCleanDirectoryStep(temp));
 
-    // Make sure the directory for the output file exists.
-    commands.add(new MkdirStep(pathToOutputFile.getParent()));
+    // Remove the output .aar file
+    commands.add(new RmStep(pathToOutputFile, /* shouldForceDeletion */ true));
 
-    // TODO(user) replace logic with creating zip file *.aar
-    commands.add(new TouchStep(pathToOutputFile));
+    // put manifest into tmp folder
+    commands.add(
+        CopyStep.forFile(
+            manifest.getPathToOutputFile(),
+            temp.resolve("AndroidManifest.xml")));
+
+    // do the zipping
+    commands.add(
+        new ZipStep(
+            pathToOutputFile,
+            ImmutableSet.<Path>of(),
+            false,
+            ZipStep.DEFAULT_COMPRESSION_LEVEL,
+            temp));
 
     return commands.build();
   }

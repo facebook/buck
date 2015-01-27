@@ -377,7 +377,8 @@ public class KnownBuildRuleTypes {
         new AppleLibraryDescription(appleConfig, cxxLibraryDescription);
     builder.register(appleLibraryDescription);
 
-    builder.register(new AndroidAarDescription());
+    builder.register(new AndroidAarDescription(
+            new AndroidManifestDescription()));
     builder.register(
         new AndroidBinaryDescription(
             androidBinaryOptions,
