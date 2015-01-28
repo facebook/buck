@@ -30,10 +30,13 @@ import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+
+import org.immutables.value.Value;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -43,54 +46,61 @@ import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
-public class ExecutionContext implements Closeable {
+@Value.Immutable(builder = false)
+@BuckStyleImmutable
+public abstract class ExecutionContext implements Closeable {
 
-  private final Verbosity verbosity;
-  private final ProjectFilesystem projectFilesystem;
-  private final Console console;
-  private final Optional<AndroidPlatformTarget> androidPlatformTarget;
-  private final Optional<TargetDevice> targetDevice;
-  private final long defaultTestTimeoutMillis;
-  private final boolean isCodeCoverageEnabled;
-  private final boolean isDebugEnabled;
-  private final ProcessExecutor processExecutor;
-  private final BuckEventBus eventBus;
-  private final Platform platform;
-  private final ImmutableMap<String, String> environment;
-  private final JavaPackageFinder javaPackageFinder;
-  private final ObjectMapper objectMapper;
-  private final ClassLoaderCache classLoaderCache;
+  @Value.Parameter
+  public abstract ProjectFilesystem getProjectFilesystem();
 
-  private ExecutionContext(
-      ProjectFilesystem projectFilesystem,
-      Console console,
-      Optional<AndroidPlatformTarget> androidPlatformTarget,
-      Optional<TargetDevice> targetDevice,
-      long defaultTestTimeoutMillis,
-      boolean isCodeCoverageEnabled,
-      boolean isDebugEnabled,
-      ProcessExecutor processExecutor,
-      BuckEventBus eventBus,
-      Platform platform,
-      ImmutableMap<String, String> environment,
-      JavaPackageFinder javaPackageFinder,
-      ObjectMapper objectMapper,
-      ClassLoaderCache classLoaderCache) {
-    this.verbosity = console.getVerbosity();
-    this.projectFilesystem = projectFilesystem;
-    this.console = console;
-    this.androidPlatformTarget = androidPlatformTarget;
-    this.targetDevice = targetDevice;
-    this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
-    this.isCodeCoverageEnabled = isCodeCoverageEnabled;
-    this.isDebugEnabled = isDebugEnabled;
-    this.processExecutor = processExecutor;
-    this.eventBus = eventBus;
-    this.platform = platform;
-    this.environment = environment;
-    this.javaPackageFinder = javaPackageFinder;
-    this.objectMapper = objectMapper;
-    this.classLoaderCache = classLoaderCache;
+  @Value.Parameter
+  public abstract Console getConsole();
+
+  /**
+   * Returns an {@link AndroidPlatformTarget} if the user specified one via {@code local.properties}
+   * or some other mechanism. If the user failed to specify one, {@link Optional#absent()} will be
+   * returned.
+   */
+  @Value.Parameter
+  public abstract Optional<AndroidPlatformTarget> getAndroidPlatformTargetOptional();
+
+  @Value.Parameter
+  public abstract Optional<TargetDevice> getTargetDeviceOptional();
+
+  @Value.Parameter
+  public abstract long getDefaultTestTimeoutMillis();
+
+  @Value.Parameter
+  public abstract boolean isCodeCoverageEnabled();
+
+  @Value.Parameter
+  public abstract boolean isDebugEnabled();
+
+  @Value.Parameter
+  public abstract ProcessExecutor getProcessExecutor();
+
+  @Value.Parameter
+  public abstract BuckEventBus getBuckEventBus();
+
+  @Value.Parameter
+  public abstract Platform getPlatform();
+
+  @Value.Parameter
+  public abstract ImmutableMap<String, String> getEnvironment();
+
+  @Value.Parameter
+  public abstract JavaPackageFinder getJavaPackageFinder();
+
+  @Value.Parameter
+  public abstract ObjectMapper getObjectMapper();
+
+  @Value.Parameter
+  public abstract ClassLoaderCache getClassLoaderCache();
+
+
+  @Value.Derived
+  public Verbosity getVerbosity() {
+    return getConsole().getVerbosity();
   }
 
   /**
@@ -99,78 +109,47 @@ public class ExecutionContext implements Closeable {
    */
   public ExecutionContext createSubContext(PrintStream newStdout, PrintStream newStderr) {
     Console console = new Console(
-        this.console.getVerbosity(),
+        this.getConsole().getVerbosity(),
         newStdout,
         newStderr,
-        this.console.getAnsi());
+        this.getConsole().getAnsi());
 
-    return new ExecutionContext(
-        getProjectFilesystem(),
-        console,
-        getAndroidPlatformTargetOptional(),
-        getTargetDeviceOptional(),
-        getDefaultTestTimeoutMillis(),
-        isCodeCoverageEnabled(),
-        isDebugEnabled,
-        new ProcessExecutor(console),
-        eventBus,
-        platform,
-        this.environment,
-        this.javaPackageFinder,
-        this.objectMapper,
-        classLoaderCache.addRef());
+    return ImmutableExecutionContext.copyOf(this)
+        .withConsole(console)
+        .withProcessExecutor(new ProcessExecutor(console))
+        .withClassLoaderCache(getClassLoaderCache().addRef());
   }
 
   public void logError(Throwable error, String msg, Object... formatArgs) {
-    eventBus.post(ThrowableConsoleEvent.create(error, msg, formatArgs));
+    getBuckEventBus().post(ThrowableConsoleEvent.create(error, msg, formatArgs));
   }
 
   public void postEvent(BuckEvent event) {
-    eventBus.post(event);
-  }
-
-  public Verbosity getVerbosity() {
-    return verbosity;
-  }
-
-  public ProjectFilesystem getProjectFilesystem() {
-    return projectFilesystem;
+    getBuckEventBus().post(event);
   }
 
   public Path getProjectDirectoryRoot() {
-    return projectFilesystem.getRootPath();
-  }
-
-  public Console getConsole() {
-    return console;
+    return getProjectFilesystem().getRootPath();
   }
 
   public PrintStream getStdErr() {
-    return console.getStdErr();
+    return getConsole().getStdErr();
   }
 
   public PrintStream getStdOut() {
-    return console.getStdOut();
+    return getConsole().getStdOut();
   }
 
   public Ansi getAnsi() {
-    return console.getAnsi();
+    return getConsole().getAnsi();
   }
 
-  public BuckEventBus getBuckEventBus() {
-    return eventBus;
+  public String getPathToAdbExecutable() throws NoAndroidSdkException {
+    return getAndroidPlatformTarget().getAdbExecutable().toString();
   }
 
-  public Platform getPlatform() {
-    return platform;
-  }
-
-  public JavaPackageFinder getJavaPackageFinder() {
-    return javaPackageFinder;
-  }
-
-  public ObjectMapper getObjectMapper() {
-    return objectMapper;
+  public static Builder builder() {
+    return new Builder();
   }
 
   /**
@@ -184,65 +163,20 @@ public class ExecutionContext implements Closeable {
    * @throws NoAndroidSdkException if no AndroidPlatformTarget is available
    */
   public AndroidPlatformTarget getAndroidPlatformTarget() throws NoAndroidSdkException {
-    if (androidPlatformTarget.isPresent()) {
-      return androidPlatformTarget.get();
+    if (getAndroidPlatformTargetOptional().isPresent()) {
+      return getAndroidPlatformTargetOptional().get();
     } else {
       throw new NoAndroidSdkException();
     }
   }
 
-  /**
-   * Returns an {@link AndroidPlatformTarget} if the user specified one via {@code local.properties}
-   * or some other mechanism. If the user failed to specify one, {@link Optional#absent()} will be
-   * returned.
-   */
-  public Optional<AndroidPlatformTarget> getAndroidPlatformTargetOptional() {
-    return androidPlatformTarget;
-  }
-
-  public Optional<TargetDevice> getTargetDeviceOptional() {
-    return targetDevice;
-  }
-
-  public long getDefaultTestTimeoutMillis() {
-    return defaultTestTimeoutMillis;
-  }
-
-  public boolean isCodeCoverageEnabled() {
-    return isCodeCoverageEnabled;
-  }
-
-  public boolean isDebugEnabled() {
-    return isDebugEnabled;
-  }
-
-  public String getPathToAdbExecutable() throws NoAndroidSdkException {
-    return getAndroidPlatformTarget().getAdbExecutable().toString();
-  }
-
-  public ProcessExecutor getProcessExecutor() {
-    return processExecutor;
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public ImmutableMap<String, String> getEnvironment() {
-    return environment;
-  }
-
-  public ClassLoaderCache getClassLoaderCache() {
-    return classLoaderCache;
-  }
-
   @Override
   public void close() throws IOException {
-    classLoaderCache.close();
+    getClassLoaderCache().close();
   }
 
   public BuildId getBuildId() {
-    return eventBus.getBuildId();
+    return getBuckEventBus().getBuildId();
   }
 
   public static class Builder {
@@ -265,7 +199,7 @@ public class ExecutionContext implements Closeable {
     private Builder() {}
 
     public ExecutionContext build() {
-      return new ExecutionContext(
+      return ImmutableExecutionContext.of(
           Preconditions.checkNotNull(projectFilesystem),
           Preconditions.checkNotNull(console),
           androidPlatformTarget,
