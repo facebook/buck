@@ -16,4 +16,6 @@ android-18,\
 addon-google_apis-google-18,\
 android-19,\
 addon-google_apis-google-19,\
+android-21,\
+addon-google_apis-google-21,\
 extra-android-support

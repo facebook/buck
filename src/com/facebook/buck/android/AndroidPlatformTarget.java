@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
  */
 public class AndroidPlatformTarget {
 
-  public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:19";
+  public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:21";
   public static final String ANDROID_VERSION_PREFIX = "android-";
 
   @VisibleForTesting
