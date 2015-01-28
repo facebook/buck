@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -26,7 +27,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.timing.Clock;
-import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -34,70 +35,30 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 
+import org.immutables.value.Value;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
-import javax.annotation.Nullable;
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class BuildContext {
 
-public class BuildContext {
+  private static final Supplier<String> DEFAULT_ANDROID_BOOTCLASSPATH_SUPPLIER =
+      new Supplier<String>() {
+        @Override
+        public String get() {
+          throw new NoAndroidSdkException();
+        }
+      };
 
-  private final ActionGraph actionGraph;
-  private final StepRunner stepRunner;
-  private final ProjectFilesystem projectFilesystem;
-  private final Clock clock;
-  private final ArtifactCache artifactCache;
-  private final JavaPackageFinder javaPackageFinder;
-  private final BuckEventBus events;
-  private final Supplier<String> androidBootclasspathSupplier;
-  private final BuildDependencies buildDependencies;
-  private final BuildId buildId;
-  private final ImmutableMap<String, String> environment;
-
-  private BuildContext(
-      @Nullable ActionGraph actionGraph,
-      @Nullable StepRunner stepRunner,
-      @Nullable ProjectFilesystem projectFilesystem,
-      @Nullable Clock clock,
-      @Nullable ArtifactCache artifactCache,
-      @Nullable JavaPackageFinder javaPackageFinder,
-      @Nullable BuckEventBus events,
-      @Nullable Supplier<String> androidBootclasspathSupplier,
-      @Nullable BuildDependencies buildDependencies,
-      @Nullable BuildId buildId,
-      @Nullable ImmutableMap<String, String> environment) {
-
-    this.actionGraph = Preconditions.checkNotNull(actionGraph);
-    this.stepRunner = Preconditions.checkNotNull(stepRunner);
-    this.projectFilesystem = Preconditions.checkNotNull(projectFilesystem);
-    this.clock = Preconditions.checkNotNull(clock);
-    this.artifactCache = Preconditions.checkNotNull(artifactCache);
-    this.javaPackageFinder = Preconditions.checkNotNull(javaPackageFinder);
-    this.events = Preconditions.checkNotNull(events);
-    this.androidBootclasspathSupplier = Preconditions.checkNotNull(androidBootclasspathSupplier);
-    this.buildDependencies = Preconditions.checkNotNull(buildDependencies);
-    this.buildId = Preconditions.checkNotNull(buildId);
-    this.environment = Preconditions.checkNotNull(environment);
-  }
-
-  public Path getProjectRoot() {
-    return getProjectFilesystem().getRootPath();
-  }
-
-  public StepRunner getStepRunner() {
-    return stepRunner;
-  }
-
-  public ActionGraph getActionGraph() {
-    return actionGraph;
-  }
-
-  public JavaPackageFinder getJavaPackageFinder() {
-    return javaPackageFinder;
-  }
+  public abstract ActionGraph getActionGraph();
+  public abstract StepRunner getStepRunner();
 
   /**
-   * By design, there is no getter for {@link ProjectFilesystem}. At the point where a
+   * By design, there is no public getter for {@link ProjectFilesystem}. At the point where a
    * {@link BuildRule} is using a {@link BuildContext} to generate its
    * {@link com.facebook.buck.step.Step}s, it should not be doing any I/O on local disk. Any reads
    * should be mediated through {@link OnDiskBuildInfo}, and {@link BuildInfoRecorder} will take
@@ -107,26 +68,29 @@ public class BuildContext {
    * The primary reason this method exists is so that someone who blindly tries to add such a getter
    * will encounter a compilation error and will [hopefully] discover this comment.
    */
-  private ProjectFilesystem getProjectFilesystem() {
-    return projectFilesystem;
-  }
+  protected abstract ProjectFilesystem getProjectFilesystem();
 
-  public ArtifactCache getArtifactCache() {
-    return artifactCache;
-  }
+  protected abstract Clock getClock();
+  public abstract ArtifactCache getArtifactCache();
+  public abstract JavaPackageFinder getJavaPackageFinder();
+  public abstract BuckEventBus getEventBus();
 
-  public BuckEventBus getEventBus() {
-    return events;
-  }
-
+  @Value.Default
   public Supplier<String> getAndroidBootclasspathSupplier() {
-    return androidBootclasspathSupplier;
+    return DEFAULT_ANDROID_BOOTCLASSPATH_SUPPLIER;
   }
 
+  @Value.Default
   public BuildDependencies getBuildDependencies() {
-    return buildDependencies;
+    return BuildDependencies.getDefault();
   }
 
+  protected abstract BuildId getBuildId();
+  protected abstract Map<String, String> getEnvironment();
+
+  public Path getProjectRoot() {
+    return getProjectFilesystem().getRootPath();
+  }
 
   /**
    * Creates an {@link OnDiskBuildInfo}.
@@ -135,7 +99,7 @@ public class BuildContext {
    * in general.
    */
   OnDiskBuildInfo createOnDiskBuildInfoFor(BuildTarget target) {
-    return new DefaultOnDiskBuildInfo(target, projectFilesystem);
+    return new DefaultOnDiskBuildInfo(target, getProjectFilesystem());
   }
 
   /**
@@ -149,152 +113,44 @@ public class BuildContext {
       RuleKey ruleKeyWithoutDeps) {
     return new BuildInfoRecorder(
         buildTarget,
-        projectFilesystem,
-        clock,
-        buildId,
-        environment,
+        getProjectFilesystem(),
+        getClock(),
+        getBuildId(),
+        ImmutableMap.copyOf(getEnvironment()),
         ruleKey,
         ruleKeyWithoutDeps);
   }
 
   public void logBuildInfo(String format, Object... args) {
-    events.post(ConsoleEvent.fine(format, args));
+    getEventBus().post(ConsoleEvent.fine(format, args));
   }
 
   public void logError(Throwable error, String msg, Object... formatArgs) {
-    events.post(ThrowableConsoleEvent.create(error, msg, formatArgs));
+    getEventBus().post(ThrowableConsoleEvent.create(error, msg, formatArgs));
   }
 
   public void logError(String msg, Object... formatArgs) {
-    events.post(ConsoleEvent.severe(msg, formatArgs));
+    getEventBus().post(ConsoleEvent.severe(msg, formatArgs));
   }
 
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-
-    @Nullable
-    private ActionGraph actionGraph = null;
-    @Nullable
-    private StepRunner stepRunner = null;
-    @Nullable
-    private ProjectFilesystem projectFilesystem = null;
-    @Nullable
-    private Clock clock = null;
-    @Nullable
-    private ArtifactCache artifactCache = null;
-    @Nullable
-    private JavaPackageFinder javaPackgeFinder = null;
-    @Nullable
-    private BuckEventBus events = null;
-    @Nullable
-    private Supplier<String> androidBootclasspathSupplier = null;
-    private BuildDependencies buildDependencies = BuildDependencies.getDefault();
-    @Nullable
-    private BuildId buildId = null;
-    private ImmutableMap<String, String> environment = ImmutableMap.of();
-
-    private Builder() {}
-
-    public BuildContext build() {
-      if (androidBootclasspathSupplier == null) {
-        setDefaultAndroidBootclasspathSupplier();
-      }
-
-      return new BuildContext(
-          actionGraph,
-          stepRunner,
-          projectFilesystem,
-          clock,
-          artifactCache,
-          javaPackgeFinder,
-          events,
-          androidBootclasspathSupplier,
-          buildDependencies,
-          buildId,
-          environment);
-    }
-
-    public Builder setActionGraph(ActionGraph actionGraph) {
-      this.actionGraph = actionGraph;
-      return this;
-    }
-
-    public Builder setStepRunner(StepRunner stepRunner) {
-      this.stepRunner = stepRunner;
-      return this;
-    }
-
-    public Builder setProjectFilesystem(ProjectFilesystem fileystemProject) {
-      this.projectFilesystem = fileystemProject;
-      return this;
-    }
-
-    public Builder setClock(Clock clock) {
-      this.clock = clock;
-      return this;
-    }
-
-    public Builder setArtifactCache(ArtifactCache artifactCache) {
-      this.artifactCache = artifactCache;
-      return this;
-    }
-
-    public Builder setJavaPackageFinder(JavaPackageFinder javaPackgeFinder) {
-      this.javaPackgeFinder = javaPackgeFinder;
-      return this;
-    }
-
-    public Builder setEventBus(BuckEventBus events) {
-      this.events = events;
-      return this;
-    }
-
-    public Builder setBuildDependencies(BuildDependencies buildDependencies) {
-      this.buildDependencies = buildDependencies;
-      return this;
-    }
-
-    public Builder setAndroidBootclasspathForAndroidPlatformTarget(
-        Optional<AndroidPlatformTarget> maybeAndroidPlatformTarget) {
-      if (maybeAndroidPlatformTarget.isPresent()) {
-        final AndroidPlatformTarget androidPlatformTarget = maybeAndroidPlatformTarget.get();
-        this.androidBootclasspathSupplier = Suppliers.memoize(new Supplier<String>() {
-          @Override
-          @Nullable
-          public String get() {
-            List<Path> bootclasspathEntries = androidPlatformTarget.getBootclasspathEntries();
-            Preconditions.checkState(!bootclasspathEntries.isEmpty(),
-                "There should be entries for the bootclasspath");
-            return Joiner.on(File.pathSeparator).join(bootclasspathEntries);
-          }
-        });
-      } else {
-        setDefaultAndroidBootclasspathSupplier();
-      }
-      return this;
-    }
-
-    public Builder setBuildId(BuildId buildId) {
-      this.buildId = buildId;
-      return this;
-    }
-
-    public Builder setEnvironment(ImmutableMap<String, String> environment) {
-      this.environment = environment;
-      return this;
-    }
-
-    private void setDefaultAndroidBootclasspathSupplier() {
-      // Will throw an exception only if the Android bootclasspath is requested.
-      this.androidBootclasspathSupplier = new Supplier<String>() {
-        @Override
-        public String get() {
-          throw new NoAndroidSdkException();
-        }
-      };
+  public static Supplier<String> getAndroidBootclasspathSupplierForAndroidPlatformTarget(
+      Optional<AndroidPlatformTarget> maybeAndroidPlatformTarget
+  ) {
+    if (maybeAndroidPlatformTarget.isPresent()) {
+      final AndroidPlatformTarget androidPlatformTarget = maybeAndroidPlatformTarget.get();
+      return Suppliers.memoize(
+          new Supplier<String>() {
+            @Override
+            public String get() {
+              List<Path> bootclasspathEntries = androidPlatformTarget.getBootclasspathEntries();
+              Preconditions.checkState(
+                  !bootclasspathEntries.isEmpty(),
+                  "There should be entries for the bootclasspath");
+              return Joiner.on(File.pathSeparator).join(bootclasspathEntries);
+            }
+          });
+    } else {
+      return DEFAULT_ANDROID_BOOTCLASSPATH_SUPPLIER;
     }
   }
 }

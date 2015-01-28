@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -45,7 +46,6 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -183,13 +183,12 @@ public class ExportFileTest {
   }
 
   private BuildContext getBuildContext(File root) {
-    return BuildContext.builder()
+    return ImmutableBuildContext.builder()
         .setProjectFilesystem(new ProjectFilesystem(root.toPath()))
         .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setEventBus(BuckEventBusFactory.newInstance())
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
-        .setAndroidBootclasspathForAndroidPlatformTarget(Optional.<AndroidPlatformTarget>absent())
         .setJavaPackageFinder(new JavaPackageFinder() {
           @Override
           public String findJavaPackageFolderForPath(String pathRelativeToProjectRoot) {

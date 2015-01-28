@@ -22,6 +22,7 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.BuckEventBusFactory.CapturingConsoleEventListener;
@@ -31,7 +32,6 @@ import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.timing.Clock;
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -47,7 +47,7 @@ public class BuildContextTest {
 
   @Test
   public void testGetAndroidBootclasspathSupplierWithAndroidPlatformTarget() {
-    BuildContext.Builder builder = BuildContext.builder();
+    ImmutableBuildContext.Builder builder = ImmutableBuildContext.builder();
 
     // Set to non-null values.
     builder.setActionGraph(createMock(ActionGraph.class));
@@ -68,7 +68,9 @@ public class BuildContextTest {
 
     replay(androidPlatformTarget);
 
-    builder.setAndroidBootclasspathForAndroidPlatformTarget(Optional.of(androidPlatformTarget));
+    builder.setAndroidBootclasspathSupplier(
+        BuildContext.getAndroidBootclasspathSupplierForAndroidPlatformTarget(
+            Optional.of(androidPlatformTarget)));
 
     BuildContext context = builder.build();
     Supplier<String> androidBootclasspathSupplier = context.getAndroidBootclasspathSupplier();
@@ -90,7 +92,7 @@ public class BuildContextTest {
 
   @Test(expected = HumanReadableException.class)
   public void testGetAndroidBootclasspathSupplierWithoutAndroidPlatformTarget() {
-    BuildContext.Builder builder = BuildContext.builder();
+    ImmutableBuildContext.Builder builder = ImmutableBuildContext.builder();
 
     // Set to non-null values.
     builder.setActionGraph(createMock(ActionGraph.class));
@@ -112,7 +114,7 @@ public class BuildContextTest {
 
   @Test(expected = HumanReadableException.class)
   public void testGetAndroidBootclasspathSupplierWithAbsentAndroidPlatformTarget() {
-    BuildContext.Builder builder = BuildContext.builder();
+    ImmutableBuildContext.Builder builder = ImmutableBuildContext.builder();
 
     // Set to non-null values.
     builder.setActionGraph(createMock(ActionGraph.class));
@@ -125,8 +127,9 @@ public class BuildContextTest {
     builder.setBuildId(createMock(BuildId.class));
 
     // Set to absent value.
-    builder.setAndroidBootclasspathForAndroidPlatformTarget(
-        Optional.<AndroidPlatformTarget>absent());
+    builder.setAndroidBootclasspathSupplier(
+        BuildContext.getAndroidBootclasspathSupplierForAndroidPlatformTarget(
+            Optional.<AndroidPlatformTarget>absent()));
 
     BuildContext context = builder.build();
     Supplier<String> androidBootclasspathSupplier = context.getAndroidBootclasspathSupplier();
@@ -141,7 +144,7 @@ public class BuildContextTest {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
     eventBus.register(listener);
-    BuildContext buildContext = BuildContext.builder()
+    BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(createMock(ActionGraph.class))
         .setStepRunner(createMock(StepRunner.class))
         .setProjectFilesystem(createMock(ProjectFilesystem.class))

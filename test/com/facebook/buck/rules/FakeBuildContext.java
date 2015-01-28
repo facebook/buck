@@ -26,8 +26,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.android.AndroidPlatformTarget;
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.MoreExecutors;
 
 /**
@@ -46,19 +44,20 @@ public class FakeBuildContext {
       .build();
 
   /**
-   * User still needs to invoke {@link BuildContext.Builder#setActionGraph(ActionGraph)} and
-   * {@link BuildContext.Builder#setJavaPackageFinder(com.facebook.buck.java.JavaPackageFinder)}
-   * before the {@link BuildContext.Builder#build()} method of the builder can be invoked.
+   * User still needs to invoke {@link ImmutableBuildContext.Builder#setActionGraph(ActionGraph)}
+   * and {@link ImmutableBuildContext.Builder#setJavaPackageFinder(
+   * com.facebook.buck.java.JavaPackageFinder)}
+   * before the {@link ImmutableBuildContext.Builder#build()} method of the builder can be invoked.
    * @param projectFilesystem for the {@link BuildContext} and for the {@link ExecutionContext} that
    *     is passed to the {@link DefaultStepRunner} for the {@link BuildContext}.
    */
-  public static BuildContext.Builder newBuilder(ProjectFilesystem projectFilesystem) {
+  public static ImmutableBuildContext.Builder newBuilder(ProjectFilesystem projectFilesystem) {
     ExecutionContext executionContext = TestExecutionContext
         .newBuilder()
         .setProjectFilesystem(projectFilesystem)
         .build();
 
-    return BuildContext.builder()
+    return ImmutableBuildContext.builder()
         .setStepRunner(
             new DefaultStepRunner(executionContext, MoreExecutors.newDirectExecutorService()))
         .setProjectFilesystem(projectFilesystem)
@@ -66,7 +65,6 @@ public class FakeBuildContext {
         .setBuildId(new BuildId())
         .setArtifactCache(new NoopArtifactCache())
         .setEventBus(BuckEventBusFactory.newInstance())
-        .setBuildDependencies(BuildDependencies.FIRST_ORDER_ONLY)
-        .setAndroidBootclasspathForAndroidPlatformTarget(Optional.<AndroidPlatformTarget>absent());
+        .setBuildDependencies(BuildDependencies.FIRST_ORDER_ONLY);
   }
 }

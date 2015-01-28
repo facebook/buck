@@ -31,8 +31,8 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
@@ -44,6 +44,7 @@ import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -166,7 +167,7 @@ public class ApkGenruleTest {
             .from(apkGenrule.getDeps())
             .transform(Functions.toStringFunction())
             .toSet());
-    BuildContext buildContext = BuildContext.builder()
+    BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(EasyMock.createMock(ActionGraph.class))
         .setStepRunner(EasyMock.createNiceMock(StepRunner.class))
         .setProjectFilesystem(EasyMock.createNiceMock(ProjectFilesystem.class))

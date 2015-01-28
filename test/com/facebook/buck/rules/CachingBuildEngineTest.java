@@ -544,7 +544,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         .andReturn(CacheResult.DIR_HIT);
 
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-    BuildContext buildContext = BuildContext.builder()
+    BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
         .setStepRunner(stepRunner)
         .setProjectFilesystem(projectFilesystem)
@@ -607,7 +607,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     ArtifactCache artifactCache = createMock(ArtifactCache.class);
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     StepRunner stepRunner = createSameThreadStepRunner(buckEventBus);
-    BuildContext buildContext = BuildContext.builder()
+    BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
         .setStepRunner(stepRunner)
         .setProjectFilesystem(projectFilesystem)

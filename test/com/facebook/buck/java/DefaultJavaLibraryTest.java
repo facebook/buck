@@ -54,6 +54,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
+import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.RuleKey;
@@ -1282,7 +1283,7 @@ public class DefaultJavaLibraryTest {
     }
 
     // TODO(mbolin): Create a utility that populates a BuildContext.Builder with fakes.
-    return BuildContext.builder()
+    return ImmutableBuildContext.builder()
         .setActionGraph(RuleMap.createGraphFromSingleRule(javaLibrary))
         .setStepRunner(EasyMock.createMock(StepRunner.class))
         .setProjectFilesystem(projectFilesystem)
@@ -1291,7 +1292,9 @@ public class DefaultJavaLibraryTest {
         .setArtifactCache(new NoopArtifactCache())
         .setBuildDependencies(BuildDependencies.TRANSITIVE)
         .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
-        .setAndroidBootclasspathForAndroidPlatformTarget(Optional.of(platformTarget))
+        .setAndroidBootclasspathSupplier(
+            BuildContext.getAndroidBootclasspathSupplierForAndroidPlatformTarget(
+                Optional.of(platformTarget)))
         .setEventBus(BuckEventBusFactory.newInstance())
         .build();
   }

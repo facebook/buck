@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
@@ -265,7 +266,7 @@ public class Build implements Closeable {
       Iterable<? extends HasBuildTarget> targetish,
       boolean isKeepGoing)
       throws IOException, StepFailedException, ExecutionException, InterruptedException {
-    buildContext = BuildContext.builder()
+    buildContext = ImmutableBuildContext.builder()
         .setActionGraph(actionGraph)
         .setStepRunner(stepRunner)
         .setProjectFilesystem(executionContext.getProjectFilesystem())
@@ -273,11 +274,12 @@ public class Build implements Closeable {
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)
         .setEventBus(executionContext.getBuckEventBus())
-        .setAndroidBootclasspathForAndroidPlatformTarget(
-            executionContext.getAndroidPlatformTargetOptional())
+        .setAndroidBootclasspathSupplier(
+            BuildContext.getAndroidBootclasspathSupplierForAndroidPlatformTarget(
+                executionContext.getAndroidPlatformTargetOptional()))
         .setBuildDependencies(buildDependencies)
         .setBuildId(executionContext.getBuildId())
-        .setEnvironment(executionContext.getEnvironment())
+        .putAllEnvironment(executionContext.getEnvironment())
         .build();
 
     ImmutableSet<BuildTarget> targetsToBuild = FluentIterable.from(targetish)
