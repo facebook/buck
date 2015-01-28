@@ -1887,6 +1887,7 @@ public class ProjectGeneratorTest {
         projectFilesystem,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
+        "BUCK",
         ProjectGenerator.SEPARATED_PROJECT_OPTIONS)
         .setTestsToGenerateAsStaticLibraries(ImmutableSet.of(xctest1, xctest2))
         .setAdditionalCombinedTestTargets(
@@ -1946,6 +1947,7 @@ public class ProjectGeneratorTest {
         projectFilesystem,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
+        "BUCK",
         projectGeneratorOptions);
   }
 

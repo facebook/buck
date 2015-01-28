@@ -242,7 +242,8 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode,
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
-        false /* combinedProject */);
+        false /* combinedProject */,
+        "BUCK");
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -299,7 +300,8 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode,
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
-        true /* combinedProject */);
+        true /* combinedProject */,
+        "BUCK");
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -341,7 +343,8 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode,
         ImmutableSet.<ProjectGenerator.Option>of(),
         AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
-        false /* combinedProject */);
+        false /* combinedProject */,
+        "BUCK");
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -452,7 +455,8 @@ public class WorkspaceAndProjectGeneratorTest {
             library.getBuildTarget(), combinableTest2,
             library.getBuildTarget(), testMarkedUncombinable,
             library.getBuildTarget(), anotherTest),
-        false);
+        false,
+        "BUCK");
     generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = Maps.newHashMap();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -566,7 +570,8 @@ public class WorkspaceAndProjectGeneratorTest {
         workspace,
         ImmutableSet.<ProjectGenerator.Option>of(),
         ImmutableMultimap.<BuildTarget, TargetNode<AppleTestDescription.Arg>>of(),
-        false);
+        false,
+        "BUCK");
 
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = Maps.newHashMap();
 

@@ -71,6 +71,7 @@ public class WorkspaceAndProjectGenerator {
   private Optional<ProjectGenerator> combinedProjectGenerator;
   private Optional<ProjectGenerator> combinedTestsProjectGenerator = Optional.absent();
   private Optional<SchemeGenerator> schemeGenerator = Optional.absent();
+  private String buildFileName;
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
@@ -78,13 +79,15 @@ public class WorkspaceAndProjectGenerator {
       TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceTargetNode,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       Multimap<BuildTarget, TargetNode<AppleTestDescription.Arg>> sourceTargetToTestNodes,
-      boolean combinedProject) {
+      boolean combinedProject,
+      String buildFileName) {
     this.projectFilesystem = projectFilesystem;
     this.projectGraph = projectGraph;
     this.workspaceTargetNode = workspaceTargetNode;
     this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
     this.sourceTargetToTestNodes = ImmutableMultimap.copyOf(sourceTargetToTestNodes);
     this.combinedProject = combinedProject;
+    this.buildFileName = buildFileName;
     this.combinedProjectGenerator = Optional.absent();
     extraTestBundleTargetNodes = getExtraTestTargetNodes(
         projectGraph, workspaceTargetNode.getConstructorArg().extraTests.get());
@@ -186,6 +189,7 @@ public class WorkspaceAndProjectGenerator {
           projectFilesystem,
           outputDirectory,
           workspaceName,
+          buildFileName,
           projectGeneratorOptions)
           .setAdditionalCombinedTestTargets(groupedTestResults.groupedTests)
           .setTestsToGenerateAsStaticLibraries(groupableTests);
@@ -224,6 +228,7 @@ public class WorkspaceAndProjectGenerator {
               projectFilesystem,
               targetNode.getBuildTarget().getBasePath(),
               projectArg.projectName,
+              buildFileName,
               projectGeneratorOptions)
               .setTestsToGenerateAsStaticLibraries(groupableTests);
 
@@ -256,6 +261,7 @@ public class WorkspaceAndProjectGenerator {
             projectFilesystem,
             BuildTargets.getGenPath(workspaceTargetNode.getBuildTarget(), "%s-CombinedTestBundles"),
             "_CombinedTestBundles",
+            buildFileName,
             projectGeneratorOptions);
         combinedTestsProjectGenerator
             .setAdditionalCombinedTestTargets(groupedTestResults.groupedTests)

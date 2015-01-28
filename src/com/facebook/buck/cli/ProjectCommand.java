@@ -335,7 +335,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           castToXcodeWorkspaceTargetNode(workspaceNode),
           optionsBuilder.build(),
           sourceTargetToTestNodes,
-          combinedProject);
+          combinedProject,
+          new ParserConfig(options.getBuckConfig()).getBuildFileName());
       generator.setGroupableTests(groupableTests);
       generator.generateWorkspaceAndDependentProjects(projectGenerators);
     }

@@ -202,6 +202,7 @@ public class ProjectGenerator {
   private final ImmutableSet.Builder<String> targetConfigNamesBuilder;
 
   private Map<String, String> gidsToTargetNames;
+  private String buildFileName;
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -209,6 +210,7 @@ public class ProjectGenerator {
       ProjectFilesystem projectFilesystem,
       Path outputDirectory,
       String projectName,
+      String buildFileName,
       Set<Option> options) {
     this.targetGraph = targetGraph;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
@@ -216,6 +218,7 @@ public class ProjectGenerator {
     this.sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
     this.outputDirectory = outputDirectory;
     this.projectName = projectName;
+    this.buildFileName = buildFileName;
     this.options = ImmutableSet.copyOf(options);
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -630,7 +633,7 @@ public class ProjectGenerator {
 
     SourceTreePath buckFilePath = new SourceTreePath(
         PBXReference.SourceTree.SOURCE_ROOT,
-        pathRelativizer.outputPathToBuildTargetPath(buildTarget, Paths.get("BUCK")));
+        pathRelativizer.outputPathToBuildTargetPath(buildTarget, Paths.get(buildFileName)));
     PBXFileReference buckReference =
         targetGroup.getOrCreateFileReferenceBySourceTreePath(buckFilePath);
     buckReference.setExplicitFileType(Optional.of("text.script.python"));
