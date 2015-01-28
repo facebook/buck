@@ -31,6 +31,15 @@ import java.util.Set;
 @BuckStyleImmutable
 public interface AppleSdkPaths {
   /**
+   * Absolute path to the active DEVELOPER_DIR.
+   *
+   * Example:
+   *
+   * {@code /Applications/Xcode.app/Contents/Developer}
+   */
+  Path getDeveloperPath();
+
+  /**
    * Absolute paths to tools and files independent of the platform.
    *
    * Example:

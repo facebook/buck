@@ -235,7 +235,7 @@ public class KnownBuildRuleTypes {
   private static void buildAppleCxxPlatforms(
       Supplier<Path> appleDeveloperDirectorySupplier,
       Platform buildPlatform,
-      ImmutableSet.Builder<CxxPlatform> appleCxxPlatformsBuilder)
+      ImmutableMap.Builder<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPathsBuilder)
       throws IOException {
     if (!buildPlatform.equals(Platform.MACOS)) {
       return;
@@ -257,6 +257,7 @@ public class KnownBuildRuleTypes {
 
     for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {
       AppleSdk sdk = entry.getKey();
+      AppleSdkPaths appleSdkPaths = entry.getValue();
       for (String architecture : sdk.getArchitectures()) {
         CxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
             sdk.getApplePlatform(),
@@ -265,8 +266,8 @@ public class KnownBuildRuleTypes {
             // targets the exact version of the SDK.
             sdk.getVersion(),
             architecture,
-            entry.getValue());
-        appleCxxPlatformsBuilder.add(appleCxxPlatform);
+            appleSdkPaths);
+        appleCxxPlatformsToAppleSdkPathsBuilder.put(appleCxxPlatform, appleSdkPaths);
       }
     }
   }
@@ -288,13 +289,14 @@ public class KnownBuildRuleTypes {
     }
 
     AppleConfig appleConfig = new AppleConfig(config);
-    ImmutableSet.Builder<CxxPlatform> appleCxxPlatformsBuilder =
-        ImmutableSet.builder();
+    ImmutableMap.Builder<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPathsBuilder =
+        ImmutableMap.builder();
     buildAppleCxxPlatforms(
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
         platform,
-        appleCxxPlatformsBuilder);
-    ImmutableSet<CxxPlatform> appleCxxPlatforms = appleCxxPlatformsBuilder.build();
+        appleCxxPlatformsToAppleSdkPathsBuilder);
+    ImmutableMap<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths =
+        appleCxxPlatformsToAppleSdkPathsBuilder.build();
 
     // Construct the thrift config wrapping the buck config.
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
@@ -328,7 +330,7 @@ public class KnownBuildRuleTypes {
           ndkCxxPlatform.getCxxPlatform());
     }
 
-    for (CxxPlatform appleCxxPlatform : appleCxxPlatforms) {
+    for (CxxPlatform appleCxxPlatform : appleCxxPlatformsToAppleSdkPaths.keySet()) {
       cxxPlatformsBuilder.put(appleCxxPlatform.getFlavor(), appleCxxPlatform);
     }
 
@@ -376,7 +378,11 @@ public class KnownBuildRuleTypes {
         cxxPlatforms);
 
     AppleLibraryDescription appleLibraryDescription =
-        new AppleLibraryDescription(appleConfig, cxxLibraryDescription);
+        new AppleLibraryDescription(
+            appleConfig,
+            cxxLibraryDescription,
+            cxxPlatforms,
+            appleCxxPlatformsToAppleSdkPaths);
     builder.register(appleLibraryDescription);
 
     builder.register(new AndroidAarDescription(
@@ -397,9 +403,13 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
-    builder.register(new AppleBinaryDescription(appleConfig, cxxBinaryDescription));
+    builder.register(
+        new AppleBinaryDescription(
+            appleConfig,
+            cxxBinaryDescription,
+            cxxPlatforms,
+            appleCxxPlatformsToAppleSdkPaths));
     builder.register(new AppleBundleDescription());
-    builder.register(new AppleLibraryDescription(appleConfig, cxxLibraryDescription));
     builder.register(new AppleResourceDescription());
     builder.register(new AppleTestDescription(appleLibraryDescription));
     builder.register(new BuckExtensionDescription(defaultJavacOptions));

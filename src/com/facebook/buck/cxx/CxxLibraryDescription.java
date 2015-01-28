@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -47,11 +48,14 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
+import org.immutables.value.Value;
+
+@Value.Nested
 public class CxxLibraryDescription implements
     Description<CxxLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<CxxLibraryDescription.Arg>,
     Flavored {
-  private static enum Type {
+  public static enum Type {
     HEADERS,
     SHARED,
     STATIC,
@@ -505,24 +509,52 @@ public class CxxLibraryDescription implements
         args.soname);
   }
 
-  @Override
-  public <A extends Arg> BuildRule createBuildRule(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
+  @Value.Immutable
+  @BuckStyleImmutable
+  public static interface TypeAndPlatform {
+    @Value.Parameter
+    Optional<Map.Entry<Flavor, Type>> getType();
 
+    @Value.Parameter
+    Optional<Map.Entry<Flavor, CxxPlatform>> getPlatform();
+  }
+
+  public static TypeAndPlatform getTypeAndPlatform(
+      BuildTarget buildTarget,
+      FlavorDomain<CxxPlatform> platforms) {
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type;
     Optional<Map.Entry<Flavor, CxxPlatform>> platform;
     try {
       type = LIBRARY_TYPE.getFlavorAndValue(
-          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
-      platform = cxxPlatforms.getFlavorAndValue(
-          ImmutableSet.copyOf(params.getBuildTarget().getFlavors()));
+          ImmutableSet.copyOf(buildTarget.getFlavors()));
+      platform = platforms.getFlavorAndValue(
+          ImmutableSet.copyOf(buildTarget.getFlavors()));
     } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
+      throw new HumanReadableException("%s: %s", buildTarget, e.getMessage());
     }
+    return ImmutableCxxLibraryDescription.TypeAndPlatform.of(type, platform);
+  }
+
+  @Override
+  public <A extends Arg> BuildRule createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    TypeAndPlatform typeAndPlatform = getTypeAndPlatform(
+        params.getBuildTarget(),
+        cxxPlatforms);
+    return createBuildRule(params, resolver, args, typeAndPlatform);
+  }
+
+  public <A extends Arg> BuildRule createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args,
+      TypeAndPlatform typeAndPlatform) {
+    Optional<Map.Entry<Flavor, Type>> type = typeAndPlatform.getType();
+    Optional<Map.Entry<Flavor, CxxPlatform>> platform = typeAndPlatform.getPlatform();
 
     // If we *are* building a specific type of this lib, call into the type specific
     // rule builder methods.

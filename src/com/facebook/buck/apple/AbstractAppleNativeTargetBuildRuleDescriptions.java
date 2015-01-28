@@ -53,6 +53,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
@@ -326,11 +327,26 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
         BuildTargets.getGenPath(targetNode.getBuildTarget(), "%s" + headerMapType.getSuffix()));
   }
 
+  private static Path translateAppleSdkPaths(
+      Path path,
+      AppleSdkPaths appleSdkPaths) {
+    if (path.startsWith("$SDKROOT")) {
+      path = appleSdkPaths.getSdkPath().resolve(
+          path.subpath(1, path.getNameCount()));
+    } else if (path.startsWith("$DEVELOPER_DIR")) {
+      path = appleSdkPaths.getDeveloperPath().resolve(
+          path.subpath(1, path.getNameCount()));
+    }
+
+    return path;
+  }
+
   public static void populateCxxConstructorArg(
       CxxConstructorArg output,
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget,
-      TargetSources targetSources) {
+      TargetSources targetSources,
+      final Optional<AppleSdkPaths> appleSdkPaths) {
     output.srcs = Optional.of(
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
             ImmutableList.copyOf(targetSources.getSrcPaths())));
@@ -344,7 +360,25 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
     output.preprocessorFlags = Optional.of(ImmutableList.<String>of());
     output.langPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
-    output.frameworkSearchPaths = Optional.of(ImmutableList.<Path>of());
+    if (appleSdkPaths.isPresent()) {
+      output.frameworkSearchPaths = arg.frameworks.transform(
+          new Function<ImmutableSortedSet<String>, ImmutableList<Path>>() {
+            @Override
+            public ImmutableList<Path> apply(ImmutableSortedSet<String> frameworkPaths) {
+                ImmutableSet.Builder<Path> frameworksSearchPathsBuilder = ImmutableSet.builder();
+                for (String frameworkPath : frameworkPaths) {
+                  Path parentDirectory = Paths.get(frameworkPath).getParent();
+                  if (parentDirectory != null) {
+                    frameworksSearchPathsBuilder.add(
+                        translateAppleSdkPaths(parentDirectory, appleSdkPaths.get()));
+                  }
+                }
+                return ImmutableList.copyOf(frameworksSearchPathsBuilder.build());
+            }
+          });
+    } else {
+      output.frameworkSearchPaths = Optional.of(ImmutableList.<Path>of());
+    }
     output.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.deps = arg.deps;

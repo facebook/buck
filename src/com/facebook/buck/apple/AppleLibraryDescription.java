@@ -18,9 +18,11 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
@@ -37,6 +39,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.Map;
 import java.util.Set;
 
 public class AppleLibraryDescription implements
@@ -60,10 +63,18 @@ public class AppleLibraryDescription implements
 
   private final AppleConfig appleConfig;
   private final CxxLibraryDescription delegate;
+  private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
+  private final ImmutableMap<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths;
 
-  public AppleLibraryDescription(AppleConfig appleConfig, CxxLibraryDescription delegate) {
+  public AppleLibraryDescription(
+      AppleConfig appleConfig,
+      CxxLibraryDescription delegate,
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      Map<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths) {
     this.appleConfig = appleConfig;
     this.delegate = delegate;
+    this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
+    this.appleCxxPlatformsToAppleSdkPaths = ImmutableMap.copyOf(appleCxxPlatformsToAppleSdkPaths);
   }
 
   @Override
@@ -102,18 +113,25 @@ public class AppleLibraryDescription implements
     }
 
     CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+    CxxLibraryDescription.TypeAndPlatform typeAndPlatform =
+        CxxLibraryDescription.getTypeAndPlatform(
+            params.getBuildTarget(),
+            cxxPlatformFlavorDomain);
+    Optional<AppleSdkPaths> appleSdkPaths = Optional.fromNullable(
+        appleCxxPlatformsToAppleSdkPaths.get(typeAndPlatform.getPlatform()));
     AbstractAppleNativeTargetBuildRuleDescriptions.populateCxxConstructorArg(
         delegateArg,
         args,
         params.getBuildTarget(),
-        targetSources);
+        targetSources,
+        appleSdkPaths);
     delegateArg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
     delegateArg.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     delegateArg.soname = Optional.absent();
     delegateArg.linkWhole = Optional.of(!isSharedLibraryTarget(params.getBuildTarget()));
 
-    return delegate.createBuildRule(params, resolver, delegateArg);
+    return delegate.createBuildRule(params, resolver, delegateArg, typeAndPlatform);
   }
 
   public static boolean isSharedLibraryTarget(BuildTarget target) {

@@ -49,6 +49,7 @@ public class FakeAppleRuleDescriptions {
 
   private static final AppleSdkPaths DEFAULT_IPHONEOS_SDK_PATHS =
       ImmutableAppleSdkPaths.builder()
+          .setDeveloperPath(Paths.get("."))
           .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
           .setPlatformDeveloperPath(Paths.get("Platforms/iPhoneOS.platform/Developer"))
           .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
@@ -78,15 +79,21 @@ public class FakeAppleRuleDescriptions {
               DEFAULT_IPHONEOS_PLATFORM.getFlavor(),
               DEFAULT_IPHONEOS_PLATFORM));
 
+  private static final ImmutableMap<CxxPlatform, AppleSdkPaths>
+    DEFAULT_CXX_PLATFORM_TO_APPLE_SDK_PATHS =
+      ImmutableMap.of(DEFAULT_PLATFORM, DEFAULT_IPHONEOS_SDK_PATHS);
+
   /**
    * A fake apple_library description with an iOS platform for use in tests.
    */
   public static final AppleLibraryDescription LIBRARY_DESCRIPTION =
     new AppleLibraryDescription(
         new AppleConfig(DEFAULT_BUCK_CONFIG),
-      new CxxLibraryDescription(
-          new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
-          DEFAULT_IPHONEOS_FLAVOR_DOMAIN));
+        new CxxLibraryDescription(
+            new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
+            DEFAULT_IPHONEOS_FLAVOR_DOMAIN),
+        DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
+        DEFAULT_CXX_PLATFORM_TO_APPLE_SDK_PATHS);
 
   /**
    * A fake apple_binary description with an iOS platform for use in tests.
@@ -97,5 +104,7 @@ public class FakeAppleRuleDescriptions {
         new CxxBinaryDescription(
             new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_IPHONEOS_PLATFORM,
-            DEFAULT_IPHONEOS_FLAVOR_DOMAIN));
+            DEFAULT_IPHONEOS_FLAVOR_DOMAIN),
+        DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
+        DEFAULT_CXX_PLATFORM_TO_APPLE_SDK_PATHS);
 }

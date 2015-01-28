@@ -275,6 +275,7 @@ public class CompilationDatabaseTest {
               .addArchitectures("i386", "x86_64")
               .build(),
           (AppleSdkPaths) ImmutableAppleSdkPaths.builder()
+              .setDeveloperPath(Paths.get("developerPath"))
               .addToolchainPaths(Paths.get("toolchainPath"))
               .setPlatformDeveloperPath(Paths.get("platformDeveloperPath"))
               .setSdkPath(Paths.get("/path/to/somewhere" +

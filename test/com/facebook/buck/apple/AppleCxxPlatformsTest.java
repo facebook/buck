@@ -50,6 +50,7 @@ public class AppleCxxPlatformsTest {
   public void appleSdkPathsBuiltFromDirectory() throws Exception {
     AppleSdkPaths appleSdkPaths =
         ImmutableAppleSdkPaths.builder()
+            .setDeveloperPath(Paths.get("."))
             .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
             .setPlatformDeveloperPath(Paths.get("Platforms/iPhoneOS.platform/Developer"))
             .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
@@ -107,6 +108,7 @@ public class AppleCxxPlatformsTest {
     thrown.expectMessage(containsString("Cannot find tool"));
     AppleSdkPaths appleSdkPaths =
         ImmutableAppleSdkPaths.builder()
+            .setDeveloperPath(Paths.get("."))
             .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
             .setPlatformDeveloperPath(Paths.get("Platforms/iPhoneOS.platform/Developer"))
             .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))

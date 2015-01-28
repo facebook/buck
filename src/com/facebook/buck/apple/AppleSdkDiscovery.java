@@ -143,6 +143,7 @@ public class AppleSdkDiscovery {
                 xcodePathsBuilder.addAllToolchainPaths(toolchainPaths);
               }
               ImmutableAppleSdkPaths xcodePaths = xcodePathsBuilder
+                  .setDeveloperPath(xcodeDir)
                   .setPlatformDeveloperPath(platformDir.resolve("Developer"))
                   .setSdkPath(sdkDir)
                   .build();
