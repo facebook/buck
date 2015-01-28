@@ -628,6 +628,13 @@ public class ProjectGenerator {
     PBXNativeTarget target = targetBuilderResult.target;
     PBXGroup targetGroup = targetBuilderResult.targetGroup;
 
+    SourceTreePath buckFilePath = new SourceTreePath(
+        PBXReference.SourceTree.SOURCE_ROOT,
+        pathRelativizer.outputPathToBuildTargetPath(buildTarget, Paths.get("BUCK")));
+    PBXFileReference buckReference =
+        targetGroup.getOrCreateFileReferenceBySourceTreePath(buckFilePath);
+    buckReference.setExplicitFileType(Optional.of("text.script.python"));
+
     // -- configurations
     ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
     extraSettingsBuilder
