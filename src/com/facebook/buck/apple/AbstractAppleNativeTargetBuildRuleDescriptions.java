@@ -343,6 +343,7 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
     output.preprocessorFlags = Optional.of(ImmutableList.<String>of());
     output.langPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
+    output.frameworkSearchPaths = Optional.of(ImmutableList.<Path>of());
     output.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.deps = arg.deps;

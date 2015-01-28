@@ -136,7 +136,8 @@ public class CxxPythonExtensionDescription implements
         CxxPreprocessorFlags.fromArgs(
             args.preprocessorFlags,
             args.langPreprocessorFlags),
-        headerSymlinkTree);
+        headerSymlinkTree,
+        ImmutableList.<Path>of());
 
     ImmutableMap<String, CxxSource> allSources =
         ImmutableMap.<String, CxxSource>builder()

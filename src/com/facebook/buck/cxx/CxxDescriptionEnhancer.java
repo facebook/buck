@@ -341,7 +341,8 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
-      SymlinkTree headerSymlinkTree) {
+      SymlinkTree headerSymlinkTree,
+      ImmutableList<Path> frameworkSearchPaths) {
 
     // Write the compile rules for all C/C++ sources in this rule.
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
@@ -361,6 +362,7 @@ public class CxxDescriptionEnhancer {
                         .putAllFullNameToPathMap(headerSymlinkTree.getFullLinks())
                         .build())
                 .addIncludeRoots(headerSymlinkTree.getRoot())
+                .addAllFrameworkRoots(frameworkSearchPaths)
                 .build(),
             cxxPreprocessorInputFromDeps));
 
@@ -487,7 +489,8 @@ public class CxxDescriptionEnhancer {
         CxxPreprocessorFlags.fromArgs(
             args.preprocessorFlags,
             args.langPreprocessorFlags),
-        headerSymlinkTree);
+        headerSymlinkTree,
+        args.frameworkSearchPaths.get());
 
     // The complete list of input sources.
     ImmutableMap<String, CxxSource> sources =

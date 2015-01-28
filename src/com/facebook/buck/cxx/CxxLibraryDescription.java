@@ -215,6 +215,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<Path, SourcePath> headers,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
+      ImmutableList<Path> frameworkSearchPaths,
       boolean pic) {
 
     CxxHeaderSourceSpec lexYaccSources =
@@ -244,7 +245,8 @@ public class CxxLibraryDescription implements
             params,
             cxxPlatform,
             preprocessorFlags,
-            headerSymlinkTree);
+            headerSymlinkTree,
+            frameworkSearchPaths);
 
     ImmutableMap<String, CxxSource> allSources =
         ImmutableMap.<String, CxxSource>builder()
@@ -286,7 +288,8 @@ public class CxxLibraryDescription implements
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableMap<Path, SourcePath> headers,
       ImmutableList<String> compilerFlags,
-      ImmutableMap<String, CxxSource> sources) {
+      ImmutableMap<String, CxxSource> sources,
+      ImmutableList<Path> frameworkSearchPaths) {
 
     // Create rules for compiling the non-PIC object files.
     ImmutableList<SourcePath> objects = requireObjects(
@@ -300,6 +303,7 @@ public class CxxLibraryDescription implements
         headers,
         compilerFlags,
         sources,
+        frameworkSearchPaths,
         /* pic */ false);
 
     // Write a build rule to create the archive for this C/C++ library.
@@ -339,6 +343,7 @@ public class CxxLibraryDescription implements
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
       ImmutableList<String> linkerFlags,
+      ImmutableList<Path> frameworkSearchPaths,
       Optional<String> soname) {
 
     // Create rules for compiling the PIC object files.
@@ -353,6 +358,7 @@ public class CxxLibraryDescription implements
         headers,
         compilerFlags,
         sources,
+        frameworkSearchPaths,
         /* pic */ true);
 
     // Setup the rules to link the shared library.
@@ -454,7 +460,8 @@ public class CxxLibraryDescription implements
             .build(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
         args.compilerFlags.or(ImmutableList.<String>of()),
-        CxxDescriptionEnhancer.parseCxxSources(params, resolver, args));
+        CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
+        args.frameworkSearchPaths.get());
   }
 
   /**
@@ -492,6 +499,7 @@ public class CxxLibraryDescription implements
                     args.platformLinkerFlags.get(),
                     cxxPlatform.asFlavor().toString()))
             .build(),
+        args.frameworkSearchPaths.get(),
         args.soname);
   }
 

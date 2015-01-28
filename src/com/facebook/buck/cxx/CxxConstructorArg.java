@@ -26,6 +26,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 @SuppressFieldNotInitialized
 public class CxxConstructorArg {
   public Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>> srcs;
@@ -35,6 +37,7 @@ public class CxxConstructorArg {
   public Optional<ImmutableList<String>> linkerFlags;
   public Optional<ImmutableList<Pair<String, ImmutableList<String>>>> platformLinkerFlags;
   public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags;
+  public Optional<ImmutableList<Path>> frameworkSearchPaths;
   public Optional<ImmutableList<SourcePath>> lexSrcs;
   public Optional<ImmutableList<SourcePath>> yaccSrcs;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;
