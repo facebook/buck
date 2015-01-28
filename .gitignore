@@ -1,6 +1,9 @@
 # Ant
 build/
 
+# IntelliJ build
+build-ij/
+
 # Buck
 # buck-out may also be generated under an integration test directory
 # when someone runs Buck locally out of that directory to reproduce
