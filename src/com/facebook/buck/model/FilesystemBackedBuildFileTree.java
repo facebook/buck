@@ -17,7 +17,6 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -43,9 +42,11 @@ import java.util.Set;
  */
 public class FilesystemBackedBuildFileTree extends BuildFileTree {
   private final ProjectFilesystem projectFilesystem;
+  private final String buildFileName;
 
-  public FilesystemBackedBuildFileTree(ProjectFilesystem projectFilesystem) {
+  public FilesystemBackedBuildFileTree(ProjectFilesystem projectFilesystem, String buildFileName) {
     this.projectFilesystem = projectFilesystem;
+    this.buildFileName = buildFileName;
   }
 
   /**
@@ -68,7 +69,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
               if (dir.equals(basePath)) {
                 return FileVisitResult.CONTINUE;
               }
-              Path buildFile = dir.resolve(BuckConstant.BUILD_RULES_FILE_NAME);
+              Path buildFile = dir.resolve(buildFileName);
               if (projectFilesystem.isFile(buildFile)) {
                 childPaths.add(basePath.relativize(dir));
                 return FileVisitResult.SKIP_SUBTREE;
@@ -93,7 +94,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
     while (filePath != null) {
       // If filePath names a directory with a build file, filePath is a base path.
       // If filePath or any of its parents are in ignoredPaths, we should keep looking.
-      if (projectFilesystem.isFile(filePath.resolve(BuckConstant.BUILD_RULES_FILE_NAME)) &&
+      if (projectFilesystem.isFile(filePath.resolve(buildFileName)) &&
           !projectFilesystem.isIgnored(filePath)) {
         return Optional.of(filePath);
       }
@@ -108,7 +109,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
     }
 
     // No build file found in any directory, check the project root
-    Path rootBuckFile = Paths.get(BuckConstant.BUILD_RULES_FILE_NAME);
+    Path rootBuckFile = Paths.get(buildFileName);
     if (projectFilesystem.isFile(rootBuckFile) &&
         !projectFilesystem.isIgnored(rootBuckFile)) {
       return Optional.of(Paths.get(""));

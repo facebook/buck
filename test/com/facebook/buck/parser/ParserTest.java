@@ -55,7 +55,6 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
@@ -131,8 +130,7 @@ public class ParserTest extends EasyMockSupport {
         includedByBuildFile.toFile(),
         Charsets.UTF_8);
 
-    testBuildFile = tempDir.newFile(
-        "java/com/facebook/" + BuckConstant.BUILD_RULES_FILE_NAME).toPath();
+    testBuildFile = tempDir.newFile("java/com/facebook/BUCK").toPath();
     Files.write(
         "include_defs('//java/com/facebook/includedByBuildFile')\n" +
         "java_library(name = 'foo')\n" +
@@ -163,7 +161,8 @@ public class ParserTest extends EasyMockSupport {
   private Parser createParser(Iterable<Map<String, Object>> rules)
       throws IOException, InterruptedException {
     return createParser(
-        ofInstance(new FilesystemBackedBuildFileTree(filesystem)),
+        ofInstance(
+            new FilesystemBackedBuildFileTree(filesystem, "BUCK")),
         rules,
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes),
         new BuildTargetParser());
@@ -174,7 +173,8 @@ public class ParserTest extends EasyMockSupport {
       ProjectBuildFileParserFactory buildFileParserFactory)
       throws IOException, InterruptedException {
     return createParser(
-        ofInstance(new FilesystemBackedBuildFileTree(filesystem)),
+        ofInstance(
+            new FilesystemBackedBuildFileTree(filesystem, "BUCK")),
         rules,
         buildFileParserFactory,
         new BuildTargetParser());
@@ -331,8 +331,7 @@ public class ParserTest extends EasyMockSupport {
     // Execute buildTargetGraphForBuildTargets() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "invalid");
 
-    File testInvalidBuildFile = tempDir.newFile(
-        "java/com/facebook/invalid/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    File testInvalidBuildFile = tempDir.newFile("java/com/facebook/invalid/BUCK");
     Files.write(
         "java_library(name = 'foo', deps = ['//java/com/facebook/invalid/lib:missing_rule'])\n" +
         "java_library(name = 'bar')\n",
@@ -340,8 +339,7 @@ public class ParserTest extends EasyMockSupport {
         Charsets.UTF_8);
 
     tempDir.newFolder("java", "com", "facebook", "invalid", "lib");
-    tempDir.newFile(
-        "java/com/facebook/invalid/lib/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    tempDir.newFile("java/com/facebook/invalid/lib/BUCK");
 
     BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook/invalid", "foo").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
@@ -988,8 +986,7 @@ public class ParserTest extends EasyMockSupport {
     // Execute buildTargetGraphForBuildTargets() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "generateddeps");
 
-    File testGeneratedDepsBuckFile = tempDir.newFile(
-        "java/com/facebook/generateddeps/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    File testGeneratedDepsBuckFile = tempDir.newFile("java/com/facebook/generateddeps/BUCK");
     Files.write(
         "java_library(name = 'foo')\n" +
             "java_library(name = 'bar')\n" +
@@ -1183,15 +1180,13 @@ public class ParserTest extends EasyMockSupport {
     tempDir.newFolder("foo");
     tempDir.newFolder("bar");
 
-    File testFooBuckFile = tempDir.newFile(
-        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    File testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
         "java_library(name = 'foo', visibility=['PUBLIC'])\n",
         testFooBuckFile,
         Charsets.UTF_8);
 
-    File testBarBuckFile = tempDir.newFile(
-        "bar/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    File testBarBuckFile = tempDir.newFile("bar/BUCK");
     Files.write(
             "java_library(name = 'bar',\n" +
             "  deps = ['//foo:foo'])\n",
@@ -1222,11 +1217,11 @@ public class ParserTest extends EasyMockSupport {
         testBarBuckFile,
         Charsets.UTF_8);
     WatchEvent<Path> deleteEvent = createPathEvent(
-        Paths.get("foo").resolve(BuckConstant.BUILD_RULES_FILE_NAME),
+        Paths.get("foo").resolve("BUCK"),
         StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(deleteEvent);
     WatchEvent<Path> modifyEvent = createPathEvent(
-        Paths.get("bar").resolve(BuckConstant.BUILD_RULES_FILE_NAME),
+        Paths.get("bar").resolve("BUCK"),
         StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(modifyEvent);
 
@@ -1250,7 +1245,7 @@ public class ParserTest extends EasyMockSupport {
     Path rootPath = tempDir.getRoot().toPath();
     java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
-    Path testBuckFile = rootPath.resolve("foo").resolve(BuckConstant.BUILD_RULES_FILE_NAME);
+    Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
     Files.write(
         "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n",
         testBuckFile.toFile(),
@@ -1331,7 +1326,7 @@ public class ParserTest extends EasyMockSupport {
     Path rootPath = tempDir.getRoot().toPath();
     java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
-    Path testBuckFile = rootPath.resolve("foo").resolve(BuckConstant.BUILD_RULES_FILE_NAME);
+    Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
     Files.write(
         "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n",
         testBuckFile.toFile(),
@@ -1410,8 +1405,7 @@ public class ParserTest extends EasyMockSupport {
 
     tempDir.newFolder("foo");
 
-    File testFooBuckFile = tempDir.newFile(
-        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    File testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
         "java_library(name = 'lib', visibility=['PUBLIC'])\n",
         testFooBuckFile,
@@ -1432,8 +1426,7 @@ public class ParserTest extends EasyMockSupport {
 
     tempDir.newFolder("foo");
 
-    File testFooBuckFile = tempDir.newFile(
-        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    File testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
         "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n",
         testFooBuckFile,
@@ -1460,8 +1453,7 @@ public class ParserTest extends EasyMockSupport {
 
     tempDir.newFolder("foo");
 
-    File testFooBuckFile = tempDir.newFile(
-        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    File testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
         "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n",
         testFooBuckFile,
@@ -1506,8 +1498,7 @@ public class ParserTest extends EasyMockSupport {
 
     tempDir.newFolder("foo");
 
-    File testFooBuckFile = tempDir.newFile(
-        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    File testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
         "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n",
         testFooBuckFile,
@@ -1551,8 +1542,7 @@ public class ParserTest extends EasyMockSupport {
 
     tempDir.newFolder("foo");
 
-    File testFooBuckFile = tempDir.newFile(
-        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    File testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
         "java_library(name = 'lib', visibility=['PUBLIC'])\n" +
         "java_library(name = 'lib2', visibility=['PUBLIC'])\n",
@@ -1576,8 +1566,7 @@ public class ParserTest extends EasyMockSupport {
 
     tempDir.newFolder("foo");
 
-    File testFooBuckFile = tempDir.newFile(
-        "foo/" + BuckConstant.BUILD_RULES_FILE_NAME);
+    File testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
         "java_library(name = 'lib', visibility=['PUBLIC'], deps=[':lib2'])\n" +
         "java_library(name = 'lib2', visibility=['PUBLIC'])\n",

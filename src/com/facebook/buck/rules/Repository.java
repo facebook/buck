@@ -22,7 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -109,18 +109,19 @@ public abstract class Repository {
         "Target %s is not from this repository %s.",
         target,
         getName());
-    Path relativePath = target.getBuildFilePath();
+    Path relativePath = target.getBasePath().resolve(
+        new ParserConfig(getBuckConfig()).getBuildFileName());
     if (!getFilesystem().isFile(relativePath)) {
-      throw new MissingBuildFileException(target);
+      throw new MissingBuildFileException(target, getBuckConfig());
     }
     return getFilesystem().resolve(relativePath);
   }
 
   @SuppressWarnings("serial")
   public static class MissingBuildFileException extends BuildTargetException {
-    public MissingBuildFileException(BuildTarget buildTarget) {
+    public MissingBuildFileException(BuildTarget buildTarget, BuckConfig buckConfig) {
       super(String.format("No build file at %s when resolving target %s.",
-          buildTarget.getBasePathWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME,
+          buildTarget.getBasePathWithSlash() + new ParserConfig(buckConfig).getBuildFileName(),
           buildTarget.getFullyQualifiedName()));
     }
 

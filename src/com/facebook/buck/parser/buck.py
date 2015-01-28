@@ -25,7 +25,6 @@ import sys
 # "base_path" - The base path of the build file.
 
 BUILD_FUNCTIONS = []
-BUILD_RULES_FILE_NAME = 'BUCK'
 
 
 class BuildContextType(object):
@@ -204,11 +203,12 @@ def add_deps(name, deps=[], build_env=None):
 
 class BuildFileProcessor(object):
 
-    def __init__(self, project_root, allow_empty_globs, implicit_includes=[]):
+    def __init__(self, project_root, build_file_name, allow_empty_globs, implicit_includes=[]):
         self._cache = {}
         self._build_env_stack = []
 
         self._project_root = project_root
+        self._build_file_name = build_file_name
         self._implicit_includes = implicit_includes
         self._allow_empty_globs = allow_empty_globs
 
@@ -382,7 +382,7 @@ class BuildFileProcessor(object):
         # name of the given path.
         relative_path_to_build_file = os.path.relpath(
             path, self._project_root).replace('\\', '/')
-        len_suffix = -len('/' + BUILD_RULES_FILE_NAME)
+        len_suffix = -len('/' + self._build_file_name)
         base_path = relative_path_to_build_file[:len_suffix]
         dirname = os.path.dirname(path)
         build_env = BuildFileContext(base_path, dirname, self._allow_empty_globs)
@@ -439,6 +439,11 @@ def main():
         type='string',
         dest='project_root')
     parser.add_option(
+        '--build_file_name',
+        action='store',
+        type='string',
+        dest="build_file_name")
+    parser.add_option(
         '--allow_empty_globs',
         action='store_true',
         dest='allow_empty_globs',
@@ -455,6 +460,7 @@ def main():
 
     buildFileProcessor = BuildFileProcessor(
         project_root,
+        options.build_file_name,
         options.allow_empty_globs,
         implicit_includes=options.include or [])
 

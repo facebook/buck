@@ -17,7 +17,6 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -72,10 +71,6 @@ public abstract class BuildTarget implements Comparable<BuildTarget>, HasBuildTa
     Preconditions.checkArgument(
         getFlavors().comparator() == Ordering.natural(),
         "Flavors must be ordered using natural ordering.");
-  }
-
-  public Path getBuildFilePath() {
-    return Paths.get(getBasePathWithSlash() + BuckConstant.BUILD_RULES_FILE_NAME);
   }
 
   @JsonProperty("repository")

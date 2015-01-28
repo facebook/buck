@@ -34,7 +34,6 @@ import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
@@ -132,34 +131,6 @@ public class Project {
   private final ObjectMapper objectMapper;
 
   public Project(
-      SourcePathResolver resolver,
-      ImmutableSet<ProjectConfig> rules,
-      ActionGraph actionGraph,
-      Map<Path, String> basePathToAliasMap,
-      JavaPackageFinder javaPackageFinder,
-      ExecutionContext executionContext,
-      ProjectFilesystem projectFilesystem,
-      Optional<String> pathToDefaultAndroidManifest,
-      Optional<String> pathToPostProcessScript,
-      String pythonInterpreter,
-      ObjectMapper objectMapper) {
-    this(
-        resolver,
-        rules,
-        actionGraph,
-        basePathToAliasMap,
-        javaPackageFinder,
-        executionContext,
-        new FilesystemBackedBuildFileTree(projectFilesystem),
-        projectFilesystem,
-        pathToDefaultAndroidManifest,
-        pathToPostProcessScript,
-        pythonInterpreter,
-        objectMapper);
-  }
-
-  @VisibleForTesting
-  Project(
       SourcePathResolver resolver,
       ImmutableSet<ProjectConfig> rules,
       ActionGraph actionGraph,

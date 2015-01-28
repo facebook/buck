@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 
@@ -41,7 +40,10 @@ public class BuildFileSpec {
   private final boolean recursive;
   private final ImmutableSet<Path> recursiveIgnorePaths;
 
-  private BuildFileSpec(Path basePath, boolean recursive, ImmutableSet<Path> recursiveIgnorePaths) {
+  private BuildFileSpec(
+      Path basePath,
+      boolean recursive,
+      ImmutableSet<Path> recursiveIgnorePaths) {
     this.basePath = basePath;
     this.recursive = recursive;
     this.recursiveIgnorePaths = recursiveIgnorePaths;
@@ -59,7 +61,10 @@ public class BuildFileSpec {
   }
 
   public static BuildFileSpec fromPath(Path basePath) {
-    return new BuildFileSpec(basePath, /* recursive */ false, ImmutableSet.<Path>of());
+    return new BuildFileSpec(
+        basePath,
+        /* recursive */ false,
+        ImmutableSet.<Path>of());
   }
 
   public static BuildFileSpec fromBuildTarget(BuildTarget target) {
@@ -71,12 +76,13 @@ public class BuildFileSpec {
    */
   public void forEachBuildFile(
       ProjectFilesystem filesystem,
+      final String buildFileName,
       final Function<Path, Void> function)
       throws IOException {
 
     // If non-recursive, we just want the build file in the target spec's given base dir.
     if (!recursive) {
-      function.apply(basePath.resolve(BuckConstant.BUILD_RULES_FILE_NAME));
+      function.apply(basePath.resolve(buildFileName));
       return;
     }
 
@@ -101,7 +107,7 @@ public class BuildFileSpec {
               Path file,
               BasicFileAttributes attrs)
               throws IOException {
-            if (BuckConstant.BUILD_RULES_FILE_NAME.equals(file.getFileName().toString())) {
+            if (buildFileName.equals(file.getFileName().toString())) {
               function.apply(file);
             }
             return FileVisitResult.CONTINUE;
@@ -129,11 +135,14 @@ public class BuildFileSpec {
   /**
    * @return paths to build files that this spec match in the given {@link ProjectFilesystem}.
    */
-  public ImmutableSet<Path> findBuildFiles(ProjectFilesystem filesystem) throws IOException {
+  public ImmutableSet<Path> findBuildFiles(
+      ProjectFilesystem filesystem,
+      String buildFileName) throws IOException {
     final ImmutableSet.Builder<Path> buildFiles = ImmutableSet.builder();
 
     forEachBuildFile(
         filesystem,
+        buildFileName,
         new Function<Path, Void>() {
           @Override
           public Void apply(Path buildFile) {

@@ -212,6 +212,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     }
 
     argBuilder.add("--project_root", projectRoot.toAbsolutePath().toString());
+    argBuilder.add("--build_file_name", parserConfig.getBuildFileName());
 
     // Add the --include flags.
     for (String include : parserConfig.getDefaultIncludes()) {

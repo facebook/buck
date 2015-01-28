@@ -46,12 +46,15 @@ public class MissingSymbolsHandler {
 
   private final Console console;
   private final JavaSymbolFinder javaSymbolFinder;
+  private final String buildFileName;
 
   private MissingSymbolsHandler(
       Console console,
-      JavaSymbolFinder javaSymbolFinder) {
+      JavaSymbolFinder javaSymbolFinder,
+      String buildFileName) {
     this.console = console;
     this.javaSymbolFinder = javaSymbolFinder;
+    this.buildFileName = buildFileName;
   }
 
   public static MissingSymbolsHandler create(
@@ -80,7 +83,8 @@ public class MissingSymbolsHandler {
         environment);
     return new MissingSymbolsHandler(
         console,
-        javaSymbolFinder);
+        javaSymbolFinder,
+        parserConfig.getBuildFileName());
   }
 
   /**
@@ -201,7 +205,7 @@ public class MissingSymbolsHandler {
    */
   private String formatTarget(BuildTarget buildTarget) {
     return String.format("%s (:%s)",
-        buildTarget.getBuildFilePath(),
+        buildTarget.getBasePath().resolve(buildFileName),
         buildTarget.getShortName());
   }
 

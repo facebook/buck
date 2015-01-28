@@ -21,6 +21,7 @@ class BuckTest(unittest.TestCase):
     def setUp(self):
         self.project_root = tempfile.mkdtemp()
         self.allow_empty_globs = False
+        self.build_file_name = 'BUCK'
 
     def tearDown(self):
         shutil.rmtree(self.project_root, True)
@@ -34,7 +35,11 @@ class BuckTest(unittest.TestCase):
             self.write_file(pfile)
 
     def create_build_file_processor(self, *includes):
-        return BuildFileProcessor(self.project_root, self.allow_empty_globs, includes)
+        return BuildFileProcessor(
+            self.project_root,
+            self.build_file_name,
+            self.allow_empty_globs,
+            includes)
 
     def test_sibling_includes_use_separate_globals(self):
         """

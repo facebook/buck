@@ -136,4 +136,17 @@ public class ParserIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//:root_module");
     result.assertSuccess("buck build should ignore empty glob results by default");
   }
+
+  @Test
+  public void testBuildFileName() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "build_file_name",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//:root");
+    result.assertSuccess("buck should parse build files with a different name");
+    assertEquals("//:root\n", result.getStdout());
+  }
 }

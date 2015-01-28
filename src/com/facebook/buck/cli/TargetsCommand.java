@@ -172,7 +172,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           buildRuleTypes.isEmpty() ?
               Optional.<ImmutableSet<BuildRuleType>>absent() :
               Optional.of(buildRuleTypes),
-          options.isDetectTestChanges());
+          options.isDetectTestChanges(),
+          parserConfig.getBuildFileName());
     }
 
     // Print out matching targets in alphabetical order.
@@ -209,7 +210,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       Optional<ImmutableSet<Path>> referencedFiles,
       final Optional<ImmutableSet<BuildTarget>> matchingBuildTargets,
       final Optional<ImmutableSet<BuildRuleType>> buildRuleTypes,
-      boolean detectTestChanges) {
+      boolean detectTestChanges,
+      String buildFileName) {
     ImmutableSet<TargetNode<?>> directOwners;
     if (referencedFiles.isPresent()) {
       BuildFileTree buildFileTree = new InMemoryBuildFileTree(
@@ -222,7 +224,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           .filter(
               new DirectOwnerPredicate(
                   buildFileTree,
-                  referencedFiles.get()))
+                  referencedFiles.get(),
+                  buildFileName))
           .toSet();
     } else {
       directOwners = graph.getNodes();
@@ -535,6 +538,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
     private final ImmutableSet<Path> referencedInputs;
     private final ImmutableSet<Path> basePathOfTargets;
+    private final String buildFileName;
 
     /**
      * @param referencedInputs A {@link TargetNode} must reference at least one of these paths as
@@ -543,7 +547,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
      */
     public DirectOwnerPredicate(
         BuildFileTree buildFileTree,
-        ImmutableSet<Path> referencedInputs) {
+        ImmutableSet<Path> referencedInputs,
+        String buildFileName) {
       this.referencedInputs = referencedInputs;
 
       ImmutableSet.Builder<Path> basePathOfTargetsBuilder = ImmutableSet.builder();
@@ -554,6 +559,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         }
       }
       this.basePathOfTargets = basePathOfTargetsBuilder.build();
+      this.buildFileName = buildFileName;
     }
 
     @Override
@@ -572,7 +578,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         }
       }
 
-      return referencedInputs.contains(node.getBuildTarget().getBuildFilePath());
+      return referencedInputs.contains(node.getBuildTarget().getBasePath().resolve(buildFileName));
     }
   }
 }

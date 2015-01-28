@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
@@ -39,24 +38,24 @@ public class BuildFileSpecTest {
   @Test
   public void recursiveVsNonRecursive() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path buildFile = Paths.get("a", BuckConstant.BUILD_RULES_FILE_NAME);
+    Path buildFile = Paths.get("a", "BUCK");
     filesystem.mkdirs(buildFile.getParent());
     filesystem.touch(buildFile);
 
-    Path nestedBuildFile = Paths.get("a", "b", BuckConstant.BUILD_RULES_FILE_NAME);
+    Path nestedBuildFile = Paths.get("a", "b", "BUCK");
     filesystem.mkdirs(nestedBuildFile.getParent());
     filesystem.touch(nestedBuildFile);
 
     // Test a non-recursive spec.
     BuildFileSpec nonRecursiveSpec = BuildFileSpec.fromPath(buildFile.getParent());
     ImmutableSet<Path> expectedBuildFiles = ImmutableSet.of(buildFile);
-    ImmutableSet<Path> actualBuildFiles = nonRecursiveSpec.findBuildFiles(filesystem);
+    ImmutableSet<Path> actualBuildFiles = nonRecursiveSpec.findBuildFiles(filesystem, "BUCK");
     assertEquals(expectedBuildFiles, actualBuildFiles);
 
     // Test a recursive spec.
     BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(buildFile.getParent());
     expectedBuildFiles = ImmutableSet.of(buildFile, nestedBuildFile);
-    actualBuildFiles = recursiveSpec.findBuildFiles(filesystem);
+    actualBuildFiles = recursiveSpec.findBuildFiles(filesystem, "BUCK");
     assertEquals(expectedBuildFiles, actualBuildFiles);
   }
 
@@ -65,11 +64,11 @@ public class BuildFileSpecTest {
     // NOTE(agallagher): FakeProjectFilesystem doesn't currently support a proper walkFileTree
     // method, so use a real one here to test ignore dirs.
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    Path buildFile = Paths.get("a", BuckConstant.BUILD_RULES_FILE_NAME);
+    Path buildFile = Paths.get("a", "BUCK");
     filesystem.mkdirs(buildFile.getParent());
     filesystem.writeContentsToPath("", buildFile);
 
-    Path ignoredBuildFile = Paths.get("a", "b", BuckConstant.BUILD_RULES_FILE_NAME);
+    Path ignoredBuildFile = Paths.get("a", "b", "BUCK");
     filesystem.mkdirs(ignoredBuildFile.getParent());
     filesystem.writeContentsToPath("", ignoredBuildFile);
 
@@ -77,7 +76,7 @@ public class BuildFileSpecTest {
     ImmutableSet<Path> ignore = ImmutableSet.of(ignoredBuildFile.getParent());
     BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(buildFile.getParent(), ignore);
     ImmutableSet<Path> expectedBuildFiles = ImmutableSet.of(buildFile);
-    ImmutableSet<Path> actualBuildFiles = recursiveSpec.findBuildFiles(filesystem);
+    ImmutableSet<Path> actualBuildFiles = recursiveSpec.findBuildFiles(filesystem, "BUCK");
     assertEquals(expectedBuildFiles, actualBuildFiles);
   }
 

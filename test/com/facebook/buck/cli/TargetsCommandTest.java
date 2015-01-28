@@ -56,7 +56,6 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -210,7 +209,8 @@ public class TargetsCommandTest {
             Optional.of(referencedFiles),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
 
     // Only test-android-library target depends on the referenced file.
@@ -221,7 +221,8 @@ public class TargetsCommandTest {
             Optional.of(referencedFiles),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library"),
         matchingBuildRules.keySet());
@@ -235,20 +236,23 @@ public class TargetsCommandTest {
             Optional.of(referencedFiles),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
         matchingBuildRules.keySet());
 
     // Verify that BUCK files show up as referenced_files.
-    referencedFiles = ImmutableSet.of(Paths.get("javasrc/" + BuckConstant.BUILD_RULES_FILE_NAME));
+    referencedFiles = ImmutableSet.of(
+        Paths.get("javasrc/BUCK"));
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(referencedFiles),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
         matchingBuildRules.keySet());
@@ -263,7 +267,8 @@ public class TargetsCommandTest {
             Optional.of(referencedFiles),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library"),
         matchingBuildRules.keySet());
@@ -275,7 +280,8 @@ public class TargetsCommandTest {
             Optional.<ImmutableSet<Path>>absent(),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of(
             "//javatest:test-java-library",
@@ -290,7 +296,8 @@ public class TargetsCommandTest {
             Optional.<ImmutableSet<Path>>absent(),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.of(ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE)),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of(
             "//javatest:test-java-library",
@@ -305,7 +312,8 @@ public class TargetsCommandTest {
             Optional.<ImmutableSet<Path>>absent(),
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
             Optional.of(ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE)),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
 
@@ -316,7 +324,8 @@ public class TargetsCommandTest {
             Optional.<ImmutableSet<Path>>absent(),
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
 
@@ -328,7 +337,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(Paths.get("javatest/TestJavaLibrary.java"))),
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.<String>of(), matchingBuildRules.keySet());
 
@@ -355,7 +365,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(Paths.get("foo/bar.m"))),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
 
     // The AppleLibrary matches the referenced file.
@@ -365,7 +376,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(Paths.get("foo/foo.m"))),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of("//foo:lib"),
         matchingBuildRules.keySet());
@@ -402,7 +414,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(Paths.get("foo/bar.m"))),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
 
     // Both AppleLibrary nodes, AppleBundle, and AppleTest match the referenced file.
@@ -412,7 +425,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(Paths.get("foo/foo.m"))),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of("//foo:lib", "//foo:xctest"),
         matchingBuildRules.keySet());
@@ -424,7 +438,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(Paths.get("foo/testfoo.m"))),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of("//foo:xctest"),
         matchingBuildRules.keySet());
@@ -455,7 +470,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(resDir.resolve("some_resource.txt"))),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of(androidResourceTarget.toString()),
         matchingBuildRules.keySet());
@@ -470,7 +486,8 @@ public class TargetsCommandTest {
                     Paths.get(resDir.toString() + "_extra").resolve("some_resource.txt"))),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
 
     // Specifying a resource with the same string-like common prefix, but not under the above
@@ -481,7 +498,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(genSrc)),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false);
+            false,
+            "BUCK");
     assertEquals(
         ImmutableSet.of(androidResourceTarget.toString(), genTarget.toString()),
         matchingBuildRules.keySet());
@@ -553,7 +571,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(Paths.get("foo/bar.m"))),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            true);
+            true,
+            "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
 
     // Test1, test2 and the library depend on the referenced file.
@@ -563,7 +582,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(Paths.get("foo/testfoo1.m"))),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            true);
+            true,
+            "BUCK");
     assertEquals(
         ImmutableSet.of("//foo:lib", "//foo:xctest1", "//foo:xctest2"),
         matchingBuildRules.keySet());
@@ -575,7 +595,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(Paths.get("foo/testfoo2.m"))),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            true);
+            true,
+            "BUCK");
     assertEquals(
         ImmutableSet.of("//foo:lib", "//foo:xctest1", "//foo:xctest2"),
         matchingBuildRules.keySet());
@@ -587,7 +608,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(Paths.get("testlib/testlib.m"))),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            true);
+            true,
+            "BUCK");
     assertEquals(
         ImmutableSet.of(
             "//foo:lib",
@@ -604,7 +626,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(Paths.get("testlib/testlib-test.m"))),
             Optional.<ImmutableSet<BuildTarget>>absent(),
             Optional.<ImmutableSet<BuildRuleType>>absent(),
-            true);
+            true,
+            "BUCK");
     assertEquals(
         ImmutableSet.of(
             "//foo:lib",

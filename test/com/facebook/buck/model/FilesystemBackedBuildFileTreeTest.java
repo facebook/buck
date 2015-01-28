@@ -57,7 +57,7 @@ public class FilesystemBackedBuildFileTreeTest {
     Files.touch(new File(tempDir, "src/com/facebook/buck/command/BUCK"));
     Files.touch(new File(tempDir, "src/com/facebook/buck/notbuck/BUCK"));
 
-    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem);
+    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
     Iterable<Path> allChildren =
         buildFiles.getChildPaths(BuildTarget.builder("src", "com/facebook").build());
     assertEquals(ImmutableSet.of(Paths.get("buck")),
@@ -86,7 +86,7 @@ public class FilesystemBackedBuildFileTreeTest {
     Files.touch(new File(tempDir, "src/com/example/build/notbuck/BUCK"));
     Files.touch(new File(tempDir, "src/com/example/some/directory/BUCK"));
 
-    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem);
+    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
     Collection<Path> allChildren = buildFiles.getChildPaths(
         BuildTargetFactory.newInstance("//src/com/example:example"));
     assertEquals(ImmutableSet.of(Paths.get("build"), Paths.get("some/directory")),
@@ -122,7 +122,7 @@ public class FilesystemBackedBuildFileTreeTest {
 
     ImmutableSet<Path> ignoredPaths = ImmutableSet.of(Paths.get("foo/bar"));
     ProjectFilesystem filesystem = new ProjectFilesystem(tempDir.toPath(), ignoredPaths);
-    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem);
+    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Collection<Path> children =
         buildFiles.getChildPaths(BuildTarget.builder("//foo", "foo").build());
@@ -140,7 +140,7 @@ public class FilesystemBackedBuildFileTreeTest {
     java.nio.file.Files.createFile(root.resolve("foo/BUCK"));
 
     ProjectFilesystem filesystem = new ProjectFilesystem(root);
-    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem);
+    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(Paths.get("bar/baz"));
     assertEquals(Optional.of(Paths.get("")), ancestor);
@@ -153,7 +153,7 @@ public class FilesystemBackedBuildFileTreeTest {
     java.nio.file.Files.createFile(root.resolve("foo/BUCK"));
 
     ProjectFilesystem filesystem = new ProjectFilesystem(root);
-    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem);
+    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(Paths.get("bar/baz"));
     assertEquals(Optional.<Path>absent(), ancestor);

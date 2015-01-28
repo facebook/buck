@@ -16,8 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import static com.facebook.buck.util.BuckConstant.BUILD_RULES_FILE_NAME;
-
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
@@ -146,7 +144,7 @@ public abstract class BuildTargetPatternParser {
    *     Examples are ":azzetz in build file //first-party/orca/orcaapp/BUCK" and
    *     "//first-party/orca/orcaapp:mezzenger in context FULLY_QUALIFIED"
    */
-  public abstract String makeTargetDescription(String buildTargetName);
+  public abstract String makeTargetDescription(String buildTargetName, String buildFileName);
 
   private static class BuildFileContext extends BuildTargetPatternParser {
 
@@ -155,12 +153,12 @@ public abstract class BuildTargetPatternParser {
     }
 
     @Override
-    public String makeTargetDescription(String buildTargetName) {
+    public String makeTargetDescription(String buildTargetName, String buildFileName) {
       return String.format(
           "%s in build file %s%s",
           buildTargetName,
           getBaseNameWithSlash(),
-          BUILD_RULES_FILE_NAME);
+          buildFileName);
     }
   }
 
@@ -174,7 +172,7 @@ public abstract class BuildTargetPatternParser {
     }
 
     @Override
-    public String makeTargetDescription(String buildTargetName) {
+    public String makeTargetDescription(String buildTargetName, String buildFileName) {
       return String.format("%s in fully qualified context.", buildTargetName);
     }
   }
@@ -185,7 +183,7 @@ public abstract class BuildTargetPatternParser {
     }
 
     @Override
-    public String makeTargetDescription(String buildTargetName) {
+    public String makeTargetDescription(String buildTargetName, String buildFileName) {
       return String.format("%s in context visibility", buildTargetName);
     }
 

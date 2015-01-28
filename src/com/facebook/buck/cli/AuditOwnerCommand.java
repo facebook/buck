@@ -27,7 +27,6 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -60,11 +59,8 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   private static final String FILE_INDENT = "    ";
   private static final int BUILD_TARGET_ERROR = 13;
 
-  private final BuildFileTree buildFileTree;
-
   public AuditOwnerCommand(CommandRunnerParams params) {
     super(params);
-    buildFileTree = new FilesystemBackedBuildFileTree(getProjectFilesystem());
   }
 
   @VisibleForTesting
@@ -116,6 +112,9 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     OwnersReport report = OwnersReport.emptyReport();
     Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
     ParserConfig parserConfig = new ParserConfig(options.getBuckConfig());
+    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(
+        getProjectFilesystem(),
+        parserConfig.getBuildFileName());
 
     for (Path filePath : options.getArgumentsAsPaths(getProjectFilesystem().getRootPath())) {
       Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(filePath);
@@ -129,7 +128,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
         continue;
       }
 
-      Path buckFile = basePath.get().resolve(BuckConstant.BUILD_RULES_FILE_NAME);
+      Path buckFile = basePath.get().resolve(parserConfig.getBuildFileName());
       Preconditions.checkState(getProjectFilesystem().exists(buckFile));
 
       // Get the target base name.

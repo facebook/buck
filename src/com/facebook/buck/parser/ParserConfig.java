@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 
 public class ParserConfig {
   private static final String DEFAULT_ALLOW_EMPTY_GLOBS = "true";
+  private static final String DEFAULT_BUILD_FILE_NAME = "BUCK";
 
   private final BuckConfig delegate;
 
@@ -41,6 +42,10 @@ public class ParserConfig {
     return Boolean.parseBoolean(
         delegate.getValue("build", "allow_empty_globs").or(DEFAULT_ALLOW_EMPTY_GLOBS)
     );
+  }
+
+  public String getBuildFileName() {
+    return delegate.getValue("buildfile", "name").or(DEFAULT_BUILD_FILE_NAME);
   }
 
   /**

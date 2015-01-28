@@ -278,7 +278,7 @@ public class ThriftLibraryDescriptionTest {
     FakeBuildRule thriftRule = createFakeBuildRule("//thrift:target", pathResolver);
     resolver.addToIndex(thriftRule);
     filesystem.mkdirs(thriftRule.getBuildTarget().getBasePath());
-    filesystem.touch(thriftRule.getBuildTarget().getBuildFilePath());
+    filesystem.touch(thriftRule.getBuildTarget().getBasePath().resolve("BUCK"));
 
     // Setup an empty thrift buck config, and set compiler target.
     buckConfig = new FakeBuckConfig(
@@ -372,7 +372,7 @@ public class ThriftLibraryDescriptionTest {
     final BuildRule implicitDep = createFakeBuildRule("//implicit:dep", pathResolver);
     resolver.addToIndex(implicitDep);
     filesystem.mkdirs(implicitDep.getBuildTarget().getBasePath());
-    filesystem.touch(implicitDep.getBuildTarget().getBuildFilePath());
+    filesystem.touch(implicitDep.getBuildTarget().getBasePath().resolve("BUCK"));
     ImmutableSet<BuildTarget> implicitDeps = ImmutableSet.of(implicitDep.getBuildTarget());
     ImmutableSet<String> options = ImmutableSet.of();
 
@@ -407,7 +407,7 @@ public class ThriftLibraryDescriptionTest {
     final FakeBuildRule thriftRule = createFakeBuildRule("//thrift:target", pathResolver);
     resolver.addToIndex(thriftRule);
     filesystem.mkdirs(thriftRule.getBuildTarget().getBasePath());
-    filesystem.touch(thriftRule.getBuildTarget().getBuildFilePath());
+    filesystem.touch(thriftRule.getBuildTarget().getBasePath().resolve("BUCK"));
 
     // Setup a simple description with an empty config.
     FakeBuckConfig buckConfig = new FakeBuckConfig(

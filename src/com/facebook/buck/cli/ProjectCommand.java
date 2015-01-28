@@ -28,12 +28,12 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.ProjectConfigDescription;
@@ -48,7 +48,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -184,28 +183,17 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
       Project project = new Project(
           new SourcePathResolver(new BuildRuleResolver(actionGraph.getNodes())),
-          ImmutableSet.copyOf(
-              FluentIterable
+          FluentIterable
               .from(actionGraph.getNodes())
-              .filter(
-                  new Predicate<BuildRule>() {
-                    @Override
-                    public boolean apply(BuildRule input) {
-                      return input instanceof ProjectConfig;
-                    }
-                  })
-              .transform(
-                  new Function<BuildRule, ProjectConfig>() {
-                    @Override
-                    public ProjectConfig apply(BuildRule input) {
-                      return (ProjectConfig) input;
-                    }
-                  }
-              )),
+              .filter(ProjectConfig.class)
+              .toSet(),
           actionGraph,
           options.getBasePathToAliasMap(),
           options.getJavaPackageFinder(),
           executionContext,
+          new FilesystemBackedBuildFileTree(
+              getProjectFilesystem(),
+              new ParserConfig(options.getBuckConfig()).getBuildFileName()),
           getProjectFilesystem(),
           options.getPathToDefaultAndroidManifest(),
           options.getPathToPostProcessScript(),

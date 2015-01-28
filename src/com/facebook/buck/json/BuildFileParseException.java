@@ -16,8 +16,6 @@
 
 package com.facebook.buck.json;
 
-import static com.facebook.buck.util.BuckConstant.BUILD_RULES_FILE_NAME;
-
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 
 import java.io.IOException;
@@ -47,16 +45,9 @@ public class BuildFileParseException extends Exception
     }
   }
 
-  static BuildFileParseException createForGenericBuildFileParseError(IOException cause) {
-    String message = String.format("Parse error while collecting %s files",
-        BUILD_RULES_FILE_NAME);
-    return new BuildFileParseException(formatMessageWithCause(message, cause));
-  }
-
   static BuildFileParseException createForBuildFileParseError(Path buildFile,
       IOException cause) {
-    String message = String.format("Parse error for %s file %s",
-        BUILD_RULES_FILE_NAME,
+    String message = String.format("Parse error for build file %s",
         buildFile);
     return new BuildFileParseException(formatMessageWithCause(message, cause));
   }

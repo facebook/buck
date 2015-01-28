@@ -50,13 +50,6 @@ public class BuckConstant {
 
   public static final Path BUCK_TRACE_DIR = BUCK_OUTPUT_PATH.resolve("log/traces");
 
-  /**
-   * This variable is package-private because conceptually, only parsing logic should be concerned
-   * with the files that define build rules. Note that if the value of this variable changes, the
-   * {@code BUILD_RULES_FILE_NAME} constant in {@code buck.py} must be updated, as well.
-   */
-  public static final String BUILD_RULES_FILE_NAME = "BUCK";
-
   private BuckConstant() {}
 
   /**
