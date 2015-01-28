@@ -16,22 +16,18 @@
 
 package com.facebook.buck.java;
 
-import com.google.common.collect.ImmutableMap;
-
 public class JavaCompilationConstants {
 
   public static final JavacOptions DEFAULT_JAVAC_OPTIONS =
       JavacOptions.builderForUseInJavaBuckConfig()
           .setSourceLevel("7")
           .setTargetLevel("7")
-          .setBootclasspathMap(ImmutableMap.<String, String>of())
           .build();
 
   public static final JavacOptions ANDROID_JAVAC_OPTIONS =
       JavacOptions.builderForUseInJavaBuckConfig()
           .setSourceLevel("7")
           .setTargetLevel("6")
-          .setBootclasspathMap(ImmutableMap.<String, String>of())
           .build();
 
   private JavaCompilationConstants() {

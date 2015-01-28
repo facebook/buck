@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
 import com.facebook.buck.java.AnnotationProcessingParams;
+import com.facebook.buck.java.ImmutableJavacOptions;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaSourceJar;
@@ -70,7 +71,7 @@ public class AndroidLibraryDescription
       return new JavaSourceJar(params, pathResolver, args.srcs.get());
     }
 
-    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
+    ImmutableJavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
         pathResolver,
         args,
         defaultOptions);

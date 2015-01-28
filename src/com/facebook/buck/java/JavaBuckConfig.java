@@ -65,8 +65,8 @@ public class JavaBuckConfig {
         .setJavacJarPath(getJavacJarPath())
         .setSourceLevel(sourceLevel.or(TARGETED_JAVA_VERSION))
         .setTargetLevel(targetLevel.or(TARGETED_JAVA_VERSION))
-        .setBootclasspathMap(bootclasspaths.build())
-        .setExtraArguments(extraArguments)
+        .putAllSourceToBootclasspath(bootclasspaths.build())
+        .addAllExtraArguments(extraArguments)
         .build();
   }
 

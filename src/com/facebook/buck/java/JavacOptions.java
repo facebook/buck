@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -25,52 +26,50 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+
+import org.immutables.value.Value;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Nullable;
 
 /**
  * Represents the command line options that should be passed to javac. Note that the options do not
  * include either the classpath or the directory for storing class files.
  */
-public class JavacOptions {
+@Value.Immutable
+@BuckStyleImmutable
+public abstract class JavacOptions {
 
-  private final Optional<Path> javacPath;
-  private final Optional<Path> javacJarPath;
-  private final boolean debug;
-  private final boolean verbose;
-  private final String sourceLevel;
-  private final String targetLevel;
-  private final AnnotationProcessingParams annotationProcessingParams;
-  private final ImmutableList<String> extraArguments;
-  private final Optional<String> bootclasspath;
-  private final ImmutableMap<String, String> sourceToBootclasspath;
+  public abstract Optional<Path> getJavacPath();
+  public abstract Optional<Path> getJavacJarPath();
 
-  private JavacOptions(
-      Optional<Path> javacPath,
-      Optional<Path> javacJarPath,
-      boolean debug,
-      boolean verbose,
-      String sourceLevel,
-      String targetLevel,
-      ImmutableList<String> extraArguments,
-      Optional<String> bootclasspath,
-      ImmutableMap<String, String> sourceToBootclasspath,
-      AnnotationProcessingParams annotationProcessingParams) {
-    this.javacPath = javacPath;
-    this.javacJarPath = javacJarPath;
-    this.debug = debug;
-    this.verbose = verbose;
-    this.sourceLevel = sourceLevel;
-    this.targetLevel = targetLevel;
-    this.extraArguments = extraArguments;
-    this.bootclasspath = bootclasspath;
-    this.sourceToBootclasspath = sourceToBootclasspath;
-    this.annotationProcessingParams = annotationProcessingParams;
+  @Value.Default
+  protected boolean isProductionBuild() {
+    return false;
+  }
+
+  @Value.Default
+  protected boolean isVerbose() {
+    return false;
+  }
+
+  public abstract String getSourceLevel();
+  @VisibleForTesting
+  abstract String getTargetLevel();
+
+  @Value.Default
+  public AnnotationProcessingParams getAnnotationProcessingParams() {
+    return AnnotationProcessingParams.EMPTY;
+  }
+
+  public abstract List<String> getExtraArguments();
+  protected abstract Optional<String> getBootclasspath();
+  protected abstract Map<String, String> getSourceToBootclasspath();
+
+  protected boolean isDebug() {
+    return !isProductionBuild();
   }
 
   public void appendOptionsToList(
@@ -78,32 +77,32 @@ public class JavacOptions {
       final Function<Path, Path> pathRelativizer) {
 
     // Add some standard options.
-    optionsBuilder.add("-source", sourceLevel);
-    optionsBuilder.add("-target", targetLevel);
+    optionsBuilder.add("-source", getSourceLevel());
+    optionsBuilder.add("-target", getTargetLevel());
 
-    if (debug) {
+    if (isDebug()) {
       optionsBuilder.add("-g");
     }
 
-    if (verbose) {
+    if (isVerbose()) {
       optionsBuilder.add("-verbose");
     }
 
     // Override the bootclasspath if Buck is building Java code for Android.
-    if (bootclasspath.isPresent()) {
-      optionsBuilder.add("-bootclasspath", bootclasspath.get());
+    if (getBootclasspath().isPresent()) {
+      optionsBuilder.add("-bootclasspath", getBootclasspath().get());
     } else {
-      String bcp = sourceToBootclasspath.get(sourceLevel);
+      String bcp = getSourceToBootclasspath().get(getSourceLevel());
       if (bcp != null) {
         optionsBuilder.add("-bootclasspath", bcp);
       }
     }
 
     // Add annotation processors.
-    if (!annotationProcessingParams.isEmpty()) {
+    if (!getAnnotationProcessingParams().isEmpty()) {
 
       // Specify where to generate sources so IntelliJ can pick them up.
-      Path generateTo = annotationProcessingParams.getGeneratedSourceFolderName();
+      Path generateTo = getAnnotationProcessingParams().getGeneratedSourceFolderName();
       if (generateTo != null) {
         optionsBuilder.add("-s").add(pathRelativizer.apply(generateTo).toString());
       }
@@ -111,182 +110,64 @@ public class JavacOptions {
       // Specify processorpath to search for processors.
       optionsBuilder.add("-processorpath",
           Joiner.on(File.pathSeparator).join(
-              FluentIterable.from(annotationProcessingParams.getSearchPathElements())
+              FluentIterable.from(getAnnotationProcessingParams().getSearchPathElements())
                   .transform(pathRelativizer)
                   .transform(Functions.toStringFunction())));
 
       // Specify names of processors.
-      if (!annotationProcessingParams.getNames().isEmpty()) {
+      if (!getAnnotationProcessingParams().getNames().isEmpty()) {
         optionsBuilder.add(
             "-processor",
-            Joiner.on(',').join(annotationProcessingParams.getNames()));
+            Joiner.on(',').join(getAnnotationProcessingParams().getNames()));
       }
 
       // Add processor parameters.
-      for (String parameter : annotationProcessingParams.getParameters()) {
+      for (String parameter : getAnnotationProcessingParams().getParameters()) {
         optionsBuilder.add("-A" + parameter);
       }
 
-      if (annotationProcessingParams.getProcessOnly()) {
+      if (getAnnotationProcessingParams().getProcessOnly()) {
         optionsBuilder.add("-proc:only");
       }
     }
 
     // Add extra arguments.
-    optionsBuilder.addAll(extraArguments);
-  }
-
-  @Nullable
-  private static String optionalPathFileName(Optional<Path> path) {
-    return path.isPresent()
-        ? path.get().getFileName().toString()
-        : null;
+    optionsBuilder.addAll(getExtraArguments());
   }
 
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(simons): Include bootclasspath params.
-    builder.set("sourceLevel", sourceLevel)
-        .set("javacPath", javacPath.transform(Functions.toStringFunction()).orNull())
-        .set("javacJarPath", javacJarPath.transform(Functions.toStringFunction()).orNull())
-        .set("targetLevel", targetLevel)
-        .set("extraArguments", Joiner.on(',').join(extraArguments))
-        .set("debug", debug);
+    builder.set("sourceLevel", getSourceLevel())
+        .set("javacPath", getJavacPath().transform(Functions.toStringFunction()).orNull())
+        .set("javacJarPath", getJavacJarPath().transform(Functions.toStringFunction()).orNull())
+        .set("targetLevel", getTargetLevel())
+        .set("extraArguments", Joiner.on(',').join(getExtraArguments()))
+        .set("debug", isDebug());
 
-    return annotationProcessingParams.appendToRuleKey(builder);
+    return getAnnotationProcessingParams().appendToRuleKey(builder);
   }
 
-  public AnnotationProcessingParams getAnnotationProcessingParams() {
-    return annotationProcessingParams;
+  static ImmutableJavacOptions.Builder builderForUseInJavaBuckConfig() {
+    return ImmutableJavacOptions.builder();
   }
 
-  public String getSourceLevel() {
-    return sourceLevel;
-  }
-
-  @VisibleForTesting
-  String getTargetLevel() {
-    return targetLevel;
-  }
-
-  public ImmutableList<String> getExtraArguments() {
-    return extraArguments;
-  }
-
-  public Optional<Path> getJavacPath() {
-    return javacPath;
-  }
-
-  public Optional<Path> getJavacJarPath() {
-    return javacJarPath;
-  }
-
-  static Builder builderForUseInJavaBuckConfig() {
-    return new Builder();
-  }
-
-  public static Builder builder(JavacOptions options) {
+  public static ImmutableJavacOptions.Builder builder(JavacOptions options) {
     Preconditions.checkNotNull(options);
 
-    Builder builder = new Builder();
+    ImmutableJavacOptions.Builder builder = ImmutableJavacOptions.builder();
 
-    builder.setVerboseOutput(options.verbose);
-    if (!options.debug) {
-      builder.setProductionBuild();
-    }
+    builder.setVerbose(options.isVerbose());
+    builder.setProductionBuild(options.isProductionBuild());
 
-    builder.setJavacPath(options.javacPath);
-    builder.setJavacJarPath(options.javacJarPath);
-    builder.setAnnotationProcessingParams(options.annotationProcessingParams);
-    builder.sourceToBootclasspath = options.sourceToBootclasspath;
-    builder.setBootclasspath(options.bootclasspath.orNull());
+    builder.setJavacPath(options.getJavacPath());
+    builder.setJavacJarPath(options.getJavacJarPath());
+    builder.setAnnotationProcessingParams(options.getAnnotationProcessingParams());
+    builder.putAllSourceToBootclasspath(options.getSourceToBootclasspath());
+    builder.setBootclasspath(options.getBootclasspath());
     builder.setSourceLevel(options.getSourceLevel());
     builder.setTargetLevel(options.getTargetLevel());
-    builder.setExtraArguments(options.getExtraArguments());
+    builder.addAllExtraArguments(options.getExtraArguments());
 
     return builder;
-  }
-
-  public static class Builder {
-    private Optional<Path> javacPath = Optional.<Path>absent();
-    private Optional<Path> javacJarPath = Optional.<Path>absent();
-    @Nullable
-    private String sourceLevel;
-    @Nullable
-    private String targetLevel;
-    private ImmutableList<String> extraArguments = ImmutableList.of();
-    private boolean debug = true;
-    private boolean verbose = false;
-    private Optional<String> bootclasspath = Optional.absent();
-    private AnnotationProcessingParams annotationProcessingParams =
-        AnnotationProcessingParams.EMPTY;
-    private ImmutableMap<String, String> sourceToBootclasspath = ImmutableMap.of();
-
-    private Builder() {
-    }
-
-    public Builder setJavacPath(Optional<Path> javacPath) {
-      this.javacPath = javacPath;
-      return this;
-    }
-
-    public Builder setJavacJarPath(Optional<Path> javacJarPath) {
-      this.javacJarPath = javacJarPath;
-      return this;
-    }
-
-    public Builder setSourceLevel(String sourceLevel) {
-      this.sourceLevel = Preconditions.checkNotNull(sourceLevel);
-      return this;
-    }
-
-    public Builder setTargetLevel(String targetLevel) {
-      this.targetLevel = Preconditions.checkNotNull(targetLevel);
-      return this;
-    }
-
-    public Builder setExtraArguments(ImmutableList<String> extraArguments) {
-      this.extraArguments = extraArguments;
-      return this;
-    }
-
-    public Builder setProductionBuild() {
-      debug = false;
-      return this;
-    }
-
-    public Builder setVerboseOutput(boolean verbose) {
-      this.verbose = verbose;
-      return this;
-    }
-
-    public Builder setBootclasspathMap(Map<String, String> sourceVersionToClasspath) {
-      this.sourceToBootclasspath = ImmutableMap.copyOf(sourceVersionToClasspath);
-      return this;
-    }
-
-    public Builder setBootclasspath(@Nullable String bootclasspath) {
-      this.bootclasspath = Optional.fromNullable(bootclasspath);
-      return this;
-    }
-
-    public Builder setAnnotationProcessingParams(
-        AnnotationProcessingParams annotationProcessingParams) {
-      this.annotationProcessingParams = annotationProcessingParams;
-      return this;
-    }
-
-    public JavacOptions build() {
-      return new JavacOptions(
-          javacPath,
-          javacJarPath,
-          debug,
-          verbose,
-          Preconditions.checkNotNull(sourceLevel),
-          Preconditions.checkNotNull(targetLevel),
-          extraArguments,
-          bootclasspath,
-          sourceToBootclasspath,
-          annotationProcessingParams);
-    }
   }
 }

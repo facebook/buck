@@ -84,7 +84,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       return new JavaSourceJar(params, pathResolver, args.srcs.get());
     }
 
-    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
+    ImmutableJavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
         pathResolver,
         args,
         defaultOptions);
@@ -125,11 +125,11 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     return arg.resources.get();
   }
 
-  public static JavacOptions.Builder getJavacOptions(
+  public static ImmutableJavacOptions.Builder getJavacOptions(
       SourcePathResolver resolver,
       Arg args,
       JavacOptions defaultOptions) {
-    JavacOptions.Builder builder = JavacOptions.builder(defaultOptions);
+    ImmutableJavacOptions.Builder builder = JavacOptions.builder(defaultOptions);
 
     if (args.source.isPresent()) {
       builder.setSourceLevel(args.source.get());
@@ -140,11 +140,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     }
 
     if (args.extraArguments.isPresent()) {
-      builder.setExtraArguments(
-          ImmutableList.<String>builder()
-          .addAll(defaultOptions.getExtraArguments())
-          .addAll(args.extraArguments.get())
-          .build());
+      builder.addAllExtraArguments(args.extraArguments.get());
     }
 
     if (args.javac.isPresent() || args.javacJar.isPresent()) {

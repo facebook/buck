@@ -26,7 +26,6 @@ import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -47,7 +46,7 @@ public class JavacOptionsTest {
   @Test
   public void productionBuildsCanBeEnabled() {
     JavacOptions options = createStandardBuilder()
-        .setProductionBuild()
+        .setProductionBuild(true)
         .build();
 
     assertOptionsDoesNotContain(options, "-g");
@@ -114,7 +113,7 @@ public class JavacOptionsTest {
   public void shouldAddABootClasspathIfTheMapContainsOne() {
     JavacOptions options = createStandardBuilder()
         .setSourceLevel("5")
-        .setBootclasspathMap(ImmutableMap.of("5", "some-magic.jar:also.jar"))
+        .putSourceToBootclasspath("5", "some-magic.jar:also.jar")
         .build();
 
     ImmutableList.Builder<String> allArgs = ImmutableList.builder();
@@ -129,7 +128,7 @@ public class JavacOptionsTest {
     JavacOptions options = createStandardBuilder()
         .setBootclasspath(expectedBootClasspath)
         .setSourceLevel("5")
-        .setBootclasspathMap(ImmutableMap.of("5", "not-the-right-path.jar"))
+        .putSourceToBootclasspath("5", "not-the-right-path.jar")
         .build();
 
     ImmutableList.Builder<String> allArgs = ImmutableList.builder();
@@ -146,7 +145,7 @@ public class JavacOptionsTest {
     JavacOptions options = createStandardBuilder()
         .setBootclasspath("cake.jar")
         .setSourceLevel("6")
-        .setBootclasspathMap(ImmutableMap.of("5", "some-magic.jar:also.jar"))
+        .putSourceToBootclasspath("5", "some-magic.jar:also.jar")
         .build();
 
     ImmutableList.Builder<String> allArgs = ImmutableList.builder();
@@ -162,7 +161,7 @@ public class JavacOptionsTest {
   public void shouldCopyMapOfSourceLevelToBootclassPathWhenBuildingNewJavacOptions() {
     JavacOptions original = createStandardBuilder()
         .setSourceLevel("5")
-        .setBootclasspathMap(ImmutableMap.of("5", "some-magic.jar:also.jar"))
+        .putSourceToBootclasspath("5", "some-magic.jar:also.jar")
         .build();
 
     JavacOptions copy = JavacOptions.builder(original).build();
@@ -173,7 +172,7 @@ public class JavacOptionsTest {
   @Test
   public void shouldIncoporateExtraOptionsInOutput() {
     JavacOptions options = createStandardBuilder()
-        .setExtraArguments(ImmutableList.<String>of("-Xfoobar"))
+        .addExtraArguments("-Xfoobar")
         .build();
 
     assertOptionsContains(options, "-Xfoobar");
@@ -204,10 +203,9 @@ public class JavacOptionsTest {
     return " " + Joiner.on(" ").join(params) + " ";
   }
 
-  private JavacOptions.Builder createStandardBuilder() {
+  private ImmutableJavacOptions.Builder createStandardBuilder() {
     return JavacOptions.builderForUseInJavaBuckConfig()
         .setSourceLevel("5")
-        .setTargetLevel("5")
-        .setBootclasspathMap(ImmutableMap.<String, String>of());
+        .setTargetLevel("5");
   }
 }
