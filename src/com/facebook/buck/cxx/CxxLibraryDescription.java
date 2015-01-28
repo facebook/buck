@@ -524,7 +524,7 @@ public class CxxLibraryDescription implements
 
     // If we *are* building a specific type of this lib, call into the type specific
     // rule builder methods.
-    if (type.isPresent()) {
+    if (type.isPresent() && platform.isPresent()) {
       Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
       flavors.remove(type.get().getKey());
       BuildTarget target = BuildTarget
