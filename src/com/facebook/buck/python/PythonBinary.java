@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
 
@@ -103,7 +104,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
 
     // Hash all the input components here so we can detect changes in both input file content
     // and module name mappings.
-    for (ImmutableMap.Entry<String, ImmutableMap<Path, SourcePath>> part : ImmutableMap.of(
+    for (ImmutableMap.Entry<String, Map<Path, SourcePath>> part : ImmutableMap.of(
         "module", components.getModules(),
         "resource", components.getResources(),
         "nativeLibraries", components.getNativeLibraries()).entrySet()) {

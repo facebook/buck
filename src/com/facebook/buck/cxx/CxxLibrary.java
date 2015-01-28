@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -146,7 +147,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
         ruleResolver,
         cxxPlatform.getFlavor(),
         CxxDescriptionEnhancer.SHARED_FLAVOR);
-    return new PythonPackageComponents(
+    return ImmutablePythonPackageComponents.of(
         /* modules */ ImmutableMap.<Path, SourcePath>of(),
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
         /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of(

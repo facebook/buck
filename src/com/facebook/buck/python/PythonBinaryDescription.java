@@ -98,7 +98,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     Path mainModule = baseModule.resolve(mainName);
 
     // Build up the list of all components going into the python binary.
-    PythonPackageComponents binaryPackageComponents = new PythonPackageComponents(
+    PythonPackageComponents binaryPackageComponents = ImmutablePythonPackageComponents.of(
         /* modules */ ImmutableMap.of(mainModule, args.main),
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
         /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of());

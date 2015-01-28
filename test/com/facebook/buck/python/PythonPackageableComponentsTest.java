@@ -53,11 +53,11 @@ public class PythonPackageableComponentsTest {
     BuildTarget me = BuildTargetFactory.newInstance("//:me");
     BuildTarget them = BuildTargetFactory.newInstance("//:them");
     Path dest = Paths.get("test");
-    PythonPackageComponents compA = new PythonPackageComponents(
+    PythonPackageComponents compA = ImmutablePythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(dest, new TestSourcePath("sourceA")),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of());
-    PythonPackageComponents compB = new PythonPackageComponents(
+    PythonPackageComponents compB = ImmutablePythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(dest, new TestSourcePath("sourceB")),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of());

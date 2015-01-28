@@ -19,89 +19,30 @@ package com.facebook.buck.python;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
+
+import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.concurrent.Immutable;
-
-@Immutable
-public class PythonPackageComponents {
+@Value.Immutable(builder = false)
+@BuckStyleImmutable
+public abstract class PythonPackageComponents {
 
   // Python modules as map of their module name to location of the source.
-  private final ImmutableMap<Path, SourcePath> modules;
+  @Value.Parameter
+  public abstract Map<Path, SourcePath> getModules();
 
   // Resources to include in the package.
-  private final ImmutableMap<Path, SourcePath> resources;
+  @Value.Parameter
+  public abstract Map<Path, SourcePath> getResources();
 
   // Native libraries to include in the package.
-  private final ImmutableMap<Path, SourcePath> nativeLibraries;
-
-  public PythonPackageComponents(
-      ImmutableMap<Path, SourcePath> modules,
-      ImmutableMap<Path, SourcePath> resources,
-      ImmutableMap<Path, SourcePath> nativeLibraries) {
-    this.modules = modules;
-    this.resources = resources;
-    this.nativeLibraries = nativeLibraries;
-  }
-
-  public ImmutableMap<Path, SourcePath> getModules() {
-    return modules;
-  }
-
-  public ImmutableMap<Path, SourcePath> getResources() {
-    return resources;
-  }
-
-  public ImmutableMap<Path, SourcePath> getNativeLibraries() {
-    return nativeLibraries;
-  }
-
-  @Override
-  public String toString() {
-    return "PythonPackageComponents{" +
-        "modules=" + modules +
-        ", resources=" + resources +
-        ", nativeLibraries=" + nativeLibraries +
-        '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    PythonPackageComponents that = (PythonPackageComponents) o;
-
-    if (modules != null ? !modules.equals(that.modules) : that.modules != null) {
-      return false;
-    }
-    if (nativeLibraries != null ?
-        !nativeLibraries.equals(that.nativeLibraries) :
-        that.nativeLibraries != null) {
-      return false;
-    }
-    if (resources != null ? !resources.equals(that.resources) : that.resources != null) {
-      return false;
-    }
-
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    int result = modules != null ? modules.hashCode() : 0;
-    result = 31 * result + (resources != null ? resources.hashCode() : 0);
-    result = 31 * result + (nativeLibraries != null ? nativeLibraries.hashCode() : 0);
-    return result;
-  }
+  @Value.Parameter
+  public abstract Map<Path, SourcePath> getNativeLibraries();
 
   /**
    * A helper class to construct a PythonPackageComponents instance which
@@ -158,9 +99,9 @@ public class PythonPackageComponents {
         String type,
         ImmutableMap.Builder<Path, SourcePath> builder,
         Map<Path, BuildTarget> sourceDescs,
-        ImmutableMap<Path, SourcePath> toAdd,
+        Map<Path, SourcePath> toAdd,
         BuildTarget sourceDesc) {
-      for (ImmutableMap.Entry<Path, SourcePath> ent : toAdd.entrySet()) {
+      for (Map.Entry<Path, SourcePath> ent : toAdd.entrySet()) {
         add(type, builder, sourceDescs, ent.getKey(), ent.getValue(), sourceDesc);
       }
       return this;
@@ -170,7 +111,7 @@ public class PythonPackageComponents {
       return add("module", modules, moduleSources, destination, source, from);
     }
 
-    public Builder addModules(ImmutableMap<Path, SourcePath> sources, BuildTarget from) {
+    public Builder addModules(Map<Path, SourcePath> sources, BuildTarget from) {
       return add("module", modules, moduleSources, sources, from);
     }
 
@@ -178,7 +119,7 @@ public class PythonPackageComponents {
       return add("resource", resources, resourceSources, destination, source, from);
     }
 
-    public Builder addResources(ImmutableMap<Path, SourcePath> sources, BuildTarget from) {
+    public Builder addResources(Map<Path, SourcePath> sources, BuildTarget from) {
       return add("resource", resources, resourceSources, sources, from);
     }
 
@@ -192,7 +133,7 @@ public class PythonPackageComponents {
           from);
     }
 
-    public Builder addNativeLibraries(ImmutableMap<Path, SourcePath> sources, BuildTarget from) {
+    public Builder addNativeLibraries(Map<Path, SourcePath> sources, BuildTarget from) {
       return add("native library", nativeLibraries, nativeLibrarySources, sources, from);
     }
 
@@ -204,7 +145,7 @@ public class PythonPackageComponents {
     }
 
     public PythonPackageComponents build() {
-      return new PythonPackageComponents(
+      return ImmutablePythonPackageComponents.of(
           modules.build(),
           resources.build(),
           nativeLibraries.build());

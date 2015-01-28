@@ -25,6 +25,7 @@ import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -94,7 +95,7 @@ public class CxxLibraryTest {
 
       @Override
       public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
-        return new PythonPackageComponents(
+        return ImmutablePythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(
@@ -148,7 +149,7 @@ public class CxxLibraryTest {
             Linker.LinkableDepType.SHARED));
 
     // Verify that we return the expected output for python packages.
-    PythonPackageComponents expectedPythonPackageComponents = new PythonPackageComponents(
+    PythonPackageComponents expectedPythonPackageComponents = ImmutablePythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(

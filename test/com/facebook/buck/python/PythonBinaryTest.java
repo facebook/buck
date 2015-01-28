@@ -62,7 +62,7 @@ public class PythonBinaryTest {
         Paths.get("dummy_path_to_pex"),
         new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7")),
         Paths.get("main.py"),
-        new PythonPackageComponents(
+        ImmutablePythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(main), new PathSourcePath(mainSrc),
                 Paths.get(mod1), new PathSourcePath(src1),

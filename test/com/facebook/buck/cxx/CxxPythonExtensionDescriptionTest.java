@@ -26,6 +26,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -158,7 +159,7 @@ public class CxxPythonExtensionDescriptionTest {
 
       @Override
       public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
-        return new PythonPackageComponents(
+        return ImmutablePythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(
@@ -221,7 +222,7 @@ public class CxxPythonExtensionDescriptionTest {
     // Verify that we get the expected view from the python packageable interface.
     PythonPackageComponents actualComponent = extension.getPythonPackageComponents(cxxPlatform);
     BuildRule rule = resolver.getRule(desc.getExtensionTarget(target, cxxPlatform.getFlavor()));
-    PythonPackageComponents expectedComponents = new PythonPackageComponents(
+    PythonPackageComponents expectedComponents = ImmutablePythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(
             target.getBasePath().resolve(desc.getExtensionName(target)),
             new BuildTargetSourcePath(rule.getBuildTarget())),

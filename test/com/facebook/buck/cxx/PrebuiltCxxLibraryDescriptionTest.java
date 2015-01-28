@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -111,7 +112,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = new PythonPackageComponents(
+    PythonPackageComponents expectedComponents = ImmutablePythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(
@@ -156,7 +157,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = new PythonPackageComponents(
+    PythonPackageComponents expectedComponents = ImmutablePythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of());
@@ -199,7 +200,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = new PythonPackageComponents(
+    PythonPackageComponents expectedComponents = ImmutablePythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of());
@@ -242,7 +243,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = new PythonPackageComponents(
+    PythonPackageComponents expectedComponents = ImmutablePythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(

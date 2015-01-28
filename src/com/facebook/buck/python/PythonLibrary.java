@@ -69,7 +69,7 @@ public class PythonLibrary extends AbstractBuildRule implements PythonPackagable
    */
   @Override
   public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
-    return new PythonPackageComponents(
+    return ImmutablePythonPackageComponents.of(
         srcs,
         resources,
         ImmutableMap.<Path, SourcePath>of());
