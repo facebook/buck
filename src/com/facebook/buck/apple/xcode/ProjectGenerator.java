@@ -610,7 +610,7 @@ public class ProjectGenerator {
     // and add any shell script rules here
     ImmutableList.Builder<TargetNode<?>> preScriptPhases = ImmutableList.builder();
     ImmutableList.Builder<TargetNode<?>> postScriptPhases = ImmutableList.builder();
-    if (bundle.isPresent()) {
+    if (bundle.isPresent() && targetNode != bundle.get()) {
       collectBuildScriptDependencies(
           targetGraph.getAll(bundle.get().getDeps()),
           preScriptPhases,
