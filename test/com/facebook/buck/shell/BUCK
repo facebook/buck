@@ -52,6 +52,7 @@ java_test(
 java_library(
   name = 'testutil',
   srcs = [
+    'ExportFileBuilder.java',
     'GenruleBuilder.java',
   ],
   deps = [

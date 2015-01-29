@@ -16,8 +16,10 @@
 package com.facebook.buck.shell;
 
 import static com.facebook.buck.testutil.MoreAsserts.assertIterablesEquals;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -34,10 +36,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.ImmutableBuildContext;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
@@ -46,7 +47,6 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.DefaultClock;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.FutureCallback;
@@ -58,6 +58,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -76,13 +78,8 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws IOException {
-    ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
-    args.out = Optional.absent();
-    args.src = Optional.absent();
-    ExportFile exportFile = new ExportFile(
-        new FakeBuildRuleParamsBuilder(target).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
-        args);
+    ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
+        .build(new BuildRuleResolver());
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -98,13 +95,9 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetOutToNameParamValueIfSrcIsSet() throws IOException {
-    ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
-    args.out = Optional.of("fish");
-    args.src = Optional.absent();
-    ExportFile exportFile = new ExportFile(
-        new FakeBuildRuleParamsBuilder(target).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
-        args);
+    ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
+        .setOut("fish")
+        .build(new BuildRuleResolver());
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -120,13 +113,10 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
-    ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
-    args.src = Optional.of((SourcePath) new TestSourcePath("chips"));
-    args.out = Optional.of("fish");
-    ExportFile exportFile = new ExportFile(
-        new FakeBuildRuleParamsBuilder(target).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
-        args);
+    ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
+        .setSrc(new TestSourcePath("chips"))
+        .setOut("fish")
+        .build(new BuildRuleResolver());
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -142,44 +132,63 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetInputsFromSourcePaths() {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
-    args.src = Optional.of((SourcePath) new TestSourcePath("chips"));
-    args.out = Optional.of("cake");
-    ExportFile exportFile = new ExportFile(
-        new FakeBuildRuleParamsBuilder(target).build(),
-        pathResolver,
-        args);
+    ExportFileBuilder builder = ExportFileBuilder.newExportFileBuilder(target)
+        .setSrc(new TestSourcePath("chips"))
+        .setOut("cake");
+
+    ExportFile exportFile = (ExportFile) builder
+        .build(new BuildRuleResolver());
 
     assertIterablesEquals(singleton(Paths.get("chips")), exportFile.getInputsToCompareToOutput());
 
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
     FakeBuildRule rule = new FakeBuildRule(
         ExportFileDescription.TYPE,
         BuildTargetFactory.newInstance("//example:one"),
-        pathResolver);
-    args.src = Optional.of(
-        (SourcePath) new BuildTargetSourcePath(rule.getBuildTarget()));
-    exportFile = new ExportFile(new FakeBuildRuleParamsBuilder(target).build(), pathResolver, args);
+        new SourcePathResolver(ruleResolver));
+
+    builder.setSrc(new BuildTargetSourcePath(rule.getBuildTarget()));
+    exportFile = (ExportFile) builder.build(ruleResolver);
     assertTrue(Iterables.isEmpty(exportFile.getInputsToCompareToOutput()));
 
-    args.src = Optional.absent();
-    exportFile = new ExportFile(new FakeBuildRuleParamsBuilder(target).build(), pathResolver, args);
+    builder.setSrc(null);
+    exportFile = (ExportFile) builder.build(new BuildRuleResolver());
     assertIterablesEquals(
         singleton(Paths.get("example.html")), exportFile.getInputsToCompareToOutput());
   }
 
   @Test
   public void getOutputName() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    ExportFileDescription.Arg args = new ExportFileDescription().createUnpopulatedConstructorArg();
-    args.src = Optional.absent();
-    args.out = Optional.of("cake");
-    ExportFile exportFile = new ExportFile(
-        new FakeBuildRuleParamsBuilder(target).build(),
-        pathResolver,
-        args);
+    ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
+        .setOut("cake")
+        .build(new BuildRuleResolver());
+
     assertEquals("cake", exportFile.getOutputName());
+  }
+
+  @Test
+  public void modifyingTheContentsOfTheFileChangesTheRuleKey() throws IOException {
+    Path temp = Files.createTempFile("example", "file");
+    temp.toFile().deleteOnExit();
+
+    Files.write(temp, "I like cheese".getBytes(UTF_8));
+
+    ExportFileBuilder builder =
+        ExportFileBuilder.newExportFileBuilder( BuildTargetFactory.newInstance("//some:file"))
+        .setSrc(new TestSourcePath(temp.toAbsolutePath().toString()));
+
+    ExportFile rule = (ExportFile) builder.build(new BuildRuleResolver());
+
+    RuleKey original = rule.getRuleKey();
+
+    Files.write(temp, "I really like cheese".getBytes(UTF_8));
+
+    // Create a new rule. The FileHashCache held by the existing rule will retain a reference to the
+    // previous content of the file, so we need to create an identical rule.
+    rule = (ExportFile) builder.build(new BuildRuleResolver());
+    RuleKey refreshed = rule.getRuleKey();
+
+    assertNotEquals(original, refreshed);
   }
 
   private BuildContext getBuildContext(File root) {
