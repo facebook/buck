@@ -40,6 +40,7 @@ import com.facebook.buck.apple.HeaderVisibility;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.TargetSources;
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.apple.xcode.xcodeproj.ImmutableProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
@@ -1685,7 +1686,9 @@ public class ProjectGenerator {
   PBXTarget.ProductType bundleToTargetProductType(
       TargetNode<? extends HasAppleBundleFields> targetNode,
       TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode) {
-    if (targetNode.getConstructorArg().getExtension().isLeft()) {
+    if (targetNode.getConstructorArg().getXcodeProductType().isPresent()) {
+      return ImmutableProductType.of(targetNode.getConstructorArg().getXcodeProductType().get());
+    } else if (targetNode.getConstructorArg().getExtension().isLeft()) {
       AppleBundleExtension extension = targetNode.getConstructorArg().getExtension().getLeft();
 
       if (binaryNode.getType().equals(AppleLibraryDescription.TYPE)) {

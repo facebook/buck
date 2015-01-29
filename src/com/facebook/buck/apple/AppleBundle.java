@@ -42,17 +42,20 @@ public class AppleBundle extends AbstractBuildRule {
   private final Either<AppleBundleExtension, String> extension;
   private final Optional<SourcePath> infoPlist;
   private final BuildRule binary;
+  private final Optional<String> xcodeProductType;
 
   AppleBundle(
       BuildRuleParams params,
       SourcePathResolver resolver,
       Either<AppleBundleExtension, String> extension,
       Optional<SourcePath> infoPlist,
-      BuildRule binary) {
+      BuildRule binary,
+      Optional<String> xcodeProductType) {
     super(params, resolver);
     this.extension = extension;
     this.infoPlist = infoPlist;
     this.binary = binary;
+    this.xcodeProductType = xcodeProductType;
   }
 
   /**
@@ -85,6 +88,17 @@ public class AppleBundle extends AbstractBuildRule {
    */
   public BuildRule getBinary() {
     return binary;
+  }
+
+  /**
+   * If present, the value to use for the productType field of a generated
+   * Xcode project's PBXNativeTarget entry for this target.
+   *
+   * If not present, will be automatically generated based on the extension
+   * of this bundle.
+   */
+  public Optional<String> getXcodeProductType() {
+    return xcodeProductType;
   }
 
   @Override

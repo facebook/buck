@@ -38,7 +38,7 @@ java_immutables_library(
   ]
 )
 
-java_library(
+java_immutables_library(
   name = 'xcode',
   srcs = [
     'GidGenerator.java',

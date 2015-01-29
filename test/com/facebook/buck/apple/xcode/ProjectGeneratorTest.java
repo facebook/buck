@@ -45,6 +45,7 @@ import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelBuilder;
 import com.facebook.buck.apple.IosPostprocessResourcesBuilder;
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.apple.xcode.xcodeproj.ImmutableProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
@@ -1110,6 +1111,50 @@ public class ProjectGeneratorTest {
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     PBXFileReference productReference = target.getProductReference();
     assertEquals("bundle.framework", productReference.getName());
+    assertEquals(Optional.of("wrapper.framework"), productReference.getExplicitFileType());
+
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals(
+        "framework",
+        settings.get("WRAPPER_EXTENSION"));
+  }
+
+  @Test
+  public void testAppleBundleRuleWithCustomXcodeProductType() throws IOException {
+    BuildTarget sharedLibraryTarget = BuildTarget
+        .builder("//dep", "shared")
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .build();
+    TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
+        .createBuilder(sharedLibraryTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .build();
+
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "custombundle").build();
+    TargetNode<?> node = AppleBundleBuilder
+        .createBuilder(buildTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setBinary(sharedLibraryTarget)
+        .setXcodeProductType(Optional.of("com.facebook.buck.niftyProductType"))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(sharedLibraryNode, node),
+        ImmutableSet.<ProjectGenerator.Option>of());
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
+    assertEquals(
+        target.getProductType(),
+        ImmutableProductType.of("com.facebook.buck.niftyProductType"));
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+    PBXFileReference productReference = target.getProductReference();
+    assertEquals("custombundle.framework", productReference.getName());
     assertEquals(Optional.of("wrapper.framework"), productReference.getExplicitFileType());
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");

@@ -17,36 +17,47 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.Lists;
 
 import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.immutables.value.Value;
+
 /**
  * Information for building a specific artifact (a library, binary, or test).
  */
 public abstract class PBXTarget extends PBXProjectItem {
-  public enum ProductType {
-    STATIC_LIBRARY("com.apple.product-type.library.static"),
-    DYNAMIC_LIBRARY("com.apple.product-type.library.dynamic"),
-    TOOL("com.apple.product-type.tool"),
-    BUNDLE("com.apple.product-type.bundle"),
-    FRAMEWORK("com.apple.product-type.framework"),
-    STATIC_FRAMEWORK("com.apple.product-type.framework.static"),
-    APPLICATION("com.apple.product-type.application"),
-    UNIT_TEST("com.apple.product-type.bundle.unit-test"),
-    IN_APP_PURCHASE_CONTENT("com.apple.product-type.in-app-purchase-content"),
-    APP_EXTENSION("com.apple.product-type.app-extension");
+  @Value.Immutable
+  @BuckStyleImmutable
+  public abstract static class ProductType {
+    public static final ProductType STATIC_LIBRARY = ImmutableProductType.of(
+        "com.apple.product-type.library.static");
+    public static final ProductType DYNAMIC_LIBRARY = ImmutableProductType.of(
+        "com.apple.product-type.library.dynamic");
+    public static final ProductType TOOL = ImmutableProductType.of(
+        "com.apple.product-type.tool");
+    public static final ProductType BUNDLE = ImmutableProductType.of(
+        "com.apple.product-type.bundle");
+    public static final ProductType FRAMEWORK = ImmutableProductType.of(
+        "com.apple.product-type.framework");
+    public static final ProductType STATIC_FRAMEWORK = ImmutableProductType.of(
+        "com.apple.product-type.framework.static");
+    public static final ProductType APPLICATION = ImmutableProductType.of(
+        "com.apple.product-type.application");
+    public static final ProductType UNIT_TEST = ImmutableProductType.of(
+        "com.apple.product-type.bundle.unit-test");
+    public static final ProductType APP_EXTENSION = ImmutableProductType.of(
+        "com.apple.product-type.app-extension");
 
-    public final String identifier;
-    private ProductType(String identifier) {
-      this.identifier = identifier;
-    }
+    @Value.Parameter
+    public abstract String getIdentifier();
 
     @Override
     public String toString() {
-      return identifier;
+      return getIdentifier();
     }
   }
 

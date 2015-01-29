@@ -41,6 +41,11 @@ public class AppleBundleBuilder
     return this;
   }
 
+  public AppleBundleBuilder setXcodeProductType(Optional<String> xcodeProductType) {
+    arg.xcodeProductType = xcodeProductType;
+    return this;
+  }
+
   public AppleBundleBuilder setBinary(BuildTarget binary) {
     arg.binary = binary;
     return this;

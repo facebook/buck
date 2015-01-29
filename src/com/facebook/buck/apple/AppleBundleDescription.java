@@ -56,7 +56,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         new SourcePathResolver(resolver),
         args.extension,
         args.infoPlist,
-        resolver.getRule(args.binary));
+        resolver.getRule(args.binary),
+        args.xcodeProductType);
   }
 
   @SuppressFieldNotInitialized
@@ -68,6 +69,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public Optional<ImmutableMap<AppleBundleDestination, SourcePath>> files;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+    public Optional<String> xcodeProductType;
 
     @Override
     public Either<AppleBundleExtension, String> getExtension() {
@@ -82,6 +84,11 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
       return tests.get();
+    }
+
+    @Override
+    public Optional<String> getXcodeProductType() {
+      return xcodeProductType;
     }
   }
 }

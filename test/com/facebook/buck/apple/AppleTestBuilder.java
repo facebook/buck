@@ -68,6 +68,11 @@ public final class AppleTestBuilder
     return this;
   }
 
+  public AppleTestBuilder setXcodeProductType(Optional<String> xcodeProductType) {
+    arg.xcodeProductType = xcodeProductType;
+    return this;
+  }
+
   public AppleTestBuilder infoPlist(Optional<SourcePath> infoPlist) {
     arg.infoPlist = infoPlist;
     return this;

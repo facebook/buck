@@ -87,7 +87,8 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         sourcePathResolver,
         args.extension,
         args.infoPlist,
-        library);
+        library,
+        args.xcodeProductType);
     return new AppleTest(
         params.copyWithDeps(
             ImmutableSortedSet.<BuildRule>of(bundle),
@@ -111,6 +112,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     // Bundle related fields.
     public Either<AppleBundleExtension, String> extension;
     public Optional<SourcePath> infoPlist;
+    public Optional<String> xcodeProductType;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
@@ -125,6 +127,11 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     @Override
     public Optional<SourcePath> getInfoPlist() {
       return infoPlist;
+    }
+
+    @Override
+    public Optional<String> getXcodeProductType() {
+      return xcodeProductType;
     }
 
     public boolean canGroup() {
