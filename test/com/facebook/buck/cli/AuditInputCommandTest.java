@@ -89,21 +89,21 @@ public class AuditInputCommandTest {
         FakeFileHashCache.EMPTY_CACHE));
   }
 
-  private static final String EXPECTED_JSON = Joiner.on("").join(
-      "{",
-      "\"//:test-android-library\":",
-      "[",
-      "\"src/com/facebook/AndroidLibraryTwo.java\",",
-      "\"src/com/facebook/TestAndroidLibrary.java\"",
-      "],",
-      "\"//:test-java-library\":",
-      "[",
-      "\"src/com/facebook/TestJavaLibrary.java\"",
-      "]",
-      "}");
-
   @Test
   public void testJsonClassPathOutput() throws IOException {
+    final String expectedJson = Joiner.on("").join(
+        "{",
+        "\"//:test-android-library\":",
+        "[",
+        "\"src/com/facebook/AndroidLibraryTwo.java\",",
+        "\"src/com/facebook/TestAndroidLibrary.java\"",
+        "],",
+        "\"//:test-java-library\":",
+        "[",
+        "\"src/com/facebook/TestJavaLibrary.java\"",
+        "]",
+        "}");
+
     BuildTarget rootTarget = BuildTargetFactory.newInstance("//:test-java-library");
     TargetNode<?> rootNode = JavaLibraryBuilder
         .createBuilder(rootTarget)
@@ -122,7 +122,7 @@ public class AuditInputCommandTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
     auditInputCommand.printJsonInputs(targetGraph);
-    assertEquals(EXPECTED_JSON, console.getTextWrittenToStdOut());
+    assertEquals(expectedJson, console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
   }
 
@@ -144,4 +144,36 @@ public class AuditInputCommandTest {
     auditInputCommand.printJsonInputs(targetGraph);
   }
 
+  @Test
+  public void testJsonContainsRulesWithNoFiles() throws IOException {
+    final String expectedJson = Joiner.on("").join(
+        "{",
+        "\"//:test-exported-dep\":",
+        "[",
+        "],",
+        "\"//:test-java-library\":",
+        "[",
+        "\"src/com/facebook/TestJavaLibrary.java\"",
+        "]",
+        "}");
+
+    BuildTarget exportedTarget = BuildTargetFactory.newInstance("//:test-java-library");
+    TargetNode<?> exportedNode = JavaLibraryBuilder
+        .createBuilder(exportedTarget)
+        .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
+        .build();
+
+    BuildTarget rootTarget = BuildTargetFactory.newInstance("//:test-exported-dep");
+    TargetNode<?> rootNode = JavaLibraryBuilder
+        .createBuilder(rootTarget)
+        .addExportedDep(exportedTarget)
+        .build();
+
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(rootNode, exportedNode);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
+
+    auditInputCommand.printJsonInputs(targetGraph);
+    assertEquals(expectedJson, console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
+  }
 }

@@ -31,13 +31,15 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.collect.TreeMultimap;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions> {
 
@@ -102,12 +104,18 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
 
   @VisibleForTesting
   int printJsonInputs(TargetGraph graph) throws IOException {
-    final Multimap<String, Path> targetInputs = TreeMultimap.create();
+    final SortedMap<String, ImmutableSortedSet<Path>> targetToInputs =
+        new TreeMap<>();
 
     new AbstractBottomUpTraversal<TargetNode<?>, Void>(graph) {
 
       @Override
       public void visit(TargetNode<?> node) {
+        LOG.debug(
+            "Looking at inputs for %s",
+            node.getBuildTarget().getFullyQualifiedName());
+
+        SortedSet<Path> targetInputs = new TreeSet<>();
         for (Path input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
@@ -115,15 +123,14 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
               throw new HumanReadableException(
                   "Target %s refers to non-existent input file: %s", node, input);
             }
-            ImmutableSortedSet<Path> nodeContents = ImmutableSortedSet.copyOf(
-                getProjectFilesystem().getFilesUnderPath(input));
-            targetInputs.putAll(
-              node.getBuildTarget().getFullyQualifiedName(),
-              nodeContents);
+            targetInputs.addAll(getProjectFilesystem().getFilesUnderPath(input));
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
         }
+        targetToInputs.put(
+            node.getBuildTarget().getFullyQualifiedName(),
+            ImmutableSortedSet.copyOf(targetInputs));
       }
 
       @Override
@@ -133,10 +140,9 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
 
     }.traverse();
 
-    // Note: using `asMap` here ensures that the keys are sorted
     getObjectMapper().writeValue(
         console.getStdOut(),
-        targetInputs.asMap());
+        targetToInputs);
 
     return 0;
   }
