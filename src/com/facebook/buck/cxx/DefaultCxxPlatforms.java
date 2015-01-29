@@ -42,8 +42,9 @@ public class DefaultCxxPlatforms {
   private DefaultCxxPlatforms() { }
 
   private static enum LinkerType {
-    GNU,
     DARWIN,
+    GNU,
+    WINDOWS,
   }
 
   private static final Flavor FLAVOR = ImmutableFlavor.of("default");
@@ -163,6 +164,8 @@ public class DefaultCxxPlatforms {
         return LinkerType.GNU;
       case MACOS:
         return LinkerType.DARWIN;
+      case WINDOWS:
+        return LinkerType.WINDOWS;
       //$CASES-OMITTED$
       default:
         throw new HumanReadableException(
@@ -184,6 +187,8 @@ public class DefaultCxxPlatforms {
         return new GnuLinker(tool);
       case DARWIN:
         return new DarwinLinker(tool);
+      case WINDOWS:
+        return new WindowsLinker(tool);
       // Add a "default" case, even thought we've handled all cases above, just to make the
       // compiler happy.
       default:

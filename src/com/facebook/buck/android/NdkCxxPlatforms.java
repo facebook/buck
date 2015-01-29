@@ -141,6 +141,7 @@ public class NdkCxxPlatforms {
 
     DARWIN_X86_64("darwin-x86_64"),
     LINUX_X86_64("linux-x86_64"),
+    WINDOWS_X86_64("windows-x86_64"),
     ;
 
     private final String value;
@@ -223,8 +224,9 @@ public class NdkCxxPlatforms {
 
   private static final ImmutableMap<Platform, Host> BUILD_PLATFORMS =
       ImmutableMap.of(
+          Platform.LINUX, Host.LINUX_X86_64,
           Platform.MACOS, Host.DARWIN_X86_64,
-          Platform.LINUX, Host.LINUX_X86_64);
+          Platform.WINDOWS, Host.WINDOWS_X86_64);
 
   public static NdkCxxPlatform build(
       Flavor flavor,
@@ -235,9 +237,6 @@ public class NdkCxxPlatforms {
 
     String version = readVersion(ndkRoot);
 
-    Preconditions.checkArgument(
-        platform.equals(Platform.MACOS) || platform.equals(Platform.LINUX),
-        "NDKCxxPlatform can only currently run on MacOS or Linux.");
     Host host = Preconditions.checkNotNull(BUILD_PLATFORMS.get(platform));
 
     ImmutableCxxPlatform.Builder cxxPlatformBuilder = ImmutableCxxPlatform.builder();
