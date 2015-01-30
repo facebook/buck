@@ -14,32 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.apple.xcode;
+package com.facebook.buck.apple;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
-import com.facebook.buck.apple.AbstractAppleNativeTargetBuildRuleDescriptions;
-import com.facebook.buck.apple.AppleAssetCatalogDescription;
-import com.facebook.buck.apple.AppleBinaryDescription;
-import com.facebook.buck.apple.AppleBuildRules;
-import com.facebook.buck.apple.AppleBundleDescription;
-import com.facebook.buck.apple.AppleBundleExtension;
-import com.facebook.buck.apple.AppleLibraryDescription;
-import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
-import com.facebook.buck.apple.AppleResourceDescription;
-import com.facebook.buck.apple.AppleTestBundleParamsKey;
-import com.facebook.buck.apple.AppleTestDescription;
-import com.facebook.buck.apple.CoreDataModelDescription;
-import com.facebook.buck.apple.FileExtensions;
-import com.facebook.buck.apple.GroupedSource;
-import com.facebook.buck.apple.HasAppleBundleFields;
-import com.facebook.buck.apple.HeaderMapType;
-import com.facebook.buck.apple.HeaderVisibility;
-import com.facebook.buck.apple.IosPostprocessResourcesDescription;
-import com.facebook.buck.apple.TargetSources;
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.apple.xcode.GidGenerator;
+import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.ImmutableProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;

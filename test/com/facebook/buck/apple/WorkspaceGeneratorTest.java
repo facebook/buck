@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple.xcode;
+package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasXPath;

@@ -127,7 +127,7 @@ public class XCScheme {
   }
 
   public static class BuildActionEntry {
-    enum BuildFor {
+    public enum BuildFor {
       RUNNING,
       TESTING,
       PROFILING,

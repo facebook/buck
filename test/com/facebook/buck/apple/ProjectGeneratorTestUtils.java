@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple.xcode;
+package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
@@ -22,9 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.apple.AppleBundle;
-import com.facebook.buck.apple.AppleBundleDescription;
-import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;

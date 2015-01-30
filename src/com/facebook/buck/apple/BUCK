@@ -3,6 +3,7 @@ java_immutables_library(
   srcs = glob(['*.java']),
   deps = [
     '//src/com/facebook/buck/apple/clang:headermap',
+    '//src/com/facebook/buck/apple/xcode:xcode',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',

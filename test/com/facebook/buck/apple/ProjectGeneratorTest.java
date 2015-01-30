@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.apple.xcode;
+package com.facebook.buck.apple;
 
-import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
-import static com.facebook.buck.apple.xcode.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
+import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
+import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -31,19 +31,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
-import com.facebook.buck.apple.AppleAssetCatalogBuilder;
-import com.facebook.buck.apple.AppleBinaryBuilder;
-import com.facebook.buck.apple.AppleBundleBuilder;
-import com.facebook.buck.apple.AppleBundleExtension;
-import com.facebook.buck.apple.AppleLibraryBuilder;
-import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
-import com.facebook.buck.apple.AppleResourceBuilder;
-import com.facebook.buck.apple.AppleResourceDescription;
-import com.facebook.buck.apple.AppleTestBuilder;
-import com.facebook.buck.apple.AppleTestBundleParamsKey;
-import com.facebook.buck.apple.AppleTestDescription;
-import com.facebook.buck.apple.CoreDataModelBuilder;
-import com.facebook.buck.apple.IosPostprocessResourcesBuilder;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcodeproj.ImmutableProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
@@ -62,12 +49,12 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;

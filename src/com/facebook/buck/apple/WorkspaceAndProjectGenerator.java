@@ -14,13 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.apple.xcode;
+package com.facebook.buck.apple;
 
-import com.facebook.buck.apple.AppleBuildRules;
-import com.facebook.buck.apple.AppleTestBundleParamsKey;
-import com.facebook.buck.apple.AppleTestDescription;
-import com.facebook.buck.apple.XcodeProjectConfigDescription;
-import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;

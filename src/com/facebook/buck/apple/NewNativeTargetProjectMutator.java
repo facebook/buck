@@ -14,17 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.apple.xcode;
+package com.facebook.buck.apple;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
-import com.facebook.buck.apple.AppleAssetCatalogDescription;
-import com.facebook.buck.apple.AppleResourceDescription;
-import com.facebook.buck.apple.FileExtensions;
-import com.facebook.buck.apple.GroupedSource;
-import com.facebook.buck.apple.HeaderVisibility;
-import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;

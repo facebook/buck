@@ -18,10 +18,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleTestDescription;
+import com.facebook.buck.apple.ProjectGenerator;
+import com.facebook.buck.apple.WorkspaceAndProjectGenerator;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
-import com.facebook.buck.apple.xcode.ProjectGenerator;
-import com.facebook.buck.apple.xcode.WorkspaceAndProjectGenerator;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.intellij.Project;
 import com.facebook.buck.json.BuildFileParseException;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple.xcode;
+package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 
