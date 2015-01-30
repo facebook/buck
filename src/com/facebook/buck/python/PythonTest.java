@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.shell.ShellStep;
@@ -50,7 +49,7 @@ import javax.annotation.Nullable;
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class PythonTest extends AbstractBuildRule implements TestRule {
 
-  private final SourcePath binary;
+  private final PythonBinary binary;
   private final ImmutableSet<Label> labels;
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<BuildRule> sourceUnderTest;
@@ -58,7 +57,7 @@ public class PythonTest extends AbstractBuildRule implements TestRule {
   public PythonTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      SourcePath binary,
+      PythonBinary binary,
       ImmutableSet<BuildRule> sourceUnderTest,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts) {
@@ -77,9 +76,10 @@ public class PythonTest extends AbstractBuildRule implements TestRule {
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
         ProjectFilesystem fs = context.getProjectFilesystem();
-        return ImmutableList.of(
-            fs.resolve(getResolver().getPath(binary)).toString(),
-            "-o", fs.resolve(getPathToTestOutputResult()).toString());
+        ImmutableList.Builder<String> builder = new ImmutableList.Builder<String>();
+        builder.addAll(binary.getExecutableCommand(fs));
+        builder.add("-o", fs.resolve(getPathToTestOutputResult()).toString());
+        return builder.build();
       }
 
       @Override

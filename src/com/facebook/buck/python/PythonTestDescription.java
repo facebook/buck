@@ -272,7 +272,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
                     .build()),
             Suppliers.ofInstance(params.getExtraDeps())),
         pathResolver,
-        new BuildTargetSourcePath(binary.getBuildTarget()),
+        binary,
         resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),
         args.labels.or(ImmutableSet.<Label>of()),
         args.contacts.or(ImmutableSet.<String>of()));
