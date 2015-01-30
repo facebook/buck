@@ -413,6 +413,7 @@ public class CxxLibraryDescription implements
     arg.yaccSrcs = Optional.absent();
     arg.headerNamespace = Optional.absent();
     arg.soname = Optional.absent();
+    arg.frameworkSearchPaths = Optional.of(ImmutableList.<Path>of());
     return arg;
   }
 
