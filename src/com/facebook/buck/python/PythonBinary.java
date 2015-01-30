@@ -91,6 +91,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
   @Override
   public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
     return ImmutableList.of(
+        pythonEnvironment.getPythonPath().toString(),
         Preconditions.checkNotNull(
             projectFilesystem.getAbsolutifier().apply(getBinPath())).toString());
   }
