@@ -166,7 +166,12 @@ public class Jsr199Javac implements Javac {
         throw new RuntimeException(ex);
       }
     } else {
-      compiler = ToolProvider.getSystemJavaCompiler();
+      synchronized (ToolProvider.class) {
+        // ToolProvider has no synchronization internally, so if we don't synchronize from the
+        // outside we could wind up loading the compiler classes multiple times from different
+        // class loaders.
+        compiler = ToolProvider.getSystemJavaCompiler();
+      }
 
       if (compiler == null) {
         throw new HumanReadableException(
