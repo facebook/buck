@@ -265,17 +265,22 @@ class Chroot(object):
     self._mkdir_for(dst)
     abs_src = self._rootjoin(src)
     abs_dst = os.path.join(self.chroot, dst)
-    try:
-      os.link(abs_src, abs_dst)
-    except OSError as e:
-      if e.errno == errno.EEXIST:
-        # File already exists, skip
-        pass
-      elif e.errno == errno.EXDEV:
-        # Hard link across devices, fall back on copying
+    if hasattr(os, 'link'):
+      try:
+        os.link(abs_src, abs_dst)
+      except OSError as e:
+        if e.errno == errno.EEXIST:
+          # File already exists, skip
+          pass
+        elif e.errno == errno.EXDEV:
+          # Hard link across devices, fall back on copying
+          shutil.copyfile(abs_src, abs_dst)
+        else:
+          raise
+    else:
+      # Python for Windows doesn't support hardlinks; fall back on copying
+      if os.path.normcase(os.path.abspath(abs_src)) != os.path.normcase(os.path.abspath(abs_dst)):
         shutil.copyfile(abs_src, abs_dst)
-      else:
-        raise
 
   def write(self, data, dst, label=None, mode='wb'):
     """
