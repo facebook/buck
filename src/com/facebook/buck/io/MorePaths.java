@@ -111,6 +111,11 @@ public class MorePaths {
     if (!path2.equals(emptyPath)) {
       path2 = path2.normalize();
     }
+
+    // On Windows, if path1 is "" then Path.relativize returns ../path2 instead of path2 or ./path2
+    if (path1.equals(emptyPath)) {
+      return path2;
+    }
     return path1.relativize(path2);
   }
 

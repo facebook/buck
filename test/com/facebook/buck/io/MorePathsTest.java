@@ -211,4 +211,12 @@ public class MorePathsTest {
     Path p2 = Paths.get("c/d/e");
     assertThat(MorePaths.relativize(p1, p2), equalTo(Paths.get("../c/d/e")));
   }
+
+  @Test
+  public void relativeWithEmptyPath() {
+    // Ensure workaround for Windows Path relativize bug
+    Path p1 = Paths.get("");
+    Path p2 = Paths.get("foo");
+    assertThat(MorePaths.relativize(p1, p2), equalTo(Paths.get("foo")));
+  }
 }
