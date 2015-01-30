@@ -57,6 +57,8 @@ class OCamlCompilables {
   protected static final String OCAML_CMTI = ".cmti";
   protected static final String OCAML_ANNOT = ".annot";
 
+  protected static final String SYSTEM_SO = ".so";
+
   protected static final ImmutableList<String> DEFAULT_OCAML_FLAGS = ImmutableList.<String>builder()
       .add("-absname")
       .add("-g")

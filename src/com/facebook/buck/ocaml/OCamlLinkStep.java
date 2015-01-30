@@ -92,17 +92,21 @@ public class OCamlLinkStep extends ShellStep {
 
   private final ImmutableList<String> aAndOInput;
   private final ImmutableList<String> ocamlInput;
+  private final ImmutableList<String> systemSoLibs;
 
   public OCamlLinkStep(Args args) {
     this.args = args;
 
     ImmutableList.Builder<String> aAndOInputBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
+    ImmutableList.Builder<String> systemSoLibsBuilder = ImmutableList.builder();
 
     for (String linkInput : this.args.depInput) {
       if (linkInput.endsWith(OCamlCompilables.OCAML_O) ||
           linkInput.endsWith(OCamlCompilables.OCAML_A)) {
         aAndOInputBuilder.add(linkInput);
+      } else if (linkInput.endsWith(OCamlCompilables.SYSTEM_SO)) {
+        systemSoLibsBuilder.add(linkInput);
       } else {
         if (!(this.args.isLibrary && linkInput.endsWith(OCamlCompilables.OCAML_CMXA))) {
           if (!this.args.isBytecode) {
@@ -119,6 +123,7 @@ public class OCamlLinkStep extends ShellStep {
 
     this.ocamlInput = ocamlInputBuilder.build();
     this.aAndOInput = aAndOInputBuilder.build().reverse();
+    this.systemSoLibs = systemSoLibsBuilder.build();
   }
 
   @Override
@@ -136,6 +141,10 @@ public class OCamlLinkStep extends ShellStep {
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-ccopt"),
                 args.cxxCompiler.subList(1, args.cxxCompiler.size())))
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-ccopt"),
+                systemSoLibs))
         .addAll((args.isLibrary ? Optional.of("-a") : Optional.<String>absent()).asSet())
         .addAll((!args.isLibrary && args.isBytecode ?
                 Optional.of("-custom") :
