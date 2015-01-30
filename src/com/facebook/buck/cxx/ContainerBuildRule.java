@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
@@ -50,8 +51,8 @@ public class ContainerBuildRule<T> extends NoopBuildRule {
         params.copyWithChanges(
             TYPE,
             target,
-            ImmutableSortedSet.<BuildRule>of(),
-            ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         resolver,
         item);
   }

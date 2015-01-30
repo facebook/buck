@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -68,11 +69,12 @@ public class Archives {
     BuildRuleParams archiveParams = originalParams.copyWithChanges(
         ARCHIVE_TYPE,
         target,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(resolver.filterBuildRuleInputs(inputs))
-            .addAll(archiver.getBuildRules(resolver))
-            .build());
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(resolver.filterBuildRuleInputs(inputs))
+                    .addAll(archiver.getBuildRules(resolver))
+                    .build()));
 
     return new Archive(
         archiveParams,

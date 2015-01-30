@@ -34,6 +34,7 @@ import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -198,8 +199,8 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
     // Create language specific build params by using the deps we formed above.
     BuildRuleParams langParams = params.copyWithDeps(
-        allDeps,
-        ImmutableSortedSet.<BuildRule>of());
+        Suppliers.ofInstance(allDeps),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     // Construct the C/C++ library description argument to pass to the
     CxxLibraryDescription.Arg langArgs = cxxLibraryDescription.createEmptyConstructorArg();

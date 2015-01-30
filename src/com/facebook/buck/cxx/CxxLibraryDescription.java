@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -535,8 +536,8 @@ public class CxxLibraryDescription implements
           params.copyWithChanges(
               params.getBuildRuleType(),
               target,
-              params.getDeclaredDeps(),
-              params.getExtraDeps());
+              Suppliers.ofInstance(params.getDeclaredDeps()),
+              Suppliers.ofInstance(params.getExtraDeps()));
       if (type.get().getValue().equals(Type.HEADERS)) {
         return createHeaderSymlinkTreeBuildRule(
             typeParams,

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.gwt;
 
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -139,7 +140,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
     }.start();
 
     return new GwtBinary(
-        params.copyWithExtraDeps(extraDeps.build()),
+        params.copyWithExtraDeps(Suppliers.ofInstance(extraDeps.build())),
         new SourcePathResolver(resolver),
         args.modules.get(),
         args.vmArgs.get(),

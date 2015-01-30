@@ -42,6 +42,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -198,17 +199,18 @@ public class ThriftLibraryDescription
               params.copyWithChanges(
                   THRIFT_COMPILE_TYPE,
                   target,
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(
-                        new SourcePathResolver(resolver).filterBuildRuleInputs(
-                            ImmutableList.<SourcePath>builder()
-                                .add(compiler)
-                                .add(source)
-                                .addAll(includes.values())
-                                .build()))
-                      .addAll(includeTreeRules)
-                      .build(),
-                  ImmutableSortedSet.<BuildRule>of()),
+                  Suppliers.ofInstance(
+                      ImmutableSortedSet.<BuildRule>naturalOrder()
+                          .addAll(
+                              new SourcePathResolver(resolver).filterBuildRuleInputs(
+                                  ImmutableList.<SourcePath>builder()
+                                      .add(compiler)
+                                      .add(source)
+                                      .addAll(includes.values())
+                                      .build()))
+                          .addAll(includeTreeRules)
+                          .build()),
+                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
               new SourcePathResolver(resolver),
               compiler,
               flags,
@@ -292,8 +294,8 @@ public class ThriftLibraryDescription
           params.copyWithChanges(
               INCLUDE_SYMLINK_TREE_TYPE,
               symlinkTreeTarget,
-              ImmutableSortedSet.<BuildRule>of(),
-              ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
           pathResolver,
           includeRoot,
           includes);

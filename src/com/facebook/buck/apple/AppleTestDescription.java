@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class AppleTestDescription implements Description<AppleTestDescription.Arg> {
@@ -73,8 +74,8 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
                 .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
                 .addFlavors(ImmutableFlavor.of("default"))
                 .build(),
-            params.getDeclaredDeps(),
-            params.getExtraDeps()),
+            Suppliers.ofInstance(params.getDeclaredDeps()),
+            Suppliers.ofInstance(params.getExtraDeps())),
         resolver,
         args);
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
@@ -82,8 +83,8 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         params.copyWithChanges(
             AppleBundleDescription.TYPE,
             BuildTarget.builder(params.getBuildTarget()).addFlavors(BUNDLE_FLAVOR).build(),
-            ImmutableSortedSet.of(library),
-            ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of(library)),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         sourcePathResolver,
         args.extension,
         args.infoPlist,
@@ -91,8 +92,8 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         args.xcodeProductType);
     return new AppleTest(
         params.copyWithDeps(
-            ImmutableSortedSet.<BuildRule>of(bundle),
-            ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         sourcePathResolver,
         bundle,
         args.contacts.get(),

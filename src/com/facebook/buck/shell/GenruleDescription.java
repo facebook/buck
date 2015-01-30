@@ -37,6 +37,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -83,7 +84,7 @@ public class GenruleDescription
         .addAll(pathResolver.filterBuildRuleInputs(srcs))
         .build();
     return new Genrule(
-        params.copyWithExtraDeps(extraDeps),
+        params.copyWithExtraDeps(Suppliers.ofInstance(extraDeps)),
         pathResolver,
         srcs,
         macroHandler.getExpander(

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -82,7 +83,7 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
         .build();
 
     return new ApkGenrule(
-        params.copyWithExtraDeps(extraDeps),
+        params.copyWithExtraDeps(Suppliers.ofInstance(extraDeps)),
         pathResolver,
         srcs,
         MACRO_HANDLER.getExpander(

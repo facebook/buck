@@ -38,6 +38,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -97,8 +98,8 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         prebuiltJarBuildTarget, JavaLibrary.GWT_MODULE_FLAVOR);
     BuildRuleParams params = new BuildRuleParams(
         flavoredBuildTarget,
-        /* declaredDeps */ ImmutableSortedSet.of(buildRule),
-        /* inferredDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(buildRule)),
+        /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         projectFilesystem,
         ruleKeyBuilderFactory,
         BuildRuleType.GWT_MODULE,

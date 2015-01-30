@@ -23,6 +23,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Paths;
@@ -80,8 +81,8 @@ public class FakeBuildRuleParamsBuilder {
   public BuildRuleParams build() {
     return new BuildRuleParams(
         buildTarget,
-        deps,
-        extraDeps,
+        Suppliers.ofInstance(deps),
+        Suppliers.ofInstance(extraDeps),
         filesystem,
         new FakeRuleKeyBuilderFactory(fileHashCache),
         buildRuleType,

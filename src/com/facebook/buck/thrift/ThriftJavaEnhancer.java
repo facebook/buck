@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -109,8 +110,8 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
               params.copyWithChanges(
                   SOURCE_ZIP_TYPE,
                   sourceZipTarget,
-                  ImmutableSortedSet.of(compilerRule),
-                  ImmutableSortedSet.<BuildRule>of()),
+                  Suppliers.ofInstance(ImmutableSortedSet.of(compilerRule)),
+                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
               pathResolver,
               sourceZip,
               sourceDirectory));
@@ -124,11 +125,12 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
         BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget().getUnflavoredTarget(),
             getFlavor()),
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(sourceZips)
-            .addAll(deps)
-            .build(),
-        ImmutableSortedSet.<BuildRule>of());
+        Suppliers.ofInstance(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(sourceZips)
+                .addAll(deps)
+                .build()),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     return new DefaultJavaLibrary(
         javaParams,
         pathResolver,

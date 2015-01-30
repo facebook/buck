@@ -24,6 +24,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -94,8 +95,8 @@ public class CxxLinkableEnhancer {
         target,
         // Add dependencies for build rules generating the object files and inputs from
         // dependencies.
-        ImmutableSortedSet.copyOf(resolver.filterBuildRuleInputs(allInputs)),
-        ImmutableSortedSet.<BuildRule>of());
+        Suppliers.ofInstance(ImmutableSortedSet.copyOf(resolver.filterBuildRuleInputs(allInputs))),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<String> argsBuilder = ImmutableList.builder();

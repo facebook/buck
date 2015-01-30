@@ -28,9 +28,10 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSortedSet;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableSortedSet;
 
 /**
  * Description for a {@link BuildRule} that generates an {@code .aar} file.
@@ -84,8 +85,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     BuildRuleParams androidManifestParams = originalBuildRuleParams.copyWithChanges(
         AndroidManifestDescription.TYPE,
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_MANIFEST_FLAVOR),
-        originalBuildRuleParams.getDeclaredDeps(),
-        originalBuildRuleParams.getExtraDeps());
+        Suppliers.ofInstance(originalBuildRuleParams.getDeclaredDeps()),
+        Suppliers.ofInstance(originalBuildRuleParams.getExtraDeps()));
 
     AndroidManifest manifest = androidManifestDescription.createBuildRule(
         androidManifestParams,
@@ -98,8 +99,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     BuildRuleParams androidAarParams = originalBuildRuleParams.copyWithChanges(
         TYPE,
         originalBuildTarget,
-        /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(manifest),
-        /* extraDeps */ ImmutableSortedSet.<BuildRule>of());
+        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(manifest)),
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     return new AndroidAar(
         androidAarParams,

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -80,7 +81,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
-        params.copyWithExtraDeps(resolver.getAllRules(args.exportedDeps.get())),
+        params.copyWithExtraDeps(
+            Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
         javacOptions.build(),
         ResourceDependencyMode.TRANSITIVE);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
@@ -94,7 +96,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
           .addAll(params.getExtraDeps())
           .add(dummyRDotJava.get())
           .build();
-      params = params.copyWithExtraDeps(newExtraDeps);
+      params = params.copyWithExtraDeps(Suppliers.ofInstance(newExtraDeps));
     }
 
     return new RobolectricTest(

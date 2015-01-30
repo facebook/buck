@@ -31,6 +31,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -94,11 +95,12 @@ public class CxxBinaryDescription implements
     //     preventing it from affecting link parallelism.
     return new CxxBinary(
         params.copyWithDeps(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getDeclaredDeps())
-                .add(cxxLink)
-                .build(),
-            params.getExtraDeps()),
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(params.getDeclaredDeps())
+                    .add(cxxLink)
+                    .build()),
+            Suppliers.ofInstance(params.getExtraDeps())),
         new SourcePathResolver(resolver),
         cxxLink.getOutput(),
         cxxLink);

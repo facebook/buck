@@ -46,6 +46,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -141,8 +142,8 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget(),
             ImmutableFlavor.of("test_module")),
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSortedSet.<BuildRule>of());
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     final String contents = getTestModulesListContents(testModules);
 
@@ -250,8 +251,8 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     BuildRuleParams binaryParams = params.copyWithChanges(
         PythonBinaryDescription.TYPE,
         getBinaryBuildTarget(params.getBuildTarget()),
-        PythonUtil.getDepsFromComponents(pathResolver, allComponents),
-        ImmutableSortedSet.<BuildRule>of());
+        Suppliers.ofInstance(PythonUtil.getDepsFromComponents(pathResolver, allComponents)),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     PythonBinary binary = new PythonBinary(
         binaryParams,
         pathResolver,
@@ -264,11 +265,12 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     // Generate and return the python test rule, which depends on the python binary rule above.
     return new PythonTest(
         params.copyWithDeps(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getDeclaredDeps())
-                .add(binary)
-                .build(),
-            params.getExtraDeps()),
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(params.getDeclaredDeps())
+                    .add(binary)
+                    .build()),
+            Suppliers.ofInstance(params.getExtraDeps())),
         pathResolver,
         new BuildTargetSourcePath(binary.getBuildTarget()),
         resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),

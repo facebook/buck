@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -132,8 +133,8 @@ public class CxxPreprocessables {
             HEADER_SYMLINK_TREE_TYPE,
             target,
             // Symlink trees never need to depend on anything.
-            ImmutableSortedSet.<BuildRule>of(),
-            ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         resolver,
         root,
         links);
@@ -307,8 +308,8 @@ public class CxxPreprocessables {
         params.copyWithChanges(
             PREPROCESS_TYPE,
             target,
-            dependencies.build(),
-            ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(dependencies.build()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         preprocessor,
         args.build(),

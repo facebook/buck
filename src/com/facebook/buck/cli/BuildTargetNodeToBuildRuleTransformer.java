@@ -26,6 +26,7 @@ import com.facebook.buck.rules.FlavorableDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
+import com.google.common.base.Suppliers;
 
 /**
  * Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule} in a manner
@@ -49,8 +50,8 @@ public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
     // via a SourcePath.
     BuildRuleParams params = new BuildRuleParams(
         targetNode.getBuildTarget(),
-        ruleResolver.getAllRules(targetNode.getDeclaredDeps()),
-        ruleResolver.getAllRules(targetNode.getExtraDeps()),
+        Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getDeclaredDeps())),
+        Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getExtraDeps())),
         ruleFactoryParams.getProjectFilesystem(),
         ruleFactoryParams.getRuleKeyBuilderFactory(),
         description.getBuildRuleType(),

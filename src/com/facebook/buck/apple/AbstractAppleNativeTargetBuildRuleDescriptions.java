@@ -42,6 +42,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -115,8 +116,8 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
     BuildRuleParams headerRuleParams = params.copyWithChanges(
         HEADERS_RULE_TYPE,
         headersTarget,
-        /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(),
-        params.getExtraDeps());
+        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        Suppliers.ofInstance(params.getExtraDeps()));
 
     TargetSources targetSources = TargetSources.ofAppleSources(resolver, args.srcs.get());
     ImmutableSortedMap<SourcePath, String> perFileFlags =
@@ -166,8 +167,8 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
     }
 
     BuildRuleParams headerParams = params.copyWithDeps(
-        /* declaredDeps */ ImmutableSortedSet.<BuildRule>of(),
-        params.getExtraDeps());
+        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        Suppliers.ofInstance(params.getExtraDeps()));
     Path root = getPathToHeaders(params.getBuildTarget());
     return new SymlinkTree(headerParams, pathResolver, root, ImmutableMap.copyOf(headersToCopy));
   }
@@ -198,8 +199,8 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
     }
 
     BuildRuleParams compilationDatabaseParams = params.copyWithDeps(
-        /* declaredDeps */ traversal.deps.build(),
-        params.getExtraDeps());
+        /* declaredDeps */ Suppliers.ofInstance(traversal.deps.build()),
+        Suppliers.ofInstance(params.getExtraDeps()));
 
     return new CompilationDatabase(
         compilationDatabaseParams,
@@ -285,8 +286,8 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
           BuildRule newBuildRule = node.getDescription().createBuildRule(
               new BuildRuleParams(
                   targetForHeaders,
-                  ImmutableSortedSet.<BuildRule>of(),
-                  ImmutableSortedSet.<BuildRule>of(),
+                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
                   node.getRuleFactoryParams().getProjectFilesystem(),
                   node.getRuleFactoryParams().getRuleKeyBuilderFactory(),
                   node.getType(),

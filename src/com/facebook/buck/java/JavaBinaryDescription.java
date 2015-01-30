@@ -35,6 +35,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -110,8 +111,8 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
       binaryParams = params.copyWithChanges(
           params.getBuildRuleType(),
           BuildTarget.builder(params.getBuildTarget()).addFlavors(FAT_JAR_INNER_JAR_FLAVOR).build(),
-          params.getDeclaredDeps(),
-          params.getExtraDeps());
+          Suppliers.ofInstance(params.getDeclaredDeps()),
+          Suppliers.ofInstance(params.getExtraDeps()));
     }
 
     // Construct the build rule to build the binary JAR.
@@ -133,11 +134,12 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
       SourcePath innerJar = new BuildTargetSourcePath(innerJarRule.getBuildTarget());
       rule = new JarFattener(
           params.appendExtraDeps(
-              pathResolver.filterBuildRuleInputs(
-                  ImmutableList.<SourcePath>builder()
-                      .add(innerJar)
-                      .addAll(nativeLibraries.values())
-                      .build())),
+              Suppliers.<Iterable<BuildRule>>ofInstance(
+                  pathResolver.filterBuildRuleInputs(
+                      ImmutableList.<SourcePath>builder()
+                          .add(innerJar)
+                          .addAll(nativeLibraries.values())
+                          .build()))),
           pathResolver,
           javacOptions,
           innerJar,

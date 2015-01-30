@@ -34,6 +34,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -129,8 +130,8 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
         // the only deps which should control whether we need to re-run the aapt_package
         // step.
         params.copyWithDeps(
-            androidResOnly(params.getDeclaredDeps()),
-            androidResOnly(params.getExtraDeps())),
+            Suppliers.ofInstance(androidResOnly(params.getDeclaredDeps())),
+            Suppliers.ofInstance(androidResOnly(params.getExtraDeps()))),
         new SourcePathResolver(resolver),
         resolver.getAllRules(args.deps.get()),
         args.res.orNull(),

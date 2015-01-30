@@ -173,8 +173,8 @@ public class ExportFileTest {
 
     Files.write(temp, "I like cheese".getBytes(UTF_8));
 
-    ExportFileBuilder builder =
-        ExportFileBuilder.newExportFileBuilder( BuildTargetFactory.newInstance("//some:file"))
+    ExportFileBuilder builder = ExportFileBuilder
+        .newExportFileBuilder(BuildTargetFactory.newInstance("//some:file"))
         .setSrc(new TestSourcePath(temp.toAbsolutePath().toString()));
 
     ExportFile rule = (ExportFile) builder.build(new BuildRuleResolver());

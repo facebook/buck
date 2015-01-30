@@ -55,6 +55,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -247,8 +248,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     BuildRuleParams makefileParams = params.copyWithChanges(
         MAKEFILE_TYPE,
         makefileTarget,
-        deps.build(),
-        ImmutableSortedSet.<BuildRule>of());
+        Suppliers.ofInstance(deps.build()),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     final Path makefilePath = getGeneratedMakefilePath(params.getBuildTarget());
     final String contents = Joiner.on(System.lineSeparator()).join(outputLinesBuilder.build());
 
@@ -322,10 +323,11 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
     return new NdkLibrary(
         params.copyWithExtraDeps(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getExtraDeps())
-                .add(makefile)
-                .build()),
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(params.getExtraDeps())
+                    .add(makefile)
+                    .build())),
         new SourcePathResolver(resolver),
         getGeneratedMakefilePath(params.getBuildTarget()),
         srcs.build(),

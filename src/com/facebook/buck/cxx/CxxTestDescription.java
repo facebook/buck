@@ -35,6 +35,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -97,11 +98,12 @@ public class CxxTestDescription implements
     // CxxLink rule above which builds the test binary.
     BuildRuleParams testParams =
         params.copyWithDeps(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getDeclaredDeps())
-                .add(cxxLink)
-                .build(),
-            params.getExtraDeps());
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(params.getDeclaredDeps())
+                    .add(cxxLink)
+                    .build()),
+            Suppliers.ofInstance(params.getExtraDeps()));
 
     CxxTest test;
 

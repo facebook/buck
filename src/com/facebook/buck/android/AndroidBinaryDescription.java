@@ -47,6 +47,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -185,7 +186,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         graphEnhancer.createAdditionalBuildables();
 
     return new AndroidBinary(
-        params.copyWithExtraDeps(result.getFinalDeps()),
+        params.copyWithExtraDeps(Suppliers.ofInstance(result.getFinalDeps())),
         new SourcePathResolver(resolver),
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),

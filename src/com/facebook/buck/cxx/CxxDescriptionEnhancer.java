@@ -42,6 +42,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -259,9 +260,10 @@ public class CxxDescriptionEnhancer {
           params.copyWithChanges(
               LEX_TYPE,
               target,
-              ImmutableSortedSet.copyOf(
-                  pathResolver.filterBuildRuleInputs(ImmutableList.of(source))),
-              ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.copyOf(
+                      pathResolver.filterBuildRuleInputs(ImmutableList.of(source)))),
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
           pathResolver,
           cxxPlatform.getLex().get(),
           ImmutableList.<String>builder()
@@ -298,9 +300,10 @@ public class CxxDescriptionEnhancer {
           params.copyWithChanges(
               YACC_TYPE,
               target,
-              ImmutableSortedSet.copyOf(
-                  pathResolver.filterBuildRuleInputs(ImmutableList.of(source))),
-              ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.copyOf(
+                      pathResolver.filterBuildRuleInputs(ImmutableList.of(source)))),
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
           pathResolver,
           cxxPlatform.getYacc().get(),
           ImmutableList.<String>builder()
@@ -577,8 +580,8 @@ public class CxxDescriptionEnhancer {
               params.copyWithChanges(
                   params.getBuildRuleType(),
                   target,
-                  params.getDeclaredDeps(),
-                  params.getExtraDeps()),
+                  Suppliers.ofInstance(params.getDeclaredDeps()),
+                  Suppliers.ofInstance(params.getExtraDeps())),
               ruleResolver,
               args));
       ruleResolver.addToIndex(rule.get());

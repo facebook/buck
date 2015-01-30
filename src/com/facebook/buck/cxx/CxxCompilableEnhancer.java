@@ -31,6 +31,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -205,8 +206,8 @@ public class CxxCompilableEnhancer {
         params.copyWithChanges(
             COMPILE_TYPE,
             target,
-            dependencies.build(),
-            ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(dependencies.build()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         compiler,
         Optional.<CxxCompile.Plugin>absent(),

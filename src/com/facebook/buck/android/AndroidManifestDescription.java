@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -73,7 +74,9 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
         .build();
 
     return new AndroidManifest(
-        params.copyWithDeps(newDeps, params.getExtraDeps()),
+        params.copyWithDeps(
+            Suppliers.ofInstance(newDeps),
+            Suppliers.ofInstance(params.getExtraDeps())),
         pathResolver,
         args.skeleton,
         manifestFiles);

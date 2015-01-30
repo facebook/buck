@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -84,7 +85,8 @@ public class AndroidLibraryDescription
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
-        params.copyWithExtraDeps(resolver.getAllRules(args.exportedDeps.get())),
+        params.copyWithExtraDeps(
+            Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
         javacOptions.build(),
         ResourceDependencyMode.FIRST_ORDER);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
@@ -98,7 +100,9 @@ public class AndroidLibraryDescription
           .addAll(params.getDeclaredDeps())
           .add(dummyRDotJava.get())
           .build();
-      params = params.copyWithDeps(newDeclaredDeps, params.getExtraDeps());
+      params = params.copyWithDeps(
+          Suppliers.ofInstance(newDeclaredDeps),
+          Suppliers.ofInstance(params.getExtraDeps()));
     }
 
     return new AndroidLibrary(
