@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
@@ -64,7 +65,7 @@ public class JavaBuckConfigTest {
     Reader reader = new StringReader(
         Joiner.on('\n').join(
             "[tools]",
-            "    javac = " + javac.toPath().toString()));
+            "    javac = " + javac.toPath().toString().replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
 
     assertEquals(Optional.of(javac.toPath()), config.getJavacPath());
@@ -75,7 +76,7 @@ public class JavaBuckConfigTest {
     String invalidPath = temporaryFolder.getRoot().getAbsolutePath() + "DoesNotExist";
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[tools]",
-        "    javac = " + invalidPath));
+        "    javac = " + invalidPath.replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
       config.getJavacPath();
@@ -88,7 +89,7 @@ public class JavaBuckConfigTest {
   @Test
   public void whenJavacIsNotExecutableThenHumanReadableExeceptionIsThrown() throws IOException {
     File javac = temporaryFolder.newFile();
-    javac.setExecutable(false);
+    assumeTrue("Should be able to set file non-executable", javac.setExecutable(false));
 
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[tools]",
@@ -107,7 +108,7 @@ public class JavaBuckConfigTest {
     String invalidPath = temporaryFolder.getRoot().getAbsolutePath() + "DoesNotExist";
     Reader reader = new StringReader(Joiner.on('\n').join(
             "[tools]",
-            "    javac_jar = " + invalidPath));
+            "    javac_jar = " + invalidPath.replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
       config.getJavacJarPath();
