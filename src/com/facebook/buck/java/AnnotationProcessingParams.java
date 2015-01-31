@@ -19,6 +19,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
@@ -43,7 +44,7 @@ import javax.annotation.Nullable;
  * threading the information through buck in a more descriptive package rather than passing all
  * the components separately.
  */
-public class AnnotationProcessingParams {
+public class AnnotationProcessingParams implements RuleKeyAppendable {
   public static final AnnotationProcessingParams EMPTY = new AnnotationProcessingParams(
       /* owner target */ null,
       /* project filesystem */ null,
@@ -110,20 +111,21 @@ public class AnnotationProcessingParams {
     return parameters;
   }
 
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  @Override
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
     if (!isEmpty()) {
       // searchPathElements is not needed here since it comes from rules, which is appended below.
       String owner = (ownerTarget == null) ? null : ownerTarget.getFullyQualifiedName();
-      builder.set("owner", owner)
-          .set("names", names)
-          .set("parameters", parameters)
-          .set("processOnly", processOnly);
+      builder.set(key + ".owner", owner)
+          .set(key + ".names", names)
+          .set(key + ".parameters", parameters)
+          .set(key + ".processOnly", processOnly);
 
       ImmutableList.Builder<String> ruleKeyStrings = ImmutableList.builder();
       for (BuildRule rule : rules) {
         ruleKeyStrings.add(rule.getRuleKey().toString());
       }
-      builder.set("annotationProcessorRuleKeys", ruleKeyStrings.build());
+      builder.set(key + ".annotationProcessorRuleKeys", ruleKeyStrings.build());
     }
 
     return builder;

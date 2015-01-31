@@ -18,6 +18,6 @@ package com.facebook.buck.rules;
 
 public interface RuleKeyAppendable {
 
-  void appendToRuleKey(RuleKey.Builder builder, String key);
+  RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key);
 
 }

@@ -142,7 +142,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return javacOptions.appendToRuleKey(builder);
+    return javacOptions.appendToRuleKey(builder, "javacOptions");
   }
 
   private static Path getRDotJavaSrcFolder(BuildTarget buildTarget) {

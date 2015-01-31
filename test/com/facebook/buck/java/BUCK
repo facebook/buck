@@ -57,6 +57,7 @@ java_library(
   deps = [
     '//src/com/facebook/buck/java:javac',
     '//src/com/facebook/buck/java:support',
+    '//src/com/facebook/buck/rules:build_rule',
     '//third-party/java/guava:guava',
   ],
   visibility = [

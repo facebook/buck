@@ -57,6 +57,7 @@ java_library(
     ':support',
     '//third-party/java/guava:guava',
     '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
   ],

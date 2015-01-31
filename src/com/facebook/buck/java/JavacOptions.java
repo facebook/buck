@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -40,7 +41,7 @@ import java.util.Map;
  */
 @Value.Immutable
 @BuckStyleImmutable
-public abstract class JavacOptions {
+public abstract class JavacOptions implements RuleKeyAppendable {
 
   public abstract Optional<Path> getJavacPath();
   public abstract Optional<Path> getJavacJarPath();
@@ -135,16 +136,19 @@ public abstract class JavacOptions {
     optionsBuilder.addAll(getExtraArguments());
   }
 
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  @Override
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
     // TODO(simons): Include bootclasspath params.
-    builder.set("sourceLevel", getSourceLevel())
-        .set("javacPath", getJavacPath().transform(Functions.toStringFunction()).orNull())
-        .set("javacJarPath", getJavacJarPath().transform(Functions.toStringFunction()).orNull())
-        .set("targetLevel", getTargetLevel())
-        .set("extraArguments", Joiner.on(',').join(getExtraArguments()))
-        .set("debug", isDebug());
+    builder.set(key + ".sourceLevel", getSourceLevel())
+        .set(key + ".javacPath", getJavacPath().transform(Functions.toStringFunction()).orNull())
+        .set(
+            key + ".javacJarPath",
+            getJavacJarPath().transform(Functions.toStringFunction()).orNull())
+        .set(key + ".targetLevel", getTargetLevel())
+        .set(key + ".extraArguments", Joiner.on(',').join(getExtraArguments()))
+        .set(key + ".debug", isDebug());
 
-    return getAnnotationProcessingParams().appendToRuleKey(builder);
+    return getAnnotationProcessingParams().appendToRuleKey(builder, key);
   }
 
   static ImmutableJavacOptions.Builder builderForUseInJavaBuckConfig() {

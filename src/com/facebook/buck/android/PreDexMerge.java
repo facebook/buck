@@ -302,7 +302,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    dexSplitMode.appendToRuleKey("dexSplitMode", builder);
+    dexSplitMode.appendToRuleKey(builder, "dexSplitMode");
     return builder;
   }
 

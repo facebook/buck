@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Optional;
@@ -33,7 +34,7 @@ import javax.annotation.concurrent.Immutable;
  * Bundles together some information about whether and how we should split up dex files.
  */
 @Immutable
-class DexSplitMode {
+class DexSplitMode implements RuleKeyAppendable {
   public static final DexSplitMode NO_SPLIT = new DexSplitMode(
       /* shouldSplitDex */ false,
       ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
@@ -220,15 +221,16 @@ class DexSplitMode {
     return paths.build();
   }
 
-  public RuleKey.Builder appendToRuleKey(String prefix, RuleKey.Builder builder) {
-    builder.set(prefix + ".shouldSplitDex", shouldSplitDex);
-    builder.set(prefix + ".dexStore", dexStore.name());
-    builder.set(prefix + ".dexSplitStrategy", dexSplitStrategy.name());
-    builder.set(prefix + ".useLinearAllocSplitDex", useLinearAllocSplitDex);
-    builder.set(prefix + ".primaryDexPatterns", primaryDexPatterns);
-    builder.set(prefix + ".linearAllocHardLimit", linearAllocHardLimit);
+  @Override
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+    builder.set(key + ".shouldSplitDex", shouldSplitDex);
+    builder.set(key + ".dexStore", dexStore.name());
+    builder.set(key + ".dexSplitStrategy", dexSplitStrategy.name());
+    builder.set(key + ".useLinearAllocSplitDex", useLinearAllocSplitDex);
+    builder.set(key + ".primaryDexPatterns", primaryDexPatterns);
+    builder.set(key + ".linearAllocHardLimit", linearAllocHardLimit);
     builder.set(
-        prefix + ".isPrimaryDexScenarioOverflowAllowed",
+        key + ".isPrimaryDexScenarioOverflowAllowed",
         isPrimaryDexScenarioOverflowAllowed);
     return builder;
   }

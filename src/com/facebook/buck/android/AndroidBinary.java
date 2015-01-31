@@ -282,7 +282,7 @@ public class AndroidBinary extends AbstractBuildRule implements
       library.appendDetailsToRuleKey(builder);
     }
 
-    return dexSplitMode.appendToRuleKey("dexSplitMode", builder);
+    return dexSplitMode.appendToRuleKey(builder, "dexSplitMode");
   }
 
   public ImmutableSortedSet<JavaLibrary> getRulesToExcludeFromDex() {
