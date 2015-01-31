@@ -20,6 +20,7 @@ import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
@@ -168,6 +169,16 @@ public abstract class ExecutionContext implements Closeable {
     } else {
       throw new NoAndroidSdkException();
     }
+  }
+
+  /**
+   * Attempts to resolve an executable in a cross-platform way.
+   * @param base The folder you expect to find the executable in.
+   * @param executable The name of the executable you wish to find.
+   * @return The {@link Path} to the executable is resolved, or {@link Optional#absent()}.
+   */
+  public Optional<Path> resolveExecutable(Path base, String executable) {
+    return MorePaths.resolveExecutable(base, executable, getEnvironment());
   }
 
   @Override

@@ -18,13 +18,16 @@ package com.facebook.buck.io;
 
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -241,6 +244,39 @@ public class MorePaths {
     } catch (NoSuchAlgorithmException e) {
       throw Throwables.propagate(e);
     }
+  }
+
+  private static boolean isExecutable(Path path) {
+    File file = path.toFile();
+    return file.canExecute() && !file.isDirectory();
+  }
+
+  /**
+   * Attempts to resolve an executable in a cross-platform way.
+   * @param base The folder you expect to find the executable in.
+   * @param executable The name of the executable you wish to find.
+   * @param environment The system environment.
+   * @return The {@link Path} to the executable is resolved, or {@link Optional#absent()}.
+   */
+  public static Optional<Path> resolveExecutable(
+      Path base,
+      String executable,
+      ImmutableMap<String, String> environment) {
+    String extensions = environment.get("PATHEXT");
+    if (extensions == null) {
+      Path exe = base.resolve(executable);
+      if (isExecutable(exe)) {
+        return Optional.of(exe);
+      }
+      return Optional.absent();
+    }
+    for (String pathExt : extensions.split(File.pathSeparator)) {
+      Path exe = base.resolve(executable + pathExt);
+      if (isExecutable(exe)) {
+        return Optional.of(exe);
+      }
+    }
+    return Optional.absent();
   }
 
   private static byte[] inputStreamDigest(InputStream inputStream, MessageDigest messageDigest)

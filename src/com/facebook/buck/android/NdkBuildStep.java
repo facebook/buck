@@ -25,6 +25,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+import java.io.File;
 import java.nio.file.Path;
 
 public class NdkBuildStep extends ShellStep {
@@ -68,10 +69,14 @@ public class NdkBuildStep extends ShellStep {
           " with a property named 'ndk.dir' that points to the absolute path of" +
           " your Android NDK directory, or set ANDROID_NDK.");
     }
+    Optional<Path> ndkBuild = context.resolveExecutable(ndkRoot.get(), "ndk-build");
+    if (!ndkBuild.isPresent()) {
+      throw new HumanReadableException("Unable to find ndk-build");
+    }
 
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.add(
-        ndkRoot.get().resolve("ndk-build").toAbsolutePath().toString(),
+        ndkBuild.get().toAbsolutePath().toString(),
         "-j",
         Integer.toString(this.maxJobCount),
         "-C",
@@ -82,9 +87,9 @@ public class NdkBuildStep extends ShellStep {
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     Function<Path, Path> absolutifier = projectFilesystem.getAbsolutifier();
     builder.add(
-        "APP_PROJECT_PATH=" + absolutifier.apply(buildArtifactsDirectory) + "/",
+        "APP_PROJECT_PATH=" + absolutifier.apply(buildArtifactsDirectory) + File.separatorChar,
         "APP_BUILD_SCRIPT=" + absolutifier.apply(makefile),
-        "NDK_OUT=" + absolutifier.apply(buildArtifactsDirectory) + "/",
+        "NDK_OUT=" + absolutifier.apply(buildArtifactsDirectory) + File.separatorChar,
         "NDK_LIBS_OUT=" + projectFilesystem.resolve(binDirectory),
         "BUCK_PROJECT_DIR=" + projectFilesystem.getRootPath(),
         // Suppress the custom build step messages (e.g. "Compile++ ...").

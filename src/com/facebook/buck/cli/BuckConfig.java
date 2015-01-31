@@ -845,9 +845,13 @@ public class BuckConfig {
     return Objects.hashCode(sectionsToEntries);
   }
 
+  protected ImmutableMap<String, String> getEnvironment() {
+    return environment;
+  }
+
   @VisibleForTesting
   String[] getEnv(String propertyName, String separator) {
-    String value = environment.get(propertyName);
+    String value = getEnvironment().get(propertyName);
     if (value == null) {
       value = "";
     }
@@ -879,14 +883,14 @@ public class BuckConfig {
     }
 
     for (String interpreterName : pythonInterpreterNames) {
-      // For each path in PATH, test "python" with each PATHEXT suffix to allow
-      // for file extensions.
+      // For each path in PATH, attempt to resolve the python executable.
       for (String path : getEnv("PATH", File.pathSeparator)) {
-        for (String pathExt : getEnv("PATHEXT", File.pathSeparator)) {
-          File python = new File(path, interpreterName + pathExt);
-          if (isExecutableFile(python)) {
-            return python.getAbsolutePath();
-          }
+        Optional<Path> python = MorePaths.resolveExecutable(
+            Paths.get(path),
+            interpreterName,
+            getEnvironment());
+        if (python.isPresent()) {
+          return python.get().toAbsolutePath().toString();
         }
       }
     }

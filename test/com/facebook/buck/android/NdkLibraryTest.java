@@ -17,10 +17,6 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -32,15 +28,18 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Function;
+import com.facebook.buck.util.DefaultPropertyFinder;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,6 +49,28 @@ import java.util.List;
  * Unit test for {@link NdkLibrary}.
  */
 public class NdkLibraryTest {
+
+  private ExecutionContext executionContext;
+  private String ndkBuildCommand;
+
+  @Before
+  public void setUp() {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
+    AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(projectFilesystem,
+        Optional.<String>absent(),
+        new DefaultPropertyFinder(projectFilesystem, ImmutableMap.copyOf(System.getenv())));
+
+    AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget.getDefaultPlatformTarget(
+        resolver,
+        Optional.<Path>absent());
+    executionContext = TestExecutionContext.newBuilder()
+        .setAndroidPlatformTarget(Optional.of(androidPlatformTarget))
+        .build();
+    ndkBuildCommand = executionContext.resolveExecutable(
+        resolver.findAndroidNdkDir().get(),
+        "ndk-build").get().toAbsolutePath().toString();
+  }
 
   @Test
   public void testSimpleNdkLibraryRule() throws IOException {
@@ -90,55 +111,29 @@ public class NdkLibraryTest {
 
     List<Step> steps = ndkLibrary.getBuildSteps(context, new FakeBuildableContext());
 
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    Function<Path, Path> pathTransform = new Function<Path, Path>() {
-      @Override
-      public Path apply(Path pathRelativeTo) {
-        return Paths.get("/foo/", pathRelativeTo.toString());
-      }
-    };
-    expect(executionContext.getProjectFilesystem()).andReturn(projectFilesystem);
-    expect(projectFilesystem.getAbsolutifier()).andReturn(pathTransform);
-    Path binDir = Paths.get(BuckConstant.BIN_DIR, "java/src/com/facebook/base/__libbase/libs");
-    expect(projectFilesystem.resolve(binDir)).andReturn(Paths.get("/foo/" + binDir));
-    expect(projectFilesystem.getRootPath()).andReturn(Paths.get("/foo"));
-    Path ndkDir = createMock(Path.class);
-    AndroidPlatformTarget mockPlatformTarget = createMock(AndroidPlatformTarget.class);
-    expect(mockPlatformTarget.getNdkDirectory()).andReturn(Optional.of(ndkDir));
-    expect(executionContext.getAndroidPlatformTarget()).andReturn(mockPlatformTarget);
-    Path ndkBuildDir = createMock(Path.class);
-    expect(ndkDir.resolve("ndk-build")).andReturn(ndkBuildDir);
-    expect(ndkBuildDir.toAbsolutePath()).andReturn(Paths.get("/ndk-r8b/ndk-build"));
-    expect(executionContext.getVerbosity()).andReturn(Verbosity.STANDARD_INFORMATION);
-
-    replay(executionContext, projectFilesystem, mockPlatformTarget, ndkDir, ndkBuildDir);
+    String libbase = Paths.get(BuckConstant.BIN_DIR, basePath, "__libbase").toString();
     MoreAsserts.assertShellCommands(
         "ndk_library() should invoke ndk-build on the given path with some -j value",
         ImmutableList.of(
             String.format(
-              "/ndk-r8b/ndk-build -j %d -C %s flag1 flag2 " +
-              "APP_PROJECT_PATH=/foo/%s/%s/%s/ APP_BUILD_SCRIPT=/foo/%s/Android.mk " +
-              "NDK_OUT=/foo/%s/%s/%s/ " +
-              "NDK_LIBS_OUT=/foo/%s/%s/%s/libs " +
-              "BUCK_PROJECT_DIR=/foo " +
-              "host-echo-build-step=@# " +
-              "--silent",
-              Runtime.getRuntime().availableProcessors(),
-              basePath,
-              BuckConstant.BIN_DIR,
-              basePath,
-              "__libbase",
-              basePath,
-              BuckConstant.BIN_DIR,
-              basePath,
-              "__libbase",
-              BuckConstant.BIN_DIR,
-              basePath,
-              "__libbase")
+                "%s -j %d -C %s flag1 flag2 " +
+                    "APP_PROJECT_PATH=%s " +
+                    "APP_BUILD_SCRIPT=%s " +
+                    "NDK_OUT=%s " +
+                    "NDK_LIBS_OUT=%s " +
+                    "BUCK_PROJECT_DIR=. " +
+                    "host-echo-build-step=@# " +
+                    "--silent",
+                ndkBuildCommand,
+                Runtime.getRuntime().availableProcessors(),
+                Paths.get(basePath).toString(),
+                /* APP_PROJECT_PATH */ libbase + File.separator,
+                /* APP_BUILD_SCRIPT */ Paths.get(basePath, "Android.mk"),
+                /* NDK_OUT */ libbase + File.separator,
+                /* NDK_LIBS_OUT */ Paths.get(libbase, "libs"),
+                Paths.get(libbase, "libs").toString())
         ),
         steps.subList(0, 1),
         executionContext);
-    verify(executionContext, projectFilesystem);
   }
 }
