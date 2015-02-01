@@ -70,6 +70,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.io.ByteStreams;
 
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
@@ -302,13 +303,13 @@ public class ProjectGeneratorTest {
 
     assertEquals("buck-out/gen/foo/lib-public-headers.hmap", headerMaps.get(0).toString());
     assertThatHeaderMapFileContains(
-        "buck-out/gen/foo/lib-public-headers.hmap",
+        Paths.get("buck-out/gen/foo/lib-public-headers.hmap"),
         ImmutableMap.<String, String>of("lib/bar.h", "bar.h")
     );
 
     assertEquals("buck-out/gen/foo/lib-target-headers.hmap", headerMaps.get(1).toString());
     assertThatHeaderMapFileContains(
-        "buck-out/gen/foo/lib-target-headers.hmap",
+        Paths.get("buck-out/gen/foo/lib-target-headers.hmap"),
         ImmutableMap.<String, String>of(
             "lib/foo.h", "foo.h",
             "lib/bar.h", "bar.h",
@@ -318,7 +319,7 @@ public class ProjectGeneratorTest {
 
     assertEquals("buck-out/gen/foo/lib-target-user-headers.hmap", headerMaps.get(2).toString());
     assertThatHeaderMapFileContains(
-        "buck-out/gen/foo/lib-target-user-headers.hmap",
+        Paths.get("buck-out/gen/foo/lib-target-user-headers.hmap"),
         ImmutableMap.<String, String>of(
             "foo.h", "foo.h",
             "bar.h", "bar.h",
@@ -521,9 +522,10 @@ public class ProjectGeneratorTest {
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
-  private void assertThatHeaderMapFileContains(String file, ImmutableMap<String, String> content) {
-    byte[] bytes = projectFilesystem.readFileIfItExists(Paths.get(file)).get().getBytes();
-    HeaderMap map = HeaderMap.deserialize(bytes);
+  private void assertThatHeaderMapFileContains(Path file, ImmutableMap<String, String> content)
+      throws IOException {
+    byte[] headerMapBytes = ByteStreams.toByteArray(projectFilesystem.newFileInputStream(file));
+    HeaderMap map = HeaderMap.deserialize(headerMapBytes);
     assertEquals(content.size(), map.getNumEntries());
     for (String key : content.keySet()) {
       assertEquals(
