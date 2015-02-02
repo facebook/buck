@@ -27,9 +27,9 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.environment.Platform;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 
@@ -49,29 +49,43 @@ public class AppleCxxPlatforms {
   private static final Path USR_BIN = Paths.get("usr/bin");
 
   public static CxxPlatform build(
-      Platform hostPlatform,
       ApplePlatform targetPlatform,
       String targetSdkName,
       String targetVersion,
       String targetArchitecture,
       AppleSdkPaths sdkPaths) {
+    return buildWithExecutableChecker(
+        targetPlatform,
+        targetSdkName,
+        targetVersion,
+        targetArchitecture,
+        sdkPaths,
+        MoreFiles.DEFAULT_PATH_IS_EXECUTABLE_CHECKER);
+  }
 
-    Preconditions.checkArgument(
-        hostPlatform.equals(Platform.MACOS),
-        String.format("%s can only currently run on Mac OS X.", AppleCxxPlatforms.class));
+  @VisibleForTesting
+  static CxxPlatform buildWithExecutableChecker(
+      ApplePlatform targetPlatform,
+      String targetSdkName,
+      String targetVersion,
+      String targetArchitecture,
+      AppleSdkPaths sdkPaths,
+      Function<Path, Boolean> pathIsExecutableChecker) {
 
+    ImmutableList.Builder<Path> toolSearchPathsBuilder = ImmutableList.builder();
     // Search for tools from most specific to least specific.
-    ImmutableList.Builder<Path> toolSearchPathsBuilder =
-        ImmutableList.<Path>builder()
-            .add(sdkPaths.getSdkPath().resolve(USR_BIN))
-            .add(sdkPaths.getPlatformDeveloperPath().resolve(USR_BIN));
+    toolSearchPathsBuilder
+        .add(sdkPaths.getSdkPath().resolve(USR_BIN))
+        .add(sdkPaths.getPlatformDeveloperPath().resolve(USR_BIN));
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
       toolSearchPathsBuilder.add(toolchainPath.resolve(USR_BIN));
     }
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
-    Tool clangPath = new SourcePathTool(getTool("clang", toolSearchPaths));
-    Tool clangXxPath = new SourcePathTool(getTool("clang++", toolSearchPaths));
+    Tool clangPath = new SourcePathTool(
+        getTool("clang", toolSearchPaths, pathIsExecutableChecker));
+    Tool clangXxPath = new SourcePathTool(
+        getTool("clang++", toolSearchPaths, pathIsExecutableChecker));
 
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
@@ -103,10 +117,12 @@ public class AppleCxxPlatforms {
         .addAllCxxppflags(cflags)
         .setCxxld(clangXxPath)
         .addAllCxxldflags(cflags)
-        .setLex(getOptionalTool("lex", toolSearchPaths))
-        .setYacc(getOptionalTool("yacc", toolSearchPaths))
-        .setLd(new DarwinLinker(new SourcePathTool(getTool("libtool", toolSearchPaths))))
-        .setAr(new SourcePathTool(getTool("ar", toolSearchPaths)))
+        .setLex(getOptionalTool("lex", toolSearchPaths, pathIsExecutableChecker))
+        .setYacc(getOptionalTool("yacc", toolSearchPaths, pathIsExecutableChecker))
+        .setLd(
+            new DarwinLinker(
+                new SourcePathTool(getTool("libtool", toolSearchPaths, pathIsExecutableChecker))))
+        .setAr(new SourcePathTool(getTool("ar", toolSearchPaths, pathIsExecutableChecker)))
         .setDebugPathSanitizer(Optional.of(
             new DebugPathSanitizer(
                 250,
@@ -119,8 +135,10 @@ public class AppleCxxPlatforms {
 
   private static Optional<SourcePath> getOptionalTool(
       String tool,
-      ImmutableList<Path> toolSearchPaths) {
-    Optional<Path> toolPath = MoreFiles.searchPathsForExecutable(Paths.get(tool), toolSearchPaths);
+      ImmutableList<Path> toolSearchPaths,
+      Function<Path, Boolean> pathIsExecutableChecker) {
+    Optional<Path> toolPath = MoreFiles.searchPathsForExecutable(
+        Paths.get(tool), toolSearchPaths, pathIsExecutableChecker);
     if (toolPath.isPresent()) {
       return Optional.<SourcePath>of(new PathSourcePath(toolPath.get()));
     } else {
@@ -130,8 +148,9 @@ public class AppleCxxPlatforms {
 
   private static SourcePath getTool(
       String tool,
-      ImmutableList<Path> toolSearchPaths) {
-    Optional<SourcePath> result = getOptionalTool(tool, toolSearchPaths);
+      ImmutableList<Path> toolSearchPaths,
+      Function<Path, Boolean> pathIsExecutableChecker) {
+    Optional<SourcePath> result = getOptionalTool(tool, toolSearchPaths, pathIsExecutableChecker);
     if (!result.isPresent()) {
       throw new HumanReadableException(
         "Cannot find tool %s in paths %s",

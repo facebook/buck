@@ -259,7 +259,6 @@ public class KnownBuildRuleTypes {
       AppleSdk sdk = entry.getKey();
       for (String architecture : sdk.getArchitectures()) {
         CxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
-            buildPlatform,
             sdk.getApplePlatform(),
             sdk.getName(),
             // TODO(user): Support targeting earlier OS versions; this
