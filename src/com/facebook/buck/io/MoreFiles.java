@@ -48,6 +48,18 @@ import java.util.Set;
 
 public final class MoreFiles {
 
+  /**
+   * Returns true iff a path on the filesystem exists, is a regular file, and is executable.
+   */
+  public static final Function<Path, Boolean> DEFAULT_PATH_IS_EXECUTABLE_CHECKER =
+      new Function<Path, Boolean>() {
+        @Override
+        public Boolean apply(Path path) {
+            return Files.isRegularFile(path) &&
+                Files.isExecutable(path);
+        }
+      };
+
   private static class FileAccessedEntry {
     public final File file;
     public final FileTime lastAccessTime;
@@ -275,7 +287,29 @@ public final class MoreFiles {
    * If none are found, returns {@link Optional#absent()}.
    */
   public static Optional<Path> searchPathsForExecutable(
-      Path executableToFind, Collection<Path> pathsToSearch) {
+      Path executableToFind,
+      Collection<Path> pathsToSearch) {
+    return searchPathsForExecutable(
+        executableToFind,
+        pathsToSearch,
+        DEFAULT_PATH_IS_EXECUTABLE_CHECKER);
+  }
+
+  /**
+   * Looks for {@code executableToFind} under each entry of {@code pathsToSearch} and returns
+   * the full path ({@code pathToSearch/executableToFind)}) to the first one for which
+   * {@code pathIsExecutableChecker(path)} returns true.
+   *
+   * This is similar to the {@code which} command in Unix.
+   *
+   * {@code executableToFind} must be a relative path.
+   *
+   * If none are found, returns {@link Optional#absent()}.
+   */
+  public static Optional<Path> searchPathsForExecutable(
+      Path executableToFind,
+      Collection<Path> pathsToSearch,
+      Function<Path, Boolean> pathIsExecutableChecker) {
     Preconditions.checkArgument(
         !executableToFind.isAbsolute(),
         "Path %s must be relative",
@@ -283,8 +317,7 @@ public final class MoreFiles {
 
     for (Path pathToSearch : pathsToSearch) {
       Path resolved = pathToSearch.resolve(executableToFind);
-      if (Files.isRegularFile(resolved) &&
-          Files.isExecutable(resolved)) {
+      if (pathIsExecutableChecker.apply(resolved)) {
         return Optional.of(resolved);
       }
     }

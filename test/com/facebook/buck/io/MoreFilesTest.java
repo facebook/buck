@@ -23,8 +23,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -282,5 +285,32 @@ public class MoreFilesTest {
         MoreFiles.searchPathsForExecutable(
             Paths.get("blech"),
             ImmutableList.<Path>of()));
+  }
+
+  @Test
+  @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
+  public void testSearchPathsWithIsExecutableFunctionSuccess() {
+    Path path1 = Paths.get("foo/bar");
+    assertEquals(
+        Optional.of(path1),
+        MoreFiles.searchPathsForExecutable(
+            Paths.get("bar"),
+            ImmutableList.of(Paths.get("baz"), Paths.get("foo")),
+            Functions.forMap(
+                ImmutableMap.of(
+                    path1,
+                    true),
+                false)));
+  }
+
+  @Test
+  @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
+  public void testSearchPathsWithIsExecutableFunctionFailure() {
+    assertEquals(
+        Optional.<Path>absent(),
+        MoreFiles.searchPathsForExecutable(
+            Paths.get("bar"),
+            ImmutableList.of(Paths.get("baz", "foo")),
+            Functions.<Path>forPredicate(Predicates.<Path>alwaysFalse())));
   }
 }
