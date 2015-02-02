@@ -160,8 +160,12 @@ def glob_internal(includes, excludes, include_dotfiles, allow_empty, search_base
 
     results = sorted(set([str(p) for p in includes_iterator() if not exclusion(p)]))
     assert allow_empty or results, (
-        "glob() returned no results. If this is expected, set allow_empty_globs to true in "
-        "Buck configuration")
+        "glob(includes={includes}, excludes={excludes}, include_dotfiles={include_dotfiles}) " +
+        "returned no results.  (allow_empty_globs is set to false in the Buck " +
+        "configuration)").format(
+            includes=includes,
+            excludes=excludes,
+            include_dotfiles=include_dotfiles)
 
     return results
 

@@ -118,8 +118,8 @@ public class ParserIntegrationTest {
     assertThat(
         "error message for failure to return results from glob is incorrect",
         result.getStderr(),
-        containsString("glob() returned no results. If this is expected, set allow_empty_globs " +
-          "to true in Buck configuration"));
+        containsString("returned no results.  (allow_empty_globs is set to false in the Buck " +
+                "configuration)"));
   }
 
   /**
