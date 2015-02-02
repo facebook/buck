@@ -37,7 +37,6 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -106,6 +105,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     BuildTarget bazTestTarget = BuildTarget.builder("//baz", "xctest").build();
     BuildTarget fooBinTestTarget = BuildTarget.builder("//foo", "bin-xctest").build();
+    BuildTarget fooTestTarget = BuildTarget.builder("//foo", "lib-xctest").build();
 
     BuildTarget barLibTarget = BuildTarget.builder("//bar", "lib").build();
     TargetNode<?> barLibNode = AppleLibraryBuilder
@@ -116,6 +116,7 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<?> fooLibNode = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
+        .setTests(Optional.of(ImmutableSortedSet.of(fooTestTarget)))
         .build();
 
     BuildTarget fooBinBinaryTarget = BuildTarget.builder("//foo", "binbinary").build();
@@ -145,10 +146,8 @@ public class WorkspaceAndProjectGeneratorTest {
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .build();
 
-    BuildTarget fooTestTarget = BuildTarget.builder("//foo", "lib-xctest").build();
     TargetNode<?> fooTestNode = AppleTestBuilder
         .createBuilder(fooTestTarget)
-        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
         .build();
@@ -230,7 +229,6 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         workspaceNode,
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
-        AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
         false /* combinedProject */,
         "BUCK");
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -288,7 +286,6 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         workspaceNode,
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
-        AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
         true /* combinedProject */,
         "BUCK");
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -331,7 +328,6 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         workspaceNode,
         ImmutableSet.<ProjectGenerator.Option>of(),
-        AppleBuildRules.getSourceTargetToTestNodesMap(targetGraph.getNodes()),
         false /* combinedProject */,
         "BUCK");
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -375,32 +371,35 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void combinedTestBundle() throws IOException {
-    TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
-        .createBuilder(BuildTarget.builder("//foo", "lib").build())
-        .build();
     TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
         .createBuilder(BuildTarget.builder("//foo", "combinableTest1").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(library.getBuildTarget())))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
         .createBuilder(BuildTarget.builder("//bar", "combinableTest2").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(library.getBuildTarget())))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> testMarkedUncombinable = AppleTestBuilder
         .createBuilder(BuildTarget.builder("//foo", "testMarkedUncombinable").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(library.getBuildTarget())))
         .setCanGroup(Optional.of(false))
         .build();
     TargetNode<AppleTestDescription.Arg> anotherTest = AppleTestBuilder
         .createBuilder(BuildTarget.builder("//foo", "anotherTest").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.OCTEST))
-        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(library.getBuildTarget())))
         .setCanGroup(Optional.of(true))
+        .build();
+    TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
+        .createBuilder(BuildTarget.builder("//foo", "lib").build())
+        .setTests(
+            Optional.of(
+                ImmutableSortedSet.of(
+                    combinableTest1.getBuildTarget(),
+                    combinableTest2.getBuildTarget(),
+                    testMarkedUncombinable.getBuildTarget(),
+                    anotherTest.getBuildTarget())))
         .build();
     TargetNode<XcodeProjectConfigDescription.Arg> fooProject = XcodeProjectConfigBuilder
         .createBuilder(BuildTarget.builder("//foo", "project").build())
@@ -439,11 +438,6 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         workspace,
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
-        ImmutableMultimap.of(
-            library.getBuildTarget(), combinableTest1,
-            library.getBuildTarget(), combinableTest2,
-            library.getBuildTarget(), testMarkedUncombinable,
-            library.getBuildTarget(), anotherTest),
         false,
         "BUCK");
     generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
@@ -558,7 +552,6 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         workspace,
         ImmutableSet.<ProjectGenerator.Option>of(),
-        ImmutableMultimap.<BuildTarget, TargetNode<AppleTestDescription.Arg>>of(),
         false,
         "BUCK");
 

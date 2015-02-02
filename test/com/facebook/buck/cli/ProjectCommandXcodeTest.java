@@ -85,10 +85,24 @@ public class ProjectCommandXcodeTest {
         .createBuilder(barLibTarget)
         .build();
 
+    BuildTarget bazLibTarget = BuildTarget.builder("//baz", "lib").build();
+    bazLibNode = AppleLibraryBuilder
+        .createBuilder(bazLibTarget)
+        .setTests(Optional.of(ImmutableSortedSet.of(bazTestTarget)))
+        .build();
+
+    BuildTarget fooTestTarget = BuildTarget.builder("//foo", "lib-xctest").build();
+    fooTestNode = AppleTestBuilder
+        .createBuilder(fooTestTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .build();
+
     BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
     fooLibNode = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
+        .setTests(Optional.of(ImmutableSortedSet.of(fooTestTarget)))
         .build();
 
     BuildTarget fooBinBinaryTarget = BuildTarget.builder("//foo", "binbinary").build();
@@ -105,24 +119,10 @@ public class ProjectCommandXcodeTest {
         .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
         .build();
 
-    BuildTarget bazLibTarget = BuildTarget.builder("//baz", "lib").build();
-    bazLibNode = AppleLibraryBuilder
-        .createBuilder(bazLibTarget)
-        .setTests(Optional.of(ImmutableSortedSet.of(bazTestTarget)))
-        .build();
-
     bazTestNode = AppleTestBuilder
         .createBuilder(bazTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .build();
-
-    BuildTarget fooTestTarget = BuildTarget.builder("//foo", "lib-xctest").build();
-    fooTestNode = AppleTestBuilder
-        .createBuilder(fooTestTarget)
-        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
-        .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
         .build();
 
     fooBinTestNode = AppleTestBuilder

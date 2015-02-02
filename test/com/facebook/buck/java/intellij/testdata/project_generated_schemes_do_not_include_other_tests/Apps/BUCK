@@ -19,11 +19,11 @@ apple_bundle(
   deps = [':TestAppBinary'],
   binary = ':TestAppBinary',
   extension = 'app',
+  tests = [':TestAppTests'],
 )
 
 apple_test(
   name = 'TestAppTests',
-  source_under_test = [':TestApp'],
   extension = 'octest',
   configs = EMPTY_CONFIGS,
   srcs = [],

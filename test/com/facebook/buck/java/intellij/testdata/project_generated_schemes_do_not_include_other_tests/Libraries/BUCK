@@ -28,6 +28,7 @@ apple_library(
   srcs = [],
   frameworks = [],
   deps = [],
+  tests = [':Dep1Tests'],
   visibility = ['PUBLIC'],
 )
 
@@ -37,6 +38,7 @@ apple_library(
   srcs = [],
   frameworks = [],
   deps = [],
+  tests = [':Dep2Tests'],
   visibility = ['PUBLIC'],
 )
 
@@ -46,14 +48,12 @@ apple_library(
   srcs = [],
   frameworks = [],
   deps = [],
+  tests = [':Dep3Tests'],
   visibility = ['PUBLIC'],
 )
 
 apple_test(
   name = 'Dep1Tests',
-  source_under_test = [
-    ':Dep1',
-  ],
   extension = 'octest',
   configs = EMPTY_CONFIGS,
   srcs = [],
@@ -65,9 +65,6 @@ apple_test(
 
 apple_test(
   name = 'Dep2Tests',
-  source_under_test = [
-    ':Dep2',
-  ],
   extension = 'octest',
   configs = EMPTY_CONFIGS,
   srcs = [],
@@ -79,9 +76,6 @@ apple_test(
 
 apple_test(
   name = 'Dep3Tests',
-  source_under_test = [
-    ':Dep3',
-  ],
   extension = 'octest',
   configs = EMPTY_CONFIGS,
   srcs = [],

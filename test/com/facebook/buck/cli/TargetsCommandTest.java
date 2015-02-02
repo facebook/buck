@@ -518,7 +518,7 @@ public class TargetsCommandTest {
         .setSrcs(
             Optional.of(
                 ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo/foo.m")))))
-        .setTests(Optional.of(ImmutableSortedSet.of(libraryTestTarget1)))
+        .setTests(Optional.of(ImmutableSortedSet.of(libraryTestTarget1, libraryTestTarget2)))
         .build();
 
     TargetNode<?> libraryTestNode1 = AppleTestBuilder
@@ -536,7 +536,6 @@ public class TargetsCommandTest {
         .setSrcs(
             Optional.of(
                 ImmutableList.of(AppleSource.ofSourcePath(new TestSourcePath("foo/testfoo2.m")))))
-        .setSourceUnderTest(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .setDeps(Optional.of(ImmutableSortedSet.of(testLibraryTarget)))
         .build();
 
@@ -585,7 +584,7 @@ public class TargetsCommandTest {
             true,
             "BUCK");
     assertEquals(
-        ImmutableSet.of("//foo:lib", "//foo:xctest1", "//foo:xctest2"),
+        ImmutableSet.of("//foo:lib", "//foo:xctest1"),
         matchingBuildRules.keySet());
 
     // Test1, test2 and the library depend on the referenced file.

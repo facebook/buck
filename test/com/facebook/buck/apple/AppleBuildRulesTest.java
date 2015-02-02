@@ -83,8 +83,7 @@ public class AppleBuildRulesTest {
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setContacts(Optional.of(ImmutableSortedSet.<String>of()))
         .setLabels(Optional.of(ImmutableSortedSet.<Label>of()))
-        .setDeps(Optional.of(ImmutableSortedSet.<BuildTarget>of()))
-        .setSourceUnderTest(Optional.of(ImmutableSortedSet.<BuildTarget>of()));
+        .setDeps(Optional.of(ImmutableSortedSet.<BuildTarget>of()));
     BuildRule testRule = appleTestBuilder.build(resolver);
 
     assertTrue(AppleBuildRules.isXcodeTargetTestBuildRule(testRule));

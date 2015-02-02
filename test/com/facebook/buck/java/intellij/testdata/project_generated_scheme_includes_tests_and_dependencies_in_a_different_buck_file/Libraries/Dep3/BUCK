@@ -9,14 +9,12 @@ apple_library(
   srcs = [],
   frameworks = [],
   deps = [],
+  tests = [':Dep3Tests'],
   visibility = ['PUBLIC'],
 )
 
 apple_test(
   name = 'Dep3Tests',
-  source_under_test = [
-    ':Dep3',
-  ],
   extension = 'octest',
   configs = EMPTY_CONFIGS,
   srcs = [],

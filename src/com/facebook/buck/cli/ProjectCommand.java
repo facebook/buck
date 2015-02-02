@@ -55,7 +55,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
@@ -315,8 +314,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     LOG.debug("Generating workspace for config targets %s", targets);
     Map<TargetNode<?>, ProjectGenerator> projectGenerators = new HashMap<>();
     ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
-    ImmutableMultimap<BuildTarget, TargetNode<AppleTestDescription.Arg>> sourceTargetToTestNodes =
-        AppleBuildRules.getSourceTargetToTestNodesMap(testTargetNodes);
     ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests =
       options.getCombineTestBundles()
           ? AppleBuildRules.filterGroupableTests(testTargetNodes)
@@ -334,7 +331,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           targetGraphAndTargets.getTargetGraph(),
           castToXcodeWorkspaceTargetNode(workspaceNode),
           optionsBuilder.build(),
-          sourceTargetToTestNodes,
           combinedProject,
           new ParserConfig(options.getBuckConfig()).getBuildFileName());
       generator.setGroupableTests(groupableTests);

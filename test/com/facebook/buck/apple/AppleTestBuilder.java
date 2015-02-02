@@ -57,12 +57,6 @@ public final class AppleTestBuilder
     return this;
   }
 
-  public AppleTestBuilder setSourceUnderTest(
-      Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest) {
-    arg.sourceUnderTest = sourceUnderTest;
-    return this;
-  }
-
   public AppleTestBuilder setExtension(Either<AppleBundleExtension, String> extension) {
     arg.extension = extension;
     return this;

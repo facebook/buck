@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
@@ -57,8 +56,6 @@ public class WorkspaceAndProjectGenerator {
   private final TargetGraph projectGraph;
   private final TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceTargetNode;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
-  private final ImmutableMultimap<BuildTarget, TargetNode<AppleTestDescription.Arg>>
-      sourceTargetToTestNodes;
   private final ImmutableSet<TargetNode<AppleTestDescription.Arg>> extraTestBundleTargetNodes;
   private final boolean combinedProject;
   private ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = ImmutableSet.of();
@@ -73,14 +70,12 @@ public class WorkspaceAndProjectGenerator {
       TargetGraph projectGraph,
       TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceTargetNode,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
-      Multimap<BuildTarget, TargetNode<AppleTestDescription.Arg>> sourceTargetToTestNodes,
       boolean combinedProject,
       String buildFileName) {
     this.projectFilesystem = projectFilesystem;
     this.projectGraph = projectGraph;
     this.workspaceTargetNode = workspaceTargetNode;
     this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
-    this.sourceTargetToTestNodes = ImmutableMultimap.copyOf(sourceTargetToTestNodes);
     this.combinedProject = combinedProject;
     this.buildFileName = buildFileName;
     this.combinedProjectGenerator = Optional.absent();
@@ -155,7 +150,6 @@ public class WorkspaceAndProjectGenerator {
 
     ImmutableSet<TargetNode<AppleTestDescription.Arg>> selectedTests = getOrderedTestNodes(
         projectGraph,
-        sourceTargetToTestNodes,
         orderedTargetNodes,
         extraTestBundleTargetNodes);
     ImmutableList<TargetNode<?>> buildForTestNodes =
@@ -315,7 +309,6 @@ public class WorkspaceAndProjectGenerator {
    * Find tests to run.
    *
    * @param targetGraph input target graph
-   * @param sourceTargetToTestNodes map of nodes to nodes that test them
    * @param orderedTargetNodes target nodes for which to fetch tests for
    * @param extraTestBundleTargets extra tests to include
    *
@@ -323,7 +316,6 @@ public class WorkspaceAndProjectGenerator {
    */
   private ImmutableSet<TargetNode<AppleTestDescription.Arg>> getOrderedTestNodes(
       TargetGraph targetGraph,
-      ImmutableMultimap<BuildTarget, TargetNode<AppleTestDescription.Arg>> sourceTargetToTestNodes,
       ImmutableSet<TargetNode<?>> orderedTargetNodes,
       ImmutableSet<TargetNode<AppleTestDescription.Arg>> extraTestBundleTargets) {
     LOG.debug("Getting ordered test target nodes for %s", orderedTargetNodes);
@@ -331,7 +323,6 @@ public class WorkspaceAndProjectGenerator {
         ImmutableSet.builder();
     if (projectGeneratorOptions.contains(ProjectGenerator.Option.INCLUDE_TESTS)) {
       for (TargetNode<?> node : orderedTargetNodes) {
-        testsBuilder.addAll(sourceTargetToTestNodes.get(node.getBuildTarget()));
         if (!(node.getConstructorArg() instanceof HasTests)) {
           continue;
         }

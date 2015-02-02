@@ -17,8 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
@@ -28,7 +26,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -42,8 +39,6 @@ import javax.annotation.Nullable;
  * Helpers for reading properties of Apple target build rules.
  */
 public final class AppleBuildRules {
-
-  private static final Logger LOG = Logger.get(AppleBuildRules.class);
 
   // Utility class not to be instantiated.
   private AppleBuildRules() { }
@@ -248,31 +243,6 @@ public final class AppleBuildRules {
                 return isXcodeTargetBuildRuleType(input.getType());
               }
             }));
-  }
-
-  /**
-   * Builds the multimap of (source rule: [test rule 1, test rule 2, ...])
-   * for the set of test rules covering each source rule.
-   */
-  public static ImmutableMultimap<BuildTarget, TargetNode<AppleTestDescription.Arg>>
-  getSourceTargetToTestNodesMap(Iterable<TargetNode<?>> testTargets) {
-    ImmutableMultimap.Builder<BuildTarget, TargetNode<AppleTestDescription.Arg>>
-        sourceNodeToTestNodesBuilder = ImmutableMultimap.builder();
-    for (TargetNode<?> targetNode : testTargets) {
-      Optional<TargetNode<AppleTestDescription.Arg>> castedNode =
-          targetNode.castArg(AppleTestDescription.Arg.class);
-      if (castedNode.isPresent()) {
-        AppleTestDescription.Arg testDescriptionArg = castedNode.get().getConstructorArg();
-        if (testDescriptionArg.sourceUnderTest.isPresent()) {
-          for (BuildTarget sourceTarget : testDescriptionArg.sourceUnderTest.get()) {
-            sourceNodeToTestNodesBuilder.put(sourceTarget, castedNode.get());
-          }
-        }
-      } else {
-        LOG.verbose("Skipping target node %s (not xcode target test)", targetNode);
-      }
-    }
-    return sourceNodeToTestNodesBuilder.build();
   }
 
   /**
