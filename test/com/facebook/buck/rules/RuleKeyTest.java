@@ -26,13 +26,10 @@ import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.util.FileHashCache;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 
 import org.junit.Test;
@@ -143,24 +140,6 @@ public class RuleKeyTest {
   }
 
   @Test
-  public void ensureListsDefaultToSettingStringValues() {
-    ImmutableList<Label> labels =
-        ImmutableList.<Label>of(ImmutableLabel.of("one"), ImmutableLabel.of("two"));
-
-    RuleKey.Builder.RuleKeyPair reflective = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
-        .setReflectively("labels", labels)
-        .build();
-
-    RuleKey.Builder.RuleKeyPair manual = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
-        .set("labels", Lists.transform(labels, Functions.toStringFunction()))
-        .build();
-
-    assertEquals(manual.getTotalRuleKey(), reflective.getTotalRuleKey());
-  }
-
-  @Test
   public void ensureSetsAreHandledProperly() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -186,28 +165,6 @@ public class RuleKeyTest {
     RuleKey.Builder.RuleKeyPair manual = createEmptyRuleKey(pathResolver)
         .setSourcePaths("sourcePaths", sourcePaths)
         .set("strings", strings)
-        .build();
-
-    assertEquals(manual.getTotalRuleKey(), reflective.getTotalRuleKey());
-  }
-
-  @Test
-  public void ensureSetsDefaultToSettingStringValues() {
-    ImmutableSortedSet<Label> labels =
-        ImmutableSortedSet.<Label>of(ImmutableLabel.of("one"), ImmutableLabel.of("two"));
-    ImmutableSortedSet<String> stringLabels = ImmutableSortedSet.copyOf(
-        Iterables.transform(
-            labels,
-            Functions.toStringFunction()));
-
-    RuleKey.Builder.RuleKeyPair reflective = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
-        .setReflectively("labels", labels)
-        .build();
-
-    RuleKey.Builder.RuleKeyPair manual = createEmptyRuleKey(
-        new SourcePathResolver(new BuildRuleResolver()))
-        .set("labels", stringLabels)
         .build();
 
     assertEquals(manual.getTotalRuleKey(), reflective.getTotalRuleKey());

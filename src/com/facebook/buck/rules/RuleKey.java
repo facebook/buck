@@ -415,13 +415,18 @@ public class RuleKey {
           return set(key, ImmutableList.copyOf((List<SourceRoot>) val));
         } else if (determinant instanceof String) {
           return set(key, (List<String>) val);
-        } else {
+        } else if (determinant == null ||
+            determinant instanceof Enum ||
+            determinant instanceof Path) {
           // Coerce the elements of the collection to strings.
           setKey(key);
           for (Object item : (List<?>) val) {
             setVal(item == null ? null : String.valueOf(item));
           }
           return separate();
+        } else {
+          throw new RuntimeException(
+              String.format("Unsupported value type: List<%s>", determinant.getClass()));
         }
       } else if (val instanceof Set) {
         Object determinant = ((Set<?>) val).isEmpty() ? null : ((Set<?>) val).iterator().next();
@@ -430,13 +435,19 @@ public class RuleKey {
           return set(key, ImmutableSortedSet.copyOf((Set<BuildRule>) val));
         } else if (determinant instanceof SourcePath) {
           return setSourcePaths(key, ImmutableSortedSet.copyOf((Set<SourcePath>) val));
-        } else {
+        } else if (determinant instanceof String) {
+          return set(key, ImmutableSortedSet.copyOf((Set<String>) val));
+        } else if (determinant == null ||
+            determinant instanceof Enum) {
           // Once again, coerce to strings.
           setKey(key);
           for (Object item : (Set<?>) val) {
             setVal(item == null ? null : String.valueOf(item));
           }
           return separate();
+        } else {
+          throw new RuntimeException(
+              String.format("Unsupported value type: Set<%s>", determinant.getClass()));
         }
       }
 
@@ -444,10 +455,16 @@ public class RuleKey {
       if (val instanceof Iterator) {
         // The only iterator type we accept is a Path. Easy.
         return setInputs(key, (Iterator<Path>) val);
+      } else if (val instanceof BuildTarget) {
+        return set(key, ((BuildTarget) val).getFullyQualifiedName());
+      } else if (val instanceof Enum || val instanceof Number) {
+        return set(key, String.valueOf(val));
+      } else if (val instanceof String) {
+        return set(key, (String) val);
       }
 
       // Fall through to setting values as strings.
-      return set(key, String.valueOf(val));
+      throw new RuntimeException(String.format("Unsupported value type: %s", val.getClass()));
     }
 
     @Value.Immutable
