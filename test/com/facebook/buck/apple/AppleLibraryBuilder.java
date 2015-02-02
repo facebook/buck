@@ -16,15 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.FlavorDomain;
-import com.google.common.collect.ImmutableMap;
 
 public class AppleLibraryBuilder
     extends AbstractAppleNativeTargetBuilder<AppleNativeTargetDescriptionArg, AppleLibraryBuilder> {
@@ -35,18 +27,7 @@ public class AppleLibraryBuilder
   }
 
   protected AppleLibraryBuilder(BuildTarget target) {
-    super(createDescription(), target);
-  }
-
-  private static AppleLibraryDescription createDescription() {
-    BuckConfig buckConfig = new FakeBuckConfig();
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(buckConfig);
-    FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
-        "C/C++ Platform",
-        ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform));
-    return new AppleLibraryDescription(
-        new AppleConfig(buckConfig),
-        new CxxLibraryDescription(new CxxBuckConfig(buckConfig), cxxPlatforms));
+    super(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION, target);
   }
 
   public static AppleLibraryBuilder createBuilder(BuildTarget target) {

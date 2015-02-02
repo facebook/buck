@@ -19,21 +19,13 @@ package com.facebook.buck.apple;
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -41,25 +33,18 @@ import org.junit.Test;
 public class AppleBundleTest {
 
   private AppleBundleDescription description = new AppleBundleDescription();
-  private BuckConfig buckConfig = new FakeBuckConfig();
-  private CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(buckConfig);
-  private FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
-      "C/C++ Platform",
-      ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform));
-  private AppleLibraryDescription appleLibraryDescription = new AppleLibraryDescription(
-      new AppleConfig(buckConfig),
-      new CxxLibraryDescription(new CxxBuckConfig(buckConfig), cxxPlatforms));
 
   @Test
   public void getKnownBundleExtension() {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
     AppleNativeTargetDescriptionArg libraryArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
+        createDescriptionArgWithDefaults(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION);
     BuildRuleParams libraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build()).build();
     BuildRule library = resolver.addToIndex(
-        appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg));
+        FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION.createBuildRule(
+            libraryParams, resolver, libraryArg));
 
     AppleBundleDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.extension = Either.ofLeft(AppleBundleExtension.FRAMEWORK);
@@ -82,11 +67,12 @@ public class AppleBundleTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
     AppleNativeTargetDescriptionArg libraryArg =
-        createDescriptionArgWithDefaults(appleLibraryDescription);
+        createDescriptionArgWithDefaults(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION);
     BuildRuleParams libraryParams =
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build()).build();
     BuildRule library = resolver.addToIndex(
-        appleLibraryDescription.createBuildRule(libraryParams, resolver, libraryArg));
+        FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION.createBuildRule(
+            libraryParams, resolver, libraryArg));
 
     AppleBundleDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.extension = Either.ofRight("grplugin");

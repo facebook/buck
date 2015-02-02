@@ -45,10 +45,7 @@ java_test(
 
 java_library(
   name = 'testutil',
-  srcs = glob(['*Builder.java']) + [
-    'FakeAppleConfig.java',
-    'ProjectGeneratorTestUtils.java',
-  ],
+  srcs = glob(['*.java'], excludes = ['*Test.java']),
   deps = [
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/apple/xcode:xcode',
