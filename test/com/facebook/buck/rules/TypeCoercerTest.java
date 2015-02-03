@@ -26,11 +26,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -43,7 +43,6 @@ import com.google.common.collect.Lists;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -429,8 +428,6 @@ public class TypeCoercerTest {
   }
 
   @Test
-  @Ignore("Test compiles and passes but checkstyle 4 barfs on the commented-out line assigning " +
-          "the expected var: try reinstating after arc lint moves to checkstyle 5.5")
   public void coerceToTurkishIsShouldWork()
       throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("listOfTestEnums").getGenericType();
@@ -440,9 +437,7 @@ public class TypeCoercerTest {
     ImmutableList<String> input = ImmutableList.of(
         "violet", "VIOLET", violetWithLowerCaseTurkishI, violetWithUpperCaseTurkishI);
     ImmutableList<TestEnum> expected = ImmutableList.of(
-      // Remove @ignore and uncomment line below once we have checkstyle 5.5
-      // Also reinstate the extra value for TestEnum
-      // TestEnum.V\u0130OLET, TestEnum.V\u0130OLET, TestEnum.V\u0130OLET, TestEnum.V\u0130OLET
+      TestEnum.VIOLET, TestEnum.VIOLET, TestEnum.VIOLET, TestEnum.VIOLET
     );
 
     Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
@@ -593,8 +588,5 @@ public class TypeCoercerTest {
     public Either<ImmutableList<String>, Path> eitherListOfStringsOrPath;
   }
 
-  private static enum TestEnum { RED, PURPLE, yellow, grey, PINK, white }
-  // Reinstate this value when we have checkstyle 5.5: see coerceToTurkishShouldWork
-  // for more information
-  // V\u0130OLET
+  private static enum TestEnum { RED, PURPLE, yellow, grey, PINK, white, VIOLET }
 }
