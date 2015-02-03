@@ -38,10 +38,23 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Collection;
 
 import javax.annotation.Nullable;
 
 public class MorePaths {
+
+  /**
+   * Returns true iff a path on the filesystem exists, is a regular file, and is executable.
+   */
+  public static final Function<Path, Boolean> DEFAULT_PATH_IS_EXECUTABLE_CHECKER =
+      new Function<Path, Boolean>() {
+        @Override
+        public Boolean apply(Path path) {
+          return Files.isRegularFile(path) &&
+              Files.isExecutable(path);
+        }
+      };
 
   /** Utility class: do not instantiate. */
   private MorePaths() {}
@@ -136,7 +149,8 @@ public class MorePaths {
       Path pathToDesiredLinkUnderProjectRoot,
       Path pathToExistingFileUnderProjectRoot,
       ProjectFilesystem projectFilesystem) throws IOException {
-    return createRelativeSymlink(pathToDesiredLinkUnderProjectRoot,
+    return createRelativeSymlink(
+        pathToDesiredLinkUnderProjectRoot,
         pathToExistingFileUnderProjectRoot,
         projectFilesystem.getRootPath());
   }
@@ -249,6 +263,55 @@ public class MorePaths {
   private static boolean isExecutable(Path path) {
     File file = path.toFile();
     return file.canExecute() && !file.isDirectory();
+  }
+
+  /**
+   * Looks for {@code executableToFind} under each entry of {@code pathsToSearch} and returns
+   * the full path ({@code pathToSearch/executableToFind)}) to the first one which
+   * exists on disk as an executable file.
+   *
+   * This is similar to the {@code which} command in Unix.
+   *
+   * {@code executableToFind} must be a relative path.
+   *
+   * If none are found, returns {@link Optional#absent()}.
+   */
+  public static Optional<Path> searchPathsForExecutable(
+      Path executableToFind,
+      Collection<Path> pathsToSearch) {
+    return searchPathsForExecutable(
+        executableToFind,
+        pathsToSearch,
+        DEFAULT_PATH_IS_EXECUTABLE_CHECKER);
+  }
+
+  /**
+   * Looks for {@code executableToFind} under each entry of {@code pathsToSearch} and returns
+   * the full path ({@code pathToSearch/executableToFind)}) to the first one for which
+   * {@code pathIsExecutableChecker(path)} returns true.
+   *
+   * This is similar to the {@code which} command in Unix.
+   *
+   * {@code executableToFind} must be a relative path.
+   *
+   * If none are found, returns {@link Optional#absent()}.
+   */
+  public static Optional<Path> searchPathsForExecutable(
+      Path executableToFind,
+      Collection<Path> pathsToSearch,
+      Function<Path, Boolean> pathIsExecutableChecker) {
+    Preconditions.checkArgument(
+        !executableToFind.isAbsolute(),
+        "Path %s must be relative",
+        executableToFind);
+
+    for (Path pathToSearch : pathsToSearch) {
+      Path resolved = pathToSearch.resolve(executableToFind);
+      if (pathIsExecutableChecker.apply(resolved)) {
+        return Optional.of(resolved);
+      }
+    }
+    return Optional.<Path>absent();
   }
 
   /**

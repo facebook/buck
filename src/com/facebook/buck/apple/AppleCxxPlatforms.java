@@ -22,7 +22,7 @@ import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.ImmutableCxxPlatform;
 import com.facebook.buck.cxx.SourcePathTool;
 import com.facebook.buck.cxx.Tool;
-import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -60,7 +60,7 @@ public class AppleCxxPlatforms {
         targetVersion,
         targetArchitecture,
         sdkPaths,
-        MoreFiles.DEFAULT_PATH_IS_EXECUTABLE_CHECKER);
+        MorePaths.DEFAULT_PATH_IS_EXECUTABLE_CHECKER);
   }
 
   @VisibleForTesting
@@ -137,7 +137,7 @@ public class AppleCxxPlatforms {
       String tool,
       ImmutableList<Path> toolSearchPaths,
       Function<Path, Boolean> pathIsExecutableChecker) {
-    Optional<Path> toolPath = MoreFiles.searchPathsForExecutable(
+    Optional<Path> toolPath = MorePaths.searchPathsForExecutable(
         Paths.get(tool), toolSearchPaths, pathIsExecutableChecker);
     if (toolPath.isPresent()) {
       return Optional.<SourcePath>of(new PathSourcePath(toolPath.get()));

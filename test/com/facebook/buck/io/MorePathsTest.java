@@ -22,6 +22,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.google.common.base.Functions;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -218,5 +223,137 @@ public class MorePathsTest {
     Path p1 = Paths.get("");
     Path p2 = Paths.get("foo");
     assertThat(MorePaths.relativize(p1, p2), equalTo(Paths.get("foo")));
+  }
+
+  private Path createExecutable(String executablePath) throws IOException {
+    File file = tmp.newFile(executablePath);
+    file.setExecutable(true);
+    return file.toPath();
+  }
+
+  @Test
+  public void testSearchPathsFileFoundReturnsPath() throws IOException {
+    Path dir1 = tmp.newFolder("foo").toPath();
+    Path dir2 = tmp.newFolder("bar").toPath();
+    Path dir3 = tmp.newFolder("baz").toPath();
+    Path file = createExecutable("bar/blech");
+
+    assertEquals(
+        Optional.of(file),
+        MorePaths.searchPathsForExecutable(
+            Paths.get("blech"),
+            ImmutableList.of(dir1, dir2, dir3)));
+  }
+
+  @Test
+  public void testSearchPathsNonExecutableFileIsIgnored() throws IOException {
+    Path dir1 = tmp.newFolder("foo").toPath();
+    // Note this is not executable.
+    tmp.newFile("foo/blech");
+    Path dir2 = tmp.newFolder("bar").toPath();
+    Path dir3 = tmp.newFolder("baz").toPath();
+    Path file = createExecutable("bar/blech");
+
+    assertEquals(
+        Optional.of(file),
+        MorePaths.searchPathsForExecutable(
+            Paths.get("blech"),
+            ImmutableList.of(dir1, dir2, dir3)));
+  }
+
+  @Test
+  public void testSearchPathsDirAndFileFoundReturnsFileNotDir() throws IOException {
+    Path dir1 = tmp.newFolder("foo").toPath();
+    // We don't want to find this folder.
+    tmp.newFolder("foo/foo");
+    Path dir2 = tmp.newFolder("bar").toPath();
+    Path file = createExecutable("bar/foo");
+
+    assertEquals(
+        Optional.of(file),
+        MorePaths.searchPathsForExecutable(
+            Paths.get("foo"),
+            ImmutableList.of(dir1, dir2)));
+  }
+
+  @Test
+  public void testSearchPathsMultipleFileFoundReturnsFirstPath() throws IOException {
+    Path dir1 = tmp.newFolder("foo").toPath();
+    Path dir2 = tmp.newFolder("bar").toPath();
+    Path dir3 = tmp.newFolder("baz").toPath();
+    Path file1 = createExecutable("bar/blech");
+    createExecutable("baz/blech");
+
+    assertEquals(
+        Optional.of(file1),
+        MorePaths.searchPathsForExecutable(
+            Paths.get("blech"),
+            ImmutableList.of(dir1, dir2, dir3)));
+  }
+
+  @Test
+  public void testSearchPathsSymlinkToExecutableOutsideSearchPathReturnsPath() throws IOException {
+    Path dir1 = tmp.newFolder("foo").toPath();
+    Path dir2 = tmp.newFolder("bar").toPath();
+    Path dir3 = tmp.newFolder("baz").toPath();
+    tmp.newFolder("unsearched");
+    Path binary = createExecutable("unsearched/binary");
+    Path file1 = dir2.resolve("blech");
+    Files.createSymbolicLink(file1, binary);
+
+    assertEquals(
+        Optional.of(file1),
+        MorePaths.searchPathsForExecutable(
+            Paths.get("blech"),
+            ImmutableList.of(dir1, dir2, dir3)));
+  }
+
+  @Test
+  public void testSearchPathsFileNotFoundReturnsAbsent() throws IOException {
+    Path dir1 = tmp.newFolder("foo").toPath();
+    Path dir2 = tmp.newFolder("bar").toPath();
+    Path dir3 = tmp.newFolder("baz").toPath();
+
+    assertEquals(
+        Optional.<Path>absent(),
+        MorePaths.searchPathsForExecutable(
+            Paths.get("blech"),
+            ImmutableList.of(dir1, dir2, dir3)));
+  }
+
+  @Test
+  public void testSearchPathsEmptyReturnsAbsent() throws IOException {
+    assertEquals(
+        Optional.<Path>absent(),
+        MorePaths.searchPathsForExecutable(
+            Paths.get("blech"),
+            ImmutableList.<Path>of()));
+  }
+
+  @Test
+  @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
+  public void testSearchPathsWithIsExecutableFunctionSuccess() {
+    Path path1 = Paths.get("foo/bar");
+    assertEquals(
+        Optional.of(path1),
+        MorePaths.searchPathsForExecutable(
+            Paths.get("bar"),
+            ImmutableList.of(Paths.get("baz"), Paths.get("foo")),
+            Functions.forMap(
+                ImmutableMap.of(
+                    path1,
+                    true),
+                false)));
+  }
+
+  @Test
+  @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
+  public void testSearchPathsWithIsExecutableFunctionFailure() {
+    assertEquals(
+        Optional.<Path>absent(),
+        MorePaths.searchPathsForExecutable(
+            Paths.get("bar"),
+            ImmutableList.of(Paths.get("baz", "foo")),
+            Functions.<Path>forPredicate(Predicates.<Path>alwaysFalse())));
   }
 }
