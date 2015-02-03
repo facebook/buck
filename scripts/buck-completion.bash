@@ -165,7 +165,7 @@ function _buck_completion_try_project() {
       --no-cache
       --process-annotations
       --verbose
-      --with-tests"
+      --without-tests"
 }
 
 function _buck_completion_try_quickstart() {

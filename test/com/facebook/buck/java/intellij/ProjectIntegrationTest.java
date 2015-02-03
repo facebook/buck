@@ -135,7 +135,11 @@ public class ProjectIntegrationTest {
         this, "project_slice", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("project", "//modules/dep1:dep1", "//:root");
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--without-tests",
+        "//modules/dep1:dep1",
+        "//:root");
     result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
@@ -170,6 +174,7 @@ public class ProjectIntegrationTest {
     ProcessResult result = workspace.runBuckCommand(
         "project",
         "--dry-run",
+        "--without-tests",
         "//modules/dep1:dep1",
         "//:root");
     result.assertSuccess("buck project should exit cleanly");
@@ -227,10 +232,10 @@ public class ProjectIntegrationTest {
   }
 
   /**
-   * Verify that if we build a project by specifying a target and '--with-tests', the resulting
-   * project only contains the transitive deps of that target as well as any tests that specify
-   * something in those transitive deps as "sources_under_test".  In this example, that means
-   * everything except //modules/tip.
+   * Verify that if we build a project by specifying a target, the resulting project only contains
+   * the transitive deps of that target as well as any tests that specify something in those
+   * transitive deps as "sources_under_test".  In this example, that means everything except
+   * //modules/tip.
    */
   @Test
   public void testBuckProjectSliceWithTests() throws IOException {
@@ -240,7 +245,6 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--with-tests",
         "//modules/dep1:dep1");
     result.assertSuccess("buck project should exit cleanly");
 
@@ -268,7 +272,7 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testBuckProjectSliceWithTestsDryRun() throws IOException {
+  public void testBuckProjectSliceWithTestsDryRunShowsNoTests() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "project_slice_with_tests", temporaryFolder);
     workspace.setUp();
@@ -276,6 +280,7 @@ public class ProjectIntegrationTest {
     ProcessResult result = workspace.runBuckCommand(
         "project",
         "--dry-run",
+        "--without-tests",
         "//modules/dep1:dep1");
     result.assertSuccess("buck project should exit cleanly");
 
@@ -297,9 +302,8 @@ public class ProjectIntegrationTest {
   }
 
   /**
-   * Verify that if we build a project by specifying a target and '--with-tests', the tests'
-   * dependencies are referenced even if they are defined in a buck file that would not have been
-   * parsed otherwise.
+   * Verify that if we build a project by specifying a target, the tests dependencies are
+   * referenced even if they are defined in a buck file that would not have been parsed otherwise.
    */
   @Test
   public void testBuckProjectSliceWithTestsDependenciesInDifferentBuckFile() throws IOException {
@@ -309,7 +313,6 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--with-tests",
         "//modules/dep1:dep1");
     result.assertSuccess("buck project should exit cleanly");
 
@@ -335,8 +338,8 @@ public class ProjectIntegrationTest {
   }
 
   /**
-   * Verify that if we build a project by specifying a target and '--with-tests', the tests'
-   * projects rules are referenced even if they are defined in a different buck file from the tests.
+   * Verify that if we build a project by specifying a target, the tests' projects rules are
+   * referenced even if they are defined in a different buck file from the tests.
    */
   @Test
   public void testBuckProjectSliceWithTestsProjectInDifferentBuckFile() throws IOException {
@@ -346,7 +349,6 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--with-tests",
         "//modules/dep1:dep1");
     result.assertSuccess("buck project should exit cleanly");
 
@@ -394,7 +396,8 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testBuckProjectGeneratedSchemeOnlyIncludesDependencies() throws IOException {
+  public void testBuckProjectGeneratedSchemeOnlyIncludesDependenciesWithoutTests()
+      throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "project_generated_scheme_only_includes_dependencies",
@@ -403,6 +406,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--without-tests",
         "//Apps:workspace");
     result.assertSuccess();
 
@@ -419,7 +423,6 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--with-tests",
         "//Apps:workspace");
     result.assertSuccess();
 
@@ -437,7 +440,6 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--with-tests",
         "//Apps:workspace");
     result.assertSuccess();
 
@@ -453,7 +455,7 @@ public class ProjectIntegrationTest {
         temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("project", "--with-tests");
+    ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
 
     workspace.verify();
@@ -512,6 +514,7 @@ public class ProjectIntegrationTest {
     ProcessResult result = workspace.runBuckCommand(
         "project",
         "--combined-project",
+        "--without-tests",
         "//Apps:workspace");
     result.assertSuccess();
 
@@ -529,7 +532,6 @@ public class ProjectIntegrationTest {
     ProcessResult result = workspace.runBuckCommand(
         "project",
         "--combined-project",
-        "--with-tests",
         "//Apps:workspace");
     result.assertSuccess();
 

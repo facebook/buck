@@ -68,9 +68,14 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
 
   @Option(
       name = "--with-tests",
-      usage = "(In Alpha) When generating a project slice, also include all tests that test " +
-          "code in that slice.")
+      hidden = true)
+  @SuppressWarnings("PMD.UnusedPrivateField")
   private boolean withTests = false;
+
+  @Option(
+      name = "--without-tests",
+      usage = "When generating a project slice, exclude tests that test the code in that slice")
+  private boolean withoutTests = false;
 
   @Option(
       name = "--combine-test-bundles",
@@ -194,7 +199,7 @@ public class ProjectCommandOptions extends AbstractCommandOptions {
   }
 
   public boolean isWithTests() {
-    return withTests;
+    return !withoutTests;
   }
 
   private List<String> getInitialTargets() {
