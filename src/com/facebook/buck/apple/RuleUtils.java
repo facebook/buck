@@ -50,6 +50,7 @@ public class RuleUtils {
   private static void addSourcePathToBuilders(
       SourcePathResolver resolver,
       SourcePath sourcePath,
+      ImmutableSortedSet.Builder<SourcePath> outputAllSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputHeaderPaths) {
     if (resolver.isSourcePathExtensionInSet(
@@ -61,12 +62,15 @@ public class RuleUtils {
         FileExtensions.CLANG_HEADERS)) {
       outputHeaderPaths.add(sourcePath);
     }
+    outputAllSourcePaths.add(sourcePath);
   }
 
   /**
    * Extract the source and header paths and flags from the input list
    * and populate the output collections.
    *
+   * @param outputAllSourcePaths The list of all specified sources will be added to
+   *        this builder, independently of whether we recognize their extension.
    * @param outputPerFileFlags per file flags will be added to this builder
    * @param outputSourcePaths The ordered list of paths to (non-header) source code
    *        files, as determined by the file extensions in SOURCE_FILE_EXTENSIONS.
@@ -76,6 +80,7 @@ public class RuleUtils {
    */
   public static void extractSourcePaths(
       SourcePathResolver resolver,
+      ImmutableSortedSet.Builder<SourcePath> outputAllSourcePaths,
       ImmutableMap.Builder<SourcePath, String> outputPerFileFlags,
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputHeaderPaths,
@@ -86,6 +91,7 @@ public class RuleUtils {
           addSourcePathToBuilders(
               resolver,
               item.getSourcePath(),
+              outputAllSourcePaths,
               outputSourcePaths,
               outputHeaderPaths);
           break;
@@ -94,6 +100,7 @@ public class RuleUtils {
           addSourcePathToBuilders(
               resolver,
               pair.getFirst(),
+              outputAllSourcePaths,
               outputSourcePaths,
               outputHeaderPaths);
           outputPerFileFlags.put(pair.getFirst(), pair.getSecond());
@@ -103,6 +110,7 @@ public class RuleUtils {
           ImmutableList<AppleSource> sourceGroupItems = sourceGroup.getSecond();
           extractSourcePaths(
               resolver,
+              outputAllSourcePaths,
               outputPerFileFlags,
               outputSourcePaths,
               outputHeaderPaths,

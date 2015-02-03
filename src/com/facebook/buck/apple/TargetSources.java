@@ -23,7 +23,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import org.immutables.value.Value;
 
@@ -70,24 +69,27 @@ public abstract class TargetSources {
   public static TargetSources ofAppleSources(
       SourcePathResolver resolver,
       Collection<AppleSource> appleSources) {
+    ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableSortedMap.Builder<SourcePath, String> perFileFlagsBuilder = ImmutableSortedMap
         .naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> srcPathsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> headerPathsBuilder = ImmutableSortedSet.naturalOrder();
     RuleUtils.extractSourcePaths(
         resolver,
+        allSourcesBuilder,
         perFileFlagsBuilder,
         srcPathsBuilder,
         headerPathsBuilder,
         appleSources);
 
+    ImmutableSortedSet<SourcePath> allSources = allSourcesBuilder.build();
     ImmutableSortedMap<SourcePath, String> perFileFlags = perFileFlagsBuilder.build();
     ImmutableSortedSet<SourcePath> srcPaths = srcPathsBuilder.build();
     ImmutableSortedSet<SourcePath> headerPaths = headerPathsBuilder.build();
 
     ImmutableList<GroupedSource> groupedSource = RuleUtils.createGroupsFromSourcePaths(
         resolver,
-        Iterables.concat(srcPaths, headerPaths));
+        allSources);
 
     return ImmutableTargetSources.of(
         groupedSource,

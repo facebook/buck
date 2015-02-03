@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import org.junit.Test;
 
@@ -38,6 +37,7 @@ public class RuleUtilsTest {
 
   @Test
   public void extractGroupedSources() {
+    ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
     ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> headerPaths = ImmutableSortedSet.naturalOrder();
@@ -64,13 +64,14 @@ public class RuleUtilsTest {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     RuleUtils.extractSourcePaths(
         resolver,
+        allSourcesBuilder,
         perFileCompileFlags,
         sourcePaths,
         headerPaths,
         input);
     ImmutableList<GroupedSource> sources = RuleUtils.createGroupsFromSourcePaths(
         resolver,
-        Iterables.concat(sourcePaths.build(), headerPaths.build()));
+        allSourcesBuilder.build());
     assertEquals(
         ImmutableList.of(
             GroupedSource.ofSourceGroup(
@@ -94,6 +95,7 @@ public class RuleUtilsTest {
 
   @Test
   public void extractUngroupedHeadersAndSources() {
+    ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
     ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> headerPaths = ImmutableSortedSet.naturalOrder();
@@ -107,6 +109,7 @@ public class RuleUtilsTest {
 
     RuleUtils.extractSourcePaths(
         new SourcePathResolver(new BuildRuleResolver()),
+        allSourcesBuilder,
         perFileCompileFlags,
         sourcePaths,
         headerPaths,
@@ -126,6 +129,7 @@ public class RuleUtilsTest {
 
   @Test
   public void extractGroupedHeadersAndSources() {
+    ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
     ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> headerPaths = ImmutableSortedSet.naturalOrder();
@@ -149,6 +153,7 @@ public class RuleUtilsTest {
 
     RuleUtils.extractSourcePaths(
         new SourcePathResolver(new BuildRuleResolver()),
+        allSourcesBuilder,
         perFileCompileFlags,
         sourcePaths,
         headerPaths,
