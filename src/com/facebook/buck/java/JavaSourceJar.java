@@ -70,7 +70,7 @@ public class JavaSourceJar extends AbstractBuildRule {
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.setReflectively("srcs", getResolver().filterInputsToCompareToOutput(sources));
+    return builder;
   }
 
   @Override
