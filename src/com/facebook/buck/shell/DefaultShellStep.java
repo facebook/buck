@@ -19,17 +19,19 @@ package com.facebook.buck.shell;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public class DefaultShellStep extends ShellStep {
 
   private ImmutableList<String> args;
 
-  public DefaultShellStep(String... args) {
-    this(ImmutableList.copyOf(args));
+  public DefaultShellStep(List<String> args) {
+    this.args = ImmutableList.copyOf(args);
   }
 
-  public DefaultShellStep(List<String> args) {
+  public DefaultShellStep(Path workingDirectory, List<String> args) {
+    super(workingDirectory.toFile());
     this.args = ImmutableList.copyOf(args);
   }
 
