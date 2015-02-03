@@ -5,6 +5,8 @@ java_library(
   ],
   deps = [
     '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/python:config',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
   ],

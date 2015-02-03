@@ -112,10 +112,6 @@ public class BuckConfig {
   private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "10";
   private static final String DEFAULT_MAX_TRACES = "25";
 
-  // Prefer "python2" where available (Linux), but fall back to "python" (Mac).
-  private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
-      ImmutableList.of("python2", "python");
-
   private final ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
 
   private final ImmutableMap<String, BuildTarget> aliasToBuildTargetMap;
@@ -845,61 +841,16 @@ public class BuckConfig {
     return Objects.hashCode(sectionsToEntries);
   }
 
-  protected ImmutableMap<String, String> getEnvironment() {
+  public ImmutableMap<String, String> getEnvironment() {
     return environment;
   }
 
-  @VisibleForTesting
-  String[] getEnv(String propertyName, String separator) {
+  public String[] getEnv(String propertyName, String separator) {
     String value = getEnvironment().get(propertyName);
     if (value == null) {
       value = "";
     }
     return value.split(separator);
-  }
-
-  /**
-   * @return true if file is executable and not a directory.
-   */
-  private boolean isExecutableFile(File file) {
-    return file.canExecute() && !file.isDirectory();
-  }
-
-  /**
-   * Returns the path to python interpreter. If python is specified in the tools section
-   * that is used and an error reported if invalid.
-   * @return The found python interpreter.
-   */
-  public String getPythonInterpreter() {
-    Optional<String> configPath = getValue("tools", "python");
-    ImmutableList<String> pythonInterpreterNames = PYTHON_INTERPRETER_NAMES;
-    if (configPath.isPresent()) {
-      // Python path in config. Use it or report error if invalid.
-      File python = new File(configPath.get());
-      if (isExecutableFile(python)) {
-        return python.getAbsolutePath();
-      }
-      pythonInterpreterNames = ImmutableList.of(configPath.get());
-    }
-
-    for (String interpreterName : pythonInterpreterNames) {
-      // For each path in PATH, attempt to resolve the python executable.
-      for (String path : getEnv("PATH", File.pathSeparator)) {
-        Optional<Path> python = MorePaths.resolveExecutable(
-            Paths.get(path),
-            interpreterName,
-            getEnvironment());
-        if (python.isPresent()) {
-          return python.get().toAbsolutePath().toString();
-        }
-      }
-    }
-
-    if (configPath.isPresent()) {
-      throw new HumanReadableException("Not a python executable: " + configPath.get());
-    } else {
-      throw new HumanReadableException("No python2 or python found.");
-    }
   }
 
   /**

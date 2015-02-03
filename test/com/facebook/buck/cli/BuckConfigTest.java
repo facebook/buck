@@ -46,7 +46,6 @@ import org.easymock.EasyMock;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -486,129 +485,6 @@ public class BuckConfigTest {
     // We don't test "auto" on Linux, because the behavior would depend on how the test was run.
     assertTrue(linuxConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
     assertFalse(linuxConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
-  }
-
-  @Test
-  public void whenToolsPythonIsExecutableFileThenItIsUsed() throws IOException {
-    File configPythonFile = temporaryFolder.newFile("python");
-    assertTrue("Should be able to set file executable", configPythonFile.setExecutable(true));
-    FakeBuckConfig config = new FakeBuckConfig(ImmutableMap.<String, Map<String, String>>builder()
-        .put("tools", ImmutableMap.of("python", configPythonFile.getAbsolutePath()))
-        .build());
-    assertEquals(
-        "Should return path to temp file.",
-        configPythonFile.getAbsolutePath(), config.getPythonInterpreter());
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void whenToolsPythonDoesNotExistThenItIsNotUsed() throws IOException {
-    String invalidPath = temporaryFolder.getRoot().getAbsolutePath() + "DoesNotExist";
-    FakeBuckConfig config = new FakeBuckConfig(ImmutableMap.<String, Map<String, String>>builder()
-        .put("tools", ImmutableMap.of("python", invalidPath))
-        .build());
-    config.getPythonInterpreter();
-    fail("Should throw exception as python config is invalid.");
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void whenToolsPythonIsNonExecutableFileThenItIsNotUsed() throws IOException {
-    File configPythonFile = temporaryFolder.newFile("python");
-    assertTrue("Should be able to set file non-executable", configPythonFile.setExecutable(false));
-    FakeBuckConfig config = new FakeBuckConfig(ImmutableMap.<String, Map<String, String>>builder()
-        .put("tools", ImmutableMap.of("python", configPythonFile.getAbsolutePath()))
-        .build());
-    config.getPythonInterpreter();
-    fail("Should throw exception as python config is invalid.");
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void whenToolsPythonIsExecutableDirectoryThenItIsNotUsed() throws IOException {
-    File configPythonFile = temporaryFolder.newFolder("python");
-    assertTrue("Should be able to set file executable", configPythonFile.setExecutable(true));
-    FakeBuckConfig config = new FakeBuckConfig(ImmutableMap.<String, Map<String, String>>builder()
-        .put("tools", ImmutableMap.of("python", configPythonFile.getAbsolutePath()))
-        .build());
-    config.getPythonInterpreter();
-    fail("Should throw exception as python config is invalid.");
-  }
-
-  @Test
-  public void whenPythonOnPathIsExecutableFileThenItIsUsed() throws IOException {
-    File python = temporaryFolder.newFile("python");
-    assertTrue("Should be able to set file executable", python.setExecutable(true));
-    FakeBuckConfig config = new FakeBuckEnvironment(ImmutableMap.<String, Map<String, String>>of(),
-        ImmutableMap.<String, String>builder()
-            .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
-            .put("PATHEXT", "")
-            .build(),
-        ImmutableMap.<String, String>of());
-    config.getPythonInterpreter();
-  }
-
-  @Test
-  public void whenPythonPlusExtensionOnPathIsExecutableFileThenItIsUsed() throws IOException {
-    File python = temporaryFolder.newFile("python.exe");
-    assertTrue("Should be able to set file executable", python.setExecutable(true));
-    FakeBuckConfig config = new FakeBuckEnvironment(ImmutableMap.<String, Map<String, String>>of(),
-        ImmutableMap.<String, String>builder()
-            .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
-            .put("PATHEXT", ".exe")
-            .build(),
-        ImmutableMap.<String, String>of());
-    config.getPythonInterpreter();
-  }
-
-  @Test
-  public void whenPython2OnPathThenItIsUsed() throws IOException {
-    File python = temporaryFolder.newFile("python");
-    assertTrue("Should be able to set file executable", python.setExecutable(true));
-    File python2 = temporaryFolder.newFile("python2");
-    assertTrue("Should be able to set file executable", python2.setExecutable(true));
-    FakeBuckConfig config = new FakeBuckEnvironment(ImmutableMap.<String, Map<String, String>>of(),
-        ImmutableMap.<String, String>builder()
-            .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
-            .put("PATHEXT", "")
-            .build(),
-        ImmutableMap.<String, String>of());
-    assertEquals(
-        "Should return path to python2.",
-        python2.getAbsolutePath(),
-        config.getPythonInterpreter());
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void whenPythonOnPathNotFoundThenThrow() throws IOException {
-    FakeBuckConfig config = new FakeBuckEnvironment(ImmutableMap.<String, Map<String, String>>of(),
-        ImmutableMap.<String, String>builder()
-            .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
-            .put("PATHEXT", "")
-            .build(),
-        ImmutableMap.<String, String>of());
-    config.getPythonInterpreter();
-    fail("Should throw an exception when Python isn't found.");
-  }
-
-  @Test
-  public void whenMultiplePythonExecutablesOnPathFirstIsUsed() throws IOException {
-    File pythonA = temporaryFolder.newFile("python");
-    assertTrue("Should be able to set file executable", pythonA.setExecutable(true));
-    DebuggableTemporaryFolder temporaryFolder2 = new DebuggableTemporaryFolder();
-    temporaryFolder2.create();
-    File pythonB = temporaryFolder2.newFile("python");
-    assertTrue("Should be able to set file executable", pythonB.setExecutable(true));
-    String path = temporaryFolder.getRoot().getAbsolutePath() +
-        File.pathSeparator +
-        temporaryFolder2.getRoot().getAbsolutePath();
-    FakeBuckConfig config = new FakeBuckEnvironment(ImmutableMap.<String, Map<String, String>>of(),
-        ImmutableMap.<String, String>builder()
-            .put("PATH", path)
-            .put("PATHEXT", "")
-            .build(),
-        ImmutableMap.<String, String>of());
-    assertEquals(
-        "Should return the first path",
-        config.getPythonInterpreter(),
-        pythonA.getAbsolutePath());
   }
 
   @Test

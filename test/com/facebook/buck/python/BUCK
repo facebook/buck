@@ -13,6 +13,7 @@ java_test(
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',
+    '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:rule_pattern',

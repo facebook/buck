@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -33,9 +34,11 @@ public class ParserConfig {
   private static final String DEFAULT_BUILD_FILE_NAME = "BUCK";
 
   private final BuckConfig delegate;
+  private final PythonBuckConfig pythonBuckConfig;
 
   public ParserConfig(BuckConfig delegate) {
     this.delegate = delegate;
+    this.pythonBuckConfig = new PythonBuckConfig(delegate);
   }
 
   public boolean getAllowEmptyGlobs() {
@@ -63,7 +66,7 @@ public class ParserConfig {
   }
 
   public String getPythonInterpreter() {
-    return delegate.getPythonInterpreter();
+    return pythonBuckConfig.getPythonInterpreter();
   }
 
   public ImmutableSet<Pattern> getTempFilePatterns() {

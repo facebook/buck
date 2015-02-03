@@ -35,12 +35,12 @@ public class FakeBuckEnvironment extends FakeBuckConfig {
   }
 
   @Override
-  protected ImmutableMap<String, String> getEnvironment() {
+  public ImmutableMap<String, String> getEnvironment() {
     return environment;
   }
 
   @Override
-  String[] getEnv(String propertyName, String separator) {
+  public String[] getEnv(String propertyName, String separator) {
     return environment.get(propertyName).split(separator);
   }
 

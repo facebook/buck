@@ -32,6 +32,7 @@ import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -196,7 +197,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           getProjectFilesystem(),
           options.getPathToDefaultAndroidManifest(),
           options.getPathToPostProcessScript(),
-          options.getBuckConfig().getPythonInterpreter(),
+          new PythonBuckConfig(options.getBuckConfig()).getPythonInterpreter(),
           getObjectMapper());
 
       File tempDir = Files.createTempDir();
