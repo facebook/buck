@@ -23,11 +23,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -260,37 +258,13 @@ public class MorePaths {
     }
   }
 
-  private static boolean isExecutable(Path path) {
-    File file = path.toFile();
-    return file.canExecute() && !file.isDirectory();
-  }
-
   /**
    * Looks for {@code executableToFind} under each entry of {@code pathsToSearch} and returns
    * the full path ({@code pathToSearch/executableToFind)}) to the first one which
    * exists on disk as an executable file.
    *
-   * This is similar to the {@code which} command in Unix.
-   *
-   * {@code executableToFind} must be a relative path.
-   *
-   * If none are found, returns {@link Optional#absent()}.
-   */
-  public static Optional<Path> searchPathsForExecutable(
-      Path executableToFind,
-      Collection<Path> pathsToSearch) {
-    return searchPathsForExecutable(
-        executableToFind,
-        pathsToSearch,
-        DEFAULT_PATH_IS_EXECUTABLE_CHECKER);
-  }
-
-  /**
-   * Looks for {@code executableToFind} under each entry of {@code pathsToSearch} and returns
-   * the full path ({@code pathToSearch/executableToFind)}) to the first one for which
-   * {@code pathIsExecutableChecker(path)} returns true.
-   *
-   * This is similar to the {@code which} command in Unix.
+   * This is similar to the {@code which} command in Unix, but handles the various extensions
+   * that are configured by Windows (when supplied with valid {@code extensions}).
    *
    * {@code executableToFind} must be a relative path.
    *
@@ -299,6 +273,30 @@ public class MorePaths {
   public static Optional<Path> searchPathsForExecutable(
       Path executableToFind,
       Collection<Path> pathsToSearch,
+      Collection<String> extensions) {
+    return searchPathsForExecutable(
+        executableToFind,
+        pathsToSearch,
+        extensions,
+        DEFAULT_PATH_IS_EXECUTABLE_CHECKER);
+  }
+
+  /**
+   * Looks for {@code executableToFind} under each entry of {@code pathsToSearch} and returns
+   * the full path ({@code pathToSearch/executableToFind)}) to the first one for which
+   * {@code pathIsExecutableChecker(path)} returns true.
+   *
+   * This is similar to the {@code which} command in Unix, but handles the various extensions
+   * that are configured by Windows (when supplied with valid {@code extensions}).
+   *
+   * {@code executableToFind} must be a relative path.
+   *
+   * If none are found, returns {@link Optional#absent()}.
+   */
+  public static Optional<Path> searchPathsForExecutable(
+      Path executableToFind,
+      Collection<Path> pathsToSearch,
+      Collection<String> extensions,
       Function<Path, Boolean> pathIsExecutableChecker) {
     Preconditions.checkArgument(
         !executableToFind.isAbsolute(),
@@ -306,37 +304,34 @@ public class MorePaths {
         executableToFind);
 
     for (Path pathToSearch : pathsToSearch) {
-      Path resolved = pathToSearch.resolve(executableToFind);
-      if (pathIsExecutableChecker.apply(resolved)) {
-        return Optional.of(resolved);
+      Optional<Path> maybeResolved = resolveExecutable(
+          pathToSearch,
+          executableToFind,
+          extensions,
+          pathIsExecutableChecker);
+      if (maybeResolved.isPresent()) {
+        return maybeResolved;
       }
     }
     return Optional.<Path>absent();
   }
 
-  /**
-   * Attempts to resolve an executable in a cross-platform way.
-   * @param base The folder you expect to find the executable in.
-   * @param executable The name of the executable you wish to find.
-   * @param environment The system environment.
-   * @return The {@link Path} to the executable is resolved, or {@link Optional#absent()}.
-   */
-  public static Optional<Path> resolveExecutable(
+  private static Optional<Path> resolveExecutable(
       Path base,
-      String executable,
-      ImmutableMap<String, String> environment) {
-    String extensions = environment.get("PATHEXT");
-    if (extensions == null) {
-      Path exe = base.resolve(executable);
-      if (isExecutable(exe)) {
-        return Optional.of(exe);
+      Path executableToFind,
+      Collection<String> extensions,
+      Function<Path, Boolean> pathIsExecutableChecker) {
+    if (extensions.isEmpty()) {
+      Path resolved = base.resolve(executableToFind);
+      if (pathIsExecutableChecker.apply(resolved)) {
+        return Optional.of(resolved);
       }
       return Optional.absent();
     }
-    for (String pathExt : extensions.split(File.pathSeparator)) {
-      Path exe = base.resolve(executable + pathExt);
-      if (isExecutable(exe)) {
-        return Optional.of(exe);
+    for (String pathExt : extensions) {
+      Path resolved = base.resolve(executableToFind + pathExt);
+      if (pathIsExecutableChecker.apply(resolved)) {
+        return Optional.of(resolved);
       }
     }
     return Optional.absent();

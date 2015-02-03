@@ -138,7 +138,10 @@ public class AppleCxxPlatforms {
       ImmutableList<Path> toolSearchPaths,
       Function<Path, Boolean> pathIsExecutableChecker) {
     Optional<Path> toolPath = MorePaths.searchPathsForExecutable(
-        Paths.get(tool), toolSearchPaths, pathIsExecutableChecker);
+        Paths.get(tool),
+        toolSearchPaths,
+        ImmutableList.<String>of(),
+        pathIsExecutableChecker);
     if (toolPath.isPresent()) {
       return Optional.<SourcePath>of(new PathSourcePath(toolPath.get()));
     } else {

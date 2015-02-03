@@ -71,19 +71,23 @@ public class PythonBuckConfig {
       if (isExecutableFile(python)) {
         return python.getAbsolutePath();
       }
+      if (python.isAbsolute()) {
+        throw new HumanReadableException("Not a python executable: " + configPath.get());
+      }
       pythonInterpreterNames = ImmutableList.of(configPath.get());
     }
 
+    ImmutableList.Builder<Path> paths = ImmutableList.builder();
+    for (String path : delegate.getEnv("PATH", File.pathSeparator)) {
+      paths.add(Paths.get(path));
+    }
     for (String interpreterName : pythonInterpreterNames) {
-      // For each path in PATH, attempt to resolve the python executable.
-      for (String path : delegate.getEnv("PATH", File.pathSeparator)) {
-        Optional<Path> python = MorePaths.resolveExecutable(
-            Paths.get(path),
-            interpreterName,
-            delegate.getEnvironment());
-        if (python.isPresent()) {
-          return python.get().toAbsolutePath().toString();
-        }
+      Optional<Path> python = MorePaths.searchPathsForExecutable(
+          Paths.get(interpreterName),
+          paths.build(),
+          ImmutableList.copyOf(delegate.getEnv("PATHEXT", File.pathSeparator)));
+      if (python.isPresent()) {
+        return python.get().toAbsolutePath().toString();
       }
     }
 

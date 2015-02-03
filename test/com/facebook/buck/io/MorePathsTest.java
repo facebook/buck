@@ -242,7 +242,8 @@ public class MorePathsTest {
         Optional.of(file),
         MorePaths.searchPathsForExecutable(
             Paths.get("blech"),
-            ImmutableList.of(dir1, dir2, dir3)));
+            ImmutableList.of(dir1, dir2, dir3),
+            ImmutableList.<String>of()));
   }
 
   @Test
@@ -258,7 +259,8 @@ public class MorePathsTest {
         Optional.of(file),
         MorePaths.searchPathsForExecutable(
             Paths.get("blech"),
-            ImmutableList.of(dir1, dir2, dir3)));
+            ImmutableList.of(dir1, dir2, dir3),
+            ImmutableList.<String>of()));
   }
 
   @Test
@@ -273,7 +275,8 @@ public class MorePathsTest {
         Optional.of(file),
         MorePaths.searchPathsForExecutable(
             Paths.get("foo"),
-            ImmutableList.of(dir1, dir2)));
+            ImmutableList.of(dir1, dir2),
+            ImmutableList.<String>of()));
   }
 
   @Test
@@ -288,7 +291,8 @@ public class MorePathsTest {
         Optional.of(file1),
         MorePaths.searchPathsForExecutable(
             Paths.get("blech"),
-            ImmutableList.of(dir1, dir2, dir3)));
+            ImmutableList.of(dir1, dir2, dir3),
+            ImmutableList.<String>of()));
   }
 
   @Test
@@ -305,7 +309,8 @@ public class MorePathsTest {
         Optional.of(file1),
         MorePaths.searchPathsForExecutable(
             Paths.get("blech"),
-            ImmutableList.of(dir1, dir2, dir3)));
+            ImmutableList.of(dir1, dir2, dir3),
+            ImmutableList.<String>of()));
   }
 
   @Test
@@ -318,7 +323,8 @@ public class MorePathsTest {
         Optional.<Path>absent(),
         MorePaths.searchPathsForExecutable(
             Paths.get("blech"),
-            ImmutableList.of(dir1, dir2, dir3)));
+            ImmutableList.of(dir1, dir2, dir3),
+            ImmutableList.<String>of()));
   }
 
   @Test
@@ -327,7 +333,8 @@ public class MorePathsTest {
         Optional.<Path>absent(),
         MorePaths.searchPathsForExecutable(
             Paths.get("blech"),
-            ImmutableList.<Path>of()));
+            ImmutableList.<Path>of(),
+            ImmutableList.<String>of()));
   }
 
   @Test
@@ -339,6 +346,7 @@ public class MorePathsTest {
         MorePaths.searchPathsForExecutable(
             Paths.get("bar"),
             ImmutableList.of(Paths.get("baz"), Paths.get("foo")),
+            ImmutableList.<String>of(),
             Functions.forMap(
                 ImmutableMap.of(
                     path1,
@@ -354,6 +362,33 @@ public class MorePathsTest {
         MorePaths.searchPathsForExecutable(
             Paths.get("bar"),
             ImmutableList.of(Paths.get("baz", "foo")),
+            ImmutableList.<String>of(),
             Functions.<Path>forPredicate(Predicates.<Path>alwaysFalse())));
+  }
+
+  @Test
+  public void testSearchPathsWithExtensions() throws IOException {
+    Path dir = tmp.newFolder("foo").toPath();
+    Path file = createExecutable("foo/bar.EXE");
+
+    assertEquals(
+        Optional.of(file),
+        MorePaths.searchPathsForExecutable(
+            Paths.get("bar"),
+            ImmutableList.of(dir),
+            ImmutableList.of(".BAT", ".EXE")));
+  }
+
+  @Test
+  public void testSearchPathsWithExtensionsNoMatch() throws IOException {
+    Path dir = tmp.newFolder("foo").toPath();
+    createExecutable("foo/bar.COM");
+
+    assertEquals(
+        Optional.absent(),
+        MorePaths.searchPathsForExecutable(
+            Paths.get("bar"),
+            ImmutableList.of(dir),
+            ImmutableList.of(".BAT", ".EXE")));
   }
 }
