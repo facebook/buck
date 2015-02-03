@@ -176,26 +176,26 @@ public class CachingBuildEngine implements BuildEngine {
               eventBus.logVerboseAndPost(LOG, BuildRuleEvent.started(rule));
               startOfBuildWasRecordedOnTheEventBus = true;
 
-              ruleKeys.putIfAbsent(rule.getBuildTarget(), rule.getRuleKey());
               BuildResult result = null;
-              result = buildOnceDepsAreBuilt(
-                  rule,
-                  context,
-                  onDiskBuildInfo,
-                  buildInfoRecorder.get(),
-                  shouldTryToFetchFromCache(rule, deps));
-              if (result.getStatus() == BuildRuleStatus.SUCCESS) {
-                try {
+              try {
+                ruleKeys.putIfAbsent(rule.getBuildTarget(), rule.getRuleKey());
+                result = buildOnceDepsAreBuilt(
+                    rule,
+                    context,
+                    onDiskBuildInfo,
+                    buildInfoRecorder.get(),
+                    shouldTryToFetchFromCache(rule, deps));
+                if (result.getStatus() == BuildRuleStatus.SUCCESS) {
                   recordBuildRuleSuccess(result);
-                } catch (InterruptedException | RuntimeException e) {
-                  // StepRunner#addCallback doesn't return a future which means that when we add a
-                  // callback to the step runner in CachingBuildEngine#build, there is no way to
-                  // have the exception thrown in the callback to be forwarded to the future we
-                  // return from it.
-                  // For now, we'll just catch the RuntimeException.
-                  // TODO(simons, t5597862): Consider modifying StepRunner#addCallback
-                  result = new BuildResult(e);
                 }
+              } catch (InterruptedException | RuntimeException e) {
+                // StepRunner#addCallback doesn't return a future which means that when we add a
+                // callback to the step runner in CachingBuildEngine#build, there is no way to
+                // have the exception thrown in the callback to be forwarded to the future we
+                // return from it.
+                // For now, we'll just catch the RuntimeException.
+                // TODO(simons, t5597862): Consider modifying StepRunner#addCallback
+                result = new BuildResult(e);
               }
               if (result.getStatus() == BuildRuleStatus.FAIL) {
                 recordBuildRuleFailure(result);
