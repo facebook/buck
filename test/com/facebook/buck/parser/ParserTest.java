@@ -1657,8 +1657,8 @@ public class ParserTest extends EasyMockSupport {
                     ImmutableMap.<String, Map<String, String>>of(
                         "buildfile",
                         ImmutableMap.of("includes", "//java/com/facebook/defaultIncludeFile"),
-                        "tools",
-                        ImmutableMap.of("python", pythonInterpreter)))),
+                        "python",
+                        ImmutableMap.of("interpreter", pythonInterpreter)))),
             buildRuleTypes.getAllDescriptions(),
             new TestConsole(),
             ImmutableMap.<String, String>of(),

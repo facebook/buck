@@ -58,7 +58,9 @@ public class PythonBuckConfigTest {
         new PythonBuckConfig(
             new FakeBuckConfig(
                 ImmutableMap.<String, Map<String, String>>builder()
-                    .put("tools", ImmutableMap.of("python", configPythonFile.getAbsolutePath()))
+                    .put(
+                        "python",
+                        ImmutableMap.of("interpreter", configPythonFile.getAbsolutePath()))
                     .build()));
     assertEquals(
         "Should return path to temp file.",
@@ -72,7 +74,7 @@ public class PythonBuckConfigTest {
         new PythonBuckConfig(
             new FakeBuckConfig(
                 ImmutableMap.<String, Map<String, String>>builder()
-                    .put("tools", ImmutableMap.of("python", invalidPath))
+                    .put("python", ImmutableMap.of("interpreter", invalidPath))
                     .build()));
     config.getPythonInterpreter();
     fail("Should throw exception as python config is invalid.");
@@ -86,7 +88,9 @@ public class PythonBuckConfigTest {
         new PythonBuckConfig(
             new FakeBuckConfig(
                 ImmutableMap.<String, Map<String, String>>builder()
-                    .put("tools", ImmutableMap.of("python", configPythonFile.getAbsolutePath()))
+                    .put(
+                        "python",
+                        ImmutableMap.of("interpreter", configPythonFile.getAbsolutePath()))
                     .build()));
     config.getPythonInterpreter();
     fail("Should throw exception as python config is invalid.");
@@ -100,7 +104,9 @@ public class PythonBuckConfigTest {
         new PythonBuckConfig(
             new FakeBuckConfig(
                 ImmutableMap.<String, Map<String, String>>builder()
-                    .put("tools", ImmutableMap.of("python", configPythonFile.getAbsolutePath()))
+                    .put(
+                        "python",
+                        ImmutableMap.of("interpreter", configPythonFile.getAbsolutePath()))
                     .build()));
     config.getPythonInterpreter();
     fail("Should throw exception as python config is invalid.");

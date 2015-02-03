@@ -34,6 +34,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PythonBuckConfig {
+
+  private static final String SECTION = "python";
+
   private static final Pattern PYTHON_VERSION_REGEX =
       Pattern.compile(".*?(\\wython \\d+\\.\\d+).*");
 
@@ -60,7 +63,7 @@ public class PythonBuckConfig {
    * @return The found python interpreter.
    */
   public String getPythonInterpreter() {
-    Optional<String> configPath = delegate.getValue("tools", "python");
+    Optional<String> configPath = delegate.getValue(SECTION, "interpreter");
     ImmutableList<String> pythonInterpreterNames = PYTHON_INTERPRETER_NAMES;
     if (configPath.isPresent()) {
       // Python path in config. Use it or report error if invalid.
@@ -99,7 +102,7 @@ public class PythonBuckConfig {
   }
 
   public Optional<Path> getPathToTestMain() {
-    Optional <Path> testMain = delegate.getPath("python", "path_to_python_test_main");
+    Optional <Path> testMain = delegate.getPath(SECTION, "path_to_python_test_main");
      if (testMain.isPresent()) {
        return testMain;
     }
@@ -115,7 +118,7 @@ public class PythonBuckConfig {
   }
 
   public Optional<Path> getPathToPex() {
-    return delegate.getPath("python", "path_to_pex");
+    return delegate.getPath(SECTION, "path_to_pex");
   }
 
 
