@@ -10,25 +10,28 @@
 This is a collection of presentations that have been given on Buck.
 Note that Buck has evolved over time, so more recent presentations
 may have information that supersedes information in older presentations.
-
+<p>
 {call .presentation}
   {param title: 'Building Android at Ludicrous Speed' /}
   {param speaker: 'Michael Bolin, David Reiss' /}
   {param event: 'DroidCon NYC' /}
   {param eventUrl: 'http://nyc.droidcon.com/2014/dcnyc/68/' /}
   {param date: 'September 20, 2014' /}
-{/call}
+  {param intro}
 <p>
-Below is an embedded version of the presentation, though it is best viewed
-as an <a href="droidcon-nyc-2014/">HTML slide deck with speaker notes</a>
-{sp}in its own window.
+Focus the pane below and use the arrow keys to navigate the slide deck,
+or <a href="droidcon-nyc-2014/">open the slides in a new window</a>.
 <p>
 {call .iframe}{param url: 'droidcon-nyc-2014/' /}{/call}
 <p>
-<em>Touch Lab, the organizers of DroidCon NYC 2014, <a href="https://twitter.com/DroidconNYC/status/513359908486774784">
-claimed that the video of this talk</a> will be made available.
-We will happily include it here once it is published.
-</em>
+The audio from the video is a little rough since we presented from the{sp}
+<a href="http://kpgalligan.tumblr.com/private/109584828938/tumblr_niz22dSBfp1qczkr2">
+ill-fated downstairs breakout room</a>.
+<p>
+  {/param}
+  {param youTubeId: 'Y9MfGS3qfoM' /}
+{/call}
+
 
 {call .presentation}
   {param title: 'Speeding Up Android Development with Exopackage' /}
@@ -87,6 +90,7 @@ We will happily include it here once it is published.
  * @param event
  * @param? eventUrl
  * @param? date
+ * @param? intro
  * @param? youTubeId
  * @param? youTubeStart
  * @param? slides
@@ -102,6 +106,10 @@ We will happily include it here once it is published.
 {if $eventUrl}<a href="{$eventUrl}">{/if}
   {$event}{if $date} ({$date}){/if}
 {if $eventUrl}</a>{/if}
+
+{if $intro}
+  {$intro|noAutoescape}
+{/if}
 
 {if $youTubeId}
   <p>
