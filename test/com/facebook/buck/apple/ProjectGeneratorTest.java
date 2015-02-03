@@ -247,18 +247,19 @@ public class ProjectGeneratorTest {
                 ImmutableList.of(
                     AppleSource.ofSourceGroup(
                         new Pair<>(
-                            "HeaderGroup1",
+                            "Ignored",
                             ImmutableList.of(
-                                AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
+                                AppleSource.ofSourcePath(new TestSourcePath("HeaderGroup1/foo.h")),
                                 AppleSource.ofSourcePathWithFlags(
                                     new Pair<SourcePath, String>(
-                                        new TestSourcePath("bar.h"),
+                                        new TestSourcePath("HeaderGroup1/bar.h"),
                                         "public"))))),
                     AppleSource.ofSourceGroup(
                         new Pair<>(
-                            "HeaderGroup2",
+                            "IgnoredAsWell",
                             ImmutableList.of(
-                                AppleSource.ofSourcePath(new TestSourcePath("baz.h"))))))))
+                                AppleSource.ofSourcePath(
+                                    new TestSourcePath("HeaderGroup2/baz.h"))))))))
         .setUseBuckHeaderMaps(Optional.of(true))
         .build();
 
@@ -278,9 +279,9 @@ public class ProjectGeneratorTest {
     assertEquals("HeaderGroup1", group1.getName());
     assertThat(group1.getChildren(), hasSize(2));
     PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
-    assertEquals("foo.h", fileRefFoo.getName());
+    assertEquals("bar.h", fileRefFoo.getName());
     PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
-    assertEquals("bar.h", fileRefBar.getName());
+    assertEquals("foo.h", fileRefBar.getName());
 
     PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
     assertEquals("HeaderGroup2", group2.getName());
@@ -304,16 +305,16 @@ public class ProjectGeneratorTest {
     assertEquals("buck-out/gen/foo/lib-public-headers.hmap", headerMaps.get(0).toString());
     assertThatHeaderMapFileContains(
         Paths.get("buck-out/gen/foo/lib-public-headers.hmap"),
-        ImmutableMap.<String, String>of("lib/bar.h", "bar.h")
+        ImmutableMap.<String, String>of("lib/bar.h", "HeaderGroup1/bar.h")
     );
 
     assertEquals("buck-out/gen/foo/lib-target-headers.hmap", headerMaps.get(1).toString());
     assertThatHeaderMapFileContains(
         Paths.get("buck-out/gen/foo/lib-target-headers.hmap"),
         ImmutableMap.<String, String>of(
-            "lib/foo.h", "foo.h",
-            "lib/bar.h", "bar.h",
-            "lib/baz.h", "baz.h"
+            "lib/foo.h", "HeaderGroup1/foo.h",
+            "lib/bar.h", "HeaderGroup1/bar.h",
+            "lib/baz.h", "HeaderGroup2/baz.h"
             )
     );
 
@@ -321,9 +322,9 @@ public class ProjectGeneratorTest {
     assertThatHeaderMapFileContains(
         Paths.get("buck-out/gen/foo/lib-target-user-headers.hmap"),
         ImmutableMap.<String, String>of(
-            "foo.h", "foo.h",
-            "bar.h", "bar.h",
-            "baz.h", "baz.h"
+            "foo.h", "HeaderGroup1/foo.h",
+            "bar.h", "HeaderGroup1/bar.h",
+            "baz.h", "HeaderGroup2/baz.h"
         )
     );
   }

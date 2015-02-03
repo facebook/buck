@@ -17,20 +17,25 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.AppleSource;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Multimap;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Set;
 
@@ -45,7 +50,6 @@ public class RuleUtils {
   private static void addSourcePathToBuilders(
       SourcePathResolver resolver,
       SourcePath sourcePath,
-      ImmutableList.Builder<GroupedSource> outputSources,
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputHeaderPaths) {
     if (resolver.isSourcePathExtensionInSet(
@@ -57,16 +61,12 @@ public class RuleUtils {
         FileExtensions.CLANG_HEADERS)) {
       outputHeaderPaths.add(sourcePath);
     }
-    outputSources.add(GroupedSource.ofSourcePath(sourcePath));
   }
 
   /**
    * Extract the source and header paths and flags from the input list
    * and populate the output collections.
    *
-   * @param outputSources The ordered tree of sources, headers, and groups (as
-   *        they should appear in a generated Xcode project) will be added to
-   *        this builder.
    * @param outputPerFileFlags per file flags will be added to this builder
    * @param outputSourcePaths The ordered list of paths to (non-header) source code
    *        files, as determined by the file extensions in SOURCE_FILE_EXTENSIONS.
@@ -76,7 +76,6 @@ public class RuleUtils {
    */
   public static void extractSourcePaths(
       SourcePathResolver resolver,
-      ImmutableList.Builder<GroupedSource> outputSources,
       ImmutableMap.Builder<SourcePath, String> outputPerFileFlags,
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputHeaderPaths,
@@ -87,7 +86,6 @@ public class RuleUtils {
           addSourcePathToBuilders(
               resolver,
               item.getSourcePath(),
-              outputSources,
               outputSourcePaths,
               outputHeaderPaths);
           break;
@@ -96,30 +94,82 @@ public class RuleUtils {
           addSourcePathToBuilders(
               resolver,
               pair.getFirst(),
-              outputSources,
               outputSourcePaths,
               outputHeaderPaths);
           outputPerFileFlags.put(pair.getFirst(), pair.getSecond());
           break;
         case SOURCE_GROUP:
           Pair<String, ImmutableList<AppleSource>> sourceGroup = item.getSourceGroup();
-          String sourceGroupName = sourceGroup.getFirst();
           ImmutableList<AppleSource> sourceGroupItems = sourceGroup.getSecond();
-          ImmutableList.Builder<GroupedSource> nestedSourceGroups = ImmutableList.builder();
           extractSourcePaths(
               resolver,
-              nestedSourceGroups,
               outputPerFileFlags,
               outputSourcePaths,
               outputHeaderPaths,
               sourceGroupItems);
-          outputSources.add(
-              GroupedSource.ofSourceGroup(sourceGroupName, nestedSourceGroups.build()));
           break;
         default:
           throw new RuntimeException("Unhandled AppleSource item type: " + item.getType());
       }
     }
+  }
+
+  public static ImmutableList<GroupedSource> createGroupsFromSourcePaths(
+      SourcePathResolver resolver,
+      Iterable<SourcePath> sourcePaths) {
+    Path rootPath = Paths.get("root");
+
+    ImmutableMultimap.Builder<Path, SourcePath> entriesBuilder = ImmutableMultimap.builder();
+    for (SourcePath sourcePath : sourcePaths) {
+      Path path = rootPath.resolve(resolver.getPath(sourcePath));
+      Path parent = Preconditions.checkNotNull(path.getParent());
+      entriesBuilder.put(parent, sourcePath);
+    }
+    ImmutableMultimap<Path, SourcePath> entries = entriesBuilder.build();
+
+    ImmutableMultimap.Builder<Path, String> subgroupsBuilder = ImmutableMultimap.builder();
+    for (Path groupPath : entries.keys()) {
+      Path parent = groupPath.getParent();
+      while (parent != null) {
+        subgroupsBuilder.put(parent, groupPath.getFileName().toString());
+        groupPath = parent;
+        parent = groupPath.getParent();
+      }
+    }
+    ImmutableMultimap<Path, String> subgroups = subgroupsBuilder.build();
+
+    ImmutableList<GroupedSource> groupedSources =
+        createGroupsFromEntryMaps(subgroups, entries, rootPath);
+
+    // Remove the longest common prefix from all paths.
+    while (groupedSources.size() == 1 &&
+        groupedSources.get(0).getType() == GroupedSource.Type.SOURCE_GROUP) {
+      groupedSources = ImmutableList.copyOf(groupedSources.get(0).getSourceGroup().get());
+    }
+
+    return groupedSources;
+  }
+
+  @VisibleForTesting
+  static ImmutableList<GroupedSource> createGroupsFromEntryMaps(
+      Multimap<Path, String> subgroups,
+      Multimap<Path, SourcePath> entries,
+      Path groupPath) {
+    ImmutableList.Builder<GroupedSource> groupBuilder = ImmutableList.builder();
+
+    for (String subgroupName : ImmutableSortedSet.copyOf(subgroups.get(groupPath))) {
+      Path subgroupPath = groupPath.resolve(subgroupName);
+      groupBuilder.add(
+          GroupedSource.ofSourceGroup(
+              subgroupName,
+              createGroupsFromEntryMaps(subgroups, entries, subgroupPath)));
+    }
+
+    for (SourcePath sourcePath : ImmutableSortedSet.copyOf(entries.get(groupPath))) {
+      groupBuilder.add(GroupedSource.ofSourcePath(sourcePath));
+    }
+
+    return groupBuilder.build();
   }
 
   public static Supplier<ImmutableCollection<Path>> subpathsOfPathsSupplier(
