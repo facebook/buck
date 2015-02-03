@@ -337,14 +337,7 @@ public class RuleKey {
       if (val != null) {
         for (SourcePath path : val) {
           setVal(path.toString());
-          Optional<BuildRule> buildRule = resolver.getRule(path);
-          if (buildRule.isPresent()) {
-            setVal(buildRule.get().getRuleKey());
-          } else {
-            Optional<Path> relativePath = resolver.getRelativePath(path);
-            Preconditions.checkState(relativePath.isPresent());
-            setVal(relativePath.get().toString());
-          }
+          setInputVal(path);
         }
       }
       return separate();

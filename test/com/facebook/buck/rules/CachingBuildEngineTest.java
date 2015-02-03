@@ -177,7 +177,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         .putByte(RuleKey.Builder.SEPARATOR)
         .putBytes("/dev/null".getBytes())
         .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("/dev/null".getBytes())
+        .putBytes("ae8c0f860a0ecad94ecede79b69460434eddbfbc".getBytes())
         .putByte(RuleKey.Builder.SEPARATOR)
         .putByte(RuleKey.Builder.SEPARATOR)
 
@@ -648,7 +648,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
   // TODO(mbolin): Test what happens when the cache's methods throw an exception.
 
-  private static BuildRule createRule(
+  private BuildRule createRule(
       SourcePathResolver resolver,
       ImmutableSet<BuildRule> deps,
       Iterable<Path> inputs,
@@ -659,7 +659,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
     final FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of(
-          "/dev/null", "ae8c0f860a0ecad94ecede79b69460434eddbfbc"));
+            "/dev/null", "ae8c0f860a0ecad94ecede79b69460434eddbfbc"));
+
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
         .setDeps(sortedDeps)
         .setType(JavaLibraryDescription.TYPE)
