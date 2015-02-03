@@ -85,7 +85,6 @@ public class ZipStep implements Step {
     this.baseDir = baseDir;
   }
 
-
   @Override
   public int execute(ExecutionContext context) {
     final ProjectFilesystem filesystem = context.getProjectFilesystem();
@@ -102,33 +101,60 @@ public class ZipStep implements Step {
           ZipOutputStreams.newOutputStream(baseOut, OVERWRITE_EXISTING)) {
 
       final FileVisitor<Path> pathFileVisitor = new SimpleFileVisitor<Path>() {
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attributes)
-            throws IOException {
+        private boolean isSkipFile(Path file) {
           if (!paths.isEmpty() && !paths.contains(file)) {
-            return FileVisitResult.CONTINUE;
+            return true;
+          }
+          return false;
+        }
+
+        private String getEntryName(Path path) {
+          Path relativePath = junkPaths ? path.getFileName() : baseDir.relativize(path);
+          return MorePaths.pathWithUnixSeparators(relativePath);
+        }
+
+        private CustomZipEntry getZipEntry(
+            String entryName,
+            Path path,
+            BasicFileAttributes attr) throws IOException {
+          boolean isDirectory = path.toFile().isDirectory();
+          if (isDirectory) {
+            entryName += "/";
           }
 
-          Path resolvedPath = filesystem.resolve(file);
-          Path relativePath = junkPaths ? file.getFileName() : baseDir.relativize(file);
-          String entryName = MorePaths.pathWithUnixSeparators(relativePath);
           CustomZipEntry entry = new CustomZipEntry(entryName);
-          entry.setTime(attributes.lastModifiedTime().toMillis());
+          entry.setTime(attr.lastModifiedTime().toMillis());
           entry.setCompressionLevel(compressionLevel);
-
           // If we're using STORED files, we must manually set the CRC, size, and compressed size.
-          if (entry.getMethod() == ZipEntry.STORED) {
-            entry.setSize(attributes.size());
-            entry.setCompressedSize(attributes.size());
+          if (entry.getMethod() == ZipEntry.STORED && !isDirectory) {
+            entry.setSize(attr.size());
+            entry.setCompressedSize(attr.size());
             entry.setCrc(
                 com.google.common.io.Files.hash(
-                    resolvedPath.toFile(),
+                    path.toFile(),
                     Hashing.crc32()).padToLong());
           }
+          return entry;
+        }
 
-          out.putNextEntry(entry);
-          Files.copy(resolvedPath, out);
-          out.closeEntry();
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+            throws IOException {
+          if (!isSkipFile(file)) {
+            Path path = filesystem.resolve(file);
+            out.putNextEntry(getZipEntry(getEntryName(file), path, attrs));
+            Files.copy(path, out);
+            out.closeEntry();
+          }
+          return FileVisitResult.CONTINUE;
+        }
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+            throws IOException {
+          if (!dir.equals(baseDir) && !isSkipFile(dir)) {
+            out.putNextEntry(getZipEntry(getEntryName(dir), filesystem.resolve(dir), attrs));
+            out.closeEntry();
+          }
           return FileVisitResult.CONTINUE;
         }
       };

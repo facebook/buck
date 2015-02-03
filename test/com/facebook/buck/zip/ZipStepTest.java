@@ -198,6 +198,28 @@ public class ZipStepTest {
     }
   }
 
+  @Test
+  public void zipWithEmptyDir() throws IOException {
+    File parent = tmp.newFolder("zipstep");
+    File out = new File(parent, "output.zip");
+
+    tmp.newFolder("zipdir");
+    tmp.newFolder("zipdir/foo/");
+    tmp.newFolder("zipdir/bar/");
+
+    ZipStep step = new ZipStep(
+        Paths.get("zipstep/output.zip"),
+        ImmutableSet.<Path>of(),
+        true,
+        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        Paths.get("zipdir"));
+    assertEquals(0, step.execute(executionContext));
+
+    try (Zip zip = new Zip(out, false)) {
+      assertEquals(ImmutableSet.of("", "foo/", "bar/"), zip.getDirNames());
+    }
+  }
+
   /**
    * Tests a couple bugs:
    *     1) {@link com.facebook.buck.zip.OverwritingZipOutputStream} was writing uncompressed zip

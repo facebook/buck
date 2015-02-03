@@ -91,6 +91,20 @@ public class Zip implements AutoCloseable {
     }
   }
 
+  public Set<String> getDirNames() throws IOException {
+    final ImmutableSet.Builder<String> contents = ImmutableSet.builder();
+    Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+              throws IOException {
+            // Skip the leading "/" from the path.
+            contents.add(dir.toString().substring(1));
+            return FileVisitResult.CONTINUE;
+          }
+        });
+    return contents.build();
+  }
+
   public Set<String> getFileNames() throws IOException {
     final ImmutableSet.Builder<String> contents = ImmutableSet.builder();
     Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
