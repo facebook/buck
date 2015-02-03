@@ -9,8 +9,11 @@ java_test(
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:rule_pattern',
     '//src/com/facebook/buck/rules:build_rule',
+    '//test/com/facebook/buck/rules:testutil',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest-core',
+    '//third-party/java/hamcrest:hamcrest-library',
     '//third-party/java/junit:junit',
   ],
 )

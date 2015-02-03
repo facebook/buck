@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.rules.coercer;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -28,11 +28,10 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.rules.coercer.AppleSource;
-import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.ImmutableLabel;
+import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -183,7 +182,7 @@ public class TypeCoercerTest {
     TestTraversal traversal = new TestTraversal();
     coercer.traverse(input, traversal);
 
-    Matcher<Iterable<? extends Object>> matcher = Matchers.contains(
+    Matcher<Iterable<?>> matcher = Matchers.contains(
         ImmutableList.<Matcher<? super Object>>of(
             sameInstance((Object) input),
             is((Object) "foo"),
@@ -257,7 +256,7 @@ public class TypeCoercerTest {
     assertThat(traversal.getObjects().get(0), sameInstance((Object) "foo"));
   }
 
-  static class TestTraversal implements ParamInfo.Traversal {
+  static class TestTraversal implements TypeCoercer.Traversal {
     private List<Object> objects = Lists.newArrayList();
 
     public List<Object> getObjects() {
