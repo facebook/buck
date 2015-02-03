@@ -395,6 +395,35 @@ public class TypeCoercerTest {
   }
 
   @Test
+  public void coerceToEnumShouldWorkInList()
+    throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("listOfTestEnums").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    ImmutableList<String> input = ImmutableList.of("PURPLE", "RED", "RED", "PURPLE");
+
+    Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
+    ImmutableList<TestEnum> expected =
+        ImmutableList.of(TestEnum.PURPLE, TestEnum.RED, TestEnum.RED, TestEnum.PURPLE);
+
+    assertEquals(expected, result);
+  }
+
+  @Test
+  public void coerceToEnumShouldWorkInSet()
+    throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("setOfTestEnums").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    ImmutableSet<String> input = ImmutableSet.of("PURPLE", "PINK", "RED");
+
+    Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
+    ImmutableSet<TestEnum> expected =
+        ImmutableSet.of(TestEnum.PURPLE, TestEnum.PINK, TestEnum.RED);
+
+    assertEquals(expected, result);
+
+  }
+
+  @Test
   public void coerceToEnumsShouldWorkWithUpperAndLowerCaseValues()
       throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("listOfTestEnums").getGenericType();
@@ -585,6 +614,7 @@ public class TypeCoercerTest {
     public ImmutableList<String> listOfStrings;
     public Either<Path, ImmutableList<String>> eitherPathOrListOfStrings;
     public Either<ImmutableList<String>, Path> eitherListOfStringsOrPath;
+    public ImmutableSet<TestEnum> setOfTestEnums;
   }
 
   private static enum TestEnum { RED, PURPLE, yellow, grey, PINK, white, VIOLET }
