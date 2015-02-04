@@ -105,17 +105,6 @@ public class RuleUtils {
               outputHeaderPaths);
           outputPerFileFlags.put(pair.getFirst(), pair.getSecond());
           break;
-        case SOURCE_GROUP:
-          Pair<String, ImmutableList<AppleSource>> sourceGroup = item.getSourceGroup();
-          ImmutableList<AppleSource> sourceGroupItems = sourceGroup.getSecond();
-          extractSourcePaths(
-              resolver,
-              outputAllSourcePaths,
-              outputPerFileFlags,
-              outputSourcePaths,
-              outputHeaderPaths,
-              sourceGroupItems);
-          break;
         default:
           throw new RuntimeException("Unhandled AppleSource item type: " + item.getType());
       }

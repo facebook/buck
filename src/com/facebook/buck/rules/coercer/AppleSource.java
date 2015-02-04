@@ -49,10 +49,6 @@ public abstract class AppleSource {
        * A {@link SourcePath} with compiler flags.
        */
       SOURCE_PATH_WITH_FLAGS,
-      /**
-       * A source group (group name and one or more AppleSource objects).
-       */
-      SOURCE_GROUP
   }
 
   /**
@@ -82,11 +78,6 @@ public abstract class AppleSource {
         Preconditions.checkArgument(!getSourcePathOptional().isPresent());
         Preconditions.checkArgument(getSourcePathWithFlagsOptional().isPresent());
         Preconditions.checkArgument(!getSourceGroupOptional().isPresent());
-        break;
-      case SOURCE_GROUP:
-        Preconditions.checkArgument(!getSourcePathOptional().isPresent());
-        Preconditions.checkArgument(!getSourcePathWithFlagsOptional().isPresent());
-        Preconditions.checkArgument(getSourceGroupOptional().isPresent());
         break;
       default:
         throw new IllegalArgumentException("Unrecognized type: " + getType());
@@ -135,16 +126,6 @@ public abstract class AppleSource {
     return ImmutableAppleSource.builder()
         .setType(Type.SOURCE_PATH_WITH_FLAGS)
         .setSourcePathWithFlagsOptional(sourcePathWithFlags)
-        .build();
-  }
-
-  /**
-   * Creates an {@link AppleSource} given a (group name, [source1, source2, ...]) pair.
-   */
-  public static AppleSource ofSourceGroup(Pair<String, ImmutableList<AppleSource>> sourceGroup) {
-    return ImmutableAppleSource.builder()
-        .setType(Type.SOURCE_GROUP)
-        .setSourceGroupOptional(sourceGroup)
         .build();
   }
 

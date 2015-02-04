@@ -347,33 +347,19 @@ public class TypeCoercerTest {
     TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<?> input = ImmutableList.of(
-        ImmutableList.of(
-            "Group1",
-            ImmutableList.of(
-                "foo.m",
-                ImmutableList.of("bar.m", "-Wall"))),
-        ImmutableList.of(
-            "Group2",
-            ImmutableList.of(
-                "baz.m",
-                ImmutableList.of("blech.m", "-fobjc-arc"))));
+        "Group1/foo.m",
+        ImmutableList.of("Group1/bar.m", "-Wall"),
+        "Group2/baz.m",
+        ImmutableList.of("Group2/blech.m", "-fobjc-arc"));
     Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
     ImmutableList<AppleSource> expectedResult = ImmutableList.of(
-        AppleSource.ofSourceGroup(
-            new Pair<>(
-                "Group1",
-                ImmutableList.of(
-                    AppleSource.ofSourcePath(new TestSourcePath("foo.m")),
-                    AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-Wall"))))),
-        AppleSource.ofSourceGroup(
-            new Pair<>(
-                "Group2",
-                ImmutableList.of(
-                    AppleSource.ofSourcePath(new TestSourcePath("baz.m")),
-                    AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(
-                            new TestSourcePath("blech.m"), "-fobjc-arc"))))));
+        AppleSource.ofSourcePath(new TestSourcePath("Group1/foo.m")),
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(new TestSourcePath("Group1/bar.m"), "-Wall")),
+        AppleSource.ofSourcePath(new TestSourcePath("Group2/baz.m")),
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(
+                new TestSourcePath("Group2/blech.m"), "-fobjc-arc")));
     assertEquals(expectedResult, result);
   }
 

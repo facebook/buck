@@ -67,9 +67,6 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
       case SOURCE_PATH_WITH_FLAGS:
         sourcePathWithFlagsTypeCoercer.traverse(object.getSourcePathWithFlags(), traversal);
         break;
-      case SOURCE_GROUP:
-        sourceGroupTypeCoercer.traverse(object.getSourceGroup(), traversal);
-        break;
     }
   }
 
@@ -107,13 +104,6 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
       if (second instanceof String) {
         return AppleSource.ofSourcePathWithFlags(
             sourcePathWithFlagsTypeCoercer.coerce(
-                buildTargetParser,
-                filesystem,
-                pathRelativeToProjectRoot,
-                object));
-      } else if (second instanceof List) {
-        return AppleSource.ofSourceGroup(
-            sourceGroupTypeCoercer.coerce(
                 buildTargetParser,
                 filesystem,
                 pathRelativeToProjectRoot,

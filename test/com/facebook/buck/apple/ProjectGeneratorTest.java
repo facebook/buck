@@ -193,14 +193,10 @@ public class ProjectGeneratorTest {
         .setSrcs(
             Optional.of(
                 ImmutableList.of(
-                    AppleSource.ofSourceGroup(
-                        new Pair<>(
-                            "HeaderGroup1",
-                            ImmutableList.of(
-                                AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
-                                AppleSource.ofSourcePathWithFlags(
-                                    new Pair<SourcePath, String>(
-                                        new TestSourcePath("bar.h"), "public"))))))))
+                    AppleSource.ofSourcePath(new TestSourcePath("HeaderGroup1/foo.h")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(
+                            new TestSourcePath("HeaderGroup1/bar.h"), "public")))))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -221,13 +217,9 @@ public class ProjectGeneratorTest {
         .setSrcs(
             Optional.of(
                 ImmutableList.of(
-                    AppleSource.ofSourceGroup(
-                        new Pair<>(
-                            "HeaderGroup2",
-                            ImmutableList.of(
-                                AppleSource.ofSourcePathWithFlags(
-                                    new Pair<SourcePath, String>(
-                                        new TestSourcePath("blech.h"), "private"))))))))
+                      AppleSource.ofSourcePathWithFlags(
+                          new Pair<SourcePath, String>(
+                              new TestSourcePath("HeaderGroup2/blech.h"), "private")))))
         .setUseBuckHeaderMaps(Optional.of(true))
         .build();
 
@@ -245,21 +237,13 @@ public class ProjectGeneratorTest {
         .setSrcs(
             Optional.of(
                 ImmutableList.of(
-                    AppleSource.ofSourceGroup(
-                        new Pair<>(
-                            "Ignored",
-                            ImmutableList.of(
-                                AppleSource.ofSourcePath(new TestSourcePath("HeaderGroup1/foo.h")),
-                                AppleSource.ofSourcePathWithFlags(
-                                    new Pair<SourcePath, String>(
-                                        new TestSourcePath("HeaderGroup1/bar.h"),
-                                        "public"))))),
-                    AppleSource.ofSourceGroup(
-                        new Pair<>(
-                            "IgnoredAsWell",
-                            ImmutableList.of(
-                                AppleSource.ofSourcePath(
-                                    new TestSourcePath("HeaderGroup2/baz.h"))))))))
+                    AppleSource.ofSourcePath(new TestSourcePath("HeaderGroup1/foo.h")),
+                    AppleSource.ofSourcePathWithFlags(
+                        new Pair<SourcePath, String>(
+                            new TestSourcePath("HeaderGroup1/bar.h"),
+                            "public")),
+                    AppleSource.ofSourcePath(
+                        new TestSourcePath("HeaderGroup2/baz.h")))))
         .setUseBuckHeaderMaps(Optional.of(true))
         .build();
 

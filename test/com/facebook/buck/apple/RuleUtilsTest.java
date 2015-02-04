@@ -43,23 +43,15 @@ public class RuleUtilsTest {
     ImmutableSortedSet.Builder<SourcePath> headerPaths = ImmutableSortedSet.naturalOrder();
 
     ImmutableList<AppleSource> input = ImmutableList.of(
-        AppleSource.ofSourceGroup(
-            new Pair<>(
-                "Ignored",
-                ImmutableList.of(
-                    AppleSource.ofSourcePath(new TestSourcePath("Group1/foo.m")),
-                    AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(
-                            new TestSourcePath("Group1/bar.m"),
-                            "-Wall"))))),
-        AppleSource.ofSourceGroup(
-            new Pair<>(
-                "IgnoredAsWell",
-                ImmutableList.of(
-                    AppleSource.ofSourcePath(new TestSourcePath("Group2/baz.m")),
-                    AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(
-                            new TestSourcePath("Group2/blech.m"), "-fobjc-arc"))))));
+        AppleSource.ofSourcePath(new TestSourcePath("Group1/foo.m")),
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(
+                new TestSourcePath("Group1/bar.m"),
+                "-Wall")),
+        AppleSource.ofSourcePath(new TestSourcePath("Group2/baz.m")),
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(
+                new TestSourcePath("Group2/blech.m"), "-fobjc-arc")));
 
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     RuleUtils.extractSourcePaths(
@@ -135,21 +127,13 @@ public class RuleUtilsTest {
     ImmutableSortedSet.Builder<SourcePath> headerPaths = ImmutableSortedSet.naturalOrder();
 
     ImmutableList<AppleSource> input = ImmutableList.of(
-        AppleSource.ofSourceGroup(
-            new Pair<>(
-                "Ignored",
-                ImmutableList.of(
-                    AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
-                    AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-Wall"))))),
-        AppleSource.ofSourceGroup(
-            new Pair<>(
-                "IgnoredAsWell",
-                ImmutableList.of(
-                    AppleSource.ofSourcePath(new TestSourcePath("baz.hh")),
-                    AppleSource.ofSourcePathWithFlags(
-                        new Pair<SourcePath, String>(
-                            new TestSourcePath("blech.mm"), "-fobjc-arc"))))));
+        AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-Wall")),
+        AppleSource.ofSourcePath(new TestSourcePath("baz.hh")),
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(
+                new TestSourcePath("blech.mm"), "-fobjc-arc")));
 
     RuleUtils.extractSourcePaths(
         new SourcePathResolver(new BuildRuleResolver()),
