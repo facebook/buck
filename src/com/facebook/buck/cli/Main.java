@@ -707,7 +707,7 @@ public final class Main {
     } else {
       env = ImmutableMap.copyOf(System.getenv());
     }
-    return EnvironmentFilter.filteredEnvironment(env);
+    return EnvironmentFilter.filteredEnvironment(env, Platform.detect());
   }
 
   private static void closeCreatedArtifactCaches(

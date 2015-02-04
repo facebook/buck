@@ -50,12 +50,12 @@ public class EnvironmentFilter {
    * changes.
    */
   public static ImmutableMap<String, String> filteredEnvironment(
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment, Platform platform) {
     ImmutableMap.Builder<String, String> filteredEnvironmentBuilder = ImmutableMap.builder();
     for (Map.Entry<String, String> envEntry : environment.entrySet()) {
       String key = envEntry.getKey();
       if (!ENV_TO_REMOVE.contains(key)) {
-        if (Platform.detect() == Platform.WINDOWS) {
+        if (platform == Platform.WINDOWS) {
           // Windows environment variables are case insensitive.  While an ImmutableMap will throw
           // if we get duplicate key, we don't have to worry about this for Windows.
           filteredEnvironmentBuilder.put(key.toUpperCase(Locale.US), envEntry.getValue());

@@ -17,6 +17,7 @@
 package com.facebook.buck.testutil.integration;
 
 import com.facebook.buck.cli.EnvironmentFilter;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -51,7 +52,9 @@ public class TestContext extends NGContext implements Closeable {
    */
   public TestContext() {
     this(
-        EnvironmentFilter.filteredEnvironment(ImmutableMap.copyOf(System.getenv())),
+        EnvironmentFilter.filteredEnvironment(
+          ImmutableMap.copyOf(System.getenv()),
+          Platform.detect()),
         createDisconnectionStream(0),
         0);
     addListeners = false; // Only track disconnections when input stream supplied.
