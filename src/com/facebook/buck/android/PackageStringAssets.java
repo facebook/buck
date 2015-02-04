@@ -88,6 +88,7 @@ public class PackageStringAssets extends AbstractBuildRule
     // We need to generate a zip file with the following dir structure:
     // /assets/strings/*.fbstr
     Path pathToBaseDir = getPathToStringAssetsDir();
+    steps.add(new MakeCleanDirectoryStep(pathToBaseDir));
     Path pathToDirContainingAssetsDir = pathToBaseDir.resolve("string_assets");
     steps.add(new MakeCleanDirectoryStep(pathToDirContainingAssetsDir));
     Path pathToStrings = pathToDirContainingAssetsDir.resolve("assets").resolve("strings");
