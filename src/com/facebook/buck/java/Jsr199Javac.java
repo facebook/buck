@@ -21,8 +21,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ClassLoaderCache;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -39,18 +40,17 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 import javax.annotation.processing.Processor;
@@ -61,8 +61,6 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
-
-import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Command used to compile java libraries with a variety of ways to handle dependencies.
@@ -140,7 +138,8 @@ public class Jsr199Javac implements Javac {
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
     return builder.setReflectively(key + ".javac", "jsr199")
-        .setReflectively(key + ".javac.version", "in-memory");
+        .setReflectively(key + ".javac.version", "in-memory")
+        .setReflectively(key + ".javacjar", javacJar);
   }
 
   @Override
