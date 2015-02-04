@@ -143,8 +143,8 @@ public abstract class AbstractBuildRule implements BuildRule {
     // Note: appendToRuleKey() should not set("srcs", srcs) if the inputs are order-independent.
     ImmutableCollection<Path> inputs = getInputs();
     builder = builder
-        .setInputs("buck.inputs", inputs.iterator())
-        .setSourcePaths("buck.sourcepaths", SourcePaths.toSourcePathsSortedByNaturalOrder(inputs));
+        .setReflectively("buck.inputs", inputs.iterator())
+        .setReflectively("buck.sourcepaths", SourcePaths.toSourcePathsSortedByNaturalOrder(inputs));
     // TODO(simons): Rename this when no Buildables extend this class.
     return appendDetailsToRuleKey(builder);
   }

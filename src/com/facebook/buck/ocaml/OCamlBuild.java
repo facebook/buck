@@ -59,8 +59,8 @@ public class OCamlBuild extends AbstractBuildRule {
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return ocamlContext.appendDetailsToRuleKey(builder)
-        .set("cCompiler", cCompiler)
-        .set("cxxCompiler", cxxCompiler);
+        .setReflectively("cCompiler", cCompiler)
+        .setReflectively("cxxCompiler", cxxCompiler);
   }
 
   @Override

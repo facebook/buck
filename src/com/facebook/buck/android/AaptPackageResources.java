@@ -131,10 +131,10 @@ public class AaptPackageResources extends AbstractBuildRule
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("packageType", packageType.toString())
-        .set("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString())
-        .set("rDotJavaNeedsDexing", rDotJavaNeedsDexing)
-        .set("shouldBuildStringSourceMap", shouldBuildStringSourceMap);
+        .setReflectively("packageType", packageType.toString())
+        .setReflectively("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString())
+        .setReflectively("rDotJavaNeedsDexing", rDotJavaNeedsDexing)
+        .setReflectively("shouldBuildStringSourceMap", shouldBuildStringSourceMap);
   }
 
   @Override

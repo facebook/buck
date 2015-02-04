@@ -134,9 +134,9 @@ public class ResourcesFilter extends AbstractBuildRule
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("resourceCompressionMode", resourceCompressionMode.toString())
-        .set("resourceFilter", resourceFilter.getDescription())
-        .set("locales", locales);
+        .setReflectively("resourceCompressionMode", resourceCompressionMode.toString())
+        .setReflectively("resourceFilter", resourceFilter.getDescription())
+        .setReflectively("locales", locales);
   }
 
   @Override

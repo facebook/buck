@@ -116,16 +116,16 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
     if (!isEmpty()) {
       // searchPathElements is not needed here since it comes from rules, which is appended below.
       String owner = (ownerTarget == null) ? null : ownerTarget.getFullyQualifiedName();
-      builder.set(key + ".owner", owner)
-          .set(key + ".names", names)
-          .set(key + ".parameters", parameters)
-          .set(key + ".processOnly", processOnly);
+      builder.setReflectively(key + ".owner", owner)
+          .setReflectively(key + ".names", names)
+          .setReflectively(key + ".parameters", parameters)
+          .setReflectively(key + ".processOnly", processOnly);
 
       ImmutableList.Builder<String> ruleKeyStrings = ImmutableList.builder();
       for (BuildRule rule : rules) {
         ruleKeyStrings.add(rule.getRuleKey().toString());
       }
-      builder.set(key + ".annotationProcessorRuleKeys", ruleKeyStrings.build());
+      builder.setReflectively(key + ".annotationProcessorRuleKeys", ruleKeyStrings.build());
     }
 
     return builder;

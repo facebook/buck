@@ -72,7 +72,7 @@ public class VersionedTool implements Tool {
 
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-    return builder.set(key, String.format("%s (%s)", name, version));
+    return builder.setReflectively(key, String.format("%s (%s)", name, version));
   }
 
 }

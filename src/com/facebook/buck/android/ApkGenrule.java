@@ -89,7 +89,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return super.appendDetailsToRuleKey(builder)
-        .setInput("apk", apk.getApkPath());
+        .setReflectively("apk", apk.getApkPath());
   }
 
   public InstallableApk getInstallableApk() {

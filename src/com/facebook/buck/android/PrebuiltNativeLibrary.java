@@ -75,7 +75,7 @@ public class PrebuiltNativeLibrary extends AbstractBuildRule
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("is_asset", isAsset());
+        .setReflectively("is_asset", isAsset());
   }
 
   @Override

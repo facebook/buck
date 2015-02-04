@@ -80,9 +80,9 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.set("nativeLib", nativeLib)
-                  .set("bytecodeLib", bytecodeLib)
-                  .set("libPath", libPath.toString());
+    return builder.setReflectively("nativeLib", nativeLib)
+        .setReflectively("bytecodeLib", bytecodeLib)
+        .setReflectively("libPath", libPath.toString());
   }
 
   @Override

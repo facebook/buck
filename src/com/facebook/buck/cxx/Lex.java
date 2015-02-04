@@ -67,12 +67,12 @@ public class Lex extends AbstractBuildRule {
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .setInput("lex", lex)
-        .set("flags", flags)
-        .set("outputSource", outputSource.toString())
-        .set("outputHeader", outputHeader.toString())
+        .setReflectively("lex", lex)
+        .setReflectively("flags", flags)
+        .setReflectively("outputSource", outputSource.toString())
+        .setReflectively("outputHeader", outputHeader.toString())
         // The input name gets baked into line markers.
-        .set("input", input.toString());
+        .setReflectively("input", input.toString());
   }
 
   @Override

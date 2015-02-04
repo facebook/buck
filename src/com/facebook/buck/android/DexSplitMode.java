@@ -223,13 +223,13 @@ class DexSplitMode implements RuleKeyAppendable {
 
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-    builder.set(key + ".shouldSplitDex", shouldSplitDex);
-    builder.set(key + ".dexStore", dexStore.name());
-    builder.set(key + ".dexSplitStrategy", dexSplitStrategy.name());
-    builder.set(key + ".useLinearAllocSplitDex", useLinearAllocSplitDex);
-    builder.set(key + ".primaryDexPatterns", primaryDexPatterns);
-    builder.set(key + ".linearAllocHardLimit", linearAllocHardLimit);
-    builder.set(
+    builder.setReflectively(key + ".shouldSplitDex", shouldSplitDex);
+    builder.setReflectively(key + ".dexStore", dexStore.name());
+    builder.setReflectively(key + ".dexSplitStrategy", dexSplitStrategy.name());
+    builder.setReflectively(key + ".useLinearAllocSplitDex", useLinearAllocSplitDex);
+    builder.setReflectively(key + ".primaryDexPatterns", primaryDexPatterns);
+    builder.setReflectively(key + ".linearAllocHardLimit", linearAllocHardLimit);
+    builder.setReflectively(
         key + ".isPrimaryDexScenarioOverflowAllowed",
         isPrimaryDexScenarioOverflowAllowed);
     return builder;

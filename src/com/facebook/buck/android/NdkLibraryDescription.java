@@ -263,8 +263,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       @Override
       protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
         return builder
-            .set("contents", contents)
-            .set("output", makefilePath.toString());
+            .setReflectively("contents", contents)
+            .setReflectively("output", makefilePath.toString());
       }
 
       @Override

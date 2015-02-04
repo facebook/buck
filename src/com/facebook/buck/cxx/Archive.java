@@ -61,8 +61,8 @@ public class Archive extends AbstractBuildRule {
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("archiver", archiver)
-        .set("output", output.toString());
+        .setReflectively("archiver", archiver)
+        .setReflectively("output", output.toString());
   }
 
   @Override

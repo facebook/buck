@@ -160,10 +160,10 @@ public class AndroidBuildConfig extends AbstractBuildRule {
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("javaPackage", javaPackage)
-        .set("valuesFile", valuesFile.isPresent() ? valuesFile.get().toString() : null)
-        .set("useConstantExpressions", useConstantExpressions)
-        .set("defaultValues", defaultValues.toString());
+        .setReflectively("javaPackage", javaPackage)
+        .setReflectively("valuesFile", valuesFile.isPresent() ? valuesFile.get().toString() : null)
+        .setReflectively("useConstantExpressions", useConstantExpressions)
+        .setReflectively("defaultValues", defaultValues.toString());
   }
 
   @Override

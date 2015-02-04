@@ -139,14 +139,16 @@ public abstract class JavacOptions implements RuleKeyAppendable {
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
     // TODO(simons): Include bootclasspath params.
-    builder.set(key + ".sourceLevel", getSourceLevel())
-        .set(key + ".javacPath", getJavacPath().transform(Functions.toStringFunction()).orNull())
-        .set(
+    builder.setReflectively(key + ".sourceLevel", getSourceLevel())
+        .setReflectively(
+            key + ".javacPath",
+            getJavacPath().transform(Functions.toStringFunction()).orNull())
+        .setReflectively(
             key + ".javacJarPath",
             getJavacJarPath().transform(Functions.toStringFunction()).orNull())
-        .set(key + ".targetLevel", getTargetLevel())
-        .set(key + ".extraArguments", Joiner.on(',').join(getExtraArguments()))
-        .set(key + ".debug", isDebug());
+        .setReflectively(key + ".targetLevel", getTargetLevel())
+        .setReflectively(key + ".extraArguments", Joiner.on(',').join(getExtraArguments()))
+        .setReflectively(key + ".debug", isDebug());
 
     return getAnnotationProcessingParams().appendToRuleKey(builder, key);
   }

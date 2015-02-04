@@ -191,10 +191,10 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("cmd", cmd)
-        .set("bash", bash)
-        .set("cmd_exe", cmdExe)
-        .set("out", out);
+        .setReflectively("cmd", cmd)
+        .setReflectively("bash", bash)
+        .setReflectively("cmd_exe", cmdExe)
+        .setReflectively("out", out);
   }
 
   public ImmutableList<Path> getSrcs() {

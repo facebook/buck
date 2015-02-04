@@ -55,8 +55,8 @@ public class SrcZip extends AbstractBuildRule {
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("sourceZip", sourceZip.toString())
-        .set("sourceDirectory", sourceDirectory.toString());
+        .setReflectively("sourceZip", sourceZip.toString())
+        .setReflectively("sourceDirectory", sourceDirectory.toString());
   }
 
   @Override

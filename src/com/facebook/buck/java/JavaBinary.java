@@ -89,7 +89,7 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
         .setReflectively("mainClass", mainClass)
-        .set("blacklist", blacklist);
+        .setReflectively("blacklist", blacklist);
   }
 
   @Override

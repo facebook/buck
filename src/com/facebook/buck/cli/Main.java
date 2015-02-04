@@ -882,7 +882,7 @@ public final class Main {
       @Override
       public Builder newInstance(BuildRule buildRule, SourcePathResolver resolver) {
         RuleKey.Builder builder = RuleKey.builder(buildRule, resolver, hashCache);
-        builder.set("buckVersionUid", BUCK_VERSION_UID);
+        builder.setReflectively("buckVersionUid", BUCK_VERSION_UID);
         return builder;
       }
     };

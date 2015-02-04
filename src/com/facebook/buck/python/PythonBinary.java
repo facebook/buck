@@ -99,9 +99,9 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder
-        .set("packageType", "pex")
-        .set("pythonVersion", pythonEnvironment.getPythonVersion().toString())
-        .set("mainModule", main.toString());
+        .setReflectively("packageType", "pex")
+        .setReflectively("pythonVersion", pythonEnvironment.getPythonVersion().toString())
+        .setReflectively("mainModule", main.toString());
 
     // Hash all the input components here so we can detect changes in both input file content
     // and module name mappings.
@@ -110,7 +110,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
         "resource", components.getResources(),
         "nativeLibraries", components.getNativeLibraries()).entrySet()) {
       for (Path name : ImmutableSortedSet.copyOf(part.getValue().keySet())) {
-        builder.setInput(part.getKey() + ":" + name, part.getValue().get(name));
+        builder.setReflectively(part.getKey() + ":" + name, part.getValue().get(name));
       }
     }
 

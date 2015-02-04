@@ -87,7 +87,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     for (Map.Entry<String, SourcePath> entry : nativeLibraries.entrySet()) {
-      builder.setInput("nativelib:" + entry.getKey(), entry.getValue());
+      builder.setReflectively("nativelib:" + entry.getKey(), entry.getValue());
     }
     return builder;
   }

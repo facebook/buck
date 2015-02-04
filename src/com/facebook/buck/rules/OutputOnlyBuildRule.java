@@ -64,7 +64,7 @@ public class OutputOnlyBuildRule extends AbstractBuildRule {
   @Override
   protected Builder appendDetailsToRuleKey(Builder builder) {
     // Note that the path itself is part of the rule key, but not the contents of the file.
-    return builder.set("output", pathToOutputFile.toString());
+    return builder.setReflectively("output", pathToOutputFile.toString());
   }
 
 }

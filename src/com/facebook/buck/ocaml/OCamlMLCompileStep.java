@@ -53,11 +53,11 @@ public class OCamlMLCompileStep extends ShellStep {
     }
 
     public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-      return builder.set("cCompiler", cCompiler.toString())
-          .set("ocamlCompiler", ocamlCompiler.toString())
-          .set("output", output.toString())
-          .set("input", input.toString())
-          .set("flags", flags);
+      return builder.setReflectively("cCompiler", cCompiler.toString())
+          .setReflectively("ocamlCompiler", ocamlCompiler.toString())
+          .setReflectively("output", output.toString())
+          .setReflectively("input", input.toString())
+          .setReflectively("flags", flags);
     }
 
     public ImmutableSet<Path> getAllOutputs() {

@@ -43,9 +43,9 @@ public class OCamlLexStep extends ShellStep {
     }
 
     public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-      return builder.set("lexCompiler", lexCompiler.toString())
-          .set("output", output.toString())
-          .set("input", input.toString());
+      return builder.setReflectively("lexCompiler", lexCompiler.toString())
+          .setReflectively("output", output.toString())
+          .setReflectively("input", input.toString());
     }
   }
 

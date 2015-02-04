@@ -43,9 +43,9 @@ public class OCamlYaccStep extends ShellStep {
     }
 
     public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-      return builder.set("yaccCompiler", yaccCompiler.toString())
-          .set("output", output.toString())
-          .set("input", input.toString());
+      return builder.setReflectively("yaccCompiler", yaccCompiler.toString())
+          .setReflectively("output", output.toString())
+          .setReflectively("input", input.toString());
     }
   }
 

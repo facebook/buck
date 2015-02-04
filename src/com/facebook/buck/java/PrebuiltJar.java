@@ -233,7 +233,7 @@ public class PrebuiltJar extends AbstractBuildRule
         .setReflectively("binaryJar", binaryJar)
         .setReflectively("sourceJar", sourceJar)
         .setReflectively("gwtJar", gwtJar)
-        .set("javadocUrl", javadocUrl);
+        .setReflectively("javadocUrl", javadocUrl);
   }
 
 }

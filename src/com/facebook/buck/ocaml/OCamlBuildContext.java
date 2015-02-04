@@ -335,13 +335,13 @@ public class OCamlBuildContext {
 
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .setInput("ocamlDepTool", getOcamlDepTool())
-        .setInput("ocamlCompiler", getOcamlCompiler())
-        .setInput("ocamlBytecodeCompiler", getOcamlBytecodeCompiler())
-        .setInput("ocamlDebug", getOcamlDebug())
-        .setInput("yaccCompiler", getYaccCompiler())
-        .setInput("lexCompiler", getLexCompiler())
-        .set("flags", getFlags());
+        .setReflectively("ocamlDepTool", getOcamlDepTool())
+        .setReflectively("ocamlCompiler", getOcamlCompiler())
+        .setReflectively("ocamlBytecodeCompiler", getOcamlBytecodeCompiler())
+        .setReflectively("ocamlDebug", getOcamlDebug())
+        .setReflectively("yaccCompiler", getYaccCompiler())
+        .setReflectively("lexCompiler", getLexCompiler())
+        .setReflectively("flags", getFlags());
   }
 
   public ImmutableList<String> getBytecodeIncludes() {

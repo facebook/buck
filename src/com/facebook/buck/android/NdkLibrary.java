@@ -193,9 +193,9 @@ public class NdkLibrary extends AbstractBuildRule
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("ndk_version", ndkVersion.or("NONE"))
-        .set("flags", flags)
-        .set("is_asset", isAsset());
+        .setReflectively("ndk_version", ndkVersion.or("NONE"))
+        .setReflectively("flags", flags)
+        .setReflectively("is_asset", isAsset());
   }
 
   @Override

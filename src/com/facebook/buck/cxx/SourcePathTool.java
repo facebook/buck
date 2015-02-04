@@ -32,7 +32,7 @@ public class SourcePathTool implements Tool {
 
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-    return builder.setInput(key, path);
+    return builder.setReflectively(key, path);
   }
 
   @Override

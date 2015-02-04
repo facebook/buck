@@ -114,7 +114,7 @@ public class AppleBundle extends AbstractBuildRule {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.set("extension", getExtensionString());
+    return builder.setReflectively("extension", getExtensionString());
   }
 
   @Override

@@ -101,7 +101,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    builder.set("copyToBundles", copyToBundles);
+    builder.setReflectively("copyToBundles", copyToBundles);
     return builder;
   }
 

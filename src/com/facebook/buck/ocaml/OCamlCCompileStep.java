@@ -58,14 +58,14 @@ public class OCamlCCompileStep extends ShellStep {
     }
 
     RuleKey.Builder appendDetailsToRuleKey(SourcePathResolver resolver, RuleKey.Builder builder) {
-      builder.set("cCompiler", cCompiler.toString());
-      builder.set("ocamlCompiler", ocamlCompiler.toString());
-      builder.set("output", output.toString());
-      builder.set("input", input.toString());
-      builder.set("flags", flags.toString());
+      builder.setReflectively("cCompiler", cCompiler.toString());
+      builder.setReflectively("ocamlCompiler", ocamlCompiler.toString());
+      builder.setReflectively("output", output.toString());
+      builder.setReflectively("input", input.toString());
+      builder.setReflectively("flags", flags.toString());
       for (Path path : ImmutableSortedSet.copyOf(includes.keySet())) {
         SourcePath source = includes.get(path);
-        builder.setInput("include(" + path + ")", resolver.getPath(source));
+        builder.setReflectively("include(" + path + ")", resolver.getPath(source));
       }
       return builder;
     }

@@ -233,36 +233,34 @@ public class RuleKey {
       return separate();
     }
 
-    public Builder set(String key, @Nullable String val) {
+    private Builder set(String key, @Nullable String val) {
       return setKey(key).setVal(val);
     }
 
-    public Builder set(String key, Optional<String> val) {
-      return set(key, val.isPresent() ? val.get() : null);
-    }
-
-    public Builder set(String key, boolean val) {
+    @VisibleForTesting
+    Builder set(String key, boolean val) {
       return setKey(key).setVal(val);
     }
 
-    public Builder set(String key, long val) {
+    @VisibleForTesting
+    Builder set(String key, long val) {
       return setKey(key).setVal(val);
     }
 
-    public Builder set(String key, @Nullable RuleKey val) {
+    private Builder set(String key, @Nullable RuleKey val) {
       return setKey(key).setVal(val);
     }
 
-    public Builder set(String key, RuleKeyAppendable appendable) {
-      appendable.appendToRuleKey(this, key);
-      return this;
+    private Builder set(String key, RuleKeyAppendable appendable) {
+      return appendable.appendToRuleKey(this, key);
     }
 
-    public Builder set(String key, @Nullable BuildRule val) {
+    private Builder set(String key, @Nullable BuildRule val) {
       return setKey(key).setVal(val != null ? val.getRuleKey() : null);
     }
 
-    public Builder set(String key, @Nullable ImmutableList<SourceRoot> val) {
+    @VisibleForTesting
+    Builder set(String key, @Nullable ImmutableList<SourceRoot> val) {
       setKey(key);
       if (val != null) {
         for (SourceRoot root : val) {
@@ -272,7 +270,8 @@ public class RuleKey {
       return separate();
     }
 
-    public Builder set(String key, @Nullable List<String> val) {
+    @VisibleForTesting
+    Builder set(String key, @Nullable List<String> val) {
       setKey(key);
       if (val != null) {
         for (String s : val) {
@@ -287,7 +286,7 @@ public class RuleKey {
      *     implements {@link Iterable} and we want to protect against passing a single {@link Path}
      *     instead of multiple {@link Path}s.
      */
-    public Builder setInputs(String key, Iterator<Path> inputs) {
+    private Builder setInputs(String key, Iterator<Path> inputs) {
       setKey(key);
       while (inputs.hasNext()) {
         Path input = inputs.next();
@@ -296,7 +295,8 @@ public class RuleKey {
       return separate();
     }
 
-    public Builder setInput(String key, @Nullable Path input) {
+    @VisibleForTesting
+    Builder setInput(String key, @Nullable Path input) {
       if (input != null) {
         setKey(key);
         setInputVal(input);
@@ -328,11 +328,12 @@ public class RuleKey {
      * case of a {@link BuildTargetSourcePath} or the hash of the contents in the case of a
      * {@link PathSourcePath}.
      */
-    public Builder setInput(String key, SourcePath input) {
+    private Builder setInput(String key, SourcePath input) {
       return setKey(key).setInputVal(input).separate();
     }
 
-    public Builder setSourcePaths(String key, @Nullable ImmutableSortedSet<SourcePath> val) {
+    @VisibleForTesting
+    Builder setSourcePaths(String key, @Nullable ImmutableSortedSet<SourcePath> val) {
       setKey(key);
       if (val != null) {
         for (SourcePath path : val) {
@@ -343,7 +344,7 @@ public class RuleKey {
       return separate();
     }
 
-    public Builder set(String key, @Nullable ImmutableSortedSet<? extends BuildRule> val) {
+    private Builder set(String key, @Nullable ImmutableSortedSet<? extends BuildRule> val) {
       setKey(key);
       if (val != null) {
         for (BuildRule buildRule : val) {
@@ -353,7 +354,8 @@ public class RuleKey {
       return separate();
     }
 
-    public Builder set(String key, @Nullable ImmutableSet<String> val) {
+    @VisibleForTesting
+    Builder set(String key, @Nullable ImmutableSet<String> val) {
       setKey(key);
       if (val != null) {
         ImmutableSortedSet<String> sortedValues = ImmutableSortedSet.copyOf(val);
@@ -368,8 +370,11 @@ public class RuleKey {
     public Builder setReflectively(String key, @Nullable Object val) {
       if (val == null) {
         // Doesn't matter what we call. Fast path out.
-        set(key, (String) null);
-        return this;
+        return set(key, (String) null);
+      }
+
+      if (val instanceof RuleKeyAppendable) {
+        return set(key, (RuleKeyAppendable) val);
       }
 
       // Let it be stated here for the record that double dispatch is an ugly way to handle this. If

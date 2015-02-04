@@ -124,6 +124,6 @@ public class GenParcelable extends AbstractBuildRule {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.set("outputDirectory", outputDirectory.toString());
+    return builder.setReflectively("outputDirectory", outputDirectory.toString());
   }
 }

@@ -54,20 +54,20 @@ public class ToolTest {
     SourcePath path = new TestSourcePath("path");
     RuleKey.Builder.RuleKeyPair pathRuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
-            .setInput("tool", path)
+            .setReflectively("tool", path)
             .build();
 
     Tool tool1 = new SourcePathTool(path);
     RuleKey.Builder.RuleKeyPair tool1RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
-            .set("tool", tool1)
+            .setReflectively("tool", tool1)
             .build();
     assertEquals(pathRuleKey, tool1RuleKey);
 
     Tool tool2 = new SourcePathTool(path);
     RuleKey.Builder.RuleKeyPair tool2RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
-            .set("tool", tool2)
+            .setReflectively("tool", tool2)
             .build();
     assertEquals(pathRuleKey, tool2RuleKey);
   }
@@ -84,7 +84,7 @@ public class ToolTest {
     String version = "version";
     RuleKey.Builder.RuleKeyPair versionRuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
-            .set("tool", String.format("%s (%s)", tool, version))
+            .setReflectively("tool", String.format("%s (%s)", tool, version))
             .build();
 
     Tool tool1 =
@@ -95,7 +95,7 @@ public class ToolTest {
             version);
     RuleKey.Builder.RuleKeyPair tool1RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
-            .set("tool", tool1)
+            .setReflectively("tool", tool1)
             .build();
     assertEquals(versionRuleKey, tool1RuleKey);
 
@@ -107,7 +107,7 @@ public class ToolTest {
             version);
     RuleKey.Builder.RuleKeyPair tool2RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
-            .set("tool", tool2)
+            .setReflectively("tool", tool2)
             .build();
     assertEquals(versionRuleKey, tool2RuleKey);
   }

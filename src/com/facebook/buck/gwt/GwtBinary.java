@@ -188,15 +188,15 @@ public class GwtBinary extends AbstractBuildRule {
   @Override
   public Builder appendDetailsToRuleKey(Builder builder) {
     return builder
-        .set("moduleDeps", moduleDeps)
-        .set("modules", modules)
-        .set("vmArgs", vmArgs)
-        .set("style", style.name())
-        .set("draftCompile", draftCompile)
-        .set("optimize", optimize)
-        .set("localWorkers", localWorkers)
-        .set("strict", strict)
-        .set("experimentalArgs", experimentalArgs);
+        .setReflectively("moduleDeps", moduleDeps)
+        .setReflectively("modules", modules)
+        .setReflectively("vmArgs", vmArgs)
+        .setReflectively("style", style.name())
+        .setReflectively("draftCompile", draftCompile)
+        .setReflectively("optimize", optimize)
+        .setReflectively("localWorkers", localWorkers)
+        .setReflectively("strict", strict)
+        .setReflectively("experimentalArgs", experimentalArgs);
   }
 
   /**

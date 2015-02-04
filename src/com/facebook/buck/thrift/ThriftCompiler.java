@@ -79,18 +79,18 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder
-        .setInput("compiler", getResolver().getPath(compiler))
-        .set("flags", flags)
-        .set("outputDir", outputDir.toString())
-        .set("options", ImmutableSortedSet.copyOf(options))
-        .set("language", language);
+        .setReflectively("compiler", getResolver().getPath(compiler))
+        .setReflectively("flags", flags)
+        .setReflectively("outputDir", outputDir.toString())
+        .setReflectively("options", ImmutableSortedSet.copyOf(options))
+        .setReflectively("language", language);
 
 
     // Hash the layout of each potentially included thrift file dependency and it's contents.
     // We do this here, rather than returning them from `getInputsToCompareToOutput` so that
     // we can match the contents hash up with where it was laid out in the include search path.
     for (Path path : ImmutableSortedSet.copyOf(includes.keySet())) {
-      builder.setInput("include(" + path + ")", includes.get(path));
+      builder.setReflectively("include(" + path + ")", includes.get(path));
     }
 
     return builder;

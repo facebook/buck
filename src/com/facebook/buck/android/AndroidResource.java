@@ -305,8 +305,8 @@ public class AndroidResource extends AbstractBuildRule
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("rDotJavaPackage", rDotJavaPackageArgument)
-        .set("hasWhitelistedStrings", hasWhitelistedStrings);
+        .setReflectively("rDotJavaPackage", rDotJavaPackageArgument)
+        .setReflectively("hasWhitelistedStrings", hasWhitelistedStrings);
   }
 
   @Override

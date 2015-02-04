@@ -157,8 +157,8 @@ public class PythonTestDescription implements Description<PythonTestDescription.
       @Override
       protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
         return builder
-            .set("contents", contents)
-            .set("output", outputPath.toString());
+            .setReflectively("contents", contents)
+            .setReflectively("output", outputPath.toString());
       }
 
       @Override

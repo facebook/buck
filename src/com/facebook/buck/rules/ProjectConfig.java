@@ -150,10 +150,10 @@ public class ProjectConfig extends AbstractBuildRule {
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder
-        .set("srcRule", srcRule)
-        .set("srcSourceRoots", srcSourceRoots)
-        .set("testRule", testRule)
-        .set("testsSourceRoots", testsSourceRoots)
-        .set("isIntelliJPlugin", isIntelliJPlugin);
+        .setReflectively("srcRule", srcRule)
+        .setReflectively("srcSourceRoots", srcSourceRoots)
+        .setReflectively("testRule", testRule)
+        .setReflectively("testsSourceRoots", testsSourceRoots)
+        .setReflectively("isIntelliJPlugin", isIntelliJPlugin);
   }
 }

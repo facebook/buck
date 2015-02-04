@@ -89,7 +89,9 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
     List<Path> keyList = Lists.newArrayList(links.keySet());
     Collections.sort(keyList);
     for (Path key : keyList) {
-      builder.set("link(" + key.toString() + ")", getResolver().getPath(links.get(key)).toString());
+      builder.setReflectively(
+          "link(" + key.toString() + ")",
+          getResolver().getPath(links.get(key)).toString());
     }
     return builder;
   }

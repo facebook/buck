@@ -84,8 +84,8 @@ public class CxxPreprocess extends AbstractBuildRule {
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder
-        .set("preprocessor", preprocessor)
-        .set("output", output.toString());
+        .setReflectively("preprocessor", preprocessor)
+        .setReflectively("output", output.toString());
 
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
     // from contributing to the rule key.
@@ -95,7 +95,7 @@ public class CxxPreprocess extends AbstractBuildRule {
           .transform(sanitizer.get().sanitize(Optional.<Path>absent(), /* expandPaths */ false))
           .toList();
     }
-    builder.set("flags", flags);
+    builder.setReflectively("flags", flags);
 
     // Hash the layout of each potentially included C/C++ header file and it's contents.
     // We do this here, rather than returning them from `getInputsToCompareToOutput` so
@@ -103,10 +103,10 @@ public class CxxPreprocess extends AbstractBuildRule {
     // search path, and therefore can accurately capture header file renames.
     for (Path path : ImmutableSortedSet.copyOf(includes.getNameToPathMap().keySet())) {
       SourcePath source = includes.getNameToPathMap().get(path);
-      builder.setInput("include(" + path + ")", getResolver().getPath(source));
+      builder.setReflectively("include(" + path + ")", getResolver().getPath(source));
     }
 
-    builder.set(
+    builder.setReflectively(
         "frameworkRoots",
         FluentIterable.from(frameworkRoots)
             .transform(Functions.toStringFunction())
