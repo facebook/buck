@@ -32,6 +32,7 @@ java_library(
     '//third-party/java/jackson:jackson-core',
     '//third-party/java/jackson:jackson-databind',
     '//third-party/java/jsr:jsr305',
+    '//third-party/java/stringtemplate:stringtemplate',
   ],
   visibility = ['PUBLIC'],
 )
@@ -43,7 +44,6 @@ java_library(
     'BashStep.java',
     'DefaultShellStep.java',
     'EchoStep.java',
-    'GenerateShellScriptStep.java',
     'RunShTestAndRecordResultStep.java',
     'ShellStep.java',
     'SymlinkFilesIntoDirectoryStep.java',
@@ -70,4 +70,11 @@ java_library(
   visibility = [
     'PUBLIC',
   ],
+)
+
+export_file(
+  name = 'sh_binary_template',
+  visibility = [
+    'PUBLIC'
+  ]
 )

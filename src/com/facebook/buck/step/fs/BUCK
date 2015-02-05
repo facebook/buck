@@ -13,6 +13,7 @@ java_library(
     '//third-party/java/xz-java-1.3:xz',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
+    '//third-party/java/stringtemplate:stringtemplate',
   ],
   visibility = [ 'PUBLIC' ],
 )

@@ -1,0 +1,32 @@
+#!/bin/bash
+# Run with -e so the script will fail if any of the steps fail.
+set -e
+
+# This script can be cached and used on machines other than the one where it was created. That
+# means it can't contain any absolute filepaths. Expose the absolute filepath of the root of
+# the project as $BUCK_REAL_ROOT, determined at runtime.
+BUCK_REAL_ROOT="$(cd `dirname $0`/<path_back_to_root>; pwd)"
+BUCK_TMP_ROOT=`mktemp -d -t sh_binary.XXXXXXXXXX`
+OLD_CWD=`pwd`
+trap "chmod -R 755 $BUCK_TMP_ROOT && rm -rf $BUCK_TMP_ROOT" EXIT HUP INT TERM
+
+# Navigate to the tmp directory.
+cd $BUCK_TMP_ROOT
+
+# Symlink the resources to the $BUCK_TMP_ROOT directory.
+SCRIPT_TO_RUN=<script_to_run>
+SYMLINK_PATHS=(
+<resources:{x|  <x><\n>}>
+  "$SCRIPT_TO_RUN"
+)
+for path in "${SYMLINK_PATHS[@]}"; do
+  mkdir -p "$(dirname "$path")"
+  ln -s "$BUCK_REAL_ROOT/$path" "$BUCK_TMP_ROOT/$path"
+done
+
+# Navigate back to the previous directory
+cd $OLD_CWD
+
+find $BUCK_TMP_ROOT -type d -exec chmod 555 {} \;
+find $BUCK_TMP_ROOT -type f -exec chmod 444 {} \;
+BUCK_PROJECT_ROOT=$BUCK_TMP_ROOT "$BUCK_TMP_ROOT/$SCRIPT_TO_RUN" "$@"

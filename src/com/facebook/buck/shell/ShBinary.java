@@ -31,17 +31,33 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MakeExecutableStep;
+import com.facebook.buck.util.Escaper;
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.base.Joiner;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.stringtemplate.v4.ST;
+
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 
 public class ShBinary extends AbstractBuildRule
     implements BinaryBuildRule, InitializableFromDisk<Object> {
+
+  private static final Path TEMPLATE = Paths.get(
+      System.getProperty(
+          "buck.path_to_sh_binary_template",
+          "src/com/facebook/buck/shell/sh_binary_template"));
 
   private final SourcePath main;
   private final ImmutableSet<SourcePath> resources;
@@ -81,19 +97,39 @@ public class ShBinary extends AbstractBuildRule
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-
-    MakeCleanDirectoryStep mkdir = new MakeCleanDirectoryStep(output.getParent());
-
-    // Generate an .sh file that builds up an environment and invokes the user's script.
-    // This generated .sh file will be returned by getExecutableCommand().
-    GenerateShellScriptStep generateShellScript = new GenerateShellScriptStep(
-        getBuildTarget().getBasePath(),
-        getResolver().getPath(main),
-        getResolver().getAllPaths(resources),
-        output);
-
     buildableContext.recordArtifact(output);
-    return ImmutableList.of(mkdir, generateShellScript);
+
+    return ImmutableList.of(
+        new MakeCleanDirectoryStep(output.getParent()),
+        new StringTemplateStep(
+            TEMPLATE,
+            output,
+            new Function<ST, ST>() {
+              @Override
+              public ST apply(ST input) {
+                // Generate an .sh file that builds up an environment and invokes the user's script.
+                // This generated .sh file will be returned by getExecutableCommand().
+                // This script can be cached and used on machines other than the one where it was
+                // created. That means it can't contain any absolute filepaths. Expose the absolute
+                // filepath of the root of the project as $BUCK_REAL_ROOT, determined at runtime.
+                int levelsBelowRoot = output.getNameCount() - 1;
+                String pathBackToRoot = Joiner
+                    .on("/")
+                    .join(Collections.nCopies(levelsBelowRoot, ".."));
+
+                ImmutableList<String> resourceStrings = FluentIterable
+                    .from(getResolver().getAllPaths(resources))
+                    .transform(Functions.toStringFunction())
+                    .transform(Escaper.BASH_ESCAPER)
+                    .toList();
+
+                return input
+                    .add("path_back_to_root", pathBackToRoot)
+                    .add("script_to_run", Escaper.escapeAsBashString(getResolver().getPath(main)))
+                    .add("resources", resourceStrings);
+              }
+            }),
+        new MakeExecutableStep(output.toString()));
   }
 
   @Override
