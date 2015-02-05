@@ -240,10 +240,10 @@ public class CxxPythonExtensionDescriptionTest {
         (CxxPythonExtensionDescription) getBuilder(target).build().getDescription();
     CxxPythonExtensionDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
     constructorArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
-    Iterable<String> res = desc.findDepsForTargetFromConstructorArgs(
+    Iterable<BuildTarget> res = desc.findDepsForTargetFromConstructorArgs(
         BuildTargetFactory.newInstance("//foo:bar"),
         constructorArg);
-    assertTrue(Iterables.contains(res, PYTHON_DEP_TARGET.toString()));
+    assertTrue(Iterables.contains(res, PYTHON_DEP_TARGET));
   }
 
 }

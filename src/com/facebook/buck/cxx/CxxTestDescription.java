@@ -140,24 +140,24 @@ public class CxxTestDescription implements
   }
 
   @Override
-  public Iterable<String> findDepsForTargetFromConstructorArgs(
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       Arg constructorArg) {
 
-    ImmutableSet.Builder<String> deps = ImmutableSet.builder();
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
     if (!constructorArg.lexSrcs.get().isEmpty()) {
-      deps.add(cxxBuckConfig.getLexDep().toString());
+      deps.add(cxxBuckConfig.getLexDep());
     }
 
     CxxTestType type = constructorArg.framework.or(getDefaultTestType());
     switch (type) {
       case GTEST: {
-        deps.add(cxxBuckConfig.getGtestDep().toString());
+        deps.add(cxxBuckConfig.getGtestDep());
         break;
       }
       case BOOST: {
-        deps.add(cxxBuckConfig.getBoostTestDep().toString());
+        deps.add(cxxBuckConfig.getBoostTestDep());
         break;
       }
       default: {

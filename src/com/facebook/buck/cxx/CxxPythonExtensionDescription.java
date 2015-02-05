@@ -233,15 +233,15 @@ public class CxxPythonExtensionDescription implements
   }
 
   @Override
-  public Iterable<String> findDepsForTargetFromConstructorArgs(
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       Arg constructorArg) {
-    ImmutableSet.Builder<String> deps = ImmutableSet.builder();
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
-    deps.add(cxxBuckConfig.getPythonDep().toString());
+    deps.add(cxxBuckConfig.getPythonDep());
 
     if (constructorArg.lexSrcs.isPresent() && !constructorArg.lexSrcs.get().isEmpty()) {
-      deps.add(cxxBuckConfig.getLexDep().toString());
+      deps.add(cxxBuckConfig.getLexDep());
     }
 
     return deps.build();

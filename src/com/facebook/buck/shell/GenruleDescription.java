@@ -35,14 +35,12 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 public class GenruleDescription
     implements
@@ -99,10 +97,10 @@ public class GenruleDescription
   }
 
   @Override
-  public Iterable<String> findDepsForTargetFromConstructorArgs(
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      GenruleDescription.Arg constructorArg) {
-    ImmutableSet.Builder<String> targets = ImmutableSet.builder();
+      Arg constructorArg) {
+    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
     if (constructorArg.bash.isPresent()) {
       addDepsFromParam(buildTarget, constructorArg.bash.get(), targets);
     }
@@ -118,16 +116,11 @@ public class GenruleDescription
   private void addDepsFromParam(
       BuildTarget target,
       String paramValue,
-      ImmutableSet.Builder<String> targets) {
-        try {
-          targets.addAll(
-              Iterables.transform(
-                  macroHandler.extractTargets(
-                      target,
-                      paramValue),
-                  Functions.toStringFunction()));
-        } catch (MacroException e) {
-          throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+      ImmutableSet.Builder<BuildTarget> targets) {
+    try {
+      targets.addAll(macroHandler.extractTargets(target, paramValue));
+    } catch (MacroException e) {
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
   }
 

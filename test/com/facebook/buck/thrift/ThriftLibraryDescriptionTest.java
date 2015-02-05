@@ -41,10 +41,8 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -509,11 +507,11 @@ public class ThriftLibraryDescriptionTest {
     ThriftConstructorArg constructorArg = desc.createUnpopulatedConstructorArg();
 
     // Now call the find deps methods and verify it returns nothing.
-    Iterable<String> results = desc.findDepsForTargetFromConstructorArgs(
+    Iterable<BuildTarget> results = desc.findDepsForTargetFromConstructorArgs(
         unflavoredTarget,
         constructorArg);
     assertEquals(
-        ImmutableList.<String>of(),
+        ImmutableList.<BuildTarget>of(),
         ImmutableList.copyOf(results));
   }
 
@@ -552,18 +550,15 @@ public class ThriftLibraryDescriptionTest {
     constructorArg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
 
     // Now call the find deps methods and verify it returns nothing.
-    Iterable<String> results = desc.findDepsForTargetFromConstructorArgs(
+    Iterable<BuildTarget> results = desc.findDepsForTargetFromConstructorArgs(
         flavoredTarget,
         constructorArg);
     assertEquals(
-        FluentIterable.from(
-            ImmutableSet.<BuildTarget>builder()
-                .add(unflavoredTarget)
-                .add(thriftTarget)
-                .addAll(implicitDeps)
-                .build())
-            .transform(Functions.toStringFunction())
-            .toSet(),
+        ImmutableSet.<BuildTarget>builder()
+            .add(unflavoredTarget)
+            .add(thriftTarget)
+            .addAll(implicitDeps)
+            .build(),
         ImmutableSet.copyOf(results));
   }
 

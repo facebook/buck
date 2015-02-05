@@ -78,15 +78,10 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     }
 
     if (description instanceof ImplicitDepsInferringDescription) {
-      Iterable<String> rawTargets =
-          ((ImplicitDepsInferringDescription<T>) description).findDepsForTargetFromConstructorArgs(
-              params.target,
-              constructorArg);
-      for (String rawTarget : rawTargets) {
-        if (isPossiblyATarget(rawTarget)) {
-          extraDeps.add(params.resolveBuildTarget(rawTarget));
-        }
-      }
+      extraDeps
+          .addAll(
+              ((ImplicitDepsInferringDescription<T>) description)
+                  .findDepsForTargetFromConstructorArgs(params.target, constructorArg));
     }
 
     this.extraDeps = ImmutableSortedSet.copyOf(Sets.difference(extraDeps.build(), declaredDeps));
@@ -229,10 +224,6 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     }
 
     return paths;
-  }
-
-  private boolean isPossiblyATarget(String param) {
-    return param.startsWith(":") || param.startsWith(BuildTarget.BUILD_TARGET_PREFIX);
   }
 
   @Override

@@ -54,9 +54,10 @@ public class CxxTestDescriptionTest {
     CxxTestDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
     constructorArg.framework = Optional.of(CxxTestType.GTEST);
     constructorArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
-    Iterable<String> implicit = desc.findDepsForTargetFromConstructorArgs(target, constructorArg);
+    Iterable<BuildTarget> implicit = desc
+        .findDepsForTargetFromConstructorArgs(target, constructorArg);
 
-    assertTrue(Iterables.contains(implicit, gtest.toString()));
+    assertTrue(Iterables.contains(implicit, gtest));
   }
 
 }

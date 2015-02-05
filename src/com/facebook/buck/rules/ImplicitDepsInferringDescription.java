@@ -29,7 +29,7 @@ import com.facebook.buck.model.BuildTarget;
  */
 public interface ImplicitDepsInferringDescription<T> {
 
-  public Iterable<String> findDepsForTargetFromConstructorArgs(
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       T constructorArg);
 }

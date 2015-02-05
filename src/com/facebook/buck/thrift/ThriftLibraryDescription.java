@@ -39,7 +39,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -396,7 +395,7 @@ public class ThriftLibraryDescription
    * Collect implicit deps for the thrift compiler and language specific enhancers.
    */
   @Override
-  public Iterable<String> findDepsForTargetFromConstructorArgs(
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       ThriftConstructorArg arg) {
     Optional<Map.Entry<Flavor, ThriftLanguageSpecificEnhancer>> enhancerFlavor;
@@ -440,7 +439,7 @@ public class ThriftLibraryDescription
         arg);
     deps.addAll(implicitDeps);
 
-    return Iterables.transform(deps, Functions.toStringFunction());
+    return deps;
   }
 
 }
