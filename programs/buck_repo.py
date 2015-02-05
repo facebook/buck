@@ -63,6 +63,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/jsr/javax.inject-1.jar",
     "third-party/java/jsr/jsr305.jar",
     "third-party/java/nailgun/nailgun-server-0.9.2-SNAPSHOT.jar",
+    "third-party/java/stringtemplate/ST-4.0.8.jar",
     "third-party/java/xz-java-1.3/xz-1.3.jar",
 ]
 
