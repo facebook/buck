@@ -529,6 +529,7 @@ public class ProjectGenerator {
       ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogs)
       throws IOException {
     Optional<String> targetGid = targetNode.getConstructorArg().gid;
+    LOG.debug("Generating binary target for node %s (GID %s)", targetNode, targetGid);
     if (targetGid.isPresent()) {
       // Check if we have used this hardcoded GID before.
       // If not, remember it so we don't use it again.

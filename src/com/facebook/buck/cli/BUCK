@@ -61,7 +61,7 @@ java_library(
   ]
 )
 
-java_library(
+java_immutables_library(
   name = 'cli',
   srcs = glob(['*.java'], excludes = EVENTS_SRCS + CONFIG_SRCS),
   deps = [

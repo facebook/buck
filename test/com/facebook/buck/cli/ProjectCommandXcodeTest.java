@@ -23,7 +23,6 @@ import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
-import com.facebook.buck.apple.XcodeProjectConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
@@ -49,11 +48,6 @@ public class ProjectCommandXcodeTest {
   private TargetNode<?> fooTestNode;
   private TargetNode<?> fooBinTestNode;
   private TargetNode<?> quxBinNode;
-  private TargetNode<?> fooProjectNode;
-  private TargetNode<?> fooTestProjectNode;
-  private TargetNode<?> barProjectNode;
-  private TargetNode<?> bazProjectNode;
-  private TargetNode<?> quxProjectNode;
   private TargetNode<?> workspaceNode;
   private TargetNode<?> smallWorkspaceNode;
 
@@ -137,48 +131,6 @@ public class ProjectCommandXcodeTest {
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
         .build();
 
-    BuildTarget fooProjectTarget = BuildTarget.builder("//foo", "foo").build();
-    fooProjectNode = XcodeProjectConfigBuilder
-        .createBuilder(fooProjectTarget)
-        .setProjectName("foo")
-        .setRules(
-            ImmutableSortedSet.of(
-                fooLibTarget,
-                fooBinBinaryTarget,
-                fooBinTarget))
-        .build();
-
-    BuildTarget fooTestProjectTarget = BuildTarget.builder("//foo", "foo-test").build();
-    fooTestProjectNode = XcodeProjectConfigBuilder
-        .createBuilder(fooTestProjectTarget)
-        .setProjectName("foo-test")
-        .setRules(
-            ImmutableSortedSet.of(
-                fooBinTestTarget,
-                fooTestTarget))
-        .build();
-
-    BuildTarget barProjectTarget = BuildTarget.builder("//bar", "bar").build();
-    barProjectNode = XcodeProjectConfigBuilder
-        .createBuilder(barProjectTarget)
-        .setProjectName("bar")
-        .setRules(ImmutableSortedSet.of(barLibTarget))
-        .build();
-
-    BuildTarget bazProjectTarget = BuildTarget.builder("//baz", "baz").build();
-    bazProjectNode = XcodeProjectConfigBuilder
-        .createBuilder(bazProjectTarget)
-        .setProjectName("baz")
-        .setRules(ImmutableSortedSet.of(bazLibTarget))
-        .build();
-
-    BuildTarget quxProjectTarget = BuildTarget.builder("//qux", "qux").build();
-    quxProjectNode = XcodeProjectConfigBuilder
-        .createBuilder(quxProjectTarget)
-        .setProjectName("qux")
-        .setRules(ImmutableSortedSet.of(quxBinTarget))
-        .build();
-
     BuildTarget workspaceTarget = BuildTarget.builder("//foo", "workspace").build();
     workspaceNode = XcodeWorkspaceConfigBuilder
         .createBuilder(workspaceTarget)
@@ -203,18 +155,13 @@ public class ProjectCommandXcodeTest {
         fooTestNode,
         fooBinTestNode,
         quxBinNode,
-        fooProjectNode,
-        fooTestProjectNode,
-        barProjectNode,
-        bazProjectNode,
-        quxProjectNode,
         workspaceNode,
         smallWorkspaceNode);
   }
 
   @Test
   public void testCreateTargetGraphWithoutTests() {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommand.createTargetGraph(
+    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
         ProjectCommandOptions.Ide.XCODE,
         ImmutableSet.<BuildTarget>of(),
@@ -224,14 +171,11 @@ public class ProjectCommandXcodeTest {
     assertEquals(
         ImmutableSortedSet.<TargetNode<?>>of(
             workspaceNode,
-            fooProjectNode,
-            barProjectNode,
             fooBinNode,
             fooBinBinaryNode,
             fooLibNode,
             barLibNode,
             smallWorkspaceNode,
-            bazProjectNode,
             bazLibNode),
         ImmutableSortedSet.copyOf(
             targetGraphAndTargets.getTargetGraph().getNodes()));
@@ -239,7 +183,7 @@ public class ProjectCommandXcodeTest {
 
   @Test
   public void testCreateTargetGraphWithTests() {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommand.createTargetGraph(
+    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
         ProjectCommandOptions.Ide.XCODE,
         ImmutableSet.<BuildTarget>of(),
@@ -249,9 +193,6 @@ public class ProjectCommandXcodeTest {
     assertEquals(
         ImmutableSortedSet.<TargetNode<?>>of(
             workspaceNode,
-            fooProjectNode,
-            fooTestProjectNode,
-            barProjectNode,
             fooBinNode,
             fooBinBinaryNode,
             fooLibNode,
@@ -259,7 +200,6 @@ public class ProjectCommandXcodeTest {
             fooTestNode,
             barLibNode,
             smallWorkspaceNode,
-            bazProjectNode,
             bazLibNode,
             bazTestNode),
         ImmutableSortedSet.copyOf(
@@ -268,7 +208,7 @@ public class ProjectCommandXcodeTest {
 
   @Test
   public void testCreateTargetGraphForSliceWithoutTests() {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommand.createTargetGraph(
+    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
         ProjectCommandOptions.Ide.XCODE,
         ImmutableSet.of(workspaceNode.getBuildTarget()),
@@ -278,8 +218,6 @@ public class ProjectCommandXcodeTest {
     assertEquals(
         ImmutableSortedSet.<TargetNode<?>>of(
             workspaceNode,
-            fooProjectNode,
-            barProjectNode,
             fooBinNode,
             fooBinBinaryNode,
             fooLibNode,
@@ -290,7 +228,7 @@ public class ProjectCommandXcodeTest {
 
   @Test
   public void testCreateTargetGraphForSliceWithTests() {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommand.createTargetGraph(
+    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
         ProjectCommandOptions.Ide.XCODE,
         ImmutableSet.of(workspaceNode.getBuildTarget()),
@@ -300,16 +238,12 @@ public class ProjectCommandXcodeTest {
     assertEquals(
         ImmutableSortedSet.<TargetNode<?>>of(
             workspaceNode,
-            fooProjectNode,
-            fooTestProjectNode,
-            barProjectNode,
             fooBinNode,
             fooBinBinaryNode,
             fooLibNode,
             fooBinTestNode,
             fooTestNode,
             barLibNode,
-            bazProjectNode,
             bazLibNode),
         ImmutableSortedSet.copyOf(
             targetGraphAndTargets.getTargetGraph().getNodes()));
@@ -317,7 +251,7 @@ public class ProjectCommandXcodeTest {
 
   @Test
   public void testCreateTargetGraphForSmallSliceWithoutTests() {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommand.createTargetGraph(
+    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
         ProjectCommandOptions.Ide.XCODE,
         ImmutableSet.of(smallWorkspaceNode.getBuildTarget()),
@@ -327,7 +261,6 @@ public class ProjectCommandXcodeTest {
     assertEquals(
         ImmutableSortedSet.<TargetNode<?>>of(
             smallWorkspaceNode,
-            bazProjectNode,
             bazLibNode),
         ImmutableSortedSet.copyOf(
             targetGraphAndTargets.getTargetGraph().getNodes()));
@@ -335,7 +268,7 @@ public class ProjectCommandXcodeTest {
 
   @Test
   public void testCreateTargetGraphForSmallSliceWithTests() {
-    TargetGraphAndTargets targetGraphAndTargets = ProjectCommand.createTargetGraph(
+    TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
         ProjectCommandOptions.Ide.XCODE,
         ImmutableSet.of(smallWorkspaceNode.getBuildTarget()),
@@ -345,7 +278,6 @@ public class ProjectCommandXcodeTest {
     assertEquals(
         ImmutableSortedSet.<TargetNode<?>>of(
             smallWorkspaceNode,
-            bazProjectNode,
             bazLibNode,
             bazTestNode),
         ImmutableSortedSet.copyOf(

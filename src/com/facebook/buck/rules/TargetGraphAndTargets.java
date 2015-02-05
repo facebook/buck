@@ -34,11 +34,11 @@ public class TargetGraphAndTargets {
 
   private TargetGraphAndTargets(
       TargetGraph targetGraph,
-      ImmutableSet<TargetNode<?>> projectRoots,
-      ImmutableSet<TargetNode<?>> associatedTests) {
+      Iterable<TargetNode<?>> projectRoots,
+      Iterable<TargetNode<?>> associatedTests) {
     this.targetGraph = targetGraph;
-    this.projectRoots = projectRoots;
-    this.associatedTests = associatedTests;
+    this.projectRoots = ImmutableSet.copyOf(projectRoots);
+    this.associatedTests = ImmutableSet.copyOf(associatedTests);
   }
 
   public TargetGraph getTargetGraph() {
@@ -53,38 +53,50 @@ public class TargetGraphAndTargets {
     return associatedTests;
   }
 
-  public static TargetGraphAndTargets create(
-      ImmutableSet<BuildTarget> graphRoots,
-      TargetGraph fullGraph,
-      AssociatedTargetNodePredicate associatedProjectPredicate,
-      boolean isWithTests) {
-    // Get the roots of the main graph. This contains all the targets in the project slice, or all
-    // the valid project roots if a project slice is not specified.
-    ImmutableSet.Builder<TargetNode<?>> projectRootsBuilder = ImmutableSet.builder();
-    for (BuildTarget target : graphRoots) {
-      TargetNode<?> targetNode = fullGraph.get(target);
+  public static ImmutableSet<BuildTarget> getExplicitTestTargets(
+      ImmutableSet<BuildTarget> buildTargets,
+      TargetGraph projectGraph) {
+    ImmutableSet<TargetNode<?>> projectRoots = checkAndGetTargetNodes(buildTargets, projectGraph);
+    return FluentIterable
+        .from(projectGraph.getSubgraph(projectRoots).getNodes())
+        .transformAndConcat(
+            new Function<TargetNode<?>, Iterable<BuildTarget>>() {
+              @Override
+              public Iterable<BuildTarget> apply(TargetNode<?> node) {
+                return TargetNodes.getTestTargetsForNode(node);
+              }
+            })
+        .toSet();
+  }
+
+  private static ImmutableSet<TargetNode<?>> checkAndGetTargetNodes(
+      ImmutableSet<BuildTarget> buildTargets,
+      TargetGraph projectGraph) {
+    ImmutableSet.Builder<TargetNode<?>> targetNodesBuilder = ImmutableSet.builder();
+    for (BuildTarget target : buildTargets) {
+      TargetNode<?> targetNode = projectGraph.get(target);
       if (targetNode == null) {
         throw new HumanReadableException("Target '%s' does not exist.", target);
       }
-      projectRootsBuilder.add(targetNode);
+      targetNodesBuilder.add(targetNode);
     }
-    ImmutableSet<TargetNode<?>> projectRoots = projectRootsBuilder.build();
+    return targetNodesBuilder.build();
+  }
+
+  public static TargetGraphAndTargets create(
+      ImmutableSet<BuildTarget> graphRoots,
+      TargetGraph projectGraph,
+      AssociatedTargetNodePredicate associatedProjectPredicate,
+      boolean isWithTests,
+      ImmutableSet<BuildTarget> explicitTests) {
+    // Get the roots of the main graph. This contains all the targets in the project slice, or all
+    // the valid project roots if a project slice is not specified.
+    ImmutableSet<TargetNode<?>> projectRoots = checkAndGetTargetNodes(graphRoots, projectGraph);
 
     // Optionally get the roots of the test graph. This contains all the tests that cover the roots
     // of the main graph or their dependencies.
     ImmutableSet<TargetNode<?>> associatedTests = ImmutableSet.of();
     if (isWithTests) {
-      ImmutableSet<BuildTarget> explicitTests = FluentIterable
-          .from(fullGraph.getSubgraph(projectRoots).getNodes())
-          .transformAndConcat(
-              new Function<TargetNode<?>, Iterable<BuildTarget>>() {
-                @Override
-                public Iterable<BuildTarget> apply(TargetNode<?> node) {
-                  return TargetNodes.getTestTargetsForNode(node);
-                }
-              })
-          .toSet();
-
       AssociatedTargetNodePredicate associatedTestsPredicate = new AssociatedTargetNodePredicate() {
         @Override
         public boolean apply(TargetNode<?> targetNode, TargetGraph targetGraph) {
@@ -113,9 +125,9 @@ public class TargetGraphAndTargets {
       associatedTests = ImmutableSet.copyOf(
           Sets.union(
               ImmutableSet.copyOf(
-                  fullGraph.getAll(explicitTests)),
+                  projectGraph.getAll(explicitTests)),
               getAssociatedTargetNodes(
-                  fullGraph,
+                  projectGraph,
                   projectRoots,
                   associatedTestsPredicate)
           )
@@ -123,31 +135,31 @@ public class TargetGraphAndTargets {
     }
 
     ImmutableSet<TargetNode<?>> associatedProjects = getAssociatedTargetNodes(
-        fullGraph,
+        projectGraph,
         Iterables.concat(projectRoots, associatedTests),
         associatedProjectPredicate);
 
-    TargetGraph targetGraph = fullGraph.getSubgraph(
+    TargetGraph targetGraph = projectGraph.getSubgraph(
         Iterables.concat(projectRoots, associatedTests, associatedProjects));
 
     return new TargetGraphAndTargets(targetGraph, projectRoots, associatedTests);
   }
 
   /**
-   * @param fullGraph A TargetGraph containing all nodes that could be related.
+   * @param projectGraph A TargetGraph containing all nodes that could be related.
    * @param subgraphRoots Target nodes forming the roots of the subgraph to which the returned nodes
    *                      are related.
    * @param associatedTargetNodePredicate A predicate to determine whether a node is related or not.
    * @return A set of nodes related to {@code subgraphRoots} or their dependencies.
    */
   private static ImmutableSet<TargetNode<?>> getAssociatedTargetNodes(
-      TargetGraph fullGraph,
+      TargetGraph projectGraph,
       Iterable<TargetNode<?>> subgraphRoots,
       final AssociatedTargetNodePredicate associatedTargetNodePredicate) {
-    final TargetGraph subgraph = fullGraph.getSubgraph(subgraphRoots);
+    final TargetGraph subgraph = projectGraph.getSubgraph(subgraphRoots);
 
     return FluentIterable
-        .from(fullGraph.getNodes())
+        .from(projectGraph.getNodes())
         .filter(
             new Predicate<TargetNode<?>>() {
               @Override

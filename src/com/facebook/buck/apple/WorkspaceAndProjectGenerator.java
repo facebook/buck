@@ -117,7 +117,8 @@ public class WorkspaceAndProjectGenerator {
   }
 
   public Path generateWorkspaceAndDependentProjects(
-      Map<TargetNode<?>, ProjectGenerator> projectGenerators) throws IOException {
+        Map<Path, ProjectGenerator> projectGenerators)
+      throws IOException {
     LOG.debug("Generating workspace for target %s", workspaceTargetNode);
 
     String workspaceName = XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(
@@ -195,35 +196,47 @@ public class WorkspaceAndProjectGenerator {
         targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
       }
     } else {
-      ImmutableSet.Builder<BuildTarget> generatedTargetsBuilder = ImmutableSet.builder();
+      ImmutableMultimap.Builder<Path, BuildTarget> projectDirectoryToBuildTargetsBuilder =
+          ImmutableMultimap.builder();
       for (TargetNode<?> targetNode : projectGraph.getNodes()) {
-        if (targetNode.getType() != XcodeProjectConfigDescription.TYPE) {
+        BuildTarget buildTarget = targetNode.getBuildTarget();
+        projectDirectoryToBuildTargetsBuilder.put(buildTarget.getBasePath(), buildTarget);
+      }
+      ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
+          projectDirectoryToBuildTargetsBuilder.build();
+      for (Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
+        ImmutableSet<BuildTarget> rules = filterRulesForProjectDirectory(
+            projectGraph,
+            ImmutableSet.copyOf(projectDirectoryToBuildTargets.get(projectDirectory)));
+        if (Sets.intersection(targetsInRequiredProjects, rules).isEmpty()) {
           continue;
         }
-        XcodeProjectConfigDescription.Arg projectArg =
-            (XcodeProjectConfigDescription.Arg) targetNode.getConstructorArg();
-        if (Sets.intersection(targetsInRequiredProjects, projectArg.rules).isEmpty()) {
-          continue;
-        }
-        generatedTargetsBuilder.addAll(projectArg.rules);
 
-        ProjectGenerator generator = projectGenerators.get(targetNode);
+        ProjectGenerator generator = projectGenerators.get(projectDirectory);
         if (generator == null) {
-          LOG.debug("Generating project for target %s", targetNode);
+          LOG.debug("Generating project for directory %s with targets %s", projectDirectory, rules);
+          String projectName;
+          if (projectDirectory.getNameCount() == 0) {
+            // If we're generating a project in the root directory, use a generic name.
+            projectName = "Project";
+          } else {
+            // Otherwise, name the project the same thing as the directory we're in.
+            projectName = projectDirectory.getFileName().toString();
+          }
           generator = new ProjectGenerator(
               projectGraph,
-              projectArg.rules,
+              rules,
               projectFilesystem,
-              targetNode.getBuildTarget().getBasePath(),
-              projectArg.projectName,
+              projectDirectory,
+              projectName,
               buildFileName,
               projectGeneratorOptions)
               .setTestsToGenerateAsStaticLibraries(groupableTests);
 
           generator.createXcodeProjects();
-          projectGenerators.put(targetNode, generator);
+          projectGenerators.put(projectDirectory, generator);
         } else {
-          LOG.debug("Already generated project for target %s, skipping", targetNode);
+          LOG.debug("Already generated project for target %s, skipping", projectDirectory);
         }
 
         workspaceGenerator.addFilePath(generator.getProjectPath());
@@ -232,14 +245,6 @@ public class WorkspaceAndProjectGenerator {
         for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
           targetToProjectPathMapBuilder.put(target, generator.getProjectPath());
         }
-      }
-
-      Sets.SetView<BuildTarget> missedTargets =
-          Sets.difference(targetsInRequiredProjects, generatedTargetsBuilder.build());
-      if (!missedTargets.isEmpty()) {
-        throw new HumanReadableException(
-            "No xcode_project_config rule was found for the following targets: %s",
-            missedTargets);
       }
 
       if (!groupedTestResults.groupedTests.isEmpty()) {
@@ -302,6 +307,42 @@ public class WorkspaceAndProjectGenerator {
     this.schemeGenerator = Optional.of(schemeGenerator);
 
     return workspacePath;
+  }
+
+  private static ImmutableSet<BuildTarget> filterRulesForProjectDirectory(
+      TargetGraph projectGraph,
+      ImmutableSet<BuildTarget> projectBuildTargets) {
+    // ProjectGenerator implicitly generates targets for all apple_binary rules which
+    // are referred to by apple_bundle rules' 'binary' field.
+    //
+    // We used to support an explicit xcode_project_config() which
+    // listed all dependencies explicitly, but now that we synthesize
+    // one, we need to ensure we continue to only pass apple_binary
+    // targets which do not belong to apple_bundle rules.
+    ImmutableSet.Builder<BuildTarget> binaryTargetsInsideBundlesBuilder =
+        ImmutableSet.builder();
+    for (TargetNode<?> projectTargetNode : projectGraph.getAll(projectBuildTargets)) {
+      if (projectTargetNode.getType() == AppleBundleDescription.TYPE) {
+        AppleBundleDescription.Arg appleBundleDescriptionArg =
+            (AppleBundleDescription.Arg) projectTargetNode.getConstructorArg();
+        // We don't support apple_bundle rules referring to apple_binary rules
+        // outside their current directory.
+        Preconditions.checkState(
+            appleBundleDescriptionArg.binary.getBasePath().equals(
+                projectTargetNode.getBuildTarget().getBasePath()),
+            "apple_bundle target %s contains reference to binary %s outside base path %s",
+            projectTargetNode.getBuildTarget(),
+            appleBundleDescriptionArg.binary,
+            projectTargetNode.getBuildTarget().getBasePath());
+        binaryTargetsInsideBundlesBuilder.add(appleBundleDescriptionArg.binary);
+      }
+    }
+    ImmutableSet<BuildTarget> binaryTargetsInsideBundles =
+        binaryTargetsInsideBundlesBuilder.build();
+
+    // Remove all apple_binary targets which are inside bundles from
+    // the rest of the build targets in the project.
+    return ImmutableSet.copyOf(Sets.difference(projectBuildTargets, binaryTargetsInsideBundles));
   }
 
   /**
