@@ -742,12 +742,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     }
   }
 
+  @VisibleForTesting
   public Javac getJavac() {
-    Optional<Path> externalJavac = javacOptions.getJavacPath();
-    if (externalJavac.isPresent()) {
-      return new ExternalJavac(externalJavac.get());
-    }
-    return new Jsr199Javac(javacOptions.getJavacJarPath());
+    return javacOptions.getJavac();
   }
 
   @Override

@@ -43,8 +43,8 @@ import java.util.Map;
 @BuckStyleImmutable
 public abstract class JavacOptions implements RuleKeyAppendable {
 
-  public abstract Optional<Path> getJavacPath();
-  public abstract Optional<Path> getJavacJarPath();
+  protected abstract Optional<Path> getJavacPath();
+  protected abstract Optional<Path> getJavacJarPath();
 
   @Value.Default
   protected boolean isProductionBuild() {
@@ -71,6 +71,15 @@ public abstract class JavacOptions implements RuleKeyAppendable {
 
   protected boolean isDebug() {
     return !isProductionBuild();
+  }
+
+  @Value.Lazy
+  public Javac getJavac() {
+    Optional<Path> externalJavac = getJavacPath();
+    if (externalJavac.isPresent()) {
+      return new ExternalJavac(externalJavac.get());
+    }
+    return new Jsr199Javac(getJavacJarPath());
   }
 
   public void appendOptionsToList(
