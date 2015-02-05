@@ -192,7 +192,8 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
         FluentIterable
             .from(params.getDeclaredDeps())
             .transform(HasBuildTarget.TO_TARGET)
-            .transform(params.getTargetGraph().get()));
+            .transform(params.getTargetGraph().get())
+            .append(params.getTargetGraph().get(params.getBuildTarget())));
     try {
       traversal.traverse(startNodes);
     } catch (CycleException | IOException | InterruptedException e) {
@@ -324,7 +325,9 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
     }
 
     return Optional.of(
-        BuildTargets.getGenPath(targetNode.getBuildTarget(), "%s" + headerMapType.getSuffix()));
+        BuildTargets.getGenPath(
+          targetNode.getBuildTarget().getUnflavoredTarget(),
+          "%s" + headerMapType.getSuffix()));
   }
 
   private static Path translateAppleSdkPaths(
