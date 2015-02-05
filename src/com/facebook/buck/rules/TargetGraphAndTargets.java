@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasSourceUnderTest;
-import com.facebook.buck.model.HasTests;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -81,11 +80,7 @@ public class TargetGraphAndTargets {
               new Function<TargetNode<?>, Iterable<BuildTarget>>() {
                 @Override
                 public Iterable<BuildTarget> apply(TargetNode<?> node) {
-                  if (node.getConstructorArg() instanceof HasTests) {
-                    return ((HasTests) node.getConstructorArg()).getTests();
-                  } else {
-                    return ImmutableSet.of();
-                  }
+                  return TargetNodes.getTestTargetsForNode(node);
                 }
               })
           .toSet();
