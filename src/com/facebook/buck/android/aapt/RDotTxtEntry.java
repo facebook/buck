@@ -91,7 +91,7 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
         @Override
         public RDotTxtEntry apply(String input) {
           Optional<RDotTxtEntry> entry = parse(input);
-          Preconditions.checkNotNull(entry.isPresent(), "Could not parse R.txt entry: '%s'", input);
+          Preconditions.checkState(entry.isPresent(), "Could not parse R.txt entry: '%s'", input);
           return entry.get();
         }
       };
