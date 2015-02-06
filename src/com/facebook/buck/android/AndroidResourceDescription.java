@@ -31,7 +31,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
@@ -48,8 +47,6 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import javax.annotation.Nullable;
-
 public class AndroidResourceDescription implements Description<AndroidResourceDescription.Arg> {
 
   public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("android_resource");
@@ -65,43 +62,6 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
   @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
-  }
-
-  /**
-   * Filters out the set of {@code android_resource()} dependencies from {@code deps}. As a special
-   * case, if an {@code android_prebuilt_aar()} appears in the deps, the {@code android_resource()}
-   * that corresponds to the AAR will also be included in the output.
-   * <p>
-   * Note that if we allowed developers to depend on a flavored build target (in this case, the
-   * {@link AndroidPrebuiltAarGraphEnhancer#AAR_ANDROID_RESOURCE_FLAVOR} flavor), then we could
-   * require them to depend on the flavored dep explicitly in their build files. Then we could
-   * eliminate this special case, though it would be more burdensome for developers to have to
-   * keep track of when they could depend on an ordinary build rule vs. a flavored one.
-   */
-  private static ImmutableSortedSet<BuildRule> androidResOnly(ImmutableSortedSet<BuildRule> deps) {
-    return FluentIterable
-        .from(deps)
-        .transform(new Function<BuildRule, BuildRule>() {
-          @Override
-          @Nullable
-          public BuildRule apply(BuildRule buildRule) {
-            if (buildRule instanceof AndroidResource) {
-              return buildRule;
-            } else if (buildRule instanceof AndroidLibrary &&
-                ((AndroidLibrary) buildRule).isPrebuiltAar()) {
-              // An AndroidLibrary that is created via graph enhancement from an
-              // android_prebuilt_aar() should always have exactly one dependency that is an
-              // AndroidResource.
-              return Iterables.getOnlyElement(
-                  FluentIterable.from(buildRule.getDeps())
-                      .filter(Predicates.instanceOf(AndroidResource.class))
-                      .toList());
-            }
-            return null;
-          }
-        })
-        .filter(Predicates.notNull())
-        .toSortedSet(deps.comparator());
   }
 
   @Override
@@ -130,8 +90,8 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
         // the only deps which should control whether we need to re-run the aapt_package
         // step.
         params.copyWithDeps(
-            Suppliers.ofInstance(androidResOnly(params.getDeclaredDeps())),
-            Suppliers.ofInstance(androidResOnly(params.getExtraDeps()))),
+            Suppliers.ofInstance(AndroidResourceHelper.androidResOnly(params.getDeclaredDeps())),
+            Suppliers.ofInstance(AndroidResourceHelper.androidResOnly(params.getExtraDeps()))),
         new SourcePathResolver(resolver),
         resolver.getAllRules(args.deps.get()),
         args.res.orNull(),

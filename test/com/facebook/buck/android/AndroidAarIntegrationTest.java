@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -43,5 +43,11 @@ public class AndroidAarIntegrationTest {
 
     ZipInspector zipInspector = new ZipInspector(workspace.getFile("buck-out/gen/app.aar"));
     zipInspector.assertFileExists("AndroidManifest.xml");
+    zipInspector.assertFileExists("classes.jar");
+    zipInspector.assertFileExists("R.txt");
+    zipInspector.assertFileExists("assets/a.txt");
+    zipInspector.assertFileExists("assets/b.txt");
+    zipInspector.assertFileExists("res/helloworld.txt");
+    zipInspector.assertFileExists("res/values/A.xml");
   }
 }

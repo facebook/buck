@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -40,16 +40,28 @@ public class AndroidAar extends AbstractBuildRule {
   private final Path pathToOutputFile;
   private final Path temp;
   private final AndroidManifest manifest;
+  private final AndroidResource androidResource;
+  private final AndroidLibrary androidLibrary;
+  private final AssembleDirectories assembleResourceDirectories;
+  private final AssembleDirectories assembleAssetsDirectories;
 
   public AndroidAar(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      AndroidManifest manifest) {
+      AndroidManifest manifest,
+      AndroidResource androidResource,
+      AndroidLibrary androidLibrary,
+      AssembleDirectories assembleResourceDirectories,
+      AssembleDirectories assembleAssetsDirectories) {
     super(params, resolver);
     BuildTarget buildTarget = params.getBuildTarget();
     this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, "%s.aar");
     this.temp = BuildTargets.getBinPath(buildTarget, "__temp__%s");
     this.manifest = manifest;
+    this.androidResource = androidResource;
+    this.androidLibrary = androidLibrary;
+    this.assembleAssetsDirectories = assembleAssetsDirectories;
+    this.assembleResourceDirectories = assembleResourceDirectories;
   }
 
   @Override
@@ -79,6 +91,27 @@ public class AndroidAar extends AbstractBuildRule {
         CopyStep.forFile(
             manifest.getPathToOutputFile(),
             temp.resolve("AndroidManifest.xml")));
+
+    // put R.txt into tmp folder
+    commands.add(CopyStep.forFile(androidResource.getPathToOutputFile(), temp.resolve("R.txt")));
+
+    // put res/ and assets/ into tmp folder
+    commands.add(CopyStep.forDirectory(
+            assembleResourceDirectories.getPathToOutputFile(),
+            temp.resolve("res"),
+            CopyStep.DirectoryMode.CONTENTS_ONLY));
+    commands.add(CopyStep.forDirectory(
+            assembleAssetsDirectories.getPathToOutputFile(),
+            temp.resolve("assets"),
+            CopyStep.DirectoryMode.CONTENTS_ONLY));
+
+    // put .jar into tmp folder
+    Path jar = androidLibrary.getPathToOutputFile();
+    if (jar != null) {
+      commands.add(CopyStep.forFile(jar, temp.resolve("classes.jar")));
+    }
+    // TODO(user) if there is neither src nor resource, there is no JAR,
+    // in such case we need to generate an empty JAR, and copy the dependence to /libs folder
 
     // do the zipping
     commands.add(
