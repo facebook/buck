@@ -16,13 +16,11 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DefaultDirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -37,22 +35,17 @@ import javax.annotation.Nullable;
 public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
 
   public static final TargetGraph EMPTY = new TargetGraph(
-      new MutableDirectedGraph<TargetNode<?>>(),
-      Optional.<BuckEventBus>absent());
+      new MutableDirectedGraph<TargetNode<?>>());
 
   private final ImmutableMap<BuildTarget, TargetNode<?>> targetsToNodes;
-  private final Optional<BuckEventBus> buckEventBus;
 
-  public TargetGraph(
-      MutableDirectedGraph<TargetNode<?>> graph,
-      Optional<BuckEventBus> buckEventBus) {
+  public TargetGraph(MutableDirectedGraph<TargetNode<?>> graph) {
     super(graph);
     ImmutableMap.Builder<BuildTarget, TargetNode<?>> builder = ImmutableMap.builder();
     for (TargetNode<?> node : graph.getNodes()) {
       builder.put(node.getBuildTarget(), node);
     }
     this.targetsToNodes = builder.build();
-    this.buckEventBus = buckEventBus;
   }
 
   @Nullable
@@ -103,6 +96,6 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
       }
     }.start();
 
-    return new TargetGraph(subgraph, buckEventBus);
+    return new TargetGraph(subgraph);
   }
 }

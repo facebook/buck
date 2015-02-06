@@ -16,12 +16,10 @@
 
 package com.facebook.buck.testutil;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,9 +42,7 @@ public class TargetGraphFactory {
         graph.addEdge(node, Preconditions.checkNotNull(map.get(dep), dep));
       }
     }
-    return new TargetGraph(
-        graph,
-        Optional.<BuckEventBus>absent());
+    return new TargetGraph(graph);
   }
 
   public static TargetGraph newInstance(TargetNode<?>... nodes) {

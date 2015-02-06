@@ -387,8 +387,7 @@ public class Parser {
             buildTargets,
             parserConfig,
             buildFileParser,
-            environment,
-            eventBus);
+            environment);
         return graph;
       } finally {
         eventBus.post(ParseEvent.finished(buildTargets, Optional.fromNullable(graph)));
@@ -441,8 +440,7 @@ public class Parser {
       Iterable<BuildTarget> toExplore,
       final ParserConfig parserConfig,
       final ProjectBuildFileParser buildFileParser,
-      final ImmutableMap<String, String> environment,
-      BuckEventBus buckEventBus) throws IOException, InterruptedException {
+      final ImmutableMap<String, String> environment) throws IOException, InterruptedException {
 
     final MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
 
@@ -523,7 +521,7 @@ public class Parser {
       throw new HumanReadableException(e.getMessage());
     }
 
-    return new TargetGraph(graph, Optional.of(buckEventBus));
+    return new TargetGraph(graph);
   }
 
   /**
