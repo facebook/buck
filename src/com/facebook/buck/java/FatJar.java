@@ -14,6 +14,13 @@
  * under the License.
  */
 
+/***************
+ *
+ * This code can be embedded in arbitrary third-party projects!
+ * For maximum compatibility, use only Java 6 constructs.
+ *
+ ***************/
+
 package com.facebook.buck.java;
 
 import java.io.BufferedInputStream;
@@ -81,14 +88,21 @@ public class FatJar {
    * @return the {@link FatJar} object deserialized from the resource name via {@code loader}.
    */
   public static FatJar load(ClassLoader loader) throws Exception {
-    try (InputStream inputStream = loader.getResourceAsStream(FAT_JAR_INFO_RESOURCE);
-         BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)) {
-      XMLEventReader xmlEventReader =
-          XMLInputFactory.newFactory().createXMLEventReader(bufferedInputStream);
-      JAXBContext context = JAXBContext.newInstance(FatJar.class);
-      Unmarshaller unmarshaller = context.createUnmarshaller();
-      JAXBElement<FatJar> jaxbElementA = unmarshaller.unmarshal(xmlEventReader, FatJar.class);
-      return jaxbElementA.getValue();
+    InputStream inputStream = loader.getResourceAsStream(FAT_JAR_INFO_RESOURCE);
+    try {
+      BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+      try {
+        XMLEventReader xmlEventReader =
+            XMLInputFactory.newFactory().createXMLEventReader(bufferedInputStream);
+        JAXBContext context = JAXBContext.newInstance(FatJar.class);
+        Unmarshaller unmarshaller = context.createUnmarshaller();
+        JAXBElement<FatJar> jaxbElementA = unmarshaller.unmarshal(xmlEventReader, FatJar.class);
+        return jaxbElementA.getValue();
+      } finally {
+        bufferedInputStream.close();
+      }
+    } finally {
+      inputStream.close();
     }
   }
 
@@ -97,25 +111,38 @@ public class FatJar {
    */
   public void store(OutputStream outputStream) throws Exception {
     JAXBContext context = JAXBContext.newInstance(FatJar.class);
-    JAXBElement<FatJar> element = new JAXBElement<>(new QName("fatjar"), FatJar.class, this);
+    JAXBElement<FatJar> element = new JAXBElement<FatJar>(new QName("fatjar"), FatJar.class, this);
     Marshaller marshaller = context.createMarshaller();
     marshaller.marshal(element, outputStream);
   }
 
   public void unpackNativeLibrariesInto(ClassLoader loader, Path destination) throws IOException {
     for (Map.Entry<String, String> entry : Preconditions.checkNotNull(nativeLibraries).entrySet()) {
-      try (InputStream input = loader.getResourceAsStream(entry.getValue());
-           BufferedInputStream bufferedInput = new BufferedInputStream(input)) {
-        Files.copy(bufferedInput, destination.resolve(entry.getKey()));
+      InputStream input = loader.getResourceAsStream(entry.getValue());
+      try {
+        BufferedInputStream bufferedInput = new BufferedInputStream(input);
+        try {
+          Files.copy(bufferedInput, destination.resolve(entry.getKey()));
+        } finally {
+          bufferedInput.close();
+        }
+      } finally {
+        input.close();
       }
     }
   }
 
   public void unpackJarTo(ClassLoader loader, Path destination) throws IOException {
-    try (InputStream input = loader.getResourceAsStream(Preconditions.checkNotNull(innerJar));
-         BufferedInputStream bufferedInput = new BufferedInputStream(input)) {
-      Files.copy(bufferedInput, destination);
+    InputStream input = loader.getResourceAsStream(Preconditions.checkNotNull(innerJar));
+    try {
+      BufferedInputStream bufferedInput = new BufferedInputStream(input);
+      try {
+        Files.copy(bufferedInput, destination);
+      } finally {
+        bufferedInput.close();
+      }
+    } finally {
+      input.close();
     }
   }
-
 }

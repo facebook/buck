@@ -15,6 +15,9 @@ java_library(
 
 java_library(
   name = 'fat-jar-main',
+  # Maximum compatibility
+  source = '6',
+  target = '6',
   srcs = [
     'FatJar.java',
     'FatJarMain.java',

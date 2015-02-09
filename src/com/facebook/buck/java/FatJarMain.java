@@ -14,6 +14,13 @@
  * under the License.
  */
 
+/***************
+ *
+ * This code can be embedded in arbitrary third-party projects!
+ * For maximum compatibility, use only Java 6 constructs.
+ *
+ ***************/
+
 package com.facebook.buck.java;
 
 import java.io.File;
@@ -49,7 +56,7 @@ public class FatJarMain {
    * @return a command to start a new JVM process to execute the given main class.
    */
   private static List<String> getCommand(Path jar, String[] args) throws Exception {
-    List<String> cmd = new ArrayList<>();
+    List<String> cmd = new ArrayList<String>();
     // Lookup the Java binary used to start us.
     cmd.add(Paths.get(System.getProperty("java.home")).resolve("bin").resolve("java").toString());
     cmd.add("-jar");
@@ -66,8 +73,10 @@ public class FatJarMain {
     // Load the fat jar info from it's resource.
     FatJar fatJar = FatJar.load(classLoader);
 
+    ManagedTemporaryDirectory temp = new ManagedTemporaryDirectory("fatjar.");
+
     // Create a temp dir to house the native libraries.
-    try (ManagedTemporaryDirectory temp = new ManagedTemporaryDirectory("fatjar.")) {
+    try {
 
       // Unpack the real, inner JAR.
       Path jar = temp.getPath().resolve("main.jar");
@@ -89,6 +98,8 @@ public class FatJarMain {
       // Wait for the inner process to finish, and propagate it's exit code, before cleaning
       // up the native libraries.
       System.exit(builder.start().waitFor());
+    } finally {
+      temp.close();
     }
   }
 
