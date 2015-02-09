@@ -21,7 +21,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
@@ -30,8 +29,7 @@ import org.immutables.value.Value;
  *
  *   <ul>
  *     <li>A {@link SourcePath}, or</li>
- *     <li>A {@link SourcePath} plus compiler flags, or</li>
- *     <li>A "source group" (a group name and one or more AppleSource objects)</li>
+ *     <li>A {@link SourcePath} plus compiler flags</li>
  *   </ul>
  */
 @Value.Immutable
@@ -63,21 +61,16 @@ public abstract class AppleSource {
   @Value.Parameter
   protected abstract Optional<Pair<SourcePath, String>> getSourcePathWithFlagsOptional();
 
-  @Value.Parameter
-  protected abstract Optional<Pair<String, ImmutableList<AppleSource>>> getSourceGroupOptional();
-
   @Value.Check
   protected void check() {
     switch (getType()) {
       case SOURCE_PATH:
         Preconditions.checkArgument(getSourcePathOptional().isPresent());
         Preconditions.checkArgument(!getSourcePathWithFlagsOptional().isPresent());
-        Preconditions.checkArgument(!getSourceGroupOptional().isPresent());
         break;
       case SOURCE_PATH_WITH_FLAGS:
         Preconditions.checkArgument(!getSourcePathOptional().isPresent());
         Preconditions.checkArgument(getSourcePathWithFlagsOptional().isPresent());
-        Preconditions.checkArgument(!getSourceGroupOptional().isPresent());
         break;
       default:
         throw new IllegalArgumentException("Unrecognized type: " + getType());
@@ -99,14 +92,6 @@ public abstract class AppleSource {
    */
   public Pair<SourcePath, String> getSourcePathWithFlags() {
     return getSourcePathWithFlagsOptional().get();
-  }
-
-  /**
-   * If getType() returns SOURCE_GROUP, returns the source group this
-   * entry represents. Otherwise, raises an exception.
-   */
-  public Pair<String, ImmutableList<AppleSource>> getSourceGroup() {
-    return getSourceGroupOptional().get();
   }
 
   /**
