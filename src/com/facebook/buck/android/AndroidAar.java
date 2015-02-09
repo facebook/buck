@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -41,7 +42,7 @@ public class AndroidAar extends AbstractBuildRule {
   private final Path temp;
   private final AndroidManifest manifest;
   private final AndroidResource androidResource;
-  private final AndroidLibrary androidLibrary;
+  private final JavaBinary javaBinary;
   private final AssembleDirectories assembleResourceDirectories;
   private final AssembleDirectories assembleAssetsDirectories;
 
@@ -50,7 +51,7 @@ public class AndroidAar extends AbstractBuildRule {
       SourcePathResolver resolver,
       AndroidManifest manifest,
       AndroidResource androidResource,
-      AndroidLibrary androidLibrary,
+      JavaBinary javaBinary,
       AssembleDirectories assembleResourceDirectories,
       AssembleDirectories assembleAssetsDirectories) {
     super(params, resolver);
@@ -59,7 +60,7 @@ public class AndroidAar extends AbstractBuildRule {
     this.temp = BuildTargets.getBinPath(buildTarget, "__temp__%s");
     this.manifest = manifest;
     this.androidResource = androidResource;
-    this.androidLibrary = androidLibrary;
+    this.javaBinary = javaBinary;
     this.assembleAssetsDirectories = assembleAssetsDirectories;
     this.assembleResourceDirectories = assembleResourceDirectories;
   }
@@ -106,12 +107,7 @@ public class AndroidAar extends AbstractBuildRule {
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 
     // put .jar into tmp folder
-    Path jar = androidLibrary.getPathToOutputFile();
-    if (jar != null) {
-      commands.add(CopyStep.forFile(jar, temp.resolve("classes.jar")));
-    }
-    // TODO(user) if there is neither src nor resource, there is no JAR,
-    // in such case we need to generate an empty JAR, and copy the dependence to /libs folder
+    commands.add(CopyStep.forFile(javaBinary.getPathToOutputFile(), temp.resolve("classes.jar")));
 
     // do the zipping
     commands.add(

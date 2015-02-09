@@ -389,7 +389,7 @@ public class KnownBuildRuleTypes {
 
     builder.register(new AndroidAarDescription(
             new AndroidManifestDescription(),
-            new AndroidLibraryDescription(androidBinaryOptions)));
+            new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform)));
     builder.register(
         new AndroidBinaryDescription(
             androidBinaryOptions,

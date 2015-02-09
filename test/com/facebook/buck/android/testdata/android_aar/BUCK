@@ -9,7 +9,6 @@ android_resource(
 android_aar(
   name = 'app',
   manifest_skeleton = 'AndroidManifestSkeleton.xml',
-  srcs = glob(['**/*.java']),
   deps = [
     ':res',
   ],
