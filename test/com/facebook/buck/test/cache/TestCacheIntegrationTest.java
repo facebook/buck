@@ -28,6 +28,7 @@ import com.google.common.base.Joiner;
 import com.google.common.io.Files;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -47,6 +48,7 @@ public class TestCacheIntegrationTest {
     workspace.setUp();
   }
 
+  @Ignore
   @Test
   public void shouldUseCacheByDefault() throws IOException {
     assertThat("First run should not be cached",
@@ -55,6 +57,7 @@ public class TestCacheIntegrationTest {
         run("test", "--all"), containsString("CACHED"));
   }
 
+  @Ignore
   @Test
   public void shouldAvoidCacheWithCommandLineOption() throws IOException {
     assertThat("First run should not be cached",
@@ -63,6 +66,7 @@ public class TestCacheIntegrationTest {
         run("test", "--all", "--no-results-cache"), not(containsString("CACHED")));
   }
 
+  @Ignore
   @Test
   public void shouldAvoidCacheWithConfigFileOption() throws IOException {
     String newBuckProject = Joiner.on('\n').join(
