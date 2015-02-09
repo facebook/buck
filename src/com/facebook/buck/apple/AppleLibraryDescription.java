@@ -48,7 +48,7 @@ public class AppleLibraryDescription implements
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       CompilationDatabase.COMPILATION_DATABASE,
-      AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS,
+      AppleDescriptions.HEADERS,
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.STATIC_FLAVOR,
       CxxDescriptionEnhancer.SHARED_FLAVOR,
@@ -100,7 +100,7 @@ public class AppleLibraryDescription implements
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     TargetSources targetSources = TargetSources.ofAppleSources(pathResolver, args.srcs.get());
-    Optional<BuildRule> flavoredRule = AbstractAppleNativeTargetBuildRuleDescriptions
+    Optional<BuildRule> flavoredRule = AppleDescriptions
         .createFlavoredRule(
             params,
             resolver,
@@ -119,7 +119,7 @@ public class AppleLibraryDescription implements
             cxxPlatformFlavorDomain);
     Optional<AppleSdkPaths> appleSdkPaths = Optional.fromNullable(
         appleCxxPlatformsToAppleSdkPaths.get(typeAndPlatform.getPlatform()));
-    AbstractAppleNativeTargetBuildRuleDescriptions.populateCxxConstructorArg(
+    AppleDescriptions.populateCxxConstructorArg(
         delegateArg,
         args,
         params.getBuildTarget(),

@@ -500,7 +500,7 @@ public class ProjectGenerator {
     if (headerMap.getNumEntries() == 0) {
       return;
     }
-    Path headerMapFile = AbstractAppleNativeTargetBuildRuleDescriptions
+    Path headerMapFile = AppleDescriptions
         .getPathToHeaderMap(targetNode, headerMapType)
         .get();
     headerMaps.add(headerMapFile);
@@ -1241,7 +1241,7 @@ public class ProjectGenerator {
   private String getHeaderMapRelativePath(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       HeaderMapType headerMapType) {
-    Optional<Path> filePath = AbstractAppleNativeTargetBuildRuleDescriptions.getPathToHeaderMap(
+    Optional<Path> filePath = AppleDescriptions.getPathToHeaderMap(
         targetNode,
         headerMapType);
     Preconditions.checkState(filePath.isPresent(), "%s does not have a header map.", targetNode);

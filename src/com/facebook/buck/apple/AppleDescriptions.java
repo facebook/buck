@@ -61,14 +61,14 @@ import java.util.Map;
 /**
  * Common logic for a {@link com.facebook.buck.rules.Description} that creates Apple target rules.
  */
-public class AbstractAppleNativeTargetBuildRuleDescriptions {
+public class AppleDescriptions {
 
   public static final Flavor HEADERS = ImmutableFlavor.of("headers");
 
   private static final BuildRuleType HEADERS_RULE_TYPE = ImmutableBuildRuleType.of("headers");
 
   /** Utility class: do not instantiate. */
-  private AbstractAppleNativeTargetBuildRuleDescriptions() {}
+  private AppleDescriptions() {}
 
   /**
    * Tries to create a {@link BuildRule} based on the flavors of {@code params.getBuildTarget()} and
@@ -112,7 +112,7 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
     }
     BuildTarget headersTarget = BuildTargets.createFlavoredBuildTarget(
         targetForOriginalRule,
-        AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS);
+        AppleDescriptions.HEADERS);
 
     BuildRuleParams headerRuleParams = params.copyWithChanges(
         HEADERS_RULE_TYPE,
@@ -282,7 +282,7 @@ public class AbstractAppleNativeTargetBuildRuleDescriptions {
         // Next, we get the #headers flavor of the rule.
         BuildTarget targetForHeaders = BuildTargets.createFlavoredBuildTarget(
             buildTarget,
-            AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS);
+            AppleDescriptions.HEADERS);
         Optional<BuildRule> buildRule = buildRuleResolver.getRuleOptional(targetForHeaders);
         if (!buildRule.isPresent()) {
           BuildRule newBuildRule = node.getDescription().createBuildRule(

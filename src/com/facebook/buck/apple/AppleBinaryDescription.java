@@ -44,7 +44,7 @@ public class AppleBinaryDescription
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       CompilationDatabase.COMPILATION_DATABASE,
-      AbstractAppleNativeTargetBuildRuleDescriptions.HEADERS);
+      AppleDescriptions.HEADERS);
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
     @Override
@@ -92,7 +92,7 @@ public class AppleBinaryDescription
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     TargetSources targetSources = TargetSources.ofAppleSources(pathResolver, args.srcs.get());
-    Optional<BuildRule> flavoredRule = AbstractAppleNativeTargetBuildRuleDescriptions
+    Optional<BuildRule> flavoredRule = AppleDescriptions
         .createFlavoredRule(
             params,
             resolver,
@@ -111,7 +111,7 @@ public class AppleBinaryDescription
             cxxPlatformFlavorDomain);
     Optional<AppleSdkPaths> appleSdkPaths = Optional.fromNullable(
         appleCxxPlatformsToAppleSdkPaths.get(typeAndPlatform.getPlatform()));
-    AbstractAppleNativeTargetBuildRuleDescriptions.populateCxxConstructorArg(
+    AppleDescriptions.populateCxxConstructorArg(
         delegateArg,
         args,
         params.getBuildTarget(),
