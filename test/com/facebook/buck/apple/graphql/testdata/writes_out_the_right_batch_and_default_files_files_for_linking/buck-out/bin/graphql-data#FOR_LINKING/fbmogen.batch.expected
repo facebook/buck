@@ -1,0 +1,12 @@
+build-objc-interface-protocols -o ../../gen/graphql-data#FOR_LINKING/GraphQLModel --model-tag CORE_DATA --model-tag MEM --model-tag MODEL_PROTOCOLS 
+build-mem-only-model -o ../../gen/graphql-data#FOR_LINKING/GraphQLModel
+build-model-protocols -o ../../gen/graphql-data#FOR_LINKING/GraphQLModel
+
+
+generate-objc-schema -o ../../gen/graphql-data#FOR_LINKING/_FBGraphQLGeneratedSchema.mm -j ../../gen/graphql-data#FOR_LINKING/schemaMetaData.json
+
+generate-objc-mutations -o ../../gen/graphql-data#FOR_LINKING/MutationCalls/
+
+generate-objc-consistency-config -o ../../gen/graphql-data#FOR_LINKING/FBConsistencyConfigData.mm
+
+

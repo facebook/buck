@@ -82,6 +82,8 @@ RESOURCES = {
         "src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh"),
     "path_to_compile_asset_catalogs_py": (
         "src/com/facebook/buck/apple/compile_asset_catalogs.py"),
+    "path_to_graphql_batch_template": (
+        "src/com/facebook/buck/apple/graphql/graphql_batch_template"),
     "path_to_intellij_py": "src/com/facebook/buck/command/intellij.py",
     "path_to_pathlib_py": "third-party/py/pathlib/pathlib.py",
     "path_to_pex": "src/com/facebook/buck/python/pex.py",

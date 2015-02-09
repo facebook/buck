@@ -1,0 +1,11 @@
+java_test(
+  name = 'graphql',
+  srcs = glob(['*Test.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/apple:rules',
+  ],
+  deps = [
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//third-party/java/junit:junit',
+  ]
+)

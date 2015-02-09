@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
@@ -44,6 +45,13 @@ public class SourcePaths {
           return new BuildTargetSourcePath(input.getBuildTarget());
         }
       };
+  public static final Function<BuildTargetSourcePath, BuildTarget> TO_BUILD_TARGET =
+      new Function<BuildTargetSourcePath, BuildTarget>() {
+        @Override
+        public BuildTarget apply(BuildTargetSourcePath input) {
+          return input.getTarget();
+        }
+      };
 
   /** Utility class: do not instantiate. */
   private SourcePaths() {}
@@ -57,6 +65,14 @@ public class SourcePaths {
     return FluentIterable.from(paths)
         .transform(TO_SOURCE_PATH)
         .toSortedSet(Ordering.natural());
+  }
+
+  public static Iterable<BuildTarget> filterBuildTargetSourcePaths(
+      Iterable<SourcePath> sourcePaths) {
+    return FluentIterable
+        .from(sourcePaths)
+        .filter(BuildTargetSourcePath.class)
+        .transform(TO_BUILD_TARGET);
   }
 
 }

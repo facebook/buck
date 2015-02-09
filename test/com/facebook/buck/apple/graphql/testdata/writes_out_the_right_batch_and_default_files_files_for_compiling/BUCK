@@ -1,0 +1,13 @@
+graphql_data(
+  name = 'graphql-data',
+  configs = {},
+  queries = [],
+  consistency_config = 'consistencyConfig.json',
+  client_schema_config = 'clientSchemaConfig.json',
+  schema = 'schema.json',
+  mutations = 'mutations.json',
+  model_tags = ['CORE_DATA', 'MEM', 'MODEL_PROTOCOLS'],
+  known_issues_file = 'knownIssues.json',
+  persist_ids = 'persistIDs.txt',
+  visibility = ['PUBLIC'],
+)

@@ -46,6 +46,7 @@ java_library(
   visibility = [
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/apple:rules',
+    '//src/com/facebook/buck/apple:config',
     '//src/com/facebook/buck/command:command',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/java:autodeps',

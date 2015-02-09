@@ -207,7 +207,13 @@ public class ProjectWorkspace {
     String[] commandArray = command.toArray(new String[command.size()]);
     Process process = Runtime.getRuntime().exec(commandArray);
     ProcessExecutor executor = new ProcessExecutor(new TestConsole());
-    return executor.execute(process);
+    String currentDir = System.getProperty("user.dir");
+    try {
+      System.setProperty("user.dir", destPath.toAbsolutePath().toString());
+      return executor.execute(process);
+    } finally {
+      System.setProperty("user.dir", currentDir);
+    }
   }
 
   /**
