@@ -45,6 +45,7 @@ public final class FileTypes {
           .put("cpp", "sourcecode.cpp.cpp")
           .put("css", "text.css")
           .put("cxx", "sourcecode.cpp.cpp")
+          .put("d", "sourcecode.dtrace")
           .put("dart", "sourcecode")
           .put("dylib", "compiled.mach-o.dylib")
           .put("exp", "sourcecode.exports")
