@@ -33,8 +33,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -51,8 +51,8 @@ import java.io.StringReader;
 import java.nio.file.CopyOption;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystems;
-import java.nio.file.FileVisitor;
 import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -134,21 +134,28 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   private final Clock clock;
 
   public FakeProjectFilesystem() {
-    this(new FakeClock(0), Paths.get(".").toFile());
+    this(new FakeClock(0), Paths.get(".").toFile(), ImmutableSet.<Path>of());
   }
 
   // We accept a File here since that's what's returned by TemporaryFolder.
   public FakeProjectFilesystem(File root) {
-    this(new FakeClock(0), root);
+    this(new FakeClock(0), root, ImmutableSet.<Path>of());
   }
 
   public FakeProjectFilesystem(Clock clock) {
-    this(clock, Paths.get(".").toFile());
+    this(clock, Paths.get(".").toFile(), ImmutableSet.<Path>of());
   }
 
-  public FakeProjectFilesystem(Clock clock, File root) {
+  public FakeProjectFilesystem(Set<Path> files) {
+    this(new FakeClock(0), Paths.get(".").toFile(), files);
+  }
+
+  public FakeProjectFilesystem(Clock clock, File root, Set<Path> files) {
     super(root.toPath());
     fileContents = Maps.newHashMap();
+    for (Path file : files) {
+      fileContents.put(file, new byte[0]);
+    }
     fileAttributes = Maps.newHashMap();
     fileLastModifiedTimes = Maps.newHashMap();
     symLinks = Maps.newHashMap();

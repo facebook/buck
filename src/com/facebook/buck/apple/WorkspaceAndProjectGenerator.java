@@ -117,8 +117,7 @@ public class WorkspaceAndProjectGenerator {
   }
 
   public Path generateWorkspaceAndDependentProjects(
-        Map<TargetNode<?>, ProjectGenerator> projectGenerators)
-      throws IOException {
+      Map<TargetNode<?>, ProjectGenerator> projectGenerators) throws IOException {
     LOG.debug("Generating workspace for target %s", workspaceTargetNode);
 
     String workspaceName = XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(

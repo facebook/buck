@@ -271,6 +271,10 @@ public class Parser {
     return !includesChanged && !environmentChanged && fileParsed;
   }
 
+  public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
+    return ruleKeyBuilderFactory;
+  }
+
   private synchronized void invalidateCache() {
     state.invalidateAll();
   }

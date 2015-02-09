@@ -17,11 +17,14 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.ProjectGenerator;
 import com.facebook.buck.apple.WorkspaceAndProjectGenerator;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.apple.graphql.GraphQLDataDescription;
+import com.facebook.buck.command.Build;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.intellij.Project;
 import com.facebook.buck.json.BuildFileParseException;
@@ -45,6 +48,7 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
@@ -56,7 +60,9 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.io.BufferedReader;
@@ -289,6 +295,52 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       ImmutableSet<BuildTarget> passedInTargetsSet,
       ProjectCommandOptions options)
       throws IOException, InterruptedException {
+    ImmutableMap<
+        BuildTarget,
+        ImmutableSet<TargetNode<GraphQLDataDescription.Arg>>> targetsToTransitiveModelDependencies =
+        AppleDescriptions.getTargetsToTransitiveModelDependencies(
+            targetGraphAndTargets.getTargetGraph());
+
+    ImmutableMap<BuildTarget, TargetNode<GraphQLDataDescription.Arg>> mergedGraphQLModels =
+        AppleDescriptions.mergeGraphQLModels(targetsToTransitiveModelDependencies);
+
+    ImmutableSet<TargetNode<GraphQLDataDescription.Arg>> nodes =
+        ImmutableSet.copyOf(mergedGraphQLModels.values());
+    TargetGraph targetGraph = AppleDescriptions
+        .getSubgraphWithMergedModels(targetGraphAndTargets.getTargetGraph(), nodes);
+    BuildTargetNodeToBuildRuleTransformer ruleGenerator =
+        new BuildTargetNodeToBuildRuleTransformer();
+    TargetGraphToActionGraph transformer = new TargetGraphToActionGraph(
+        getBuckEventBus(),
+        ruleGenerator);
+
+    ActionGraph actionGraph = transformer.apply(targetGraph);
+    int exitCode;
+    try (Build build = options.createBuild(
+        options.getBuckConfig(),
+        actionGraph,
+        getProjectFilesystem(),
+        getAndroidDirectoryResolver(),
+        getBuildEngine(),
+        getArtifactCache(),
+        console,
+        getBuckEventBus(),
+        Optional.<TargetDevice>absent(),
+        getCommandRunnerParams().getPlatform(),
+        getCommandRunnerParams().getEnvironment(),
+        getCommandRunnerParams().getObjectMapper(),
+        getCommandRunnerParams().getClock())) {
+      exitCode = build.executeAndPrintFailuresToConsole(
+          Iterables.transform(nodes, HasBuildTarget.TO_TARGET),
+          options.isKeepGoing(),
+          console,
+          options.getPathToBuildReport());
+    }
+
+    if (exitCode != 0) {
+      return exitCode;
+    }
+
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (options.getReadOnly()) {
       optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);

@@ -74,7 +74,7 @@ public abstract class AbstractNodeBuilder<A> {
     return rule;
   }
 
-  public final TargetNode<A> build() {
+  public TargetNode<A> build() {
     try {
       return new TargetNode<>(
           description,

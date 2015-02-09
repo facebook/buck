@@ -27,6 +27,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.Map;
@@ -93,6 +94,10 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
    */
   public boolean addNode(T node) {
     return nodes.add(node);
+  }
+
+  public boolean addAllNodes(Collection<? extends T> nodesToAdd) {
+    return nodes.addAll(nodesToAdd);
   }
 
   /**

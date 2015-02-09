@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import java.util.Collections;
 
@@ -111,5 +112,30 @@ public class GraphQLDataDescription
     public ImmutableSet<GraphQLModelTag> modelTags;
     public SourcePath knownIssuesFile;
     public SourcePath persistIds;
+
+    public boolean isMergeableWith(Arg other) {
+      return this.configs.equals(other.configs) &&
+          this.consistencyConfig.equals(other.consistencyConfig) &&
+          this.clientSchemaConfig.equals(other.clientSchemaConfig) &&
+          this.schema.equals(other.schema) &&
+          this.mutations.equals(other.mutations) &&
+          this.modelTags.equals(other.modelTags) &&
+          this.knownIssuesFile.equals(other.knownIssuesFile) &&
+          this.persistIds.equals(other.persistIds) &&
+          this.configs.equals(other.configs) &&
+          this.srcs.equals(other.srcs) &&
+          this.frameworks.equals(other.frameworks) &&
+          this.deps.equals(other.deps) &&
+          this.gid.equals(other.gid) &&
+          this.headerPathPrefix.equals(other.headerPathPrefix) &&
+          this.useBuckHeaderMaps.equals(other.useBuckHeaderMaps) &&
+          this.prefixHeader.equals(other.prefixHeader) &&
+          this.tests.equals(other.tests);
+    }
+
+    public Arg mergeWith(Arg other) {
+      this.queries = ImmutableSet.copyOf(Sets.union(this.queries, other.queries));
+      return this;
+    }
   }
 }

@@ -16,14 +16,18 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.graphql.GraphQLDataDescription;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal.CycleException;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
@@ -37,8 +41,12 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -53,10 +61,13 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Common logic for a {@link com.facebook.buck.rules.Description} that creates Apple target rules.
@@ -234,6 +245,217 @@ public class AppleDescriptions {
                 return (TargetNode<AppleNativeTargetDescriptionArg>) input;
               }
             });
+  }
+
+  public static ImmutableMap<
+      BuildTarget,
+      ImmutableSet<TargetNode<GraphQLDataDescription.Arg>>> getTargetsToTransitiveModelDependencies(
+      TargetGraph targetGraph) {
+    Map<
+        BuildTarget,
+        Set<TargetNode<GraphQLDataDescription.Arg>>> targetsToTransitiveModelDependencies =
+        new HashMap<>();
+
+    for (TargetNode<?> node : targetGraph.getNodes()) {
+      if (node.getType().equals(GraphQLDataDescription.TYPE)) {
+        TargetNode<GraphQLDataDescription.Arg> model =
+            node.castArg(GraphQLDataDescription.Arg.class).get();
+        Set<TargetNode<?>> visited = new HashSet<>();
+        for (TargetNode<?> dependent : targetGraph.getIncomingNodesFor(model)) {
+          addAllTransitiveDependents(
+              targetGraph,
+              targetsToTransitiveModelDependencies,
+              dependent,
+              model,
+              visited);
+        }
+      }
+    }
+
+    return ImmutableMap.copyOf(
+        Maps.transformValues(
+            targetsToTransitiveModelDependencies,
+            new Function<
+                Set<TargetNode<GraphQLDataDescription.Arg>>,
+                ImmutableSet<TargetNode<GraphQLDataDescription.Arg>>>() {
+              @Override
+              public ImmutableSet<TargetNode<GraphQLDataDescription.Arg>> apply(
+                  Set<TargetNode<GraphQLDataDescription.Arg>> input) {
+                return ImmutableSet.copyOf(input);
+              }
+            }
+        ));
+  }
+
+  private static void addAllTransitiveDependents(
+      TargetGraph targetGraph,
+      Map<
+          BuildTarget,
+          Set<TargetNode<GraphQLDataDescription.Arg>>> targetsToTransitiveModelDependencies,
+      TargetNode<?> node,
+      TargetNode<GraphQLDataDescription.Arg> model,
+      Set<TargetNode<?>> visited) {
+    if (visited.contains(node)) {
+      return;
+    }
+    visited.add(node);
+    if (node.getType() != AppleLibraryDescription.TYPE &&
+        node.getType() != AppleBinaryDescription.TYPE) {
+      return;
+    }
+    Set<TargetNode<GraphQLDataDescription.Arg>> models =
+        targetsToTransitiveModelDependencies.get(node.getBuildTarget());
+    if (models == null) {
+      models = new HashSet<>();
+      targetsToTransitiveModelDependencies.put(node.getBuildTarget(), models);
+    }
+    models.add(model);
+
+    for (TargetNode<?> dependent : targetGraph.getIncomingNodesFor(node)) {
+      addAllTransitiveDependents(
+          targetGraph,
+          targetsToTransitiveModelDependencies, dependent, model, visited);
+    }
+  }
+
+  public static BuildTarget getMergedBuildTarget(
+      Iterable<? extends HasBuildTarget> targets) {
+    ImmutableSortedSet<BuildTarget> sortedTargets = ImmutableSortedSet.copyOf(
+        Iterables.transform(targets, HasBuildTarget.TO_TARGET));
+    return ImmutableBuildTarget.of(
+        Optional.<String>absent(),
+        "//buck/synthesized/ios",
+        Joiner
+            .on('-')
+            .join(
+                Iterables.transform(
+                    sortedTargets,
+                    new Function<BuildTarget, String>() {
+                      @Override
+                      public String apply(BuildTarget input) {
+                        return input
+                            .getFullyQualifiedName()
+                            .replace('/', '-')
+                            .replace('.', '-')
+                            .replace('+', '-')
+                            .replace(' ', '-')
+                            .replace(':', '-');
+                      }
+                    })),
+        ImmutableSortedSet.<Flavor>of());
+  }
+
+  public static ImmutableMap<
+      BuildTarget,
+      TargetNode<GraphQLDataDescription.Arg>> mergeGraphQLModels(
+      ImmutableMap<
+          BuildTarget,
+          ImmutableSet<
+              TargetNode<GraphQLDataDescription.Arg>>> targetsToTransitiveModelDependencies) {
+    ImmutableMap.Builder<BuildTarget, TargetNode<GraphQLDataDescription.Arg>> modelsBuilder =
+        ImmutableMap.builder();
+    Map<Set<TargetNode<GraphQLDataDescription.Arg>>, TargetNode<GraphQLDataDescription.Arg>>
+        mergedNodes = new HashMap<>();
+    for (Map.Entry<BuildTarget, ImmutableSet<TargetNode<GraphQLDataDescription.Arg>>> entry :
+        targetsToTransitiveModelDependencies.entrySet()) {
+      TargetNode<GraphQLDataDescription.Arg> mergedNode = mergedNodes.get(entry.getValue());
+      if (mergedNode != null) {
+        modelsBuilder.put(entry.getKey(), mergedNode);
+        continue;
+      }
+      mergedNode = mergeGraphQLModels(entry.getValue());
+      mergedNodes.put(entry.getValue(), mergedNode);
+      modelsBuilder.put(entry.getKey(), mergedNode);
+    }
+
+    return modelsBuilder.build();
+  }
+
+  public static TargetGraph getSubgraphWithMergedModels(
+      final TargetGraph targetGraph,
+      ImmutableSet<TargetNode<GraphQLDataDescription.Arg>> mergedModels) {
+    final ImmutableSet<TargetNode<?>> unmergedModels = FluentIterable
+        .from(targetGraph.getNodes())
+        .filter(
+            new Predicate<TargetNode<?>>() {
+              @Override
+              public boolean apply(TargetNode<?> input) {
+                return input.getType().equals(GraphQLDataDescription.TYPE);
+              }
+            })
+        .toSet();
+    final MutableDirectedGraph<TargetNode<?>> subgraph = new MutableDirectedGraph<>();
+
+    new AbstractBreadthFirstTraversal<TargetNode<?>>(unmergedModels) {
+      @Override
+      public ImmutableSet<TargetNode<?>> visit(TargetNode<?> node) {
+        ImmutableSet<TargetNode<?>> dependencies =
+            ImmutableSet.copyOf(targetGraph.getAll(node.getDeps()));
+        if (unmergedModels.contains(node)) {
+          return dependencies;
+        }
+        subgraph.addNode(node);
+        for (TargetNode<?> dependency : dependencies) {
+          subgraph.addEdge(node, dependency);
+        }
+        return dependencies;
+      }
+    }.start();
+
+    for (TargetNode<?> mergedModel : mergedModels) {
+      subgraph.addNode(mergedModel);
+      for (TargetNode<?> dependency : targetGraph.getAll(mergedModel.getDeps())) {
+        Preconditions.checkNotNull(targetGraph.get(dependency.getBuildTarget()));
+        subgraph.addEdge(mergedModel, dependency);
+      }
+    }
+
+    return new TargetGraph(subgraph);
+  }
+
+  @VisibleForTesting
+  static TargetNode<GraphQLDataDescription.Arg> mergeGraphQLModels(
+      Set<TargetNode<GraphQLDataDescription.Arg>> models) {
+    TargetNode<GraphQLDataDescription.Arg> mergedModel = null;
+    for (TargetNode<GraphQLDataDescription.Arg> model : models) {
+      if (mergedModel == null) {
+        mergedModel = model.withConstructorArg(copyGraphQLArg(model));
+        continue;
+      }
+
+      GraphQLDataDescription.Arg mergedArg = mergedModel.getConstructorArg();
+      GraphQLDataDescription.Arg nextArg = model.getConstructorArg();
+      if (!mergedArg.isMergeableWith(nextArg)) {
+        throw new HumanReadableException(
+            "Attempting to merge two GraphQL models with incompatible args.");
+      }
+
+      mergedModel = mergedModel.withConstructorArg(mergedArg.mergeWith(nextArg));
+    }
+    return Preconditions.checkNotNull(mergedModel).withBuildTarget(getMergedBuildTarget(models));
+  }
+
+  @VisibleForTesting
+  static GraphQLDataDescription.Arg copyGraphQLArg(TargetNode<GraphQLDataDescription.Arg> node) {
+    GraphQLDataDescription.Arg arg = node.getDescription().createUnpopulatedConstructorArg();
+    arg.queries = node.getConstructorArg().queries;
+    arg.consistencyConfig = node.getConstructorArg().consistencyConfig;
+    arg.clientSchemaConfig = node.getConstructorArg().clientSchemaConfig;
+    arg.schema = node.getConstructorArg().schema;
+    arg.mutations = node.getConstructorArg().mutations;
+    arg.modelTags = node.getConstructorArg().modelTags;
+    arg.knownIssuesFile = node.getConstructorArg().knownIssuesFile;
+    arg.persistIds = node.getConstructorArg().persistIds;
+    arg.configs = node.getConstructorArg().configs;
+    arg.srcs = node.getConstructorArg().srcs;
+    arg.frameworks = node.getConstructorArg().frameworks;
+    arg.deps = node.getConstructorArg().deps;
+    arg.gid = node.getConstructorArg().gid;
+    arg.headerPathPrefix = node.getConstructorArg().headerPathPrefix;
+    arg.useBuckHeaderMaps = node.getConstructorArg().useBuckHeaderMaps;
+    arg.prefixHeader = node.getConstructorArg().prefixHeader;
+    arg.tests = node.getConstructorArg().tests;
+    return arg;
   }
 
   private static class CompilationDatabaseTraversal
