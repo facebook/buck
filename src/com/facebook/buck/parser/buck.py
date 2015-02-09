@@ -59,9 +59,11 @@ class IncludeContext(object):
 
     type = BuildContextType.INCLUDE
 
-    def __init__(self):
+    def __init__(self, base_path, dirname):
         self.globals = {}
         self.includes = set()
+        self.base_path = base_path
+        self.dirname = dirname
 
 
 class LazyBuildEnvPartial(object):
@@ -183,10 +185,17 @@ def get_base_path(build_env=None):
              trailing slash. The return value will be "" if called from
              the build file in the root of the project.
     """
-    assert build_env.type == BuildContextType.BUILD_FILE, (
-        "Cannot use `get_base_path()` at the top-level of an included file.")
     return build_env.base_path
 
+@provide_for_build
+def get_dir_name(build_env=None):
+    """Get the directory name of the build or include file.
+
+    This function can be called in both build file and include file contexts.
+
+    Returns: directory name.
+    """
+    return build_env.dirname
 
 @provide_for_build
 def add_deps(name, deps=[], build_env=None):
@@ -371,7 +380,10 @@ class BuildFileProcessor(object):
         Process the include file at the given path.
         """
 
-        build_env = IncludeContext()
+        base_path = os.path.relpath(
+            path, self._project_root).replace('\\', '/')
+        dirname = os.path.dirname(path)
+        build_env = IncludeContext(base_path, dirname)
         return self._process(
             build_env,
             path,
