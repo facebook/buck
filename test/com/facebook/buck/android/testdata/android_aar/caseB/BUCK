@@ -1,0 +1,12 @@
+android_prebuilt_aar(
+  name = 'aar',
+  aar = 'data.aar',
+)
+
+android_aar(
+  name = 'app',
+  manifest_skeleton = 'AndroidManifestSkeleton.xml',
+  deps = [
+    ':aar',
+  ],
+)

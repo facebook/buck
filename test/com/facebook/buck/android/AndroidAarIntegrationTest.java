@@ -36,7 +36,7 @@ public class AndroidAarIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "android_aar",
+        "android_aar/caseA",
         tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:app").assertSuccess();
@@ -49,5 +49,24 @@ public class AndroidAarIntegrationTest {
     zipInspector.assertFileExists("assets/b.txt");
     zipInspector.assertFileExists("res/helloworld.txt");
     zipInspector.assertFileExists("res/values/A.xml");
+  }
+
+  @Test
+  public void testBuildPrebuiltAndroidAar() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "android_aar/caseB",
+        tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:app").assertSuccess();
+
+    ZipInspector zipInspector = new ZipInspector(workspace.getFile("buck-out/gen/app.aar"));
+    zipInspector.assertFileExists("AndroidManifest.xml");
+    zipInspector.assertFileExists("classes.jar");
+    zipInspector.assertFileExists("R.txt");
+    zipInspector.assertFileExists("res/");
+    zipInspector.assertFileExists("res/values/");
+    zipInspector.assertFileExists("res/values/strings.xml");
   }
 }

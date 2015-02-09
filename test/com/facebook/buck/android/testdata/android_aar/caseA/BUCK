@@ -6,10 +6,16 @@ android_resource(
   manifest = 'AndroidManifestSkeleton.xml',
 )
 
+android_library(
+  name = 'lib',
+  srcs = glob(['**/*.java']),
+)
+
 android_aar(
   name = 'app',
   manifest_skeleton = 'AndroidManifestSkeleton.xml',
   deps = [
     ':res',
+    ':lib',
   ],
 )
