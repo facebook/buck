@@ -35,3 +35,7 @@ android_binary(
     ':lib',
   ],
 )
+
+project_config(
+  src_target = ':app',
+)

@@ -78,7 +78,8 @@ class AndroidPrebuiltAarGraphEnhancer {
    * Creates a rooted DAG of build rules:
    * <ul>
    *   <li>{@code unzip_aar} depends on the deps specified to the original {@code android_aar}
-   *   <li>{@code prebuilt_jar} depends on {@code unzip_aar}
+   *   <li>{@code classes_jar} depends on {@code unzip_aar}
+   *   <li>{@code prebuilt_jar} depends on {@code unzip_aar} and {@code classes_jar}
    *   <li>{@code android_resource} depends on {@code unzip_aar}
    *   <li>{@code android_library} depends on {@code android_resource}, {@code prebuilt_jar}, and
    *       {@code unzip_aar}
@@ -118,7 +119,8 @@ class AndroidPrebuiltAarGraphEnhancer {
     BuildRuleParams prebuiltJarParams = originalBuildRuleParams.copyWithChanges(
         PrebuiltJarDescription.TYPE,
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_PREBUILT_JAR_FLAVOR),
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar)),
+        /* declaredDeps */
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar, classesJar)),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     PrebuiltJar prebuiltJar = new PrebuiltJar(
         /* params */ prebuiltJarParams,

@@ -20,6 +20,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -27,17 +28,28 @@ import java.io.IOException;
 
 public class AndroidPrebuiltAarIntegrationTest {
 
+  private ProjectWorkspace workspace;
+
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
-  @Test
-  public void testBuildAndroidPrebuiltAar() throws IOException {
+  @Before
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "android_prebuilt_aar",
         tmp);
     workspace.setUp();
+  }
+
+  @Test
+  public void testBuildAndroidPrebuiltAar() throws IOException {
     workspace.runBuckBuild("//:app").assertSuccess();
+  }
+
+  @Test
+  public void testProjectAndroidPrebuiltAar() throws IOException {
+    workspace.runBuckCommand("project", "//:app").assertSuccess();
   }
 }
