@@ -64,7 +64,7 @@ public class Logger
      */
     public static Logger get(Class<?> clazz)
     {
-        return get(clazz.getName());
+        return get(clazz.getName().replace('$', '.'));
     }
 
     /**
