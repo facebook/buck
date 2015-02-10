@@ -42,7 +42,9 @@ import com.google.common.collect.Lists;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -51,11 +53,15 @@ import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class TypeCoercerTest {
   private final TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
   private final BuildTargetParser targetParser = new BuildTargetParser();
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+  @Rule
+  public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void coercingStringMapOfIntListsShouldBeIdentity()
@@ -219,6 +225,55 @@ public class TypeCoercerTest {
 
   @Test
   public void coerceToEitherLeftOrRight() throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("eitherStringSetOrStringToStringMap").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    Set<String> inputSet = ImmutableSet.of("a", "b", "x");
+    Map<String, String> inputMap = ImmutableMap.of(
+        "key1", "One",
+        "key2", "Two");
+
+    assertEquals(
+        Either.ofLeft(inputSet),
+        coercer.coerce(targetParser, filesystem, Paths.get(""), inputSet));
+    assertEquals(
+        Either.ofRight(inputMap),
+        coercer.coerce(targetParser, filesystem, Paths.get(""), inputMap));
+  }
+
+  @Test
+  public void coercedEitherThrowsOnAccessingMissingLeft()
+      throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("eitherStringSetOrStringToStringMap").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    Map<String, String> inputMap = ImmutableMap.of(
+        "key1", "One",
+        "key2", "Two");
+    Either<?, ?> either = (Either<?, ?>)
+        coercer.coerce(targetParser, filesystem, Paths.get(""), inputMap);
+    assertEquals(inputMap, either.getRight());
+    exception.expect(RuntimeException.class);
+    either.getLeft();
+  }
+
+  @Test
+  public void coercedEitherThrowsOnAccessingMissingRight()
+      throws NoSuchFieldException, CoerceFailedException {
+    Type type = TestFields.class.getField("eitherStringSetOrStringToStringMap").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    Set<String> inputSet = ImmutableSet.of("a", "b", "x");
+    Either<?, ?> either = (Either<?, ?>)
+        coercer.coerce(targetParser, filesystem, Paths.get(""), inputSet);
+    assertEquals(inputSet, either.getLeft());
+    exception.expect(RuntimeException.class);
+    either.getRight();
+  }
+
+  @Test
+  public void coerceToEitherLeftOrRightWithCollections()
+      throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("eitherStringOrStringList").getGenericType();
     TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
@@ -589,6 +644,7 @@ public class TypeCoercerTest {
     public Map<Optional<Integer>, String> optionalIntegerMapOfStrings;
     public String primitiveString;
     public Either<String, List<String>> eitherStringOrStringList;
+    public Either<Set<String>, Map<String, String>> eitherStringSetOrStringToStringMap;
     public Pair<Path, String> pairOfPathsAndStrings;
     public ImmutableList<AppleSource> listOfAppleSources;
     public ImmutableSortedSet<Label> labels;
