@@ -18,20 +18,33 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cxx.NoopBuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 
 import org.easymock.EasyMockSupport;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 public class ExternalJavacTest extends EasyMockSupport {
   private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
@@ -73,6 +86,63 @@ public class ExternalJavacTest extends EasyMockSupport {
             Optional.of(PATH_TO_SRCS_LIST)));
   }
 
+  @Test
+  public void externalJavacWillHashTheExternalIfNoVersionInformationIsReturned()
+      throws IOException {
+    Path javac = Files.createTempFile("fake", "javac");
+    javac.toFile().deleteOnExit();
+
+    Map<Path, HashCode> hashCodes = ImmutableMap.of(javac, Hashing.sha1().hashInt(42));
+    FakeFileHashCache fileHashCache = new FakeFileHashCache(hashCodes);
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
+    RuleKey.Builder builder = RuleKey.builder(
+        new NoopBuildRule(params, pathResolver),
+        pathResolver,
+        fileHashCache);
+    builder.setReflectively("key.javac", javac);
+    RuleKey.Builder.RuleKeyPair expected = builder.build();
+
+    builder = RuleKey.builder(
+        new NoopBuildRule(params, pathResolver),
+        pathResolver,
+        fileHashCache);
+    ExternalJavac compiler = new ExternalJavac(javac, Optional.<JavacVersion>absent());
+    compiler.appendToRuleKey(builder, "key");
+    RuleKey.Builder.RuleKeyPair seen = builder.build();
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
+  public void externalJavacWillHashTheJavacVersionIfPresent()
+      throws IOException {
+    Path javac = Files.createTempFile("fake", "javac");
+    javac.toFile().deleteOnExit();
+    JavacVersion javacVersion = ImmutableJavacVersion.of("mozzarella");
+
+    Map<Path, HashCode> hashCodes = ImmutableMap.of(javac, Hashing.sha1().hashInt(42));
+    FakeFileHashCache fileHashCache = new FakeFileHashCache(hashCodes);
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
+    RuleKey.Builder builder = RuleKey.builder(
+        new NoopBuildRule(params, pathResolver),
+        pathResolver,
+        fileHashCache);
+    builder.setReflectively("key.javac.version", javacVersion.toString());
+    RuleKey.Builder.RuleKeyPair expected = builder.build();
+
+    builder = RuleKey.builder(
+        new NoopBuildRule(params, pathResolver),
+        pathResolver,
+        fileHashCache);
+    ExternalJavac compiler = new ExternalJavac(javac, Optional.of(javacVersion));
+    compiler.appendToRuleKey(builder, "key");
+    RuleKey.Builder.RuleKeyPair seen = builder.build();
+
+    assertEquals(expected, seen);
+  }
+
   private ImmutableList.Builder<String> getArgs() {
     return ImmutableList.<String>builder().add(
           "-source", "6",
@@ -85,7 +155,7 @@ public class ExternalJavacTest extends EasyMockSupport {
   private ExternalJavac createTestStep() {
     Path fakeJavac = Paths.get("fakeJavac");
     return new ExternalJavac(
-        fakeJavac, ImmutableJavacVersion.of("unknown"));
+        fakeJavac, Optional.of((JavacVersion) ImmutableJavacVersion.of("unknown")));
   }
 }
 

@@ -28,6 +28,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
@@ -97,8 +98,14 @@ public abstract class JavacOptions implements RuleKeyAppendable {
       } catch (InterruptedException | IOException e) {
         throw new RuntimeException(e);
       }
+
+      Optional<JavacVersion> version;
       Optional<String> stderr = result.getStderr();
-      JavacVersion version = ImmutableJavacVersion.of(stderr.or("unknown version"));
+      if (Strings.isNullOrEmpty(stderr.orNull())) {
+        version = Optional.absent();
+      } else {
+        version = Optional.of((JavacVersion) ImmutableJavacVersion.of(stderr.get()));
+      }
       return new ExternalJavac(externalJavac.get(), version);
     }
     return new Jsr199Javac(getJavacJarPath());
@@ -171,15 +178,11 @@ public abstract class JavacOptions implements RuleKeyAppendable {
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
     // TODO(simons): Include bootclasspath params.
     builder.setReflectively(key + ".sourceLevel", getSourceLevel())
-        .setReflectively(
-            key + ".javacPath",
-            getJavacPath().transform(Functions.toStringFunction()).orNull())
-        .setReflectively(
-            key + ".javacJarPath",
-            getJavacJarPath().transform(Functions.toStringFunction()).orNull())
         .setReflectively(key + ".targetLevel", getTargetLevel())
         .setReflectively(key + ".extraArguments", Joiner.on(',').join(getExtraArguments()))
         .setReflectively(key + ".debug", isDebug());
+
+    getJavac().appendToRuleKey(builder, "javac");
 
     return getAnnotationProcessingParams().appendToRuleKey(builder, key);
   }
