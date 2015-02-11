@@ -1,0 +1,11 @@
+java_library(name = 'keys',
+  srcs = glob(['*.java']),
+  deps = [
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/util:util',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+  ],
+  visibility = ['PUBLIC'],
+)

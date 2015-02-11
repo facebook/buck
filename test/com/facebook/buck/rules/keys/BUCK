@@ -1,0 +1,16 @@
+java_test(
+  name = 'keys',
+  srcs = glob(['*.java']),
+  deps = [
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules/keys:keys',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/junit:junit',
+  ],
+)

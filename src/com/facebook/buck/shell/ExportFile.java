@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -78,8 +79,10 @@ import java.util.Collections;
 // TODO(simons): Extend to also allow exporting a rule.
 public class ExportFile extends AbstractBuildRule implements HasOutputName {
 
+  @AddToRuleKey
   private final String name;
   private final SourcePath src;
+  @AddToRuleKey(stringify = true)
   private final Path out;
 
   @VisibleForTesting
@@ -106,9 +109,7 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .setReflectively("name", name)
-        .setReflectively("out", out.toString());
+    return builder;
   }
 
   @Override
