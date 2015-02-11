@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
@@ -41,7 +42,7 @@ public class JavaBuckConfig {
     this.delegate = delegate;
   }
 
-  public JavacOptions getDefaultJavacOptions() {
+  public JavacOptions getDefaultJavacOptions(ProcessExecutor processExecutor) {
     Optional<String> sourceLevel = delegate.getValue("java", "source_level");
     Optional<String> targetLevel = delegate.getValue("java", "target_level");
     Optional<String> extraArgumentsString = delegate.getValue("java", "extra_arguments");
@@ -61,6 +62,7 @@ public class JavaBuckConfig {
     }
 
     return JavacOptions.builderForUseInJavaBuckConfig()
+        .setProcessExecutor(processExecutor)
         .setJavacPath(getJavacPath())
         .setJavacJarPath(getJavacJarPath())
         .setSourceLevel(sourceLevel.or(TARGETED_JAVA_VERSION))

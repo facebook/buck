@@ -18,6 +18,9 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.util.ImmutableProcessExecutorParams;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -31,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +46,8 @@ import java.util.Map;
 @Value.Immutable
 @BuckStyleImmutable
 public abstract class JavacOptions implements RuleKeyAppendable {
+
+  protected abstract Optional<ProcessExecutor> getProcessExecutor();
 
   protected abstract Optional<Path> getJavacPath();
   protected abstract Optional<Path> getJavacJarPath();
@@ -77,7 +83,23 @@ public abstract class JavacOptions implements RuleKeyAppendable {
   public Javac getJavac() {
     Optional<Path> externalJavac = getJavacPath();
     if (externalJavac.isPresent()) {
-      return new ExternalJavac(externalJavac.get());
+
+      if (!getProcessExecutor().isPresent()) {
+        throw new RuntimeException("Misconfigured JavacOptions --- no process executor");
+      }
+
+      ProcessExecutorParams params = ImmutableProcessExecutorParams.builder()
+          .setCommand(ImmutableList.of(externalJavac.get().toString(), "-version"))
+          .build();
+      ProcessExecutor.Result result = null;
+      try {
+        result = getProcessExecutor().get().launchAndExecute(params);
+      } catch (InterruptedException | IOException e) {
+        throw new RuntimeException(e);
+      }
+      Optional<String> stderr = result.getStderr();
+      JavacVersion version = ImmutableJavacVersion.of(stderr.or("unknown version"));
+      return new ExternalJavac(externalJavac.get(), version);
     }
     return new Jsr199Javac(getJavacJarPath());
   }
@@ -174,6 +196,7 @@ public abstract class JavacOptions implements RuleKeyAppendable {
     builder.setVerbose(options.isVerbose());
     builder.setProductionBuild(options.isProductionBuild());
 
+    builder.setProcessExecutor(options.getProcessExecutor());
     builder.setJavacPath(options.getJavacPath());
     builder.setJavacJarPath(options.getJavacJarPath());
     builder.setAnnotationProcessingParams(options.getAnnotationProcessingParams());

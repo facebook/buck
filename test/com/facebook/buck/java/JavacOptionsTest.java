@@ -16,22 +16,32 @@
 
 package com.facebook.buck.java;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import org.junit.Assume;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 
 public class JavacOptionsTest {
@@ -176,6 +186,41 @@ public class JavacOptionsTest {
         .build();
 
     assertOptionsContains(options, "-Xfoobar");
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void settingTheExternalJavacButNotTheProcessExecutorIsATerribleMistake() {
+    JavacOptions options = createStandardBuilder()
+        .setJavacPath(Paths.get("/example/javac"))
+        .setProcessExecutor(Optional.<ProcessExecutor>absent())
+        .build();
+
+    options.getJavac();
+  }
+
+  @Test
+  public void externalJavacVersionIsReadFromStderrBecauseThatIsWhereJavacWritesIt()
+      throws IOException {
+    Platform current = Platform.detect();
+    Assume.assumeTrue(current != Platform.WINDOWS && current != Platform.UNKNOWN);
+
+    Path tempPath = Files.createTempFile("javac", "spoof");
+    File tempFile = tempPath.toFile();
+    tempFile.deleteOnExit();
+    assertTrue(tempFile.setExecutable(true));
+    // We could use the "-n" syntax, but that doesn't work on all variants of echo. Play it safe.
+    Files.write(tempPath, "echo \"cover-version\" 1>&2".getBytes(UTF_8));
+
+    ImmutableJavacOptions options = createStandardBuilder()
+        .setJavacPath(tempPath)
+        .setProcessExecutor(new ProcessExecutor(new TestConsole()))
+        .build();
+
+    Javac javac = options.getJavac();
+    assertTrue(javac instanceof ExternalJavac);
+
+    JavacVersion seen = javac.getVersion();
+    assertEquals(ImmutableJavacVersion.of("cover-version\n"), seen);
   }
 
   private void assertOptionsContains(JavacOptions options, String param) {

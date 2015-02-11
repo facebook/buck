@@ -84,7 +84,8 @@ public class ExternalJavacTest extends EasyMockSupport {
 
   private ExternalJavac createTestStep() {
     Path fakeJavac = Paths.get("fakeJavac");
-    return new ExternalJavac(fakeJavac);
+    return new ExternalJavac(
+        fakeJavac, ImmutableJavacVersion.of("unknown"));
   }
 }
 

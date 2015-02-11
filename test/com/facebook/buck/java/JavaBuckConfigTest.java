@@ -29,6 +29,7 @@ import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
@@ -131,7 +132,8 @@ public class JavaBuckConfigTest {
 
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    JavacOptions options = config.getDefaultJavacOptions();
+    FakeProcessExecutor processExecutor = new FakeProcessExecutor();
+    JavacOptions options = config.getDefaultJavacOptions(processExecutor);
 
     assertEquals(sourceLevel, options.getSourceLevel());
     assertEquals(targetLevel, options.getTargetLevel());
@@ -142,7 +144,8 @@ public class JavaBuckConfigTest {
       throws IOException, InterruptedException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
 
-    JavacOptions options = config.getDefaultJavacOptions();
+    FakeProcessExecutor processExecutor = new FakeProcessExecutor();
+    JavacOptions options = config.getDefaultJavacOptions(processExecutor);
 
     assertEquals(TARGETED_JAVA_VERSION, options.getSourceLevel());
     assertEquals(TARGETED_JAVA_VERSION, options.getTargetLevel());
@@ -154,7 +157,8 @@ public class JavaBuckConfigTest {
     String localConfig = "[java]\nbootclasspath-6 = one.jar\nbootclasspath-7 = two.jar";
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    JavacOptions options = config.getDefaultJavacOptions();
+    FakeProcessExecutor processExecutor = new FakeProcessExecutor();
+    JavacOptions options = config.getDefaultJavacOptions(processExecutor);
 
     JavacOptions jse5 = JavacOptions.builder(options).setSourceLevel("5").build();
     JavacOptions jse6 = JavacOptions.builder(options).setSourceLevel("6").build();

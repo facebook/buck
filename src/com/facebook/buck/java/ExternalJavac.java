@@ -39,21 +39,16 @@ import java.util.Map;
 public class ExternalJavac implements Javac {
 
   private final Path pathToJavac;
+  private final JavacVersion version;
 
-  private static final JavacVersion VERSION = new JavacVersion() {
-      @Override
-      public String getVersionString() {
-        return "external";
-      }
-    };
-
-  public ExternalJavac(Path pathToJavac) {
+  public ExternalJavac(Path pathToJavac, JavacVersion version) {
     this.pathToJavac = pathToJavac;
+    this.version = version;
   }
 
   @Override
   public JavacVersion getVersion() {
-    return VERSION;
+    return version;
   }
 
   @Override
