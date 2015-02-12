@@ -131,6 +131,10 @@ directory-based and Cassandra caching.
     # is buck-cache.
     dir = buck-cache
 
+    # The maximum cache size for directory-based caching. The default size
+    # is unlimited.
+    dir_max_size = 10GB
+
     # Comma-separated set of known Cassandra cache nodes, for example:
     #
     #   hosts = artifactcache1.example.com, artifactcache2.example.com
