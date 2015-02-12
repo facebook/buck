@@ -75,9 +75,10 @@ public class ProjectIntegrationTest {
         result.getStdout());
 
     assertThat(
-        "`buck project` should contain warning to restart IntelliJ.",
+        "`buck project` should contain warning to synchronize IntelliJ.",
         result.getStderr(),
-        containsString("  ::  Please close and re-open IntelliJ."));
+        containsString("  ::  Please resynchronize IntelliJ via File->Synchronize " +
+            "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
   }
 
   @Test
@@ -160,9 +161,10 @@ public class ProjectIntegrationTest {
         result.getStdout());
 
     assertThat(
-        "`buck project` should contain warning to restart IntelliJ.",
+        "`buck project` should contain warning to synchronize IntelliJ.",
         result.getStderr(),
-        containsString("  ::  Please close and re-open IntelliJ."));
+        containsString("  ::  Please resynchronize IntelliJ via File->Synchronize " +
+            "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
   }
 
   @Test
@@ -226,9 +228,10 @@ public class ProjectIntegrationTest {
         result.getStdout());
 
     assertThat(
-        "`buck project` should contain warning to restart IntelliJ.",
+        "`buck project` should contain warning to synchronize IntelliJ.",
         result.getStderr(),
-        containsString("  ::  Please close and re-open IntelliJ."));
+        containsString("  ::  Please resynchronize IntelliJ via File->Synchronize " +
+            "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
   }
 
   /**
@@ -266,9 +269,10 @@ public class ProjectIntegrationTest {
         result.getStdout());
 
     assertThat(
-        "`buck project` should contain warning to restart IntelliJ.",
+        "`buck project` should contain warning to synchronize IntelliJ.",
         result.getStderr(),
-        containsString("  ::  Please close and re-open IntelliJ."));
+        containsString("  ::  Please resynchronize IntelliJ via File->Synchronize " +
+            "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
   }
 
   @Test
@@ -332,9 +336,10 @@ public class ProjectIntegrationTest {
         result.getStdout());
 
     assertThat(
-        "`buck project` should contain warning to restart IntelliJ.",
+        "`buck project` should contain warning to synchronize IntelliJ.",
         result.getStderr(),
-        containsString("  ::  Please close and re-open IntelliJ."));
+        containsString("  ::  Please resynchronize IntelliJ via File->Synchronize " +
+            "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
   }
 
   /**
@@ -367,9 +372,10 @@ public class ProjectIntegrationTest {
         result.getStdout());
 
     assertThat(
-        "`buck project` should contain warning to restart IntelliJ.",
+        "`buck project` should contain warning to synchronize IntelliJ.",
         result.getStderr(),
-        containsString("  ::  Please close and re-open IntelliJ."));
+        containsString("  ::  Please resynchronize IntelliJ via File->Synchronize " +
+            "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
   }
 
   /**

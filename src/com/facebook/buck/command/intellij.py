@@ -509,4 +509,5 @@ if __name__ == '__main__':
     for path in MODIFIED_FILES:
         print path
 
-    print >> sys.stderr, '  ::  Please close and re-open IntelliJ.'
+    print >> sys.stderr, ('  ::  Please resynchronize IntelliJ via File->Synchronize ' +
+                          'or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)')
