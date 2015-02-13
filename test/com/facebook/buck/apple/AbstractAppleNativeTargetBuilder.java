@@ -59,6 +59,11 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
+  public BUILDER setExportedDeps(Optional<ImmutableSortedSet<BuildTarget>> exportedDeps) {
+    arg.exportedDeps = exportedDeps;
+    return getThis();
+  }
+
   public BUILDER setGid(Optional<String> gid) {
     arg.gid = gid;
     return getThis();

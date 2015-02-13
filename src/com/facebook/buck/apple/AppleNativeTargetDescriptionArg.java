@@ -37,6 +37,7 @@ public class AppleNativeTargetDescriptionArg implements HasTests {
   public Optional<ImmutableList<AppleSource>> srcs;
   public Optional<ImmutableSortedSet<String>> frameworks;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;
+  public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
   public Optional<String> gid;
   public Optional<String> headerPathPrefix;
   public Optional<Boolean> useBuckHeaderMaps;
