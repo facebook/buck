@@ -86,7 +86,7 @@ public class HttpArtifactCache implements ArtifactCache {
     this.urlStore = String.format(URL_TEMPLATE_STORE, hostname, port);
   }
 
-  protected HttpURLConnection getConnection(String url) throws MalformedURLException, IOException {
+  protected HttpURLConnection getConnection(String url) throws IOException {
     return (HttpURLConnection) new URL(url).openConnection();
   }
 
@@ -243,7 +243,7 @@ public class HttpArtifactCache implements ArtifactCache {
     // The cache protocol requires we provide the number of artifacts being sent in the request
     connection.setRequestProperty("Buck-Artifact-Count", "1");
     try (OutputStream os = new BufferedOutputStream(connection.getOutputStream());
-         InputStream is = projectFilesystem.newFileInputStream(file.toPath());) {
+         InputStream is = projectFilesystem.newFileInputStream(file.toPath())) {
       os.write(("--" + BOUNDARY + "\r\n").getBytes(StandardCharsets.UTF_8));
       os.write("Content-Disposition: form-data; name=\"key0\"\r\n\r\n".getBytes(
             StandardCharsets.UTF_8));

@@ -34,7 +34,6 @@ import com.google.common.eventbus.Subscribe;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.util.logging.Level;
 
@@ -50,7 +49,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected final Console console;
   protected final Clock clock;
   protected final Ansi ansi;
-  protected final PrintStream stdErr;
 
   @Nullable
   protected volatile ProjectBuildFileParseEvents.Started projectBuildFileParseStarted;
@@ -98,8 +96,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
     this.installStarted = null;
     this.installFinished = null;
-
-    this.stdErr = console.getStdErr().getRawStream();
   }
 
   protected String formatElapsedTime(long elapsedTimeMs) {

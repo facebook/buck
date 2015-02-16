@@ -52,7 +52,7 @@ public class FirstOrderTest {
     }
   };
 
-  private static final ImmutableList<Class<?>> KNOWN_TYPES = ImmutableList.<Class<?>>of(
+  private static final ImmutableList<Class<?>> KNOWN_TYPES = ImmutableList.of(
       DependencyEnum.class,
       AnnotationDependency.class,
       DependencyInterface.class,

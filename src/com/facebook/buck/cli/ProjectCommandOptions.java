@@ -147,8 +147,8 @@ public class ProjectCommandOptions extends BuildCommandOptions {
     Optional<String> defaultExcludePathsPaths = getBuckConfig().getValue(
         "project", "default_exclude_paths");
     return defaultExcludePathsPaths.isPresent()
-        ? ImmutableSet.<String>copyOf(
-            Splitter.on(',').omitEmptyStrings().trimResults().split(defaultExcludePathsPaths.get()))
+        ? ImmutableSet.copyOf(
+        Splitter.on(',').omitEmptyStrings().trimResults().split(defaultExcludePathsPaths.get()))
         : ImmutableSet.<String>of();
   }
 

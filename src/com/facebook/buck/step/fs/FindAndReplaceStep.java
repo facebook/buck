@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.file.Path;
-import java.util.regex.Pattern;
 
 public class FindAndReplaceStep implements Step {
 
@@ -49,18 +48,6 @@ public class FindAndReplaceStep implements Step {
           @Override
           public String apply(String input) {
             return input.replace(pattern, replace);
-          }
-        });
-  }
-
-  public FindAndReplaceStep(Path input, Path output, final Pattern pattern, final String replace) {
-    this(
-        input,
-        output,
-        new Function<String, String>() {
-          @Override
-          public String apply(String input) {
-            return pattern.matcher(input).replaceAll(replace);
           }
         });
   }

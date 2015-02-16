@@ -96,7 +96,7 @@ public class ZipOutputStreamTest {
   @Test(expected = ZipException.class)
   public void mustThrowAnExceptionIfNoZipEntryIsOpenWhenWritingData() throws IOException {
     try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output);
+        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output)
     ) {
       // Note: we have not opened a zip entry.
       out.write("cheese".getBytes());
@@ -107,7 +107,7 @@ public class ZipOutputStreamTest {
   public void mustThrowAnExceptionIfNoZipEntryIsOpenWhenWritingDataWhenOverwriting()
       throws IOException {
     try (
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING);
+        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, OVERWRITE_EXISTING)
     ) {
       // Note: we have not opened a zip entry
       out.write("cheese".getBytes());

@@ -21,5 +21,5 @@ public enum GraphQLModelTag {
   CORE_DATA_CONSISTENCY_LOOKASIDE,
   MEM,
   MODEL_PROTOCOLS,
-  MIXINS;
+  MIXINS
 }

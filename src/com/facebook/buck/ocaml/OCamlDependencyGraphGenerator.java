@@ -16,8 +16,6 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.graph.DefaultDirectedAcyclicGraph;
-import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.rules.PathSourcePath;
@@ -46,11 +44,6 @@ public class OCamlDependencyGraphGenerator {
 
   @Nullable
   private MutableDirectedGraph<String> graph;
-
-  public DirectedAcyclicGraph<String> getGraph() {
-    Preconditions.checkNotNull(graph);
-    return new DefaultDirectedAcyclicGraph<>(graph);
-  }
 
   public ImmutableList<String> generate(String depToolOutput) {
     parseDependencies(depToolOutput);

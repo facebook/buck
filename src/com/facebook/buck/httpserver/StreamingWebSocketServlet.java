@@ -17,12 +17,7 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.event.BuckEvent;
-import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.BuildRule;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 
@@ -40,8 +35,6 @@ import java.util.Set;
 
 @SuppressWarnings("serial")
 public class StreamingWebSocketServlet extends WebSocketServlet {
-
-  private static final JsonNodeFactory jsonNodeFactory = JsonNodeFactory.instance;
 
   // This is threadsafe
   private final Set<MyWebSocket> connections;
@@ -110,24 +103,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     @Override
     public void onWebSocketText(String message) {
       super.onWebSocketText(message);
-      if (isNotConnected()) {
-        return;
-      }
-
       // TODO(mbolin): Handle requests from client instead of only pushing data down.
     }
-  }
-
-  static ObjectNode createJsonForGraph(ActionGraph graph) {
-    ObjectNode nodesToDeps = jsonNodeFactory.objectNode();
-    for (BuildRule source : graph.getNodes()) {
-      ArrayNode deps = jsonNodeFactory.arrayNode();
-      for (BuildRule sink : graph.getOutgoingNodesFor(source)) {
-        deps.add(sink.getFullyQualifiedName());
-      }
-      nodesToDeps.put(source.getFullyQualifiedName(), deps);
-    }
-
-    return nodesToDeps;
   }
 }

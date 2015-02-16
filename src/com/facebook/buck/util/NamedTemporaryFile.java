@@ -28,14 +28,6 @@ public class NamedTemporaryFile implements Closeable, Supplier<Path> {
   private final Path tempPath;
 
   public NamedTemporaryFile(
-      Path dir,
-      String prefix,
-      String suffix,
-      FileAttribute<?>... attrs) throws IOException {
-    tempPath = Files.createTempFile(dir, prefix, suffix, attrs);
-  }
-
-  public NamedTemporaryFile(
       String prefix,
       String suffix,
       FileAttribute<?>... attrs) throws IOException {

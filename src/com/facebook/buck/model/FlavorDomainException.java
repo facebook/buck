@@ -23,8 +23,4 @@ public class FlavorDomainException extends Exception {
     super(msg);
   }
 
-  public FlavorDomainException(String msg, Throwable cause) {
-    super(msg, cause);
-  }
-
 }

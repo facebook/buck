@@ -78,8 +78,8 @@ public abstract class ShellStep implements Step {
 
   protected ShellStep(@Nullable File workingDirectory) {
     this.workingDirectory = workingDirectory;
-    this.stdout = Optional.<String>absent();
-    this.stderr = Optional.<String>absent();
+    this.stdout = Optional.absent();
+    this.stderr = Optional.absent();
   }
 
   /**

@@ -45,10 +45,7 @@ public class XcodeProjectConfigDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new XcodeProjectConfig(
-        params,
-        new SourcePathResolver(resolver),
-        resolver.getAllRules(args.rules));
+    return new XcodeProjectConfig(params, new SourcePathResolver(resolver));
   }
 
   @SuppressFieldNotInitialized

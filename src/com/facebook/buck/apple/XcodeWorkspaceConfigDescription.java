@@ -53,13 +53,7 @@ public class XcodeWorkspaceConfigDescription
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) {
-    return new XcodeWorkspaceConfig(
-        params,
-        new SourcePathResolver(resolver),
-        args.srcTarget.transform(resolver.getRuleFunction()),
-        resolver.getAllRules(args.extraTests.get()),
-        getWorkspaceNameFromArg(args),
-        getActionConfigNamesFromArg(args));
+    return new XcodeWorkspaceConfig(params, new SourcePathResolver(resolver));
   }
 
   public static String getWorkspaceNameFromArg(Arg arg) {

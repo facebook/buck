@@ -76,7 +76,7 @@ public class CxxPreprocessorFlagsTest {
   public void fromBothToMultimapContainsConcatenatedFlags() {
     ImmutableMultimap<CxxSource.Type, String> flags =
         CxxPreprocessorFlags.fromArgs(
-            Optional.of(ImmutableList.<String>of("common")),
+            Optional.of(ImmutableList.of("common")),
             Optional.of(ImmutableMap.of(
                 CxxSource.Type.C, ImmutableList.of("foo", "bar"),
                 CxxSource.Type.CXX, ImmutableList.of("baz", "blech"),

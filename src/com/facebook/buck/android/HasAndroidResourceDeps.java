@@ -113,9 +113,4 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
    * this rule to finish.
    */
   ImmutableCollection<Path> getInputsToCompareToOutput();
-
-  /**
-   * @return boolean indicating whether this resource rule has whitelisted strings.
-   */
-  boolean hasWhitelistedStrings();
 }

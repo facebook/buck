@@ -110,13 +110,6 @@ public class AppleResource extends AbstractBuildRule {
     return files;
   }
 
-  /**
-   * Returns a map of variant files to evaluate for this resource rule.
-   */
-  public ImmutableMap<String, ImmutableMap<String, SourcePath>> getVariants() {
-    return variants;
-  }
-
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
     ImmutableSortedSet.Builder<Path> inputsToConsiderForCachingPurposes = ImmutableSortedSet

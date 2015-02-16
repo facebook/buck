@@ -291,7 +291,7 @@ public class SplitZipStepTest {
 
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))
-        .andReturn(ImmutableList.<String>of("-dontobfuscate"));
+        .andReturn(ImmutableList.of("-dontobfuscate"));
     ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
     EasyMock.expect(context.getProjectFilesystem()).andReturn(projectFilesystem).anyTimes();
     EasyMock.replay(projectFilesystem, context);

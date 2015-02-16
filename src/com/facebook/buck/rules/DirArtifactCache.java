@@ -161,6 +161,6 @@ public class DirArtifactCache implements ArtifactCache {
         return ArrayIterable.of(files, i, files.length);
       }
     }
-    return ImmutableList.<File>of();
+    return ImmutableList.of();
   }
 }

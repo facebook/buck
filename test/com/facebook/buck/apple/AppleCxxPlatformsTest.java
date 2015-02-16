@@ -120,6 +120,6 @@ public class AppleCxxPlatformsTest {
         "7.0",
         "armv7",
         appleSdkPaths,
-        Functions.<Path>forPredicate(Predicates.<Path>alwaysFalse()));
+        Functions.forPredicate(Predicates.<Path>alwaysFalse()));
   }
 }

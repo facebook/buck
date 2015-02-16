@@ -144,14 +144,6 @@ public class TestDevice implements IDevice {
     return properties.get(s);
   }
 
-  public void setProperty(String name, String value) {
-    if (value == null) {
-      properties.remove(name);
-    } else {
-      properties.put(name, value);
-    }
-  }
-
   @Override
   public boolean arePropertiesSet() {
     return true;

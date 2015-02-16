@@ -32,7 +32,7 @@ abstract class AbstractTemplateHandlerDelegate implements TemplateHandlerDelegat
         .addAll(COMMON_TEMPLATES)
         .addAll(templates)
         .build();
-  };
+  }
 
   @Override
   public ImmutableSet<String> getTemplates() {

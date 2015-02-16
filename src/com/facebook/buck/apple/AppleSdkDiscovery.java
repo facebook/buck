@@ -80,7 +80,7 @@ public class AppleSdkDiscovery {
     Path defaultToolchainPath = xcodeToolchainPaths.get(DEFAULT_TOOLCHAIN_ID);
     if (defaultToolchainPath == null) {
       LOG.debug("Could not find default toolchain %s; skipping discovery.", DEFAULT_TOOLCHAIN_ID);
-      return ImmutableMap.<AppleSdk, AppleSdkPaths>of();
+      return ImmutableMap.of();
     }
     LOG.debug("Searching for Xcode platforms under %s", xcodeDir);
 
@@ -205,13 +205,13 @@ public class AppleSdkDiscovery {
       } catch (Exception e) {
         throw new IOException(e);
       }
-      String name = ((NSString) sdkSettings.objectForKey("CanonicalName")).toString();
-      String version = ((NSString) sdkSettings.objectForKey("Version")).toString();
+      String name = sdkSettings.objectForKey("CanonicalName").toString();
+      String version = sdkSettings.objectForKey("Version").toString();
       NSDictionary defaultProperties = (NSDictionary) sdkSettings.objectForKey("DefaultProperties");
       NSArray toolchains = (NSArray) sdkSettings.objectForKey("Toolchains");
       if (toolchains != null) {
         for (NSObject toolchain : toolchains.getArray()) {
-          String toolchainId = ((NSString) toolchain).toString();
+          String toolchainId = toolchain.toString();
           sdkBuilder.addToolchains(toolchainId);
         }
       }

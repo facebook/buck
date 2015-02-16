@@ -115,22 +115,8 @@ public abstract class PythonPackageComponents {
       return add("module", modules, moduleSources, sources, from);
     }
 
-    public Builder addResource(Path destination, SourcePath source, BuildTarget from) {
-      return add("resource", resources, resourceSources, destination, source, from);
-    }
-
     public Builder addResources(Map<Path, SourcePath> sources, BuildTarget from) {
       return add("resource", resources, resourceSources, sources, from);
-    }
-
-    public Builder addNativeLibrary(Path destination, SourcePath source, BuildTarget from) {
-      return add(
-          "native library",
-          nativeLibraries,
-          nativeLibrarySources,
-          destination,
-          source,
-          from);
     }
 
     public Builder addNativeLibraries(Map<Path, SourcePath> sources, BuildTarget from) {

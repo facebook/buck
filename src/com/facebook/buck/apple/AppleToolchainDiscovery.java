@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.dd.plist.NSDictionary;
-import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableMap;
@@ -84,7 +83,7 @@ public class AppleToolchainDiscovery {
       } catch (Exception e) {
         throw new IOException(e);
       }
-      String identifier = ((NSString) parsedToolchainInfoPlist.objectForKey("Identifier"))
+      String identifier = parsedToolchainInfoPlist.objectForKey("Identifier")
           .toString();
       LOG.debug("Mapped SDK identifier %s to path %s", identifier, toolchainDir);
       toolchainBuilder.put(identifier, toolchainDir);

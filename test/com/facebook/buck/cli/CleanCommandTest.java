@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static org.easymock.EasyMock.capture;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
@@ -28,11 +29,9 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TestRepositoryBuilder;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -125,7 +124,6 @@ public class CleanCommandTest extends EasyMockSupport {
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
         new ObjectMapper(),
-        FakeFileHashCache.EMPTY_CACHE,
         new DefaultClock(),
         Optional.<ProcessManager>absent());
     return new CleanCommand(params);

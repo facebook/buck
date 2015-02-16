@@ -403,7 +403,7 @@ public class HeaderMap {
     OK,
     FAILURE_FULL,
     FAILURE_ALREADY_PRESENT,
-  };
+  }
 
   @SuppressWarnings("PMD.UnusedPrivateMethod") // PMD has a bad heuristic here.
   private AddResult add(String str, String prefix, String suffix) {

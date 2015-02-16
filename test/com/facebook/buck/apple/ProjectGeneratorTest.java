@@ -289,23 +289,23 @@ public class ProjectGeneratorTest {
     assertEquals("buck-out/gen/foo/lib-public-headers.hmap", headerMaps.get(0).toString());
     assertThatHeaderMapFileContains(
         Paths.get("buck-out/gen/foo/lib-public-headers.hmap"),
-        ImmutableMap.<String, String>of("lib/bar.h", "HeaderGroup1/bar.h")
+        ImmutableMap.of("lib/bar.h", "HeaderGroup1/bar.h")
     );
 
     assertEquals("buck-out/gen/foo/lib-target-headers.hmap", headerMaps.get(1).toString());
     assertThatHeaderMapFileContains(
         Paths.get("buck-out/gen/foo/lib-target-headers.hmap"),
-        ImmutableMap.<String, String>of(
+        ImmutableMap.of(
             "lib/foo.h", "HeaderGroup1/foo.h",
             "lib/bar.h", "HeaderGroup1/bar.h",
             "lib/baz.h", "HeaderGroup2/baz.h"
-            )
+        )
     );
 
     assertEquals("buck-out/gen/foo/lib-target-user-headers.hmap", headerMaps.get(2).toString());
     assertThatHeaderMapFileContains(
         Paths.get("buck-out/gen/foo/lib-target-user-headers.hmap"),
-        ImmutableMap.<String, String>of(
+        ImmutableMap.of(
             "foo.h", "HeaderGroup1/foo.h",
             "bar.h", "HeaderGroup1/bar.h",
             "baz.h", "HeaderGroup2/baz.h"
@@ -1777,7 +1777,7 @@ public class ProjectGeneratorTest {
   public void nonexistentResourceDirectoryShouldThrow() throws IOException {
     ImmutableSet<TargetNode<?>> nodes = setupSimpleLibraryWithResources(
         ImmutableSet.<SourcePath>of(),
-        ImmutableSet.<Path>of(Paths.get("nonexistent-directory")));
+        ImmutableSet.of(Paths.get("nonexistent-directory")));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -1805,7 +1805,7 @@ public class ProjectGeneratorTest {
   public void usingFileAsResourceDirectoryShouldThrow() throws IOException {
     ImmutableSet<TargetNode<?>> nodes = setupSimpleLibraryWithResources(
         ImmutableSet.<SourcePath>of(),
-        ImmutableSet.<Path>of(Paths.get("bar.png")));
+        ImmutableSet.of(Paths.get("bar.png")));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(

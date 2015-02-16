@@ -32,4 +32,4 @@ public enum ApplePlatform {
     public String toString() {
       return value;
     }
-};
+}

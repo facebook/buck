@@ -47,7 +47,6 @@ import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.Platform;
@@ -210,8 +209,7 @@ public class AuditOwnerCommandTest {
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
-        new ObjectMapper(),
-        FakeFileHashCache.EMPTY_CACHE));
+        new ObjectMapper()));
   }
 
   @Test

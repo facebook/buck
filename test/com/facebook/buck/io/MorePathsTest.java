@@ -363,7 +363,7 @@ public class MorePathsTest {
             Paths.get("bar"),
             ImmutableList.of(Paths.get("baz", "foo")),
             ImmutableList.<String>of(),
-            Functions.<Path>forPredicate(Predicates.<Path>alwaysFalse())));
+            Functions.forPredicate(Predicates.<Path>alwaysFalse())));
   }
 
   @Test

@@ -32,12 +32,9 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.NullFileHashCache;
 import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -63,7 +60,6 @@ class CommandRunnerParams {
   private final Repository repository;
   private final JavaPackageFinder javaPackageFinder;
   private final ObjectMapper objectMapper;
-  private final FileHashCache fileHashCache;
   private final Clock clock;
   private final Optional<ProcessManager> processManager;
 
@@ -79,8 +75,7 @@ class CommandRunnerParams {
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
-      ObjectMapper objectMapper,
-      FileHashCache fileHashCache)
+      ObjectMapper objectMapper)
       throws IOException, InterruptedException {
     this(
         console,
@@ -102,7 +97,6 @@ class CommandRunnerParams {
         environment,
         javaPackageFinder,
         objectMapper,
-        fileHashCache,
         new DefaultClock(),
         Optional.<ProcessManager>absent());
   }
@@ -119,7 +113,6 @@ class CommandRunnerParams {
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
       ObjectMapper objectMapper,
-      FileHashCache fileHashCache,
       Clock clock,
       Optional<ProcessManager> processManager) {
     this.console = console;
@@ -133,21 +126,12 @@ class CommandRunnerParams {
     this.environment = environment;
     this.javaPackageFinder = javaPackageFinder;
     this.objectMapper = objectMapper;
-    this.fileHashCache = fileHashCache;
     this.clock = clock;
     this.processManager = processManager;
   }
 
-  public Ansi getAnsi() {
-    return console.getAnsi();
-  }
-
   public Console getConsole() {
     return console;
-  }
-
-  public Verbosity getVerbosity() {
-    return console.getVerbosity();
   }
 
   public Repository getRepository() {
@@ -188,10 +172,6 @@ class CommandRunnerParams {
 
   public ObjectMapper getObjectMapper() {
     return objectMapper;
-  }
-
-  public FileHashCache getFileHashCache() {
-    return fileHashCache;
   }
 
   public Clock getClock() {

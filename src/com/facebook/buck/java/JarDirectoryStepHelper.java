@@ -202,7 +202,7 @@ public class JarDirectoryStepHelper {
   private static Manifest readManifest(ZipFile zip, ZipEntry manifestMfEntry) throws IOException {
     try (
         ByteArrayOutputStream output = new ByteArrayOutputStream((int) manifestMfEntry.getSize());
-        InputStream stream = zip.getInputStream(manifestMfEntry);
+        InputStream stream = zip.getInputStream(manifestMfEntry)
     ) {
       ByteStreams.copy(stream, output);
       ByteArrayInputStream rawManifest = new ByteArrayInputStream(output.toByteArray());

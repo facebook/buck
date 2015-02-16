@@ -919,11 +919,6 @@ public class BuckConfig {
     return repoNamesToPaths;
   }
 
-  @VisibleForTesting
-  String getProperty(String key, String def) {
-    return System.getProperty(key, def);
-  }
-
   /**
    * @param projectFilesystem The directory that is the root of the project being built.
    */

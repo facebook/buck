@@ -23,15 +23,12 @@ import java.util.Map;
 public class FakeBuckEnvironment extends FakeBuckConfig {
 
   private final ImmutableMap<String, String> environment;
-  private final Map<String, String> properties;
 
   public FakeBuckEnvironment(
       Map<String, Map<String, String>> sections,
-      Map<String, String> environment,
-      Map<String, String> properties) {
+      Map<String, String> environment) {
     super(sections);
     this.environment = ImmutableMap.copyOf(environment);
-    this.properties = properties;
   }
 
   @Override
@@ -42,13 +39,5 @@ public class FakeBuckEnvironment extends FakeBuckConfig {
   @Override
   public String[] getEnv(String propertyName, String separator) {
     return environment.get(propertyName).split(separator);
-  }
-
-  @Override
-  String getProperty(String name, String def) {
-    if (properties.containsKey(name)) {
-      return properties.get(name);
-    }
-    return def;
   }
 }

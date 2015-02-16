@@ -19,5 +19,4 @@ package com.facebook.buck.rules;
 public enum BuildRuleStatus {
   FAIL,
   SUCCESS,
-  UNKNOWN,   // Final status is currently not known
 }

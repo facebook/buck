@@ -39,7 +39,6 @@ import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.Platform;
@@ -83,8 +82,7 @@ public class AuditClasspathCommandTest {
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
-        new ObjectMapper(),
-        FakeFileHashCache.EMPTY_CACHE));
+        new ObjectMapper()));
   }
 
   @Test

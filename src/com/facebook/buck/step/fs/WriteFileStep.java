@@ -29,7 +29,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class WriteFileStep implements Step {
 
@@ -41,16 +40,8 @@ public class WriteFileStep implements Step {
     this.outputPath = outputPath;
   }
 
-  public WriteFileStep(String content, String outputPath) {
-    this(Suppliers.ofInstance(content), Paths.get(outputPath));
-  }
-
   public WriteFileStep(String content, Path outputPath) {
     this(Suppliers.ofInstance(content), outputPath);
-  }
-
-  public WriteFileStep(Supplier<String> content, String outputPath) {
-    this(content, Paths.get(outputPath));
   }
 
   public WriteFileStep(final Supplier<String> content, Path outputPath) {

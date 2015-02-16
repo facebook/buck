@@ -197,10 +197,6 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
         .setReflectively("out", out);
   }
 
-  public ImmutableList<Path> getSrcs() {
-    return getResolver().getAllPaths(srcs);
-  }
-
   protected void addEnvironmentVariables(ExecutionContext context,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put("SRCS", Joiner.on(' ').join(srcsToAbsolutePaths.values()));

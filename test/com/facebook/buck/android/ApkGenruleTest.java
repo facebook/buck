@@ -177,7 +177,7 @@ public class ApkGenruleTest {
         .setJavaPackageFinder(EasyMock.createNiceMock(JavaPackageFinder.class))
         .setEventBus(BuckEventBusFactory.newInstance())
         .build();
-    Iterable<Path> expectedInputsToCompareToOutputs = ImmutableList.<Path>of(
+    Iterable<Path> expectedInputsToCompareToOutputs = ImmutableList.of(
         Paths.get("src/com/facebook/signer.py"),
         Paths.get("src/com/facebook/key.properties"));
     MoreAsserts.assertIterablesEquals(

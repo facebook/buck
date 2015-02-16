@@ -171,9 +171,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         started.getCommandName(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(
+        ImmutableMap.of(
             "command_args", Joiner.on(' ').join(started.getArgs())
-            ),
+        ),
         started);
   }
 
@@ -182,7 +182,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         finished.getCommandName(),
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(
+        ImmutableMap.of(
             "command_args", Joiner.on(' ').join(finished.getArgs()),
             "daemon", Boolean.toString(finished.isDaemon())),
         finished);
@@ -213,7 +213,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         buildRule.getFullyQualifiedName(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of("rule_key", started.getRuleKeySafe()),
+        ImmutableMap.of("rule_key", started.getRuleKeySafe()),
         started);
   }
 
@@ -222,10 +222,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         finished.getBuildRule().getFullyQualifiedName(),
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(
+        ImmutableMap.of(
             "cache_result", finished.getCacheResult().toString().toLowerCase(),
             "success_type",
-                finished.getSuccessType().transform(Functions.toStringFunction()).or("failed")
+            finished.getSuccessType().transform(Functions.toStringFunction()).or("failed")
         ),
         finished);
   }
@@ -264,7 +264,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         "parse",
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of("targets",
+        ImmutableMap.of(
+            "targets",
             Joiner.on(",").join(finished.getBuildTargets())),
         finished);
   }
@@ -303,7 +304,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         "install",
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(
+        ImmutableMap.of(
             "target", finished.getBuildTarget().getFullyQualifiedName(),
             "success", Boolean.toString(finished.isSuccess())),
         finished);
@@ -323,7 +324,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         "start_activity",
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(
+        ImmutableMap.of(
             "target", finished.getBuildTarget().getFullyQualifiedName(),
             "activity_name", finished.getActivityName(),
             "success", Boolean.toString(finished.isSuccess())),
@@ -344,7 +345,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         "uninstall",
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(
+        ImmutableMap.of(
             "package_name", finished.getPackageName(),
             "success", Boolean.toString(finished.isSuccess())),
         finished);
@@ -355,7 +356,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         started.getCategory(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(
+        ImmutableMap.of(
             "rule_key", started.getRuleKey().toString()),
         started);
   }

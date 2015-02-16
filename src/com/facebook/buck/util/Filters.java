@@ -49,7 +49,7 @@ public class Filters {
     private final String qualifier;
     private final double value;
 
-    public static final Ordering<Density> ORDERING = Ordering.<Density>natural();
+    public static final Ordering<Density> ORDERING = Ordering.natural();
 
     Density(String qualifier, double value) {
       this.qualifier = qualifier;

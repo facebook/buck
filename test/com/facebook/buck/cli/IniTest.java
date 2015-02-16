@@ -22,7 +22,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import org.ini4j.Ini;
-import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Profile.Section;
 import org.junit.Test;
 
@@ -38,7 +37,7 @@ public class IniTest {
 
   @Test
   public void testSecondaryLoadOverridesOriginalDefs()
-      throws InvalidFileFormatException, IOException {
+      throws IOException {
     Ini ini = new Ini();
     Reader originalInput = new StringReader(Joiner.on("\n").join(
         "[alias]",

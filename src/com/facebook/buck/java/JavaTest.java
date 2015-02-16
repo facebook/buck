@@ -154,10 +154,6 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
     return sourceUnderTest;
   }
 
-  public ImmutableList<String> getVmArgs() {
-    return vmArgs;
-  }
-
   /**
    * @param context That may be useful in producing the bootclasspath entries.
    */

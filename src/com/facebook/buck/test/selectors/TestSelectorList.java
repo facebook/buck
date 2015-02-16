@@ -161,7 +161,7 @@ public class TestSelectorList {
     Builder loadFromFile(File file) throws IOException {
       try (
         FileReader tempReader = new FileReader(file);
-        BufferedReader in = new BufferedReader(tempReader);
+        BufferedReader in = new BufferedReader(tempReader)
       ) {
         String line;
         int lineNumber = 1;

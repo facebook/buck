@@ -24,7 +24,6 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
@@ -59,7 +58,7 @@ public class ThriftCxxEnhancerTest {
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       new FlavorDomain<>(
           "C/C++ Platform",
-          ImmutableMap.<Flavor, CxxPlatform>of(CXX_PLATFORM.getFlavor(), CXX_PLATFORM));
+          ImmutableMap.of(CXX_PLATFORM.getFlavor(), CXX_PLATFORM));
   private static final ThriftCxxEnhancer ENHANCER_CPP = new ThriftCxxEnhancer(
       THRIFT_BUCK_CONFIG,
       CXX_BUCK_CONFIG,

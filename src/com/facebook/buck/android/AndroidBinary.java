@@ -297,10 +297,6 @@ public class AndroidBinary extends AbstractBuildRule implements
     return proguardConfig;
   }
 
-  public boolean isRelease() {
-    return packageType == PackageType.RELEASE;
-  }
-
   private boolean isCompressResources(){
     return resourceCompressionMode.isCompressResources();
   }

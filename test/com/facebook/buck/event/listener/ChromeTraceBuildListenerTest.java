@@ -185,7 +185,7 @@ public class ChromeTraceBuildListenerTest {
     )) {
       eventBus.post(new TraceEvent("scheming", ChromeTraceEvent.Phase.BEGIN));
       eventBus.post(new TraceEvent("scheming", ChromeTraceEvent.Phase.END,
-          ImmutableMap.<String, String>of("success", "false")));
+          ImmutableMap.of("success", "false")));
     }
 
     eventBus.post(BuildEvent.finished(buildTargets, 0));

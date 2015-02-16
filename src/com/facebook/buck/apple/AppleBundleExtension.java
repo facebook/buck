@@ -16,9 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Ascii;
-
 /**
  * Known bundle extensions that have special handling.
  */
@@ -30,27 +27,6 @@ public enum AppleBundleExtension {
   BUNDLE,
   OCTEST,
   XCTEST;
-
-  public static AppleBundleExtension fromString(String s) {
-    switch (Ascii.toLowerCase(s)) {
-      case "app":
-        return APP;
-      case "framework":
-        return FRAMEWORK;
-      case "appex":
-        return APPEX;
-      case "plugin":
-        return PLUGIN;
-      case "bundle":
-        return BUNDLE;
-      case "octest":
-        return OCTEST;
-      case "xctest":
-        return XCTEST;
-      default:
-        throw new HumanReadableException("Invalid bundle extension value %s.", s);
-    }
-  }
 
   public String toFileExtension() {
     switch (this) {

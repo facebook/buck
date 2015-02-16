@@ -71,7 +71,7 @@ public class Pair<FIRST, SECOND> {
           return res;
         }
         return o1.second.compareTo(o2.second);
-      };
+      }
     };
   }
 

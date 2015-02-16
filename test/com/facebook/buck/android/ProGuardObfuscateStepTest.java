@@ -103,7 +103,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
         /* optimizationPasses */ Optional.<Integer>absent(),
         /* inputAndOutputEntries */ ImmutableMap.<Path, Path>of(),
-        /* additionalLibraryJarsForProguard */ ImmutableSet.<Path>of(
+        /* additionalLibraryJarsForProguard */ ImmutableSet.of(
             Paths.get("myfavorite.jar"), Paths.get("another.jar")),
         Paths.get("proguard-directory"),
         new FakeBuildableContext(),

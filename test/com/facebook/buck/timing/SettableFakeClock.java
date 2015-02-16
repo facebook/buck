@@ -35,10 +35,6 @@ public class SettableFakeClock implements Clock {
     currentTimeMillis.set(millis);
   }
 
-  public void setNanos(long nanos) {
-    nanoTime.set(nanos);
-  }
-
   @Override
   public long currentTimeMillis() {
     return currentTimeMillis.get();

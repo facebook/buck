@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -71,13 +70,6 @@ public final class AppleBuildRules {
   }
 
   /**
-   * Whether the target node type is a test target.
-   */
-  public static boolean isXcodeTargetTestTargetNode(TargetNode<?> targetNode) {
-    return XCODE_TARGET_BUILD_RULE_TEST_TYPES.contains(targetNode.getType());
-  }
-
-  /**
    * Whether the bundle extension is a test bundle extension.
    */
   public static boolean isXcodeTargetTestBundleExtension(AppleBundleExtension extension) {
@@ -105,34 +97,6 @@ public final class AppleBuildRules {
      * Will also not traverse the dependencies of shared libraries, as those are linked already.
      */
     LINKING,
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T> Iterable<TargetNode<T>> getRecursiveTargetNodeDependenciesOfType(
-      TargetGraph targetGraph,
-      RecursiveDependenciesMode mode,
-      TargetNode<?> targetNode,
-      BuildRuleType type) {
-    return Iterables.transform(
-        getRecursiveTargetNodeDependenciesOfTypes(targetGraph, mode, targetNode, type),
-        new Function<TargetNode<?>, TargetNode<T>>() {
-          @Override
-          public TargetNode<T> apply(TargetNode<?> input) {
-            return (TargetNode<T>) input;
-          }
-        });
-  }
-
-  public static Iterable<TargetNode<?>> getRecursiveTargetNodeDependenciesOfTypes(
-      TargetGraph targetGraph,
-      RecursiveDependenciesMode mode,
-      TargetNode<?> targetNode,
-      BuildRuleType... types) {
-    return getRecursiveTargetNodeDependenciesOfTypes(
-        targetGraph,
-        mode,
-        targetNode,
-        Optional.of(ImmutableSet.copyOf(types)));
   }
 
   public static Iterable<TargetNode<?>> getRecursiveTargetNodeDependenciesOfTypes(

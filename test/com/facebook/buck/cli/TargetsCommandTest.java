@@ -52,7 +52,6 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -125,8 +124,7 @@ public class TargetsCommandTest {
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
             new FakeJavaPackageFinder(),
-            objectMapper,
-            FakeFileHashCache.EMPTY_CACHE));
+            objectMapper));
   }
 
   @Test

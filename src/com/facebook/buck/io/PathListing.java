@@ -177,7 +177,7 @@ public class PathListing {
       case EXCLUDE:
         if (fullSet) {
           // Make sure we don't call pathsList.get(pathsList.size()).
-          paths = ImmutableSortedSet.<Path>of();
+          paths = ImmutableSortedSet.of();
         } else {
           paths = paths.tailSet(pathsList.get(limitIndex));
         }

@@ -444,10 +444,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return javacOptions.getAnnotationProcessingParams();
   }
 
-  public Optional<Path> getProguardConfig() {
-    return proguardConfig;
-  }
-
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
     ImmutableList.Builder<Path> builder = ImmutableList.builder();

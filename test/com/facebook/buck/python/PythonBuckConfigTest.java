@@ -123,8 +123,7 @@ public class PythonBuckConfigTest {
                 ImmutableMap.<String, String>builder()
                     .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
                     .put("PATHEXT", "")
-                    .build(),
-                ImmutableMap.<String, String>of()));
+                    .build()));
     config.getPythonInterpreter();
   }
 
@@ -139,8 +138,7 @@ public class PythonBuckConfigTest {
                 ImmutableMap.<String, String>builder()
                     .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
                     .put("PATHEXT", ".exe")
-                    .build(),
-                ImmutableMap.<String, String>of()));
+                    .build()));
     config.getPythonInterpreter();
   }
 
@@ -157,8 +155,7 @@ public class PythonBuckConfigTest {
                 ImmutableMap.<String, String>builder()
                     .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
                     .put("PATHEXT", "")
-                    .build(),
-                ImmutableMap.<String, String>of()));
+                    .build()));
     assertEquals(
         "Should return path to python2.",
         python2.getAbsolutePath(),
@@ -174,8 +171,7 @@ public class PythonBuckConfigTest {
                 ImmutableMap.<String, String>builder()
                     .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
                     .put("PATHEXT", "")
-                    .build(),
-                ImmutableMap.<String, String>of()));
+                    .build()));
     config.getPythonInterpreter();
     fail("Should throw an exception when Python isn't found.");
   }
@@ -198,8 +194,7 @@ public class PythonBuckConfigTest {
                 ImmutableMap.<String, String>builder()
                     .put("PATH", path)
                     .put("PATHEXT", "")
-                    .build(),
-                ImmutableMap.<String, String>of()));
+                    .build()));
     assertEquals(
         "Should return the first path",
         config.getPythonInterpreter(),

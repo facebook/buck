@@ -90,7 +90,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
 
     public OwnersReport updatedWith(OwnersReport other) {
       SetMultimap<TargetNode<?>, Path> updatedOwners =
-          TreeMultimap.<TargetNode<?>, Path>create(owners);
+          TreeMultimap.create(owners);
       updatedOwners.putAll(other.owners);
 
       return new OwnersReport(

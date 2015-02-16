@@ -437,7 +437,7 @@ public class WatchmanWatcherTest {
         new ObjectMapper(),
         "/path/to/repo",
         "uuid",
-        Lists.<Path>newArrayList(Paths.get("foo"), Paths.get("bar/baz")),
+        Lists.newArrayList(Paths.get("foo"), Paths.get("bar/baz")),
         Lists.<String>newArrayList());
     assertEquals(
         "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
@@ -456,7 +456,7 @@ public class WatchmanWatcherTest {
         "/path/to/repo",
         "uuid",
         Lists.<Path>newArrayList(),
-        Lists.<String>newArrayList("*/project.pbxproj", "buck-out/*"));
+        Lists.newArrayList("*/project.pbxproj", "buck-out/*"));
     assertEquals(
         "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
         "\"expression\":[\"not\",[\"anyof\"," +

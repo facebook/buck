@@ -465,7 +465,7 @@ public class ProjectFilesystemTest {
   public void testCreateReadOnlyFileSetsPermissions() throws IOException {
     Path path = Paths.get("hello.txt");
     ImmutableSet<PosixFilePermission> permissions =
-      ImmutableSet.<PosixFilePermission>of(
+      ImmutableSet.of(
           PosixFilePermission.OWNER_READ,
           PosixFilePermission.GROUP_READ,
           PosixFilePermission.OTHERS_READ);

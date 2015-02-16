@@ -198,7 +198,7 @@ public class OCamlRuleBuilder {
             ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(allInputs))),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
-    ImmutableList.Builder<String> flagsBuilder = ImmutableList.<String>builder();
+    ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
 
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
@@ -304,7 +304,7 @@ public class OCamlRuleBuilder {
             ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(allInputs))),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
-    ImmutableList.Builder<String> flagsBuilder = ImmutableList.<String>builder();
+    ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
 
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =

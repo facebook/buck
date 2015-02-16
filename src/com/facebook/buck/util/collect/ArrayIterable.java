@@ -58,7 +58,7 @@ public class ArrayIterable<T> implements Iterable<T> {
       // Note that Collections.emptyIterator().remove() throws an IllegalStateException. We prefer
       // that remove() throws an UnsupportedOperationException for an empty Iterator, so we use
       // ImmutableList instead.
-      return ImmutableList.<T>of();
+      return ImmutableList.of();
     } else if (endIndex - startIndex == 1) {
       return new Iterable<T>() {
         @Override

@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
@@ -26,25 +25,17 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
 public class XcodeProjectConfig extends AbstractBuildRule {
-  private final ImmutableSet<BuildRule> rules;
 
   public XcodeProjectConfig(
       BuildRuleParams params,
-      SourcePathResolver resolver,
-      ImmutableSet<BuildRule> rules) {
+      SourcePathResolver resolver) {
     super(params, resolver);
-    this.rules = rules;
-  }
-
-  public ImmutableSet<BuildRule> getRules() {
-    return rules;
   }
 
   @Nullable

@@ -145,7 +145,7 @@ public class AppleCxxPlatforms {
     if (toolPath.isPresent()) {
       return Optional.<SourcePath>of(new PathSourcePath(toolPath.get()));
     } else {
-      return Optional.<SourcePath>absent();
+      return Optional.absent();
     }
   }
 

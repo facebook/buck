@@ -41,7 +41,7 @@ public class ConsoleHandlerTest {
     public String format(LogRecord record) {
       return record.getMessage();
     }
-  };
+  }
 
   @Test
   public void consoleHandlerDoesNotWriteBelowLevelToStream() {

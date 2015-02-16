@@ -221,11 +221,6 @@ public class AndroidResource extends AbstractBuildRule
   }
 
   @Override
-  public boolean hasWhitelistedStrings() {
-    return hasWhitelistedStrings;
-  }
-
-  @Override
   @Nullable
   public Path getAssets() {
     return assets;

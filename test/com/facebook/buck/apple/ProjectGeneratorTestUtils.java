@@ -33,20 +33,12 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Types;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -66,38 +58,6 @@ public final class ProjectGeneratorTestUtils {
    * Utility class should not be instantiated.
    */
   private ProjectGeneratorTestUtils() {}
-
-  public static <T> BuildRule createBuildRuleWithDefaults(
-      BuildTarget target,
-      ImmutableSortedSet<BuildRule> deps,
-      Description<T> description,
-      BuildRuleResolver resolver) {
-    return createBuildRuleWithDefaults(
-        target,
-        resolver,
-        deps,
-        description,
-        Functions.<T>identity());
-  }
-
-
-  /**
-   * Helper function to create a build rule for a description, initializing fields to empty values,
-   * and allowing a user to override specific fields.
-   */
-  public static <T> BuildRule createBuildRuleWithDefaults(
-      BuildTarget target,
-      BuildRuleResolver resolver,
-      ImmutableSortedSet<BuildRule> deps,
-      Description<T> description,
-      Function<T, T> overrides) {
-    T arg = createDescriptionArgWithDefaults(description);
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(target)
-        .setDeps(deps)
-        .setType(description.getBuildRuleType())
-        .build();
-    return description.createBuildRule(buildRuleParams, resolver, overrides.apply(arg));
-  }
 
   public static <T> T createDescriptionArgWithDefaults(Description<T> description) {
     T arg = description.createUnpopulatedConstructorArg();
@@ -194,11 +154,11 @@ public final class ProjectGeneratorTestUtils {
     Iterable<PBXBuildPhase> buildPhases =
         Iterables.filter(
             target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
-          @Override
-          public boolean apply(PBXBuildPhase input) {
-            return cls.isInstance(input);
-          }
-        });
+              @Override
+              public boolean apply(PBXBuildPhase input) {
+                return cls.isInstance(input);
+              }
+            });
     assertEquals("Build phase should be singleton", 1, Iterables.size(buildPhases));
     @SuppressWarnings("unchecked")
     T element = (T) Iterables.getOnlyElement(buildPhases);
@@ -226,40 +186,5 @@ public final class ProjectGeneratorTestUtils {
     }
 
     return ImmutableMap.copyOf(builder);
-  }
-
-  public static AppleBundle createAppleBundleBuildRule(
-      BuildTarget target,
-      BuildRuleResolver resolver,
-      AppleBundleDescription description,
-      BuildRule binaryRule,
-      AppleBundleExtension extension) {
-    return createAppleBundleBuildRule(
-        target, resolver, description, binaryRule, extension, ImmutableList.<BuildRule>of());
-  }
-
-  public static AppleBundle createAppleBundleBuildRule(
-      BuildTarget target,
-      BuildRuleResolver resolver,
-      AppleBundleDescription description,
-      BuildRule binaryRule,
-      AppleBundleExtension extension,
-      Iterable<BuildRule> extraDeps) {
-    AppleBundleDescription.Arg bundleArg = description.createUnpopulatedConstructorArg();
-    bundleArg.infoPlist = Optional.<SourcePath>of(new TestSourcePath("Info.plist"));
-    bundleArg.binary = binaryRule.getBuildTarget();
-    bundleArg.extension = Either.ofLeft(extension);
-    bundleArg.deps = Optional.of(ImmutableSortedSet.of(binaryRule.getBuildTarget()));
-
-    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.<BuildRule>naturalOrder()
-        .add(binaryRule)
-        .addAll(extraDeps)
-        .build();
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeps(deps)
-            .setType(AppleBundleDescription.TYPE)
-            .build();
-    return description.createBuildRule(params, resolver, bundleArg);
   }
 }

@@ -382,7 +382,7 @@ public class TestCommandTest {
 
     Iterable<TestRule> result = TestCommand.filterTestRules(options,
         TestCommand.getCandidateRules(graph));
-    assertThat(result, containsInAnyOrder((TestRule) rule1, (TestRule) rule3));
+    assertThat(result, containsInAnyOrder((TestRule) rule1, rule3));
   }
 
   @Test

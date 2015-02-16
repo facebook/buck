@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
@@ -49,7 +48,6 @@ public class HttpArtifactCacheTest {
   private HttpArtifactCache cache;
   private HttpURLConnection connection;
   private ProjectFilesystem projectFilesystem;
-  private BuckEventBus buckEventBus;
   private FileHashCache fileHashCache;
 
   private byte[] createFileContentsWithHashCode(HashCode code, String contents) throws IOException {
@@ -64,9 +62,12 @@ public class HttpArtifactCacheTest {
   public void setUp() {
     connection = createNiceMock(HttpURLConnection.class);
     projectFilesystem = createMock(ProjectFilesystem.class);
-    buckEventBus = BuckEventBusFactory.newInstance();
     fileHashCache = createMock(FileHashCache.class);
-    cache = new FakeHttpArtifactCache(connection, projectFilesystem, buckEventBus, fileHashCache);
+    cache = new FakeHttpArtifactCache(
+        connection,
+        projectFilesystem,
+        BuckEventBusFactory.newInstance(),
+        fileHashCache);
   }
 
   @Test
@@ -180,7 +181,7 @@ public class HttpArtifactCacheTest {
 
     @Override
     protected HttpURLConnection getConnection(String url)
-        throws MalformedURLException, IOException {
+        throws IOException {
       return connectionMock;
     }
   }

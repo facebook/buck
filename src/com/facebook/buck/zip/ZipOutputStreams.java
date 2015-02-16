@@ -103,6 +103,6 @@ public class ZipOutputStreams {
     /** An exception should be thrown if a duplicate entry is added to a zip. */
     THROW_EXCEPTION,
     /** A duplicate entry overwrites an existing entry with the same name. */
-    OVERWRITE_EXISTING;
+    OVERWRITE_EXISTING
   }
 }

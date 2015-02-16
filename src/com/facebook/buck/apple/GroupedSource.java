@@ -98,23 +98,4 @@ public abstract class GroupedSource {
         Optional.of(sourceGroupName),
         Optional.of((List<GroupedSource>) ImmutableList.copyOf(sourceGroup)));
   }
-
-  public static interface Visitor {
-    public void visitSourcePath(SourcePath sourcePath);
-    public void visitSourceGroup(String sourceGroupName);
-  }
-
-  public void visit(Visitor visitor) {
-    switch (this.getType()) {
-    case SOURCE_PATH:
-      visitor.visitSourcePath(getSourcePath().get());
-      break;
-    case SOURCE_GROUP:
-      visitor.visitSourceGroup(getSourceGroupName().get());
-      for (GroupedSource group : getSourceGroup().get()) {
-        group.visit(visitor);
-      }
-      break;
-    }
-  }
 }

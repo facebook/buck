@@ -74,11 +74,6 @@ public class RobolectricTestRuleTest {
     }
 
     @Override
-    public boolean hasWhitelistedStrings() {
-      return false;
-    }
-
-    @Override
     public BuildTarget getBuildTarget() {
       return null;
     }

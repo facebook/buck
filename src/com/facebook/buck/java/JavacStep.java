@@ -312,8 +312,4 @@ public class JavacStep implements Step {
   Set<Path> getSrcs() {
     return javaSourceFilePaths;
   }
-
-  public String getOutputDirectory() {
-    return outputDirectory.toString();
-  }
 }

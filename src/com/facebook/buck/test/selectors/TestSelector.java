@@ -41,7 +41,7 @@ public class TestSelector {
   /** Defining @Nullable locally here because we cannot import
    * javax.annotation.Nullable;
    *according to comment in src/com/facebook/buck/test/selectors/BUCK */
-  @interface Nullable{};
+  @interface Nullable{}
 
   private final boolean inclusive;
   @Nullable  private final Pattern classPattern;

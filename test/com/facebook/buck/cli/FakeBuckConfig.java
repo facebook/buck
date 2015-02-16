@@ -35,7 +35,7 @@ import java.util.Map;
 public class FakeBuckConfig extends BuckConfig {
 
   private static final Map<String, Map<String, String>> EMPTY_SECTIONS =
-      ImmutableMap.<String, Map<String, String>>of();
+      ImmutableMap.of();
 
   public FakeBuckConfig() {
     this(EMPTY_SECTIONS, Platform.detect(), null, ImmutableMap.copyOf(System.getenv()));

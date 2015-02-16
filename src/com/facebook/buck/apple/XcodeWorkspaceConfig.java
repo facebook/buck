@@ -18,16 +18,13 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -36,39 +33,10 @@ import javax.annotation.Nullable;
 
 public class XcodeWorkspaceConfig extends AbstractBuildRule {
 
-  private final Optional<BuildRule> srcTarget;
-  private final ImmutableSet<BuildRule> extraTests;
-  private final String workspaceName;
-  private final ImmutableMap<SchemeActionType, String> actionConfigNames;
-
   protected XcodeWorkspaceConfig(
       BuildRuleParams params,
-      SourcePathResolver resolver,
-      Optional<BuildRule> srcTarget,
-      ImmutableSet<BuildRule> extraTests,
-      String workspaceName,
-      ImmutableMap<SchemeActionType, String> actionConfigNames) {
+      SourcePathResolver resolver) {
     super(params, resolver);
-    this.srcTarget = srcTarget;
-    this.extraTests = extraTests;
-    this.workspaceName = workspaceName;
-    this.actionConfigNames = actionConfigNames;
-  }
-
-  public Optional<BuildRule> getSrcTarget() {
-    return srcTarget;
-  }
-
-  public ImmutableSet<BuildRule> getExtraTests() {
-    return extraTests;
-  }
-
-  public String getWorkspaceName() {
-    return workspaceName;
-  }
-
-  public ImmutableMap<SchemeActionType, String> getActionConfigNames() {
-    return actionConfigNames;
   }
 
   @Override

@@ -87,9 +87,4 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
   public Path getAssets() {
     return androidResource.getAssets();
   }
-
-  @Override
-  public boolean hasWhitelistedStrings() {
-    return androidResource.hasWhitelistedStrings();
-  }
 }

@@ -21,7 +21,6 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
@@ -69,10 +68,6 @@ public class BuckEventBusFactory {
 
   public static EventBus getEventBusFor(BuckEventBus buckEventBus) {
     return buckEventBus.getEventBus();
-  }
-
-  public static Supplier<Long> getThreadIdSupplierFor(BuckEventBus buckEventBus) {
-    return buckEventBus.getThreadIdSupplier();
   }
 
   /**

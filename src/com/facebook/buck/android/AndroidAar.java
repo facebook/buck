@@ -67,7 +67,7 @@ public class AndroidAar extends AbstractBuildRule {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.<Path>of();
+    return ImmutableList.of();
   }
 
   @Override

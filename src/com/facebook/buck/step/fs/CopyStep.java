@@ -49,7 +49,7 @@ public class CopyStep implements Step {
        * 'dest/foo/bar.txt'.
        */
       DIRECTORY_AND_CONTENTS
-  };
+  }
 
   private final Path source;
   private final Path destination;

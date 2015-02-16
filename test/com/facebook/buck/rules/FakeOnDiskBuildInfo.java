@@ -78,12 +78,6 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
     return getValue(key).transform(Sha1HashCode.TO_SHA1);
   }
 
-  /** @return this */
-  public FakeOnDiskBuildInfo setFileContentsForPath(Path path, List<String> lines) {
-    pathsToContents.put(path, ImmutableList.copyOf(lines));
-    return this;
-  }
-
   @Override
   public List<String> getOutputFileContentsByLine(Path path) throws IOException {
     ImmutableList<String> lines = pathsToContents.get(path);

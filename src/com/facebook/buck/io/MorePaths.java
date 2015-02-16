@@ -313,7 +313,7 @@ public class MorePaths {
         return maybeResolved;
       }
     }
-    return Optional.<Path>absent();
+    return Optional.absent();
   }
 
   private static Optional<Path> resolveExecutable(
