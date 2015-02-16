@@ -35,6 +35,16 @@ while an Android APK will require a shared PIC-enabled build).
 
 {call cxx_common.headers_arg /}
 
+{call buck.arg}
+  {param name : 'exported_headers' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of header files that are available for inclusion for the above sources and all dependents of this library.
+  Header files listed here are included in code using their project-relative path on the filesystem
+  (e.g. header <code>bar.h</code> listed in <code>foo/BUCK</code> is included with <code>#include "foo/bar.h"</code>).
+  {/param}
+{/call}
+
 {call cxx_common.preprocessor_flags_arg /}
 
 {call buck.arg}

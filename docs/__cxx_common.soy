@@ -22,8 +22,7 @@
   {param default : '[]' /}
   {param desc}
   The set of header files that are available for inclusion for the above sources.
-  In the case of libraries, these headers are also made available to all transitive
-  dependents.
+  These headers are never made available to dependents.
   Header files listed here are included in code using their project-relative path on the filesystem
   (e.g. header <code>bar.h</code> listed in <code>foo/BUCK</code> is included with <code>#include "foo/bar.h"</code>).
   {/param}
