@@ -1,7 +1,7 @@
 prebuilt_jar(
   name = 'infer-annotations',
-  binary_jar = 'infer-annotations-1.4.jar',
-  source_jar = 'infer-annotations-1.4.jar',
+  binary_jar = 'infer-annotations-1.5.jar',
+  source_jar = 'infer-annotations-1.5.jar',
   visibility = [
     'PUBLIC',
   ],
