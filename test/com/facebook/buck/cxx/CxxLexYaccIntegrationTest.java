@@ -93,7 +93,10 @@ public class CxxLexYaccIntegrationTest {
         sourceName,
         /* pic */ false);
     BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor());
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            target,
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
 
     // Do a clean build, verify that it succeeds, and check that all expected targets built
     // successfully.

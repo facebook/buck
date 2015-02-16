@@ -18,7 +18,11 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> {
 
@@ -32,6 +36,27 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
   public CxxLibraryBuilder(BuildTarget target) {
     this(target, createDefaultConfig(), createDefaultPlatforms());
   }
+
+  public CxxLibraryBuilder setExportedHeaders(ImmutableList<SourcePath> headers)  {
+    arg.exportedHeaders =
+        Optional.of(
+            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(headers));
+    return this;
+  }
+
+  public CxxLibraryBuilder setExportedHeaders(ImmutableMap<String, SourcePath> headers)  {
+    arg.exportedHeaders =
+        Optional.of(
+            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(headers));
+    return this;
+  }
+
+  public CxxLibraryBuilder setExportedHeaders(
+      Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>> headers)  {
+    arg.exportedHeaders = Optional.of(headers);
+    return this;
+  }
+
 
   public CxxLibraryBuilder setSoname(String soname) {
     arg.soname = Optional.of(soname);

@@ -33,6 +33,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -57,6 +58,7 @@ public class CxxLibraryDescription implements
     Flavored {
   public static enum Type {
     HEADERS,
+    EXPORTED_HEADERS,
     SHARED,
     STATIC,
   }
@@ -68,6 +70,7 @@ public class CxxLibraryDescription implements
           "C/C++ Library Type",
           ImmutableMap.of(
               CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR, Type.HEADERS,
+              CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR, Type.EXPORTED_HEADERS,
               CxxDescriptionEnhancer.SHARED_FLAVOR, Type.SHARED,
               CxxDescriptionEnhancer.STATIC_FLAVOR, Type.STATIC));
 
@@ -136,26 +139,35 @@ public class CxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
+      boolean includeLexYaccHeaders,
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources,
-      ImmutableMap<Path, SourcePath> headers) {
+      ImmutableMap<Path, SourcePath> headers,
+      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
 
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             params.getBuildTarget(),
-            cxxPlatform.getFlavor());
+            cxxPlatform.getFlavor(),
+            headerVisibility);
     Path headerSymlinkTreeRoot =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             params.getBuildTarget(),
-            cxxPlatform.getFlavor());
+            cxxPlatform.getFlavor(),
+            headerVisibility);
 
-    CxxHeaderSourceSpec lexYaccSources = requireLexYaccSources(
-        params,
-        ruleResolver,
-        pathResolver,
-        cxxPlatform,
-        lexSources,
-        yaccSources);
+    CxxHeaderSourceSpec lexYaccSources;
+    if (includeLexYaccHeaders) {
+      lexYaccSources = requireLexYaccSources(
+          params,
+          ruleResolver,
+          pathResolver,
+          cxxPlatform,
+          lexSources,
+          yaccSources);
+    } else {
+      lexYaccSources = ImmutableCxxHeaderSourceSpec.builder().build();
+    }
 
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         pathResolver,
@@ -179,14 +191,17 @@ public class CxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
+      boolean includeLexYaccHeaders,
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources,
-      ImmutableMap<Path, SourcePath> headers) {
+      ImmutableMap<Path, SourcePath> headers,
+      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
 
     BuildTarget headerTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             params.getBuildTarget(),
-            cxxPlatform.getFlavor());
+            cxxPlatform.getFlavor(),
+            headerVisibility);
 
     // Check the cache...
     Optional<BuildRule> rule = ruleResolver.getRuleOptional(headerTarget);
@@ -200,9 +215,11 @@ public class CxxLibraryDescription implements
             ruleResolver,
             pathResolver,
             cxxPlatform,
+            includeLexYaccHeaders,
             lexSources,
             yaccSources,
-            headers);
+            headers,
+            headerVisibility);
 
     ruleResolver.addToIndex(symlinkTree);
 
@@ -219,6 +236,7 @@ public class CxxLibraryDescription implements
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableList<SourcePath> prefixHeaders,
       ImmutableMap<Path, SourcePath> headers,
+      ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
       ImmutableList<Path> frameworkSearchPaths,
@@ -239,12 +257,23 @@ public class CxxLibraryDescription implements
             ruleResolver,
             pathResolver,
             cxxPlatform,
+            /* includeLexYaccHeaders */ true,
             lexSources,
             yaccSources,
-            ImmutableMap.<Path, SourcePath>builder()
-                .putAll(headers)
-                .putAll(lexYaccSources.getCxxHeaders())
-                .build());
+            headers,
+            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+
+    SymlinkTree exportedHeaderSymlinkTree =
+        requireHeaderSymlinkTree(
+            params,
+            ruleResolver,
+            pathResolver,
+            cxxPlatform,
+            /* includeLexYaccHeaders */ false,
+            ImmutableMap.<String, SourcePath>of(),
+            ImmutableMap.<String, SourcePath>of(),
+            exportedHeaders,
+            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC);
 
     CxxPreprocessorInput cxxPreprocessorInputFromDependencies =
         CxxDescriptionEnhancer.combineCxxPreprocessorInput(
@@ -252,7 +281,9 @@ public class CxxLibraryDescription implements
             cxxPlatform,
             preprocessorFlags,
             prefixHeaders,
-            headerSymlinkTree,
+            ImmutableList.of(
+                headerSymlinkTree,
+                exportedHeaderSymlinkTree),
             frameworkSearchPaths);
 
     ImmutableMap<String, CxxSource> allSources =
@@ -295,6 +326,7 @@ public class CxxLibraryDescription implements
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableList<SourcePath> prefixHeaders,
       ImmutableMap<Path, SourcePath> headers,
+      ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
       ImmutableList<Path> frameworkSearchPaths) {
@@ -310,6 +342,7 @@ public class CxxLibraryDescription implements
         preprocessorFlags,
         prefixHeaders,
         headers,
+        exportedHeaders,
         compilerFlags,
         sources,
         frameworkSearchPaths,
@@ -350,6 +383,7 @@ public class CxxLibraryDescription implements
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableList<SourcePath> prefixHeaders,
       ImmutableMap<Path, SourcePath> headers,
+      ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
       ImmutableList<String> linkerFlags,
@@ -367,6 +401,7 @@ public class CxxLibraryDescription implements
         preprocessorFlags,
         prefixHeaders,
         headers,
+        exportedHeaders,
         compilerFlags,
         sources,
         frameworkSearchPaths,
@@ -410,7 +445,9 @@ public class CxxLibraryDescription implements
     Arg arg = new Arg();
     arg.deps = Optional.absent();
     arg.srcs = Optional.absent();
+    arg.prefixHeaders = Optional.of(ImmutableList.<SourcePath>of());
     arg.headers = Optional.absent();
+    arg.exportedHeaders = Optional.absent();
     arg.compilerFlags = Optional.absent();
     arg.exportedPreprocessorFlags = Optional.absent();
     arg.exportedLangPreprocessorFlags = Optional.absent();
@@ -440,9 +477,31 @@ public class CxxLibraryDescription implements
         resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,
+        /* includeLexYaccHeaders */ true,
         CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
         CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
-        CxxDescriptionEnhancer.parseHeaders(params, resolver, args));
+        CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
+        CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+  }
+
+  /**
+   * @return a {@link SymlinkTree} for the exported headers of this C/C++ library.
+   */
+  public <A extends Arg> SymlinkTree createExportedHeaderSymlinkTreeBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      A args) {
+    return createHeaderSymlinkTree(
+        params,
+        resolver,
+        new SourcePathResolver(resolver),
+        cxxPlatform,
+        /* includeLexYaccHeaders */ false,
+        ImmutableMap.<String, SourcePath>of(),
+        ImmutableMap.<String, SourcePath>of(),
+        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
+        CxxDescriptionEnhancer.HeaderVisibility.PUBLIC);
   }
 
   /**
@@ -472,6 +531,7 @@ public class CxxLibraryDescription implements
             .build(),
         args.prefixHeaders.get(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
+        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
         args.compilerFlags.or(ImmutableList.<String>of()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
         args.frameworkSearchPaths.get());
@@ -504,6 +564,7 @@ public class CxxLibraryDescription implements
             .build(),
         args.prefixHeaders.get(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
+        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
         args.compilerFlags.or(ImmutableList.<String>of()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
         ImmutableList.<String>builder()
@@ -585,6 +646,12 @@ public class CxxLibraryDescription implements
             resolver,
             platform.get().getValue(),
             args);
+      } else if (type.get().getValue().equals(Type.EXPORTED_HEADERS)) {
+          return createExportedHeaderSymlinkTreeBuildRule(
+              typeParams,
+              resolver,
+              platform.get().getValue(),
+              args);
       } else if (type.get().getValue().equals(Type.SHARED)) {
         return createSharedLibraryBuildRule(
             typeParams,
@@ -636,6 +703,8 @@ public class CxxLibraryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends CxxConstructorArg {
+    public Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>>
+        exportedHeaders;
     public Optional<ImmutableList<String>> exportedPreprocessorFlags;
     public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>>
         exportedLangPreprocessorFlags;

@@ -50,6 +50,7 @@ public class AppleLibraryDescription implements
       CompilationDatabase.COMPILATION_DATABASE,
       AppleDescriptions.HEADERS,
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
+      CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.STATIC_FLAVOR,
       CxxDescriptionEnhancer.SHARED_FLAVOR,
       ImmutableFlavor.of("default"));
@@ -125,6 +126,7 @@ public class AppleLibraryDescription implements
         params.getBuildTarget(),
         targetSources,
         appleSdkPaths);
+    delegateArg.exportedHeaders = Optional.absent();
     delegateArg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
     delegateArg.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());

@@ -67,7 +67,10 @@ public class CxxBinaryIntegrationTest {
         sourceName,
         /* pic */ false);
     BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor());
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            target,
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
 
     // Do a clean build, verify that it succeeds, and check that all expected targets built
     // successfully.
@@ -185,7 +188,10 @@ public class CxxBinaryIntegrationTest {
         sourceName,
         /* pic */ false);
     BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor());
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            target,
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
 
     // Do a clean build, verify that it succeeds, and check that all expected targets built
     // successfully.
@@ -261,7 +267,10 @@ public class CxxBinaryIntegrationTest {
         sourceName,
         /* pic */ false);
     BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor());
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            target,
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
 
     // Setup variables pointing to the sources and targets of the library dep.
     BuildTarget depTarget = BuildTargetFactory.newInstance("//foo:library_with_header");
@@ -283,7 +292,15 @@ public class CxxBinaryIntegrationTest {
             depSourceName,
             /* pic */ false);
     BuildTarget depHeaderSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(depTarget, cxxPlatform.getFlavor());
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            depTarget,
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+    BuildTarget depHeaderExportedSymlinkTreeTarget =
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            depTarget,
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC);
     BuildTarget depArchiveTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(depTarget, cxxPlatform.getFlavor());
 
@@ -294,6 +311,7 @@ public class CxxBinaryIntegrationTest {
     assertEquals(
         ImmutableSet.of(
             depHeaderSymlinkTreeTarget,
+            depHeaderExportedSymlinkTreeTarget,
             depPreprocessTarget,
             depCompileTarget,
             depArchiveTarget,
@@ -328,6 +346,7 @@ public class CxxBinaryIntegrationTest {
     assertEquals(
         ImmutableSet.of(
             depHeaderSymlinkTreeTarget,
+            depHeaderExportedSymlinkTreeTarget,
             depPreprocessTarget,
             depCompileTarget,
             depArchiveTarget,
@@ -339,6 +358,7 @@ public class CxxBinaryIntegrationTest {
             target),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(depHeaderSymlinkTreeTarget.toString());
+    buildLog.assertTargetHadMatchingRuleKey(depHeaderExportedSymlinkTreeTarget.toString());
     buildLog.assertTargetBuiltLocally(depPreprocessTarget.toString());
     buildLog.assertTargetBuiltLocally(depCompileTarget.toString());
     buildLog.assertTargetBuiltLocally(depArchiveTarget.toString());
@@ -362,6 +382,7 @@ public class CxxBinaryIntegrationTest {
     assertEquals(
         ImmutableSet.of(
             depHeaderSymlinkTreeTarget,
+            depHeaderExportedSymlinkTreeTarget,
             depPreprocessTarget,
             depCompileTarget,
             depArchiveTarget,
@@ -373,6 +394,7 @@ public class CxxBinaryIntegrationTest {
             target),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(depHeaderSymlinkTreeTarget.toString());
+    buildLog.assertTargetHadMatchingRuleKey(depHeaderExportedSymlinkTreeTarget.toString());
     buildLog.assertTargetBuiltLocally(depPreprocessTarget.toString());
     buildLog.assertTargetBuiltLocally(depCompileTarget.toString());
     buildLog.assertTargetBuiltLocally(depArchiveTarget.toString());

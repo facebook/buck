@@ -16,15 +16,16 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assume.assumeThat;
+
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 
-import static org.hamcrest.Matchers.is;
 import org.junit.Rule;
 import org.junit.Test;
-import static org.junit.Assume.assumeThat;
 
 import java.io.IOException;
 
@@ -61,4 +62,23 @@ public class CxxLibraryIntegrationTest {
     workspace.runBuckBuild("//:lib#iphonesimulator-i386,static").assertSuccess();
   }
 
+  @Test
+  public void libraryCanIncludeAllItsHeadersAndExportedHeadersOfItsDeps() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "private_and_exported_headers", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:good-bin");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void libraryCannotIncludePrivateHeadersOfDeps() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "private_and_exported_headers", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:bad-bin");
+    result.assertFailure();
+  }
 }

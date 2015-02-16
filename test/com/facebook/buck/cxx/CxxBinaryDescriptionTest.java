@@ -186,7 +186,10 @@ public class CxxBinaryDescriptionTest {
             genHeaderTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor())),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE)),
         FluentIterable.from(preprocessRule1.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -222,7 +225,10 @@ public class CxxBinaryDescriptionTest {
             genSourceTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor())),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE)),
         FluentIterable.from(preprocessRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());

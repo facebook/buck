@@ -76,7 +76,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
         params,
         ruleResolver,
         cxxPlatform.getFlavor(),
-        CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
+        CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     Preconditions.checkState(rule instanceof SymlinkTree);
     SymlinkTree symlinkTree = (SymlinkTree) rule;
     return CxxPreprocessorInput.builder()

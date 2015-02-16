@@ -31,7 +31,7 @@ cxx_library(
   srcs = [
     'Dep.cpp',
   ],
-  headers = [
+  exported_headers = [
     'Dep.h',
   ],
 )

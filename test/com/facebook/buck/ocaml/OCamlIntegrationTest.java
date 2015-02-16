@@ -378,7 +378,15 @@ public class OCamlIntegrationTest {
         sourceName,
         /* pic */ false);
     BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(cclib, cxxPlatform.getFlavor());
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            cclib,
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+    BuildTarget exportedHeaderSymlinkTreeTarget =
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            cclib,
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC);
 
     ImmutableSet<BuildTarget> targets = ImmutableSet.of(
         target,
@@ -389,7 +397,8 @@ public class OCamlIntegrationTest {
         cclibbin,
         ccObj,
         ppObj,
-        headerSymlinkTreeTarget);
+        headerSymlinkTreeTarget,
+        exportedHeaderSymlinkTreeTarget);
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
@@ -402,6 +411,7 @@ public class OCamlIntegrationTest {
     buildLog.assertTargetBuiltLocally(ccObj.toString());
     buildLog.assertTargetBuiltLocally(ppObj.toString());
     buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget.toString());
+    buildLog.assertTargetBuiltLocally(exportedHeaderSymlinkTreeTarget.toString());
 
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
@@ -416,6 +426,7 @@ public class OCamlIntegrationTest {
     buildLog.assertTargetHadMatchingRuleKey(ccObj.toString());
     buildLog.assertTargetHadMatchingRuleKey(ppObj.toString());
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
+    buildLog.assertTargetHadMatchingRuleKey(exportedHeaderSymlinkTreeTarget.toString());
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("clib/cc/cc.cpp", "Hi there", "hi there");
@@ -430,5 +441,6 @@ public class OCamlIntegrationTest {
     buildLog.assertTargetBuiltLocally(ccObj.toString());
     buildLog.assertTargetBuiltLocally(ppObj.toString());
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
+    buildLog.assertTargetHadMatchingRuleKey(exportedHeaderSymlinkTreeTarget.toString());
   }
 }

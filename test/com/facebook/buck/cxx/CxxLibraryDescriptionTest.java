@@ -152,14 +152,14 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     String headerName = "test/bar.h";
     CxxLibraryBuilder cxxLibraryBuilder = (CxxLibraryBuilder) new CxxLibraryBuilder(target)
+        .setExportedHeaders(
+            ImmutableList.<SourcePath>of(
+                new TestSourcePath(headerName),
+                new BuildTargetSourcePath(genHeaderTarget)))
         .setSrcs(
             ImmutableList.<SourcePath>of(
                 new TestSourcePath("test/bar.cpp"),
                 new BuildTargetSourcePath(genSourceTarget)))
-        .setHeaders(
-            ImmutableList.<SourcePath>of(
-                new TestSourcePath(headerName),
-                new BuildTargetSourcePath(genHeaderTarget)))
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
 
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(
@@ -173,13 +173,17 @@ public class CxxLibraryDescriptionTest {
                 .build()));
 
     Path headerRoot =
-        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target, cxxPlatform.getFlavor());
+        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+            target,
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC);
     assertEquals(
         CxxPreprocessorInput.builder()
             .addRules(
                 CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                     target,
-                    cxxPlatform.getFlavor()))
+                    cxxPlatform.getFlavor(),
+                    CxxDescriptionEnhancer.HeaderVisibility.PUBLIC))
             .setIncludes(
                 ImmutableCxxHeaders.builder()
                     .putNameToPathMap(
@@ -198,7 +202,8 @@ public class CxxLibraryDescriptionTest {
             .addIncludeRoots(
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
                     target,
-                    cxxPlatform.getFlavor()))
+                    cxxPlatform.getFlavor(),
+                    CxxDescriptionEnhancer.HeaderVisibility.PUBLIC))
             .build(),
         rule.getCxxPreprocessorInput(cxxPlatform));
 
@@ -237,7 +242,14 @@ public class CxxLibraryDescriptionTest {
             genHeaderTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor())),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC)),
         FluentIterable.from(preprocessRule1.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -273,7 +285,14 @@ public class CxxLibraryDescriptionTest {
             genSourceTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor())),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC)),
         FluentIterable.from(preprocessRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -470,7 +489,7 @@ public class CxxLibraryDescriptionTest {
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxLibraryBuilder cxxLibraryBuilder = (CxxLibraryBuilder) new CxxLibraryBuilder(target)
-        .setHeaders(
+        .setExportedHeaders(
             ImmutableMap.<String, SourcePath>of(
                 genHeaderName, new BuildTargetSourcePath(genHeaderTarget)))
         .setSrcs(
@@ -492,13 +511,17 @@ public class CxxLibraryDescriptionTest {
 
     // Verify the C/C++ preprocessor input is setup correctly.
     Path headerRoot =
-        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(target, cxxPlatform.getFlavor());
+        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+            target,
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC);
     assertEquals(
         CxxPreprocessorInput.builder()
             .addRules(
                 CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                     target,
-                    cxxPlatform.getFlavor()))
+                    cxxPlatform.getFlavor(),
+                    CxxDescriptionEnhancer.HeaderVisibility.PUBLIC))
             .setIncludes(
                 ImmutableCxxHeaders.builder()
                     .putNameToPathMap(
@@ -511,7 +534,8 @@ public class CxxLibraryDescriptionTest {
             .addIncludeRoots(
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
                     target,
-                    cxxPlatform.getFlavor()))
+                    cxxPlatform.getFlavor(),
+                    CxxDescriptionEnhancer.HeaderVisibility.PUBLIC))
             .build(),
         rule.getCxxPreprocessorInput(cxxPlatform));
 
@@ -551,7 +575,14 @@ public class CxxLibraryDescriptionTest {
             genHeaderTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor())),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC)),
         FluentIterable.from(staticPreprocessRule1.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -587,7 +618,14 @@ public class CxxLibraryDescriptionTest {
             genSourceTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor())),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC)),
         FluentIterable.from(staticPreprocessRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -644,7 +682,14 @@ public class CxxLibraryDescriptionTest {
             genHeaderTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor())),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC)),
         FluentIterable.from(sharedPreprocessRule1.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -680,7 +725,14 @@ public class CxxLibraryDescriptionTest {
             genSourceTarget,
             headerSymlinkTree.getBuildTarget(),
             header.getBuildTarget(),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(target, cxxPlatform.getFlavor())),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC)),
         FluentIterable.from(sharedPreprocessRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());

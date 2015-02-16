@@ -44,7 +44,7 @@ cxx_library(
     srcs=[
         'bar.cpp',
     ],
-    headers=[
+    exported_headers=[
         'bar.h',
     ],
 )

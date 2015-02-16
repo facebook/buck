@@ -129,7 +129,8 @@ public class CxxPythonExtensionDescription implements
         ImmutableMap.<Path, SourcePath>builder()
             .putAll(headers)
             .putAll(lexYaccSources.getCxxHeaders())
-            .build());
+            .build(),
+        CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
     CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
         params,
         cxxPlatform,
@@ -137,7 +138,7 @@ public class CxxPythonExtensionDescription implements
             args.preprocessorFlags,
             args.langPreprocessorFlags),
         args.prefixHeaders.get(),
-        headerSymlinkTree,
+        ImmutableList.of(headerSymlinkTree),
         ImmutableList.<Path>of());
 
     ImmutableMap<String, CxxSource> allSources =

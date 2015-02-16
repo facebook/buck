@@ -1,0 +1,60 @@
+cxx_binary(
+  name = 'good-bin',
+  srcs = [
+    'main.cpp',
+  ],
+  deps = [
+    ':good',
+  ],
+)
+
+cxx_binary(
+  name = 'bad-bin',
+  srcs = [
+    'main.cpp',
+  ],
+  deps = [
+    ':bad',
+  ],
+)
+
+cxx_library(
+  name = 'good',
+  srcs = [
+    'good.cpp',
+  ],
+  header_namespace = 'good',
+  headers = [
+    'good_private.h',
+  ],
+  exported_headers = [
+    'good_public.h',
+  ],
+  deps = [
+    ':dep',
+  ],
+)
+
+cxx_library(
+  name = 'bad',
+  srcs = [
+    'bad.cpp',
+  ],
+  deps = [
+    ':dep',
+  ],
+)
+
+cxx_library(
+  name = 'dep',
+  srcs = [
+    'dep.cpp',
+  ],
+  header_namespace = 'dep',
+  headers = [
+    'dep_private.h',
+  ],
+  exported_headers = [
+    'dep_public.h',
+  ],
+)

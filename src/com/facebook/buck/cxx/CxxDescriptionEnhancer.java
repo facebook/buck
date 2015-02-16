@@ -20,6 +20,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -48,6 +50,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
@@ -57,6 +60,8 @@ import java.util.regex.Pattern;
 public class CxxDescriptionEnhancer {
 
   public static final Flavor HEADER_SYMLINK_TREE_FLAVOR = ImmutableFlavor.of("header-symlink-tree");
+  public static final Flavor EXPORTED_HEADER_SYMLINK_TREE_FLAVOR =
+      ImmutableFlavor.of("exported-header-symlink-tree");
   public static final Flavor STATIC_FLAVOR = ImmutableFlavor.of("static");
   public static final Flavor SHARED_FLAVOR = ImmutableFlavor.of("shared");
 
@@ -64,6 +69,11 @@ public class CxxDescriptionEnhancer {
 
   public static final BuildRuleType LEX_TYPE = ImmutableBuildRuleType.of("lex");
   public static final BuildRuleType YACC_TYPE = ImmutableBuildRuleType.of("yacc");
+
+  public static enum HeaderVisibility {
+    PUBLIC,
+    PRIVATE,
+  }
 
   private CxxDescriptionEnhancer() {}
 
@@ -73,21 +83,59 @@ public class CxxDescriptionEnhancer {
    */
   public static BuildTarget createHeaderSymlinkTreeTarget(
       BuildTarget target,
-      Flavor platform) {
+      Flavor platform,
+      HeaderVisibility headerVisibility) {
     return BuildTarget
         .builder(target)
         .addFlavors(platform)
-        .addFlavors(HEADER_SYMLINK_TREE_FLAVOR)
+        .addFlavors(getHeaderSymlinkTreeFlavor(headerVisibility))
         .build();
   }
 
   /**
    * @return the {@link Path} to use for the symlink tree of headers.
    */
-  public static Path getHeaderSymlinkTreePath(BuildTarget target, Flavor platform) {
+  public static Path getHeaderSymlinkTreePath(
+      BuildTarget target,
+      Flavor platform,
+      HeaderVisibility headerVisibility) {
     return BuildTargets.getGenPath(
-        createHeaderSymlinkTreeTarget(target, platform),
+        createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
         "%s");
+  }
+
+  public static Flavor getHeaderSymlinkTreeFlavor(HeaderVisibility headerVisibility) {
+    switch (headerVisibility) {
+      case PUBLIC:
+        return EXPORTED_HEADER_SYMLINK_TREE_FLAVOR;
+      case PRIVATE:
+        return HEADER_SYMLINK_TREE_FLAVOR;
+      default:
+        throw new RuntimeException("Unexpected value of enum ExportMode");
+    }
+  }
+
+  private static ImmutableMap<Path, SourcePath> getHeaderMapFromArgParameter(
+      SourcePathResolver pathResolver,
+      BuildTarget buildTarget,
+      Optional<String> headerNamespace,
+      String parameterName,
+      Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>> parameter) {
+    ImmutableMap<String, SourcePath> headers;
+    if (!parameter.isPresent()) {
+      headers = ImmutableMap.of();
+    } else if (parameter.get().isRight()) {
+      headers = parameter.get().getRight();
+    } else {
+      headers = pathResolver.getSourcePathNames(
+          buildTarget,
+          parameterName,
+          parameter.get().getLeft());
+    }
+    return CxxPreprocessables.resolveHeaderMap(
+        headerNamespace.transform(MorePaths.TO_PATH)
+            .or(buildTarget.getBasePath()),
+        headers);
   }
 
   /**
@@ -98,22 +146,28 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxConstructorArg args) {
-    ImmutableMap<String, SourcePath> headers;
-    if (!args.headers.isPresent()) {
-      headers = ImmutableMap.of();
-    } else if (args.headers.get().isRight()) {
-      headers = args.headers.get().getRight();
-    } else {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-      headers = pathResolver.getSourcePathNames(
-          params.getBuildTarget(),
-          "headers",
-          args.headers.get().getLeft());
-    }
-    return CxxPreprocessables.resolveHeaderMap(
-        args.headerNamespace.transform(MorePaths.TO_PATH)
-            .or(params.getBuildTarget().getBasePath()),
-        headers);
+    return getHeaderMapFromArgParameter(
+        new SourcePathResolver(resolver),
+        params.getBuildTarget(),
+        args.headerNamespace,
+        "headers",
+        args.headers);
+  }
+
+  /**
+   * @return a map of header locations to input {@link SourcePath} objects formed by parsing the
+   *    input {@link SourcePath} objects for the "exportedHeaders" parameter.
+   */
+  public static ImmutableMap<Path, SourcePath> parseExportedHeaders(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxLibraryDescription.Arg args) {
+    return getHeaderMapFromArgParameter(
+        new SourcePathResolver(resolver),
+        params.getBuildTarget(),
+        args.headerNamespace,
+        "exportedHeaders",
+        args.exportedHeaders);
   }
 
   /**
@@ -337,13 +391,14 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       Flavor platform,
-      ImmutableMap<Path, SourcePath> headers) {
+      ImmutableMap<Path, SourcePath> headers,
+      HeaderVisibility headerVisibility) {
 
     // Setup the header and symlink tree rules
     BuildTarget headerSymlinkTreeTarget =
-        createHeaderSymlinkTreeTarget(params.getBuildTarget(), platform);
+        createHeaderSymlinkTreeTarget(params.getBuildTarget(), platform, headerVisibility);
     Path headerSymlinkTreeRoot =
-        getHeaderSymlinkTreePath(params.getBuildTarget(), platform);
+        getHeaderSymlinkTreePath(params.getBuildTarget(), platform, headerVisibility);
     final SymlinkTree headerSymlinkTree = CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         new SourcePathResolver(resolver),
         headerSymlinkTreeTarget,
@@ -360,7 +415,7 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableList<SourcePath> prefixHeaders,
-      SymlinkTree headerSymlinkTree,
+      ImmutableList<SymlinkTree> headerSymlinkTrees,
       ImmutableList<Path> frameworkSearchPaths) {
 
     // Write the compile rules for all C/C++ sources in this rule.
@@ -370,18 +425,27 @@ public class CxxDescriptionEnhancer {
             FluentIterable.from(params.getDeps())
                 .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
 
+    ImmutableMap.Builder<Path, SourcePath> allLinks = ImmutableMap.builder();
+    ImmutableMap.Builder<Path, SourcePath> allFullLinks = ImmutableMap.builder();
+    ImmutableList.Builder<Path> allIncludeRoots = ImmutableList.builder();
+    for (SymlinkTree headerSymlinkTree : headerSymlinkTrees) {
+      allLinks.putAll(headerSymlinkTree.getLinks());
+      allFullLinks.putAll(headerSymlinkTree.getFullLinks());
+      allIncludeRoots.add(headerSymlinkTree.getRoot());
+    }
+
     return CxxPreprocessorInput.concat(
         ImmutableList.of(
             CxxPreprocessorInput.builder()
-                .addRules(headerSymlinkTree.getBuildTarget())
+                .addAllRules(Iterables.transform(headerSymlinkTrees, HasBuildTarget.TO_TARGET))
                 .putAllPreprocessorFlags(preprocessorFlags)
                 .setIncludes(
                     ImmutableCxxHeaders.builder()
                         .addAllPrefixHeaders(prefixHeaders)
-                        .putAllNameToPathMap(headerSymlinkTree.getLinks())
-                        .putAllFullNameToPathMap(headerSymlinkTree.getFullLinks())
+                        .putAllNameToPathMap(allLinks.build())
+                        .putAllFullNameToPathMap(allFullLinks.build())
                         .build())
-                .addIncludeRoots(headerSymlinkTree.getRoot())
+                .addAllIncludeRoots(allIncludeRoots.build())
                 .addAllFrameworkRoots(frameworkSearchPaths)
                 .build(),
             cxxPreprocessorInputFromDeps));
@@ -502,7 +566,8 @@ public class CxxDescriptionEnhancer {
         ImmutableMap.<Path, SourcePath>builder()
             .putAll(headers)
             .putAll(lexYaccSources.getCxxHeaders())
-            .build());
+            .build(),
+        HeaderVisibility.PRIVATE);
     CxxPreprocessorInput cxxPreprocessorInput = combineCxxPreprocessorInput(
         params,
         cxxPlatform,
@@ -510,7 +575,7 @@ public class CxxDescriptionEnhancer {
             args.preprocessorFlags,
             args.langPreprocessorFlags),
         args.prefixHeaders.get(),
-        headerSymlinkTree,
+        ImmutableList.of(headerSymlinkTree),
         args.frameworkSearchPaths.get());
 
     // The complete list of input sources.

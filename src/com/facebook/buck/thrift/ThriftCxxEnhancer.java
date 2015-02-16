@@ -208,7 +208,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
         Optional.of(
             Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
                 spec.getSources()));
-    langArgs.headers =
+    langArgs.exportedHeaders =
         Optional.of(
             Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
                 spec.getHeaders()));

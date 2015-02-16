@@ -27,7 +27,7 @@ cxx_library(
     srcs = [
         'cc/cc.cpp',
     ],
-    headers = [
+    exported_headers = [
         'cc/cc.h',
     ],
     visibility = [

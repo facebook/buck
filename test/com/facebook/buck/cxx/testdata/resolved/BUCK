@@ -1,7 +1,7 @@
 cxx_library(
   name = 'lib2',
   header_namespace = 'resolved',
-  headers = [
+  exported_headers = [
     'lib2.h',
   ],
   srcs = [
@@ -12,7 +12,7 @@ cxx_library(
 cxx_library(
   name = 'lib1',
   header_namespace = 'resolved',
-  headers = [
+  exported_headers = [
     'lib1.h',
   ],
   deps = [
