@@ -69,6 +69,7 @@ java_library(
   deps = [
     ':exceptions',
     '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/log:log',
   ],
   visibility = [ 'PUBLIC' ],
