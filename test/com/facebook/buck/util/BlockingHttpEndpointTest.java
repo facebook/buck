@@ -41,7 +41,7 @@ public class BlockingHttpEndpointTest {
 
   @Test
   public void whenRequestServiceTerminatesThenExceptionNotThrownByClose()
-      throws MalformedURLException {
+      throws IOException {
     long start = System.nanoTime();
     BlockingHttpEndpoint endpoint = createBlockingHttpEndpoint();
     endpoint.send(new TestHttpURLConnection(0), "Foo");
@@ -54,7 +54,8 @@ public class BlockingHttpEndpointTest {
   }
 
   @Test
-  public void whenRequestServiceTimesOutCloseStillWorks() throws MalformedURLException {
+  public void whenRequestServiceTimesOutCloseStillWorks()
+      throws IOException {
     long start = System.nanoTime();
     BlockingHttpEndpoint endpoint = createBlockingHttpEndpoint();
     endpoint.send(new TestHttpURLConnection(timeoutMillis), "Foo");

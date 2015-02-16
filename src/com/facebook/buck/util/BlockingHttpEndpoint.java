@@ -19,6 +19,7 @@ import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
 import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -77,32 +78,35 @@ public class BlockingHttpEndpoint implements HttpEndpoint, Closeable {
   }
 
   @Override
-  public ListenableFuture<HttpResponse> post(String content) throws IOException {
-    HttpURLConnection connection = buildConnection("POST");
-    connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-    return send(connection, content);
+  public ListenableFuture<HttpResponse> post(final String content) {
+    return requestService.submit(
+        new Callable<HttpResponse>() {
+          @Override
+          public HttpResponse call() {
+            try {
+              HttpURLConnection connection = buildConnection("POST");
+              connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+              return send(connection, content);
+            } catch (IOException e) {
+              throw Throwables.propagate(e);
+            }
+          }
+        });
   }
 
   @VisibleForTesting
-  ListenableFuture<HttpResponse> send(final HttpURLConnection connection, final String content) {
-    return requestService.submit(new Callable<HttpResponse>() {
-      @Override
-      public HttpResponse call() {
-        try (DataOutputStream out = new DataOutputStream(connection.getOutputStream())) {
-          out.writeBytes(content);
-          out.flush();
-          out.close();
-          InputStream inputStream = connection.getInputStream();
-          String response = CharStreams.toString(
-              new InputStreamReader(inputStream, Charsets.UTF_8));
-          return new HttpResponse(response);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        } finally {
-          connection.disconnect();
-        }
-      }
-    });
+  HttpResponse send(final HttpURLConnection connection, final String content) throws IOException {
+    try (DataOutputStream out = new DataOutputStream(connection.getOutputStream())) {
+      out.writeBytes(content);
+      out.flush();
+      out.close();
+      InputStream inputStream = connection.getInputStream();
+      String response = CharStreams.toString(
+          new InputStreamReader(inputStream, Charsets.UTF_8));
+      return new HttpResponse(response);
+    } finally {
+      connection.disconnect();
+    }
   }
 
   private HttpURLConnection buildConnection(String httpMethod) throws IOException {

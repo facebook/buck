@@ -18,8 +18,6 @@ package com.facebook.buck.util;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.IOException;
-
 public interface HttpEndpoint {
-  ListenableFuture<HttpResponse> post(String content) throws IOException;
+  ListenableFuture<HttpResponse> post(String content);
 }
