@@ -50,6 +50,7 @@ public class CxxPreprocessStep implements Step {
   private final ImmutableList<String> flags;
   private final Path output;
   private final Path input;
+  private final ImmutableList<Path> prefixHeaders;
   private final ImmutableList<Path> includes;
   private final ImmutableList<Path> systemIncludes;
   private final ImmutableList<Path> frameworkRoots;
@@ -61,6 +62,7 @@ public class CxxPreprocessStep implements Step {
       ImmutableList<String> flags,
       Path output,
       Path input,
+      ImmutableList<Path> prefixHeaders,
       ImmutableList<Path> includes,
       ImmutableList<Path> systemIncludes,
       ImmutableList<Path> frameworkRoots,
@@ -70,6 +72,7 @@ public class CxxPreprocessStep implements Step {
     this.flags = flags;
     this.output = output;
     this.input = input;
+    this.prefixHeaders = prefixHeaders;
     this.includes = includes;
     this.systemIncludes = systemIncludes;
     this.frameworkRoots = frameworkRoots;
@@ -88,6 +91,10 @@ public class CxxPreprocessStep implements Step {
         .addAll(preprocessor)
         .add("-E")
         .addAll(flags)
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-include"),
+                Iterables.transform(prefixHeaders, Functions.toStringFunction())))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-I"),

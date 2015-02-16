@@ -136,6 +136,7 @@ public class CxxPythonExtensionDescription implements
         CxxPreprocessorFlags.fromArgs(
             args.preprocessorFlags,
             args.langPreprocessorFlags),
+        args.prefixHeaders.get(),
         headerSymlinkTree,
         ImmutableList.<Path>of());
 

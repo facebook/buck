@@ -578,6 +578,7 @@ public class AppleDescriptions {
     output.headers = Optional.of(
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
             ImmutableList.copyOf(targetSources.getHeaderPaths())));
+    output.prefixHeaders = Optional.of(ImmutableList.copyOf(arg.prefixHeader.asSet()));
     output.compilerFlags = Optional.of(ImmutableList.<String>of());
     output.linkerFlags = Optional.of(ImmutableList.<String>of());
     output.platformLinkerFlags = Optional.of(

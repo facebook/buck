@@ -41,6 +41,9 @@ public class CxxPreprocessStepTest {
         ImmutableList.of("-Dtest=blah");
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
+    ImmutableList<Path> prefixHeaders = ImmutableList.of(
+        Paths.get("first/prefix/header.h"),
+        Paths.get("another/prefix/header.h"));
     ImmutableList<Path> includes = ImmutableList.of(
         Paths.get("foo/bar"),
         Paths.get("test"));
@@ -58,6 +61,7 @@ public class CxxPreprocessStepTest {
         flags,
         output,
         input,
+        prefixHeaders,
         includes,
         systemIncludes,
         frameworkRoots,
@@ -68,7 +72,9 @@ public class CxxPreprocessStepTest {
     ImmutableList<String> expected = ImmutableList.<String>builder()
         .addAll(compiler)
         .add("-E")
-        .addAll(flags)
+        .add("-Dtest=blah")
+        .add("-include", "first/prefix/header.h")
+        .add("-include", "another/prefix/header.h")
         .add("-I", "foo/bar")
         .add("-I", "test")
         .add("-isystem", "/usr/include")
@@ -124,6 +130,7 @@ public class CxxPreprocessStepTest {
     ImmutableList<String> flags = ImmutableList.of("-Dtest=blah");
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
+    ImmutableList<Path> prefixHeaders = ImmutableList.of();
     ImmutableList<Path> includes = ImmutableList.of();
     ImmutableList<Path> systemIncludes = ImmutableList.of();
     ImmutableList<Path> frameworkRoots = ImmutableList.of();
@@ -135,6 +142,7 @@ public class CxxPreprocessStepTest {
         flags,
         output,
         input,
+        prefixHeaders,
         includes,
         systemIncludes,
         frameworkRoots,

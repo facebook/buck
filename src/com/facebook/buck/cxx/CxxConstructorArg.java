@@ -32,6 +32,7 @@ import java.nio.file.Path;
 public class CxxConstructorArg {
   public Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>> srcs;
   public Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>> headers;
+  public Optional<ImmutableList<SourcePath>> prefixHeaders;
   public Optional<ImmutableList<String>> compilerFlags;
   public Optional<ImmutableList<String>> preprocessorFlags;
   public Optional<ImmutableList<String>> linkerFlags;

@@ -359,6 +359,7 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
+      ImmutableList<SourcePath> prefixHeaders,
       SymlinkTree headerSymlinkTree,
       ImmutableList<Path> frameworkSearchPaths) {
 
@@ -376,6 +377,7 @@ public class CxxDescriptionEnhancer {
                 .putAllPreprocessorFlags(preprocessorFlags)
                 .setIncludes(
                     ImmutableCxxHeaders.builder()
+                        .addAllPrefixHeaders(prefixHeaders)
                         .putAllNameToPathMap(headerSymlinkTree.getLinks())
                         .putAllFullNameToPathMap(headerSymlinkTree.getFullLinks())
                         .build())
@@ -507,6 +509,7 @@ public class CxxDescriptionEnhancer {
         CxxPreprocessorFlags.fromArgs(
             args.preprocessorFlags,
             args.langPreprocessorFlags),
+        args.prefixHeaders.get(),
         headerSymlinkTree,
         args.frameworkSearchPaths.get());
 

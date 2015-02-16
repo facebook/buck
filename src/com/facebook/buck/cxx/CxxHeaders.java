@@ -22,11 +22,17 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 @Value.Immutable
 @BuckStyleImmutable
 public interface CxxHeaders {
+
+  /**
+   * List of headers that are implicitly included at the beginning of each preprocessed source file.
+   */
+  List<SourcePath> getPrefixHeaders();
 
   /**
    * Maps the name of the header (e.g. the path used to include it in a C/C++ source) to the

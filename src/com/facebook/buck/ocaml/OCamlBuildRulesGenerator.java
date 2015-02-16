@@ -171,6 +171,7 @@ public class OCamlBuildRulesGenerator {
                       pathResolver.filterBuildRuleInputs(
                           ImmutableList.<SourcePath>builder()
                               .add(cSrc)
+                              .addAll(cxxPreprocessorInput.getIncludes().getPrefixHeaders())
                               .addAll(
                                   cxxPreprocessorInput.getIncludes().getNameToPathMap().values())
                               .build()))

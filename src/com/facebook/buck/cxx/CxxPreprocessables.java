@@ -229,6 +229,7 @@ public class CxxPreprocessables {
         pathResolver.filterBuildRuleInputs(
             ImmutableList.<SourcePath>builder()
                 .add(source.getPath())
+                .addAll(preprocessorInput.getIncludes().getPrefixHeaders())
                 .addAll(preprocessorInput.getIncludes().getNameToPathMap().values())
                 .build()));
 

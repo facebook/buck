@@ -78,7 +78,11 @@ public class CxxPreprocess extends AbstractBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(input);
+    return getResolver().filterInputsToCompareToOutput(
+        ImmutableList.<SourcePath>builder()
+            .addAll(includes.getPrefixHeaders())
+            .add(input)
+            .build());
   }
 
   @Override
@@ -135,6 +139,9 @@ public class CxxPreprocess extends AbstractBuildRule {
             flags,
             output,
             getResolver().getPath(input),
+            FluentIterable.from(includes.getPrefixHeaders())
+                .transform(getResolver().getPathFunction())
+                .toList(),
             includeRoots,
             systemIncludeRoots,
             frameworkRoots,

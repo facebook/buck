@@ -44,11 +44,11 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import org.immutables.value.Value;
+
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
-
-import org.immutables.value.Value;
 
 @Value.Nested
 public class CxxLibraryDescription implements
@@ -217,6 +217,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
+      ImmutableList<SourcePath> prefixHeaders,
       ImmutableMap<Path, SourcePath> headers,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
@@ -250,6 +251,7 @@ public class CxxLibraryDescription implements
             params,
             cxxPlatform,
             preprocessorFlags,
+            prefixHeaders,
             headerSymlinkTree,
             frameworkSearchPaths);
 
@@ -291,6 +293,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
+      ImmutableList<SourcePath> prefixHeaders,
       ImmutableMap<Path, SourcePath> headers,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
@@ -305,6 +308,7 @@ public class CxxLibraryDescription implements
         lexSources,
         yaccSources,
         preprocessorFlags,
+        prefixHeaders,
         headers,
         compilerFlags,
         sources,
@@ -344,6 +348,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
+      ImmutableList<SourcePath> prefixHeaders,
       ImmutableMap<Path, SourcePath> headers,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
@@ -360,6 +365,7 @@ public class CxxLibraryDescription implements
         lexSources,
         yaccSources,
         preprocessorFlags,
+        prefixHeaders,
         headers,
         compilerFlags,
         sources,
@@ -464,6 +470,7 @@ public class CxxLibraryDescription implements
                     args.exportedPreprocessorFlags,
                     args.exportedLangPreprocessorFlags))
             .build(),
+        args.prefixHeaders.get(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
         args.compilerFlags.or(ImmutableList.<String>of()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
@@ -495,6 +502,7 @@ public class CxxLibraryDescription implements
                     args.exportedPreprocessorFlags,
                     args.exportedLangPreprocessorFlags))
             .build(),
+        args.prefixHeaders.get(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
         args.compilerFlags.or(ImmutableList.<String>of()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
