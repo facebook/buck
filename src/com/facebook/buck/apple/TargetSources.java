@@ -58,10 +58,16 @@ public abstract class TargetSources {
   public abstract SortedSet<SourcePath> getSrcPaths();
 
   /**
-   * Paths to each header file in the target.
+   * Paths to each public header file in the target.
    */
   @Value.Parameter
-  public abstract SortedSet<SourcePath> getHeaderPaths();
+  public abstract SortedSet<SourcePath> getPublicHeaderPaths();
+
+  /**
+   * Paths to each private header file in the target.
+   */
+  @Value.Parameter
+  public abstract SortedSet<SourcePath> getPrivateHeaderPaths();
 
   /**
    * Creates a {@link TargetSources} given a list of {@link AppleSource}s.
@@ -73,19 +79,24 @@ public abstract class TargetSources {
     ImmutableSortedMap.Builder<SourcePath, String> perFileFlagsBuilder = ImmutableSortedMap
         .naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> srcPathsBuilder = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> headerPathsBuilder = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourcePath> publicHeaderPathsBuilder =
+        ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourcePath> privateHeaderPathsBuilder =
+        ImmutableSortedSet.naturalOrder();
     RuleUtils.extractSourcePaths(
         resolver,
         allSourcesBuilder,
         perFileFlagsBuilder,
         srcPathsBuilder,
-        headerPathsBuilder,
+        publicHeaderPathsBuilder,
+        privateHeaderPathsBuilder,
         appleSources);
 
     ImmutableSortedSet<SourcePath> allSources = allSourcesBuilder.build();
     ImmutableSortedMap<SourcePath, String> perFileFlags = perFileFlagsBuilder.build();
     ImmutableSortedSet<SourcePath> srcPaths = srcPathsBuilder.build();
-    ImmutableSortedSet<SourcePath> headerPaths = headerPathsBuilder.build();
+    ImmutableSortedSet<SourcePath> publicHeaderPaths = publicHeaderPathsBuilder.build();
+    ImmutableSortedSet<SourcePath> privateHeaderPaths = privateHeaderPathsBuilder.build();
 
     ImmutableList<GroupedSource> groupedSource = RuleUtils.createGroupsFromSourcePaths(
         resolver,
@@ -95,7 +106,8 @@ public abstract class TargetSources {
         groupedSource,
         perFileFlags,
         srcPaths,
-        headerPaths);
+        publicHeaderPaths,
+        privateHeaderPaths);
   }
 
 }

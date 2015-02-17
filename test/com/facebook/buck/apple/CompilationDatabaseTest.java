@@ -96,6 +96,7 @@ public class CompilationDatabaseTest {
         "public");
     Collection<AppleSource> appleSources = ImmutableList.of(
         AppleSource.ofSourcePathWithFlags(publicHeader),
+        AppleSource.ofSourcePath(new TestSourcePath("Foo/Bye.h")),
         AppleSource.ofSourcePath(new TestSourcePath("Foo/Hello.m")));
     TargetSources targetSources = TargetSources.ofAppleSources(
         testSourcePathResolver,
@@ -113,8 +114,9 @@ public class CompilationDatabaseTest {
     MoreAsserts.assertIterablesEquals(
         "getInputsToCompareToOutput() should contain files in targetSources.",
         ImmutableList.of(
+            Paths.get("Foo/Hello.m"),
             Paths.get("Foo/Hello.h"),
-            Paths.get("Foo/Hello.m")),
+            Paths.get("Foo/Bye.h")),
         compilationDatabase.getInputsToCompareToOutput());
   }
 

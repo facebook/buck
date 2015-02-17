@@ -84,9 +84,9 @@ public class CompilationDatabase extends AbstractBuildRule {
   /**
    * @param buildRuleParams As needed by superclass constructor.
    * @param resolver As needed by superclass constructor.
-   * @param targetSources The {@link TargetSources#getHeaderPaths()} and
-   *     {@link TargetSources#getSrcPaths()} will be the entries in the generated compilation
-   *     database.
+   * @param targetSources The {@link TargetSources#getPublicHeaderPaths()},
+   *     {@link TargetSources#getPublicHeaderPaths()} and {@link TargetSources#getSrcPaths()} will
+   *     be the entries in the generated compilation database.
    * @param frameworks Paths to frameworks to link against. Each may start with {@code "$SDKROOT"},
    *     in which case the appropriate path will be substituted.
    * @param includePaths Paths that should be passed as clang args with {@code -I}.
@@ -126,13 +126,16 @@ public class CompilationDatabase extends AbstractBuildRule {
     steps.add(new AbstractExecutionStep("generate_internal_header_map") {
       @Override
       public int execute(ExecutionContext context) {
-        if (targetSources.getHeaderPaths().isEmpty()) {
+        Iterable<SourcePath> allHeaderPaths = Iterables.concat(
+            targetSources.getPublicHeaderPaths(),
+            targetSources.getPrivateHeaderPaths());
+        if (Iterables.isEmpty(allHeaderPaths)) {
           return 0;
         }
 
         HeaderMap.Builder builder = HeaderMap.builder();
         ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-        for (SourcePath headerPath : targetSources.getHeaderPaths()) {
+        for (SourcePath headerPath : allHeaderPaths) {
           Path relativePath = getResolver().getPath(headerPath);
           Path absolutePath = projectFilesystem.resolve(relativePath);
           builder.add(relativePath.getFileName().toString(), absolutePath);
@@ -166,7 +169,10 @@ public class CompilationDatabase extends AbstractBuildRule {
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
     return getResolver().filterInputsToCompareToOutput(
-        Iterables.concat(targetSources.getHeaderPaths(), targetSources.getSrcPaths()));
+        Iterables.concat(
+            targetSources.getSrcPaths(),
+            targetSources.getPublicHeaderPaths(),
+            targetSources.getPrivateHeaderPaths()));
   }
 
   @Override
@@ -198,7 +204,8 @@ public class CompilationDatabase extends AbstractBuildRule {
       List<JsonSerializableDatabaseEntry> entries = Lists.newArrayList();
       Iterable<SourcePath> allSources = Iterables.concat(
           targetSources.getSrcPaths(),
-          targetSources.getHeaderPaths());
+          targetSources.getPublicHeaderPaths(),
+          targetSources.getPrivateHeaderPaths());
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       for (SourcePath srcPath : allSources) {
         String fileToCompile = projectFilesystem.resolve(getResolver().getPath(srcPath))

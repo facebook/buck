@@ -50,9 +50,11 @@ public class RuleUtils {
   private static void addSourcePathToBuilders(
       SourcePathResolver resolver,
       SourcePath sourcePath,
+      String perFileFlags,
       ImmutableSortedSet.Builder<SourcePath> outputAllSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
-      ImmutableSortedSet.Builder<SourcePath> outputHeaderPaths) {
+      ImmutableSortedSet.Builder<SourcePath> outputPublicHeaderPaths,
+      ImmutableSortedSet.Builder<SourcePath> outputPrivateHeaderPaths) {
     if (resolver.isSourcePathExtensionInSet(
         sourcePath,
         FileExtensions.CLANG_SOURCES)) {
@@ -60,7 +62,11 @@ public class RuleUtils {
     } else if (resolver.isSourcePathExtensionInSet(
         sourcePath,
         FileExtensions.CLANG_HEADERS)) {
-      outputHeaderPaths.add(sourcePath);
+      if (AppleDescriptions.isPublicHeader(perFileFlags)) {
+        outputPublicHeaderPaths.add(sourcePath);
+      } else {
+        outputPrivateHeaderPaths.add(sourcePath);
+      }
     }
     outputAllSourcePaths.add(sourcePath);
   }
@@ -74,8 +80,10 @@ public class RuleUtils {
    * @param outputPerFileFlags per file flags will be added to this builder
    * @param outputSourcePaths The ordered list of paths to (non-header) source code
    *        files, as determined by the file extensions in SOURCE_FILE_EXTENSIONS.
-   * @param outputHeaderPaths The ordered list of paths to header files,
-   *        as determined by the file extensions in HEADER_FILE_EXTENSIONS.
+   * @param outputPublicHeaderPaths The ordered list of paths to public header files,
+   *        as determined by the file extensions in HEADER_FILE_EXTENSIONS and per-file flags.
+   * @param outputPrivateHeaderPaths The ordered list of paths to private header files,
+   *        as determined by the file extensions in HEADER_FILE_EXTENSIONS and per-file flags.
    * @param items input list of sources
    */
   public static void extractSourcePaths(
@@ -83,7 +91,8 @@ public class RuleUtils {
       ImmutableSortedSet.Builder<SourcePath> outputAllSourcePaths,
       ImmutableMap.Builder<SourcePath, String> outputPerFileFlags,
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
-      ImmutableSortedSet.Builder<SourcePath> outputHeaderPaths,
+      ImmutableSortedSet.Builder<SourcePath> outputPublicHeaderPaths,
+      ImmutableSortedSet.Builder<SourcePath> outputPrivateHeaderPaths,
       Collection<AppleSource> items) {
     for (AppleSource item : items) {
       switch (item.getType()) {
@@ -91,18 +100,22 @@ public class RuleUtils {
           addSourcePathToBuilders(
               resolver,
               item.getSourcePath(),
+              /* perFileFlags = */ "",
               outputAllSourcePaths,
               outputSourcePaths,
-              outputHeaderPaths);
+              outputPublicHeaderPaths,
+              outputPrivateHeaderPaths);
           break;
         case SOURCE_PATH_WITH_FLAGS:
           Pair<SourcePath, String> pair = item.getSourcePathWithFlags();
           addSourcePathToBuilders(
               resolver,
               pair.getFirst(),
+              pair.getSecond(),
               outputAllSourcePaths,
               outputSourcePaths,
-              outputHeaderPaths);
+              outputPublicHeaderPaths,
+              outputPrivateHeaderPaths);
           outputPerFileFlags.put(pair.getFirst(), pair.getSecond());
           break;
         default:

@@ -40,7 +40,8 @@ public class RuleUtilsTest {
     ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
     ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> headerPaths = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourcePath> publicHeaderPaths = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourcePath> privateHeaderPaths = ImmutableSortedSet.naturalOrder();
 
     ImmutableList<AppleSource> input = ImmutableList.of(
         AppleSource.ofSourcePath(new TestSourcePath("Group1/foo.m")),
@@ -59,7 +60,8 @@ public class RuleUtilsTest {
         allSourcesBuilder,
         perFileCompileFlags,
         sourcePaths,
-        headerPaths,
+        publicHeaderPaths,
+        privateHeaderPaths,
         input);
     ImmutableList<GroupedSource> sources = RuleUtils.createGroupsFromSourcePaths(
         resolver,
@@ -90,21 +92,27 @@ public class RuleUtilsTest {
     ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
     ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> headerPaths = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourcePath> publicHeaderPaths = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourcePath> privateHeaderPaths = ImmutableSortedSet.naturalOrder();
 
     ImmutableList<AppleSource> input = ImmutableList.of(
         AppleSource.ofSourcePath(new TestSourcePath("foo.m")),
         AppleSource.ofSourcePath(new TestSourcePath("bar.h")),
         AppleSource.ofSourcePath(new TestSourcePath("baz.mm")),
         AppleSource.ofSourcePath(new TestSourcePath("blech.hh")),
-        AppleSource.ofSourcePath(new TestSourcePath("beeble.c")));
+        AppleSource.ofSourcePath(new TestSourcePath("beeble.c")),
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(
+                new TestSourcePath("file.h"),
+                "public")));
 
     RuleUtils.extractSourcePaths(
         new SourcePathResolver(new BuildRuleResolver()),
         allSourcesBuilder,
         perFileCompileFlags,
         sourcePaths,
-        headerPaths,
+        publicHeaderPaths,
+        privateHeaderPaths,
         input);
     assertEquals(
         ImmutableSortedSet.of(
@@ -116,7 +124,11 @@ public class RuleUtilsTest {
         ImmutableSortedSet.of(
             new TestSourcePath("bar.h"),
             new TestSourcePath("blech.hh")),
-        headerPaths.build());
+        privateHeaderPaths.build());
+    assertEquals(
+        ImmutableSortedSet.of(
+            new TestSourcePath("file.h")),
+        publicHeaderPaths.build());
   }
 
   @Test
@@ -124,10 +136,13 @@ public class RuleUtilsTest {
     ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
     ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> headerPaths = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourcePath> publicHeaderPaths = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourcePath> privateHeaderPaths = ImmutableSortedSet.naturalOrder();
 
     ImmutableList<AppleSource> input = ImmutableList.of(
         AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
+        AppleSource.ofSourcePathWithFlags(
+            new Pair<SourcePath, String>(new TestSourcePath("qux.h"), "public")),
         AppleSource.ofSourcePathWithFlags(
             new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-Wall")),
         AppleSource.ofSourcePath(new TestSourcePath("baz.hh")),
@@ -140,7 +155,8 @@ public class RuleUtilsTest {
         allSourcesBuilder,
         perFileCompileFlags,
         sourcePaths,
-        headerPaths,
+        publicHeaderPaths,
+        privateHeaderPaths,
         input);
     assertEquals(
         ImmutableSortedSet.of(
@@ -151,7 +167,11 @@ public class RuleUtilsTest {
         ImmutableSortedSet.of(
             new TestSourcePath("foo.h"),
             new TestSourcePath("baz.hh")),
-        headerPaths.build());
+        privateHeaderPaths.build());
+    assertEquals(
+        ImmutableSortedSet.of(
+            new TestSourcePath("qux.h")),
+        publicHeaderPaths.build());
   }
 
   @Test
