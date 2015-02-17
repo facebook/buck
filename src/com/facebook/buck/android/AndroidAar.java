@@ -16,11 +16,11 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
@@ -42,7 +42,7 @@ public class AndroidAar extends AbstractBuildRule {
   private final Path temp;
   private final AndroidManifest manifest;
   private final AndroidResource androidResource;
-  private final JavaBinary javaBinary;
+  private final BuildRule javaBinary;
   private final AssembleDirectories assembleResourceDirectories;
   private final AssembleDirectories assembleAssetsDirectories;
 
@@ -51,7 +51,7 @@ public class AndroidAar extends AbstractBuildRule {
       SourcePathResolver resolver,
       AndroidManifest manifest,
       AndroidResource androidResource,
-      JavaBinary javaBinary,
+      BuildRule javaBinary,
       AssembleDirectories assembleResourceDirectories,
       AssembleDirectories assembleAssetsDirectories) {
     super(params, resolver);

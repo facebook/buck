@@ -1,0 +1,27 @@
+android_aar(
+  name = 'app',
+  manifest_skeleton = 'AndroidManifest.xml',
+  deps = [
+    ':lib',
+    ':res',
+  ],
+)
+
+android_resource(
+  name = 'res',
+  manifest = 'AndroidManifest.xml',
+)
+
+cxx_library(
+  name = 'lib',
+  header_namespace = 'test',
+  headers = [
+    'bar.h',
+  ],
+  srcs = [
+    'bar.cpp',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

@@ -1,0 +1,43 @@
+android_aar(
+  name = 'app',
+  manifest_skeleton = 'AndroidManifest.xml',
+  deps = [
+    ':lib',
+    ':res',
+  ],
+)
+
+android_resource(
+  name = 'res',
+  manifest = 'AndroidManifest.xml',
+)
+
+java_library(
+  name = 'lib',
+  srcs = [
+    'Lib.java',
+  ],
+  deps = [
+    ':native',
+  ],
+)
+
+cxx_library(
+  name = 'native',
+  srcs = [
+    'Native.cpp',
+  ],
+  deps = [
+    ':dep',
+  ],
+)
+
+cxx_library(
+  name = 'dep',
+  srcs = [
+    'Dep.cpp',
+  ],
+  headers = [
+    'Dep.h',
+  ],
+)

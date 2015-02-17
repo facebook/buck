@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -214,7 +213,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         pathResolver,
         manifest,
         androidResource,
-        (JavaBinary) javaBinary,
+        javaBinary,
         assembleResourceDirectories,
         assembleAssetsDirectories);
   }

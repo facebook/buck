@@ -1,0 +1,9 @@
+ndk_library(
+  name = 'foo',
+  flags = [
+    'NDK_APPLICATION_MK=${PWD}/jni/Application.mk',
+  ],
+  deps = [
+    '//bar:bar',
+  ],
+)

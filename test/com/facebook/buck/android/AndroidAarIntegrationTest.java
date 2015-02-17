@@ -21,6 +21,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -31,12 +32,16 @@ public class AndroidAarIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
+  @Before
+  public void setUp() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  }
+
   @Test
   public void testBuildAndroidAar() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "android_aar/caseA",
+        "android_aar_build/caseA",
         tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:app").assertSuccess();
@@ -53,10 +58,9 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testBuildPrebuiltAndroidAar() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
-        "android_aar/caseB",
+        "android_aar_build/caseB",
         tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:app").assertSuccess();
@@ -68,5 +72,37 @@ public class AndroidAarIntegrationTest {
     zipInspector.assertFileExists("res/");
     zipInspector.assertFileExists("res/values/");
     zipInspector.assertFileExists("res/values/strings.xml");
+  }
+
+  @Test
+  public void testCxxLibraryDependent() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "android_aar_native_deps/cxx_deps",
+        tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:app").assertSuccess();
+
+    ZipInspector zipInspector = new ZipInspector(workspace.getFile("buck-out/gen/app.aar"));
+    zipInspector.assertFileExists("AndroidManifest.xml");
+    zipInspector.assertFileExists("classes.jar");
+    zipInspector.assertFileExists("R.txt");
+    zipInspector.assertFileExists("res/");
+  }
+
+  @Test
+  public void testNativeLibraryDependent() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "android_aar_native_deps/ndk_deps",
+        tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:app").assertSuccess();
+
+    ZipInspector zipInspector = new ZipInspector(workspace.getFile("buck-out/gen/app.aar"));
+    zipInspector.assertFileExists("AndroidManifest.xml");
+    zipInspector.assertFileExists("classes.jar");
+    zipInspector.assertFileExists("R.txt");
+    zipInspector.assertFileExists("res/");
   }
 }
