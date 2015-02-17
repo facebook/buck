@@ -146,6 +146,11 @@ public class AppleDescriptions {
     return BuildTargets.getBinPath(buildTarget, "__%s_public_headers__");
   }
 
+  private static final Splitter spaceSplitter = Splitter.on(' ').trimResults().omitEmptyStrings();
+  public static boolean isPublicHeader(String flags) {
+    return Iterables.any(spaceSplitter.split(flags), Predicates.equalTo("public"));
+  }
+
   private static SymlinkTree createSymlinkTree(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
@@ -166,11 +171,9 @@ public class AppleDescriptions {
       Path headerPathPrefix = params.getBuildTarget().getBasePath().getFileName();
 
       headersToCopy = Maps.newHashMap();
-      Splitter spaceSplitter = Splitter.on(' ').trimResults().omitEmptyStrings();
-      Predicate<String> isPublicHeaderFlag = Predicates.equalTo("public");
       for (Map.Entry<SourcePath, String> entry : perFileFlags.entrySet()) {
         String flags = entry.getValue();
-        if (Iterables.any(spaceSplitter.split(flags), isPublicHeaderFlag)) {
+        if (isPublicHeader(flags)) {
           SourcePath sourcePath = entry.getKey();
           Path sourcePathName = pathResolver.getPath(sourcePath).getFileName();
           headersToCopy.put(headerPathPrefix.resolve(sourcePathName), sourcePath);
