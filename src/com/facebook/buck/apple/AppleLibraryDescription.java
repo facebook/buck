@@ -31,14 +31,19 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImmutableBuildRuleType;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 
@@ -120,13 +125,35 @@ public class AppleLibraryDescription implements
             cxxPlatformFlavorDomain);
     Optional<AppleSdkPaths> appleSdkPaths = Optional.fromNullable(
         appleCxxPlatformsToAppleSdkPaths.get(typeAndPlatform.getPlatform()));
+    Sets.SetView<SourcePath> allHeaderPaths = Sets.union(
+        targetSources.getPublicHeaderPaths(),
+        targetSources.getPrivateHeaderPaths());
+    Path headerPathPrefix = Paths.get(
+        AppleDescriptions.getHeaderPathPrefix(args, params.getBuildTarget()));
+    ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>builder()
+        .putAll(
+            AppleDescriptions.convertToFlatCxxHeaders(
+                Paths.get(""),
+                pathResolver,
+                allHeaderPaths))
+        .putAll(
+            AppleDescriptions.convertToFlatCxxHeaders(
+                headerPathPrefix,
+                pathResolver,
+                targetSources.getPrivateHeaderPaths()))
+        .build();
     AppleDescriptions.populateCxxConstructorArg(
         delegateArg,
         args,
-        params.getBuildTarget(),
-        targetSources,
+        targetSources.getSrcPaths(),
+        headerMap,
         appleSdkPaths);
-    delegateArg.exportedHeaders = Optional.absent();
+    delegateArg.exportedHeaders = Optional.of(
+        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
+            AppleDescriptions.convertToFlatCxxHeaders(
+                headerPathPrefix,
+                pathResolver,
+                targetSources.getPublicHeaderPaths())));
     delegateArg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
     delegateArg.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());

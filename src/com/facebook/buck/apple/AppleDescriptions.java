@@ -569,18 +569,37 @@ public class AppleDescriptions {
     return path;
   }
 
+  public static String getHeaderPathPrefix(
+      AppleNativeTargetDescriptionArg arg,
+      BuildTarget buildTarget) {
+    return arg.headerPathPrefix.or(buildTarget.getShortName());
+  }
+
+  public static ImmutableMap<String, SourcePath> convertToFlatCxxHeaders(
+      Path headerPathPrefix,
+      SourcePathResolver sourcePathResolver,
+      Set<SourcePath> headerPaths) {
+    ImmutableMap.Builder<String, SourcePath> cxxHeaders = ImmutableMap.builder();
+    for (SourcePath headerPath : headerPaths) {
+      Path fileName = sourcePathResolver.getPath(headerPath).getFileName();
+      String key = headerPathPrefix.resolve(fileName).toString();
+      cxxHeaders.put(key, headerPath);
+    }
+    return cxxHeaders.build();
+  }
+
   public static void populateCxxConstructorArg(
       CxxConstructorArg output,
       AppleNativeTargetDescriptionArg arg,
-      BuildTarget buildTarget,
-      TargetSources targetSources,
+      Set<SourcePath> sourcePaths,
+      ImmutableMap<String, SourcePath> headerMap,
       final Optional<AppleSdkPaths> appleSdkPaths) {
     output.srcs = Optional.of(
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-            ImmutableList.copyOf(targetSources.getSrcPaths())));
+            ImmutableList.copyOf(sourcePaths)));
     output.headers = Optional.of(
-        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-            ImmutableList.copyOf(targetSources.getPrivateHeaderPaths())));
+        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
+            headerMap));
     output.prefixHeaders = Optional.of(ImmutableList.copyOf(arg.prefixHeader.asSet()));
     output.compilerFlags = Optional.of(ImmutableList.<String>of());
     output.linkerFlags = Optional.of(ImmutableList.<String>of());
@@ -611,8 +630,7 @@ public class AppleDescriptions {
     output.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.deps = arg.deps;
-    output.headerNamespace = arg.headerPathPrefix.or(
-        Optional.of(buildTarget.getShortName()));
+    output.headerNamespace = Optional.of("");
   }
 
 }

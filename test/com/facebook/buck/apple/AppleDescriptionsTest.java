@@ -22,11 +22,14 @@ import com.facebook.buck.apple.graphql.GraphQLDataBuilder;
 import com.facebook.buck.apple.graphql.GraphQLDataDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -232,6 +235,42 @@ public class AppleDescriptionsTest {
     assertEquals(
         TargetGraphFactory.newInstance(ImmutableSet.of(mergedModel, genrule)),
         subgraph);
+  }
+
+  @Test
+  public void convertToFlatCxxHeadersWithPrefix() {
+    assertEquals(
+        ImmutableMap.<String, SourcePath>of(
+            "prefix/some_file.h", new TestSourcePath("path/to/some_file.h"),
+            "prefix/another_file.h", new TestSourcePath("path/to/another_file.h"),
+            "prefix/a_file.h", new TestSourcePath("different/path/to/a_file.h"),
+            "prefix/file.h", new TestSourcePath("file.h")),
+        AppleDescriptions.convertToFlatCxxHeaders(
+            Paths.get("prefix"),
+            new SourcePathResolver(new BuildRuleResolver()),
+            ImmutableSet.<SourcePath>of(
+                new TestSourcePath("path/to/some_file.h"),
+                new TestSourcePath("path/to/another_file.h"),
+                new TestSourcePath("different/path/to/a_file.h"),
+                new TestSourcePath("file.h"))));
+  }
+
+  @Test
+  public void convertToFlatCxxHeadersWithoutPrefix() {
+    assertEquals(
+        ImmutableMap.<String, SourcePath>of(
+            "some_file.h", new TestSourcePath("path/to/some_file.h"),
+            "another_file.h", new TestSourcePath("path/to/another_file.h"),
+            "a_file.h", new TestSourcePath("different/path/to/a_file.h"),
+            "file.h", new TestSourcePath("file.h")),
+        AppleDescriptions.convertToFlatCxxHeaders(
+            Paths.get(""),
+            new SourcePathResolver(new BuildRuleResolver()),
+            ImmutableSet.<SourcePath>of(
+                new TestSourcePath("path/to/some_file.h"),
+                new TestSourcePath("path/to/another_file.h"),
+                new TestSourcePath("different/path/to/a_file.h"),
+                new TestSourcePath("file.h"))));
   }
 
 }
