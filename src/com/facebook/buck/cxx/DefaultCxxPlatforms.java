@@ -118,13 +118,19 @@ public class DefaultCxxPlatforms {
   public static void addToolFlagsFromConfig(
       BuckConfig delegate,
       ImmutableCxxPlatform.Builder builder) {
+    ImmutableList<String> asflags = getFlags("cxx", "asflags", DEFAULT_ASFLAGS, delegate);
+    ImmutableList<String> cflags = getFlags("cxx", "cflags", DEFAULT_CFLAGS, delegate);
+    ImmutableList<String> cxxflags = getFlags("cxx", "cxxflags", DEFAULT_CXXFLAGS, delegate);
     builder
-        .addAllAsflags(getFlags("cxx", "asflags", DEFAULT_ASFLAGS, delegate))
+        .addAllAsflags(asflags)
         .addAllAsppflags(getFlags("cxx", "asppflags", DEFAULT_ASPPFLAGS, delegate))
-        .addAllCflags(getFlags("cxx", "cflags", DEFAULT_CFLAGS, delegate))
-        .addAllCxxflags(getFlags("cxx", "cxxflags", DEFAULT_CXXFLAGS, delegate))
+        .addAllAsppflags(asflags)
+        .addAllCflags(cflags)
+        .addAllCxxflags(cxxflags)
         .addAllCppflags(getFlags("cxx", "cppflags", DEFAULT_CPPFLAGS, delegate))
+        .addAllCppflags(cflags)
         .addAllCxxppflags(getFlags("cxx", "cxxppflags", DEFAULT_CXXPPFLAGS, delegate))
+        .addAllCxxppflags(cxxflags)
         .addAllCxxldflags(getFlags("cxx", "cxxldflags", DEFAULT_CXXLDFLAGS, delegate))
         .addAllLdflags(getFlags("cxx", "ldflags", DEFAULT_LDFLAGS, delegate))
         .addAllArflags(getFlags("cxx", "arflags", DEFAULT_ARFLAGS, delegate))

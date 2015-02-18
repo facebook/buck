@@ -16,7 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.google.common.collect.ImmutableList;
@@ -39,5 +42,31 @@ public class DefaultCxxPlatformsTest {
     assertEquals(ImmutableList.of("-lex", "-lex"), cxxPlatform.getLexFlags());
     assertEquals(ImmutableList.of("-yacc", "-yacc"), cxxPlatform.getYaccFlags());
   }
+
+
+  @Test
+  public void compilerFlagsPropagateToPreprocessorFlags() {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new FakeBuckConfig(
+            ImmutableMap.<String, Map<String, String>>of(
+                "cxx", ImmutableMap.of(
+                    "cflags", "-std=gnu11",
+                    "cppflags", "-DCFOO",
+                    "cxxflags", "-std=c++11",
+                    "cxxppflags", "-DCXXFOO"))));
+    assertThat(
+        cxxPlatform.getCflags(),
+        containsInAnyOrder("-std=gnu11"));
+    assertThat(
+        cxxPlatform.getCppflags(),
+        containsInAnyOrder("-std=gnu11", "-DCFOO"));
+    assertThat(
+        cxxPlatform.getCxxflags(),
+        containsInAnyOrder("-std=c++11"));
+    assertThat(
+        cxxPlatform.getCxxppflags(),
+        containsInAnyOrder("-std=c++11", "-DCXXFOO"));
+  }
+
 
 }
