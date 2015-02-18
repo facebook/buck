@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
@@ -45,6 +46,8 @@ import java.util.regex.Pattern;
  * A step that preprocesses C/C++ sources.
  */
 public class CxxPreprocessStep implements Step {
+
+  private static final Logger LOG = Logger.get(CxxCompileStep.class);
 
   private final ImmutableList<String> preprocessor;
   private final ImmutableList<String> flags;
@@ -167,6 +170,7 @@ public class CxxPreprocessStep implements Step {
   @Override
   @SuppressWarnings("PMD.EmptyTryBlock")
   public int execute(ExecutionContext context) throws InterruptedException {
+    LOG.debug("Preprocessing %s -> %s", input, output);
     ProcessBuilder builder = new ProcessBuilder();
     builder.command(getCommand());
     builder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
@@ -177,6 +181,10 @@ public class CxxPreprocessStep implements Step {
     Path outputTempPath = context.getProjectFilesystem().resolve(this.output + ".tmp");
 
     try {
+      LOG.debug(
+          "Running command (pwd=%s): %s",
+          builder.directory(),
+          Joiner.on(' ').join(Iterables.transform(builder.command(), Escaper.BASH_ESCAPER)));
 
       // Start the process.
       Process process = builder.start();
@@ -220,6 +228,10 @@ public class CxxPreprocessStep implements Step {
       String err = new String(error.toByteArray());
       if (!err.isEmpty()) {
         context.getConsole().printErrorText(err);
+      }
+
+      if (exitCode != 0) {
+        LOG.warn("Error %d preprocessing %s: %s", exitCode, input, err);
       }
 
       return exitCode;

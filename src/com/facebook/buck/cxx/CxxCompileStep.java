@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
@@ -26,6 +27,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -36,6 +38,8 @@ import java.nio.file.Path;
  * A step that compiles and assembles C/C++ sources.
  */
 public class CxxCompileStep implements Step {
+
+  private static final Logger LOG = Logger.get(CxxCompileStep.class);
 
   private final ImmutableList<String> compilerPrefix;
   private final ImmutableList<String> flags;
@@ -87,6 +91,7 @@ public class CxxCompileStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
+    LOG.debug("Compiling %s -> %s", input, output);
     ProcessBuilder builder = new ProcessBuilder();
     builder.command(getCommand());
     builder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
@@ -105,6 +110,10 @@ public class CxxCompileStep implements Step {
     }
 
     try {
+      LOG.debug(
+          "Running command (pwd=%s): %s",
+          builder.directory(),
+          Joiner.on(' ').join(Iterables.transform(builder.command(), Escaper.BASH_ESCAPER)));
 
       // Start the process.
       Process process = builder.start();
@@ -131,6 +140,10 @@ public class CxxCompileStep implements Step {
         context.getConsole().printErrorText(err);
       }
 
+      if (exitCode != 0) {
+        LOG.warn("Error %d compiling %s: %s", exitCode, input, err);
+      }
+
       // If the compilation completed successfully, perform the in-place update of the compilation
       // as per above.  This locates the relevant debug section and swaps out the expanded actual
       // compilation directory with the one we really want.
@@ -144,6 +157,8 @@ public class CxxCompileStep implements Step {
           return 1;
         }
       }
+
+      LOG.warn("Error compiling %s: %s (%d)", input, err, exitCode);
 
       return exitCode;
 
