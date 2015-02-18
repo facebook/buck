@@ -189,7 +189,9 @@ public class CxxCompilableEnhancer {
 
     // Add in explicit additional compiler flags, if we're compiling.
     if (source.getType() == CxxSource.Type.C_CPP_OUTPUT ||
-        source.getType() == CxxSource.Type.CXX_CPP_OUTPUT) {
+        source.getType() == CxxSource.Type.OBJC_CPP_OUTPUT ||
+        source.getType() == CxxSource.Type.CXX_CPP_OUTPUT ||
+        source.getType() == CxxSource.Type.OBJCXX_CPP_OUTPUT) {
       args.addAll(compilerFlags);
     }
 

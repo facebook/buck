@@ -338,4 +338,44 @@ public class CxxCompilableEnhancerTest {
     assertThat(cxxCompile.getFlags(), Matchers.contains("-x", "c-cpp-output"));
   }*/
 
+  @Test
+  public void checkCorrectFlagsAreUsedForObjcAndObjcxx() {
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+
+    ImmutableList<String> explicitCompilerFlags = ImmutableList.of("-fobjc-arc");
+
+    FakeBuckConfig buckConfig = new FakeBuckConfig(filesystem);
+    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
+
+    String objcSourceName = "test.mi";
+    CxxSource objcSource = ImmutableCxxSource.of(
+        CxxSource.Type.OBJC_CPP_OUTPUT,
+        new TestSourcePath(objcSourceName));
+    CxxCompile objcCompile = CxxCompilableEnhancer.createCompileBuildRule(
+        params,
+        buildRuleResolver,
+        platform,
+        explicitCompilerFlags,
+        /* pic */ false,
+        objcSourceName,
+        objcSource);
+    assertContains(objcCompile.getFlags(), explicitCompilerFlags);
+
+    String objcxxSourceName = "test.mii";
+    CxxSource objcxxSource = ImmutableCxxSource.of(
+        CxxSource.Type.OBJCXX_CPP_OUTPUT,
+        new TestSourcePath(objcxxSourceName));
+    CxxCompile objcxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
+        params,
+        buildRuleResolver,
+        platform,
+        explicitCompilerFlags,
+        /* pic */ false,
+        objcxxSourceName,
+        objcxxSource);
+    assertContains(objcxxCompile.getFlags(), explicitCompilerFlags);
+  }
 }
