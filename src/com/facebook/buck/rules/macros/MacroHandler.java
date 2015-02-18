@@ -18,44 +18,21 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 /**
- * Extracts macros from input strings and calls registered exanders to handle their input.
- *
- * Examples:
- *   $(exe //foo:bar)
- *   $(location :bar)
- *   $(platform)
+ * Extracts macros from input strings and calls registered expanders to handle their input.
  */
 public class MacroHandler {
 
-  /**
-   * Matches a some macro name wrapped in <tt>$()</tt> followed by an optional argument, unless the
-   * <code>$</code> is preceded by a backslash.
-   * <p>
-   * Given the input: $(exe //foo:bar), capturing groups are
-   * <ol>
-   *     <li> $(exe //foo:bar)
-   *     <li> exe
-   *     <li> //foo:bar
-   * </ol>
-   * <p>
-   * If we match against $(platform), the capturing groups are:
-   * <ol>
-   *     <li> $(platform)
-   *     <li> platform
-   * </ol>
-   **/
-  private static final Pattern MACRO_PATTERN = Pattern.compile("\\$\\(([^)\\s]+)(?: ([^)]*))?\\)");
+  private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
   private final ImmutableMap<String, MacroExpander> expanders;
 
@@ -96,49 +73,23 @@ public class MacroHandler {
   }
 
   public String expand(
-      BuildTarget target,
-      BuildRuleResolver resolver,
-      ProjectFilesystem filesystem,
+      final BuildTarget target,
+      final BuildRuleResolver resolver,
+      final ProjectFilesystem filesystem,
       String blob)
       throws MacroException {
-
-    StringBuilder expanded = new StringBuilder();
-
-    // Iterate over all macros found in the string, expanding each found macro.
-    int lastEnd = 0;
-    Matcher matcher = MACRO_PATTERN.matcher(blob);
-    while (matcher.find()) {
-
-      // If the match is preceded by a backslash, skip this match but drop the backslash.
-      if (matcher.start() > 0 && blob.charAt(matcher.start() - 1) == '\\') {
-        expanded.append(blob.substring(lastEnd, matcher.start() - 1));
-        expanded.append(blob.substring(matcher.start(), matcher.end()));
-
-      // Otherwise we need to add the expanded value.
-      } else {
-
-        // Add everything from the original string since the last match to this one.
-        expanded.append(blob.substring(lastEnd, matcher.start()));
-
-        // Call the relevant expander and add the expanded value to the string.
-        String name = matcher.group(1);
-        String input = Optional.fromNullable(matcher.group(2)).or("");
-        try {
-          expanded.append(getExpander(name).expand(target, resolver, filesystem, input));
-        } catch (MacroException e) {
-          throw new MacroException(
-              String.format("expanding %s: %s", matcher.group(), e.getMessage()),
-              e);
-        }
-      }
-
-      lastEnd = matcher.end();
+    ImmutableMap.Builder<String, MacroReplacer> replacers = ImmutableMap.builder();
+    for (final Map.Entry<String, MacroExpander> entry : expanders.entrySet()) {
+      replacers.put(
+          entry.getKey(),
+          new MacroReplacer() {
+            @Override
+            public String replace(String input) throws MacroException {
+              return getExpander(entry.getKey()).expand(target, resolver, filesystem, input);
+            }
+          });
     }
-
-    // Append the remaining part of the original string after the last match.
-    expanded.append(blob.substring(lastEnd, blob.length()));
-
-    return expanded.toString();
+    return MACRO_FINDER.replace(replacers.build(), blob);
   }
 
   public ImmutableList<BuildTarget> extractTargets(
@@ -150,14 +101,8 @@ public class MacroHandler {
 
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
-    Matcher matcher = MACRO_PATTERN.matcher(blob);
-    while (matcher.find()) {
-      if (matcher.start() > 0 && blob.charAt(matcher.start() - 1) == '\\') {
-        continue;
-      }
-      String name = matcher.group(1);
-      String input = Optional.fromNullable(matcher.group(2)).or("");
-      targets.addAll(getExpander(name).extractTargets(target, input));
+    for (Pair<String, String> match : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
+      targets.addAll(getExpander(match.getFirst()).extractTargets(target, match.getSecond()));
     }
 
     return targets.build();
