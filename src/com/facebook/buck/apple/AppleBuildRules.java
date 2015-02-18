@@ -182,7 +182,7 @@ public final class AppleBuildRules {
                   break;
                 case COPYING:
                   if (node.getType().equals(AppleBundleDescription.TYPE)) {
-                    deps = ImmutableSortedSet.of();
+                    deps = exportedDeps;
                   } else {
                     deps = defaultDeps;
                   }

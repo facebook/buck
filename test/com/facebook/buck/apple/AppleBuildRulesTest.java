@@ -180,4 +180,81 @@ public class AppleBuildRulesTest {
             fooFrameworkNode),
         ImmutableSortedSet.copyOf(rules));
   }
+
+  @Test
+  public void exportedDepsAreCollectedForCopying() throws Exception {
+    BuildTarget fooLibTarget =
+        BuildTarget
+            .builder("//foo", "lib")
+            .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+            .build();
+    TargetNode<?> fooLibNode = AppleLibraryBuilder
+        .createBuilder(fooLibTarget)
+        .build();
+
+    BuildTarget fooFrameworkTarget = BuildTarget.builder("//foo", "framework").build();
+    TargetNode<?> fooFrameworkNode = AppleBundleBuilder
+        .createBuilder(fooFrameworkTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setBinary(fooLibTarget)
+        .build();
+
+    BuildTarget barLibTarget =
+        BuildTarget
+            .builder("//bar", "lib")
+            .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+            .build();
+    TargetNode<?> barLibNode = AppleLibraryBuilder
+        .createBuilder(barLibTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(fooFrameworkTarget)))
+        .setExportedDeps(Optional.of(ImmutableSortedSet.of(fooFrameworkTarget)))
+        .build();
+
+    BuildTarget barFrameworkTarget = BuildTarget.builder("//bar", "framework").build();
+    TargetNode<?> barFrameworkNode = AppleBundleBuilder
+        .createBuilder(barFrameworkTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setBinary(barLibTarget)
+        .build();
+
+    BuildTarget bazLibTarget =
+        BuildTarget
+            .builder("//baz", "lib")
+            .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+            .build();
+    TargetNode<?> bazLibNode = AppleLibraryBuilder
+        .createBuilder(bazLibTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(barFrameworkTarget)))
+        .build();
+
+    BuildTarget bazFrameworkTarget = BuildTarget.builder("//baz", "framework").build();
+    TargetNode<?> bazFrameworkNode = AppleBundleBuilder
+        .createBuilder(bazFrameworkTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setBinary(bazLibTarget)
+        .build();
+
+    ImmutableSet<TargetNode<?>> targetNodes =
+        ImmutableSet.<TargetNode<?>>builder()
+          .add(
+            fooLibNode,
+            fooFrameworkNode,
+            barLibNode,
+            barFrameworkNode,
+            bazLibNode,
+            bazFrameworkNode)
+          .build();
+
+    Iterable<TargetNode<?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+        TargetGraphFactory.newInstance(targetNodes),
+        AppleBuildRules.RecursiveDependenciesMode.COPYING,
+        bazFrameworkNode,
+        Optional.<ImmutableSet<BuildRuleType>>absent());
+
+    assertEquals(
+        ImmutableSortedSet.of(
+            barFrameworkNode,
+            fooFrameworkNode),
+        ImmutableSortedSet.copyOf(rules));
+  }
 }
