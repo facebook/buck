@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -33,6 +34,7 @@ import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -302,6 +304,49 @@ public class PrebuiltCxxLibraryDescriptionTest {
             getSharedLibrarySoname(arg),
             new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         lib.getSharedLibraries(CXX_PLATFORM));
+  }
+
+  @Test
+  public void platformMacro() {
+    Optional<String> libDir = Optional.of("libs/$(platform)");
+    Optional<String> libName = Optional.of("test-$(platform)");
+    Optional<String> soname = Optional.absent();
+
+    CxxPlatform platform1 =
+        CxxPlatformUtils.DEFAULT_PLATFORM
+            .withFlavor(ImmutableFlavor.of("PLATFORM1"));
+    CxxPlatform platform2 =
+        CxxPlatformUtils.DEFAULT_PLATFORM
+            .withFlavor(ImmutableFlavor.of("PLATFORM2"));
+
+    assertEquals(
+        "libtest-PLATFORM1.so",
+        PrebuiltCxxLibraryDescription.getSoname(
+            TARGET,
+            platform1, soname, libName));
+    assertEquals(
+        "libtest-PLATFORM2.so",
+        PrebuiltCxxLibraryDescription.getSoname(
+            TARGET,
+            platform2, soname, libName));
+
+    assertEquals(
+        TARGET.getBasePath()
+            .resolve("libs/PLATFORM1/libtest-PLATFORM1.so"),
+        PrebuiltCxxLibraryDescription.getSharedLibraryPath(TARGET, platform1, libDir, libName));
+    assertEquals(
+        TARGET.getBasePath()
+            .resolve("libs/PLATFORM1/libtest-PLATFORM1.a"),
+        PrebuiltCxxLibraryDescription.getStaticLibraryPath(TARGET, platform1, libDir, libName));
+
+    assertEquals(
+        TARGET.getBasePath()
+            .resolve("libs/PLATFORM2/libtest-PLATFORM2.so"),
+        PrebuiltCxxLibraryDescription.getSharedLibraryPath(TARGET, platform2, libDir, libName));
+    assertEquals(
+        TARGET.getBasePath()
+            .resolve("libs/PLATFORM2/libtest-PLATFORM2.a"),
+        PrebuiltCxxLibraryDescription.getStaticLibraryPath(TARGET, platform2, libDir, libName));
   }
 
 }

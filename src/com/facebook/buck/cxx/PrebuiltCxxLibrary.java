@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -40,11 +41,11 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   private final BuildRuleResolver ruleResolver;
   private final SourcePathResolver pathResolver;
   private final ImmutableList<Path> includeDirs;
-  private final Path staticLibraryPath;
-  private final Path sharedLibraryPath;
+  private final Optional<String> libDir;
+  private final Optional<String> libName;
   private final ImmutableList<String> linkerFlags;
   private final ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags;
-  private final String soname;
+  private final Optional<String> soname;
   private final boolean headerOnly;
   private final boolean linkWhole;
   private final boolean provided;
@@ -54,11 +55,11 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       ImmutableList<Path> includeDirs,
-      Path staticLibraryPath,
-      Path sharedLibraryPath,
+      Optional<String> libDir,
+      Optional<String> libName,
       ImmutableList<String> linkerFlags,
       ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags,
-      String soname,
+      Optional<String> soname,
       boolean headerOnly,
       boolean linkWhole,
       boolean provided) {
@@ -67,8 +68,8 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     this.ruleResolver = ruleResolver;
     this.pathResolver = pathResolver;
     this.includeDirs = includeDirs;
-    this.staticLibraryPath = staticLibraryPath;
-    this.sharedLibraryPath = sharedLibraryPath;
+    this.libDir = libDir;
+    this.libName = libName;
     this.linkerFlags = linkerFlags;
     this.platformLinkerFlags = platformLinkerFlags;
     this.soname = soname;
@@ -84,6 +85,12 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
    * @return the {@link SourcePath} representing the actual shared library.
    */
   private SourcePath requireSharedLibrary(CxxPlatform cxxPlatform) {
+    Path sharedLibraryPath =
+        PrebuiltCxxLibraryDescription.getSharedLibraryPath(
+            getBuildTarget(),
+            cxxPlatform,
+            libDir,
+            libName);
 
     // If the shared library is prebuilt, just return a reference to it.
     if (params.getProjectFilesystem().exists(sharedLibraryPath)) {
@@ -131,6 +138,12 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
         librariesBuilder.add(sharedLibrary);
         linkerArgsBuilder.add(pathResolver.getPath(sharedLibrary).toString());
       } else {
+        Path staticLibraryPath =
+            PrebuiltCxxLibraryDescription.getStaticLibraryPath(
+                getBuildTarget(),
+                cxxPlatform,
+                libDir,
+                libName);
         librariesBuilder.add(new PathSourcePath(getProjectFilesystem(), staticLibraryPath));
         if (linkWhole) {
           Linker linker = cxxPlatform.getLd();
@@ -148,13 +161,15 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
+    String resolvedSoname =
+        PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname, libName);
 
     // Build up the shared library list to contribute to a python executable package.
     ImmutableMap.Builder<Path, SourcePath> nativeLibrariesBuilder = ImmutableMap.builder();
     if (!headerOnly && !provided) {
       SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
       nativeLibrariesBuilder.put(
-          Paths.get(soname),
+          Paths.get(resolvedSoname),
           sharedLibrary);
     }
     ImmutableMap<Path, SourcePath> nativeLibraries = nativeLibrariesBuilder.build();
@@ -177,10 +192,12 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+    String resolvedSoname =
+        PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname, libName);
     ImmutableMap.Builder<String, SourcePath> solibs = ImmutableMap.builder();
     if (!headerOnly && !provided) {
       SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
-      solibs.put(soname, sharedLibrary);
+      solibs.put(resolvedSoname, sharedLibrary);
     }
     return solibs.build();
   }

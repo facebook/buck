@@ -1,6 +1,6 @@
 java_library(
   name = 'testutil',
-  srcs = glob(['*Builder.java']),
+  srcs = glob(['*.java'], excludes=['*Test.java']),
   deps = [
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
