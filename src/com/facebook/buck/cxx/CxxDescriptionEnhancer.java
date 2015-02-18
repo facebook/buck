@@ -418,12 +418,17 @@ public class CxxDescriptionEnhancer {
       ImmutableList<SymlinkTree> headerSymlinkTrees,
       ImmutableList<Path> frameworkSearchPaths) {
 
-    // Write the compile rules for all C/C++ sources in this rule.
-    CxxPreprocessorInput cxxPreprocessorInputFromDeps =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-            cxxPlatform,
-            FluentIterable.from(params.getDeps())
-                .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
+    CxxPreprocessorInput cxxPreprocessorInputFromDeps;
+    try {
+      // Write the compile rules for all C/C++ sources in this rule.
+      cxxPreprocessorInputFromDeps =
+          CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+              cxxPlatform,
+              FluentIterable.from(params.getDeps())
+                  .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
+    } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
+    }
 
     ImmutableMap.Builder<Path, SourcePath> allLinks = ImmutableMap.builder();
     ImmutableMap.Builder<Path, SourcePath> allFullLinks = ImmutableMap.builder();
@@ -434,22 +439,28 @@ public class CxxDescriptionEnhancer {
       allIncludeRoots.add(headerSymlinkTree.getRoot());
     }
 
-    return CxxPreprocessorInput.concat(
-        ImmutableList.of(
-            CxxPreprocessorInput.builder()
-                .addAllRules(Iterables.transform(headerSymlinkTrees, HasBuildTarget.TO_TARGET))
-                .putAllPreprocessorFlags(preprocessorFlags)
-                .setIncludes(
-                    ImmutableCxxHeaders.builder()
-                        .addAllPrefixHeaders(prefixHeaders)
-                        .putAllNameToPathMap(allLinks.build())
-                        .putAllFullNameToPathMap(allFullLinks.build())
-                        .build())
-                .addAllIncludeRoots(allIncludeRoots.build())
-                .addAllFrameworkRoots(frameworkSearchPaths)
-                .build(),
-            cxxPreprocessorInputFromDeps));
+    CxxPreprocessorInput localPreprocessorInput =
+        CxxPreprocessorInput.builder()
+            .addAllRules(Iterables.transform(headerSymlinkTrees, HasBuildTarget.TO_TARGET))
+            .putAllPreprocessorFlags(preprocessorFlags)
+            .setIncludes(
+                ImmutableCxxHeaders.builder()
+                    .addAllPrefixHeaders(prefixHeaders)
+                    .putAllNameToPathMap(allLinks.build())
+                    .putAllFullNameToPathMap(allFullLinks.build())
+                    .build())
+            .addAllIncludeRoots(allIncludeRoots.build())
+            .addAllFrameworkRoots(frameworkSearchPaths)
+            .build();
 
+    try {
+      return CxxPreprocessorInput.concat(
+          ImmutableList.of(
+              localPreprocessorInput,
+              cxxPreprocessorInputFromDeps));
+    } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
+    }
   }
 
   /**

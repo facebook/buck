@@ -159,6 +159,17 @@ public class OCamlRuleBuilder {
       boolean isLibrary,
       ImmutableList<String> argFlags,
       final ImmutableList<String> linkerFlags) {
+    CxxPreprocessorInput cxxPreprocessorInputFromDeps;
+    try {
+      cxxPreprocessorInputFromDeps =
+          CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+              ocamlBuckConfig.getCxxPlatform(),
+              FluentIterable.from(params.getDeps())
+                  .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
+    } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
+    }
+
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     ImmutableList<String> includes = FluentIterable.from(params.getDeps())
@@ -200,12 +211,6 @@ public class OCamlRuleBuilder {
 
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
-
-    CxxPreprocessorInput cxxPreprocessorInputFromDeps =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-            ocamlBuckConfig.getCxxPlatform(),
-            FluentIterable.from(params.getDeps())
-                .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
 
     final OCamlBuildContext ocamlContext = OCamlBuildContext.builder(ocamlBuckConfig, pathResolver)
         .setFlags(flagsBuilder.build())
@@ -264,6 +269,16 @@ public class OCamlRuleBuilder {
       boolean isLibrary,
       ImmutableList<String> argFlags,
       final ImmutableList<String> linkerFlags) {
+    CxxPreprocessorInput cxxPreprocessorInputFromDeps;
+    try {
+      cxxPreprocessorInputFromDeps =
+          CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+              ocamlBuckConfig.getCxxPlatform(),
+              FluentIterable.from(params.getDeps())
+                  .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
+    } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
+    }
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
@@ -306,12 +321,6 @@ public class OCamlRuleBuilder {
 
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
-
-    CxxPreprocessorInput cxxPreprocessorInputFromDeps =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-            ocamlBuckConfig.getCxxPlatform(),
-            FluentIterable.from(params.getDeps())
-                .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
 
     final OCamlBuildContext ocamlContext = OCamlBuildContext.builder(ocamlBuckConfig, pathResolver)
         .setFlags(flagsBuilder.build())

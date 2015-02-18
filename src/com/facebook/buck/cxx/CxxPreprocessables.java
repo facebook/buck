@@ -81,7 +81,8 @@ public class CxxPreprocessables {
   public static CxxPreprocessorInput getTransitiveCxxPreprocessorInput(
       final CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
-      final Predicate<Object> traverse) {
+      final Predicate<Object> traverse)
+      throws CxxPreprocessorInput.ConflictingHeadersException {
 
     // We don't really care about the order we get back here, since headers shouldn't
     // conflict.  However, we want something that's deterministic, so sort by build
@@ -109,7 +110,8 @@ public class CxxPreprocessables {
 
   public static CxxPreprocessorInput getTransitiveCxxPreprocessorInput(
       final CxxPlatform cxxPlatform,
-      Iterable<? extends BuildRule> inputs) {
+      Iterable<? extends BuildRule> inputs)
+      throws CxxPreprocessorInput.ConflictingHeadersException {
     return getTransitiveCxxPreprocessorInput(
         cxxPlatform,
         inputs,

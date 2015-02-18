@@ -17,16 +17,21 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -67,11 +72,25 @@ public abstract class CxxPreprocessorInput {
     return ImmutableCxxPreprocessorInput.builder();
   }
 
-  public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs) {
+  private static void addAllEntriesToIncludeMap(
+      Map<Path, SourcePath> destination,
+      Map<Path, SourcePath> source) throws ConflictingHeadersException {
+    for (Map.Entry<Path, SourcePath> entry : source.entrySet()) {
+      SourcePath original = destination.put(entry.getKey(), entry.getValue());
+      if (original != null && !original.equals(entry.getValue())) {
+        throw new ConflictingHeadersException(entry.getKey(), original, entry.getValue());
+      }
+    }
+  }
+
+  public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs)
+      throws ConflictingHeadersException {
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();
     ImmutableMultimap.Builder<CxxSource.Type, String> preprocessorFlags =
       ImmutableMultimap.builder();
-    ImmutableCxxHeaders.Builder includes = ImmutableCxxHeaders.builder();
+    ImmutableList.Builder<SourcePath> prefixHeaders = ImmutableList.builder();
+    Map<Path, SourcePath> includeNameToPathMap = new HashMap<>();
+    Map<Path, SourcePath> includeFullNameToPathMap = new HashMap<>();
     ImmutableList.Builder<Path> includeRoots = ImmutableList.builder();
     ImmutableList.Builder<Path> systemIncludeRoots = ImmutableList.builder();
     ImmutableList.Builder<Path> frameworkRoots = ImmutableList.builder();
@@ -79,9 +98,13 @@ public abstract class CxxPreprocessorInput {
     for (CxxPreprocessorInput input : inputs) {
       rules.addAll(input.getRules());
       preprocessorFlags.putAll(input.getPreprocessorFlags());
-      includes.addAllPrefixHeaders(input.getIncludes().getPrefixHeaders());
-      includes.putAllNameToPathMap(input.getIncludes().getNameToPathMap());
-      includes.putAllFullNameToPathMap(input.getIncludes().getFullNameToPathMap());
+      prefixHeaders.addAll(input.getIncludes().getPrefixHeaders());
+      addAllEntriesToIncludeMap(
+          includeNameToPathMap,
+          input.getIncludes().getNameToPathMap());
+      addAllEntriesToIncludeMap(
+          includeFullNameToPathMap,
+          input.getIncludes().getFullNameToPathMap());
       includeRoots.addAll(input.getIncludeRoots());
       systemIncludeRoots.addAll(input.getSystemIncludeRoots());
       frameworkRoots.addAll(input.getFrameworkRoots());
@@ -90,10 +113,33 @@ public abstract class CxxPreprocessorInput {
     return ImmutableCxxPreprocessorInput.of(
         rules.build(),
         preprocessorFlags.build(),
-        includes.build(),
+        ImmutableCxxHeaders.builder()
+            .addAllPrefixHeaders(prefixHeaders.build())
+            .putAllNameToPathMap(includeNameToPathMap)
+            .putAllFullNameToPathMap(includeFullNameToPathMap)
+            .build(),
         includeRoots.build(),
         systemIncludeRoots.build(),
         frameworkRoots.build());
+  }
+
+  @SuppressWarnings("serial")
+  public static class ConflictingHeadersException extends Exception {
+    public ConflictingHeadersException(Path key, SourcePath value1, SourcePath value2) {
+      super(
+          String.format(
+              "'%s' maps to both %s.",
+              key,
+              ImmutableSortedSet.of(value1, value2)));
+    }
+
+    public HumanReadableException getHumanReadableExceptionForBuildTarget(BuildTarget buildTarget) {
+      return new HumanReadableException(
+          this,
+          "Target '%s' uses conflicting header file mappings. %s",
+          buildTarget,
+          getMessage());
+    }
   }
 
 }

@@ -170,19 +170,22 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
 
     for (Map.Entry<AndroidBinary.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
-      AndroidBinary.TargetCpuType targetCpuType = entry.getKey();
-      String targetArchAbi = getTargetArchAbi(targetCpuType);
       CxxPlatform cxxPlatform = entry.getValue().getCxxPlatform();
 
-      // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
-      // NDK library rules.
-      CxxPreprocessorInput cxxPreprocessorInput =
-          CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-              cxxPlatform,
-              params.getDeps(),
-              Predicates.or(
-                  Predicates.instanceOf(CxxPreprocessorDep.class),
-                  Predicates.instanceOf(NdkLibrary.class)));
+      CxxPreprocessorInput cxxPreprocessorInput;
+      try {
+        // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
+        // NDK library rules.
+        cxxPreprocessorInput =
+            CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                cxxPlatform,
+                params.getDeps(),
+                Predicates.or(
+                    Predicates.instanceOf(CxxPreprocessorDep.class),
+                    Predicates.instanceOf(NdkLibrary.class)));
+      } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
+        throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
+      }
 
       // We add any dependencies from the C/C++ preprocessor input to this rule, even though
       // it technically should be added to the top-level rule.
@@ -230,6 +233,9 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
       // Write the relevant lines to the generated makefile.
       if (!localCflags.isEmpty() || !localLdflags.isEmpty()) {
+        AndroidBinary.TargetCpuType targetCpuType = entry.getKey();
+        String targetArchAbi = getTargetArchAbi(targetCpuType);
+
         outputLinesBuilder.add(String.format("ifeq ($(TARGET_ARCH_ABI),%s)", targetArchAbi));
         if (!localCflags.isEmpty()) {
           outputLinesBuilder.add("BUCK_DEP_CFLAGS=" + localCflags);
