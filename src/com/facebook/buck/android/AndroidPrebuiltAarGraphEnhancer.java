@@ -181,6 +181,7 @@ class AndroidPrebuiltAarGraphEnhancer {
         androidLibraryParams,
         pathResolver,
         unzipAar.getProguardConfig(),
+        unzipAar.getNativeLibsDirectory(),
         prebuiltJar,
         androidResource,
         javacOptions);
@@ -214,6 +215,7 @@ class AndroidPrebuiltAarGraphEnhancer {
       steps.add(new UnzipStep(getResolver().getPath(aarFile), unpackDirectory));
       steps.add(new TouchStep(getProguardConfig()));
       steps.add(new MkdirStep(getAssetsDirectory()));
+      steps.add(new MkdirStep(getNativeLibsDirectory()));
 
       // We take the classes.jar file that is required to exist in an .aar and merge it with any
       // .jar files under libs/ into an "uber" jar. We do this for simplicity because we do not know
@@ -317,6 +319,10 @@ class AndroidPrebuiltAarGraphEnhancer {
 
     Path getProguardConfig() {
       return unpackDirectory.resolve("proguard.txt");
+    }
+
+    Path getNativeLibsDirectory() {
+      return unpackDirectory.resolve("jni");
     }
   }
 }

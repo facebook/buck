@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.testutil.integration.ZipInspector;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -46,6 +47,11 @@ public class AndroidPrebuiltAarIntegrationTest {
   @Test
   public void testBuildAndroidPrebuiltAar() throws IOException {
     workspace.runBuckBuild("//:app").assertSuccess();
+    ZipInspector zipInspector = new ZipInspector(workspace.getFile("buck-out/gen/app.apk"));
+    zipInspector.assertFileExists("AndroidManifest.xml");
+    zipInspector.assertFileExists("resources.arsc");
+    zipInspector.assertFileExists("classes.dex");
+    zipInspector.assertFileExists("lib/x86/liba.so");
   }
 
   @Test

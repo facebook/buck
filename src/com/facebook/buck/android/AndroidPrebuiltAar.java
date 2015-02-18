@@ -35,11 +35,13 @@ import javax.annotation.Nullable;
 public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidResourceDeps {
 
   private final AndroidResource androidResource;
+  private final Path nativeLibsDirectory;
 
   public AndroidPrebuiltAar(
       BuildRuleParams androidLibraryParams,
       SourcePathResolver resolver,
       Path proguardConfig,
+      Path nativeLibsDirectory,
       PrebuiltJar prebuiltJar,
       AndroidResource androidResource,
       JavacOptions javacOptions) {
@@ -58,6 +60,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
         /* manifestFile */ Optional.<SourcePath>absent(),
         /* isPrebuiltAar */ true);
     this.androidResource = androidResource;
+    this.nativeLibsDirectory = nativeLibsDirectory;
   }
 
   @Override
@@ -86,5 +89,10 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
   @Override
   public Path getAssets() {
     return androidResource.getAssets();
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    collector.addNativeLibsDirectory(getBuildTarget(), nativeLibsDirectory);
   }
 }

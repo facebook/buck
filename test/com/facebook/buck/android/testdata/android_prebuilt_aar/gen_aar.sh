@@ -36,6 +36,10 @@ javac -source 1.7 -target 1.7 -d classes Utils.java
 jar -cf classes.jar -C classes .
 rm -rf classes Utils.java
 
+# Include some .so in jni/ folder
+mkdir -p jni/x86
+echo "Empty" > jni/x86/liba.so
+
 # Note that we do not include an R.txt file, even though it is required by the .aar spec.
 # Currently, Buck does not check for its existence.
 
