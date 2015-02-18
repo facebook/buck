@@ -99,30 +99,37 @@ public class DefaultCxxPlatforms {
     builder
         .setFlavor(FLAVOR)
         .setAs(getTool("cxx", "as", DEFAULT_AS, delegate))
-        .addAllAsflags(getFlags("cxx", "asflags", DEFAULT_ASFLAGS, delegate))
         .setAspp(getTool("cxx", "aspp", DEFAULT_ASPP, delegate))
-        .addAllAsppflags(getFlags("cxx", "asppflags", DEFAULT_ASPPFLAGS, delegate))
         .setCc(getTool("cxx", "cc", DEFAULT_CC, delegate))
-        .addAllCflags(getFlags("cxx", "cflags", DEFAULT_CFLAGS, delegate))
         .setCxx(getTool("cxx", "cxx", DEFAULT_CXX, delegate))
-        .addAllCxxflags(getFlags("cxx", "cxxflags", DEFAULT_CXXFLAGS, delegate))
         .setCpp(getTool("cxx", "cpp", DEFAULT_CPP, delegate))
-        .addAllCppflags(getFlags("cxx", "cppflags", DEFAULT_CPPFLAGS, delegate))
         .setCxxpp(getTool("cxx", "cxxpp", DEFAULT_CXXPP, delegate))
-        .addAllCxxppflags(getFlags("cxx", "cxxppflags", DEFAULT_CXXPPFLAGS, delegate))
         .setCxxld(getTool("cxx", "cxxld", DEFAULT_CXXLD, delegate))
-        .addAllCxxldflags(getFlags("cxx", "cxxldflags", DEFAULT_CXXLDFLAGS, delegate))
         .setLd(getLd(platform, delegate))
-        .addAllLdflags(getFlags("cxx", "ldflags", DEFAULT_LDFLAGS, delegate))
         .setAr(getTool("cxx", "ar", DEFAULT_AR, delegate))
-        .addAllArflags(getFlags("cxx", "arflags", DEFAULT_ARFLAGS, delegate))
         .setLex(getSourcePath("cxx", "lex", DEFAULT_LEX, delegate))
-        .addAllLexFlags(getFlags("cxx", "lexflags", DEFAULT_LEX_FLAGS, delegate))
         .setYacc(getSourcePath("cxx", "yacc", DEFAULT_YACC, delegate))
-        .addAllYaccFlags(getFlags("cxx", "yaccflags", DEFAULT_YACC_FLAGS, delegate))
         .setSharedLibraryExtension(getSharedLibraryExtension(platform))
         .setDebugPathSanitizer(DEBUG_PATH_SANITIZER);
+    addToolFlagsFromConfig(delegate, builder);
     return builder.build();
+  }
+
+  public static void addToolFlagsFromConfig(
+      BuckConfig delegate,
+      ImmutableCxxPlatform.Builder builder) {
+    builder
+        .addAllAsflags(getFlags("cxx", "asflags", DEFAULT_ASFLAGS, delegate))
+        .addAllAsppflags(getFlags("cxx", "asppflags", DEFAULT_ASPPFLAGS, delegate))
+        .addAllCflags(getFlags("cxx", "cflags", DEFAULT_CFLAGS, delegate))
+        .addAllCxxflags(getFlags("cxx", "cxxflags", DEFAULT_CXXFLAGS, delegate))
+        .addAllCppflags(getFlags("cxx", "cppflags", DEFAULT_CPPFLAGS, delegate))
+        .addAllCxxppflags(getFlags("cxx", "cxxppflags", DEFAULT_CXXPPFLAGS, delegate))
+        .addAllCxxldflags(getFlags("cxx", "cxxldflags", DEFAULT_CXXLDFLAGS, delegate))
+        .addAllLdflags(getFlags("cxx", "ldflags", DEFAULT_LDFLAGS, delegate))
+        .addAllArflags(getFlags("cxx", "arflags", DEFAULT_ARFLAGS, delegate))
+        .addAllLexFlags(getFlags("cxx", "lexflags", DEFAULT_LEX_FLAGS, delegate))
+        .addAllYaccFlags(getFlags("cxx", "yaccflags", DEFAULT_YACC_FLAGS, delegate));
   }
 
   private static ImmutableList<String> getFlags(
