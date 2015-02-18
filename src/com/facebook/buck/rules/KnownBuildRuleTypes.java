@@ -74,6 +74,7 @@ import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.KeystoreDescription;
 import com.facebook.buck.java.PrebuiltJarDescription;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -118,6 +119,7 @@ import java.util.Map;
  */
 public class KnownBuildRuleTypes {
 
+  private static final Logger LOG = Logger.get(KnownBuildRuleTypes.class);
   private final ImmutableMap<BuildRuleType, Description<?>> descriptions;
   private final ImmutableMap<String, BuildRuleType> types;
 
@@ -242,6 +244,7 @@ public class KnownBuildRuleTypes {
   private static void buildAppleCxxPlatforms(
       Supplier<Path> appleDeveloperDirectorySupplier,
       Platform buildPlatform,
+      AppleConfig appleConfig,
       ImmutableMap.Builder<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPathsBuilder)
       throws IOException {
     if (!buildPlatform.equals(Platform.MACOS)) {
@@ -265,13 +268,14 @@ public class KnownBuildRuleTypes {
     for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {
       AppleSdk sdk = entry.getKey();
       AppleSdkPaths appleSdkPaths = entry.getValue();
+      String targetSdkVersion = appleConfig.getTargetSdkVersion(
+          sdk.getApplePlatform()).or(sdk.getVersion());
+      LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
       for (String architecture : sdk.getArchitectures()) {
         CxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
             sdk.getApplePlatform(),
             sdk.getName(),
-            // TODO(user): Support targeting earlier OS versions; this
-            // targets the exact version of the SDK.
-            sdk.getVersion(),
+            targetSdkVersion,
             architecture,
             appleSdkPaths);
         appleCxxPlatformsToAppleSdkPathsBuilder.put(appleCxxPlatform, appleSdkPaths);
@@ -301,6 +305,7 @@ public class KnownBuildRuleTypes {
     buildAppleCxxPlatforms(
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
         platform,
+        appleConfig,
         appleCxxPlatformsToAppleSdkPathsBuilder);
     ImmutableMap<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths =
         appleCxxPlatformsToAppleSdkPathsBuilder.build();
