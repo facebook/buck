@@ -48,7 +48,7 @@ public class JsonObjectHashing {
 
   /**
    * Given a {@link Hasher} and a parsed JSON object returned by
-   * {@link RawParser#parseFromReader(Reader)}, updates the Hasher
+   * {@link RawParser#parseFromReader(java.io.Reader)}, updates the Hasher
    * with the contents of the JSON object.
    */
   public static void hashJsonObject(Hasher hasher, @Nullable Object obj) {
