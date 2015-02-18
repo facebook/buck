@@ -62,6 +62,7 @@ public class FakeAppleRuleDescriptions {
           "8.0",
           "i386",
           DEFAULT_IPHONEOS_SDK_PATHS,
+          new FakeBuckConfig(),
           Functions.forMap(DEFAULT_TOOL_EXECUTABLE_CHECKER, false));
 
   private static final BuckConfig DEFAULT_BUCK_CONFIG = new FakeBuckConfig();

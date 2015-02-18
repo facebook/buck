@@ -244,6 +244,7 @@ public class KnownBuildRuleTypes {
   private static void buildAppleCxxPlatforms(
       Supplier<Path> appleDeveloperDirectorySupplier,
       Platform buildPlatform,
+      BuckConfig buckConfig,
       AppleConfig appleConfig,
       ImmutableMap.Builder<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPathsBuilder)
       throws IOException {
@@ -277,7 +278,8 @@ public class KnownBuildRuleTypes {
             sdk.getName(),
             targetSdkVersion,
             architecture,
-            appleSdkPaths);
+            appleSdkPaths,
+            buckConfig);
         appleCxxPlatformsToAppleSdkPathsBuilder.put(appleCxxPlatform, appleSdkPaths);
       }
     }
@@ -305,6 +307,7 @@ public class KnownBuildRuleTypes {
     buildAppleCxxPlatforms(
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
         platform,
+        config,
         appleConfig,
         appleCxxPlatformsToAppleSdkPathsBuilder);
     ImmutableMap<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths =

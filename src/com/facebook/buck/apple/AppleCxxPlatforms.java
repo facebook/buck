@@ -16,9 +16,11 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DarwinLinker;
 import com.facebook.buck.cxx.DebugPathSanitizer;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.ImmutableCxxPlatform;
 import com.facebook.buck.cxx.SourcePathTool;
 import com.facebook.buck.cxx.Tool;
@@ -53,13 +55,15 @@ public class AppleCxxPlatforms {
       String targetSdkName,
       String targetVersion,
       String targetArchitecture,
-      AppleSdkPaths sdkPaths) {
+      AppleSdkPaths sdkPaths,
+      BuckConfig buckConfig) {
     return buildWithExecutableChecker(
         targetPlatform,
         targetSdkName,
         targetVersion,
         targetArchitecture,
         sdkPaths,
+        buckConfig,
         MorePaths.DEFAULT_PATH_IS_EXECUTABLE_CHECKER);
   }
 
@@ -70,6 +74,7 @@ public class AppleCxxPlatforms {
       String targetVersion,
       String targetArchitecture,
       AppleSdkPaths sdkPaths,
+      BuckConfig buckConfig,
       Function<Path, Boolean> pathIsExecutableChecker) {
 
     ImmutableList.Builder<Path> toolSearchPathsBuilder = ImmutableList.builder();
@@ -103,7 +108,7 @@ public class AppleCxxPlatforms {
     // TODO(user): Add more and better cflags.
     ImmutableList<String> cflags = cflagsBuilder.build();
 
-    return ImmutableCxxPlatform.builder()
+    ImmutableCxxPlatform.Builder platformBuilder = ImmutableCxxPlatform.builder()
         .setFlavor(ImmutableFlavor.of(targetSdkName + "-" + targetArchitecture))
         .setAs(clangPath)
         .setAspp(clangPath)
@@ -129,8 +134,9 @@ public class AppleCxxPlatforms {
                 File.separatorChar,
                 Paths.get("."),
                 ImmutableBiMap.<Path, Path>of())))
-        .setSharedLibraryExtension("dylib")
-        .build();
+        .setSharedLibraryExtension("dylib");
+    DefaultCxxPlatforms.addToolFlagsFromConfig(buckConfig, platformBuilder);
+    return platformBuilder.build();
   }
 
   private static Optional<SourcePath> getOptionalTool(
