@@ -601,11 +601,11 @@ public class AppleDescriptions {
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
             headerMap));
     output.prefixHeaders = Optional.of(ImmutableList.copyOf(arg.prefixHeader.asSet()));
-    output.compilerFlags = Optional.of(ImmutableList.<String>of());
+    output.compilerFlags = arg.compilerFlags;
     output.linkerFlags = Optional.of(ImmutableList.<String>of());
     output.platformLinkerFlags = Optional.of(
         ImmutableList.<Pair<String, ImmutableList<String>>>of());
-    output.preprocessorFlags = Optional.of(ImmutableList.<String>of());
+    output.preprocessorFlags = arg.preprocessorFlags;
     output.langPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     if (appleSdkPaths.isPresent()) {
