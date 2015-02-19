@@ -93,6 +93,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
+    super.addToCollector(collector);
     collector.addNativeLibsDirectory(getBuildTarget(), nativeLibsDirectory);
   }
 }
