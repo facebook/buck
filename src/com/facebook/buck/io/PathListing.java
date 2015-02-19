@@ -137,6 +137,7 @@ public class PathListing {
     return paths;
   }
 
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   private static ImmutableSortedSet<Path> applyTotalSizeFilter(
       ImmutableSortedSet<Path> paths,
       FilterMode filterMode,
@@ -146,7 +147,12 @@ public class PathListing {
       int limitIndex = 0;
       long totalSize = 0;
       for (Path path : paths) {
-        totalSize += Files.size(path);
+        try {
+          totalSize += Files.size(path);
+        } catch (NoSuchFileException e) {
+          // Path was deleted; ignore it.
+        }
+
         if (totalSize < totalSizeFilter.get()) {
           limitIndex++;
         } else {
