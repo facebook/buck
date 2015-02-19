@@ -202,6 +202,7 @@ public class NdkCxxPlatforms {
     public final String targetPlatform;
     public final String compilerVersion;
     public final ImmutableList<String> compilerFlags;
+    public final ImmutableList<String> linkerFlags;
 
     public TargetConfiguration(
         Toolchain toolchain,
@@ -210,7 +211,8 @@ public class NdkCxxPlatforms {
         TargetArchAbi targetArchAbi,
         String targetPlatform,
         String compilerVersion,
-        ImmutableList<String> compilerFlags) {
+        ImmutableList<String> compilerFlags,
+        ImmutableList<String> linkerFlags) {
       this.toolchain = Preconditions.checkNotNull(toolchain);
       this.toolchainPrefix = Preconditions.checkNotNull(toolchainPrefix);
       this.targetArch = Preconditions.checkNotNull(targetArch);
@@ -218,6 +220,7 @@ public class NdkCxxPlatforms {
       this.targetPlatform = Preconditions.checkNotNull(targetPlatform);
       this.compilerVersion = Preconditions.checkNotNull(compilerVersion);
       this.compilerFlags = Preconditions.checkNotNull(compilerFlags);
+      this.linkerFlags = Preconditions.checkNotNull(linkerFlags);
     }
 
   }
@@ -255,6 +258,7 @@ public class NdkCxxPlatforms {
         .setCxxpp(getCppTool(ndkRoot, targetConfiguration, host, "g++", version))
         .addAllCxxppflags(getCxxppflags(ndkRoot, targetConfiguration))
         .setCxxld(getCcLinkTool(ndkRoot, targetConfiguration, host, cxxRuntime, "g++", version))
+        .addAllCxxldflags(targetConfiguration.linkerFlags)
         .setLd(new GnuLinker(getTool(ndkRoot, targetConfiguration, host, "ld.gold", version)))
         // Default linker flags added by the NDK
         .addLdflags(
@@ -266,8 +270,7 @@ public class NdkCxxPlatforms {
             "-z", "nocopyreloc",
             // We always pass the runtime library on the command line, so setting this flag
             // means the resulting link will only use it if it was actually needed it.
-            "--as-needed"
-        )
+            "--as-needed")
         .setAr(getTool(ndkRoot, targetConfiguration, host, "ar", version))
         .setDebugPathSanitizer(
             Optional.of(
