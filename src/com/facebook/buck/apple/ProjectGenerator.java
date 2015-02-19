@@ -1579,13 +1579,18 @@ public class ProjectGenerator {
   }
 
   private PBXFileReference getLibraryFileReference(TargetNode<?> targetNode) {
+    // Don't re-use the productReference from other targets in this project.
+    // File references set as a productReference don't work with custom paths.
+    SourceTreePath productsPath = getProductsSourceTreePath(targetNode);
+
     if (targetNode.getType().equals(AppleLibraryDescription.TYPE) ||
         targetNode.getType().equals(AppleBundleDescription.TYPE)) {
-      // Don't re-use the productReference from other targets in this project.
-      // File references set as a productReference don't work with custom paths.
-      SourceTreePath productsPath = getProductsSourceTreePath(targetNode);
       return project.getMainGroup()
           .getOrCreateChildGroupByName("Frameworks")
+          .getOrCreateFileReferenceBySourceTreePath(productsPath);
+    } else if (targetNode.getType().equals(AppleBinaryDescription.TYPE)) {
+      return project.getMainGroup()
+          .getOrCreateChildGroupByName("Dependencies")
           .getOrCreateFileReferenceBySourceTreePath(productsPath);
     } else {
       throw new RuntimeException("Unexpected type: " + targetNode.getType());
