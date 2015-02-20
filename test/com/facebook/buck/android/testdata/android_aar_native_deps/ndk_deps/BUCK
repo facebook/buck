@@ -1,27 +1,21 @@
+android_resource(
+  name = 'res',
+  package = 'com.example',
+  manifest = 'AndroidManifest.xml',
+)
+
+android_library(
+  name = 'lib',
+  srcs = glob(['**/*.java']),
+)
+
 android_aar(
   name = 'app',
   manifest_skeleton = 'AndroidManifest.xml',
   deps = [
-    ':lib',
     ':res',
-  ],
-)
-
-android_resource(
-  name = 'res',
-  manifest = 'AndroidManifest.xml',
-)
-
-cxx_library(
-  name = 'lib',
-  header_namespace = 'test',
-  headers = [
-    'bar.h',
-  ],
-  srcs = [
-    'bar.cpp',
-  ],
-  visibility = [
-    'PUBLIC',
+    ':lib',
+    '//foo:foo',
+    '//bar:bar',
   ],
 )

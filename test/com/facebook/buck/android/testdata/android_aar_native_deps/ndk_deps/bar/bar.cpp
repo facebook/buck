@@ -1,3 +1,3 @@
 int bar(int x) {
-  return x + 5;
+  return x + 3;
 }

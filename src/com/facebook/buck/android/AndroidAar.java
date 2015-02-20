@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -45,6 +46,8 @@ public class AndroidAar extends AbstractBuildRule {
   private final BuildRule javaBinary;
   private final AssembleDirectories assembleResourceDirectories;
   private final AssembleDirectories assembleAssetsDirectories;
+  private final ImmutableSet<Path> nativeLibAssetsDirectories;
+  private final ImmutableSet<Path> nativeLibsDirectories;
 
   public AndroidAar(
       BuildRuleParams params,
@@ -53,7 +56,9 @@ public class AndroidAar extends AbstractBuildRule {
       AndroidResource androidResource,
       BuildRule javaBinary,
       AssembleDirectories assembleResourceDirectories,
-      AssembleDirectories assembleAssetsDirectories) {
+      AssembleDirectories assembleAssetsDirectories,
+      ImmutableSet<Path> nativeLibAssetsDirectories,
+      ImmutableSet<Path> nativeLibsDirectories) {
     super(params, resolver);
     BuildTarget buildTarget = params.getBuildTarget();
     this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, "%s.aar");
@@ -63,6 +68,8 @@ public class AndroidAar extends AbstractBuildRule {
     this.javaBinary = javaBinary;
     this.assembleAssetsDirectories = assembleAssetsDirectories;
     this.assembleResourceDirectories = assembleResourceDirectories;
+    this.nativeLibAssetsDirectories = nativeLibAssetsDirectories;
+    this.nativeLibsDirectories = nativeLibsDirectories;
   }
 
   @Override
@@ -108,6 +115,18 @@ public class AndroidAar extends AbstractBuildRule {
 
     // put .jar into tmp folder
     commands.add(CopyStep.forFile(javaBinary.getPathToOutputFile(), temp.resolve("classes.jar")));
+
+    // move native libs into tmp folder under jni/
+    for (Path dir : nativeLibsDirectories) {
+      commands.add(CopyStep.forDirectory(dir, temp.resolve("jni"),
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
+    }
+
+    // move native assets into tmp folder under assets/lib/
+    for (Path dir : nativeLibAssetsDirectories) {
+      CopyNativeLibraries.copyNativeLibrary(
+          dir, temp.resolve("assets").resolve("lib"), ImmutableSet.<TargetCpuType>of(), commands);
+    }
 
     // do the zipping
     commands.add(

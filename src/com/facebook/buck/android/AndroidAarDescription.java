@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImmutableBuildRuleType;
@@ -40,6 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Collection;
 
 /**
  * Description for a {@link BuildRule} that generates an {@code .aar} file.
@@ -205,6 +207,12 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     depRules.add(resolver.addToIndex(javaBinary));
 
     /* android_aar */
+    depRules.addAll(
+        getTargetsAsRules(
+            packageableCollection.getNativeLibsTargets(),
+            originalBuildTarget,
+            resolver));
+
     BuildRuleParams androidAarParams = originalBuildRuleParams.copyWithChanges(
         TYPE,
         originalBuildTarget,
@@ -218,7 +226,20 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         androidResource,
         javaBinary,
         assembleResourceDirectories,
-        assembleAssetsDirectories);
+        assembleAssetsDirectories,
+        packageableCollection.getNativeLibAssetsDirectories(),
+        packageableCollection.getNativeLibsDirectories());
+  }
+
+  private ImmutableSortedSet<BuildRule> getTargetsAsRules(
+      Collection<BuildTarget> buildTargets,
+      BuildTarget originalBuildTarget,
+      BuildRuleResolver ruleResolver) {
+    return BuildRules.toBuildRulesFor(
+        originalBuildTarget,
+        ruleResolver,
+        buildTargets,
+        /* allowNonExistentRules */ false);
   }
 
   private ImmutableList<SourcePath> getSourcePathForDirectories(
