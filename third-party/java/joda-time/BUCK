@@ -1,0 +1,7 @@
+prebuilt_jar(
+  name = 'joda-time',
+  binary_jar = 'joda-time-2.2.jar',
+  visibility = [
+    '//third-party/java/astyanax:cassandra',
+  ],
+)

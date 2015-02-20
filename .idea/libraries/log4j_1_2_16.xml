@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="log4j-1.2.16">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/astyanax/log4j-1.2.16.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/log4j/log4j-1.2.16.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

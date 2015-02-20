@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="libthrift-0.7.0">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/astyanax/libthrift-0.7.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/thrift/libthrift-0.7.0.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/astyanax/libthrift-0.7.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/thrift/libthrift-0.7.0.jar!/" />
     </SOURCES>
   </library>
 </component>

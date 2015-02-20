@@ -67,17 +67,12 @@
     <include name="astyanax/astyanax-thrift-1.56.38.jar" />
     <include name="astyanax/cassandra-1.2.3.jar" />
     <include name="astyanax/cassandra-thrift-1.2.3.jar" />
-    <include name="astyanax/commons-cli-1.1.jar" />
-    <include name="astyanax/commons-codec-1.2.jar" />
-    <include name="astyanax/commons-lang-2.6.jar" />
     <include name="astyanax/high-scale-lib-1.1.2.jar" />
-    <include name="astyanax/joda-time-2.2.jar" />
-    <include name="astyanax/libthrift-0.7.0.jar" />
-    <include name="astyanax/log4j-1.2.16.jar" />
-    <include name="astyanax/slf4j-api-1.7.2.jar" />
-    <include name="astyanax/slf4j-log4j12-1.7.2.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
+    <include name="commons-cli/commons-cli-1.1.jar" />
+    <include name="commons-codec/commons-codec-1.2.jar" />
     <include name="commons-compress/commons-compress-1.8.1.jar" />
+    <include name="commons-lang/commons-lang-2.6.jar" />
     <include name="dd-plist/dd-plist.jar" />
     <include name="eclipse/org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar" />
     <include name="eclipse/org.eclipse.core.jobs_3.5.300.v20130429-1813.jar" />
@@ -98,10 +93,15 @@
     <include name="jacoco/org.jacoco.report-0.7.2.201409121644.jar" />
     <include name="jetty/jetty-all-9.0.4.v20130625.jar" />
     <include name="jetty/servlet-api.jar" />
+    <include name="joda-time/joda-time-2.2.jar" />
     <include name="jsr/javax.inject-1.jar" />
+    <include name="log4j/log4j-1.2.16.jar" />
     <include name="parboiled/parboiled-core-1.1.6.jar" />
     <include name="parboiled/parboiled-java-1.1.6.jar" />
-    <include name="stringtemplate/ST-4.0.8.jar" />    
+    <include name="slf4j/slf4j-api-1.7.2.jar" />
+    <include name="slf4j/slf4j-log4j12-1.7.2.jar" />
+    <include name="stringtemplate/ST-4.0.8.jar" />
+    <include name="thrift/libthrift-0.7.0.jar" />
     <include name="xz-java-1.3/xz-1.3.jar" />
   </fileset>
 

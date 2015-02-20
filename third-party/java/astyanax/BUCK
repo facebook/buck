@@ -1,83 +1,52 @@
+java_library(
+  name = 'cassandra',
+  exported_deps = [
+    ':astyanax-cassandra',
+    ':astyanax-core',
+    ':astyanax-thrift',
+    ':cassandra-thrift', 
+  ],
+  deps = [
+    ':cassandra-prebuilt',
+    ':high-scale-lib',
+    '//third-party/java/commons-cli:commons-cli',
+    '//third-party/java/commons-codec:commons-codec',
+    '//third-party/java/commons-lang:commons-lang',
+    '//third-party/java/joda-time:joda-time',
+    '//third-party/java/slf4j:slf4j-log4j',
+    '//third-party/java/thrift:thrift',
+  ],
+  visibility = ['PUBLIC'],
+)
+
 prebuilt_jar(
   name = 'astyanax-cassandra',
   binary_jar = 'astyanax-cassandra-1.56.38.jar',
-  visibility = ['PUBLIC'],
 )
 
 prebuilt_jar(
   name = 'astyanax-core',
   binary_jar = 'astyanax-core-1.56.38.jar',
-  visibility = ['PUBLIC'],
 )
 
 prebuilt_jar(
   name = 'astyanax-thrift',
   binary_jar = 'astyanax-thrift-1.56.38.jar',
-  visibility = ['PUBLIC'],
 )
 
 prebuilt_jar(
-  name = 'cassandra',
+  name = 'cassandra-prebuilt',
   binary_jar = 'cassandra-1.2.3.jar',
-  visibility = ['PUBLIC'],
 )
 
 prebuilt_jar(
   name = 'cassandra-thrift',
   binary_jar = 'cassandra-thrift-1.2.3.jar',
-  visibility = ['PUBLIC'],
 )
 
-prebuilt_jar(
-  name = 'commons-cli',
-  binary_jar = 'commons-cli-1.1.jar',
-  visibility = ['PUBLIC'],
-)
-
-prebuilt_jar(
-  name = 'commons-codec',
-  binary_jar = 'commons-codec-1.2.jar',
-  visibility = ['PUBLIC'],
-)
-
-prebuilt_jar(
-  name = 'commons-lang',
-  binary_jar = 'commons-lang-2.6.jar',
-  visibility = ['PUBLIC'],
-)
-
+# Leaving this here for now
 prebuilt_jar(
   name = 'high-scale-lib',
   binary_jar = 'high-scale-lib-1.1.2.jar',
-  visibility = ['PUBLIC'],
 )
 
-prebuilt_jar(
-  name = 'joda-time',
-  binary_jar = 'joda-time-2.2.jar',
-  visibility = ['PUBLIC'],
-)
-
-prebuilt_jar(
-  name = 'libthrift',
-  binary_jar = 'libthrift-0.7.0.jar',
-  visibility = ['PUBLIC'],
-)
-
-prebuilt_jar(
-  name = 'log4j',
-  binary_jar = 'log4j-1.2.16.jar',
-  visibility = ['PUBLIC'],
-)
-
-prebuilt_jar(
-  name = 'slf4j-api',
-  binary_jar = 'slf4j-api-1.7.2.jar',
-  visibility = ['PUBLIC'],
-)
-
-prebuilt_jar(
-  name = 'slf4j-log4j12',
-  binary_jar = 'slf4j-log4j12-1.7.2.jar',
-  visibility = ['PUBLIC'],
-)

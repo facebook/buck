@@ -13,7 +13,7 @@
 	<classpathentry kind="lib" path="third-party/java/astyanax/astyanax-thrift-1.56.38.jar"/>
 	<classpathentry kind="lib" path="third-party/java/astyanax/cassandra-1.2.3.jar"/>
 	<classpathentry kind="lib" path="third-party/java/astyanax/cassandra-thrift-1.2.3.jar"/>
-	<classpathentry kind="lib" path="third-party/java/astyanax/libthrift-0.7.0.jar"/>
+	<classpathentry kind="lib" path="third-party/java/thrift/libthrift-0.7.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/cglib/cglib-nodep-2.2.jar"/>
 	<classpathentry kind="lib" path="third-party/java/closure-templates/soy-excluding-deps.jar"/>
 	<classpathentry kind="lib" path="third-party/java/commons-compress/commons-compress-1.8.1.jar"/>

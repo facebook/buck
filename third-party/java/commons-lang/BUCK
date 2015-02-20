@@ -1,0 +1,8 @@
+prebuilt_jar(
+  name = 'commons-lang',
+  binary_jar = 'commons-lang-2.6.jar',
+  visibility = [
+    '//third-party/java/astyanax:cassandra',
+  ],
+)
+

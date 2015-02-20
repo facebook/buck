@@ -1,0 +1,8 @@
+prebuilt_jar(
+  name = 'commons-cli',
+  binary_jar = 'commons-cli-1.1.jar',
+  visibility = [
+    '//third-party/java/astyanax:cassandra',
+  ],
+)
+

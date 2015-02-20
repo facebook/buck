@@ -1,0 +1,8 @@
+prebuilt_jar(
+  name = 'log4j',
+  binary_jar = 'log4j-1.2.16.jar',
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+    '//third-party/java/slf4j:slf4j-log4j',
+  ],
+)

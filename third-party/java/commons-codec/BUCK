@@ -1,0 +1,7 @@
+prebuilt_jar(
+  name = 'commons-codec',
+  binary_jar = 'commons-codec-1.2.jar',
+  visibility = [
+    '//third-party/java/astyanax:cassandra',
+  ],
+)
