@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.google.common.annotations.Beta;
@@ -40,6 +41,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final BuildRuleType buildRuleType;
   private final SourcePathResolver resolver;
+  private final ProjectFilesystem projectFilesystem;
   /** @see #getInputsToCompareToOutput()  */
   @Nullable private ImmutableCollection<Path> inputsToCompareToOutputs;
   @Nullable private volatile RuleKey.Builder.RuleKeyPair ruleKeyPair;
@@ -51,6 +53,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
     this.buildRuleType = buildRuleParams.getBuildRuleType();
     this.resolver = resolver;
+    this.projectFilesystem = buildRuleParams.getProjectFilesystem();
   }
 
   @Override
@@ -84,6 +87,10 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   public final SourcePathResolver getResolver() {
     return resolver;
+  }
+
+  public final ProjectFilesystem getProjectFilesystem() {
+    return projectFilesystem;
   }
 
   @Override

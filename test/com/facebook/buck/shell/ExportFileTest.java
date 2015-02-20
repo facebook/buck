@@ -45,6 +45,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
@@ -78,8 +79,9 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
-        .build(new BuildRuleResolver());
+        .build(new BuildRuleResolver(), projectFilesystem);
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -87,7 +89,7 @@ public class ExportFileTest {
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
             "mkdir -p buck-out/gen",
-            "cp example.html buck-out/gen/example.html"),
+            "cp " + projectFilesystem.resolve("example.html") + " buck-out/gen/example.html"),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(Paths.get("buck-out/gen/example.html"), exportFile.getPathToOutputFile());
@@ -95,9 +97,10 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetOutToNameParamValueIfSrcIsSet() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
         .setOut("fish")
-        .build(new BuildRuleResolver());
+        .build(new BuildRuleResolver(), projectFilesystem);
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -105,7 +108,7 @@ public class ExportFileTest {
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
             "mkdir -p buck-out/gen",
-            "cp example.html buck-out/gen/fish"),
+            "cp " + projectFilesystem.resolve("example.html") + " buck-out/gen/fish"),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(Paths.get("buck-out/gen/fish"), exportFile.getPathToOutputFile());
@@ -113,10 +116,11 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
         .setSrc(new TestSourcePath("chips"))
         .setOut("fish")
-        .build(new BuildRuleResolver());
+        .build(new BuildRuleResolver(), projectFilesystem);
 
     List<Step> steps = exportFile.getBuildSteps(context, new FakeBuildableContext());
 
@@ -124,7 +128,7 @@ public class ExportFileTest {
         "The output directory should be created and then the file should be copied there.",
         ImmutableList.of(
             "mkdir -p buck-out/gen",
-            "cp chips buck-out/gen/fish"),
+            "cp " + projectFilesystem.resolve("chips") + " buck-out/gen/fish"),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(Paths.get("buck-out/gen/fish"), exportFile.getPathToOutputFile());

@@ -121,7 +121,7 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName {
     // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder()
         .add(new MkdirStep(out.getParent()))
-        .add(CopyStep.forFile(getResolver().getPath(src), out));
+        .add(CopyStep.forFile(getProjectFilesystem().resolve(getResolver().getPath(src)), out));
 
     buildableContext.recordArtifact(out);
     return builder.build();
