@@ -79,7 +79,7 @@ public class NewNativeTargetProjectMutator {
   private ImmutableList<String> targetGroupPath = ImmutableList.of();
   private Optional<String> gid = Optional.absent();
   private Iterable<GroupedSource> sources = ImmutableList.of();
-  private ImmutableMap<SourcePath, String> sourceFlags = ImmutableMap.of();
+  private ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags = ImmutableMap.of();
   private boolean shouldGenerateCopyHeadersPhase = true;
   private ImmutableSet<FrameworkPath> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
@@ -130,7 +130,7 @@ public class NewNativeTargetProjectMutator {
 
   public NewNativeTargetProjectMutator setSources(
       Iterable<GroupedSource> sources,
-      Map<SourcePath, String> sourceFlags) {
+      Map<SourcePath, ImmutableList<String>> sourceFlags) {
     this.sources = sources;
     this.sourceFlags = ImmutableMap.copyOf(sourceFlags);
     return this;
@@ -243,7 +243,7 @@ public class NewNativeTargetProjectMutator {
       PBXSourcesBuildPhase sourcesBuildPhase,
       Optional<PBXHeadersBuildPhase> headersBuildPhase,
       Iterable<GroupedSource> groupedSources,
-      ImmutableMap<SourcePath, String> sourceFlags) {
+      ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags) {
     for (GroupedSource groupedSource : groupedSources) {
       switch (groupedSource.getType()) {
         case SOURCE_PATH:
@@ -285,17 +285,17 @@ public class NewNativeTargetProjectMutator {
       SourcePath sourcePath,
       PBXGroup sourcesGroup,
       PBXSourcesBuildPhase sourcesBuildPhase,
-      ImmutableMap<SourcePath, String> sourceFlags) {
+      ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags) {
     PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
             pathRelativizer.outputDirToRootRelative(sourcePathResolver.getPath(sourcePath))));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     sourcesBuildPhase.getFiles().add(buildFile);
-    String customFlags = sourceFlags.get(sourcePath);
+    ImmutableList<String> customFlags = sourceFlags.get(sourcePath);
     if (customFlags != null) {
       NSDictionary settings = new NSDictionary();
-      settings.put("COMPILER_FLAGS", customFlags);
+      settings.put("COMPILER_FLAGS", Joiner.on(' ').join(customFlags));
       buildFile.setSettings(Optional.of(settings));
     }
     LOG.verbose(
@@ -310,19 +310,22 @@ public class NewNativeTargetProjectMutator {
       SourcePath headerPath,
       PBXGroup headersGroup,
       Optional<PBXHeadersBuildPhase> headersBuildPhase,
-      ImmutableMap<SourcePath, String> sourceFlags) {
+      ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags) {
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
             pathRelativizer.outputPathToSourcePath(headerPath)));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-    String headerFlags = sourceFlags.get(headerPath);
+    Optional<HeaderVisibility> visibility = Optional.absent();
+    ImmutableList<String> headerFlags = sourceFlags.get(headerPath);
     if (headerFlags != null) {
-      // If we specify nothing, Xcode will use "project" visibility.
+      visibility = HeaderVisibility.fromFlags(headerFlags);
+    }
+    if (visibility.isPresent()) {
       NSDictionary settings = new NSDictionary();
       settings.put(
           "ATTRIBUTES",
-          new NSArray(new NSString(HeaderVisibility.fromString(headerFlags).toXcodeAttribute())));
+          new NSArray(new NSString(visibility.get().toXcodeAttribute())));
       buildFile.setSettings(Optional.of(settings));
     } else {
       buildFile.setSettings(Optional.<NSDictionary>absent());

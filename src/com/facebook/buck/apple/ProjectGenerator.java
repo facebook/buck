@@ -768,7 +768,7 @@ public class ProjectGenerator {
             ImmutableList.of(
                 GroupedSource.ofSourcePath(
                     new PathSourcePath(projectFilesystem, emptyFileWithExtension("c")))),
-            ImmutableMap.<SourcePath, String>of())
+            ImmutableMap.<SourcePath, ImmutableList<String>>of())
         .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))
         .setResources(collectRecursiveResources(tests))
         .setAssetCatalogs(
@@ -953,7 +953,7 @@ public class ProjectGenerator {
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       Optional<String> headerPathPrefix,
       Iterable<GroupedSource> groupedSources,
-      ImmutableMap<SourcePath, String> sourceFlags) throws IOException {
+      ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags) throws IOException {
     HeaderMap.Builder publicMapBuilder = HeaderMap.builder();
     HeaderMap.Builder targetMapBuilder = HeaderMap.builder();
     HeaderMap.Builder targetUserMapBuilder = HeaderMap.builder();
@@ -975,7 +975,7 @@ public class ProjectGenerator {
       HeaderMap.Builder targetUserHeaderMap,
       Path prefix,
       Iterable<GroupedSource> groupedSources,
-      ImmutableMap<SourcePath, String> sourceFlags) {
+      ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags) {
     for (GroupedSource groupedSource : groupedSources) {
       switch (groupedSource.getType()) {
         case SOURCE_PATH:
@@ -1025,12 +1025,13 @@ public class ProjectGenerator {
       HeaderMap.Builder publicHeaderMap,
       HeaderMap.Builder targetHeaderMap,
       HeaderMap.Builder targetUserHeaderMap,
-      ImmutableMap<SourcePath, String> sourceFlags) {
-    HeaderVisibility visibility = HeaderVisibility.PROJECT;
-    String headerFlags = sourceFlags.get(headerPath);
+      ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags) {
+    Optional<HeaderVisibility> visibilityOptional = Optional.absent();
+    ImmutableList<String> headerFlags = sourceFlags.get(headerPath);
     if (headerFlags != null) {
-      visibility = HeaderVisibility.fromString(headerFlags);
+      visibilityOptional = HeaderVisibility.fromFlags(headerFlags);
     }
+    HeaderVisibility visibility = visibilityOptional.or(HeaderVisibility.PROJECT);
     String fileName = sourcePathResolver.getPath(headerPath).getFileName().toString();
     String prefixedFileName = prefix.resolve(fileName).toString();
     Path value =

@@ -93,7 +93,7 @@ public class CompilationDatabaseTest {
     Collection<AppleSource> appleSources = ImmutableList.of(
         AppleSource.of(
             new TestSourcePath("Foo/Hello.h"),
-            "public"),
+            ImmutableList.of("public")),
         AppleSource.of(new TestSourcePath("Foo/Bye.h")),
         AppleSource.of(new TestSourcePath("Foo/Hello.m")));
     TargetSources targetSources = TargetSources.ofAppleSources(
@@ -249,7 +249,8 @@ public class CompilationDatabaseTest {
     Collection<AppleSource> appleSources = ImmutableList.of(
         AppleSource.of(
             new TestSourcePath("foo/Hello.h"),
-            "public"), // Note that "public" should not be included in the clang flags.
+            // Note that "public" should not be included in the clang flags.
+            ImmutableList.of("public")),
         AppleSource.of(new TestSourcePath("foo/Hello.m")));
     testTargetSources = TargetSources.ofAppleSources(testSourcePathResolver, appleSources);
     testBuildTarget = BuildTargetFactory.newInstance("//foo:bar");

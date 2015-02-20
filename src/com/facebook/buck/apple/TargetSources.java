@@ -49,7 +49,7 @@ public abstract class TargetSources {
    * apply to each source or header path.
    */
   @Value.Parameter
-  public abstract SortedMap<SourcePath, String> getPerFileFlags();
+  public abstract SortedMap<SourcePath, ImmutableList<String>> getPerFileFlags();
 
   /**
    * Paths to each source code file in the target to be compiled.
@@ -76,8 +76,8 @@ public abstract class TargetSources {
       SourcePathResolver resolver,
       Collection<AppleSource> appleSources) {
     ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedMap.Builder<SourcePath, String> perFileFlagsBuilder = ImmutableSortedMap
-        .naturalOrder();
+    ImmutableSortedMap.Builder<SourcePath, ImmutableList<String>> perFileFlagsBuilder =
+        ImmutableSortedMap.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> srcPathsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> publicHeaderPathsBuilder =
         ImmutableSortedSet.naturalOrder();
@@ -93,7 +93,8 @@ public abstract class TargetSources {
         appleSources);
 
     ImmutableSortedSet<SourcePath> allSources = allSourcesBuilder.build();
-    ImmutableSortedMap<SourcePath, String> perFileFlags = perFileFlagsBuilder.build();
+    ImmutableSortedMap<SourcePath, ImmutableList<String>> perFileFlags =
+        perFileFlagsBuilder.build();
     ImmutableSortedSet<SourcePath> srcPaths = srcPathsBuilder.build();
     ImmutableSortedSet<SourcePath> publicHeaderPaths = publicHeaderPathsBuilder.build();
     ImmutableSortedSet<SourcePath> privateHeaderPaths = privateHeaderPathsBuilder.build();

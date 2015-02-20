@@ -75,7 +75,7 @@ public class TypeCoercerFactory {
     sourcePathTypeCoercer = new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
     appleSourceTypeCoercer = new AppleSourceTypeCoercer(
         sourcePathTypeCoercer,
-        stringTypeCoercer);
+        new ListTypeCoercer<>(stringTypeCoercer));
     ocamlSourceTypeCoercer = new OCamlSourceTypeCoercer(sourcePathTypeCoercer);
     nonContainerTypeCoercers = new TypeCoercer<?>[] {
         // special classes

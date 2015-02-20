@@ -194,7 +194,7 @@ public class ProjectGeneratorTest {
                 ImmutableList.of(
                     AppleSource.of(new TestSourcePath("HeaderGroup1/foo.h")),
                     AppleSource.of(
-                        new TestSourcePath("HeaderGroup1/bar.h"), "public"))))
+                        new TestSourcePath("HeaderGroup1/bar.h"), ImmutableList.of("public")))))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -215,8 +215,8 @@ public class ProjectGeneratorTest {
         .setSrcs(
             Optional.of(
                 ImmutableList.of(
-                      AppleSource.of(
-                          new TestSourcePath("HeaderGroup2/blech.h"), "private"))))
+                    AppleSource.of(
+                        new TestSourcePath("HeaderGroup2/blech.h"), ImmutableList.of("private")))))
         .setUseBuckHeaderMaps(Optional.of(true))
         .build();
 
@@ -237,7 +237,7 @@ public class ProjectGeneratorTest {
                     AppleSource.of(new TestSourcePath("HeaderGroup1/foo.h")),
                     AppleSource.of(
                         new TestSourcePath("HeaderGroup1/bar.h"),
-                        "public"),
+                        ImmutableList.of("public")),
                     AppleSource.of(
                         new TestSourcePath("HeaderGroup2/baz.h")))))
         .setUseBuckHeaderMaps(Optional.of(true))
@@ -321,9 +321,9 @@ public class ProjectGeneratorTest {
                 ImmutableList.of(
                     AppleSource.of(
                         new TestSourcePath("foo.h"),
-                        "public"),
+                        ImmutableList.of("public")),
                     AppleSource.of(
-                        new TestSourcePath("bar.h")))))
+                            new TestSourcePath("bar.h")))))
         .setTests(Optional.of(ImmutableSortedSet.of(testTarget)))
         .setUseBuckHeaderMaps(Optional.of(true))
         .build();
@@ -381,7 +381,7 @@ public class ProjectGeneratorTest {
                 ImmutableList.of(
                     AppleSource.of(
                         new TestSourcePath("foo.h"),
-                        "public"),
+                        ImmutableList.of("public")),
                     AppleSource.of(
                         new TestSourcePath("bar.h")))))
         .setUseBuckHeaderMaps(Optional.of(true))
@@ -447,7 +447,7 @@ public class ProjectGeneratorTest {
                 ImmutableList.of(
                     AppleSource.of(
                         new TestSourcePath("foo.h"),
-                        "public"),
+                        ImmutableList.of("public")),
                     AppleSource.of(
                         new TestSourcePath("bar.h")))))
         .setUseBuckHeaderMaps(Optional.of(true))
@@ -527,7 +527,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableList.of(
                     AppleSource.of(
-                        new TestSourcePath("foo.m"), "-foo"),
+                        new TestSourcePath("foo.m"), ImmutableList.of("-foo")),
                     AppleSource.of(new TestSourcePath("foo.h")),
                     AppleSource.of(new TestSourcePath("bar.m")))))
         .build();
@@ -947,7 +947,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableList.of(
                     AppleSource.of(
-                        new TestSourcePath("foo.m"), "-foo"),
+                        new TestSourcePath("foo.m"), ImmutableList.of("-foo")),
                     AppleSource.of(new TestSourcePath("foo.h")))))
         .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Foo.framework")))
         .setDeps(Optional.of(ImmutableSortedSet.of(depTarget)))
@@ -1171,7 +1171,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableList.of(
                     AppleSource.of(
-                        new TestSourcePath("foo.m"), "-foo"),
+                        new TestSourcePath("foo.m"), ImmutableList.of("-foo")),
                     AppleSource.of(new TestSourcePath("foo.h")),
                     AppleSource.of(new TestSourcePath("bar.m")))))
         .build();

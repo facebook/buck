@@ -37,7 +37,8 @@ public class RuleUtilsTest {
   @Test
   public void extractGroupedSources() {
     ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
-    ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
+    ImmutableMap.Builder<SourcePath, ImmutableList<String>> perFileCompileFlags =
+        ImmutableMap.builder();
     ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> publicHeaderPaths = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> privateHeaderPaths = ImmutableSortedSet.naturalOrder();
@@ -46,10 +47,10 @@ public class RuleUtilsTest {
         AppleSource.of(new TestSourcePath("Group1/foo.m")),
         AppleSource.of(
             new TestSourcePath("Group1/bar.m"),
-            "-Wall"),
+            ImmutableList.of("-Wall")),
         AppleSource.of(new TestSourcePath("Group2/baz.m")),
         AppleSource.of(
-            new TestSourcePath("Group2/blech.m"), "-fobjc-arc"));
+            new TestSourcePath("Group2/blech.m"), ImmutableList.of("-fobjc-arc")));
 
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     RuleUtils.extractSourcePaths(
@@ -78,16 +79,17 @@ public class RuleUtilsTest {
                     GroupedSource.ofSourcePath(new TestSourcePath("Group2/blech.m"))
                 ))),
         sources);
-    assertEquals(ImmutableMap.<SourcePath, String>of(
-            new TestSourcePath("Group1/bar.m"), "-Wall",
-            new TestSourcePath("Group2/blech.m"), "-fobjc-arc"),
+    assertEquals(ImmutableMap.<SourcePath, ImmutableList<String>>of(
+            new TestSourcePath("Group1/bar.m"), ImmutableList.of("-Wall"),
+            new TestSourcePath("Group2/blech.m"), ImmutableList.of("-fobjc-arc")),
         perFileCompileFlags.build());
   }
 
   @Test
   public void extractUngroupedHeadersAndSources() {
     ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
-    ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
+    ImmutableMap.Builder<SourcePath, ImmutableList<String>> perFileCompileFlags =
+        ImmutableMap.builder();
     ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> publicHeaderPaths = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> privateHeaderPaths = ImmutableSortedSet.naturalOrder();
@@ -100,7 +102,7 @@ public class RuleUtilsTest {
         AppleSource.of(new TestSourcePath("beeble.c")),
         AppleSource.of(
             new TestSourcePath("file.h"),
-            "public"));
+            ImmutableList.of("public")));
 
     RuleUtils.extractSourcePaths(
         new SourcePathResolver(new BuildRuleResolver()),
@@ -130,7 +132,8 @@ public class RuleUtilsTest {
   @Test
   public void extractGroupedHeadersAndSources() {
     ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
-    ImmutableMap.Builder<SourcePath, String> perFileCompileFlags = ImmutableMap.builder();
+    ImmutableMap.Builder<SourcePath, ImmutableList<String>> perFileCompileFlags =
+        ImmutableMap.builder();
     ImmutableSortedSet.Builder<SourcePath> sourcePaths = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> publicHeaderPaths = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> privateHeaderPaths = ImmutableSortedSet.naturalOrder();
@@ -138,12 +141,12 @@ public class RuleUtilsTest {
     ImmutableList<AppleSource> input = ImmutableList.of(
         AppleSource.of(new TestSourcePath("foo.h")),
         AppleSource.of(
-            new TestSourcePath("qux.h"), "public"),
+            new TestSourcePath("qux.h"), ImmutableList.of("public")),
         AppleSource.of(
-            new TestSourcePath("bar.m"), "-Wall"),
+            new TestSourcePath("bar.m"), ImmutableList.of("-Wall")),
         AppleSource.of(new TestSourcePath("baz.hh")),
         AppleSource.of(
-            new TestSourcePath("blech.mm"), "-fobjc-arc"));
+            new TestSourcePath("blech.mm"), ImmutableList.of("-fobjc-arc")));
 
     RuleUtils.extractSourcePaths(
         new SourcePathResolver(new BuildRuleResolver()),

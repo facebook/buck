@@ -21,6 +21,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -30,12 +31,12 @@ import java.util.Collection;
  */
 public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
   private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
-  private final TypeCoercer<String> flagsTypeCoercer;
-  private final TypeCoercer<Pair<SourcePath, String>> sourcePathWithFlagsTypeCoercer;
+  private final TypeCoercer<ImmutableList<String>> flagsTypeCoercer;
+  private final TypeCoercer<Pair<SourcePath, ImmutableList<String>>> sourcePathWithFlagsTypeCoercer;
 
   AppleSourceTypeCoercer(
       TypeCoercer<SourcePath> sourcePathTypeCoercer,
-      TypeCoercer<String> flagsTypeCoercer) {
+      TypeCoercer<ImmutableList<String>> flagsTypeCoercer) {
     this.sourcePathTypeCoercer = sourcePathTypeCoercer;
     this.flagsTypeCoercer = flagsTypeCoercer;
     this.sourcePathWithFlagsTypeCoercer =
@@ -57,7 +58,7 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
   @Override
   public void traverse(AppleSource object, Traversal traversal) {
     sourcePathTypeCoercer.traverse(object.getSourcePath(), traversal);
-    flagsTypeCoercer.traverse(object.getFlags(), traversal);
+    flagsTypeCoercer.traverse(ImmutableList.copyOf(object.getFlags()), traversal);
   }
 
   @Override
@@ -87,11 +88,12 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
 
     // If we get this far, we're dealing with a Pair of a SourcePath and a String.
     if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
-      Pair<SourcePath, String> sourcePathWithFlags = sourcePathWithFlagsTypeCoercer.coerce(
-          buildTargetParser,
-          filesystem,
-          pathRelativeToProjectRoot,
-          object);
+      Pair<SourcePath, ImmutableList<String>> sourcePathWithFlags =
+          sourcePathWithFlagsTypeCoercer.coerce(
+              buildTargetParser,
+              filesystem,
+              pathRelativeToProjectRoot,
+              object);
       return AppleSource.of(
           sourcePathWithFlags.getFirst(),
           sourcePathWithFlags.getSecond());

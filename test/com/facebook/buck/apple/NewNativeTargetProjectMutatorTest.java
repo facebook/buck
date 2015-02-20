@@ -142,7 +142,8 @@ public class NewNativeTargetProjectMutatorTest {
             "Group2",
             ImmutableList.of(
                 GroupedSource.ofSourcePath(baz))));
-    ImmutableMap<SourcePath, String> sourceFlags = ImmutableMap.of(bar, "-Wall");
+    ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags =
+        ImmutableMap.of(bar, ImmutableList.of("-Wall"));
     mutator.setSources(sources, sourceFlags);
     NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
         generatedProject);
@@ -181,9 +182,9 @@ public class NewNativeTargetProjectMutatorTest {
             "HeaderGroup2",
             ImmutableList.of(
                 GroupedSource.ofSourcePath(baz))));
-    ImmutableMap<SourcePath, String> sourceFlags = ImmutableMap.of(
-        bar, "public",
-        baz, "private");
+    ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags = ImmutableMap.of(
+        bar, ImmutableList.of("public"),
+        baz, ImmutableList.of("private"));
     mutator.setSources(sources, sourceFlags);
     NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
         generatedProject);
@@ -242,7 +243,7 @@ public class NewNativeTargetProjectMutatorTest {
       NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
       mutator
           .setShouldGenerateCopyHeadersPhase(false)
-          .setSources(sources, ImmutableMap.<SourcePath, String>of());
+          .setSources(sources, ImmutableMap.<SourcePath, ImmutableList<String>>of());
       NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
           generatedProject);
 
@@ -256,7 +257,7 @@ public class NewNativeTargetProjectMutatorTest {
       NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
       mutator
           .setShouldGenerateCopyHeadersPhase(true)
-          .setSources(sources, ImmutableMap.<SourcePath, String>of());
+          .setSources(sources, ImmutableMap.<SourcePath, ImmutableList<String>>of());
       NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
           generatedProject);
       assertThat(

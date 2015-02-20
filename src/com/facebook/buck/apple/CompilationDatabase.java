@@ -44,7 +44,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -295,12 +294,13 @@ public class CompilationDatabase extends AbstractBuildRule {
         commandArgs.add("-c");
         commandArgs.add(fileToCompile);
 
-        // Currently, perFileFlags is a single string rather than a list, so we concatenate it
-        // to the end of the command string without escaping or splitting.
-        String perFileFlags = Strings.nullToEmpty(targetSources.getPerFileFlags().get(srcPath));
+        ImmutableList<String> perFileFlags = targetSources.getPerFileFlags().get(srcPath);
+        if (perFileFlags == null) {
+          perFileFlags = ImmutableList.of();
+        }
         if (!perFileFlags.isEmpty() && FileExtensions.CLANG_SOURCES.contains(
             Files.getFileExtension(fileToCompile))) {
-          commandArgs.add(perFileFlags);
+          commandArgs.addAll(perFileFlags);
         }
 
         String command = Joiner.on(' ').join(commandArgs);

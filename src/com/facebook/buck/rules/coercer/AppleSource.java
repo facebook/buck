@@ -18,8 +18,11 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
+
+import java.util.List;
 
 /**
  * Simple type representing an iOS or OS X source entry containing a {@link SourcePath} and
@@ -33,14 +36,14 @@ public abstract class AppleSource {
   public abstract SourcePath getSourcePath();
 
   @Value.Parameter
-  public abstract String getFlags();
+  public abstract List<String> getFlags();
 
   public static AppleSource of(SourcePath sourcePath) {
-    return ImmutableAppleSource.of(sourcePath, "");
+    return ImmutableAppleSource.of(sourcePath, ImmutableList.<String>of());
   }
 
-  public static AppleSource of(SourcePath sourcePath, String flags) {
-    return ImmutableAppleSource.of(sourcePath, flags);
+  public static AppleSource of(SourcePath sourcePath, List<String> flags) {
+    return ImmutableAppleSource.of(sourcePath, ImmutableList.copyOf(flags));
   }
 
 }

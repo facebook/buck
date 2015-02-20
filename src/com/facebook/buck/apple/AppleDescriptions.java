@@ -49,7 +49,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -66,6 +65,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -132,7 +132,7 @@ public class AppleDescriptions {
         Suppliers.ofInstance(params.getExtraDeps()));
 
     TargetSources targetSources = TargetSources.ofAppleSources(resolver, args.srcs.get());
-    ImmutableSortedMap<SourcePath, String> perFileFlags =
+    ImmutableSortedMap<SourcePath, ImmutableList<String>> perFileFlags =
         ImmutableSortedMap.copyOf(targetSources.getPerFileFlags());
     boolean useBuckHeaderMaps = args.useBuckHeaderMaps.or(Boolean.FALSE);
     return createSymlinkTree(
@@ -146,15 +146,15 @@ public class AppleDescriptions {
     return BuildTargets.getBinPath(buildTarget, "__%s_public_headers__");
   }
 
-  private static final Splitter spaceSplitter = Splitter.on(' ').trimResults().omitEmptyStrings();
-  public static boolean isPublicHeader(String flags) {
-    return Iterables.any(spaceSplitter.split(flags), Predicates.equalTo("public"));
+  public static boolean isPublicHeader(List<String> flags) {
+    Optional<HeaderVisibility> visibility = HeaderVisibility.fromFlags(flags);
+    return visibility.isPresent() && HeaderVisibility.PUBLIC.equals(visibility.get());
   }
 
   private static SymlinkTree createSymlinkTree(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
-      ImmutableSortedMap<SourcePath, String> perFileFlags,
+      ImmutableSortedMap<SourcePath, ImmutableList<String>> perFileFlags,
       boolean useBuckHeaderMaps) {
     // Note that the set of headersToCopy may be empty. If so, the returned rule will be a no-op.
     // TODO(mbolin): Make headersToCopy an ImmutableSortedMap once we clean up the iOS codebase and
@@ -171,9 +171,10 @@ public class AppleDescriptions {
       Path headerPathPrefix = params.getBuildTarget().getBasePath().getFileName();
 
       headersToCopy = Maps.newHashMap();
-      for (Map.Entry<SourcePath, String> entry : perFileFlags.entrySet()) {
-        String flags = entry.getValue();
-        if (isPublicHeader(flags)) {
+      Predicate<String> isPublicHeaderFlag = Predicates.equalTo("public");
+      for (Map.Entry<SourcePath, ImmutableList<String>> entry : perFileFlags.entrySet()) {
+        ImmutableList<String> flags = entry.getValue();
+        if (Iterables.any(flags, isPublicHeaderFlag)) {
           SourcePath sourcePath = entry.getKey();
           Path sourcePathName = pathResolver.getPath(sourcePath).getFileName();
           headersToCopy.put(headerPathPrefix.resolve(sourcePathName), sourcePath);

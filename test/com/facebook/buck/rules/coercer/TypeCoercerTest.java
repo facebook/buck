@@ -384,14 +384,14 @@ public class TypeCoercerTest {
     TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<?> input = ImmutableList.of(
-        ImmutableList.of("foo.m", "-Wall"),
-        ImmutableList.of("bar.m", "-fobjc-arc"));
+        ImmutableList.of("foo.m", ImmutableList.of("-Wall", "-Werror")),
+        ImmutableList.of("bar.m", ImmutableList.of("-fobjc-arc")));
     Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
     ImmutableList<AppleSource> expectedResult = ImmutableList.of(
         AppleSource.of(
-            new TestSourcePath("foo.m"), "-Wall"),
+            new TestSourcePath("foo.m"), ImmutableList.of("-Wall", "-Werror")),
         AppleSource.of(
-            new TestSourcePath("bar.m"), "-fobjc-arc"));
+            new TestSourcePath("bar.m"), ImmutableList.of("-fobjc-arc")));
     assertEquals(expectedResult, result);
   }
 
@@ -403,17 +403,17 @@ public class TypeCoercerTest {
 
     ImmutableList<?> input = ImmutableList.of(
         "Group1/foo.m",
-        ImmutableList.of("Group1/bar.m", "-Wall"),
+        ImmutableList.of("Group1/bar.m", ImmutableList.of("-Wall", "-Werror")),
         "Group2/baz.m",
-        ImmutableList.of("Group2/blech.m", "-fobjc-arc"));
+        ImmutableList.of("Group2/blech.m", ImmutableList.of("-fobjc-arc")));
     Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
     ImmutableList<AppleSource> expectedResult = ImmutableList.of(
         AppleSource.of(new TestSourcePath("Group1/foo.m")),
         AppleSource.of(
-            new TestSourcePath("Group1/bar.m"), "-Wall"),
+            new TestSourcePath("Group1/bar.m"), ImmutableList.of("-Wall", "-Werror")),
         AppleSource.of(new TestSourcePath("Group2/baz.m")),
         AppleSource.of(
-            new TestSourcePath("Group2/blech.m"), "-fobjc-arc"));
+            new TestSourcePath("Group2/blech.m"), ImmutableList.of("-fobjc-arc")));
     assertEquals(expectedResult, result);
   }
 

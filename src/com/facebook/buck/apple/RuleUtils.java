@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -49,7 +50,7 @@ public class RuleUtils {
   private static void addSourcePathToBuilders(
       SourcePathResolver resolver,
       SourcePath sourcePath,
-      String perFileFlags,
+      List<String> perFileFlags,
       ImmutableSortedSet.Builder<SourcePath> outputAllSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputPublicHeaderPaths,
@@ -88,7 +89,7 @@ public class RuleUtils {
   public static void extractSourcePaths(
       SourcePathResolver resolver,
       ImmutableSortedSet.Builder<SourcePath> outputAllSourcePaths,
-      ImmutableMap.Builder<SourcePath, String> outputPerFileFlags,
+      ImmutableMap.Builder<SourcePath, ImmutableList<String>> outputPerFileFlags,
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputPublicHeaderPaths,
       ImmutableSortedSet.Builder<SourcePath> outputPrivateHeaderPaths,
@@ -103,7 +104,7 @@ public class RuleUtils {
           outputPublicHeaderPaths,
           outputPrivateHeaderPaths);
       if (!item.getFlags().isEmpty()) {
-        outputPerFileFlags.put(item.getSourcePath(), item.getFlags());
+        outputPerFileFlags.put(item.getSourcePath(), ImmutableList.copyOf(item.getFlags()));
       }
     }
   }

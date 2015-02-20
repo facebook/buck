@@ -18,6 +18,9 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Ascii;
+import com.google.common.base.Optional;
+
+import java.util.List;
 
 /**
  * The visibility of a header file.
@@ -41,6 +44,19 @@ public enum HeaderVisibility {
       default:
         throw new HumanReadableException("Invalid header visibility value %s.", s);
     }
+  }
+
+  public static Optional<HeaderVisibility> fromFlags(List<String> flags) {
+    if (flags == null || flags.isEmpty()) {
+      return Optional.absent();
+    }
+    if (flags.size() != 1) {
+      throw new HumanReadableException(
+          "Header file has more than one per-file flag: %s",
+          flags);
+    }
+    String headerFlag = flags.get(0);
+    return Optional.of(HeaderVisibility.fromString(headerFlag));
   }
 
   public String toXcodeAttribute() {
