@@ -512,6 +512,58 @@ public class MirrorTest {
     stubbed.findField("QUITE_MILD");
   }
 
+  @Test
+  public void stubJarIsEquallyAtHomeWalkingADirectoryOfClassFiles() throws IOException {
+    Path jar = compileToJar(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            ImmutableList.of(
+                "package com.example.buck;",
+                "public class A {",
+                "  public String toString() { return null; }",
+                "  public void eatCake() {}",
+                "}")));
+
+    Path classDir = temp.newFolder().toPath();
+    Unzip.extractZipFile(jar, classDir, true);
+
+    new StubJar(classDir).writeTo(filesystem, stubJar);
+
+    // Verify that both methods are present and given in alphabetical order.
+    AbiClass classNode = readClass(stubJar, "com/example/buck/A.class");
+    List<MethodNode> methods = classNode.getClassNode().methods;
+    // Index 0 is the <init> method. Skip that.
+    assertEquals("eatCake", methods.get(1).name);
+    assertEquals("toString", methods.get(2).name);
+  }
+
+  @Test
+  public void shouldIncludeBridgeMethods() throws IOException {
+    Path original = compileToJar(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on('\n').join(ImmutableList.of(
+                "package com.example.buck;",
+                "public class A implements Comparable<A> {",
+                "  public int compareTo(A other) {",
+                "    return 0;",
+                "  }",
+                "}")));
+
+    new StubJar(original).writeTo(filesystem, stubJar);
+
+    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    int count = 0;
+    for (MethodNode method : stubbed.getClassNode().methods) {
+      if ("compareTo".equals(method.name)) {
+        count++;
+      }
+    }
+    // One for the generics method, one for the bridge method from Comparable
+    assertEquals(2, count);
+  }
+
   private Path compileToJar(
       SortedSet<Path> classpath,
       String fileName,
@@ -567,31 +619,6 @@ public class MirrorTest {
     }
 
     return jar.toPath().toAbsolutePath();
-  }
-
-  @Test
-  public void stubJarIsEquallyAtHomeWalkingADirectoryOfClassFiles() throws IOException {
-    Path jar = compileToJar(
-        EMPTY_CLASSPATH,
-        "A.java",
-        Joiner.on("\n").join(ImmutableList.of(
-                "package com.example.buck;",
-                "public class A {",
-                "  public String toString() { return null; }",
-                "  public void eatCake() {}",
-                "}")));
-
-    Path classDir = temp.newFolder().toPath();
-    Unzip.extractZipFile(jar, classDir, true);
-
-    new StubJar(classDir).writeTo(filesystem, stubJar);
-
-    // Verify that both methods are present and given in alphabetical order.
-    AbiClass classNode = readClass(stubJar, "com/example/buck/A.class");
-    List<MethodNode> methods = classNode.getClassNode().methods;
-    // Index 0 is the <init> method. Skip that.
-    assertEquals("eatCake", methods.get(1).name);
-    assertEquals("toString", methods.get(2).name);
   }
 
   private AbiClass readClass(Path pathToJar, String className) throws IOException {
