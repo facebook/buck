@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.AppleSource;
@@ -95,31 +94,16 @@ public class RuleUtils {
       ImmutableSortedSet.Builder<SourcePath> outputPrivateHeaderPaths,
       Collection<AppleSource> items) {
     for (AppleSource item : items) {
-      switch (item.getType()) {
-        case SOURCE_PATH:
-          addSourcePathToBuilders(
-              resolver,
-              item.getSourcePath(),
-              /* perFileFlags = */ "",
-              outputAllSourcePaths,
-              outputSourcePaths,
-              outputPublicHeaderPaths,
-              outputPrivateHeaderPaths);
-          break;
-        case SOURCE_PATH_WITH_FLAGS:
-          Pair<SourcePath, String> pair = item.getSourcePathWithFlags();
-          addSourcePathToBuilders(
-              resolver,
-              pair.getFirst(),
-              pair.getSecond(),
-              outputAllSourcePaths,
-              outputSourcePaths,
-              outputPublicHeaderPaths,
-              outputPrivateHeaderPaths);
-          outputPerFileFlags.put(pair.getFirst(), pair.getSecond());
-          break;
-        default:
-          throw new RuntimeException("Unhandled AppleSource item type: " + item.getType());
+      addSourcePathToBuilders(
+          resolver,
+          item.getSourcePath(),
+          item.getFlags(),
+          outputAllSourcePaths,
+          outputSourcePaths,
+          outputPublicHeaderPaths,
+          outputPrivateHeaderPaths);
+      if (!item.getFlags().isEmpty()) {
+        outputPerFileFlags.put(item.getSourcePath(), item.getFlags());
       }
     }
   }

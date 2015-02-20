@@ -21,28 +21,25 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * A type coercer to handle source entries in an iOS or OS X rule.
  */
 public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
   private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
+  private final TypeCoercer<String> flagsTypeCoercer;
   private final TypeCoercer<Pair<SourcePath, String>> sourcePathWithFlagsTypeCoercer;
-  private final TypeCoercer<Pair<String, ImmutableList<AppleSource>>> sourceGroupTypeCoercer;
 
   AppleSourceTypeCoercer(
       TypeCoercer<SourcePath> sourcePathTypeCoercer,
-      TypeCoercer<Pair<SourcePath, String>> sourcePathWithFlagsTypeCoercer,
-      TypeCoercer<String> stringTypeCoercer) {
+      TypeCoercer<String> flagsTypeCoercer) {
     this.sourcePathTypeCoercer = sourcePathTypeCoercer;
-    this.sourcePathWithFlagsTypeCoercer = sourcePathWithFlagsTypeCoercer;
-    this.sourceGroupTypeCoercer = new PairTypeCoercer<String, ImmutableList<AppleSource>>(
-        stringTypeCoercer,
-        new ListTypeCoercer<AppleSource>(this));
+    this.flagsTypeCoercer = flagsTypeCoercer;
+    this.sourcePathWithFlagsTypeCoercer =
+        new PairTypeCoercer<>(sourcePathTypeCoercer, flagsTypeCoercer);
   }
 
   @Override
@@ -54,20 +51,13 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
   public boolean hasElementClass(Class<?>... types) {
     return
       sourcePathTypeCoercer.hasElementClass(types) ||
-      sourcePathWithFlagsTypeCoercer.hasElementClass(types) ||
-      sourceGroupTypeCoercer.hasElementClass(types);
+      flagsTypeCoercer.hasElementClass(types);
   }
 
   @Override
   public void traverse(AppleSource object, Traversal traversal) {
-    switch (object.getType()) {
-      case SOURCE_PATH:
-        sourcePathTypeCoercer.traverse(object.getSourcePath(), traversal);
-        break;
-      case SOURCE_PATH_WITH_FLAGS:
-        sourcePathWithFlagsTypeCoercer.traverse(object.getSourcePathWithFlags(), traversal);
-        break;
-    }
+    sourcePathTypeCoercer.traverse(object.getSourcePath(), traversal);
+    flagsTypeCoercer.traverse(object.getFlags(), traversal);
   }
 
   @Override
@@ -85,32 +75,31 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
       return (AppleSource) object;
     }
 
-    // We're expecting one of three types here. They can be differentiated pretty easily.
+    // We're expecting one of two types here. They can be differentiated pretty easily.
     if (object instanceof String) {
-      return AppleSource.ofSourcePath(sourcePathTypeCoercer.coerce(
+      return AppleSource.of(
+          sourcePathTypeCoercer.coerce(
               buildTargetParser,
               filesystem,
               pathRelativeToProjectRoot,
               object));
     }
 
-    // If we get this far, we're dealing with a Pair. We can differentiate the kinds by looking at
-    // the second item.
-
-    if (object instanceof List<?>) {
-      List<?> list = (List<?>) object;
-      Object second = list.size() == 2 ? list.get(1) : null;
-
-      if (second instanceof String) {
-        return AppleSource.ofSourcePathWithFlags(
-            sourcePathWithFlagsTypeCoercer.coerce(
-                buildTargetParser,
-                filesystem,
-                pathRelativeToProjectRoot,
-                object));
-      }
+    // If we get this far, we're dealing with a Pair of a SourcePath and a String.
+    if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
+      Pair<SourcePath, String> sourcePathWithFlags = sourcePathWithFlagsTypeCoercer.coerce(
+          buildTargetParser,
+          filesystem,
+          pathRelativeToProjectRoot,
+          object);
+      return AppleSource.of(
+          sourcePathWithFlags.getFirst(),
+          sourcePathWithFlags.getSecond());
     }
 
-    throw CoerceFailedException.simple(object, getOutputClass());
+    throw CoerceFailedException.simple(
+        object,
+        getOutputClass(),
+        "input should be either a source path or a pair of a source path and a list of flags");
   }
 }

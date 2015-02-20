@@ -17,7 +17,6 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -44,15 +43,13 @@ public class RuleUtilsTest {
     ImmutableSortedSet.Builder<SourcePath> privateHeaderPaths = ImmutableSortedSet.naturalOrder();
 
     ImmutableList<AppleSource> input = ImmutableList.of(
-        AppleSource.ofSourcePath(new TestSourcePath("Group1/foo.m")),
-        AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(
-                new TestSourcePath("Group1/bar.m"),
-                "-Wall")),
-        AppleSource.ofSourcePath(new TestSourcePath("Group2/baz.m")),
-        AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(
-                new TestSourcePath("Group2/blech.m"), "-fobjc-arc")));
+        AppleSource.of(new TestSourcePath("Group1/foo.m")),
+        AppleSource.of(
+            new TestSourcePath("Group1/bar.m"),
+            "-Wall"),
+        AppleSource.of(new TestSourcePath("Group2/baz.m")),
+        AppleSource.of(
+            new TestSourcePath("Group2/blech.m"), "-fobjc-arc"));
 
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     RuleUtils.extractSourcePaths(
@@ -96,15 +93,14 @@ public class RuleUtilsTest {
     ImmutableSortedSet.Builder<SourcePath> privateHeaderPaths = ImmutableSortedSet.naturalOrder();
 
     ImmutableList<AppleSource> input = ImmutableList.of(
-        AppleSource.ofSourcePath(new TestSourcePath("foo.m")),
-        AppleSource.ofSourcePath(new TestSourcePath("bar.h")),
-        AppleSource.ofSourcePath(new TestSourcePath("baz.mm")),
-        AppleSource.ofSourcePath(new TestSourcePath("blech.hh")),
-        AppleSource.ofSourcePath(new TestSourcePath("beeble.c")),
-        AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(
-                new TestSourcePath("file.h"),
-                "public")));
+        AppleSource.of(new TestSourcePath("foo.m")),
+        AppleSource.of(new TestSourcePath("bar.h")),
+        AppleSource.of(new TestSourcePath("baz.mm")),
+        AppleSource.of(new TestSourcePath("blech.hh")),
+        AppleSource.of(new TestSourcePath("beeble.c")),
+        AppleSource.of(
+            new TestSourcePath("file.h"),
+            "public"));
 
     RuleUtils.extractSourcePaths(
         new SourcePathResolver(new BuildRuleResolver()),
@@ -140,15 +136,14 @@ public class RuleUtilsTest {
     ImmutableSortedSet.Builder<SourcePath> privateHeaderPaths = ImmutableSortedSet.naturalOrder();
 
     ImmutableList<AppleSource> input = ImmutableList.of(
-        AppleSource.ofSourcePath(new TestSourcePath("foo.h")),
-        AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new TestSourcePath("qux.h"), "public")),
-        AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-Wall")),
-        AppleSource.ofSourcePath(new TestSourcePath("baz.hh")),
-        AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(
-                new TestSourcePath("blech.mm"), "-fobjc-arc")));
+        AppleSource.of(new TestSourcePath("foo.h")),
+        AppleSource.of(
+            new TestSourcePath("qux.h"), "public"),
+        AppleSource.of(
+            new TestSourcePath("bar.m"), "-Wall"),
+        AppleSource.of(new TestSourcePath("baz.hh")),
+        AppleSource.of(
+            new TestSourcePath("blech.mm"), "-fobjc-arc"));
 
     RuleUtils.extractSourcePaths(
         new SourcePathResolver(new BuildRuleResolver()),

@@ -372,8 +372,8 @@ public class TypeCoercerTest {
     ImmutableList<String> input = ImmutableList.of("foo.m", "bar.m");
     Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
     ImmutableList<AppleSource> expectedResult = ImmutableList.of(
-        AppleSource.ofSourcePath(new TestSourcePath("foo.m")),
-        AppleSource.ofSourcePath(new TestSourcePath("bar.m")));
+        AppleSource.of(new TestSourcePath("foo.m")),
+        AppleSource.of(new TestSourcePath("bar.m")));
     assertEquals(expectedResult, result);
   }
 
@@ -388,10 +388,10 @@ public class TypeCoercerTest {
         ImmutableList.of("bar.m", "-fobjc-arc"));
     Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
     ImmutableList<AppleSource> expectedResult = ImmutableList.of(
-        AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new TestSourcePath("foo.m"), "-Wall")),
-        AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new TestSourcePath("bar.m"), "-fobjc-arc")));
+        AppleSource.of(
+            new TestSourcePath("foo.m"), "-Wall"),
+        AppleSource.of(
+            new TestSourcePath("bar.m"), "-fobjc-arc"));
     assertEquals(expectedResult, result);
   }
 
@@ -408,13 +408,12 @@ public class TypeCoercerTest {
         ImmutableList.of("Group2/blech.m", "-fobjc-arc"));
     Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
     ImmutableList<AppleSource> expectedResult = ImmutableList.of(
-        AppleSource.ofSourcePath(new TestSourcePath("Group1/foo.m")),
-        AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(new TestSourcePath("Group1/bar.m"), "-Wall")),
-        AppleSource.ofSourcePath(new TestSourcePath("Group2/baz.m")),
-        AppleSource.ofSourcePathWithFlags(
-            new Pair<SourcePath, String>(
-                new TestSourcePath("Group2/blech.m"), "-fobjc-arc")));
+        AppleSource.of(new TestSourcePath("Group1/foo.m")),
+        AppleSource.of(
+            new TestSourcePath("Group1/bar.m"), "-Wall"),
+        AppleSource.of(new TestSourcePath("Group2/baz.m")),
+        AppleSource.of(
+            new TestSourcePath("Group2/blech.m"), "-fobjc-arc"));
     assertEquals(expectedResult, result);
   }
 

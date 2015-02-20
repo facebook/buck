@@ -16,102 +16,31 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import org.immutables.value.Value;
 
 /**
- * Simple type representing an iOS or OS X source entry, which can be either:
- *
- *   <ul>
- *     <li>A {@link SourcePath}, or</li>
- *     <li>A {@link SourcePath} plus compiler flags</li>
- *   </ul>
+ * Simple type representing an iOS or OS X source entry containing a {@link SourcePath} and
+ * file-specific flags.
  */
 @Value.Immutable
 @BuckStyleImmutable
 public abstract class AppleSource {
-  /**
-   * The type of source entry this object represents.
-   */
-  public enum Type {
-      /**
-       * A single {@link SourcePath}.
-       */
-      SOURCE_PATH,
-      /**
-       * A {@link SourcePath} with compiler flags.
-       */
-      SOURCE_PATH_WITH_FLAGS,
-  }
-
-  /**
-   * Gets the type of source entry this object represents.
-   */
-  @Value.Parameter
-  public abstract Type getType();
 
   @Value.Parameter
-  protected abstract Optional<SourcePath> getSourcePathOptional();
+  public abstract SourcePath getSourcePath();
 
   @Value.Parameter
-  protected abstract Optional<Pair<SourcePath, String>> getSourcePathWithFlagsOptional();
+  public abstract String getFlags();
 
-  @Value.Check
-  protected void check() {
-    switch (getType()) {
-      case SOURCE_PATH:
-        Preconditions.checkArgument(getSourcePathOptional().isPresent());
-        Preconditions.checkArgument(!getSourcePathWithFlagsOptional().isPresent());
-        break;
-      case SOURCE_PATH_WITH_FLAGS:
-        Preconditions.checkArgument(!getSourcePathOptional().isPresent());
-        Preconditions.checkArgument(getSourcePathWithFlagsOptional().isPresent());
-        break;
-      default:
-        throw new IllegalArgumentException("Unrecognized type: " + getType());
-    }
+  public static AppleSource of(SourcePath sourcePath) {
+    return ImmutableAppleSource.of(sourcePath, "");
   }
 
-  /**
-   * If getType() returns SOURCE_PATH, returns the source path this entry represents.
-   * Otherwise, raises an exception.
-   */
-  public SourcePath getSourcePath() {
-    return getSourcePathOptional().get();
-  }
-
-  /**
-   * If getType() returns SOURCE_PATH_WITH_FLAGS, returns the (source
-   * path, flags) pair this entry represents.  Otherwise, raises an
-   * exception.
-   */
-  public Pair<SourcePath, String> getSourcePathWithFlags() {
-    return getSourcePathWithFlagsOptional().get();
-  }
-
-  /**
-   * Creates an {@link AppleSource} given a {@link SourcePath}.
-   */
-  public static AppleSource ofSourcePath(SourcePath sourcePath) {
-    return ImmutableAppleSource.builder()
-        .setType(Type.SOURCE_PATH)
-        .setSourcePathOptional(sourcePath)
-        .build();
-  }
-
-  /**
-   * Creates an {@link AppleSource} given a ({@link SourcePath}, flags) pair.
-   */
-  public static AppleSource ofSourcePathWithFlags(Pair<SourcePath, String> sourcePathWithFlags) {
-    return ImmutableAppleSource.builder()
-        .setType(Type.SOURCE_PATH_WITH_FLAGS)
-        .setSourcePathWithFlagsOptional(sourcePathWithFlags)
-        .build();
+  public static AppleSource of(SourcePath sourcePath, String flags) {
+    return ImmutableAppleSource.of(sourcePath, flags);
   }
 
 }
