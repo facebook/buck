@@ -48,9 +48,10 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    if ((object instanceof String) && (
-        ((String) object).startsWith("//") || ((String) object).startsWith(":"))
-        ) {
+    if ((object instanceof String) &&
+        (((String) object).startsWith("//") ||
+            ((String) object).startsWith(":") ||
+            ((String) object).startsWith("@"))) {
       BuildTarget buildTarget =
           buildTargetTypeCoercer.coerce(
               buildTargetParser,
