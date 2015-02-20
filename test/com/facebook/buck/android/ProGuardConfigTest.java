@@ -40,7 +40,7 @@ public class ProGuardConfigTest {
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
-  public void whenRelativeProGuardJarOverrideUsed() throws IOException {
+  public void proGuardJarOverrideUsedShouldBeRelativeToTheProjectRoot() throws IOException {
     Path proGuardJar = Paths.get("proguard.jar");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.touch(proGuardJar);
@@ -55,7 +55,7 @@ public class ProGuardConfigTest {
     Optional<Path> proGuardJarOverride = proGuardConfig.getProguardJarOverride();
 
     assertTrue(proGuardJarOverride.isPresent());
-    assertEquals(filesystem.resolve(proGuardJar), proGuardJarOverride.get());
+    assertEquals(filesystem.getPathForRelativePath(proGuardJar), proGuardJarOverride.get());
   }
 
   @Test(expected = HumanReadableException.class)

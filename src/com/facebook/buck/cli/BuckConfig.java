@@ -893,7 +893,7 @@ public class BuckConfig {
   public Optional<Path> checkPathExists(String pathString, String errorMsg) {
     Path path = Paths.get(pathString);
     if (projectFilesystem.exists(path)) {
-      return Optional.of(projectFilesystem.resolve(path));
+      return Optional.of(projectFilesystem.getPathForRelativePath(path));
     }
     throw new HumanReadableException(errorMsg + path);
   }
