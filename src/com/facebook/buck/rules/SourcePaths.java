@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
@@ -31,20 +32,6 @@ import javax.annotation.Nullable;
  */
 public class SourcePaths {
 
-  public static final Function<Path, SourcePath> TO_SOURCE_PATH =
-      new Function<Path, SourcePath>() {
-        @Override
-        public SourcePath apply(Path input) {
-          return new PathSourcePath(input);
-        }
-      };
-  public static final Function<BuildRule, SourcePath> TO_BUILD_TARGET_SOURCE_PATH =
-      new Function<BuildRule, SourcePath>() {
-        @Override
-        public SourcePath apply(BuildRule input) {
-          return new BuildTargetSourcePath(input.getBuildTarget());
-        }
-      };
   public static final Function<BuildTargetSourcePath, BuildTarget> TO_BUILD_TARGET =
       new Function<BuildTargetSourcePath, BuildTarget>() {
         @Override
@@ -57,13 +44,14 @@ public class SourcePaths {
   private SourcePaths() {}
 
   public static ImmutableSortedSet<SourcePath> toSourcePathsSortedByNaturalOrder(
+      ProjectFilesystem projectFilesystem,
       @Nullable Iterable<Path> paths) {
     if (paths == null) {
       return ImmutableSortedSet.of();
     }
 
     return FluentIterable.from(paths)
-        .transform(TO_SOURCE_PATH)
+        .transform(toSourcePath(projectFilesystem))
         .toSortedSet(Ordering.natural());
   }
 
@@ -75,4 +63,22 @@ public class SourcePaths {
         .transform(TO_BUILD_TARGET);
   }
 
+  public static Function<Path, SourcePath> toSourcePath(final ProjectFilesystem projectFilesystem) {
+    return new Function<Path, SourcePath>() {
+      @Override
+      public SourcePath apply(Path input) {
+        return new PathSourcePath(projectFilesystem, input);
+      }
+    };
+  }
+
+  public static Function<BuildRule, SourcePath> getToBuildTargetSourcePath(
+      final ProjectFilesystem projectFilesystem) {
+    return new Function<BuildRule, SourcePath>() {
+      @Override
+      public SourcePath apply(BuildRule input) {
+        return new BuildTargetSourcePath(projectFilesystem, input.getBuildTarget());
+      }
+    };
+  }
 }

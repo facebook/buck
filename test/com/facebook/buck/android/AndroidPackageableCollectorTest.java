@@ -105,7 +105,9 @@ public class AndroidPackageableCollectorTest {
         .setResolver(pathResolver)
         .setBuildTarget(manifestTarget)
         .setManifest(
-            new PathSourcePath(Paths.get("java/src/com/facebook/module/AndroidManifest.xml")))
+            new PathSourcePath(
+                projectFilesystem,
+                Paths.get("java/src/com/facebook/module/AndroidManifest.xml")))
         .setAssets(Paths.get("assets"))
         .build();
     ruleResolver.addToIndex(manifestRule);

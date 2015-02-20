@@ -87,7 +87,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
 
     // If the shared library is prebuilt, just return a reference to it.
     if (params.getProjectFilesystem().exists(sharedLibraryPath)) {
-      return new PathSourcePath(sharedLibraryPath);
+      return new PathSourcePath(params.getProjectFilesystem(), sharedLibraryPath);
     }
 
     // Otherwise, generate it's build rule.
@@ -98,7 +98,9 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
             cxxPlatform.getFlavor(),
             CxxDescriptionEnhancer.SHARED_FLAVOR);
 
-    return new BuildTargetSourcePath(sharedLibrary.getBuildTarget());
+    return new BuildTargetSourcePath(
+        sharedLibrary.getProjectFilesystem(),
+        sharedLibrary.getBuildTarget());
   }
 
   @Override
@@ -129,7 +131,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
         librariesBuilder.add(sharedLibrary);
         linkerArgsBuilder.add(pathResolver.getPath(sharedLibrary).toString());
       } else {
-        librariesBuilder.add(new PathSourcePath(staticLibraryPath));
+        librariesBuilder.add(new PathSourcePath(getProjectFilesystem(), staticLibraryPath));
         if (linkWhole) {
           Linker linker = cxxPlatform.getLd();
           linkerArgsBuilder.addAll(linker.linkWhole(staticLibraryPath.toString()));

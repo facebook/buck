@@ -20,6 +20,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -53,7 +54,7 @@ public class NdkLibraryBuilder {
     }
 
     public Builder addSrc(Path source) {
-      this.sources.add(new PathSourcePath(source));
+      this.sources.add(new PathSourcePath(new FakeProjectFilesystem(), source));
       return this;
     }
 

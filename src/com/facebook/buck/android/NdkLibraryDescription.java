@@ -297,7 +297,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
   @Override
   public <A extends Arg> NdkLibrary createBuildRule(
-      BuildRuleParams params,
+      final BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
 
@@ -320,6 +320,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               if (EXTENSIONS_REGEX.matcher(file.toString()).matches()) {
                 srcs.add(
                     new PathSourcePath(
+                        params.getProjectFilesystem(),
                         buildRulePath.resolve(rootDirectory.relativize(file))));
               }
 

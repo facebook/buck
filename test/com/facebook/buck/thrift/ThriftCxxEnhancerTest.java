@@ -22,6 +22,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
@@ -35,6 +36,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -52,9 +54,11 @@ public class ThriftCxxEnhancerTest {
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:test#cpp");
   private static final FakeBuckConfig BUCK_CONFIG = new FakeBuckConfig();
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
+  private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
   private static final CxxBuckConfig CXX_BUCK_CONFIG = new CxxBuckConfig(BUCK_CONFIG);
-  private static final CxxPlatform CXX_PLATFORM =
-      DefaultCxxPlatforms.build(BUCK_CONFIG);
+  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
+      PROJECT_FILESYSTEM,
+      BUCK_CONFIG);
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       new FlavorDomain<>(
           "C/C++ Platform",

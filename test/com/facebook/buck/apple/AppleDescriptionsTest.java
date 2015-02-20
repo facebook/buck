@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.apple.graphql.GraphQLDataBuilder;
 import com.facebook.buck.apple.graphql.GraphQLDataDescription;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -32,6 +33,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescription;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -138,6 +140,8 @@ public class AppleDescriptionsTest {
 
   @Test
   public void testMergedModels() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:binary");
     BuildTarget libraryTargetA = BuildTargetFactory.newInstance("//:libraryA");
     BuildTarget modelTargetA = BuildTargetFactory.newInstance("//:modelA");
@@ -146,10 +150,10 @@ public class AppleDescriptionsTest {
     BuildTarget modelTargetC = BuildTargetFactory.newInstance("//:modelC");
     BuildTarget modelTargetD = BuildTargetFactory.newInstance("//:modelD");
 
-    SourcePath queryA = new PathSourcePath(Paths.get("queryA.graphql"));
-    SourcePath queryB = new PathSourcePath(Paths.get("queryB.graphql"));
-    SourcePath queryC = new PathSourcePath(Paths.get("queryC.graphql"));
-    SourcePath queryD = new PathSourcePath(Paths.get("queryD.graphql"));
+    SourcePath queryA = new PathSourcePath(projectFilesystem, Paths.get("queryA.graphql"));
+    SourcePath queryB = new PathSourcePath(projectFilesystem, Paths.get("queryB.graphql"));
+    SourcePath queryC = new PathSourcePath(projectFilesystem, Paths.get("queryC.graphql"));
+    SourcePath queryD = new PathSourcePath(projectFilesystem, Paths.get("queryD.graphql"));
 
     TargetNode<GraphQLDataDescription.Arg> modelA = GraphQLDataBuilder
         .createBuilder(modelTargetA)
@@ -202,6 +206,8 @@ public class AppleDescriptionsTest {
 
   @Test
   public void getSubgraphWithMergedModelsPicksUpDependencies() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:binary");
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:library");
     BuildTarget modelTarget = BuildTargetFactory.newInstance("//:model");
@@ -217,7 +223,9 @@ public class AppleDescriptionsTest {
         .build();
     TargetNode<GraphQLDataDescription.Arg> model = GraphQLDataBuilder
         .createBuilder(modelTarget)
-        .setQueries(ImmutableSortedSet.<SourcePath>of(new BuildTargetSourcePath(genruleTarget)))
+        .setQueries(
+            ImmutableSortedSet.<SourcePath>of(
+                new BuildTargetSourcePath(projectFilesystem, genruleTarget)))
         .build();
     TargetNode<GenruleDescription.Arg> genrule = GenruleBuilder
         .newGenruleBuilder(genruleTarget)

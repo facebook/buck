@@ -111,7 +111,8 @@ public class PrebuiltCxxLibraryDescription
         Linker.LinkType.SHARED,
         Optional.of(soname),
         builtSharedLibraryPath,
-        ImmutableList.<SourcePath>of(new PathSourcePath(staticLibraryPath)),
+        ImmutableList.<SourcePath>of(
+            new PathSourcePath(params.getProjectFilesystem(), staticLibraryPath)),
         Linker.LinkableDepType.SHARED,
         params.getDeps());
   }

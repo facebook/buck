@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Optional;
 
@@ -27,18 +28,23 @@ import java.nio.file.Path;
  */
 public class BuildTargetSourcePath extends AbstractSourcePath {
 
+
   private final BuildTarget target;
   private final Optional<Path> resolvedPath;
 
-  public BuildTargetSourcePath(BuildTarget target) {
-    this(target, Optional.<Path>absent());
+  public BuildTargetSourcePath(ProjectFilesystem projectFilesystem, BuildTarget target) {
+    this(projectFilesystem, target, Optional.<Path>absent());
   }
 
-  public BuildTargetSourcePath(BuildTarget target, Path path) {
-    this(target, Optional.of(path));
+  public BuildTargetSourcePath(ProjectFilesystem projectFilesystem, BuildTarget target, Path path) {
+    this(projectFilesystem, target, Optional.of(path));
   }
 
-  private BuildTargetSourcePath(BuildTarget target, Optional<Path> path) {
+  private BuildTargetSourcePath(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget target,
+      Optional<Path> path) {
+    super(projectFilesystem);
     this.target = target;
     this.resolvedPath = path;
   }

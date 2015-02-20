@@ -125,7 +125,7 @@ class AndroidPrebuiltAarGraphEnhancer {
     PrebuiltJar prebuiltJar = new PrebuiltJar(
         /* params */ prebuiltJarParams,
         pathResolver,
-        new BuildTargetSourcePath(classesJar.getBuildTarget()),
+        new BuildTargetSourcePath(classesJar.getProjectFilesystem(), classesJar.getBuildTarget()),
         /* sourceJar */ Optional.<SourcePath>absent(),
         /* gwtJar */ Optional.<SourcePath>absent(),
         /* javadocUrl */ Optional.<String>absent());
@@ -163,7 +163,7 @@ class AndroidPrebuiltAarGraphEnhancer {
         /* rDotJavaPackage */ null,
         /* assets */ unzipAar.getAssetsDirectory(),
         assetsSrcs,
-        new BuildTargetSourcePath(manifest.getBuildTarget()),
+        new BuildTargetSourcePath(manifest.getProjectFilesystem(), manifest.getBuildTarget()),
         /* hasWhitelistedStrings */ false);
     ruleResolver.addToIndex(androidResource);
 

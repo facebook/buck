@@ -19,6 +19,7 @@ package com.facebook.buck.rules.keys;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -359,6 +361,11 @@ public class DefaultRuleKeyBuilderFactoryTest {
     @Override
     public ImmutableSortedSet<BuildRule> getDeps() {
       return ImmutableSortedSet.of();
+    }
+
+    @Override
+    public ProjectFilesystem getProjectFilesystem() {
+      return new FakeProjectFilesystem();
     }
 
     @Override

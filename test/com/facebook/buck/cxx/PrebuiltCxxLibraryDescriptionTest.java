@@ -97,7 +97,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = ImmutableNativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(new PathSourcePath(getStaticLibraryPath(arg))),
+        ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()));
     assertEquals(
         expectedStaticLinkableInput,
@@ -105,7 +105,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = ImmutableNativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(new PathSourcePath(getSharedLibraryPath(arg))),
+        ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()));
     assertEquals(
         expectedSharedLinkableInput,
@@ -117,7 +117,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(
             Paths.get(getSharedLibrarySoname(arg)),
-            new PathSourcePath(getSharedLibraryPath(arg))));
+            new PathSourcePath(filesystem, getSharedLibraryPath(arg))));
     assertEquals(
         expectedComponents,
         lib.getPythonPackageComponents(CXX_PLATFORM));
@@ -185,7 +185,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = ImmutableNativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(new PathSourcePath(getSharedLibraryPath(arg))),
+        ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()));
     assertEquals(
         expectedStaticLinkableInput,
@@ -193,7 +193,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = ImmutableNativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(new PathSourcePath(getSharedLibraryPath(arg))),
+        ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()));
     assertEquals(
         expectedSharedLinkableInput,
@@ -228,7 +228,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = ImmutableNativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(new PathSourcePath(getStaticLibraryPath(arg))),
+        ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()));
     assertEquals(
         expectedStaticLinkableInput,
@@ -236,7 +236,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = ImmutableNativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(new PathSourcePath(getSharedLibraryPath(arg))),
+        ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()));
     assertEquals(
         expectedSharedLinkableInput,
@@ -248,7 +248,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(
             Paths.get(getSharedLibrarySoname(arg)),
-            new PathSourcePath(getSharedLibraryPath(arg))));
+            new PathSourcePath(filesystem, getSharedLibraryPath(arg))));
     assertEquals(
         expectedComponents,
         lib.getPythonPackageComponents(CXX_PLATFORM));
@@ -300,7 +300,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             getSharedLibrarySoname(arg),
-            new PathSourcePath(getSharedLibraryPath(arg))),
+            new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         lib.getSharedLibraries(CXX_PLATFORM));
   }
 

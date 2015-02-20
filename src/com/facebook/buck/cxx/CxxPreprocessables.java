@@ -330,7 +330,9 @@ public class CxxPreprocessables {
         name,
         ImmutableCxxSource.of(
             outputType,
-            new BuildTargetSourcePath(cxxPreprocess.getBuildTarget())));
+            new BuildTargetSourcePath(
+                cxxPreprocess.getProjectFilesystem(),
+                cxxPreprocess.getBuildTarget())));
   }
 
   /**

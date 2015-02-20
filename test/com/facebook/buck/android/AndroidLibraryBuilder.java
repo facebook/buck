@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -62,7 +63,7 @@ public class AndroidLibraryBuilder extends AbstractNodeBuilder<AndroidLibraryDes
   }
 
   public AndroidLibraryBuilder addSrc(Path path) {
-    arg.srcs = amend(arg.srcs, new PathSourcePath(path));
+    arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
     return this;
   }
 }

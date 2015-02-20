@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.python.ImmutablePythonPackageComponents;
@@ -37,6 +38,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -49,10 +51,11 @@ public class CxxLibraryTest {
 
   @Test
   public void cxxLibraryInterfaces() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(projectFilesystem, new FakeBuckConfig());
 
     // Setup some dummy values for the header info.
     final BuildTarget headerTarget = BuildTargetFactory.newInstance("//:header");
@@ -85,11 +88,14 @@ public class CxxLibraryTest {
           Linker.LinkableDepType type) {
         return type == Linker.LinkableDepType.STATIC ?
             ImmutableNativeLinkableInput.of(
-                ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
+                ImmutableList.<SourcePath>of(
+                    new BuildTargetSourcePath(getProjectFilesystem(), archive.getBuildTarget())),
                 ImmutableList.of(archiveOutput.toString())) :
             ImmutableNativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
-                    new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
+                    new BuildTargetSourcePath(
+                        getProjectFilesystem(),
+                        sharedLibrary.getBuildTarget())),
                 ImmutableList.of(sharedLibraryOutput.toString()));
       }
 
@@ -100,7 +106,7 @@ public class CxxLibraryTest {
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(sharedLibrarySoname),
-                new PathSourcePath(sharedLibraryOutput)));
+                new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput)));
       }
 
       @Override
@@ -129,7 +135,8 @@ public class CxxLibraryTest {
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
     NativeLinkableInput expectedStaticNativeLinkableInput = ImmutableNativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
+        ImmutableList.<SourcePath>of(
+            new BuildTargetSourcePath(projectFilesystem, archive.getBuildTarget())),
         ImmutableList.of(archiveOutput.toString()));
     assertEquals(
         expectedStaticNativeLinkableInput,
@@ -140,7 +147,8 @@ public class CxxLibraryTest {
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
     NativeLinkableInput expectedSharedNativeLinkableInput = ImmutableNativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
+        ImmutableList.<SourcePath>of(
+            new BuildTargetSourcePath(projectFilesystem, sharedLibrary.getBuildTarget())),
         ImmutableList.of(sharedLibraryOutput.toString()));
     assertEquals(
         expectedSharedNativeLinkableInput,
@@ -154,7 +162,7 @@ public class CxxLibraryTest {
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(
             Paths.get(sharedLibrarySoname),
-            new PathSourcePath(sharedLibraryOutput)));
+            new PathSourcePath(projectFilesystem, sharedLibraryOutput)));
     assertEquals(
         expectedPythonPackageComponents,
         cxxLibrary.getPythonPackageComponents(cxxPlatform));

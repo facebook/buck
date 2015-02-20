@@ -38,6 +38,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Types;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -79,7 +80,7 @@ public final class ProjectGeneratorTestUtils {
       } else if (field.getType().isAssignableFrom(Path.class)) {
         value = Paths.get("");
       } else if (field.getType().isAssignableFrom(SourcePath.class)) {
-        value = new PathSourcePath(Paths.get(""));
+        value = new PathSourcePath(new FakeProjectFilesystem(), Paths.get(""));
       } else if (field.getType().isPrimitive()) {
         // do nothing, these are initialized with a zero value
         continue;

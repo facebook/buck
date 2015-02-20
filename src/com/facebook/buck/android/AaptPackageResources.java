@@ -356,7 +356,7 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(rDotJavaBin));
 
     JavacStep javacStep = RDotJava.createJavacStepForUberRDotJavaFiles(
-        ImmutableSet.copyOf(getResolver().getAllPaths(mergeStep.getRDotJavaFiles())),
+        ImmutableSet.copyOf(mergeStep.getRDotJavaFiles()),
         rDotJavaBin,
         javacOptions,
         getBuildTarget());

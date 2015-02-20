@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -47,7 +49,10 @@ public class PythonTestDescriptionTest {
 
   private static final Path PEX_PATH = Paths.get("pex");
   private static final Optional<Path> TEST_MAIN = Optional.of(Paths.get("main"));
-  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(new FakeBuckConfig());
+  private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
+  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
+      PROJECT_FILESYSTEM,
+      new FakeBuckConfig());
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of());
 
@@ -58,6 +63,7 @@ public class PythonTestDescriptionTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:bin"))
             .build();
     PythonTestDescription desc = new PythonTestDescription(
+        PROJECT_FILESYSTEM,
         PEX_PATH,
         TEST_MAIN,
         new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7")),
@@ -93,6 +99,7 @@ public class PythonTestDescriptionTest {
     String sourceName = "main.py";
     SourcePath source = new TestSourcePath("foo/" + sourceName);
     PythonTestDescription desc = new PythonTestDescription(
+        PROJECT_FILESYSTEM,
         PEX_PATH,
         TEST_MAIN,
         new PythonEnvironment(Paths.get("python"), ImmutablePythonVersion.of("2.5")),

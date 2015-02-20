@@ -21,6 +21,7 @@ import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTI
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -48,7 +49,7 @@ public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg
   }
 
   public JavaTestBuilder addSrc(Path path) {
-    arg.srcs = amend(arg.srcs, new PathSourcePath(path));
+    arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
     return this;
   }
 

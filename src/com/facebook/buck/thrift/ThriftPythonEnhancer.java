@@ -105,7 +105,9 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
             .resolve(module);
         modulesBuilder.put(
             module,
-            new BuildTargetSourcePath(source.getCompileRule().getBuildTarget(), path));
+            new BuildTargetSourcePath(
+                source.getCompileRule().getProjectFilesystem(),
+                source.getCompileRule().getBuildTarget(), path));
       }
 
     }

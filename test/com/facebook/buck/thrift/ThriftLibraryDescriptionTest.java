@@ -252,7 +252,7 @@ public class ThriftLibraryDescriptionTest {
         .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
         .setOut(sourceName)
         .build(resolver);
-    SourcePath ruleSourcePath = new BuildTargetSourcePath(genrule.getBuildTarget());
+    SourcePath ruleSourcePath = new BuildTargetSourcePath(filesystem, genrule.getBuildTarget());
 
     // Generate these rules using no deps and the genrule generated source.
     rules = desc.createThriftCompilerBuildRules(
@@ -393,7 +393,7 @@ public class ThriftLibraryDescriptionTest {
         .newGenruleBuilder(genruleTarget)
         .setOut(thriftSourceName1)
         .build(resolver);
-    SourcePath thriftSource1 = new BuildTargetSourcePath(genrule.getBuildTarget());
+    SourcePath thriftSource1 = new BuildTargetSourcePath(filesystem, genrule.getBuildTarget());
     final ImmutableList<String> thriftServices1 = ImmutableList.of();
 
     // Setup a normal thrift source file.

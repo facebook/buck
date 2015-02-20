@@ -583,7 +583,9 @@ public class ProjectGenerator {
       frameworksBuilder.addAll(
           Iterables.transform(
               targetNode.getConstructorArg().frameworks.get(),
-              FrameworkPath.transformFromString(targetNode.getBuildTarget())));
+              FrameworkPath.transformFromString(
+                  targetNode.getRuleFactoryParams().getProjectFilesystem(),
+                  targetNode.getBuildTarget())));
       frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(ImmutableList.of(targetNode)));
       mutator.setFrameworks(frameworksBuilder.build());
       mutator.setArchives(
@@ -764,7 +766,8 @@ public class ProjectGenerator {
         .setShouldGenerateCopyHeadersPhase(false)
         .setSources(
             ImmutableList.of(
-                GroupedSource.ofSourcePath(new PathSourcePath(emptyFileWithExtension("c")))),
+                GroupedSource.ofSourcePath(
+                    new PathSourcePath(projectFilesystem, emptyFileWithExtension("c")))),
             ImmutableMap.<SourcePath, String>of())
         .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))
         .setResources(collectRecursiveResources(tests))
@@ -778,7 +781,9 @@ public class ProjectGenerator {
       frameworksBuilder.addAll(
           Iterables.transform(
               test.getConstructorArg().frameworks.get(),
-              FrameworkPath.transformFromString(test.getBuildTarget())));
+              FrameworkPath.transformFromString(
+                  test.getRuleFactoryParams().getProjectFilesystem(),
+                  test.getBuildTarget())));
     }
     mutator.setFrameworks(frameworksBuilder.build());
 
@@ -1502,7 +1507,9 @@ public class ProjectGenerator {
                         library.get().getBuildTarget())) {
                   return Iterables.transform(
                       library.get().getConstructorArg().frameworks.get(),
-                      FrameworkPath.transformFromString(input.getBuildTarget()));
+                      FrameworkPath.transformFromString(
+                          input.getRuleFactoryParams().getProjectFilesystem(),
+                          input.getBuildTarget()));
                 } else {
                   return ImmutableList.of();
                 }

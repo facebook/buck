@@ -16,13 +16,16 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
+
 import java.nio.file.Path;
 
 public class PathSourcePath extends AbstractSourcePath {
 
   private final Path relativePath;
 
-  public PathSourcePath(Path relativePath) {
+  public PathSourcePath(ProjectFilesystem projectFilesystem, Path relativePath) {
+    super(projectFilesystem);
     this.relativePath = relativePath;
   }
 

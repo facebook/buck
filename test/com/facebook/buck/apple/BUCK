@@ -61,6 +61,7 @@ java_library(
     '//src/com/facebook/buck/util:util',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/rules:testutil',
+    '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/dd-plist:dd-plist',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest-core',

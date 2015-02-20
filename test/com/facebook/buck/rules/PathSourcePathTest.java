@@ -17,6 +17,9 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -26,7 +29,8 @@ public class PathSourcePathTest {
 
   @Test
   public void shouldResolveFilesUsingTheBuildContextsFileSystem() {
-    PathSourcePath path = new PathSourcePath(Paths.get("cheese"));
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    PathSourcePath path = new PathSourcePath(projectFilesystem, Paths.get("cheese"));
 
     Path resolved = new SourcePathResolver(new BuildRuleResolver()).getPath(path);
 
@@ -35,8 +39,9 @@ public class PathSourcePathTest {
 
   @Test
   public void shouldReturnTheOriginalPathAsTheReference() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Path expected = Paths.get("cheese");
-    PathSourcePath path = new PathSourcePath(expected);
+    PathSourcePath path = new PathSourcePath(projectFilesystem, expected);
 
     assertEquals(expected, path.getRelativePath());
   }

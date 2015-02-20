@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.step.Step;
@@ -92,5 +93,7 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
   public Path getPathToOutputFile();
 
   public CacheMode getCacheMode();
+
+  public ProjectFilesystem getProjectFilesystem();
 
 }

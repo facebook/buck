@@ -143,6 +143,7 @@ public class RepositoryFactory {
     KnownBuildRuleTypes buildRuleTypes =
         KnownBuildRuleTypes.createInstance(
             config,
+            projectFilesystem,
             processExecutor,
             androidDirectoryResolver,
             pythonEnv);

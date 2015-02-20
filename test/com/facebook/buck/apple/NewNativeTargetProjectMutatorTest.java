@@ -45,6 +45,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -53,6 +54,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -68,6 +70,7 @@ import org.junit.Test;
 import java.nio.file.Paths;
 
 public class NewNativeTargetProjectMutatorTest {
+  private ProjectFilesystem projectFilesystem;
   private BuildRuleResolver buildRuleResolver;
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
@@ -75,6 +78,7 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Before
   public void setUp() {
+    projectFilesystem = new FakeProjectFilesystem();
     buildRuleResolver = new BuildRuleResolver();
     generatedProject = new PBXProject("TestProject");
     sourcePathResolver = new SourcePathResolver(buildRuleResolver);
@@ -267,7 +271,11 @@ public class NewNativeTargetProjectMutatorTest {
     BuildTarget testBuildTarget = BuildTarget.builder("//foo", "binary").build();
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
     mutator.setFrameworks(
-        ImmutableSet.of(FrameworkPath.fromString(testBuildTarget, "$SDKROOT/Foo.framework")));
+        ImmutableSet.of(
+            FrameworkPath.fromString(
+                projectFilesystem,
+                testBuildTarget,
+                "$SDKROOT/Foo.framework")));
     mutator.setArchives(
         ImmutableSet.of(
             new PBXFileReference(

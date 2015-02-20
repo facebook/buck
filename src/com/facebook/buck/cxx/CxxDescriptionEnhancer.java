@@ -334,10 +334,16 @@ public class CxxDescriptionEnhancer {
           name + ".cc",
           ImmutableCxxSource.of(
               CxxSource.Type.CXX,
-              new BuildTargetSourcePath(lex.getBuildTarget(), outputSource)));
+              new BuildTargetSourcePath(
+                  lex.getProjectFilesystem(),
+                  lex.getBuildTarget(),
+                  outputSource)));
       lexYaccHeadersBuilder.put(
           params.getBuildTarget().getBasePath().resolve(name + ".h"),
-          new BuildTargetSourcePath(lex.getBuildTarget(), outputHeader));
+          new BuildTargetSourcePath(
+              lex.getProjectFilesystem(),
+              lex.getBuildTarget(),
+              outputHeader));
     }
 
     // Loop over all yaccc sources, generating build rule for each one and adding the sources
@@ -374,12 +380,16 @@ public class CxxDescriptionEnhancer {
           ImmutableCxxSource.of(
               CxxSource.Type.CXX,
               new BuildTargetSourcePath(
+                  yacc.getProjectFilesystem(),
                   yacc.getBuildTarget(),
                   Yacc.getSourceOutputPath(outputPrefix))));
 
       lexYaccHeadersBuilder.put(
           params.getBuildTarget().getBasePath().resolve(name + ".h"),
-          new BuildTargetSourcePath(yacc.getBuildTarget(), Yacc.getHeaderOutputPath(outputPrefix)));
+          new BuildTargetSourcePath(
+              yacc.getProjectFilesystem(),
+              yacc.getBuildTarget(),
+              Yacc.getHeaderOutputPath(outputPrefix)));
     }
 
     return ImmutableCxxHeaderSourceSpec.of(
@@ -488,7 +498,7 @@ public class CxxDescriptionEnhancer {
     resolver.addAllToIndex(objectRules);
 
     return FluentIterable.from(objectRules)
-        .transform(SourcePaths.TO_BUILD_TARGET_SOURCE_PATH)
+        .transform(SourcePaths.getToBuildTargetSourcePath(params.getProjectFilesystem()))
         .toList();
   }
 

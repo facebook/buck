@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.graphql;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
@@ -55,26 +56,27 @@ public class GraphQLDataBuilder extends AbstractNodeBuilder<GraphQLDataDescripti
 
   @Override
   public TargetNode<GraphQLDataDescription.Arg> build() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     if (arg.consistencyConfig == null) {
-      arg.consistencyConfig = new PathSourcePath(Paths.get(""));
+      arg.consistencyConfig = new PathSourcePath(projectFilesystem, Paths.get(""));
     }
     if (arg.clientSchemaConfig == null) {
-      arg.clientSchemaConfig = new PathSourcePath(Paths.get(""));
+      arg.clientSchemaConfig = new PathSourcePath(projectFilesystem, Paths.get(""));
     }
     if (arg.schema == null) {
-      arg.schema = new PathSourcePath(Paths.get(""));
+      arg.schema = new PathSourcePath(projectFilesystem, Paths.get(""));
     }
     if (arg.mutations == null) {
-      arg.mutations = new PathSourcePath(Paths.get(""));
+      arg.mutations = new PathSourcePath(projectFilesystem, Paths.get(""));
     }
     if (arg.modelTags == null) {
       arg.modelTags = ImmutableSet.of();
     }
     if (arg.knownIssuesFile == null) {
-      arg.knownIssuesFile = new PathSourcePath(Paths.get(""));
+      arg.knownIssuesFile = new PathSourcePath(projectFilesystem, Paths.get(""));
     }
     if (arg.persistIds == null) {
-      arg.persistIds = new PathSourcePath(Paths.get(""));
+      arg.persistIds = new PathSourcePath(projectFilesystem, Paths.get(""));
     }
     return super.build();
   }

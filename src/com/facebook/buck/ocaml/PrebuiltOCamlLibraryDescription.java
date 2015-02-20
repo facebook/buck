@@ -54,7 +54,7 @@ public class PrebuiltOCamlLibraryDescription
 
   @Override
   public <A extends Arg> OCamlLibrary createBuildRule(
-      BuildRuleParams params,
+      final BuildRuleParams params,
       BuildRuleResolver resolver,
       final A args) {
 
@@ -71,17 +71,23 @@ public class PrebuiltOCamlLibraryDescription
     final Path libPath = target.getBasePath().resolve(libDir);
     final Path includeDir = libPath.resolve(args.includeDir.or(""));
 
-    final SourcePath staticNativeLibraryPath = new PathSourcePath(libPath.resolve(nativeLib));
+    final SourcePath staticNativeLibraryPath = new PathSourcePath(
+        params.getProjectFilesystem(),
+        libPath.resolve(nativeLib));
     final ImmutableList<SourcePath> staticCLibraryPaths =
         FluentIterable.from(cLibs)
           .transform(new Function<String, SourcePath>() {
                        @Override
                        public SourcePath apply(String input) {
-                         return new PathSourcePath(libPath.resolve(input));
+                         return new PathSourcePath(
+                             params.getProjectFilesystem(),
+                             libPath.resolve(input));
                        }
                      }).toList();
 
-    final SourcePath bytecodeLibraryPath = new PathSourcePath(libPath.resolve(bytecodeLib));
+    final SourcePath bytecodeLibraryPath = new PathSourcePath(
+        params.getProjectFilesystem(),
+        libPath.resolve(bytecodeLib));
 
     return new PrebuiltOCamlLibrary(
         params,

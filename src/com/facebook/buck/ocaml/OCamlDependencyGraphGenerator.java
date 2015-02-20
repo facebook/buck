@@ -18,8 +18,6 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -29,6 +27,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -70,9 +69,9 @@ public class OCamlDependencyGraphGenerator {
             OCamlCompilables.OCAML_CMI_REGEX,
             OCamlCompilables.OCAML_MLI);
   }
-  public ImmutableMap<SourcePath, ImmutableList<SourcePath>> generateDependencyMap(
+  public ImmutableMap<Path, ImmutableList<Path>> generateDependencyMap(
       String depString) {
-    ImmutableMap.Builder<SourcePath, ImmutableList<SourcePath>> mapBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<Path, ImmutableList<Path>> mapBuilder = ImmutableMap.builder();
     Iterable<String> lines = Splitter.on(LINE_SEPARATOR).split(depString);
     for (String line : lines) {
       List<String> sourceAndDeps = Splitter.on(OCAML_SOURCE_AND_DEPS_SEPARATOR)
@@ -81,7 +80,7 @@ public class OCamlDependencyGraphGenerator {
         String source = replaceObjExtWithSourceExt(sourceAndDeps.get(0));
         if (source.endsWith(OCamlCompilables.OCAML_ML) ||
             source.endsWith(OCamlCompilables.OCAML_MLI)) {
-          FluentIterable<SourcePath> dependencies = FluentIterable
+          FluentIterable<Path> dependencies = FluentIterable
               .from(
                 Splitter.on(OCAML_DEPS_SEPARATOR)
                   .trimResults().splitToList(sourceAndDeps.get(1)))
@@ -92,14 +91,14 @@ public class OCamlDependencyGraphGenerator {
                         }
                       })
               .transform(
-                  new Function<String, SourcePath>() {
+                  new Function<String, Path>() {
                     @Override
-                    public SourcePath apply(String input) {
-                      return new PathSourcePath(Paths.get(replaceObjExtWithSourceExt(input)));
+                    public Path apply(String input) {
+                      return Paths.get(replaceObjExtWithSourceExt(input));
                     }
                   });
           mapBuilder.put(
-              new PathSourcePath(Paths.get(source)),
+              Paths.get(source),
               ImmutableList.copyOf(dependencies));
         }
       }

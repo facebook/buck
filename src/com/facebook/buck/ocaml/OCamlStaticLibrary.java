@@ -93,7 +93,9 @@ class OCamlStaticLibrary extends AbstractBuildRule implements OCamlLibrary {
 
     return ImmutableNativeLinkableInput.of(
         ImmutableList.<SourcePath>of(
-            new BuildTargetSourcePath(ocamlLibraryBuild.getBuildTarget())),
+            new BuildTargetSourcePath(
+                ocamlLibraryBuild.getProjectFilesystem(),
+                ocamlLibraryBuild.getBuildTarget())),
         linkerArgs);
   }
 

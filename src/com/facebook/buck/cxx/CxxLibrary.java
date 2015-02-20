@@ -134,7 +134,10 @@ public class CxxLibrary extends AbstractCxxLibrary {
     final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
     return ImmutableNativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(new BuildTargetSourcePath(libraryRule.getBuildTarget())),
+        ImmutableList.<SourcePath>of(
+            new BuildTargetSourcePath(
+                libraryRule.getProjectFilesystem(),
+                libraryRule.getBuildTarget())),
         linkerArgs);
   }
 
@@ -152,7 +155,9 @@ public class CxxLibrary extends AbstractCxxLibrary {
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
         /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of(
             Paths.get(sharedLibrarySoname),
-            new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget())));
+            new BuildTargetSourcePath(
+                sharedLibraryBuildRule.getProjectFilesystem(),
+                sharedLibraryBuildRule.getBuildTarget())));
   }
 
   @Override
@@ -176,7 +181,9 @@ public class CxxLibrary extends AbstractCxxLibrary {
         CxxDescriptionEnhancer.SHARED_FLAVOR);
     return ImmutableMap.<String, SourcePath>of(
         sharedLibrarySoname,
-        new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
+        new BuildTargetSourcePath(
+            sharedLibraryBuildRule.getProjectFilesystem(),
+            sharedLibraryBuildRule.getBuildTarget()));
   }
 
 }

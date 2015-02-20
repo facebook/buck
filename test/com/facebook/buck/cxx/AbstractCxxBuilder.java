@@ -18,10 +18,12 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 
 public class AbstractCxxBuilder<T> extends AbstractNodeBuilder<T> {
@@ -32,23 +34,22 @@ public class AbstractCxxBuilder<T> extends AbstractNodeBuilder<T> {
 
   public static CxxBuckConfig createDefaultConfig() {
     BuckConfig buckConfig = new FakeBuckConfig();
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
-    return cxxBuckConfig;
+    return new CxxBuckConfig(buckConfig);
   }
 
   public static CxxPlatform createDefaultPlatform() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckConfig buckConfig = new FakeBuckConfig();
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(buckConfig);
-    return cxxPlatform;
+    return DefaultCxxPlatforms.build(projectFilesystem, buckConfig);
   }
 
   public static FlavorDomain<CxxPlatform> createDefaultPlatforms() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckConfig buckConfig = new FakeBuckConfig();
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(buckConfig);
-    FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(projectFilesystem, buckConfig);
+    return new FlavorDomain<>(
         "C/C++ Platform",
         ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform));
-    return cxxPlatforms;
   }
 
 }

@@ -72,6 +72,7 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.timing.DefaultClock;
@@ -194,7 +195,7 @@ public class DefaultJavaLibraryTest {
 
     DefaultJavaLibrary javaRule = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//library:code"))
-        .addResource(new BuildTargetSourcePath(genrule.getBuildTarget()))
+        .addResource(new BuildTargetSourcePath(filesystem, genrule.getBuildTarget()))
         .addResource(new TestSourcePath("library/data.txt"))
         .build(ruleResolver, filesystem);
 
@@ -949,9 +950,10 @@ public class DefaultJavaLibraryTest {
       ImmutableSet<String> srcs,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<BuildRule> exportedDeps) {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ImmutableSortedSet<SourcePath> srcsAsPaths = FluentIterable.from(srcs)
         .transform(MorePaths.TO_PATH)
-        .transform(SourcePaths.TO_SOURCE_PATH)
+        .transform(SourcePaths.toSourcePath(projectFilesystem))
         .toSortedSet(Ordering.natural());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)

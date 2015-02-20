@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.ImmutableCxxPlatform;
 import com.facebook.buck.cxx.SourcePathTool;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -51,6 +52,7 @@ public class AppleCxxPlatforms {
   private static final Path USR_BIN = Paths.get("usr/bin");
 
   public static CxxPlatform build(
+      ProjectFilesystem projectFilesystem,
       ApplePlatform targetPlatform,
       String targetSdkName,
       String targetVersion,
@@ -58,6 +60,7 @@ public class AppleCxxPlatforms {
       AppleSdkPaths sdkPaths,
       BuckConfig buckConfig) {
     return buildWithExecutableChecker(
+        projectFilesystem,
         targetPlatform,
         targetSdkName,
         targetVersion,
@@ -69,6 +72,7 @@ public class AppleCxxPlatforms {
 
   @VisibleForTesting
   static CxxPlatform buildWithExecutableChecker(
+      ProjectFilesystem projectFilesystem,
       ApplePlatform targetPlatform,
       String targetSdkName,
       String targetVersion,
@@ -88,9 +92,9 @@ public class AppleCxxPlatforms {
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
     Tool clangPath = new SourcePathTool(
-        getTool("clang", toolSearchPaths, pathIsExecutableChecker));
+        getTool(projectFilesystem, "clang", toolSearchPaths, pathIsExecutableChecker));
     Tool clangXxPath = new SourcePathTool(
-        getTool("clang++", toolSearchPaths, pathIsExecutableChecker));
+        getTool(projectFilesystem, "clang++", toolSearchPaths, pathIsExecutableChecker));
 
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
@@ -122,12 +126,20 @@ public class AppleCxxPlatforms {
         .addAllCxxppflags(cflags)
         .setCxxld(clangXxPath)
         .addAllCxxldflags(cflags)
-        .setLex(getOptionalTool("lex", toolSearchPaths, pathIsExecutableChecker))
-        .setYacc(getOptionalTool("yacc", toolSearchPaths, pathIsExecutableChecker))
+        .setLex(getOptionalTool(projectFilesystem, "lex", toolSearchPaths, pathIsExecutableChecker))
+        .setYacc(
+            getOptionalTool(projectFilesystem, "yacc", toolSearchPaths, pathIsExecutableChecker))
         .setLd(
             new DarwinLinker(
-                new SourcePathTool(getTool("libtool", toolSearchPaths, pathIsExecutableChecker))))
-        .setAr(new SourcePathTool(getTool("ar", toolSearchPaths, pathIsExecutableChecker)))
+                new SourcePathTool(
+                    getTool(
+                        projectFilesystem,
+                        "libtool",
+                        toolSearchPaths,
+                        pathIsExecutableChecker))))
+        .setAr(
+            new SourcePathTool(
+                getTool(projectFilesystem, "ar", toolSearchPaths, pathIsExecutableChecker)))
         .setDebugPathSanitizer(Optional.of(
             new DebugPathSanitizer(
                 250,
@@ -140,6 +152,7 @@ public class AppleCxxPlatforms {
   }
 
   private static Optional<SourcePath> getOptionalTool(
+      ProjectFilesystem projectFilesystem,
       String tool,
       ImmutableList<Path> toolSearchPaths,
       Function<Path, Boolean> pathIsExecutableChecker) {
@@ -149,17 +162,22 @@ public class AppleCxxPlatforms {
         ImmutableList.<String>of(),
         pathIsExecutableChecker);
     if (toolPath.isPresent()) {
-      return Optional.<SourcePath>of(new PathSourcePath(toolPath.get()));
+      return Optional.<SourcePath>of(new PathSourcePath(projectFilesystem, toolPath.get()));
     } else {
       return Optional.absent();
     }
   }
 
   private static SourcePath getTool(
+      ProjectFilesystem projectFilesystem,
       String tool,
       ImmutableList<Path> toolSearchPaths,
       Function<Path, Boolean> pathIsExecutableChecker) {
-    Optional<SourcePath> result = getOptionalTool(tool, toolSearchPaths, pathIsExecutableChecker);
+    Optional<SourcePath> result = getOptionalTool(
+        projectFilesystem,
+        tool,
+        toolSearchPaths,
+        pathIsExecutableChecker);
     if (!result.isPresent()) {
       throw new HumanReadableException(
         "Cannot find tool %s in paths %s",

@@ -306,7 +306,9 @@ public class AndroidBinaryGraphEnhancer {
             new Pair<>(
                 targetCpuType,
                 cxxRuntime.getSoname()),
-            new PathSourcePath(platform.getCxxSharedRuntimePath()));
+            new PathSourcePath(
+                buildRuleParams.getProjectFilesystem(),
+                platform.getCxxSharedRuntimePath()));
       }
     }
     ImmutableMap<Pair<TargetCpuType, String>, SourcePath> nativeLinkableLibs =

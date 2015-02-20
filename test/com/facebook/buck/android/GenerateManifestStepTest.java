@@ -18,12 +18,14 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
@@ -83,8 +85,9 @@ public class GenerateManifestStepTest {
   }
 
   private SourcePath testDataPath(String fileName) {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Path testData = TestDataHelper.getTestDataDirectory(this).resolve("create_manifest");
 
-    return new PathSourcePath(testData.resolve(fileName));
+    return new PathSourcePath(projectFilesystem, testData.resolve(fileName));
   }
 }

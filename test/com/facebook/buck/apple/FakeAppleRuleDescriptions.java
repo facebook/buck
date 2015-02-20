@@ -23,7 +23,9 @@ import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 
 import com.google.common.base.Functions;
@@ -38,6 +40,8 @@ import java.nio.file.Paths;
 public class FakeAppleRuleDescriptions {
   // Utility class, do not instantiate.
   private FakeAppleRuleDescriptions() { }
+
+  private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
 
   private static final ImmutableMap<Path, Boolean> DEFAULT_TOOL_EXECUTABLE_CHECKER =
       ImmutableMap.<Path, Boolean>builder()
@@ -57,6 +61,7 @@ public class FakeAppleRuleDescriptions {
 
   private static final CxxPlatform DEFAULT_IPHONEOS_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
+          PROJECT_FILESYSTEM,
           ApplePlatform.IPHONEOS,
           "iphoneos",
           "8.0",
@@ -68,6 +73,7 @@ public class FakeAppleRuleDescriptions {
   private static final BuckConfig DEFAULT_BUCK_CONFIG = new FakeBuckConfig();
 
   private static final CxxPlatform DEFAULT_PLATFORM = DefaultCxxPlatforms.build(
+      PROJECT_FILESYSTEM,
       Platform.MACOS,
       DEFAULT_BUCK_CONFIG);
 

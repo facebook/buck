@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -26,6 +27,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,6 +48,7 @@ public class SymlinkTreeTest {
   @Rule
   public final TemporaryFolder tmpDir = new TemporaryFolder();
 
+  private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private BuildTarget buildTarget;
   private SymlinkTree symlinkTreeBuildRule;
   private ImmutableMap<Path, SourcePath> links;
@@ -69,8 +72,8 @@ public class SymlinkTreeTest {
 
     // Setup the map representing the link tree.
     links = ImmutableMap.<Path, SourcePath>of(
-        link1, new PathSourcePath(file1),
-        link2, new PathSourcePath(file2));
+        link1, new PathSourcePath(projectFilesystem, file1),
+        link2, new PathSourcePath(projectFilesystem, file2));
 
     // The output path used by the buildable for the link tree.
     outputPath = BuildTargets.getGenPath(buildTarget, "%s/symlink-tree-root");
@@ -119,7 +122,7 @@ public class SymlinkTreeTest {
         new SourcePathResolver(new BuildRuleResolver()),
         outputPath,
         ImmutableMap.<Path, SourcePath>of(
-            Paths.get("different/link"), new PathSourcePath(aFile)));
+            Paths.get("different/link"), new PathSourcePath(projectFilesystem, aFile)));
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
         symlinkTreeBuildRule,
         modifiedSymlinkTreeBuildRule)));

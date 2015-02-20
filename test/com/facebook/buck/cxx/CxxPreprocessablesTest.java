@@ -41,6 +41,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -59,7 +60,11 @@ import java.util.Map;
 
 public class CxxPreprocessablesTest {
 
-  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(new FakeBuckConfig());
+  private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
+
+  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
+      PROJECT_FILESYSTEM,
+      new FakeBuckConfig());
 
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
     for (T item : items) {
@@ -144,7 +149,7 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveCxxPreprocessorInput() throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(PROJECT_FILESYSTEM, new FakeBuckConfig());
 
     // Setup a simple CxxPreprocessorDep which contributes components to preprocessing.
     BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance("//:cpp1");
@@ -212,8 +217,10 @@ public class CxxPreprocessablesTest {
     // Setup the link map with both a regular path-based source path and one provided by
     // another build rule.
     ImmutableMap<Path, SourcePath> links = ImmutableMap.<Path, SourcePath>of(
-        Paths.get("link1"), new TestSourcePath("hello"),
-        Paths.get("link2"), new BuildTargetSourcePath(genrule.getBuildTarget()));
+        Paths.get("link1"),
+        new TestSourcePath("hello"),
+        Paths.get("link2"),
+        new BuildTargetSourcePath(PROJECT_FILESYSTEM, genrule.getBuildTarget()));
 
     // Build our symlink tree rule using the helper method.
     SymlinkTree symlinkTree = CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
@@ -233,7 +240,7 @@ public class CxxPreprocessablesTest {
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables()
       throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(PROJECT_FILESYSTEM, new FakeBuckConfig());
 
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinal = "bottom";
@@ -278,7 +285,7 @@ public class CxxPreprocessablesTest {
             .build();
 
     String name = "foo/bar.cpp";
-    SourcePath input = new PathSourcePath(target.getBasePath().resolve(name));
+    SourcePath input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
     CxxSource cxxSource = ImmutableCxxSource.of(CxxSource.Type.CXX, input);
 
     Map.Entry<String, CxxSource> entry =
@@ -308,6 +315,7 @@ public class CxxPreprocessablesTest {
 
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
     CxxPlatform platform = DefaultCxxPlatforms.build(
+        PROJECT_FILESYSTEM,
         new FakeBuckConfig(
             ImmutableMap.<String, Map<String, String>>of(
                 "cxx", ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags)))));
@@ -364,7 +372,7 @@ public class CxxPreprocessablesTest {
                 .put("cxxppflags", space.join(cxxppflags))
                 .build()),
         filesystem);
-    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
+    CxxPlatform platform = DefaultCxxPlatforms.build(PROJECT_FILESYSTEM, buckConfig);
 
     String cSourceName = "test.c";
     CxxSource cSource = ImmutableCxxSource.of(CxxSource.Type.C, new TestSourcePath(cSourceName));
@@ -427,7 +435,7 @@ public class CxxPreprocessablesTest {
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
     String name = "foo/bar.cpp";
-    SourcePath input = new PathSourcePath(target.getBasePath().resolve(name));
+    SourcePath input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
     CxxSource cxxSource = ImmutableCxxSource.of(CxxSource.Type.CXX, input);
 
     Map.Entry<String, CxxSource> cxxPreprocessEntry =
@@ -445,7 +453,7 @@ public class CxxPreprocessablesTest {
     assertThat(cxxPreprocess.getFlags(), Matchers.contains("-x", "c++"));
 
     name = "foo/bar.m";
-    input = new PathSourcePath(target.getBasePath().resolve(name));
+    input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
     cxxSource = ImmutableCxxSource.of(CxxSource.Type.OBJC, input);
 
     cxxPreprocessEntry =
@@ -463,7 +471,7 @@ public class CxxPreprocessablesTest {
     assertThat(cxxPreprocess.getFlags(), Matchers.contains("-x", "objective-c"));
 
     name = "foo/bar.mm";
-    input = new PathSourcePath(target.getBasePath().resolve(name));
+    input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
     cxxSource = ImmutableCxxSource.of(CxxSource.Type.OBJCXX, input);
 
     cxxPreprocessEntry =
@@ -481,7 +489,7 @@ public class CxxPreprocessablesTest {
     assertThat(cxxPreprocess.getFlags(), Matchers.contains("-x", "objective-c++"));
 
     name = "foo/bar.c";
-    input = new PathSourcePath(target.getBasePath().resolve(name));
+    input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
     cxxSource = ImmutableCxxSource.of(CxxSource.Type.C, input);
 
     cxxPreprocessEntry =
@@ -502,8 +510,9 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveDependenciesThrowsForConflictingHeaders()
       throws Exception {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(projectFilesystem, new FakeBuckConfig());
 
     CxxPreprocessorInput bottomInput = CxxPreprocessorInput.builder()
         .setIncludes(
@@ -542,8 +551,9 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveDependenciesDoesNotThrowsForCompatibleHeaders()
       throws Exception {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(projectFilesystem, new FakeBuckConfig());
 
     CxxPreprocessorInput bottomInput = CxxPreprocessorInput.builder()
         .setIncludes(

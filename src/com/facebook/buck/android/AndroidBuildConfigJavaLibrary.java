@@ -53,7 +53,9 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary
         params,
         resolver,
         /* srcs */ ImmutableSortedSet.of(
-            new BuildTargetSourcePath(androidBuildConfig.getBuildTarget())),
+            new BuildTargetSourcePath(
+                androidBuildConfig.getProjectFilesystem(),
+                androidBuildConfig.getBuildTarget())),
         /* resources */ ImmutableSortedSet.<SourcePath>of(),
         /* proguardConfig */ Optional.<Path>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),

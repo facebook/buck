@@ -54,7 +54,9 @@ public class CxxPythonExtension extends NoopBuildRule implements PythonPackagabl
             ruleResolver,
             cxxPlatform.getFlavor(),
             CxxDescriptionEnhancer.SHARED_FLAVOR);
-    SourcePath output = new BuildTargetSourcePath(extension.getBuildTarget());
+    SourcePath output = new BuildTargetSourcePath(
+        extension.getProjectFilesystem(),
+        extension.getBuildTarget());
     return ImmutablePythonPackageComponents.of(
         ImmutableMap.of(module, output),
         ImmutableMap.<Path, SourcePath>of(),

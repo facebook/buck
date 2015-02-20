@@ -136,6 +136,7 @@ public class ExportFileTest {
 
   @Test
   public void shouldSetInputsFromSourcePaths() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ExportFileBuilder builder = ExportFileBuilder.newExportFileBuilder(target)
         .setSrc(new TestSourcePath("chips"))
         .setOut("cake");
@@ -151,7 +152,7 @@ public class ExportFileTest {
         BuildTargetFactory.newInstance("//example:one"),
         new SourcePathResolver(ruleResolver));
 
-    builder.setSrc(new BuildTargetSourcePath(rule.getBuildTarget()));
+    builder.setSrc(new BuildTargetSourcePath(projectFilesystem, rule.getBuildTarget()));
     exportFile = (ExportFile) builder.build(ruleResolver);
     assertTrue(Iterables.isEmpty(exportFile.getInputsToCompareToOutput()));
 

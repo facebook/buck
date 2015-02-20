@@ -67,6 +67,7 @@ import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.HttpDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavaLibraryDescription;
@@ -157,16 +158,23 @@ public class KnownBuildRuleTypes {
 
   public static KnownBuildRuleTypes createInstance(
       BuckConfig config,
+      ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver,
       PythonEnvironment pythonEnv) throws InterruptedException, IOException {
-    return createBuilder(config, processExecutor, androidDirectoryResolver, pythonEnv).build();
+    return createBuilder(
+        config,
+        projectFilesystem,
+        processExecutor,
+        androidDirectoryResolver,
+        pythonEnv).build();
   }
 
   /**
    * @return the map holding the available {@link NdkCxxPlatform}s.
    */
   private static ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> getNdkCxxPlatforms(
+      ProjectFilesystem projectFilesystem,
       Path ndkRoot,
       Platform platform) {
 
@@ -177,6 +185,7 @@ public class KnownBuildRuleTypes {
         NdkCxxPlatforms.build(
             ImmutableFlavor.of("android-arm"),
             platform,
+            projectFilesystem,
             ndkRoot,
             new NdkCxxPlatforms.TargetConfiguration(
                 NdkCxxPlatforms.Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
@@ -200,6 +209,7 @@ public class KnownBuildRuleTypes {
         NdkCxxPlatforms.build(
             ImmutableFlavor.of("android-armv7"),
             platform,
+            projectFilesystem,
             ndkRoot,
             new NdkCxxPlatforms.TargetConfiguration(
                 NdkCxxPlatforms.Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
@@ -222,6 +232,7 @@ public class KnownBuildRuleTypes {
         NdkCxxPlatforms.build(
             ImmutableFlavor.of("android-x86"),
             platform,
+            projectFilesystem,
             ndkRoot,
             new NdkCxxPlatforms.TargetConfiguration(
                 NdkCxxPlatforms.Toolchain.X86_4_8,
@@ -242,6 +253,7 @@ public class KnownBuildRuleTypes {
   }
 
   private static void buildAppleCxxPlatforms(
+      ProjectFilesystem projectFilesystem,
       Supplier<Path> appleDeveloperDirectorySupplier,
       Platform buildPlatform,
       BuckConfig buckConfig,
@@ -274,6 +286,7 @@ public class KnownBuildRuleTypes {
       LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
       for (String architecture : sdk.getArchitectures()) {
         CxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
+            projectFilesystem,
             sdk.getApplePlatform(),
             sdk.getName(),
             targetSdkVersion,
@@ -288,6 +301,7 @@ public class KnownBuildRuleTypes {
   @VisibleForTesting
   static Builder createBuilder(
       BuckConfig config,
+      ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver,
       PythonEnvironment pythonEnv) throws InterruptedException, IOException {
@@ -305,6 +319,7 @@ public class KnownBuildRuleTypes {
     ImmutableMap.Builder<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPathsBuilder =
         ImmutableMap.builder();
     buildAppleCxxPlatforms(
+        projectFilesystem,
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
         platform,
         config,
@@ -317,14 +332,14 @@ public class KnownBuildRuleTypes {
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
 
     // Construct the OCaml config wrapping the buck config.
-    OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
+    OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(projectFilesystem, platform, config);
 
     // Setup the NDK C/C++ platforms.
     ImmutableMap.Builder<AndroidBinary.TargetCpuType, NdkCxxPlatform> ndkCxxPlatformsBuilder =
         ImmutableMap.builder();
     Optional<Path> ndkRoot = androidDirectoryResolver.findAndroidNdkDir();
     if (ndkRoot.isPresent()) {
-      ndkCxxPlatformsBuilder.putAll(getNdkCxxPlatforms(ndkRoot.get(), platform));
+      ndkCxxPlatformsBuilder.putAll(getNdkCxxPlatforms(projectFilesystem, ndkRoot.get(), platform));
     }
     ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
         ndkCxxPlatformsBuilder.build();
@@ -334,7 +349,7 @@ public class KnownBuildRuleTypes {
     ImmutableMap.Builder<Flavor, CxxPlatform> cxxPlatformsBuilder = ImmutableMap.builder();
 
     // Add the default, config-defined C/C++ platform.
-    CxxPlatform defaultCxxPlatform = DefaultCxxPlatforms.build(platform, config);
+    CxxPlatform defaultCxxPlatform = DefaultCxxPlatforms.build(projectFilesystem, platform, config);
     cxxPlatformsBuilder.put(defaultCxxPlatform.getFlavor(), defaultCxxPlatform);
 
     // If an Android NDK is present, add platforms for that.  This is mostly useful for
@@ -462,6 +477,7 @@ public class KnownBuildRuleTypes {
     builder.register(new PythonLibraryDescription());
     builder.register(
         new PythonTestDescription(
+            projectFilesystem,
             pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
             pythonPathToPythonTestMain,
             pythonEnv,

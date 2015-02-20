@@ -66,7 +66,7 @@ public class OCamlBuildRulesGenerator {
   private final BuildRuleResolver resolver;
   private final SourcePathResolver pathResolver;
   private final OCamlBuildContext ocamlContext;
-  private final ImmutableMap<SourcePath, ImmutableList<SourcePath>> mlInput;
+  private final ImmutableMap<Path, ImmutableList<Path>> mlInput;
   private final ImmutableList<SourcePath> cInput;
 
   private final Tool cCompiler;
@@ -77,7 +77,7 @@ public class OCamlBuildRulesGenerator {
       SourcePathResolver pathResolver,
       BuildRuleResolver resolver,
       OCamlBuildContext ocamlContext,
-      ImmutableMap<SourcePath, ImmutableList<SourcePath>> mlInput,
+      ImmutableMap<Path, ImmutableList<Path>> mlInput,
       ImmutableList<SourcePath> cInput,
       Tool cCompiler,
       Tool cxxCompiler) {
@@ -199,7 +199,10 @@ public class OCamlBuildRulesGenerator {
             cCompileFlags.build(),
             ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
       resolver.addToIndex(compileRule);
-      objects.add(new BuildTargetSourcePath(compileRule.getBuildTarget()));
+      objects.add(
+          new BuildTargetSourcePath(
+              compileRule.getProjectFilesystem(),
+              compileRule.getBuildTarget()));
     }
     return objects.build();
   }
@@ -381,31 +384,31 @@ public class OCamlBuildRulesGenerator {
   }
 
   ImmutableList<SourcePath> generateMLCompilation(
-      ImmutableMap<SourcePath, ImmutableList<SourcePath>> mlSources) {
+      ImmutableMap<Path, ImmutableList<Path>> mlSources) {
     ImmutableList.Builder<SourcePath> cmxFiles = ImmutableList.builder();
 
-    final HashMap<SourcePath, BuildRule> sourceToRule = new HashMap<>();
+    final HashMap<Path, BuildRule> sourceToRule = new HashMap<>();
 
-    for (ImmutableMap.Entry<SourcePath, ImmutableList<SourcePath>>
+    for (ImmutableMap.Entry<Path, ImmutableList<Path>>
         mlSource : mlSources.entrySet()) {
       generateSingleMLCompilation(
           sourceToRule,
           cmxFiles,
           mlSource.getKey(),
           mlSources,
-          ImmutableList.<SourcePath>of());
+          ImmutableList.<Path>of());
     }
     return cmxFiles.build();
   }
 
   private void generateSingleMLCompilation(
-      HashMap<SourcePath, BuildRule> sourceToRule,
+      HashMap<Path, BuildRule> sourceToRule,
       ImmutableList.Builder<SourcePath> cmxFiles,
-      SourcePath mlSource,
-      ImmutableMap<SourcePath, ImmutableList<SourcePath>> sources,
-      ImmutableList<SourcePath> cycleDetector) {
+      Path mlSource,
+      ImmutableMap<Path, ImmutableList<Path>> sources,
+      ImmutableList<Path> cycleDetector) {
 
-    ImmutableList<SourcePath> newCycleDetector = ImmutableList.<SourcePath>builder()
+    ImmutableList<Path> newCycleDetector = ImmutableList.<Path>builder()
         .addAll(cycleDetector)
         .add(mlSource)
         .build();
@@ -421,13 +424,13 @@ public class OCamlBuildRulesGenerator {
 
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
     if (sources.containsKey(mlSource)) {
-      for (SourcePath dep : Preconditions.checkNotNull(sources.get(mlSource))) {
+      for (Path dep : Preconditions.checkNotNull(sources.get(mlSource))) {
         generateSingleMLCompilation(sourceToRule, cmxFiles, dep, sources, newCycleDetector);
         deps.add(sourceToRule.get(dep));
       }
     }
 
-    String name = pathResolver.getPath(mlSource).toFile().getName();
+    String name = mlSource.toFile().getName();
 
     BuildTarget buildTarget = createMLCompileBuildTarget(
         params.getBuildTarget(),
@@ -456,42 +459,42 @@ public class OCamlBuildRulesGenerator {
           cCompiler.getCommandPrefix(pathResolver),
           ocamlContext.getOcamlCompiler(),
           outputPath,
-          pathResolver.getPath(mlSource),
+          mlSource,
           compileFlags));
     resolver.addToIndex(compile);
     sourceToRule.put(mlSource, compile);
     if (!outputFileName.endsWith(OCamlCompilables.OCAML_CMI)) {
-      cmxFiles.add(new BuildTargetSourcePath(compile.getBuildTarget()));
+      cmxFiles.add(
+          new BuildTargetSourcePath(compile.getProjectFilesystem(), compile.getBuildTarget()));
     }
   }
 
   private ImmutableList<SourcePath> generateMLCompileBytecode(
-      ImmutableMap<SourcePath, ImmutableList<SourcePath>> mlSources) {
+      ImmutableMap<Path, ImmutableList<Path>> mlSources) {
     ImmutableList.Builder<SourcePath> cmoFiles = ImmutableList.builder();
 
-    final HashMap<SourcePath, BuildRule> sourceToRule = new HashMap<>();
+    final HashMap<Path, BuildRule> sourceToRule = new HashMap<>();
 
-    for (ImmutableMap.Entry<SourcePath, ImmutableList<SourcePath>>
+    for (ImmutableMap.Entry<Path, ImmutableList<Path>>
         mlSource : mlSources.entrySet()) {
       generateSingleMLBytecodeCompilation(
           sourceToRule,
           cmoFiles,
           mlSource.getKey(),
           mlSources,
-          ImmutableList.<SourcePath>of());
+          ImmutableList.<Path>of());
     }
     return cmoFiles.build();
   }
 
   private void generateSingleMLBytecodeCompilation(
-      HashMap<SourcePath, BuildRule> sourceToRule,
+      HashMap<Path, BuildRule> sourceToRule,
       ImmutableList.Builder<SourcePath> cmoFiles,
-      SourcePath mlSource,
-      ImmutableMap<SourcePath,
-      ImmutableList<SourcePath>> sources,
-      ImmutableList<SourcePath> cycleDetector) {
+      Path mlSource,
+      ImmutableMap<Path, ImmutableList<Path>> sources,
+      ImmutableList<Path> cycleDetector) {
 
-    ImmutableList<SourcePath> newCycleDetector = ImmutableList.<SourcePath>builder()
+    ImmutableList<Path> newCycleDetector = ImmutableList.<Path>builder()
         .addAll(cycleDetector)
         .add(mlSource)
         .build();
@@ -506,7 +509,7 @@ public class OCamlBuildRulesGenerator {
 
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
     if (sources.containsKey(mlSource)) {
-      for (SourcePath dep : Preconditions.checkNotNull(sources.get(mlSource))) {
+      for (Path dep : Preconditions.checkNotNull(sources.get(mlSource))) {
         generateSingleMLBytecodeCompilation(
             sourceToRule,
             cmoFiles,
@@ -517,7 +520,7 @@ public class OCamlBuildRulesGenerator {
       }
     }
 
-    String name = pathResolver.getPath(mlSource).toFile().getName();
+    String name = mlSource.toFile().getName();
     BuildTarget buildTarget = createMLBytecodeCompileBuildTarget(
         params.getBuildTarget(),
         name);
@@ -545,12 +548,15 @@ public class OCamlBuildRulesGenerator {
           cCompiler.getCommandPrefix(pathResolver),
           ocamlContext.getOcamlBytecodeCompiler(),
           outputPath,
-          pathResolver.getPath(mlSource),
+          mlSource,
           compileFlags));
     resolver.addToIndex(compileBytecode);
     sourceToRule.put(mlSource, compileBytecode);
     if (!outputFileName.endsWith(OCamlCompilables.OCAML_CMI)) {
-      cmoFiles.add(new BuildTargetSourcePath(compileBytecode.getBuildTarget()));
+      cmoFiles.add(
+          new BuildTargetSourcePath(
+              compileBytecode.getProjectFilesystem(),
+              compileBytecode.getBuildTarget()));
     }
   }
 

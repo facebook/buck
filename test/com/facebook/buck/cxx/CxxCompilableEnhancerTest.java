@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,7 +51,11 @@ import java.util.Map;
 
 public class CxxCompilableEnhancerTest {
 
-  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(new FakeBuckConfig());
+  private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
+
+  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
+      PROJECT_FILESYSTEM,
+      new FakeBuckConfig());
 
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
     for (T item : items) {
@@ -78,7 +83,7 @@ public class CxxCompilableEnhancerTest {
     String name = "foo/bar.ii";
     FakeBuildRule dep = createFakeBuildRule("//:test", new SourcePathResolver(resolver));
     resolver.addToIndex(dep);
-    SourcePath input = new BuildTargetSourcePath(dep.getBuildTarget());
+    SourcePath input = new BuildTargetSourcePath(PROJECT_FILESYSTEM, dep.getBuildTarget());
     CxxSource cxxSource = ImmutableCxxSource.of(CxxSource.Type.CXX_CPP_OUTPUT, input);
 
     CxxCompile cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
@@ -157,6 +162,7 @@ public class CxxCompilableEnhancerTest {
 
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
     CxxPlatform platform = DefaultCxxPlatforms.build(
+        PROJECT_FILESYSTEM,
         new FakeBuckConfig(
             ImmutableMap.<String, Map<String, String>>of(
                 "cxx", ImmutableMap.of("cxxflags", Joiner.on(" ").join(platformFlags)))));
@@ -206,7 +212,7 @@ public class CxxCompilableEnhancerTest {
                 .put("cxxflags", space.join(cxxflags))
                 .build()),
         filesystem);
-    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
+    CxxPlatform platform = DefaultCxxPlatforms.build(PROJECT_FILESYSTEM, buckConfig);
 
     String cSourceName = "test.i";
     CxxSource cSource = ImmutableCxxSource.of(
@@ -348,7 +354,7 @@ public class CxxCompilableEnhancerTest {
     ImmutableList<String> explicitCompilerFlags = ImmutableList.of("-fobjc-arc");
 
     FakeBuckConfig buckConfig = new FakeBuckConfig(filesystem);
-    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
+    CxxPlatform platform = DefaultCxxPlatforms.build(filesystem, buckConfig);
 
     String objcSourceName = "test.mi";
     CxxSource objcSource = ImmutableCxxSource.of(

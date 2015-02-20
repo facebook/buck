@@ -52,6 +52,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.AppleSource;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -445,6 +446,7 @@ public class TargetsCommandTest {
 
   @Test
   public void testPathsUnderDirectories() throws CmdLineException, IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Path resDir = Paths.get("some/resources/dir");
     BuildTarget androidResourceTarget = BuildTargetFactory.newInstance("//:res");
     TargetNode<?> androidResourceNode = AndroidResourceBuilder.createBuilder(androidResourceTarget)
@@ -454,7 +456,7 @@ public class TargetsCommandTest {
     Path genSrc = resDir.resolve("foo.txt");
     BuildTarget genTarget = BuildTargetFactory.newInstance("//:res");
     TargetNode<?> genNode = GenruleBuilder.newGenruleBuilder(genTarget)
-        .setSrcs(ImmutableList.<SourcePath>of(new PathSourcePath(genSrc)))
+        .setSrcs(ImmutableList.<SourcePath>of(new PathSourcePath(projectFilesystem, genSrc)))
         .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(androidResourceNode, genNode);

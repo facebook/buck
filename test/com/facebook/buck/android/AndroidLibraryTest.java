@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -89,6 +91,7 @@ public class AndroidLibraryTest {
 
 
   private BuildRule getAndroidLibraryRuleFoo(BuildRuleResolver ruleResolver) {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRule libraryRule = JavaLibraryBuilder
         .createBuilder(BuildTarget.builder("//java/src/com/bar", "bar").build())
         .build(new BuildRuleResolver());
@@ -96,7 +99,10 @@ public class AndroidLibraryTest {
     return AndroidLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/src/com/foo:foo"))
         .addSrc(Paths.get("java/src/com/foo/Foo.java"))
-        .setManifestFile(new PathSourcePath(Paths.get("java/src/com/foo/AndroidManifest.xml")))
+        .setManifestFile(
+            new PathSourcePath(
+                projectFilesystem,
+                Paths.get("java/src/com/foo/AndroidManifest.xml")))
         .addExportedDep(libraryRule.getBuildTarget())
         .addDep(libraryRule.getBuildTarget())
         .build(ruleResolver);

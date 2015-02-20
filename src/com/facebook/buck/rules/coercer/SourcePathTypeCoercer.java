@@ -58,14 +58,14 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
               filesystem,
               pathRelativeToProjectRoot,
               object);
-      return new BuildTargetSourcePath(buildTarget);
+      return new BuildTargetSourcePath(filesystem, buildTarget);
     } else {
       Path path = pathTypeCoercer.coerce(
           buildTargetParser,
           filesystem,
           pathRelativeToProjectRoot,
           object);
-      return new PathSourcePath(path);
+      return new PathSourcePath(filesystem, path);
     }
   }
 }

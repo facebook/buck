@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -134,6 +135,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         Suppliers.ofInstance(androidResourceDeclaredDeps),
         Suppliers.ofInstance(androidResourceExtraDeps));
     ImmutableCollection<SourcePath> assetsDirectories = getSourcePathForDirectories(
+        assembleAssetsParams.getProjectFilesystem(),
         assembleAssetsParams.getBuildTarget(),
         packageableCollection.getAssetsDirectories());
     AssembleDirectories assembleAssetsDirectories = new AssembleDirectories(
@@ -148,6 +150,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         Suppliers.ofInstance(androidResourceDeclaredDeps),
         Suppliers.ofInstance(androidResourceExtraDeps));
     ImmutableCollection<SourcePath> resDirectories = getSourcePathForDirectories(
+        assembleResourceParams.getProjectFilesystem(),
         assembleResourceParams.getBuildTarget(),
         packageableCollection.getResourceDetails().getResourceDirectories());
     AssembleDirectories assembleResourceDirectories = new AssembleDirectories(
@@ -175,7 +178,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         /* rDotJavaPackage */ null,
         assembleAssetsDirectories.getPathToOutputFile(),
         /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
-        new BuildTargetSourcePath(manifest.getBuildTarget()),
+        new BuildTargetSourcePath(manifest.getProjectFilesystem(), manifest.getBuildTarget()),
         /* hasWhitelistedStrings */ false);
     depRules.add(resolver.addToIndex(androidResource));
 
@@ -219,11 +222,12 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
   }
 
   private ImmutableList<SourcePath> getSourcePathForDirectories(
+      ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
       ImmutableCollection<Path> directories) {
     ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
     for (Path directory : directories) {
-      builder.add(new BuildTargetSourcePath(buildTarget, directory));
+      builder.add(new BuildTargetSourcePath(projectFilesystem, buildTarget, directory));
     }
     return builder.build();
   }

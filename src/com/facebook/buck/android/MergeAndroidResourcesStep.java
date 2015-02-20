@@ -21,8 +21,6 @@ import static com.google.common.collect.Ordering.natural;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreStrings;
@@ -94,7 +92,7 @@ public class MergeAndroidResourcesStep implements Step {
         outputDir);
   }
 
-  public ImmutableSet<SourcePath> getRDotJavaFiles() {
+  public ImmutableSet<Path> getRDotJavaFiles() {
     return FluentIterable.from(androidResourceDeps)
         .transform(HasAndroidResourceDeps.TO_R_DOT_JAVA_PACKAGE)
         .transform(
@@ -104,7 +102,6 @@ public class MergeAndroidResourcesStep implements Step {
                 return getPathToRDotJava(input);
               }
             })
-        .transform(SourcePaths.TO_SOURCE_PATH)
         .toSet();
   }
 

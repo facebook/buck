@@ -89,6 +89,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     return resolver;
   }
 
+  @Override
   public final ProjectFilesystem getProjectFilesystem() {
     return projectFilesystem;
   }
@@ -151,7 +152,9 @@ public abstract class AbstractBuildRule implements BuildRule {
     ImmutableCollection<Path> inputs = getInputs();
     builder = builder
         .setReflectively("buck.inputs", inputs.iterator())
-        .setReflectively("buck.sourcepaths", SourcePaths.toSourcePathsSortedByNaturalOrder(inputs));
+        .setReflectively(
+            "buck.sourcepaths",
+            SourcePaths.toSourcePathsSortedByNaturalOrder(getProjectFilesystem(), inputs));
     // TODO(simons): Rename this when no Buildables extend this class.
     return appendDetailsToRuleKey(builder);
   }

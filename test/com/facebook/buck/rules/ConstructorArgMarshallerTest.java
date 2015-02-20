@@ -194,6 +194,7 @@ public class ConstructorArgMarshallerTest {
       public SourcePath targetPath;
     }
 
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
     FakeBuildRule rule = new FakeBuildRule(
         ruleType,
@@ -212,8 +213,12 @@ public class ConstructorArgMarshallerTest {
             "targetPath", ":peas"
         ));
 
-    assertEquals(new PathSourcePath(Paths.get("example/path/cheese.txt")), dto.filePath);
-    assertEquals(new BuildTargetSourcePath(rule.getBuildTarget()), dto.targetPath);
+    assertEquals(
+        new PathSourcePath(projectFilesystem, Paths.get("example/path/cheese.txt")),
+        dto.filePath);
+    assertEquals(
+        new BuildTargetSourcePath(projectFilesystem, rule.getBuildTarget()),
+        dto.targetPath);
   }
 
   @Test
@@ -453,6 +458,7 @@ public class ConstructorArgMarshallerTest {
       public List<? extends SourcePath> yup;
     }
 
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildRule rule = new FakeBuildRule(
         ImmutableBuildRuleType.of("example"),
@@ -469,7 +475,9 @@ public class ConstructorArgMarshallerTest {
             "yup",
             ImmutableList.of(rule.getBuildTarget().getFullyQualifiedName())));
 
-    BuildTargetSourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
+    BuildTargetSourcePath path = new BuildTargetSourcePath(
+        projectFilesystem,
+        rule.getBuildTarget());
     assertEquals(ImmutableList.of(path), dto.yup);
   }
 
@@ -515,6 +523,7 @@ public class ConstructorArgMarshallerTest {
       public Optional<Path> notAPath;
     }
 
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FakeBuildRule expectedRule = new FakeBuildRule(
         ruleType,
         BuildTargetFactory.newInstance("//example/path:path"),
@@ -547,7 +556,9 @@ public class ConstructorArgMarshallerTest {
     assertEquals(42, dto.num);
     assertTrue(dto.needed);
     assertEquals(Optional.<Boolean>absent(), dto.notNeeded);
-    BuildTargetSourcePath expected = new BuildTargetSourcePath(expectedRule.getBuildTarget());
+    BuildTargetSourcePath expected = new BuildTargetSourcePath(
+        projectFilesystem,
+        expectedRule.getBuildTarget());
     assertEquals(expected, dto.aSrcPath);
     assertEquals(Paths.get("example/path/NotFile.java"), dto.notAPath.get());
   }

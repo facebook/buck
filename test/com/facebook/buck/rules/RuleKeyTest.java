@@ -22,9 +22,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -123,6 +125,7 @@ public class RuleKeyTest {
 
   @Test
   public void ensureSetsAreHandledProperly() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
@@ -135,7 +138,7 @@ public class RuleKeyTest {
     resolver.addToIndex(rule);
 
     ImmutableSortedSet<SourcePath> sourcePaths = ImmutableSortedSet.<SourcePath>of(
-        new BuildTargetSourcePath(rule.getBuildTarget()),
+        new BuildTargetSourcePath(projectFilesystem, rule.getBuildTarget()),
         new TestSourcePath("alpha/beta"));
     ImmutableSet<String> strings = ImmutableSet.of("one", "two");
 
@@ -179,32 +182,38 @@ public class RuleKeyTest {
 
   @Test
   public void setInputPathSourcePath() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     // Just changing the name of a named source path shouldn't change the hash.
     assertEquals(
         createEmptyRuleKey(
             new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("key", new PathSourcePath(Paths.get("something")))
+            .setReflectively("key", new PathSourcePath(projectFilesystem, Paths.get("something")))
             .build(),
         createEmptyRuleKey(
             new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("key", new PathSourcePath(Paths.get("something", "else")))
+            .setReflectively(
+                "key",
+                new PathSourcePath(projectFilesystem, Paths.get("something", "else")))
             .build());
 
     // But changing the key should...
     assertNotEquals(
         createEmptyRuleKey(
             new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("key", new PathSourcePath(Paths.get("something")))
+            .setReflectively("key", new PathSourcePath(projectFilesystem, Paths.get("something")))
             .build(),
         createEmptyRuleKey(
             new SourcePathResolver(new BuildRuleResolver()))
-            .setReflectively("different-key", new PathSourcePath(Paths.get("something")))
+            .setReflectively(
+                "different-key",
+                new PathSourcePath(projectFilesystem, Paths.get("something")))
             .build());
   }
 
   @Test
   public void setInputBuildTargetSourcePath() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeBuildRule fake1 = new FakeBuildRule("//:fake1", pathResolver);
@@ -220,13 +229,19 @@ public class RuleKeyTest {
             pathResolver)
             .setReflectively(
                 "key",
-                new BuildTargetSourcePath(fake1.getBuildTarget(), Paths.get("location")))
+                new BuildTargetSourcePath(
+                    projectFilesystem,
+                    fake1.getBuildTarget(),
+                    Paths.get("location")))
             .build(),
         createEmptyRuleKey(
             pathResolver)
             .setReflectively(
                 "key",
-                new BuildTargetSourcePath(fake1.getBuildTarget(), Paths.get("different")))
+                new BuildTargetSourcePath(
+                    projectFilesystem,
+                    fake1.getBuildTarget(),
+                    Paths.get("different")))
             .build());
 
     // Verify that just changing the build rule rule key changes the calculated rule key.
@@ -235,13 +250,19 @@ public class RuleKeyTest {
             pathResolver)
             .setReflectively(
                 "key",
-                new BuildTargetSourcePath(fake1.getBuildTarget(), Paths.get("location")))
+                new BuildTargetSourcePath(
+                    projectFilesystem,
+                    fake1.getBuildTarget(),
+                    Paths.get("location")))
             .build(),
         createEmptyRuleKey(
             pathResolver)
             .setReflectively(
                 "key",
-                new BuildTargetSourcePath(fake2.getBuildTarget(), Paths.get("location")))
+                new BuildTargetSourcePath(
+                    projectFilesystem,
+                    fake2.getBuildTarget(),
+                    Paths.get("location")))
             .build());
 
     // Verify that just changing the key changes the calculated rule key.
@@ -250,13 +271,19 @@ public class RuleKeyTest {
             pathResolver)
             .setReflectively(
                 "key",
-                new BuildTargetSourcePath(fake1.getBuildTarget(), Paths.get("location")))
+                new BuildTargetSourcePath(
+                    projectFilesystem,
+                    fake1.getBuildTarget(),
+                    Paths.get("location")))
             .build(),
         createEmptyRuleKey(
             pathResolver)
             .setReflectively(
                 "different-key",
-                new BuildTargetSourcePath(fake1.getBuildTarget(), Paths.get("location")))
+                new BuildTargetSourcePath(
+                    projectFilesystem,
+                    fake1.getBuildTarget(),
+                    Paths.get("location")))
             .build());
   }
 

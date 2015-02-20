@@ -16,10 +16,24 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
+
+import java.util.Objects;
+
 /**
  * Abstract base class for implementations of {@link SourcePath}.
  */
 abstract class AbstractSourcePath implements SourcePath {
+
+  private final ProjectFilesystem projectFilesystem;
+
+  protected AbstractSourcePath(ProjectFilesystem projectFilesystem) {
+    this.projectFilesystem = projectFilesystem;
+  }
+
+  protected final ProjectFilesystem getProjectFilesystem() {
+    return projectFilesystem;
+  }
 
   /**
    * @return An opaque representation of the source path in a stable manner.
@@ -41,12 +55,15 @@ abstract class AbstractSourcePath implements SourcePath {
   }
 
   @Override
-  public boolean equals(Object that) {
-    if (that == null || !(that instanceof AbstractSourcePath)) {
+  public boolean equals(Object other) {
+    if (other == null || !(other instanceof AbstractSourcePath)) {
       return false;
     }
 
-    return asReference().equals(((AbstractSourcePath) that).asReference());
+    AbstractSourcePath that = (AbstractSourcePath) other;
+
+    return Objects.equals(this.projectFilesystem, that.projectFilesystem) &&
+        Objects.equals(this.asReference(), that.asReference());
   }
 
   @Override

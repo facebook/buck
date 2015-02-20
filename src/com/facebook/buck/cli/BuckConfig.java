@@ -448,12 +448,12 @@ public class BuckConfig {
     }
     try {
       BuildTarget target = getBuildTargetForFullyQualifiedTarget(value.get());
-      return Optional.<SourcePath>of(new BuildTargetSourcePath(target));
+      return Optional.<SourcePath>of(new BuildTargetSourcePath(projectFilesystem, target));
     } catch (BuildTargetParseException e) {
       checkPathExists(
           value.get(),
           String.format("Overridden %s:%s path not found: ", section, field));
-      return Optional.<SourcePath>of(new PathSourcePath(Paths.get(value.get())));
+      return Optional.<SourcePath>of(new PathSourcePath(projectFilesystem, Paths.get(value.get())));
     }
   }
 

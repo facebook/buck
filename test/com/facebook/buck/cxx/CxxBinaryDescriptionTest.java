@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
@@ -38,6 +39,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -65,6 +67,7 @@ public class CxxBinaryDescriptionTest {
   @Test
   @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
   public void createBuildRule() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     CxxPlatform cxxPlatform = CxxBinaryBuilder.createDefaultPlatform();
@@ -110,7 +113,8 @@ public class CxxBinaryDescriptionTest {
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return ImmutableNativeLinkableInput.of(
-            ImmutableList.<SourcePath>of(new BuildTargetSourcePath(archive.getBuildTarget())),
+            ImmutableList.<SourcePath>of(
+                new BuildTargetSourcePath(getProjectFilesystem(), archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()));
       }
 
@@ -144,11 +148,11 @@ public class CxxBinaryDescriptionTest {
         .setSrcs(
             ImmutableList.<SourcePath>of(
                 new TestSourcePath("test/bar.cpp"),
-                new BuildTargetSourcePath(genSource.getBuildTarget())))
+                new BuildTargetSourcePath(projectFilesystem, genSource.getBuildTarget())))
         .setHeaders(
             ImmutableList.<SourcePath>of(
                 new TestSourcePath("test/bar.h"),
-                new BuildTargetSourcePath(genHeader.getBuildTarget())))
+                new BuildTargetSourcePath(projectFilesystem, genHeader.getBuildTarget())))
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
         .build(resolver);
     CxxLink rule = binRule.getRule();

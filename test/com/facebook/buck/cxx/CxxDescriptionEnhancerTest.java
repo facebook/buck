@@ -61,7 +61,7 @@ public class CxxDescriptionEnhancerTest {
                 "lex", lexPath.toString(),
                 "yacc", yaccPath.toString())),
         filesystem);
-    CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(buckConfig);
+    CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(filesystem, buckConfig);
 
     // Setup the target name and build params.
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
@@ -74,7 +74,7 @@ public class CxxDescriptionEnhancerTest {
         .newGenruleBuilder(genruleTarget)
         .setOut(lexSourceName)
         .build(resolver);
-    SourcePath lexSource = new BuildTargetSourcePath(genrule.getBuildTarget());
+    SourcePath lexSource = new BuildTargetSourcePath(filesystem, genrule.getBuildTarget());
 
     // Use a regular path for our yacc source.
     String yaccSourceName = "test.yy";
@@ -115,18 +115,18 @@ public class CxxDescriptionEnhancerTest {
     CxxHeaderSourceSpec expected = ImmutableCxxHeaderSourceSpec.of(
         ImmutableMap.<Path, SourcePath>of(
             target.getBasePath().resolve(lexSourceName + ".h"),
-            new BuildTargetSourcePath(lex.getBuildTarget(), lexOutputHeader),
+            new BuildTargetSourcePath(filesystem, lex.getBuildTarget(), lexOutputHeader),
             target.getBasePath().resolve(yaccSourceName + ".h"),
-            new BuildTargetSourcePath(yacc.getBuildTarget(), yaccOutputHeader)),
+            new BuildTargetSourcePath(filesystem, yacc.getBuildTarget(), yaccOutputHeader)),
         ImmutableMap.<String, CxxSource>of(
             lexSourceName + ".cc",
             ImmutableCxxSource.of(
                 CxxSource.Type.CXX,
-                new BuildTargetSourcePath(lex.getBuildTarget(), lexOutputSource)),
+                new BuildTargetSourcePath(filesystem, lex.getBuildTarget(), lexOutputSource)),
             yaccSourceName + ".cc",
             ImmutableCxxSource.of(
                 CxxSource.Type.CXX,
-                new BuildTargetSourcePath(yacc.getBuildTarget(), yaccOutputSource))));
+                new BuildTargetSourcePath(filesystem, yacc.getBuildTarget(), yaccOutputSource))));
     assertEquals(expected, actual);
   }
 

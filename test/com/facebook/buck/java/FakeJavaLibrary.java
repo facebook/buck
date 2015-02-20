@@ -30,6 +30,7 @@ import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -107,7 +108,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   public FakeJavaLibrary setJavaSrcs(ImmutableSortedSet<Path> srcs) {
     Preconditions.checkNotNull(srcs);
     this.srcs = FluentIterable.from(srcs)
-        .transform(SourcePaths.TO_SOURCE_PATH)
+        .transform(SourcePaths.toSourcePath(new FakeProjectFilesystem()))
         .toSortedSet(Ordering.natural());
     return this;
   }

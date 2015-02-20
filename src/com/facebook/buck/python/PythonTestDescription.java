@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -62,6 +63,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
   private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
+  private final ProjectFilesystem projectFilesystem;
   private final Path pathToPex;
   private final Optional<Path> pathToPythonTestMain;
   private final PythonEnvironment pythonEnvironment;
@@ -69,11 +71,13 @@ public class PythonTestDescription implements Description<PythonTestDescription.
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonTestDescription(
+      ProjectFilesystem projectFilesystem,
       Path pathToPex,
       Optional<Path> pathToPythonTestMain,
       PythonEnvironment pythonEnvironment,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
+    this.projectFilesystem = projectFilesystem;
     this.pathToPex = pathToPex;
     this.pathToPythonTestMain = pathToPythonTestMain;
     this.pythonEnvironment = pythonEnvironment;
@@ -238,8 +242,12 @@ public class PythonTestDescription implements Description<PythonTestDescription.
             .<Path, SourcePath>builder()
             .put(
                 getTestModulesListName(),
-                new BuildTargetSourcePath(testModulesBuildRule.getBuildTarget()))
-            .put(getTestMainName(), new PathSourcePath(pathToPythonTestMain.get()))
+                new BuildTargetSourcePath(
+                    testModulesBuildRule.getProjectFilesystem(),
+                    testModulesBuildRule.getBuildTarget()))
+            .put(
+                getTestMainName(),
+                new PathSourcePath(projectFilesystem, pathToPythonTestMain.get()))
             .putAll(srcs)
             .build(),
         resources,

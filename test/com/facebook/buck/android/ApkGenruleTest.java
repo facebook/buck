@@ -59,6 +59,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.environment.Platform;
@@ -117,6 +118,7 @@ public class ApkGenruleTest {
   @Test
   @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
   public void testCreateAndRunApkGenrule() throws IOException, NoSuchBuildTargetException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     createSampleAndroidBinaryRule(ruleResolver);
 
@@ -142,8 +144,8 @@ public class ApkGenruleTest {
     arg.cmdExe = Optional.of("");
     arg.out = "signed_fb4a.apk";
     arg.srcs = Optional.of(ImmutableList.<SourcePath>of(
-        new PathSourcePath(Paths.get("src/com/facebook/signer.py")),
-        new PathSourcePath(Paths.get("src/com/facebook/key.properties"))));
+        new PathSourcePath(projectFilesystem, Paths.get("src/com/facebook/signer.py")),
+        new PathSourcePath(projectFilesystem, Paths.get("src/com/facebook/key.properties"))));
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setProjectFilesystem(
             new ProjectFilesystem(Paths.get(".")) {

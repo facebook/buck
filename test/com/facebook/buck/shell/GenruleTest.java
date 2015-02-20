@@ -51,6 +51,7 @@ import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -146,8 +147,12 @@ public class GenruleTest {
         .setOut("AndroidManifest.xml")
         .setSrcs(
             ImmutableList.<SourcePath>of(
-                new PathSourcePath(Paths.get("src/com/facebook/katana/convert_to_katana.py")),
-                new PathSourcePath(Paths.get("src/com/facebook/katana/AndroidManifest.xml"))))
+                new PathSourcePath(
+                    fakeFilesystem,
+                    Paths.get("src/com/facebook/katana/convert_to_katana.py")),
+                new PathSourcePath(
+                    fakeFilesystem,
+                    Paths.get("src/com/facebook/katana/AndroidManifest.xml"))))
         .build(ruleResolver, fakeFilesystem);
 
     // Verify all of the observers of the Genrule.
@@ -293,6 +298,7 @@ public class GenruleTest {
 
   @Test
   public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:example");
     BuildRule rule = GenruleBuilder
@@ -300,9 +306,9 @@ public class GenruleTest {
         .setBash("ignored")
         .setSrcs(
             ImmutableList.<SourcePath>of(
-                new PathSourcePath(Paths.get("in-dir.txt")),
-                new PathSourcePath(Paths.get("foo/bar.html")),
-                new PathSourcePath(Paths.get("other/place.txt"))))
+                new PathSourcePath(projectFilesystem, Paths.get("in-dir.txt")),
+                new PathSourcePath(projectFilesystem, Paths.get("foo/bar.html")),
+                new PathSourcePath(projectFilesystem, Paths.get("other/place.txt"))))
         .setOut("example-file")
         .build(resolver);
 

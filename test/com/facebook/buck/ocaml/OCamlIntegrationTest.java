@@ -38,6 +38,7 @@ import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -70,7 +71,10 @@ public class OCamlIntegrationTest {
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
 
-    OCamlBuckConfig oCamlBuckConfig = new OCamlBuckConfig(Platform.detect(), buckConfig);
+    OCamlBuckConfig oCamlBuckConfig = new OCamlBuckConfig(
+        filesystem,
+        Platform.detect(),
+        buckConfig);
 
     assumeTrue(Files.exists(oCamlBuckConfig.getOCamlCompiler().or(DEFAULT_OCAML_COMPILER)));
     assumeTrue(Files.exists(oCamlBuckConfig.getOCamlBytecodeCompiler().or(
@@ -362,7 +366,9 @@ public class OCamlIntegrationTest {
     BuildTarget libplusStatic = createStaticLibraryBuildTarget(libplus);
     BuildTarget cclib = BuildTargetFactory.newInstance("//clib:cc");
 
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new FakeProjectFilesystem(),
+        new FakeBuckConfig());
     BuildTarget cclibbin =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(cclib, cxxPlatform.getFlavor());
     String sourceName = "cc/cc.cpp";

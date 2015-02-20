@@ -22,6 +22,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.python.ImmutablePythonVersion;
 import com.facebook.buck.python.PythonEnvironment;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ImmutableProcessExecutorParams;
@@ -50,6 +51,7 @@ public class DefaultKnownBuildRuleTypes {
 
     return KnownBuildRuleTypes.createInstance(
         config,
+        new FakeProjectFilesystem(),
         new FakeProcessExecutor(ImmutableMap.of(XCODE_SELECT_PARAMS, XCODE_SELECT_PROCESS)),
         new FakeAndroidDirectoryResolver(),
         new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7")));

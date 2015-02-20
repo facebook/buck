@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -52,7 +53,10 @@ public abstract class FrameworkPath {
         "Exactly one of sourceTreePath or sourcePath should be set");
   }
 
-  public static FrameworkPath fromString(BuildTarget target, String string) {
+  public static FrameworkPath fromString(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget target,
+      String string) {
     Path path = Paths.get(string);
 
     String firstElement =
@@ -83,16 +87,18 @@ public abstract class FrameworkPath {
       }
     } else {
       return ImmutableFrameworkPath.builder()
-          .setSourcePath(new BuildTargetSourcePath(target, Paths.get(string)))
+          .setSourcePath(new BuildTargetSourcePath(projectFilesystem, target, Paths.get(string)))
           .build();
     }
   }
 
-  public static Function<String, FrameworkPath> transformFromString(final BuildTarget target) {
+  public static Function<String, FrameworkPath> transformFromString(
+      final ProjectFilesystem projectFilesystem,
+      final BuildTarget target) {
     return new Function<String, FrameworkPath>() {
       @Override
       public FrameworkPath apply(String input) {
-        return fromString(target, input);
+        return fromString(projectFilesystem, target, input);
       }
     };
   }

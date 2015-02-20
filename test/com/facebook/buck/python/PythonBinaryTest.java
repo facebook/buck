@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -52,6 +54,7 @@ public class PythonBinaryTest {
       String main, Path mainSrc,
       String mod1, Path src1,
       String mod2, Path src2) throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
 
     // The top-level python binary that lists the above libraries as deps.
@@ -64,9 +67,9 @@ public class PythonBinaryTest {
         Paths.get("main.py"),
         ImmutablePythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(
-                Paths.get(main), new PathSourcePath(mainSrc),
-                Paths.get(mod1), new PathSourcePath(src1),
-                Paths.get(mod2), new PathSourcePath(src2)),
+                Paths.get(main), new PathSourcePath(projectFilesystem, mainSrc),
+                Paths.get(mod1), new PathSourcePath(projectFilesystem, src1),
+                Paths.get(mod2), new PathSourcePath(projectFilesystem, src2)),
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of()));
 

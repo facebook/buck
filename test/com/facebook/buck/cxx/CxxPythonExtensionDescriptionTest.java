@@ -152,6 +152,7 @@ public class CxxPythonExtensionDescriptionTest {
             ImmutableNativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
+                        getProjectFilesystem(),
                         sharedLibraryDep.getBuildTarget(),
                         sharedLibraryOutput)),
                 ImmutableList.of(sharedLibraryOutput.toString()));
@@ -164,7 +165,7 @@ public class CxxPythonExtensionDescriptionTest {
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(sharedLibrarySoname),
-                new PathSourcePath(sharedLibraryOutput)));
+                new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput)));
       }
 
       @Override
@@ -206,6 +207,7 @@ public class CxxPythonExtensionDescriptionTest {
 
   @Test
   public void createBuildRulePythonPackageable() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleResolver resolver = new BuildRuleResolver();
     CxxPlatform cxxPlatform = CxxPythonExtensionBuilder.createDefaultPlatform();
@@ -214,7 +216,7 @@ public class CxxPythonExtensionDescriptionTest {
         (CxxPythonExtensionDescription) extensionBuilder.build().getDescription();
     CxxPythonExtension extension = (CxxPythonExtension) extensionBuilder.build(
         resolver,
-        new FakeProjectFilesystem(),
+        projectFilesystem,
         TargetGraphFactory.newInstance(
             extensionBuilder.build(),
             GenruleBuilder.newGenruleBuilder(PYTHON_DEP_TARGET).build()));
@@ -225,7 +227,7 @@ public class CxxPythonExtensionDescriptionTest {
     PythonPackageComponents expectedComponents = ImmutablePythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(
             target.getBasePath().resolve(desc.getExtensionName(target)),
-            new BuildTargetSourcePath(rule.getBuildTarget())),
+            new BuildTargetSourcePath(projectFilesystem, rule.getBuildTarget())),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of());
     assertEquals(

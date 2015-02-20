@@ -96,6 +96,7 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName {
       this.src = args.src.get();
     } else {
       this.src = new PathSourcePath(
+          params.getProjectFilesystem(),
           target.getBasePath().resolve(target.getShortNameAndFlavorPostfix()));
     }
 

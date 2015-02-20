@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -52,7 +53,7 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
   }
 
   public JavaLibraryBuilder addSrc(Path path) {
-    arg.srcs = amend(arg.srcs, new PathSourcePath(path));
+    arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
     return this;
   }
 
@@ -62,7 +63,8 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
   }
 
   public JavaLibraryBuilder setJavacJar(Path javacJar) {
-    arg.javacJar = Optional.<SourcePath>of(new PathSourcePath(javacJar));
+    arg.javacJar = Optional.<SourcePath>of(
+        new PathSourcePath(new FakeProjectFilesystem(), javacJar));
     return this;
   }
 }

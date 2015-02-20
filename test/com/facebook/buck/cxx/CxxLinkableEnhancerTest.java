@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -50,13 +52,16 @@ import java.util.Collections;
 
 public class CxxLinkableEnhancerTest {
 
+  private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
   private static final Path DEFAULT_OUTPUT = Paths.get("libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS = ImmutableList.<SourcePath>of(
       new TestSourcePath("a.o"),
       new TestSourcePath("b.o"),
       new TestSourcePath("c.o"));
   private static final ImmutableSortedSet<BuildRule> EMPTY_DEPS = ImmutableSortedSet.of();
-  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(new FakeBuckConfig());
+  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
+      PROJECT_FILESYSTEM,
+      new FakeBuckConfig());
 
   private static class FakeNativeLinkable extends FakeBuildRule implements NativeLinkable {
 
@@ -126,8 +131,8 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         ImmutableList.<SourcePath>of(
             new TestSourcePath("simple.o"),
-            new BuildTargetSourcePath(genrule1.getBuildTarget()),
-            new BuildTargetSourcePath(genrule2.getBuildTarget())),
+            new BuildTargetSourcePath(PROJECT_FILESYSTEM, genrule1.getBuildTarget()),
+            new BuildTargetSourcePath(PROJECT_FILESYSTEM, genrule2.getBuildTarget())),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS);
 
@@ -193,7 +198,8 @@ public class CxxLinkableEnhancerTest {
     // Create a native linkable dep and have it list the fake build rule above as a link
     // time dependency.
     NativeLinkableInput nativeLinkableInput = ImmutableNativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(new BuildTargetSourcePath(fakeBuildRule.getBuildTarget())),
+        ImmutableList.<SourcePath>of(
+            new BuildTargetSourcePath(PROJECT_FILESYSTEM, fakeBuildRule.getBuildTarget())),
         ImmutableList.<String>of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable(
         "//:dep",
@@ -341,7 +347,7 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(PROJECT_FILESYSTEM, new FakeBuckConfig());
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
 
     // Create a native linkable that sits at the bottom of the dep chain.

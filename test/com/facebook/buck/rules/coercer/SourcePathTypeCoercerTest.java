@@ -59,7 +59,7 @@ public class SourcePathTypeCoercerTest {
         pathRelativeToProjectRoot,
         path);
 
-    assertEquals(new PathSourcePath(Paths.get(path)), sourcePath);
+    assertEquals(new PathSourcePath(projectFilesystem, Paths.get(path)), sourcePath);
   }
 
   @Test
@@ -72,6 +72,7 @@ public class SourcePathTypeCoercerTest {
 
     assertEquals(
         new BuildTargetSourcePath(
+            projectFilesystem,
             ImmutableBuildTarget.of(
                 Optional.<String>absent(),
                 "//",
@@ -90,6 +91,7 @@ public class SourcePathTypeCoercerTest {
 
     assertEquals(
         new BuildTargetSourcePath(
+            projectFilesystem,
             ImmutableBuildTarget.of(
                 Optional.<String>absent(),
                 "//",
@@ -111,6 +113,7 @@ public class SourcePathTypeCoercerTest {
 
     assertEquals(
         new BuildTargetSourcePath(
+            projectFilesystem,
             ImmutableBuildTarget.of(
                 Optional.of("hello"),
                 "//",

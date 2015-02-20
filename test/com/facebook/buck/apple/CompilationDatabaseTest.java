@@ -258,14 +258,15 @@ public class CompilationDatabaseTest {
   private CompilationDatabase createTestCompilationDatabase() {
     setUpTestValues();
 
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ImmutableSortedSet<String> frameworks = ImmutableSortedSet.of(
         "$SDKROOT/System/Library/Frameworks/CoreLocation.framework",
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
         "$SDKROOT/System/Library/Frameworks/UIKit.framework");
     ImmutableSet<Path> includePaths = ImmutableSet.of(
         Paths.get("/Users/user/src/buck-out/gen/library/lib.hmap"));
-    Optional<SourcePath> pchFile = Optional.<SourcePath>of(new PathSourcePath(Paths.get(
-        "foo/bar.pch")));
+    Optional<SourcePath> pchFile = Optional.<SourcePath>of(
+        new PathSourcePath(projectFilesystem, Paths.get("foo/bar.pch")));
     ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths = ImmutableMap.of(
           (AppleSdk) ImmutableAppleSdk.builder()
               .setName("iphonesimulator8.0")

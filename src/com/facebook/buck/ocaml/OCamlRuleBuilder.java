@@ -334,8 +334,7 @@ public class OCamlRuleBuilder {
         .build();
 
     File baseDir = params.getProjectFilesystem().getRootPath().toAbsolutePath().toFile();
-    ImmutableMap<SourcePath, ImmutableList<SourcePath>> mlInput = getMLInputWithDeps(
-        pathResolver,
+    ImmutableMap<Path, ImmutableList<Path>> mlInput = getMLInputWithDeps(
         baseDir,
         ocamlContext);
 
@@ -391,8 +390,7 @@ public class OCamlRuleBuilder {
         .toList();
   }
 
-  private static ImmutableMap<SourcePath, ImmutableList<SourcePath>> getMLInputWithDeps(
-      SourcePathResolver resolver,
+  private static ImmutableMap<Path, ImmutableList<Path>> getMLInputWithDeps(
       File baseDir,
       OCamlBuildContext ocamlContext) {
     OCamlDepToolStep depToolStep = new OCamlDepToolStep(
@@ -416,7 +414,6 @@ public class OCamlRuleBuilder {
     if (depsString.isPresent()) {
       OCamlDependencyGraphGenerator graphGenerator = new OCamlDependencyGraphGenerator();
       return filterCurrentRuleInput(
-          resolver,
           ocamlContext.getMLInput(),
           graphGenerator.generateDependencyMap(depsString.get()));
     } else {
@@ -424,19 +421,18 @@ public class OCamlRuleBuilder {
     }
   }
 
-  private static ImmutableMap<SourcePath, ImmutableList<SourcePath>> filterCurrentRuleInput(
-      final SourcePathResolver resolver,
+  private static ImmutableMap<Path, ImmutableList<Path>> filterCurrentRuleInput(
       final ImmutableList<Path> mlInput,
-      ImmutableMap<SourcePath, ImmutableList<SourcePath>> deps) {
-    ImmutableMap.Builder<SourcePath, ImmutableList<SourcePath>> builder = ImmutableMap.builder();
-    for (ImmutableMap.Entry<SourcePath, ImmutableList<SourcePath>> entry : deps.entrySet()) {
-      if (mlInput.contains(resolver.getPath(entry.getKey()))) {
+      ImmutableMap<Path, ImmutableList<Path>> deps) {
+    ImmutableMap.Builder<Path, ImmutableList<Path>> builder = ImmutableMap.builder();
+    for (ImmutableMap.Entry<Path, ImmutableList<Path>> entry : deps.entrySet()) {
+      if (mlInput.contains(entry.getKey())) {
         builder.put(entry.getKey(),
             FluentIterable.from(entry.getValue())
-              .filter(new Predicate<SourcePath>() {
+              .filter(new Predicate<Path>() {
                         @Override
-                        public boolean apply(SourcePath input) {
-                          return mlInput.contains(resolver.getPath(input));
+                        public boolean apply(Path input) {
+                          return mlInput.contains(input);
                         }
                       }).toList()
             );

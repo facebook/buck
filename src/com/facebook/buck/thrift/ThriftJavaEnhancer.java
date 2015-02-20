@@ -135,7 +135,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
         javaParams,
         pathResolver,
         FluentIterable.from(sourceZips)
-            .transform(SourcePaths.TO_BUILD_TARGET_SOURCE_PATH)
+            .transform(SourcePaths.getToBuildTargetSourcePath(params.getProjectFilesystem()))
             .toSortedSet(Ordering.natural()),
         /* resources */ ImmutableSet.<SourcePath>of(),
         /* proguardConfig */ Optional.<Path>absent(),

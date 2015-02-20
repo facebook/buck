@@ -109,7 +109,7 @@ public class DummyRDotJava extends AbstractBuildRule
           rDotJavaSrcFolder);
       steps.add(mergeStep);
       javaSourceFilePaths =
-          ImmutableSet.copyOf(getResolver().getAllPaths(mergeStep.getRDotJavaFiles()));
+          ImmutableSet.copyOf(mergeStep.getRDotJavaFiles());
     }
 
     // Clear out the directory where the .class files will be generated.

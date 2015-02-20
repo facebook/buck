@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidResource.BuildOutput;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +56,7 @@ public class AndroidResourceTest {
 
   @Test
   public void testGetInputsToCompareToOutput() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     // Create an android_resource rule with all sorts of input files that it depends on. If any of
     // these files is modified, then this rule should not be cached.
     BuildTarget buildTarget = BuildTarget.builder("//java/src/com/facebook/base", "res").build();
@@ -72,7 +75,9 @@ public class AndroidResourceTest {
             Paths.get("java/src/com/facebook/base/assets/drawable/F.xml"),
             Paths.get("java/src/com/facebook/base/assets/drawable/B.xml"),
             Paths.get("java/src/com/facebook/base/assets/drawable/D.xml")),
-        new PathSourcePath(Paths.get("java/src/com/facebook/base/AndroidManifest.xml")),
+        new PathSourcePath(
+            projectFilesystem,
+            Paths.get("java/src/com/facebook/base/AndroidManifest.xml")),
         /* hasWhitelisted */ false);
 
     // Test getInputsToCompareToOutput().
@@ -92,6 +97,7 @@ public class AndroidResourceTest {
 
   @Test
   public void testRuleKeyForDifferentInputFilenames() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     String commonHash = Strings.repeat("a", 40);
     FakeFileHashCache fakeFileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of(
@@ -117,7 +123,9 @@ public class AndroidResourceTest {
         .setAssetsSrcs(ImmutableSortedSet.of(
             Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
         .setManifest(
-            new PathSourcePath(Paths.get("java/src/com/facebook/base/AndroidManifest.xml")))
+            new PathSourcePath(
+                projectFilesystem,
+                Paths.get("java/src/com/facebook/base/AndroidManifest.xml")))
         .build();
 
     AndroidResource androidResource2 = AndroidResourceRuleBuilder.newBuilder()
@@ -131,7 +139,9 @@ public class AndroidResourceTest {
         .setAssetsSrcs(ImmutableSortedSet.of(
                 Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
         .setManifest(
-            new PathSourcePath(Paths.get("java/src/com/facebook/base/AndroidManifest.xml")))
+            new PathSourcePath(
+                projectFilesystem,
+                Paths.get("java/src/com/facebook/base/AndroidManifest.xml")))
         .build();
 
     RuleKey ruleKey1 = androidResource1.getRuleKeyWithoutDeps();
@@ -208,6 +218,7 @@ public class AndroidResourceTest {
 
   @Test
   public void testGetRDotJavaPackageWhenPackageIsNotSpecified() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidResource androidResource = new AndroidResource(
         new FakeBuildRuleParamsBuilder("//foo:bar").build(),
         new SourcePathResolver(new BuildRuleResolver()),
@@ -217,7 +228,9 @@ public class AndroidResourceTest {
         /* rDotJavaPackage */ null,
         /* assets */ null,
         /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
-        /* manifestFile */ new PathSourcePath(Paths.get("foo/AndroidManifest.xml")),
+        /* manifestFile */ new PathSourcePath(
+            projectFilesystem,
+            Paths.get("foo/AndroidManifest.xml")),
         /* hasWhitelistedStrings */ false);
     FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
     onDiskBuildInfo.putMetadata(AndroidResource.METADATA_KEY_FOR_ABI, Strings.repeat("a", 40));
