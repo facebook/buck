@@ -80,6 +80,7 @@ public final class FileTypes {
           .put("s", "sourcecode.asm")
           .put("storyboard", "file.storyboard")
           .put("strings", "text.plist.strings")
+          .put("stringsdict", "text.plist.xml")
           .put("tif", "image.tiff")
           .put("tiff", "image.tiff")
           .put("tcc", "sourcecode.cpp.cpp")
