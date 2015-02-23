@@ -137,7 +137,8 @@ public class AaptPackageResources extends AbstractBuildRule
         .setReflectively("packageType", packageType.toString())
         .setReflectively("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString())
         .setReflectively("rDotJavaNeedsDexing", rDotJavaNeedsDexing)
-        .setReflectively("shouldBuildStringSourceMap", shouldBuildStringSourceMap);
+        .setReflectively("shouldBuildStringSourceMap", shouldBuildStringSourceMap)
+        .setReflectively("skipCrunchPngs", skipCrunchPngs);
   }
 
   @Override
