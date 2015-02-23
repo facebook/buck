@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -32,11 +33,16 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class AppleTestDescription implements Description<AppleTestDescription.Arg> {
+import java.util.Set;
+
+public class AppleTestDescription implements Description<AppleTestDescription.Arg>, Flavored {
   public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("apple_test");
 
   /**
@@ -44,6 +50,11 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
    */
   private static final Flavor LIBRARY_FLAVOR = ImmutableFlavor.of("apple-test-library");
   private static final Flavor BUNDLE_FLAVOR = ImmutableFlavor.of("apple-test-bundle");
+
+  private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
+      LIBRARY_FLAVOR, BUNDLE_FLAVOR);
+
+  private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = Predicates.in(SUPPORTED_FLAVORS);
 
   private final AppleLibraryDescription appleLibraryDescription;
 
@@ -62,6 +73,12 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
   }
 
   @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR) ||
+        appleLibraryDescription.hasFlavors(flavors);
+  }
+
+  @Override
   public <A extends Arg> AppleTest createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -72,7 +89,6 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
             BuildTarget.builder(params.getBuildTarget())
                 .addFlavors(LIBRARY_FLAVOR)
                 .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-                .addFlavors(ImmutableFlavor.of("default"))
                 .build(),
             Suppliers.ofInstance(params.getDeclaredDeps()),
             Suppliers.ofInstance(params.getExtraDeps())),
