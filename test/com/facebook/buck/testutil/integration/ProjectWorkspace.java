@@ -226,6 +226,7 @@ public class ProjectWorkspace {
       throws IOException {
     return runBuckCommandWithEnvironmentAndContext(
         Optional.<NGContext>absent(),
+        Optional.<BuckEventListener>absent(),
         args);
   }
 
@@ -244,12 +245,27 @@ public class ProjectWorkspace {
 
   public ProcessResult runBuckdCommand(NGContext context, String... args)
       throws IOException {
-    return runBuckCommandWithEnvironmentAndContext(Optional.of(context), args);
+    return runBuckCommandWithEnvironmentAndContext(
+        Optional.of(context),
+        Optional.<BuckEventListener>absent(),
+        args);
+  }
+
+  public ProcessResult runBuckdCommand(
+      NGContext context,
+      BuckEventListener eventListener,
+      String... args)
+      throws IOException {
+    return runBuckCommandWithEnvironmentAndContext(
+        Optional.of(context),
+        Optional.of(eventListener),
+        args);
   }
 
   private ProcessResult runBuckCommandWithEnvironmentAndContext(
-        Optional<NGContext> context,
-        String... args)
+      Optional<NGContext> context,
+      Optional<BuckEventListener> eventListener,
+      String... args)
     throws IOException {
     assertTrue("setUp() must be run before this method is invoked", isSetUp);
     CapturingPrintStream stdout = new CapturingPrintStream();
@@ -268,6 +284,11 @@ public class ProjectWorkspace {
         // empty
       }
     };
+    ImmutableList.Builder<BuckEventListener> eventListeners = ImmutableList.builder();
+    eventListeners.add(capturingEventListener);
+    if (eventListener.isPresent()) {
+      eventListeners.add(eventListener.get());
+    }
 
     // Construct a limited view of the parent environment for the child.
     //
@@ -288,7 +309,7 @@ public class ProjectWorkspace {
     }
     ImmutableMap<String, String> env = envBuilder.build();
 
-    Main main = new Main(stdout, stderr, Optional.of(capturingEventListener));
+    Main main = new Main(stdout, stderr, eventListeners.build());
     int exitCode = 0;
     try {
       exitCode = main.runMainWithExitCode(

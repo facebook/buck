@@ -27,11 +27,15 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.TestRepositoryBuilder;
+import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.DelegatingInputStream;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -250,17 +254,33 @@ public class DaemonIntegrationTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     final long timeoutMillis = 100;
-    final long intervalMillis = timeoutMillis * 2; // Interval > timeout to trigger disconnection.
     final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "exclusive_execution", tmp);
     workspace.setUp();
 
+    // Start with an input stream that sends heartbeats at a regular rate.
+    final DelegatingInputStream inputStream = new DelegatingInputStream(
+        TestContext.createHeartBeatStream(timeoutMillis / 10));
+
     // Build an NGContext connected to an NGInputStream reading from stream that will timeout.
     try (TestContext context = new TestContext(
         ImmutableMap.copyOf(System.getenv()),
-        TestContext.createHeartBeatStream(intervalMillis),
+        inputStream,
         timeoutMillis)) {
-      ProcessResult result = workspace.runBuckdCommand(context, "test", "//:test");
+      BuckEventListener listener = new BuckEventListener() {
+        @Subscribe
+        @SuppressWarnings("unused")
+        public void onEvent(TestRunEvent.Started event) {
+          // When tests start running, make the heartbeat stream time out.
+          inputStream.setDelegate(TestContext.createHeartBeatStream(2 * timeoutMillis));
+        }
+
+        @Override
+        public void outputTrace(BuildId buildId) throws InterruptedException {
+          // do nothing
+        }
+      };
+      ProcessResult result = workspace.runBuckdCommand(context, listener, "test", "//:test");
       result.assertFailure();
       assertThat(result.getStderr(), containsString("InterruptedException"));
     }
@@ -313,12 +333,29 @@ public class DaemonIntegrationTest {
         this, "exclusive_execution", tmp);
     workspace.setUp();
 
+    // Start with an input stream that sends heartbeats at a regular rate.
+    final DelegatingInputStream inputStream = new DelegatingInputStream(
+        TestContext.createHeartBeatStream(timeoutMillis / 10));
+
     // Build an NGContext connected to an NGInputStream reading from stream that will timeout.
     try (TestContext context = new TestContext(
         ImmutableMap.copyOf(System.getenv()),
-        TestContext.createDisconnectionStream(disconnectMillis),
+        inputStream,
         timeoutMillis)) {
-      ProcessResult result = workspace.runBuckdCommand(context, "test", "//:test");
+      BuckEventListener listener = new BuckEventListener() {
+        @Subscribe
+        @SuppressWarnings("unused")
+        public void onEvent(TestRunEvent.Started event) {
+          // When tests start running, make the heartbeat stream simulate a disconnection.
+          inputStream.setDelegate(TestContext.createDisconnectionStream(disconnectMillis));
+        }
+
+        @Override
+        public void outputTrace(BuildId buildId) throws InterruptedException {
+          // do nothing
+        }
+      };
+      ProcessResult result = workspace.runBuckdCommand(context, listener, "test", "//:test");
       result.assertFailure();
       assertThat(result.getStderr(), containsString("InterruptedException"));
     }

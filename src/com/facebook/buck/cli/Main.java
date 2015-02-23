@@ -92,6 +92,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -132,7 +133,7 @@ public final class Main {
 
   private final PrintStream stdOut;
   private final PrintStream stdErr;
-  private final Optional<BuckEventListener> externalEventsListener;
+  private final ImmutableList<BuckEventListener> externalEventsListeners;
 
   private static final Semaphore commandSemaphore = new Semaphore(1);
 
@@ -386,21 +387,21 @@ public final class Main {
 
   @VisibleForTesting
   public Main(PrintStream stdOut, PrintStream stdErr) {
-    this(stdOut, stdErr, Optional.<BuckEventListener>absent());
+    this(stdOut, stdErr, ImmutableList.<BuckEventListener>of());
   }
 
   @VisibleForTesting
   public Main(
       PrintStream stdOut,
       PrintStream stdErr,
-      Optional<BuckEventListener> externalEventsListener) {
+      List<BuckEventListener> externalEventsListeners) {
     this.stdOut = stdOut;
     this.stdErr = stdErr;
     this.platform = Platform.detect();
     this.objectMapper = new ObjectMapper();
     // Add support for serializing Path and other JDK 7 objects.
     this.objectMapper.registerModule(new Jdk7Module());
-    this.externalEventsListener = externalEventsListener;
+    this.externalEventsListeners = ImmutableList.copyOf(externalEventsListeners);
   }
 
   /** Prints the usage message to standard error. */
@@ -831,14 +832,12 @@ public final class Main {
             javacOptions,
             environment));
 
+    eventListenersBuilder.addAll(externalEventsListeners);
+
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
 
     for (BuckEventListener eventListener : eventListeners) {
       buckEvents.register(eventListener);
-    }
-
-    if (externalEventsListener.isPresent()) {
-      buckEvents.register(externalEventsListener.get());
     }
 
     return eventListeners;
