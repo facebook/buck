@@ -1106,13 +1106,29 @@ public class Parser {
               unflavored.getBasePath().resolve(buildFileName));
         }
 
-        if (buildTarget.isFlavored() &&
-            (!(description instanceof Flavored) ||
-            !((Flavored) description).hasFlavors(ImmutableSet.copyOf(buildTarget.getFlavors())))) {
-          throw new HumanReadableException("Unrecognized flavor in target %s while parsing %s%s.",
-              buildTarget,
-              BuildTarget.BUILD_TARGET_PREFIX,
-              buildTarget.getBasePath().resolve(buildFileName));
+        if (buildTarget.isFlavored()) {
+          if (description instanceof Flavored) {
+            if (!((Flavored) description).hasFlavors(
+                    ImmutableSet.copyOf(buildTarget.getFlavors()))) {
+              throw new HumanReadableException(
+                  "Unrecognized flavor in target %s while parsing %s%s.",
+                  buildTarget,
+                  BuildTarget.BUILD_TARGET_PREFIX,
+                  buildTarget.getBasePath().resolve(buildFileName));
+            }
+          } else {
+            LOG.warn(
+                "Target %s (type %s) must implement the Flavored interface " +
+                "before we can check if it supports flavors: %s",
+                buildTarget.getUnflavoredTarget(),
+                buildRuleType,
+                buildTarget.getFlavors());
+            throw new HumanReadableException(
+                "Target %s (type %s) does not currently support flavors (tried %s)",
+                buildTarget.getUnflavoredTarget(),
+                buildRuleType,
+                buildTarget.getFlavors());
+          }
         }
 
         this.pathsToBuildTargets.put(buildFilePath, buildTarget);

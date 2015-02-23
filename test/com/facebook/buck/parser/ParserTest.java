@@ -308,8 +308,8 @@ public class ParserTest extends EasyMockSupport {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Unrecognized flavor in target //java/com/facebook:baz#src while parsing " +
-            "//java/com/facebook/BUCK.");
+        "Target //java/com/facebook:baz (type genrule) does not currently support flavors " +
+            "(tried [src])");
     testParser.buildTargetGraphForBuildTargets(
         ImmutableSortedSet.of(flavored),
         new ParserConfig(new FakeBuckConfig()),
