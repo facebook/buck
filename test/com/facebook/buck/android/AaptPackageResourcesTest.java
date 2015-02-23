@@ -81,7 +81,8 @@ public class AaptPackageResourcesTest {
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false,
-        /* shouldWarnIfMissingResources */ false);
+        /* shouldWarnIfMissingResources */ false,
+        /* skipCrunchPngs */ false);
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
@@ -145,7 +146,8 @@ public class AaptPackageResourcesTest {
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false,
-        /* shouldWarnIfMissingResources */ false);
+        /* shouldWarnIfMissingResources */ false,
+        /* skipCrunchPngs */ false);
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
     Set<Path> assetsDirectories = ImmutableSet.of(resourceOne.getAssets());
@@ -222,7 +224,8 @@ public class AaptPackageResourcesTest {
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false,
-        /* shouldWarnIfMissingResources */ false);
+        /* shouldWarnIfMissingResources */ false,
+        /* skipCrunchPngs */ false);
 
     AndroidResource resourceOne = (AndroidResource) ruleResolver.getRule(
         BuildTargetFactory.newInstance("//facebook/base:libraryOne_resources"));

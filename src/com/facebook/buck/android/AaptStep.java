@@ -68,7 +68,6 @@ public class AaptStep extends ShellStep {
   private final Path pathToRDotTxtDir;
   private final Optional<Path> pathToGeneratedProguardConfig;
 
-  @SuppressWarnings("unused")
   private final boolean isCrunchPngFiles;
 
   public AaptStep(
@@ -108,19 +107,10 @@ public class AaptStep extends ShellStep {
       builder.add("-G", pathToGeneratedProguardConfig.get().toString());
     }
 
-    /*
-     * In practice, it appears that if --no-crunch is used, resources will occasionally appear
-     * distorted in the APK produced by this command (and what's worse, a clean reinstall does not
-     * make the problem go away). This is not reliably reproducible, so for now, we categorically
-     * outlaw the use of --no-crunch so that developers do not get stuck in the distorted image
-     * state. One would expect the use of --no-crunch to allow for faster build times, so it would
-     * be nice to figure out a way to leverage it in debug mode that never results in distorted
-     * images.
-     */
     // --no-crunch, if appropriate.
-    // if (!isCrunchPngFiles) {
-    //   builder.add("--no-crunch");
-    // }
+    if (!isCrunchPngFiles) {
+       builder.add("--no-crunch");
+    }
 
     // Include all of the res/ directories.
     builder.add("--auto-add-overlay");

@@ -123,6 +123,36 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 {/call}
 
 {call buck.arg}
+  {param name : 'skip_crunch_pngs' /}
+  {param default : 'False' /}
+  {param desc}
+  If <code>True</code>, PNGs in the APK are not crushed by aapt.
+
+  This is equivalent to specifying
+
+  {literal}<pre class="prettyprint lang-js">
+  android {
+      aaptOptions.useAaptPngCruncher = false
+  }
+  </pre>{/literal}
+
+  in gradle, or
+
+  {literal}<pre class="prettyprint lang-xml">
+  &lt;target name="-crunch">
+      &lt;echo message="Skipping PNG optimization"/>
+  &lt;/target>
+  </pre>{/literal}
+
+  in ant.
+
+  This can be useful if the PNGs have
+  been optimised beforehand, as aapt would attempt to crush the optimised PNGs and end up increasing
+  their size instead of decreasing it.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'deps' /}
   {param default : '[]' /}
   {param desc}

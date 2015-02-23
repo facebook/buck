@@ -176,6 +176,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         dexSplitMode,
         ImmutableSet.copyOf(args.noDx.or(ImmutableSet.<BuildTarget>of())),
         /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        args.skipCrunchPngs.or(false),
         javacOptions,
         exopackageModes,
         (Keystore) keystore,
@@ -282,6 +283,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     public Optional<Integer> optimizationPasses;
     public Optional<SourcePath> proguardConfig;
     public Optional<String> resourceCompression;
+    public Optional<Boolean> skipCrunchPngs;
     public Optional<List<String>> primaryDexPatterns;
     public Optional<SourcePath> primaryDexClassesFile;
     public Optional<SourcePath> primaryDexScenarioFile;

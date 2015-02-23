@@ -124,6 +124,7 @@ public class AndroidInstrumentationApkDescription
         DexSplitMode.NO_SPLIT,
         FluentIterable.from(rulesToExcludeFromDex).transform(TO_TARGET).toSet(),
         resourcesToExclude,
+        /* skipCrunchPngs */ false,
         javacOptions,
         EnumSet.noneOf(ExopackageMode.class),
         apkUnderTest.getKeystore(),

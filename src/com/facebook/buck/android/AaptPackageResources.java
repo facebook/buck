@@ -94,6 +94,7 @@ public class AaptPackageResources extends AbstractBuildRule
   private final boolean rDotJavaNeedsDexing;
   private final boolean shouldBuildStringSourceMap;
   private final boolean shouldWarnIfMissingResource;
+  private final boolean skipCrunchPngs;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   AaptPackageResources(
@@ -108,7 +109,8 @@ public class AaptPackageResources extends AbstractBuildRule
       JavacOptions javacOptions,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap,
-      boolean shouldWarnIfMissingResources) {
+      boolean shouldWarnIfMissingResources,
+      boolean skipCrunchPngs) {
     super(params, resolver);
     this.manifest = manifest;
     this.filteredResourcesProvider = filteredResourcesProvider;
@@ -120,6 +122,7 @@ public class AaptPackageResources extends AbstractBuildRule
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.shouldWarnIfMissingResource = shouldWarnIfMissingResources;
+    this.skipCrunchPngs = skipCrunchPngs;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
@@ -277,7 +280,7 @@ public class AaptPackageResources extends AbstractBuildRule
         getResourceApkPath(),
         rDotTxtDir,
         pathToGeneratedProguardConfig,
-        packageType.isCrunchPngFiles()));
+        !skipCrunchPngs && packageType.isCrunchPngFiles()));
 
     if (!filteredResourcesProvider.getResDirectories().isEmpty()) {
       generateAndCompileRDotJavaFiles(steps, buildableContext);
