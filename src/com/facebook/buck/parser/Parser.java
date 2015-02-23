@@ -577,7 +577,7 @@ public class Parser {
       ParserConfig parserConfig,
       ProjectBuildFileParser buildFileParser,
       ImmutableMap<String, String> environment)
-      throws BuildFileParseException, BuildTargetException, IOException {
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
     if (!isCached(buildFile, parserConfig.getDefaultIncludes(), environment)) {
       LOG.debug("Parsing %s file: %s", parserConfig.getBuildFileName(), buildFile);

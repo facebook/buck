@@ -44,10 +44,12 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -229,7 +231,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
   public List<Map<String, Object>> getAll(Path buildFile)
-      throws BuildFileParseException {
+      throws BuildFileParseException, InterruptedException {
     List<Map<String, Object>> result = getAllRulesAndMetaRules(buildFile);
 
     // Strip out the __includes meta rule, which is the last rule.
@@ -243,9 +245,15 @@ public class ProjectBuildFileParser implements AutoCloseable {
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
   public List<Map<String, Object>> getAllRulesAndMetaRules(Path buildFile)
-      throws BuildFileParseException {
+      throws BuildFileParseException, InterruptedException {
     try {
       return getAllRulesInternal(buildFile);
+    } catch (InterruptedIOException | ClosedByInterruptException e) {
+      // I/O operations will throw these types of `IOException` when interrupted, so
+      // propagate these along as an `InterruptedException`, so we handle this as expected.
+      InterruptedException interruptedException = new InterruptedException();
+      interruptedException.initCause(e);
+      throw interruptedException;
     } catch (IOException e) {
       throw BuildFileParseException.createForBuildFileParseError(buildFile, e);
     }
