@@ -1,0 +1,94 @@
+{namespace android_aar}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'android_aar()' /}
+    {param prettify: true /}
+    {param description}
+          A rule that generates an Android AAR.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'FROZEN' /}
+{param overview}
+An <code>android_aar()</code> rule is used to generate an Android AAR.
+<p>
+<p>
+See the <a href="http://tools.android.com/tech-docs/new-build-system/aar-format">
+official Android documentation</a> for details about the <code>.aar</code> format.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'manifest_skeleton' /}
+  {param desc}
+  The skeleton manifest file used to generate the final <code>AndroidManifest.xml
+  </code>. May either be a file or a <code>android_manifest</code> target.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  List of build targets whose corresponding compiled Java code,
+  Android resources, and native libraries will be included in the AAR.
+  <ul>
+    <li><code>android_library()</code> Will be included in the final <code>classes.jar</code>
+    <li><code>android_resource()</code> Will be included in the final <code>R.txt</code>,
+    {sp}<code>res/</code> and <code>assets/</code>
+    <li><code>java_library()</code> Will be included in the final <code>classes.jar</code>
+    <li><code>prebuilt_jar()</code>  Will be included in the final <code>classes.jar</code>
+    <li><code>ndk_library()</code> Will be included in the final <code>jni/</code> or
+    {sp}<code>assets/</code> if <code>is_asset</code> is True
+    <li><code>prebuilt_native_library()</code> Will be included in the final <code>jni/</code> or
+    {sp}<code>assets/</code> if <code>is_asset</code> is True
+  </ul>
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+android_resource(
+  name = 'res',
+  res = 'res',
+  assets = 'assets',
+  package = 'com.example',
+)
+
+android_library(
+  name = 'lib',
+  srcs = glob(['**/*.java']),
+)
+
+android_aar(
+  name = 'app',
+  manifest_skeleton = 'AndroidManifestSkeleton.xml',
+  deps = [
+    ':res',
+    ':lib',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
