@@ -690,7 +690,15 @@ public class ProjectGenerator {
         .put(
             "FRAMEWORK_SEARCH_PATHS",
             Joiner.on(' ').join(
-                collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode), false)));
+                collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode), false)))
+        .put(
+            "OTHER_CFLAGS",
+            Joiner
+                .on(' ')
+                .join(
+                    Iterables.concat(
+                        targetNode.getConstructorArg().compilerFlags.get(),
+                        targetNode.getConstructorArg().preprocessorFlags.get())));
 
     setTargetBuildConfigurations(
         new Function<String, Path>() {

@@ -44,6 +44,16 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
+  public BUILDER setCompilerFlags(Optional<ImmutableList<String>> compilerFlags) {
+    arg.compilerFlags = compilerFlags;
+    return getThis();
+  }
+
+  public BUILDER setPreprocessorFlags(Optional<ImmutableList<String>> preprocessorFlags) {
+    arg.preprocessorFlags = preprocessorFlags;
+    return getThis();
+  }
+
   public BUILDER setSrcs(Optional<ImmutableList<SourceWithFlags>> srcs) {
     arg.srcs = srcs;
     return getThis();
