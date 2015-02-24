@@ -184,8 +184,8 @@ public class RuleKeyTest {
   public void setInputPathSourcePath() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-    // Just changing the name of a named source path shouldn't change the hash.
-    assertEquals(
+    // Just changing the name of a source path should cause the key to change.
+    assertNotEquals(
         createEmptyRuleKey(
             new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("key", new PathSourcePath(projectFilesystem, Paths.get("something")))
@@ -197,7 +197,7 @@ public class RuleKeyTest {
                 new PathSourcePath(projectFilesystem, Paths.get("something", "else")))
             .build());
 
-    // But changing the key should...
+    // As should changing the key.
     assertNotEquals(
         createEmptyRuleKey(
             new SourcePathResolver(new BuildRuleResolver()))
