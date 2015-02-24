@@ -25,12 +25,11 @@ import org.immutables.value.Value;
 import java.util.List;
 
 /**
- * Simple type representing an iOS or OS X source entry containing a {@link SourcePath} and
- * file-specific flags.
+ * Simple type representing a {@link SourcePath} and a list of file-specific flags.
  */
 @Value.Immutable
 @BuckStyleImmutable
-public abstract class AppleSource {
+public abstract class SourceWithFlags {
 
   @Value.Parameter
   public abstract SourcePath getSourcePath();
@@ -38,12 +37,12 @@ public abstract class AppleSource {
   @Value.Parameter
   public abstract List<String> getFlags();
 
-  public static AppleSource of(SourcePath sourcePath) {
-    return ImmutableAppleSource.of(sourcePath, ImmutableList.<String>of());
+  public static SourceWithFlags of(SourcePath sourcePath) {
+    return ImmutableSourceWithFlags.of(sourcePath, ImmutableList.<String>of());
   }
 
-  public static AppleSource of(SourcePath sourcePath, List<String> flags) {
-    return ImmutableAppleSource.of(sourcePath, ImmutableList.copyOf(flags));
+  public static SourceWithFlags of(SourcePath sourcePath, List<String> flags) {
+    return ImmutableSourceWithFlags.of(sourcePath, ImmutableList.copyOf(flags));
   }
 
 }

@@ -34,7 +34,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.coercer.AppleSource;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -90,15 +90,15 @@ public class CompilationDatabaseTest {
   public void testGetInputsToCompareToOutput() {
     setUpTestValues();
 
-    Collection<AppleSource> appleSources = ImmutableList.of(
-        AppleSource.of(
+    Collection<SourceWithFlags> sourcesWithFlags = ImmutableList.of(
+        SourceWithFlags.of(
             new TestSourcePath("Foo/Hello.h"),
             ImmutableList.of("public")),
-        AppleSource.of(new TestSourcePath("Foo/Bye.h")),
-        AppleSource.of(new TestSourcePath("Foo/Hello.m")));
-    TargetSources targetSources = TargetSources.ofAppleSources(
+        SourceWithFlags.of(new TestSourcePath("Foo/Bye.h")),
+        SourceWithFlags.of(new TestSourcePath("Foo/Hello.m")));
+    TargetSources targetSources = TargetSources.fromSourcesWithFlags(
         testSourcePathResolver,
-        appleSources);
+        sourcesWithFlags);
 
     CompilationDatabase compilationDatabase = new CompilationDatabase(
         new FakeBuildRuleParamsBuilder(testBuildTarget).build(),
@@ -246,13 +246,15 @@ public class CompilationDatabaseTest {
   private void setUpTestValues() {
     testBuildRuleResolver = new BuildRuleResolver();
     testSourcePathResolver = new SourcePathResolver(testBuildRuleResolver);
-    Collection<AppleSource> appleSources = ImmutableList.of(
-        AppleSource.of(
+    Collection<SourceWithFlags> sourcesWithFlags = ImmutableList.of(
+        SourceWithFlags.of(
             new TestSourcePath("foo/Hello.h"),
             // Note that "public" should not be included in the clang flags.
             ImmutableList.of("public")),
-        AppleSource.of(new TestSourcePath("foo/Hello.m")));
-    testTargetSources = TargetSources.ofAppleSources(testSourcePathResolver, appleSources);
+        SourceWithFlags.of(new TestSourcePath("foo/Hello.m")));
+    testTargetSources = TargetSources.fromSourcesWithFlags(
+        testSourcePathResolver,
+        sourcesWithFlags);
     testBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
   }
 

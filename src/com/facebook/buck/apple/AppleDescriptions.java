@@ -131,7 +131,7 @@ public class AppleDescriptions {
         /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(params.getExtraDeps()));
 
-    TargetSources targetSources = TargetSources.ofAppleSources(resolver, args.srcs.get());
+    TargetSources targetSources = TargetSources.fromSourcesWithFlags(resolver, args.srcs.get());
     ImmutableSortedMap<SourcePath, ImmutableList<String>> perFileFlags =
         ImmutableSortedMap.copyOf(targetSources.getPerFileFlags());
     boolean useBuckHeaderMaps = args.useBuckHeaderMaps.or(Boolean.FALSE);

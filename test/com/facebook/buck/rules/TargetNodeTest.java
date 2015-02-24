@@ -26,7 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.coercer.AppleSource;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -121,7 +121,7 @@ public class TargetNodeTest {
   public class Arg {
     public ImmutableSortedSet<BuildTarget> deps;
     public ImmutableSortedSet<SourcePath> sourcePaths;
-    public Optional<AppleSource> appleSource;
+    public Optional<SourceWithFlags> appleSource;
     public Optional<Path> source;
     public Optional<String> string;
     @Hint(isDep = false)

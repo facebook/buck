@@ -105,7 +105,7 @@ public class AppleLibraryDescription implements
       BuildRuleResolver resolver,
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    TargetSources targetSources = TargetSources.ofAppleSources(pathResolver, args.srcs.get());
+    TargetSources targetSources = TargetSources.fromSourcesWithFlags(pathResolver, args.srcs.get());
     Optional<BuildRule> flavoredRule = AppleDescriptions
         .createFlavoredRule(
             params,

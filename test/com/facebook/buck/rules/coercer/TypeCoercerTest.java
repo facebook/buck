@@ -366,31 +366,31 @@ public class TypeCoercerTest {
 
   @Test
   public void coercingAppleSourcePaths() throws NoSuchFieldException, CoerceFailedException {
-    Type type = TestFields.class.getField("listOfAppleSources").getGenericType();
+    Type type = TestFields.class.getField("listOfSourcesWithFlags").getGenericType();
     TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<String> input = ImmutableList.of("foo.m", "bar.m");
     Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
-    ImmutableList<AppleSource> expectedResult = ImmutableList.of(
-        AppleSource.of(new TestSourcePath("foo.m")),
-        AppleSource.of(new TestSourcePath("bar.m")));
+    ImmutableList<SourceWithFlags> expectedResult = ImmutableList.of(
+        SourceWithFlags.of(new TestSourcePath("foo.m")),
+        SourceWithFlags.of(new TestSourcePath("bar.m")));
     assertEquals(expectedResult, result);
   }
 
   @Test
   public void coercingAppleSourcePathsWithFlags()
       throws NoSuchFieldException, CoerceFailedException {
-    Type type = TestFields.class.getField("listOfAppleSources").getGenericType();
+    Type type = TestFields.class.getField("listOfSourcesWithFlags").getGenericType();
     TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<?> input = ImmutableList.of(
         ImmutableList.of("foo.m", ImmutableList.of("-Wall", "-Werror")),
         ImmutableList.of("bar.m", ImmutableList.of("-fobjc-arc")));
     Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
-    ImmutableList<AppleSource> expectedResult = ImmutableList.of(
-        AppleSource.of(
+    ImmutableList<SourceWithFlags> expectedResult = ImmutableList.of(
+        SourceWithFlags.of(
             new TestSourcePath("foo.m"), ImmutableList.of("-Wall", "-Werror")),
-        AppleSource.of(
+        SourceWithFlags.of(
             new TestSourcePath("bar.m"), ImmutableList.of("-fobjc-arc")));
     assertEquals(expectedResult, result);
   }
@@ -398,7 +398,7 @@ public class TypeCoercerTest {
   @Test
   public void coercingHeterogeneousAppleSourceGroups()
       throws NoSuchFieldException, CoerceFailedException {
-    Type type = TestFields.class.getField("listOfAppleSources").getGenericType();
+    Type type = TestFields.class.getField("listOfSourcesWithFlags").getGenericType();
     TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<?> input = ImmutableList.of(
@@ -407,12 +407,12 @@ public class TypeCoercerTest {
         "Group2/baz.m",
         ImmutableList.of("Group2/blech.m", ImmutableList.of("-fobjc-arc")));
     Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
-    ImmutableList<AppleSource> expectedResult = ImmutableList.of(
-        AppleSource.of(new TestSourcePath("Group1/foo.m")),
-        AppleSource.of(
+    ImmutableList<SourceWithFlags> expectedResult = ImmutableList.of(
+        SourceWithFlags.of(new TestSourcePath("Group1/foo.m")),
+        SourceWithFlags.of(
             new TestSourcePath("Group1/bar.m"), ImmutableList.of("-Wall", "-Werror")),
-        AppleSource.of(new TestSourcePath("Group2/baz.m")),
-        AppleSource.of(
+        SourceWithFlags.of(new TestSourcePath("Group2/baz.m")),
+        SourceWithFlags.of(
             new TestSourcePath("Group2/blech.m"), ImmutableList.of("-fobjc-arc")));
     assertEquals(expectedResult, result);
   }
@@ -645,7 +645,7 @@ public class TypeCoercerTest {
     public Either<String, List<String>> eitherStringOrStringList;
     public Either<Set<String>, Map<String, String>> eitherStringSetOrStringToStringMap;
     public Pair<Path, String> pairOfPathsAndStrings;
-    public ImmutableList<AppleSource> listOfAppleSources;
+    public ImmutableList<SourceWithFlags> listOfSourcesWithFlags;
     public ImmutableSortedSet<Label> labels;
     public ImmutableList<TestEnum> listOfTestEnums;
     public ImmutableMap<String, Path> stringMapOfPaths;

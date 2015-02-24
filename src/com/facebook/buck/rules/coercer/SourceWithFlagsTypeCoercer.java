@@ -27,14 +27,14 @@ import java.nio.file.Path;
 import java.util.Collection;
 
 /**
- * A type coercer to handle source entries in an iOS or OS X rule.
+ * A type coercer to handle source entries with a list of flags.
  */
-public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
+public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> {
   private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
   private final TypeCoercer<ImmutableList<String>> flagsTypeCoercer;
   private final TypeCoercer<Pair<SourcePath, ImmutableList<String>>> sourcePathWithFlagsTypeCoercer;
 
-  AppleSourceTypeCoercer(
+  SourceWithFlagsTypeCoercer(
       TypeCoercer<SourcePath> sourcePathTypeCoercer,
       TypeCoercer<ImmutableList<String>> flagsTypeCoercer) {
     this.sourcePathTypeCoercer = sourcePathTypeCoercer;
@@ -44,8 +44,8 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
   }
 
   @Override
-  public Class<AppleSource> getOutputClass() {
-    return AppleSource.class;
+  public Class<SourceWithFlags> getOutputClass() {
+    return SourceWithFlags.class;
   }
 
   @Override
@@ -56,29 +56,29 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
   }
 
   @Override
-  public void traverse(AppleSource object, Traversal traversal) {
+  public void traverse(SourceWithFlags object, Traversal traversal) {
     sourcePathTypeCoercer.traverse(object.getSourcePath(), traversal);
     flagsTypeCoercer.traverse(ImmutableList.copyOf(object.getFlags()), traversal);
   }
 
   @Override
-  public Optional<AppleSource> getOptionalValue() {
+  public Optional<SourceWithFlags> getOptionalValue() {
     return Optional.absent();
   }
 
   @Override
-  public AppleSource coerce(
+  public SourceWithFlags coerce(
       BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
-    if (object instanceof AppleSource) {
-      return (AppleSource) object;
+    if (object instanceof SourceWithFlags) {
+      return (SourceWithFlags) object;
     }
 
     // We're expecting one of two types here. They can be differentiated pretty easily.
     if (object instanceof String) {
-      return AppleSource.of(
+      return SourceWithFlags.of(
           sourcePathTypeCoercer.coerce(
               buildTargetParser,
               filesystem,
@@ -94,7 +94,7 @@ public class AppleSourceTypeCoercer implements TypeCoercer<AppleSource> {
               filesystem,
               pathRelativeToProjectRoot,
               object);
-      return AppleSource.of(
+      return SourceWithFlags.of(
           sourcePathWithFlags.getFirst(),
           sourcePathWithFlags.getSecond());
     }

@@ -20,7 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.AppleSource;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -34,7 +34,7 @@ import com.google.common.collect.ImmutableSortedSet;
 @SuppressFieldNotInitialized
 public class AppleNativeTargetDescriptionArg implements HasTests {
   public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
-  public Optional<ImmutableList<AppleSource>> srcs;
+  public Optional<ImmutableList<SourceWithFlags>> srcs;
   public Optional<ImmutableSortedSet<String>> frameworks;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;
   public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;

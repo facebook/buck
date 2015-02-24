@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.AppleSource;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -93,8 +93,8 @@ public class RuleUtils {
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputPublicHeaderPaths,
       ImmutableSortedSet.Builder<SourcePath> outputPrivateHeaderPaths,
-      Collection<AppleSource> items) {
-    for (AppleSource item : items) {
+      Collection<SourceWithFlags> items) {
+    for (SourceWithFlags item : items) {
       addSourcePathToBuilders(
           resolver,
           item.getSourcePath(),

@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.AppleSource;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -70,11 +70,11 @@ public abstract class TargetSources {
   public abstract SortedSet<SourcePath> getPrivateHeaderPaths();
 
   /**
-   * Creates a {@link TargetSources} given a list of {@link AppleSource}s.
+   * Creates a {@link TargetSources} object given a list of {@link SourceWithFlags} objects.
    */
-  public static TargetSources ofAppleSources(
+  public static TargetSources fromSourcesWithFlags(
       SourcePathResolver resolver,
-      Collection<AppleSource> appleSources) {
+      Collection<SourceWithFlags> sourcesWithFlags) {
     ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableSortedMap.Builder<SourcePath, ImmutableList<String>> perFileFlagsBuilder =
         ImmutableSortedMap.naturalOrder();
@@ -90,7 +90,7 @@ public abstract class TargetSources {
         srcPathsBuilder,
         publicHeaderPathsBuilder,
         privateHeaderPathsBuilder,
-        appleSources);
+        sourcesWithFlags);
 
     ImmutableSortedSet<SourcePath> allSources = allSourcesBuilder.build();
     ImmutableSortedMap<SourcePath, ImmutableList<String>> perFileFlags =
