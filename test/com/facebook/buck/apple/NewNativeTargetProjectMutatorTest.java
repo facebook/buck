@@ -53,13 +53,13 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -136,15 +136,14 @@ public class NewNativeTargetProjectMutatorTest {
         GroupedSource.ofSourceGroup(
             "Group1",
             ImmutableList.of(
-                GroupedSource.ofSourcePath(foo),
-                GroupedSource.ofSourcePath(bar))),
+                GroupedSource.ofSourceWithFlags(SourceWithFlags.of(foo)),
+                GroupedSource.ofSourceWithFlags(
+                    SourceWithFlags.of(bar, ImmutableList.of("-Wall"))))),
         GroupedSource.ofSourceGroup(
             "Group2",
             ImmutableList.of(
-                GroupedSource.ofSourcePath(baz))));
-    ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags =
-        ImmutableMap.of(bar, ImmutableList.of("-Wall"));
-    mutator.setSources(sources, sourceFlags);
+                GroupedSource.ofSourceWithFlags(SourceWithFlags.of(baz)))));
+    mutator.setSources(sources);
     NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
         generatedProject);
 
@@ -176,16 +175,13 @@ public class NewNativeTargetProjectMutatorTest {
         GroupedSource.ofSourceGroup(
             "HeaderGroup1",
             ImmutableList.of(
-                GroupedSource.ofSourcePath(foo),
-                GroupedSource.ofSourcePath(bar))),
+                GroupedSource.ofPrivateHeader(foo),
+                GroupedSource.ofPublicHeader(bar))),
         GroupedSource.ofSourceGroup(
             "HeaderGroup2",
             ImmutableList.of(
-                GroupedSource.ofSourcePath(baz))));
-    ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags = ImmutableMap.of(
-        bar, ImmutableList.of("public"),
-        baz, ImmutableList.of("public"));
-    mutator.setSources(sources, sourceFlags);
+                GroupedSource.ofPublicHeader(baz))));
+    mutator.setSources(sources);
     NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
         generatedProject);
 
@@ -237,13 +233,13 @@ public class NewNativeTargetProjectMutatorTest {
   @Test
   public void testSuppressCopyHeaderOption() throws NoSuchBuildTargetException {
     Iterable<GroupedSource> sources = ImmutableList.of(
-        GroupedSource.ofSourcePath(new TestSourcePath("foo.h")));
+        GroupedSource.ofPrivateHeader(new TestSourcePath("foo.h")));
 
     {
       NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
       mutator
           .setShouldGenerateCopyHeadersPhase(false)
-          .setSources(sources, ImmutableMap.<SourcePath, ImmutableList<String>>of());
+          .setSources(sources);
       NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
           generatedProject);
 
@@ -257,7 +253,7 @@ public class NewNativeTargetProjectMutatorTest {
       NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
       mutator
           .setShouldGenerateCopyHeadersPhase(true)
-          .setSources(sources, ImmutableMap.<SourcePath, ImmutableList<String>>of());
+          .setSources(sources);
       NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
           generatedProject);
       assertThat(

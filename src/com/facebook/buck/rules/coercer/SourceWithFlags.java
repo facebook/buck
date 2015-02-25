@@ -18,7 +18,10 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Function;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 import org.immutables.value.Value;
 
@@ -29,13 +32,21 @@ import java.util.List;
  */
 @Value.Immutable
 @BuckStyleImmutable
-public abstract class SourceWithFlags {
+public abstract class SourceWithFlags implements Comparable<SourceWithFlags> {
 
   @Value.Parameter
   public abstract SourcePath getSourcePath();
 
   @Value.Parameter
   public abstract List<String> getFlags();
+
+  @Override
+  public int compareTo(SourceWithFlags that) {
+    return ComparisonChain.start()
+        .compare(this.getSourcePath(), that.getSourcePath())
+        .compare(this.getFlags(), that.getFlags(), Ordering.<String>natural().lexicographical())
+        .result();
+  }
 
   public static SourceWithFlags of(SourcePath sourcePath) {
     return ImmutableSourceWithFlags.of(sourcePath, ImmutableList.<String>of());
@@ -44,5 +55,13 @@ public abstract class SourceWithFlags {
   public static SourceWithFlags of(SourcePath sourcePath, List<String> flags) {
     return ImmutableSourceWithFlags.of(sourcePath, ImmutableList.copyOf(flags));
   }
+
+  public static final Function<SourceWithFlags, SourcePath> TO_SOURCE_PATH =
+      new Function<SourceWithFlags, SourcePath>() {
+        @Override
+        public SourcePath apply(SourceWithFlags sourceWithFlags) {
+          return sourceWithFlags.getSourcePath();
+        }
+      };
 
 }

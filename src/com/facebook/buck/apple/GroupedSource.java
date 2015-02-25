@@ -17,6 +17,8 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -35,9 +37,17 @@ public abstract class GroupedSource {
    */
   public enum Type {
       /**
-       * A single {@link SourcePath}.
+       * A single {@link SourceWithFlags}.
        */
-      SOURCE_PATH,
+      SOURCE_WITH_FLAGS,
+      /**
+       * A single {@link SourcePath} representing a public header file.
+       */
+      PUBLIC_HEADER,
+      /**
+       * A single {@link SourcePath} representing a private header file.
+       */
+      PRIVATE_HEADER,
       /**
        * A source group (group name and one or more GroupedSource objects).
        */
@@ -45,26 +55,38 @@ public abstract class GroupedSource {
   }
 
   @Value.Parameter
-  public abstract Type getType();
+  protected abstract Type getType();
 
   @Value.Parameter
-  public abstract Optional<SourcePath> getSourcePath();
+  protected abstract Optional<SourceWithFlags> getSourceWithFlags();
 
   @Value.Parameter
-  public abstract Optional<String> getSourceGroupName();
+  protected abstract Optional<SourcePath> getSourcePath();
 
   @Value.Parameter
-  public abstract Optional<List<GroupedSource>> getSourceGroup();
+  protected abstract Optional<String> getSourceGroupName();
+
+  @Value.Parameter
+  protected abstract Optional<List<GroupedSource>> getSourceGroup();
 
   @Value.Check
   protected void check() {
     switch (getType()) {
-      case SOURCE_PATH:
+      case SOURCE_WITH_FLAGS:
+        Preconditions.checkArgument(getSourceWithFlags().isPresent());
+        Preconditions.checkArgument(!getSourcePath().isPresent());
+        Preconditions.checkArgument(!getSourceGroupName().isPresent());
+        Preconditions.checkArgument(!getSourceGroup().isPresent());
+        break;
+      case PUBLIC_HEADER:
+      case PRIVATE_HEADER:
+        Preconditions.checkArgument(!getSourceWithFlags().isPresent());
         Preconditions.checkArgument(getSourcePath().isPresent());
         Preconditions.checkArgument(!getSourceGroupName().isPresent());
         Preconditions.checkArgument(!getSourceGroup().isPresent());
         break;
       case SOURCE_GROUP:
+        Preconditions.checkArgument(!getSourceWithFlags().isPresent());
         Preconditions.checkArgument(!getSourcePath().isPresent());
         Preconditions.checkArgument(getSourceGroupName().isPresent());
         Preconditions.checkArgument(getSourceGroup().isPresent());
@@ -74,13 +96,55 @@ public abstract class GroupedSource {
     }
   }
 
+  public String getName(SourcePathResolver pathResolver) {
+    SourcePath sourcePath;
+    switch (getType()) {
+      case SOURCE_WITH_FLAGS:
+        sourcePath = getSourceWithFlags().get().getSourcePath();
+        return pathResolver.getPath(sourcePath).getFileName().toString();
+      case PUBLIC_HEADER:
+      case PRIVATE_HEADER:
+        sourcePath = getSourcePath().get();
+        return pathResolver.getPath(sourcePath).getFileName().toString();
+      case SOURCE_GROUP:
+        return getSourceGroupName().get();
+      default:
+        throw new RuntimeException("Unhandled type: " + getType());
+    }
+  }
+
   /**
-   * Creates a {@link GroupedSource} given a {@link SourcePath}.
+   * Creates a {@link GroupedSource} given a {@link SourceWithFlags}.
    */
-  public static GroupedSource ofSourcePath(SourcePath sourcePath) {
+  public static GroupedSource ofSourceWithFlags(SourceWithFlags sourceWithFlags) {
     return ImmutableGroupedSource.of(
-        Type.SOURCE_PATH,
-        Optional.of(sourcePath),
+        Type.SOURCE_WITH_FLAGS,
+        Optional.of(sourceWithFlags),
+        Optional.<SourcePath>absent(),
+        Optional.<String>absent(),
+        Optional.<List<GroupedSource>>absent());
+  }
+
+  /**
+   * Creates a {@link GroupedSource} given a {@link SourcePath} representing a public header file.
+   */
+  public static GroupedSource ofPublicHeader(SourcePath headerPath) {
+    return ImmutableGroupedSource.of(
+        Type.PUBLIC_HEADER,
+        Optional.<SourceWithFlags>absent(),
+        Optional.of(headerPath),
+        Optional.<String>absent(),
+        Optional.<List<GroupedSource>>absent());
+  }
+
+  /**
+   * Creates a {@link GroupedSource} given a {@link SourcePath} representing a private header file.
+   */
+  public static GroupedSource ofPrivateHeader(SourcePath headerPath) {
+    return ImmutableGroupedSource.of(
+        Type.PRIVATE_HEADER,
+        Optional.<SourceWithFlags>absent(),
+        Optional.of(headerPath),
         Optional.<String>absent(),
         Optional.<List<GroupedSource>>absent());
   }
@@ -94,8 +158,32 @@ public abstract class GroupedSource {
       Collection<GroupedSource> sourceGroup) {
     return ImmutableGroupedSource.of(
         Type.SOURCE_GROUP,
+        Optional.<SourceWithFlags>absent(),
         Optional.<SourcePath>absent(),
         Optional.of(sourceGroupName),
         Optional.of((List<GroupedSource>) ImmutableList.copyOf(sourceGroup)));
+  }
+
+  public interface Visitor {
+    void visitSourceWithFlags(SourceWithFlags sourceWithFlags);
+    void visitPublicHeader(SourcePath publicHeader);
+    void visitPrivateHeader(SourcePath privateHeader);
+    void visitSourceGroup(String sourceGroupName, List<GroupedSource> sourceGroup);
+  }
+
+  public void visit(Visitor visitor) {
+    switch (getType()) {
+      case SOURCE_WITH_FLAGS:
+        visitor.visitSourceWithFlags(getSourceWithFlags().get());
+        break;
+      case PUBLIC_HEADER:
+        visitor.visitPublicHeader(getSourcePath().get());
+        break;
+      case PRIVATE_HEADER:
+        visitor.visitPrivateHeader(getSourcePath().get());
+        break;
+      case SOURCE_GROUP:
+        visitor.visitSourceGroup(getSourceGroupName().get(), getSourceGroup().get());
+    }
   }
 }

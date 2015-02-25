@@ -30,11 +30,13 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Paths;
@@ -137,7 +139,10 @@ public class AppleBinaryDescription
     AppleDescriptions.populateCxxConstructorArg(
         delegateArg,
         args,
-        targetSources.getSrcPaths(),
+        ImmutableSet.copyOf(
+            Iterables.transform(
+                targetSources.getSourcesWithFlags(),
+                SourceWithFlags.TO_SOURCE_PATH)),
         headerMap,
         appleSdkPaths);
 

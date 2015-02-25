@@ -212,15 +212,16 @@ public class ProjectGeneratorTest {
     BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
-        .setSrcs(
+        .setSrcs(Optional.of(ImmutableList.<SourceWithFlags>of()))
+        .setHeaders(
             Optional.of(
-                ImmutableList.of(
-                    SourceWithFlags.of(new TestSourcePath("HeaderGroup1/foo.h")),
-                    SourceWithFlags.of(
-                        new TestSourcePath("HeaderGroup1/bar.h"),
-                        ImmutableList.of("public")),
-                    SourceWithFlags.of(
-                        new TestSourcePath("HeaderGroup2/baz.h")))))
+                ImmutableSortedSet.<SourcePath>of(
+                    new TestSourcePath("HeaderGroup1/foo.h"),
+                    new TestSourcePath("HeaderGroup2/baz.h"))))
+        .setExportedHeaders(
+            Optional.of(
+                ImmutableSortedSet.<SourcePath>of(
+                    new TestSourcePath("HeaderGroup1/bar.h"))))
         .setUseBuckHeaderMaps(Optional.of(true))
         .build();
 
@@ -509,8 +510,10 @@ public class ProjectGeneratorTest {
                 ImmutableList.of(
                     SourceWithFlags.of(
                         new TestSourcePath("foo.m"), ImmutableList.of("-foo")),
-                    SourceWithFlags.of(new TestSourcePath("foo.h")),
                     SourceWithFlags.of(new TestSourcePath("bar.m")))))
+        .setHeaders(
+            Optional.of(
+                ImmutableSortedSet.<SourcePath>of(new TestSourcePath("foo.h"))))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -958,8 +961,11 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableList.of(
                     SourceWithFlags.of(
-                        new TestSourcePath("foo.m"), ImmutableList.of("-foo")),
-                    SourceWithFlags.of(new TestSourcePath("foo.h")))))
+                        new TestSourcePath("foo.m"), ImmutableList.of("-foo")))))
+        .setHeaders(
+            Optional.of(
+                ImmutableSortedSet.<SourcePath>of(
+                    new TestSourcePath("foo.h"))))
         .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Foo.framework")))
         .setDeps(Optional.of(ImmutableSortedSet.of(depTarget)))
         .setGid(Optional.<String>absent())
@@ -1183,8 +1189,11 @@ public class ProjectGeneratorTest {
                 ImmutableList.of(
                     SourceWithFlags.of(
                         new TestSourcePath("foo.m"), ImmutableList.of("-foo")),
-                    SourceWithFlags.of(new TestSourcePath("foo.h")),
                     SourceWithFlags.of(new TestSourcePath("bar.m")))))
+        .setHeaders(
+            Optional.of(
+                ImmutableSortedSet.<SourcePath>of(
+                    new TestSourcePath("foo.h"))))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(

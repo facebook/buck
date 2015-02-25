@@ -21,14 +21,12 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.SortedMap;
 import java.util.SortedSet;
 
 /**
@@ -45,17 +43,10 @@ public abstract class TargetSources {
   public abstract List<GroupedSource> getSrcs();
 
   /**
-   * A map of (source path : flags) pairs containing flags to
-   * apply to each source or header path.
+   * Paths to each source code file in the target to be compiled and their per-file flags.
    */
   @Value.Parameter
-  public abstract SortedMap<SourcePath, ImmutableList<String>> getPerFileFlags();
-
-  /**
-   * Paths to each source code file in the target to be compiled.
-   */
-  @Value.Parameter
-  public abstract SortedSet<SourcePath> getSrcPaths();
+  public abstract SortedSet<SourceWithFlags> getSourcesWithFlags();
 
   /**
    * Paths to each public header file in the target.
@@ -77,18 +68,12 @@ public abstract class TargetSources {
       Collection<SourceWithFlags> sourcesWithFlags,
       Collection<SourcePath> headers,
       Collection<SourcePath> exportedHeaders) {
-    ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedMap.Builder<SourcePath, ImmutableList<String>> perFileFlagsBuilder =
-        ImmutableSortedMap.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> srcPathsBuilder = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<SourceWithFlags> srcPathsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> publicHeaderPathsBuilder =
         ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<SourcePath> privateHeaderPathsBuilder =
         ImmutableSortedSet.naturalOrder();
     RuleUtils.extractSourcePaths(
-        resolver,
-        allSourcesBuilder,
-        perFileFlagsBuilder,
         srcPathsBuilder,
         publicHeaderPathsBuilder,
         privateHeaderPathsBuilder,
@@ -96,20 +81,18 @@ public abstract class TargetSources {
         headers,
         exportedHeaders);
 
-    ImmutableSortedSet<SourcePath> allSources = allSourcesBuilder.build();
-    ImmutableSortedMap<SourcePath, ImmutableList<String>> perFileFlags =
-        perFileFlagsBuilder.build();
-    ImmutableSortedSet<SourcePath> srcPaths = srcPathsBuilder.build();
+    ImmutableSortedSet<SourceWithFlags> srcPaths = srcPathsBuilder.build();
     ImmutableSortedSet<SourcePath> publicHeaderPaths = publicHeaderPathsBuilder.build();
     ImmutableSortedSet<SourcePath> privateHeaderPaths = privateHeaderPathsBuilder.build();
 
     ImmutableList<GroupedSource> groupedSource = RuleUtils.createGroupsFromSourcePaths(
         resolver,
-        allSources);
+        srcPaths,
+        publicHeaderPaths,
+        privateHeaderPaths);
 
     return ImmutableTargetSources.of(
         groupedSource,
-        perFileFlags,
         srcPaths,
         publicHeaderPaths,
         privateHeaderPaths);

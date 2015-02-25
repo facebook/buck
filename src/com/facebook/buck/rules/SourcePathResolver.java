@@ -28,13 +28,11 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.google.common.io.Files;
 
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 public class SourcePathResolver {
 
@@ -110,12 +108,6 @@ public class SourcePathResolver {
     }
     Preconditions.checkState(sourcePath instanceof PathSourcePath);
     return Optional.of(((PathSourcePath) sourcePath).getRelativePath());
-  }
-
-  public boolean isSourcePathExtensionInSet(
-      SourcePath sourcePath,
-      Set<String> extensions) {
-    return extensions.contains(Files.getFileExtension(getPath(sourcePath).toString()));
   }
 
   /**

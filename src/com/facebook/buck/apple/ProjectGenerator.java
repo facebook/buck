@@ -51,6 +51,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
@@ -71,7 +72,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -566,7 +566,7 @@ public class ProjectGenerator {
         .setGid(targetGid)
         .setShouldGenerateCopyHeadersPhase(
             !targetNode.getConstructorArg().getUseBuckHeaderMaps())
-        .setSources(sources.getSrcs(), sources.getPerFileFlags())
+        .setSources(sources.getSrcs())
         .setResources(resources);
 
     if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE)) {
@@ -722,8 +722,8 @@ public class ProjectGenerator {
       addHeaderMapsForHeaders(
           targetNode,
           targetNode.getConstructorArg().headerPathPrefix,
-          sources.getSrcs(),
-          ImmutableSortedMap.copyOf(sources.getPerFileFlags()));
+          sources.getPublicHeaderPaths(),
+          sources.getPrivateHeaderPaths());
     }
 
     // Use Core Data models from immediate dependencies only.
@@ -777,9 +777,10 @@ public class ProjectGenerator {
         .setShouldGenerateCopyHeadersPhase(false)
         .setSources(
             ImmutableList.of(
-                GroupedSource.ofSourcePath(
-                    new PathSourcePath(projectFilesystem, emptyFileWithExtension("c")))),
-            ImmutableMap.<SourcePath, ImmutableList<String>>of())
+                GroupedSource.ofSourceWithFlags(
+                    SourceWithFlags.of(
+                        new PathSourcePath(projectFilesystem, emptyFileWithExtension("c")),
+                        ImmutableList.<String>of()))))
         .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))
         .setResources(collectRecursiveResources(tests))
         .setAssetCatalogs(
@@ -955,16 +956,12 @@ public class ProjectGenerator {
 
   /**
    * Create header map files and write them to disk.
-   *
-   * @param groupedSources Source files to include in the header map.
-   *                       Implementation files in the source groups are ignored.
-   * @param sourceFlags    Source path to flag mapping.
    */
   private void addHeaderMapsForHeaders(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       Optional<String> headerPathPrefix,
-      Iterable<GroupedSource> groupedSources,
-      ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags) throws IOException {
+      Iterable<SourcePath> publicHeaders,
+      Iterable<SourcePath> privateHeaders) throws IOException {
     HeaderMap.Builder publicMapBuilder = HeaderMap.builder();
     HeaderMap.Builder targetMapBuilder = HeaderMap.builder();
     HeaderMap.Builder targetUserMapBuilder = HeaderMap.builder();
@@ -973,8 +970,8 @@ public class ProjectGenerator {
         targetMapBuilder,
         targetUserMapBuilder,
         Paths.get(headerPathPrefix.or(getProductName(targetNode.getBuildTarget()))),
-        groupedSources,
-        sourceFlags);
+        publicHeaders,
+        privateHeaders);
     writeHeaderMap(publicMapBuilder.build(), targetNode, HeaderMapType.PUBLIC_HEADER_MAP);
     writeHeaderMap(targetMapBuilder.build(), targetNode, HeaderMapType.TARGET_HEADER_MAP);
     writeHeaderMap(targetUserMapBuilder.build(), targetNode, HeaderMapType.TARGET_USER_HEADER_MAP);
@@ -985,35 +982,25 @@ public class ProjectGenerator {
       HeaderMap.Builder targetHeaderMap,
       HeaderMap.Builder targetUserHeaderMap,
       Path prefix,
-      Iterable<GroupedSource> groupedSources,
-      ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags) {
-    for (GroupedSource groupedSource : groupedSources) {
-      switch (groupedSource.getType()) {
-        case SOURCE_PATH:
-          if (sourcePathResolver.isSourcePathExtensionInSet(
-              groupedSource.getSourcePath().get(),
-              FileExtensions.CLANG_HEADERS)) {
-            addSourcePathToHeaderMaps(
-                groupedSource.getSourcePath().get(),
-                prefix,
-                publicHeaderMap,
-                targetHeaderMap,
-                targetUserHeaderMap,
-                sourceFlags);
-          }
-          break;
-        case SOURCE_GROUP:
-          addGroupedSourcesToHeaderMaps(
-              publicHeaderMap,
-              targetHeaderMap,
-              targetUserHeaderMap,
-              prefix,
-              groupedSource.getSourceGroup().get(),
-              sourceFlags);
-          break;
-        default:
-          throw new RuntimeException("Unhandled grouped source type: " + groupedSource.getType());
-      }
+      Iterable<SourcePath> publicHeaders,
+      Iterable<SourcePath> privateHeaders) {
+    for (SourcePath headerPath : publicHeaders) {
+      addSourcePathToHeaderMaps(
+          headerPath,
+          prefix,
+          publicHeaderMap,
+          targetHeaderMap,
+          targetUserHeaderMap,
+          HeaderVisibility.PUBLIC);
+    }
+    for (SourcePath headerPath : privateHeaders) {
+      addSourcePathToHeaderMaps(
+          headerPath,
+          prefix,
+          publicHeaderMap,
+          targetHeaderMap,
+          targetUserHeaderMap,
+          HeaderVisibility.PROJECT);
     }
   }
 
@@ -1036,13 +1023,7 @@ public class ProjectGenerator {
       HeaderMap.Builder publicHeaderMap,
       HeaderMap.Builder targetHeaderMap,
       HeaderMap.Builder targetUserHeaderMap,
-      ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags) {
-    Optional<HeaderVisibility> visibilityOptional = Optional.absent();
-    ImmutableList<String> headerFlags = sourceFlags.get(headerPath);
-    if (headerFlags != null) {
-      visibilityOptional = HeaderVisibility.fromFlags(headerFlags);
-    }
-    HeaderVisibility visibility = visibilityOptional.or(HeaderVisibility.PROJECT);
+      HeaderVisibility visibility) {
     String fileName = sourcePathResolver.getPath(headerPath).getFileName().toString();
     String prefixedFileName = prefix.resolve(fileName).toString();
     Path value =

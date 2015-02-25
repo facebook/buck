@@ -59,6 +59,16 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
+  public BUILDER setHeaders(Optional<ImmutableSortedSet<SourcePath>> headers) {
+    arg.headers = headers;
+    return getThis();
+  }
+
+  public BUILDER setExportedHeaders(Optional<ImmutableSortedSet<SourcePath>> exportedHeaders) {
+    arg.exportedHeaders = exportedHeaders;
+    return getThis();
+  }
+
   public BUILDER setFrameworks(Optional<ImmutableSortedSet<String>> frameworks) {
     arg.frameworks = frameworks;
     return getThis();

@@ -27,7 +27,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
@@ -36,7 +35,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Set;
+import java.util.SortedSet;
 
 /**
  * Common conversion functions from raw Description Arg specifications.
@@ -50,60 +51,58 @@ public class RuleUtils {
    * Extract the source and header paths and flags from the input list
    * and populate the output collections.
    *
-   * @param outputAllSourcePaths The list of all specified sources will be added to
-   *        this builder, independently of whether we recognize their extension.
-   * @param outputPerFileFlags per file flags will be added to this builder
    * @param outputSourcePaths The ordered list of paths to (non-header) source code
    *        files, as determined by the file extensions in SOURCE_FILE_EXTENSIONS.
    * @param outputPublicHeaderPaths The ordered list of paths to public header files,
    *        as determined by the file extensions in HEADER_FILE_EXTENSIONS and per-file flags.
    * @param outputPrivateHeaderPaths The ordered list of paths to private header files,
    *        as determined by the file extensions in HEADER_FILE_EXTENSIONS and per-file flags.
-   * @param items input list of sources
+   * @param items input list of sources with their per-file flags
+   * @param headers input list of public headers
+   * @param exportedHeaders input list of private headers
    */
   public static void extractSourcePaths(
-      SourcePathResolver resolver,
-      ImmutableSortedSet.Builder<SourcePath> outputAllSourcePaths,
-      ImmutableMap.Builder<SourcePath, ImmutableList<String>> outputPerFileFlags,
-      ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
+      ImmutableSortedSet.Builder<SourceWithFlags> outputSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputPublicHeaderPaths,
       ImmutableSortedSet.Builder<SourcePath> outputPrivateHeaderPaths,
       Collection<SourceWithFlags> items,
       Collection<SourcePath> headers,
       Collection<SourcePath> exportedHeaders) {
     for (SourceWithFlags item : items) {
-      if (resolver.isSourcePathExtensionInSet(
-          item.getSourcePath(),
-          FileExtensions.CLANG_SOURCES)) {
-        outputSourcePaths.add(item.getSourcePath());
-      }
-      outputAllSourcePaths.add(item.getSourcePath());
-      if (!item.getFlags().isEmpty()) {
-        outputPerFileFlags.put(item.getSourcePath(), ImmutableList.copyOf(item.getFlags()));
-      }
+      outputSourcePaths.add(item);
     }
     for (SourcePath headerPath : headers) {
       outputPrivateHeaderPaths.add(headerPath);
-      outputAllSourcePaths.add(headerPath);
     }
     for (SourcePath headerPath : exportedHeaders) {
       outputPublicHeaderPaths.add(headerPath);
-      outputAllSourcePaths.add(headerPath);
     }
   }
 
   public static ImmutableList<GroupedSource> createGroupsFromSourcePaths(
       SourcePathResolver resolver,
-      Iterable<SourcePath> sourcePaths) {
+      Iterable<SourceWithFlags> sources,
+      Iterable<SourcePath> publicHeaders,
+      Iterable<SourcePath> privateHeaders) {
     Path rootPath = Paths.get("root");
 
-    ImmutableMultimap.Builder<Path, SourcePath> entriesBuilder = ImmutableMultimap.builder();
-    for (SourcePath sourcePath : sourcePaths) {
-      Path path = rootPath.resolve(resolver.getPath(sourcePath));
-      Path parent = Preconditions.checkNotNull(path.getParent());
-      entriesBuilder.put(parent, sourcePath);
+    ImmutableMultimap.Builder<Path, GroupedSource> entriesBuilder = ImmutableMultimap.builder();
+    for (SourceWithFlags sourceWithFlags : sources) {
+      Path path = rootPath.resolve(resolver.getPath(sourceWithFlags.getSourcePath()));
+      GroupedSource groupedSource = GroupedSource.ofSourceWithFlags(sourceWithFlags);
+      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
     }
-    ImmutableMultimap<Path, SourcePath> entries = entriesBuilder.build();
+    for (SourcePath publicHeader : publicHeaders) {
+      Path path = rootPath.resolve(resolver.getPath(publicHeader));
+      GroupedSource groupedSource = GroupedSource.ofPublicHeader(publicHeader);
+      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+    }
+    for (SourcePath privateHeader : privateHeaders) {
+      Path path = rootPath.resolve(resolver.getPath(privateHeader));
+      GroupedSource groupedSource = GroupedSource.ofPrivateHeader(privateHeader);
+      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+    }
+    ImmutableMultimap<Path, GroupedSource> entries = entriesBuilder.build();
 
     ImmutableMultimap.Builder<Path, String> subgroupsBuilder = ImmutableMultimap.builder();
     for (Path groupPath : entries.keys()) {
@@ -116,8 +115,15 @@ public class RuleUtils {
     }
     ImmutableMultimap<Path, String> subgroups = subgroupsBuilder.build();
 
+    GroupedSourceNameComparator groupedSourceNameComparator =
+        new GroupedSourceNameComparator(resolver);
+
     ImmutableList<GroupedSource> groupedSources =
-        createGroupsFromEntryMaps(subgroups, entries, rootPath);
+        createGroupsFromEntryMaps(
+            subgroups,
+            entries,
+            groupedSourceNameComparator,
+            rootPath);
 
     // Remove the longest common prefix from all paths.
     while (groupedSources.size() == 1 &&
@@ -128,10 +134,27 @@ public class RuleUtils {
     return groupedSources;
   }
 
+  static class GroupedSourceNameComparator implements Comparator<GroupedSource> {
+    private final SourcePathResolver pathResolver;
+
+    public GroupedSourceNameComparator(SourcePathResolver pathResolver) {
+      this.pathResolver = pathResolver;
+    }
+
+    @Override
+    public int compare(GroupedSource source1, GroupedSource source2) {
+      String name1 = source1.getName(pathResolver);
+      String name2 = source2.getName(pathResolver);
+      return name1.compareTo(name2);
+    }
+
+  }
+
   @VisibleForTesting
   static ImmutableList<GroupedSource> createGroupsFromEntryMaps(
       Multimap<Path, String> subgroups,
-      Multimap<Path, SourcePath> entries,
+      Multimap<Path, GroupedSource> entries,
+      Comparator<GroupedSource> comparator,
       Path groupPath) {
     ImmutableList.Builder<GroupedSource> groupBuilder = ImmutableList.builder();
 
@@ -140,14 +163,16 @@ public class RuleUtils {
       groupBuilder.add(
           GroupedSource.ofSourceGroup(
               subgroupName,
-              createGroupsFromEntryMaps(subgroups, entries, subgroupPath)));
+              createGroupsFromEntryMaps(subgroups, entries, comparator, subgroupPath)));
     }
 
-    for (SourcePath sourcePath : ImmutableSortedSet.copyOf(entries.get(groupPath))) {
-      groupBuilder.add(GroupedSource.ofSourcePath(sourcePath));
+    SortedSet<GroupedSource> sortedEntries =
+        ImmutableSortedSet.copyOf(comparator, entries.get(groupPath));
+    for (GroupedSource groupedSource : sortedEntries) {
+      groupBuilder.add(groupedSource);
     }
 
-    return groupBuilder.build();
+    return groupBuilder.build().asList();
   }
 
   public static Supplier<ImmutableCollection<Path>> subpathsOfPathsSupplier(

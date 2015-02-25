@@ -64,7 +64,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -146,11 +145,6 @@ public class AppleDescriptions {
 
   public static Path getPathToHeaders(BuildTarget buildTarget) {
     return BuildTargets.getBinPath(buildTarget, "__%s_public_headers__");
-  }
-
-  public static boolean isPublicHeader(List<String> flags) {
-    Optional<HeaderVisibility> visibility = HeaderVisibility.fromFlags(flags);
-    return visibility.isPresent() && HeaderVisibility.PUBLIC.equals(visibility.get());
   }
 
   private static SymlinkTree createSymlinkTree(
