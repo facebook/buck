@@ -212,8 +212,8 @@ public class AndroidBinaryGraphEnhancer {
         javacOptions,
         shouldPreDex,
         shouldBuildStringSourceMap,
-        skipCrunchPngs,
-        locales.isEmpty());
+        locales.isEmpty(),
+        skipCrunchPngs);
     ruleResolver.addToIndex(aaptPackageResources);
     enhancedDeps.add(aaptPackageResources);
 
