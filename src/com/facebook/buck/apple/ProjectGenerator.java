@@ -1059,12 +1059,6 @@ public class ProjectGenerator {
     // Add an entry File.h -> AbsolutePathTo/File.h
     // to targetUserHeaderMap
     addHeaderMapEntry(targetUserHeaderMap, "target-user", fileName, value);
-    if (visibility == HeaderVisibility.PRIVATE) {
-      throw new HumanReadableException(
-          "Xcode's so-called 'private' headers have been deprecated in the new header map mode. " +
-          "Please declare '" + fileName + "' as public, " +
-          "or use the default visibility (i.e. by target) instead.");
-    }
   }
 
   private void addCoreDataModelBuildPhase(

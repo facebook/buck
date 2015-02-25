@@ -184,7 +184,7 @@ public class NewNativeTargetProjectMutatorTest {
                 GroupedSource.ofSourcePath(baz))));
     ImmutableMap<SourcePath, ImmutableList<String>> sourceFlags = ImmutableMap.of(
         bar, ImmutableList.of("public"),
-        baz, ImmutableList.of("private"));
+        baz, ImmutableList.of("public"));
     mutator.setSources(sources, sourceFlags);
     NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
         generatedProject);
@@ -231,7 +231,7 @@ public class NewNativeTargetProjectMutatorTest {
         bazHeaderBuildFile.getSettings().isPresent());
     NSDictionary blechBuildFileSettings = bazHeaderBuildFile.getSettings().get();
     NSArray blechAttributes = (NSArray) blechBuildFileSettings.get("ATTRIBUTES");
-    assertArrayEquals(new NSString[]{new NSString("Private")}, blechAttributes.getArray());
+    assertArrayEquals(new NSString[]{new NSString("Public")}, blechAttributes.getArray());
   }
 
   @Test

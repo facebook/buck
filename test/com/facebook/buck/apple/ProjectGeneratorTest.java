@@ -207,25 +207,6 @@ public class ProjectGeneratorTest {
     assertThat(headerMaps, hasSize(0));
   }
 
-  @Test(expected = HumanReadableException.class)
-  public void testLibraryPrivateHeaderWithHeaderMaps() throws IOException {
-    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
-    TargetNode<?> node = AppleLibraryBuilder
-        .createBuilder(buildTarget)
-        .setSrcs(
-            Optional.of(
-                ImmutableList.of(
-                    SourceWithFlags.of(
-                        new TestSourcePath("HeaderGroup2/blech.h"), ImmutableList.of("private")))))
-        .setUseBuckHeaderMaps(Optional.of(true))
-        .build();
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node));
-
-    projectGenerator.createXcodeProjects();
-  }
-
   @Test
   public void testLibraryHeaderGroupsWithHeaderMaps() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
