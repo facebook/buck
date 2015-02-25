@@ -1,11 +1,15 @@
 apple_library(
   name = 'EXExample',
   srcs = [
-    ('EXExample/EXExampleModel.h', ['public']),
     'EXExample/EXExampleModel.m',
     'EXExample/EXUser.mm',
-    'EXExample/Categories/NSString+Palindrome.h',
     'EXExample/Categories/NSString+Palindrome.m',
+  ],
+  headers = [
+    'EXExample/Categories/NSString+Palindrome.h',
+  ],
+  exported_headers = [
+    'EXExample/EXExampleModel.h',
   ],
   frameworks = [
     '$SDKROOT/System/Library/Frameworks/Foundation.framework',

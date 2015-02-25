@@ -74,7 +74,9 @@ public abstract class TargetSources {
    */
   public static TargetSources fromSourcesWithFlags(
       SourcePathResolver resolver,
-      Collection<SourceWithFlags> sourcesWithFlags) {
+      Collection<SourceWithFlags> sourcesWithFlags,
+      Collection<SourcePath> headers,
+      Collection<SourcePath> exportedHeaders) {
     ImmutableSortedSet.Builder<SourcePath> allSourcesBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableSortedMap.Builder<SourcePath, ImmutableList<String>> perFileFlagsBuilder =
         ImmutableSortedMap.naturalOrder();
@@ -90,7 +92,9 @@ public abstract class TargetSources {
         srcPathsBuilder,
         publicHeaderPathsBuilder,
         privateHeaderPathsBuilder,
-        sourcesWithFlags);
+        sourcesWithFlags,
+        headers,
+        exportedHeaders);
 
     ImmutableSortedSet<SourcePath> allSources = allSourcesBuilder.build();
     ImmutableSortedMap<SourcePath, ImmutableList<String>> perFileFlags =

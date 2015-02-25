@@ -35,6 +35,8 @@ import com.google.common.collect.ImmutableSortedSet;
 public class AppleNativeTargetDescriptionArg implements HasTests {
   public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
   public Optional<ImmutableList<SourceWithFlags>> srcs;
+  public Optional<ImmutableSortedSet<SourcePath>> headers;
+  public Optional<ImmutableSortedSet<SourcePath>> exportedHeaders;
   public Optional<ImmutableSortedSet<String>> frameworks;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;
   public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;

@@ -124,6 +124,8 @@ public class GraphQLDataDescription
           this.persistIds.equals(other.persistIds) &&
           this.configs.equals(other.configs) &&
           this.srcs.equals(other.srcs) &&
+          this.headers.equals(other.headers) &&
+          this.exportedHeaders.equals(other.exportedHeaders) &&
           this.frameworks.equals(other.frameworks) &&
           this.deps.equals(other.deps) &&
           this.gid.equals(other.gid) &&

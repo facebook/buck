@@ -1,9 +1,11 @@
 apple_binary(
   name = 'Weather',
   srcs = [
-    'Weather/EXViewController.h',
     'Weather/EXViewController.m',
     'Weather/main.m',
+  ],
+  headers = [
+    'Weather/EXViewController.h',
   ],
   frameworks = [
     '$SDKROOT/System/Library/Frameworks/Foundation.framework',

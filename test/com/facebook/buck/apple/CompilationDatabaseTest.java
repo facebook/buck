@@ -91,14 +91,16 @@ public class CompilationDatabaseTest {
     setUpTestValues();
 
     Collection<SourceWithFlags> sourcesWithFlags = ImmutableList.of(
-        SourceWithFlags.of(
-            new TestSourcePath("Foo/Hello.h"),
-            ImmutableList.of("public")),
-        SourceWithFlags.of(new TestSourcePath("Foo/Bye.h")),
         SourceWithFlags.of(new TestSourcePath("Foo/Hello.m")));
+    Collection<SourcePath> headers = ImmutableList.<SourcePath>of(
+        new TestSourcePath("Foo/Bye.h"));
+    Collection<SourcePath> exportedHeaders = ImmutableList.<SourcePath>of(
+        new TestSourcePath("Foo/Hello.h"));
     TargetSources targetSources = TargetSources.fromSourcesWithFlags(
         testSourcePathResolver,
-        sourcesWithFlags);
+        sourcesWithFlags,
+        headers,
+        exportedHeaders);
 
     CompilationDatabase compilationDatabase = new CompilationDatabase(
         new FakeBuildRuleParamsBuilder(testBuildTarget).build(),
@@ -247,14 +249,15 @@ public class CompilationDatabaseTest {
     testBuildRuleResolver = new BuildRuleResolver();
     testSourcePathResolver = new SourcePathResolver(testBuildRuleResolver);
     Collection<SourceWithFlags> sourcesWithFlags = ImmutableList.of(
-        SourceWithFlags.of(
-            new TestSourcePath("foo/Hello.h"),
-            // Note that "public" should not be included in the clang flags.
-            ImmutableList.of("public")),
         SourceWithFlags.of(new TestSourcePath("foo/Hello.m")));
+    Collection<SourcePath> headers = ImmutableList.of();
+    Collection<SourcePath> exportedHeaders = ImmutableList.<SourcePath>of(
+        new TestSourcePath("foo/Hello.h"));
     testTargetSources = TargetSources.fromSourcesWithFlags(
         testSourcePathResolver,
-        sourcesWithFlags);
+        sourcesWithFlags,
+        headers,
+        exportedHeaders);
     testBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
   }
 

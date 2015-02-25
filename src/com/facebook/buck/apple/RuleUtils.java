@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -46,30 +45,6 @@ public class RuleUtils {
 
   /** Utility class: do not instantiate. */
   private RuleUtils() {}
-
-  private static void addSourcePathToBuilders(
-      SourcePathResolver resolver,
-      SourcePath sourcePath,
-      List<String> perFileFlags,
-      ImmutableSortedSet.Builder<SourcePath> outputAllSourcePaths,
-      ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
-      ImmutableSortedSet.Builder<SourcePath> outputPublicHeaderPaths,
-      ImmutableSortedSet.Builder<SourcePath> outputPrivateHeaderPaths) {
-    if (resolver.isSourcePathExtensionInSet(
-        sourcePath,
-        FileExtensions.CLANG_SOURCES)) {
-      outputSourcePaths.add(sourcePath);
-    } else if (resolver.isSourcePathExtensionInSet(
-        sourcePath,
-        FileExtensions.CLANG_HEADERS)) {
-      if (AppleDescriptions.isPublicHeader(perFileFlags)) {
-        outputPublicHeaderPaths.add(sourcePath);
-      } else {
-        outputPrivateHeaderPaths.add(sourcePath);
-      }
-    }
-    outputAllSourcePaths.add(sourcePath);
-  }
 
   /**
    * Extract the source and header paths and flags from the input list
@@ -93,19 +68,27 @@ public class RuleUtils {
       ImmutableSortedSet.Builder<SourcePath> outputSourcePaths,
       ImmutableSortedSet.Builder<SourcePath> outputPublicHeaderPaths,
       ImmutableSortedSet.Builder<SourcePath> outputPrivateHeaderPaths,
-      Collection<SourceWithFlags> items) {
+      Collection<SourceWithFlags> items,
+      Collection<SourcePath> headers,
+      Collection<SourcePath> exportedHeaders) {
     for (SourceWithFlags item : items) {
-      addSourcePathToBuilders(
-          resolver,
+      if (resolver.isSourcePathExtensionInSet(
           item.getSourcePath(),
-          item.getFlags(),
-          outputAllSourcePaths,
-          outputSourcePaths,
-          outputPublicHeaderPaths,
-          outputPrivateHeaderPaths);
+          FileExtensions.CLANG_SOURCES)) {
+        outputSourcePaths.add(item.getSourcePath());
+      }
+      outputAllSourcePaths.add(item.getSourcePath());
       if (!item.getFlags().isEmpty()) {
         outputPerFileFlags.put(item.getSourcePath(), ImmutableList.copyOf(item.getFlags()));
       }
+    }
+    for (SourcePath headerPath : headers) {
+      outputPrivateHeaderPaths.add(headerPath);
+      outputAllSourcePaths.add(headerPath);
+    }
+    for (SourcePath headerPath : exportedHeaders) {
+      outputPublicHeaderPaths.add(headerPath);
+      outputAllSourcePaths.add(headerPath);
     }
   }
 

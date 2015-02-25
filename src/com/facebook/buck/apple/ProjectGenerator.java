@@ -548,9 +548,12 @@ public class ProjectGenerator {
     final BuildTarget buildTarget = buildTargetNode.getBuildTarget();
 
     String productName = getProductName(buildTarget);
+    AppleNativeTargetDescriptionArg arg = targetNode.getConstructorArg();
     TargetSources sources = TargetSources.fromSourcesWithFlags(
         sourcePathResolver,
-        targetNode.getConstructorArg().srcs.get());
+        arg.srcs.get(),
+        arg.headers.get(),
+        arg.exportedHeaders.get());
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
         sourcePathResolver);

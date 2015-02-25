@@ -48,7 +48,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -68,6 +67,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 
 /**
  * Common logic for a {@link com.facebook.buck.rules.Description} that creates Apple target rules.
@@ -131,14 +131,16 @@ public class AppleDescriptions {
         /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(params.getExtraDeps()));
 
-    TargetSources targetSources = TargetSources.fromSourcesWithFlags(resolver, args.srcs.get());
-    ImmutableSortedMap<SourcePath, ImmutableList<String>> perFileFlags =
-        ImmutableSortedMap.copyOf(targetSources.getPerFileFlags());
+    TargetSources targetSources = TargetSources.fromSourcesWithFlags(
+        resolver,
+        args.srcs.get(),
+        args.headers.get(),
+        args.exportedHeaders.get());
     boolean useBuckHeaderMaps = args.useBuckHeaderMaps.or(Boolean.FALSE);
     return createSymlinkTree(
         headerRuleParams,
         resolver,
-        perFileFlags,
+        targetSources.getPublicHeaderPaths(),
         useBuckHeaderMaps);
   }
 
@@ -154,7 +156,7 @@ public class AppleDescriptions {
   private static SymlinkTree createSymlinkTree(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
-      ImmutableSortedMap<SourcePath, ImmutableList<String>> perFileFlags,
+      SortedSet<SourcePath> publicHeaders,
       boolean useBuckHeaderMaps) {
     // Note that the set of headersToCopy may be empty. If so, the returned rule will be a no-op.
     // TODO(mbolin): Make headersToCopy an ImmutableSortedMap once we clean up the iOS codebase and
@@ -171,14 +173,9 @@ public class AppleDescriptions {
       Path headerPathPrefix = params.getBuildTarget().getBasePath().getFileName();
 
       headersToCopy = Maps.newHashMap();
-      Predicate<String> isPublicHeaderFlag = Predicates.equalTo("public");
-      for (Map.Entry<SourcePath, ImmutableList<String>> entry : perFileFlags.entrySet()) {
-        ImmutableList<String> flags = entry.getValue();
-        if (Iterables.any(flags, isPublicHeaderFlag)) {
-          SourcePath sourcePath = entry.getKey();
-          Path sourcePathName = pathResolver.getPath(sourcePath).getFileName();
-          headersToCopy.put(headerPathPrefix.resolve(sourcePathName), sourcePath);
-        }
+      for (SourcePath sourcePath : publicHeaders) {
+        Path sourcePathName = pathResolver.getPath(sourcePath).getFileName();
+        headersToCopy.put(headerPathPrefix.resolve(sourcePathName), sourcePath);
       }
     }
 
@@ -452,6 +449,8 @@ public class AppleDescriptions {
     arg.persistIds = node.getConstructorArg().persistIds;
     arg.configs = node.getConstructorArg().configs;
     arg.srcs = node.getConstructorArg().srcs;
+    arg.headers = node.getConstructorArg().headers;
+    arg.exportedHeaders = node.getConstructorArg().exportedHeaders;
     arg.frameworks = node.getConstructorArg().frameworks;
     arg.deps = node.getConstructorArg().deps;
     arg.gid = node.getConstructorArg().gid;
