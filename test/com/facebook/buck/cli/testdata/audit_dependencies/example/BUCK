@@ -1,0 +1,46 @@
+apple_library(
+  name = 'one',
+  srcs = [ '1.txt' ],
+  deps = [
+    ':two',
+    ':three',
+  ],
+)
+
+apple_library(
+  name = 'two',
+  srcs = [ '2.txt' ],
+  deps = [
+    ':four',
+  ],
+)
+
+apple_library(
+  name = 'three',
+  srcs = [ '3.txt' ],
+  deps = [
+    ':four',
+    ':five',
+  ],
+)
+
+apple_library(
+  name = 'four',
+  srcs = [ '4.txt' ],
+  deps = [
+    ':six',
+  ],
+)
+
+apple_library(
+  name = 'five',
+  srcs = [
+    '5.txt',
+    ':six',
+  ],
+)
+
+apple_library(
+  name = 'six',
+  srcs = [ '6.txt' ],
+)

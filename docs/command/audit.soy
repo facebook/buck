@@ -1,9 +1,27 @@
 {namespace buck.audit}
 
+/**
+ * Used to format the description of an audit command.
+ *
+ * Very similar to `buck.param`, but without the forced '--' prefix and
+ * the optional alias parameter
+ *
+ * @param name Name of the command.
+ * @param desc Prose description of the command.
+ */
+{template .command}
+  <li class={css arg}>
+    <code>{$name}</code>
+    {sp}
+    {$desc|noAutoescape}
+  </li>
+{/template}
+
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'buck audit' /}
+    {param prettify: true /}
     {param description}
       Provide build information about build targets and outputs.
     {/param}
@@ -17,25 +35,153 @@ Provide build information about build targets and outputs.
 
 <pre>buck audit input /&#x2F;java/com/example/app:amazing</pre>
 
-Buck will print the paths to the sources for the given target.
+<h2>Commands</h2>
+
+<ul class="{css arglist}">
+  {call buck.audit.command}
+    {param name: 'input <targets>' /}
+    {param desc}
+    Lists the input source and resource files used to build the
+    given targets.
+   {/param}
+  {/call}
+
+  {call buck.audit.command}
+    {param name: 'classpath <targets>' /}
+    {param desc}
+    Lists the classpath used to build the given targets. This does
+    not work for all build rule types.
+    {/param}
+  {/call}
+
+  {call buck.audit.command}
+    {param name: 'dependencies <targets>' /}
+    {param desc}
+    Lists the dependencies used to build the given targets. Results are listed
+    in alphabetical order. By default, only direct dependencies are listed.
+    To show transitive dependencies, use the <code>--transitive</code> flag.
+    {/param}
+  {/call}
+</ul>
 {/param}
 
 {param params}
-{call buck.param}
-  {param name: 'input <targets>' /}
-  {param desc}
-  Lists the input source and resource files used to build the
-  given targets.
- {/param}
-{/call}
 
 {call buck.param}
-  {param name: 'classpath <targets>' /}
+  {param name: 'json' /}
   {param desc}
-  Lists the classpath used to build the given targets. This does
-  not work for all build rule types.
+  Outputs the results as JSON. The format of the JSON depends on the command
+  used. For example, <code>buck audit dependencies</code> returns an array of
+  results, while <code>buck audit input</code> will return an object
   {/param}
 {/call}
+
+{/param}
+
+{param examples}
+
+<pre class="prettyprint lang-py">
+{literal}
+# For all of the following examples, assume this BUCK file exists in
+# the `examples` directory.
+java_library(
+  name = 'one',
+  srcs = [ '1.txt' ],
+  deps = [
+    ':two',
+    ':three',
+  ],
+)
+
+java_library(
+  name = 'two',
+  srcs = [ '2.txt' ],
+  deps = [
+    ':four',
+  ],
+)
+
+java_library(
+  name = 'three',
+  srcs = [ '3.txt' ],
+  deps = [
+    ':four',
+    ':five',
+  ],
+)
+
+java_library(
+  name = 'four',
+  srcs = [ '4.txt' ],
+  deps = [
+    ':five',
+  ]
+)
+
+java_library(
+  name = 'five',
+  srcs = [ '5.txt' ],
+)
+{/literal}
+</pre>
+
+Lists all of the source files used to build the <code>one</code> library
+<pre>buck audit input /&#x2F;examples:one</pre>
+<pre>
+examples/1.txt{\n}
+examples/2.txt{\n}
+examples/3.txt{\n}
+examples/4.txt{\n}
+examples/5.txt{\n}
+</pre>
+
+Outputs a JSON representation of all of the source files used to build the{sp}
+<code>two</code> library. In this JSON object, each key is a build target and
+each value is an array of the source paths used to build that rule.
+<pre>buck audit input --json /&#x2F;examples:two</pre>
+<pre class="prettyprint lang-js">
+{literal}
+{
+  "//examples:two": ["examples/2.txt"],
+  "//examples:four": ["examples/4.txt"],
+  "//examples:five": ["examples/5.txt"],
+}
+{/literal}
+</pre>
+
+Lists all of the rules that the <code>one</code> library directly depends on
+<pre>buck audit dependencies /&#x2F;examples:one</pre>
+<pre>
+{literal}
+//examples:three
+//examples:two
+{/literal}
+</pre>
+
+Lists all of the rules that the <code>one</code> library transitively depends on
+<pre>buck audit dependencies --transitive /&#x2F;examples:one</pre>
+<pre>
+{literal}
+//examples:five
+//examples:four
+//examples:three
+//examples:two
+{/literal}
+</pre>
+
+Outputs a JSON representation of all of the rules that the <code>two</code>{sp}
+library transitively depends on.
+<pre>buck audit dependencies --transitive --json /&#x2F;examples:two</pre>
+<pre class="prettyprint lang-js">
+{literal}
+[
+  "//examples:five",
+  "//examples:four",
+  "//examples:three",
+  "//examples:two",
+]
+{/literal}
+</pre>
 
 {/param}
 
