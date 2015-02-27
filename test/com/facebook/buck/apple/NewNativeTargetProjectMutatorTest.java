@@ -68,6 +68,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.List;
 
 public class NewNativeTargetProjectMutatorTest {
   private ProjectFilesystem projectFilesystem;
@@ -132,14 +133,11 @@ public class NewNativeTargetProjectMutatorTest {
     SourcePath foo = new TestSourcePath("Group1/foo.m");
     SourcePath bar = new TestSourcePath("Group1/bar.m");
     SourcePath baz = new TestSourcePath("Group2/baz.m");
-    TargetSources sources = TargetSources.fromSourcesWithFlags(
-        ImmutableSortedSet.of(
+    mutator.setSourcesWithFlags(
+        ImmutableList.of(
             SourceWithFlags.of(foo),
             SourceWithFlags.of(bar, ImmutableList.of("-Wall")),
-            SourceWithFlags.of(baz)),
-        ImmutableSortedSet.<SourcePath>of(),
-        ImmutableSortedSet.<SourcePath>of());
-    mutator.setSources(sources);
+            SourceWithFlags.of(baz)));
     NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
         generatedProject);
 
@@ -167,11 +165,8 @@ public class NewNativeTargetProjectMutatorTest {
     SourcePath foo = new TestSourcePath("HeaderGroup1/foo.h");
     SourcePath bar = new TestSourcePath("HeaderGroup1/bar.h");
     SourcePath baz = new TestSourcePath("HeaderGroup2/baz.h");
-    TargetSources sources = TargetSources.fromSourcesWithFlags(
-        ImmutableSortedSet.<SourceWithFlags>of(),
-        /* headers */ ImmutableSortedSet.of(foo),
-        /* exortedHeaders */ ImmutableSortedSet.of(bar, baz));
-    mutator.setSources(sources);
+    mutator.setPublicHeaders(ImmutableList.of(bar, baz));
+    mutator.setPrivateHeaders(ImmutableList.of(foo));
     NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
         generatedProject);
 
@@ -222,16 +217,13 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void testSuppressCopyHeaderOption() throws NoSuchBuildTargetException {
-    TargetSources sources = TargetSources.fromSourcesWithFlags(
-        ImmutableSortedSet.<SourceWithFlags>of(),
-        /* headers */ ImmutableSortedSet.<SourcePath>of(new TestSourcePath("foo")),
-        /* exportedHeaders */ ImmutableSortedSet.<SourcePath>of());
+    List<SourcePath> privateHeaders = ImmutableList.<SourcePath>of(new TestSourcePath("foo"));
 
     {
       NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
       mutator
           .setShouldGenerateCopyHeadersPhase(false)
-          .setSources(sources);
+          .setPrivateHeaders(privateHeaders);
       NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
           generatedProject);
 
@@ -245,7 +237,7 @@ public class NewNativeTargetProjectMutatorTest {
       NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
       mutator
           .setShouldGenerateCopyHeadersPhase(true)
-          .setSources(sources);
+          .setPrivateHeaders(privateHeaders);
       NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
           generatedProject);
       assertThat(

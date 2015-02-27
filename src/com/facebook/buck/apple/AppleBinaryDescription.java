@@ -96,18 +96,13 @@ public class AppleBinaryDescription
       BuildRuleResolver resolver,
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    TargetSources targetSources = TargetSources.fromSourcesWithFlags(
-        args.srcs.get(),
-        args.headers.get(),
-        args.exportedHeaders.get());
     Optional<BuildRule> flavoredRule = AppleDescriptions
         .createFlavoredRule(
             params,
             resolver,
             args,
             appleConfig,
-            pathResolver,
-            targetSources);
+            pathResolver);
     if (flavoredRule.isPresent()) {
       return flavoredRule.get();
     }
@@ -120,8 +115,8 @@ public class AppleBinaryDescription
     Optional<AppleSdkPaths> appleSdkPaths = Optional.fromNullable(
         appleCxxPlatformsToAppleSdkPaths.get(typeAndPlatform.getPlatform()));
     Sets.SetView<SourcePath> allHeaderPaths = Sets.union(
-        targetSources.getPublicHeaderPaths(),
-        targetSources.getPrivateHeaderPaths());
+        args.exportedHeaders.get(),
+        args.headers.get());
     String headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, params.getBuildTarget());
     ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>builder()
         .putAll(
@@ -140,7 +135,7 @@ public class AppleBinaryDescription
         args,
         ImmutableSet.copyOf(
             Iterables.transform(
-                targetSources.getSourcesWithFlags(),
+                args.srcs.get(),
                 SourceWithFlags.TO_SOURCE_PATH)),
         headerMap,
         appleSdkPaths);

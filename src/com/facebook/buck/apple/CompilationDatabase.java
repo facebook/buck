@@ -73,7 +73,9 @@ public class CompilationDatabase extends AbstractBuildRule {
 
 
   private final AppleConfig appleConfig;
-  private final TargetSources targetSources;
+  private final ImmutableSortedSet<SourceWithFlags> sourcesWithFlags;
+  private final ImmutableSortedSet<SourcePath> publicHeaders;
+  private final ImmutableSortedSet<SourcePath> privateHeaders;
   private final Path outputJsonFile;
   private final ImmutableSortedSet<String> frameworks;
   private final ImmutableSet<Path> includePaths;
@@ -82,10 +84,9 @@ public class CompilationDatabase extends AbstractBuildRule {
   /**
    * @param buildRuleParams As needed by superclass constructor.
    * @param resolver As needed by superclass constructor.
-   * @param targetSources The {@link TargetSources#getPublicHeaderPaths()},
-   *     {@link TargetSources#getPrivateHeaderPaths()} and
-   *     {@link TargetSources#getSourcesWithFlags()} will
-   *     be the entries in the generated compilation database.
+   * @param sourcesWithFlags Target's sources and their per-file flags.
+   * @param publicHeaders Target's headers that are visible by dependent targets.
+   * @param privateHeaders Target's headers that are only visible in the target itself.
    * @param frameworks Paths to frameworks to link against. Each may start with {@code "$SDKROOT"},
    *     in which case the appropriate path will be substituted.
    * @param includePaths Paths that should be passed as clang args with {@code -I}.
@@ -95,13 +96,17 @@ public class CompilationDatabase extends AbstractBuildRule {
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       AppleConfig appleConfig,
-      TargetSources targetSources,
+      ImmutableSortedSet<SourceWithFlags> sourcesWithFlags,
+      ImmutableSortedSet<SourcePath> publicHeaders,
+      ImmutableSortedSet<SourcePath> privateHeaders,
       ImmutableSortedSet<String> frameworks,
       ImmutableSet<Path> includePaths,
       Optional<SourcePath> pchFile) {
     super(buildRuleParams, resolver);
     this.appleConfig = appleConfig;
-    this.targetSources = targetSources;
+    this.sourcesWithFlags = sourcesWithFlags;
+    this.publicHeaders = publicHeaders;
+    this.privateHeaders = privateHeaders;
     this.outputJsonFile = BuildTargets.getGenPath(
         buildRuleParams.getBuildTarget(),
         "__%s_compilation_database.json");
@@ -125,9 +130,7 @@ public class CompilationDatabase extends AbstractBuildRule {
     steps.add(new AbstractExecutionStep("generate_internal_header_map") {
       @Override
       public int execute(ExecutionContext context) {
-        Iterable<SourcePath> allHeaderPaths = Iterables.concat(
-            targetSources.getPublicHeaderPaths(),
-            targetSources.getPrivateHeaderPaths());
+        Iterable<SourcePath> allHeaderPaths = Iterables.concat(publicHeaders, privateHeaders);
         if (Iterables.isEmpty(allHeaderPaths)) {
           return 0;
         }
@@ -170,10 +173,10 @@ public class CompilationDatabase extends AbstractBuildRule {
     return getResolver().filterInputsToCompareToOutput(
         Iterables.concat(
             Iterables.transform(
-                targetSources.getSourcesWithFlags(),
+                sourcesWithFlags,
                 SourceWithFlags.TO_SOURCE_PATH),
-            targetSources.getPublicHeaderPaths(),
-            targetSources.getPrivateHeaderPaths()));
+            publicHeaders,
+            privateHeaders));
   }
 
   @Override
@@ -202,7 +205,7 @@ public class CompilationDatabase extends AbstractBuildRule {
     @VisibleForTesting
     Iterable<JsonSerializableDatabaseEntry> createEntries(ExecutionContext context) {
       List<JsonSerializableDatabaseEntry> entries = Lists.newArrayList();
-      for (SourceWithFlags sourceWithFlags : targetSources.getSourcesWithFlags()) {
+      for (SourceWithFlags sourceWithFlags : sourcesWithFlags) {
         entries.add(
             createEntry(
                 context,
@@ -211,8 +214,8 @@ public class CompilationDatabase extends AbstractBuildRule {
       }
 
       Iterable<SourcePath> allHeaderPaths = Iterables.concat(
-          targetSources.getPublicHeaderPaths(),
-          targetSources.getPrivateHeaderPaths());
+          publicHeaders,
+          privateHeaders);
       for (SourcePath headerPath : allHeaderPaths) {
         entries.add(
             createEntry(

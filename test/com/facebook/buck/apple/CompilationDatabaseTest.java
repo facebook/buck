@@ -53,7 +53,6 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.List;
 
 public class CompilationDatabaseTest {
@@ -61,7 +60,9 @@ public class CompilationDatabaseTest {
   // These will be initialized by setUpTestValues().
   private BuildRuleResolver testBuildRuleResolver;
   private SourcePathResolver testSourcePathResolver;
-  private TargetSources testTargetSources;
+  private ImmutableSortedSet<SourceWithFlags> testSourcesWithFlags;
+  private ImmutableSortedSet<SourcePath> testPublicHeaders;
+  private ImmutableSortedSet<SourcePath> testPrivateHeaders;
   private BuildTarget testBuildTarget;
   private AppleConfig appleConfig;
 
@@ -74,7 +75,9 @@ public class CompilationDatabaseTest {
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         testSourcePathResolver,
         appleConfig,
-        testTargetSources,
+        testSourcesWithFlags,
+        testPublicHeaders,
+        testPrivateHeaders,
         /* frameworks */ ImmutableSortedSet.<String>of(),
         /* includePaths */ ImmutableSet.<Path>of(),
         /* pchFile */ Optional.<SourcePath>absent());
@@ -90,22 +93,20 @@ public class CompilationDatabaseTest {
   public void testGetInputsToCompareToOutput() {
     setUpTestValues();
 
-    Collection<SourceWithFlags> sourcesWithFlags = ImmutableList.of(
+    ImmutableSortedSet<SourceWithFlags> sourcesWithFlags = ImmutableSortedSet.of(
         SourceWithFlags.of(new TestSourcePath("Foo/Hello.m")));
-    Collection<SourcePath> headers = ImmutableList.<SourcePath>of(
+    ImmutableSortedSet<SourcePath> headers = ImmutableSortedSet.<SourcePath>of(
         new TestSourcePath("Foo/Bye.h"));
-    Collection<SourcePath> exportedHeaders = ImmutableList.<SourcePath>of(
+    ImmutableSortedSet<SourcePath> exportedHeaders = ImmutableSortedSet.<SourcePath>of(
         new TestSourcePath("Foo/Hello.h"));
-    TargetSources targetSources = TargetSources.fromSourcesWithFlags(
-        sourcesWithFlags,
-        headers,
-        exportedHeaders);
 
     CompilationDatabase compilationDatabase = new CompilationDatabase(
         new FakeBuildRuleParamsBuilder(testBuildTarget).build(),
         testSourcePathResolver,
         appleConfig,
-        targetSources,
+        sourcesWithFlags,
+        exportedHeaders,
+        headers,
         /* frameworks */ ImmutableSortedSet.<String>of(),
         /* includePaths */ ImmutableSet.<Path>of(),
         /* pchFile */ Optional.<SourcePath>absent());
@@ -247,15 +248,11 @@ public class CompilationDatabaseTest {
   private void setUpTestValues() {
     testBuildRuleResolver = new BuildRuleResolver();
     testSourcePathResolver = new SourcePathResolver(testBuildRuleResolver);
-    Collection<SourceWithFlags> sourcesWithFlags = ImmutableList.of(
+    testSourcesWithFlags = ImmutableSortedSet.of(
         SourceWithFlags.of(new TestSourcePath("foo/Hello.m")));
-    Collection<SourcePath> headers = ImmutableList.of();
-    Collection<SourcePath> exportedHeaders = ImmutableList.<SourcePath>of(
+    testPrivateHeaders = ImmutableSortedSet.of();
+    testPublicHeaders = ImmutableSortedSet.<SourcePath>of(
         new TestSourcePath("foo/Hello.h"));
-    testTargetSources = TargetSources.fromSourcesWithFlags(
-        sourcesWithFlags,
-        headers,
-        exportedHeaders);
     testBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
   }
 
@@ -290,7 +287,9 @@ public class CompilationDatabaseTest {
         new FakeBuildRuleParamsBuilder(testBuildTarget).build(),
         testSourcePathResolver,
         appleConfig,
-        testTargetSources,
+        testSourcesWithFlags,
+        testPublicHeaders,
+        testPrivateHeaders,
         frameworks,
         includePaths,
         pchFile);

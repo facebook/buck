@@ -107,18 +107,13 @@ public class AppleLibraryDescription implements
       BuildRuleResolver resolver,
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    TargetSources targetSources = TargetSources.fromSourcesWithFlags(
-        args.srcs.get(),
-        args.headers.get(),
-        args.exportedHeaders.get());
     Optional<BuildRule> flavoredRule = AppleDescriptions
         .createFlavoredRule(
             params,
             resolver,
             args,
             appleConfig,
-            pathResolver,
-            targetSources);
+            pathResolver);
     if (flavoredRule.isPresent()) {
       return flavoredRule.get();
     }
@@ -130,9 +125,11 @@ public class AppleLibraryDescription implements
             cxxPlatformFlavorDomain);
     Optional<AppleSdkPaths> appleSdkPaths = Optional.fromNullable(
         appleCxxPlatformsToAppleSdkPaths.get(typeAndPlatform.getPlatform()));
+    ImmutableSet<SourcePath> publicHeaders = args.exportedHeaders.get();
+    ImmutableSet<SourcePath> privateHeaders = args.headers.get();
     Sets.SetView<SourcePath> allHeaderPaths = Sets.union(
-        targetSources.getPublicHeaderPaths(),
-        targetSources.getPrivateHeaderPaths());
+        publicHeaders,
+        privateHeaders);
     Path headerPathPrefix = Paths.get(
         AppleDescriptions.getHeaderPathPrefix(args, params.getBuildTarget()));
     ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>builder()
@@ -145,14 +142,14 @@ public class AppleLibraryDescription implements
             AppleDescriptions.convertToFlatCxxHeaders(
                 headerPathPrefix,
                 pathResolver,
-                targetSources.getPrivateHeaderPaths()))
+                privateHeaders))
         .build();
     AppleDescriptions.populateCxxConstructorArg(
         delegateArg,
         args,
         ImmutableSet.copyOf(
             Iterables.transform(
-                targetSources.getSourcesWithFlags(),
+                args.srcs.get(),
                 SourceWithFlags.TO_SOURCE_PATH)),
         headerMap,
         appleSdkPaths);
@@ -161,7 +158,7 @@ public class AppleLibraryDescription implements
             AppleDescriptions.convertToFlatCxxHeaders(
                 headerPathPrefix,
                 pathResolver,
-                targetSources.getPublicHeaderPaths())));
+                publicHeaders)));
     delegateArg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
     delegateArg.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());

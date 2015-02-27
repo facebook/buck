@@ -549,10 +549,6 @@ public class ProjectGenerator {
 
     String productName = getProductName(buildTarget);
     AppleNativeTargetDescriptionArg arg = targetNode.getConstructorArg();
-    TargetSources sources = TargetSources.fromSourcesWithFlags(
-        arg.srcs.get(),
-        arg.headers.get(),
-        arg.exportedHeaders.get());
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
         sourcePathResolver);
@@ -565,7 +561,9 @@ public class ProjectGenerator {
         .setGid(targetGid)
         .setShouldGenerateCopyHeadersPhase(
             !targetNode.getConstructorArg().getUseBuckHeaderMaps())
-        .setSources(sources)
+        .setSourcesWithFlags(arg.srcs.get())
+        .setPublicHeaders(arg.exportedHeaders.get())
+        .setPrivateHeaders(arg.headers.get())
         .setResources(resources);
 
     if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE)) {
@@ -721,8 +719,8 @@ public class ProjectGenerator {
       addHeaderMapsForHeaders(
           targetNode,
           targetNode.getConstructorArg().headerPathPrefix,
-          sources.getPublicHeaderPaths(),
-          sources.getPrivateHeaderPaths());
+          arg.exportedHeaders.get(),
+          arg.headers.get());
     }
 
     // Use Core Data models from immediate dependencies only.
@@ -774,14 +772,10 @@ public class ProjectGenerator {
             productName,
             Paths.get(productName + "." + getExtensionString(key.getExtension())))
         .setShouldGenerateCopyHeadersPhase(false)
-        .setSources(
-            TargetSources.fromSourcesWithFlags(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new PathSourcePath(projectFilesystem, emptyFileWithExtension("c")),
-                        ImmutableList.<String>of())),
-                /* headers */ ImmutableSortedSet.<SourcePath>of(),
-                /* exportedHeaders */ ImmutableSortedSet.<SourcePath>of()))
+        .setSourcesWithFlags(
+            ImmutableList.of(
+                SourceWithFlags.of(
+                    new PathSourcePath(projectFilesystem, emptyFileWithExtension("c")))))
         .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))
         .setResources(collectRecursiveResources(tests))
         .setAssetCatalogs(

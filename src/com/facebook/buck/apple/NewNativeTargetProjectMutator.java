@@ -79,7 +79,9 @@ public class NewNativeTargetProjectMutator {
   private String targetName = "";
   private ImmutableList<String> targetGroupPath = ImmutableList.of();
   private Optional<String> gid = Optional.absent();
-  private Iterable<GroupedSource> sources = ImmutableList.of();
+  private ImmutableSet<SourceWithFlags> sourcesWithFlags = ImmutableSet.of();
+  private ImmutableSet<SourcePath> publicHeaders = ImmutableSet.of();
+  private ImmutableSet<SourcePath> privateHeaders = ImmutableSet.of();
   private boolean shouldGenerateCopyHeadersPhase = true;
   private ImmutableSet<FrameworkPath> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
@@ -128,13 +130,21 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public NewNativeTargetProjectMutator setSources(
-      TargetSources sources) {
-    this.sources = RuleUtils.createGroupsFromSourcePaths(
-        sourcePathResolver,
-        sources.getSourcesWithFlags(),
-        sources.getPublicHeaderPaths(),
-        sources.getPrivateHeaderPaths());
+  public NewNativeTargetProjectMutator setSourcesWithFlags(
+      Iterable<SourceWithFlags> sourcesWithFlags) {
+    this.sourcesWithFlags = ImmutableSet.copyOf(sourcesWithFlags);
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setPublicHeaders(
+      Iterable<SourcePath> publicHeaders) {
+    this.publicHeaders = ImmutableSet.copyOf(publicHeaders);
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setPrivateHeaders(
+      Iterable<SourcePath> privateHeaders) {
+    this.privateHeaders = ImmutableSet.copyOf(privateHeaders);
     return this;
   }
 
@@ -229,7 +239,11 @@ public class NewNativeTargetProjectMutator {
         !shouldGenerateCopyHeadersPhase
             ? Optional.<PBXHeadersBuildPhase>absent()
             : Optional.of(headersBuildPhase),
-        sources);
+        RuleUtils.createGroupsFromSourcePaths(
+            sourcePathResolver,
+            sourcesWithFlags,
+            publicHeaders,
+            privateHeaders));
 
     if (!sourcesBuildPhase.getFiles().isEmpty()) {
       target.getBuildPhases().add(sourcesBuildPhase);

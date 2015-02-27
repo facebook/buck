@@ -90,8 +90,7 @@ public class AppleDescriptions {
       BuildRuleResolver resolver,
       A args,
       AppleConfig appleConfig,
-      SourcePathResolver pathResolver,
-      TargetSources targetSources) {
+      SourcePathResolver pathResolver) {
     BuildTarget target = params.getBuildTarget();
     if (target.getFlavors().contains(CompilationDatabase.COMPILATION_DATABASE)) {
       BuildRule compilationDatabase = createCompilationDatabase(
@@ -99,8 +98,7 @@ public class AppleDescriptions {
           resolver,
           args,
           appleConfig,
-          pathResolver,
-          targetSources);
+          pathResolver);
       return Optional.of(compilationDatabase);
     } else if (target.getFlavors().contains(HEADERS)) {
       return Optional.of(createHeadersFlavor(params, pathResolver, args));
@@ -130,15 +128,11 @@ public class AppleDescriptions {
         /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(params.getExtraDeps()));
 
-    TargetSources targetSources = TargetSources.fromSourcesWithFlags(
-        args.srcs.get(),
-        args.headers.get(),
-        args.exportedHeaders.get());
     boolean useBuckHeaderMaps = args.useBuckHeaderMaps.or(Boolean.FALSE);
     return createSymlinkTree(
         headerRuleParams,
         resolver,
-        targetSources.getPublicHeaderPaths(),
+        args.exportedHeaders.get(),
         useBuckHeaderMaps);
   }
 
@@ -188,8 +182,7 @@ public class AppleDescriptions {
       BuildRuleResolver buildRuleResolver,
       AppleNativeTargetDescriptionArg args,
       AppleConfig appleConfig,
-      SourcePathResolver pathResolver,
-      TargetSources targetSources) {
+      SourcePathResolver pathResolver) {
     CompilationDatabaseTraversal traversal = new CompilationDatabaseTraversal(
         params.getTargetGraph(),
         buildRuleResolver);
@@ -213,7 +206,9 @@ public class AppleDescriptions {
         compilationDatabaseParams,
         pathResolver,
         appleConfig,
-        targetSources,
+        ImmutableSortedSet.copyOf(args.srcs.get()),
+        args.exportedHeaders.get(),
+        args.headers.get(),
         args.frameworks.get(),
         traversal.includePaths.build(),
         args.prefixHeader);
