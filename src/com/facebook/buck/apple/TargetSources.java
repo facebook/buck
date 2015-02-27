@@ -58,27 +58,10 @@ public abstract class TargetSources {
       Collection<SourceWithFlags> sourcesWithFlags,
       Collection<SourcePath> headers,
       Collection<SourcePath> exportedHeaders) {
-    ImmutableSortedSet.Builder<SourceWithFlags> srcPathsBuilder = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> publicHeaderPathsBuilder =
-        ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> privateHeaderPathsBuilder =
-        ImmutableSortedSet.naturalOrder();
-    RuleUtils.extractSourcePaths(
-        srcPathsBuilder,
-        publicHeaderPathsBuilder,
-        privateHeaderPathsBuilder,
-        sourcesWithFlags,
-        headers,
-        exportedHeaders);
-
-    ImmutableSortedSet<SourceWithFlags> srcPaths = srcPathsBuilder.build();
-    ImmutableSortedSet<SourcePath> publicHeaderPaths = publicHeaderPathsBuilder.build();
-    ImmutableSortedSet<SourcePath> privateHeaderPaths = privateHeaderPathsBuilder.build();
-
     return ImmutableTargetSources.of(
-        srcPaths,
-        publicHeaderPaths,
-        privateHeaderPaths);
+        ImmutableSortedSet.copyOf(sourcesWithFlags),
+        ImmutableSortedSet.copyOf(exportedHeaders),
+        ImmutableSortedSet.copyOf(headers));
   }
 
 }

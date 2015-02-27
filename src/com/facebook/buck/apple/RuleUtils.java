@@ -34,7 +34,6 @@ import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.SortedSet;
@@ -46,38 +45,6 @@ public class RuleUtils {
 
   /** Utility class: do not instantiate. */
   private RuleUtils() {}
-
-  /**
-   * Extract the source and header paths and flags from the input list
-   * and populate the output collections.
-   *
-   * @param outputSourcePaths The ordered list of paths to (non-header) source code
-   *        files, as determined by the file extensions in SOURCE_FILE_EXTENSIONS.
-   * @param outputPublicHeaderPaths The ordered list of paths to public header files,
-   *        as determined by the file extensions in HEADER_FILE_EXTENSIONS and per-file flags.
-   * @param outputPrivateHeaderPaths The ordered list of paths to private header files,
-   *        as determined by the file extensions in HEADER_FILE_EXTENSIONS and per-file flags.
-   * @param items input list of sources with their per-file flags
-   * @param headers input list of public headers
-   * @param exportedHeaders input list of private headers
-   */
-  public static void extractSourcePaths(
-      ImmutableSortedSet.Builder<SourceWithFlags> outputSourcePaths,
-      ImmutableSortedSet.Builder<SourcePath> outputPublicHeaderPaths,
-      ImmutableSortedSet.Builder<SourcePath> outputPrivateHeaderPaths,
-      Collection<SourceWithFlags> items,
-      Collection<SourcePath> headers,
-      Collection<SourcePath> exportedHeaders) {
-    for (SourceWithFlags item : items) {
-      outputSourcePaths.add(item);
-    }
-    for (SourcePath headerPath : headers) {
-      outputPrivateHeaderPaths.add(headerPath);
-    }
-    for (SourcePath headerPath : exportedHeaders) {
-      outputPublicHeaderPaths.add(headerPath);
-    }
-  }
 
   public static ImmutableList<GroupedSource> createGroupsFromSourcePaths(
       SourcePathResolver resolver,

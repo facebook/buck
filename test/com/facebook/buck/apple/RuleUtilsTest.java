@@ -35,10 +35,6 @@ public class RuleUtilsTest {
 
   @Test
   public void extractGroupedSources() {
-    ImmutableSortedSet.Builder<SourceWithFlags> sourcePaths = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> publicHeaderPaths = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> privateHeaderPaths = ImmutableSortedSet.naturalOrder();
-
     ImmutableList<SourceWithFlags> input = ImmutableList.of(
         SourceWithFlags.of(new TestSourcePath("Group1/foo.m")),
         SourceWithFlags.of(
@@ -49,18 +45,11 @@ public class RuleUtilsTest {
             new TestSourcePath("Group2/blech.m"), ImmutableList.of("-fobjc-arc")));
 
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
-    RuleUtils.extractSourcePaths(
-        sourcePaths,
-        publicHeaderPaths,
-        privateHeaderPaths,
-        input,
-        ImmutableSortedSet.<SourcePath>of(),
-        ImmutableSortedSet.<SourcePath>of());
     ImmutableList<GroupedSource> sources = RuleUtils.createGroupsFromSourcePaths(
         resolver,
-        sourcePaths.build(),
-        publicHeaderPaths.build(),
-        privateHeaderPaths.build());
+        input,
+        /* publicHeaders */ ImmutableSortedSet.<SourcePath>of(),
+        /* privateHeaders */ ImmutableSortedSet.<SourcePath>of());
     assertEquals(
         ImmutableList.of(
             GroupedSource.ofSourceGroup(
@@ -84,86 +73,6 @@ public class RuleUtilsTest {
                             ImmutableList.of("-fobjc-arc")))
                 ))),
         sources);
-  }
-
-  @Test
-  public void extractUngroupedHeadersAndSources() {
-    ImmutableSortedSet.Builder<SourceWithFlags> sourcePaths = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> publicHeaderPaths = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> privateHeaderPaths = ImmutableSortedSet.naturalOrder();
-
-    ImmutableList<SourceWithFlags> input = ImmutableList.of(
-        SourceWithFlags.of(new TestSourcePath("foo.m")),
-        SourceWithFlags.of(new TestSourcePath("baz.mm")),
-        SourceWithFlags.of(new TestSourcePath("beeble.c")));
-    ImmutableSortedSet<SourcePath> headers = ImmutableSortedSet.<SourcePath>of(
-        new TestSourcePath("bar.h"),
-        new TestSourcePath("blech.hh"));
-    ImmutableSortedSet<SourcePath> exportedHeaders = ImmutableSortedSet.<SourcePath>of(
-        new TestSourcePath("file.h"));
-
-    RuleUtils.extractSourcePaths(
-        sourcePaths,
-        publicHeaderPaths,
-        privateHeaderPaths,
-        input,
-        headers,
-        exportedHeaders);
-    assertEquals(
-        ImmutableSortedSet.of(
-            SourceWithFlags.of(new TestSourcePath("foo.m")),
-            SourceWithFlags.of(new TestSourcePath("baz.mm")),
-            SourceWithFlags.of(new TestSourcePath("beeble.c"))),
-        sourcePaths.build());
-    assertEquals(
-        ImmutableSortedSet.<SourcePath>of(
-            new TestSourcePath("bar.h"),
-            new TestSourcePath("blech.hh")),
-        privateHeaderPaths.build());
-    assertEquals(
-        ImmutableSortedSet.<SourcePath>of(
-            new TestSourcePath("file.h")),
-        publicHeaderPaths.build());
-  }
-
-  @Test
-  public void extractGroupedHeadersAndSources() {
-    ImmutableSortedSet.Builder<SourceWithFlags> sourcePaths = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> publicHeaderPaths = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<SourcePath> privateHeaderPaths = ImmutableSortedSet.naturalOrder();
-
-    ImmutableList<SourceWithFlags> input = ImmutableList.of(
-        SourceWithFlags.of(
-            new TestSourcePath("bar.m"), ImmutableList.of("-Wall")),
-        SourceWithFlags.of(
-            new TestSourcePath("blech.mm"), ImmutableList.of("-fobjc-arc")));
-    ImmutableSortedSet<SourcePath> headers = ImmutableSortedSet.<SourcePath>of(
-        new TestSourcePath("foo.h"),
-        new TestSourcePath("baz.hh"));
-    ImmutableSortedSet<SourcePath> exportedHeaders = ImmutableSortedSet.<SourcePath>of(
-        new TestSourcePath("qux.h"));
-
-    RuleUtils.extractSourcePaths(
-        sourcePaths,
-        publicHeaderPaths,
-        privateHeaderPaths,
-        input,
-        headers,
-        exportedHeaders);
-    assertEquals(
-        ImmutableSortedSet.of(
-            SourceWithFlags.of(new TestSourcePath("bar.m"), ImmutableList.of("-Wall")),
-            SourceWithFlags.of(new TestSourcePath("blech.mm"), ImmutableList.of("-fobjc-arc"))),
-        sourcePaths.build());
-    assertEquals(
-        ImmutableSortedSet.<SourcePath>of(
-            new TestSourcePath("foo.h"),
-            new TestSourcePath("baz.hh")),
-        privateHeaderPaths.build());
-    assertEquals(
-        ImmutableSortedSet.<SourcePath>of(
-            new TestSourcePath("qux.h")),
-        publicHeaderPaths.build());
   }
 
   @Test
