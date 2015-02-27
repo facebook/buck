@@ -84,24 +84,6 @@ of the compiled class files and resources.
 
 {call buck.arg}
   {param name: 'source' /}
-  {param default : '\'7\'' /}
-  {param desc}
-  Java language level for compiling. Corresponds to the
-  {sp}<code>-source</code> argument for <code>javac</code>.
-  {/param}
-{/call}
-
-{call buck.arg}
-  {param name: 'target' /}
-  {param default : '\'7\'' /}
-  {param desc}
-  Bytecode target level for compiling. Corresponds to the
-  {sp}<code>-target</code> argument for <code>javac</code>.
-  {/param}
-{/call}
-
-{call buck.arg}
-  {param name: 'source' /}
   {param default : '<global value>' /}
   {param desc}
   Specifies the version of Java (as a string) to interpret source
