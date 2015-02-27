@@ -108,7 +108,6 @@ public class AppleLibraryDescription implements
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     TargetSources targetSources = TargetSources.fromSourcesWithFlags(
-        pathResolver,
         args.srcs.get(),
         args.headers.get(),
         args.exportedHeaders.get());

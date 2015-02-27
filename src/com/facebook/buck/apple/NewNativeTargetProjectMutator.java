@@ -129,8 +129,12 @@ public class NewNativeTargetProjectMutator {
   }
 
   public NewNativeTargetProjectMutator setSources(
-      Iterable<GroupedSource> sources) {
-    this.sources = sources;
+      TargetSources sources) {
+    this.sources = RuleUtils.createGroupsFromSourcePaths(
+        sourcePathResolver,
+        sources.getSourcesWithFlags(),
+        sources.getPublicHeaderPaths(),
+        sources.getPrivateHeaderPaths());
     return this;
   }
 

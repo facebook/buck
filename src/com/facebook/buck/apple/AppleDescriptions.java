@@ -131,7 +131,6 @@ public class AppleDescriptions {
         Suppliers.ofInstance(params.getExtraDeps()));
 
     TargetSources targetSources = TargetSources.fromSourcesWithFlags(
-        resolver,
         args.srcs.get(),
         args.headers.get(),
         args.exportedHeaders.get());

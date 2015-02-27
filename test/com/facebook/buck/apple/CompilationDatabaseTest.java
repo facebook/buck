@@ -97,7 +97,6 @@ public class CompilationDatabaseTest {
     Collection<SourcePath> exportedHeaders = ImmutableList.<SourcePath>of(
         new TestSourcePath("Foo/Hello.h"));
     TargetSources targetSources = TargetSources.fromSourcesWithFlags(
-        testSourcePathResolver,
         sourcesWithFlags,
         headers,
         exportedHeaders);
@@ -254,7 +253,6 @@ public class CompilationDatabaseTest {
     Collection<SourcePath> exportedHeaders = ImmutableList.<SourcePath>of(
         new TestSourcePath("foo/Hello.h"));
     testTargetSources = TargetSources.fromSourcesWithFlags(
-        testSourcePathResolver,
         sourcesWithFlags,
         headers,
         exportedHeaders);

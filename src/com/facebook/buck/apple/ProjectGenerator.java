@@ -550,7 +550,6 @@ public class ProjectGenerator {
     String productName = getProductName(buildTarget);
     AppleNativeTargetDescriptionArg arg = targetNode.getConstructorArg();
     TargetSources sources = TargetSources.fromSourcesWithFlags(
-        sourcePathResolver,
         arg.srcs.get(),
         arg.headers.get(),
         arg.exportedHeaders.get());
@@ -566,7 +565,7 @@ public class ProjectGenerator {
         .setGid(targetGid)
         .setShouldGenerateCopyHeadersPhase(
             !targetNode.getConstructorArg().getUseBuckHeaderMaps())
-        .setSources(sources.getSrcs())
+        .setSources(sources)
         .setResources(resources);
 
     if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE)) {
@@ -776,11 +775,13 @@ public class ProjectGenerator {
             Paths.get(productName + "." + getExtensionString(key.getExtension())))
         .setShouldGenerateCopyHeadersPhase(false)
         .setSources(
-            ImmutableList.of(
-                GroupedSource.ofSourceWithFlags(
+            TargetSources.fromSourcesWithFlags(
+                ImmutableSortedSet.of(
                     SourceWithFlags.of(
                         new PathSourcePath(projectFilesystem, emptyFileWithExtension("c")),
-                        ImmutableList.<String>of()))))
+                        ImmutableList.<String>of())),
+                /* headers */ ImmutableSortedSet.<SourcePath>of(),
+                /* exportedHeaders */ ImmutableSortedSet.<SourcePath>of()))
         .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))
         .setResources(collectRecursiveResources(tests))
         .setAssetCatalogs(
@@ -1736,8 +1737,7 @@ public class ProjectGenerator {
   }
 
   private Path emptyFileWithExtension(String extension) {
-    Path path = projectFilesystem.getPathForRelativePath(
-        BuckConstant.GEN_PATH.resolve("xcode-scripts/emptyFile." + extension));
+    Path path = BuckConstant.GEN_PATH.resolve("xcode-scripts/emptyFile." + extension);
     if (!projectFilesystem.exists(path)) {
       try {
         projectFilesystem.createParentDirs(path);

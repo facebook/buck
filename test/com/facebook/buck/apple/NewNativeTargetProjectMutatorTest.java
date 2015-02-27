@@ -129,20 +129,16 @@ public class NewNativeTargetProjectMutatorTest {
   public void testSourceGroups() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    SourcePath foo = new TestSourcePath("foo.m");
-    SourcePath bar = new TestSourcePath("bar.m");
-    SourcePath baz = new TestSourcePath("baz.m");
-    Iterable<GroupedSource> sources = ImmutableList.of(
-        GroupedSource.ofSourceGroup(
-            "Group1",
-            ImmutableList.of(
-                GroupedSource.ofSourceWithFlags(SourceWithFlags.of(foo)),
-                GroupedSource.ofSourceWithFlags(
-                    SourceWithFlags.of(bar, ImmutableList.of("-Wall"))))),
-        GroupedSource.ofSourceGroup(
-            "Group2",
-            ImmutableList.of(
-                GroupedSource.ofSourceWithFlags(SourceWithFlags.of(baz)))));
+    SourcePath foo = new TestSourcePath("Group1/foo.m");
+    SourcePath bar = new TestSourcePath("Group1/bar.m");
+    SourcePath baz = new TestSourcePath("Group2/baz.m");
+    TargetSources sources = TargetSources.fromSourcesWithFlags(
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(foo),
+            SourceWithFlags.of(bar, ImmutableList.of("-Wall")),
+            SourceWithFlags.of(baz)),
+        ImmutableSortedSet.<SourcePath>of(),
+        ImmutableSortedSet.<SourcePath>of());
     mutator.setSources(sources);
     NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
         generatedProject);
@@ -152,10 +148,10 @@ public class NewNativeTargetProjectMutatorTest {
     PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
     assertEquals("Group1", group1.getName());
     assertThat(group1.getChildren(), hasSize(2));
-    PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
-    assertEquals("foo.m", fileRefFoo.getName());
-    PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
+    PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("bar.m", fileRefBar.getName());
+    PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
+    assertEquals("foo.m", fileRefFoo.getName());
 
     PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
     assertEquals("Group2", group2.getName());
@@ -168,19 +164,13 @@ public class NewNativeTargetProjectMutatorTest {
   public void testLibraryHeaderGroups() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    SourcePath foo = new TestSourcePath("foo.h");
-    SourcePath bar = new TestSourcePath("bar.h");
-    SourcePath baz = new TestSourcePath("baz.h");
-    Iterable<GroupedSource> sources = ImmutableList.of(
-        GroupedSource.ofSourceGroup(
-            "HeaderGroup1",
-            ImmutableList.of(
-                GroupedSource.ofPrivateHeader(foo),
-                GroupedSource.ofPublicHeader(bar))),
-        GroupedSource.ofSourceGroup(
-            "HeaderGroup2",
-            ImmutableList.of(
-                GroupedSource.ofPublicHeader(baz))));
+    SourcePath foo = new TestSourcePath("HeaderGroup1/foo.h");
+    SourcePath bar = new TestSourcePath("HeaderGroup1/bar.h");
+    SourcePath baz = new TestSourcePath("HeaderGroup2/baz.h");
+    TargetSources sources = TargetSources.fromSourcesWithFlags(
+        ImmutableSortedSet.<SourceWithFlags>of(),
+        /* headers */ ImmutableSortedSet.of(foo),
+        /* exortedHeaders */ ImmutableSortedSet.of(bar, baz));
     mutator.setSources(sources);
     NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
         generatedProject);
@@ -192,10 +182,10 @@ public class NewNativeTargetProjectMutatorTest {
     PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
     assertEquals("HeaderGroup1", group1.getName());
     assertThat(group1.getChildren(), hasSize(2));
-    PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
-    assertEquals("foo.h", fileRefFoo.getName());
-    PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
+    PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("bar.h", fileRefBar.getName());
+    PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
+    assertEquals("foo.h", fileRefFoo.getName());
 
     PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
     assertEquals("HeaderGroup2", group2.getName());
@@ -210,17 +200,17 @@ public class NewNativeTargetProjectMutatorTest {
                 return input instanceof PBXHeadersBuildPhase;
               }
             });
-    PBXBuildFile fooHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 0);
-    assertFalse(
-        "foo.h should not have settings dictionary",
-        fooHeaderBuildFile.getSettings().isPresent());
-    PBXBuildFile barHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 1);
+    PBXBuildFile barHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 0);
     assertTrue(
         "bar.h should have settings dictionary",
         barHeaderBuildFile.getSettings().isPresent());
     NSDictionary barBuildFileSettings = barHeaderBuildFile.getSettings().get();
     NSArray barAttributes = (NSArray) barBuildFileSettings.get("ATTRIBUTES");
     assertArrayEquals(new NSString[]{new NSString("Public")}, barAttributes.getArray());
+    PBXBuildFile fooHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 1);
+    assertFalse(
+        "foo.h should not have settings dictionary",
+        fooHeaderBuildFile.getSettings().isPresent());
     PBXBuildFile bazHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 2);
     assertTrue(
         "baz.h should have settings dictionary",
@@ -232,8 +222,10 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void testSuppressCopyHeaderOption() throws NoSuchBuildTargetException {
-    Iterable<GroupedSource> sources = ImmutableList.of(
-        GroupedSource.ofPrivateHeader(new TestSourcePath("foo.h")));
+    TargetSources sources = TargetSources.fromSourcesWithFlags(
+        ImmutableSortedSet.<SourceWithFlags>of(),
+        /* headers */ ImmutableSortedSet.<SourcePath>of(new TestSourcePath("foo")),
+        /* exportedHeaders */ ImmutableSortedSet.<SourcePath>of());
 
     {
       NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();

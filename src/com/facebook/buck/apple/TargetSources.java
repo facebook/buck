@@ -17,16 +17,13 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.SortedSet;
 
 /**
@@ -36,12 +33,6 @@ import java.util.SortedSet;
 @Value.Immutable
 @BuckStyleImmutable
 public abstract class TargetSources {
-  /**
-   * The tree of source files and source groups comprising the target.
-   */
-  @Value.Parameter
-  public abstract List<GroupedSource> getSrcs();
-
   /**
    * Paths to each source code file in the target to be compiled and their per-file flags.
    */
@@ -64,7 +55,6 @@ public abstract class TargetSources {
    * Creates a {@link TargetSources} object given a list of {@link SourceWithFlags} objects.
    */
   public static TargetSources fromSourcesWithFlags(
-      SourcePathResolver resolver,
       Collection<SourceWithFlags> sourcesWithFlags,
       Collection<SourcePath> headers,
       Collection<SourcePath> exportedHeaders) {
@@ -85,14 +75,7 @@ public abstract class TargetSources {
     ImmutableSortedSet<SourcePath> publicHeaderPaths = publicHeaderPathsBuilder.build();
     ImmutableSortedSet<SourcePath> privateHeaderPaths = privateHeaderPathsBuilder.build();
 
-    ImmutableList<GroupedSource> groupedSource = RuleUtils.createGroupsFromSourcePaths(
-        resolver,
-        srcPaths,
-        publicHeaderPaths,
-        privateHeaderPaths);
-
     return ImmutableTargetSources.of(
-        groupedSource,
         srcPaths,
         publicHeaderPaths,
         privateHeaderPaths);
