@@ -554,4 +554,34 @@ public class CxxBinaryIntegrationTest {
     }
   }
 
+  @Test
+  public void perFileFlagsUsedForPreprocessing() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "preprocessing_per_file_flags", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:bin");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void correctPerFileFlagsUsedForCompilation() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "compiling_per_file_flags", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:working-bin");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void incorrectPerFileFlagsUsedForCompilation() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "compiling_per_file_flags", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:broken-bin");
+    result.assertFailure();
+  }
+
 }

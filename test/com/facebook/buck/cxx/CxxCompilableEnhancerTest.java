@@ -47,6 +47,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class CxxCompilableEnhancerTest {
@@ -84,7 +85,10 @@ public class CxxCompilableEnhancerTest {
     FakeBuildRule dep = createFakeBuildRule("//:test", new SourcePathResolver(resolver));
     resolver.addToIndex(dep);
     SourcePath input = new BuildTargetSourcePath(PROJECT_FILESYSTEM, dep.getBuildTarget());
-    CxxSource cxxSource = ImmutableCxxSource.of(CxxSource.Type.CXX_CPP_OUTPUT, input);
+    CxxSource cxxSource = ImmutableCxxSource.of(
+        CxxSource.Type.CXX_CPP_OUTPUT,
+        input,
+        ImmutableList.<String>of());
 
     CxxCompile cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
         params,
@@ -108,7 +112,8 @@ public class CxxCompilableEnhancerTest {
     String name = "foo/bar.ii";
     CxxSource cxxSource = ImmutableCxxSource.of(
         CxxSource.Type.CXX_CPP_OUTPUT,
-        new TestSourcePath(name));
+        new TestSourcePath(name),
+        ImmutableList.<String>of());
 
     // Verify building a non-PIC compile rule does *not* have the "-fPIC" flag and has the
     // expected compile target.
@@ -158,7 +163,8 @@ public class CxxCompilableEnhancerTest {
     String name = "source.ii";
     CxxSource cxxSource = ImmutableCxxSource.of(
         CxxSource.Type.CXX_CPP_OUTPUT,
-        new TestSourcePath(name));
+        new TestSourcePath(name),
+        ImmutableList.<String>of());
 
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
     CxxPlatform platform = DefaultCxxPlatforms.build(
@@ -215,9 +221,11 @@ public class CxxCompilableEnhancerTest {
     CxxPlatform platform = DefaultCxxPlatforms.build(PROJECT_FILESYSTEM, buckConfig);
 
     String cSourceName = "test.i";
+    List<String> cSourcePerFileFlags = ImmutableList.of("-c-source-par-file-flag");
     CxxSource cSource = ImmutableCxxSource.of(
         CxxSource.Type.C_CPP_OUTPUT,
-        new TestSourcePath(cSourceName));
+        new TestSourcePath(cSourceName),
+        cSourcePerFileFlags);
     CxxCompile cCompile = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         buildRuleResolver,
@@ -229,10 +237,15 @@ public class CxxCompilableEnhancerTest {
     assertContains(cCompile.getFlags(), explicitCompilerFlags);
     assertContains(cCompile.getFlags(), cflags);
     assertContains(cCompile.getFlags(), asflags);
+    assertContains(cCompile.getFlags(), cSourcePerFileFlags);
 
     String cxxSourceName = "test.ii";
+    List<String> cxxSourcePerFileFlags = ImmutableList.of("-cxx-source-par-file-flag");
     CxxSource cxxSource =
-        ImmutableCxxSource.of(CxxSource.Type.CXX_CPP_OUTPUT, new TestSourcePath(cxxSourceName));
+        ImmutableCxxSource.of(
+            CxxSource.Type.CXX_CPP_OUTPUT,
+            new TestSourcePath(cxxSourceName),
+            cxxSourcePerFileFlags);
     CxxCompile cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         buildRuleResolver,
@@ -244,11 +257,15 @@ public class CxxCompilableEnhancerTest {
     assertContains(cxxCompile.getFlags(), explicitCompilerFlags);
     assertContains(cxxCompile.getFlags(), cxxflags);
     assertContains(cxxCompile.getFlags(), asflags);
+    assertContains(cxxCompile.getFlags(), cxxSourcePerFileFlags);
 
     String cCppOutputSourceName = "test.i";
+    List<String> cCppOutputSourcePerFileFlags =
+        ImmutableList.of("-c-cpp-output-source-par-file-flag");
     CxxSource cCppOutputSource = ImmutableCxxSource.of(
         CxxSource.Type.C_CPP_OUTPUT,
-        new TestSourcePath(cCppOutputSourceName));
+        new TestSourcePath(cCppOutputSourceName),
+        cCppOutputSourcePerFileFlags);
     CxxCompile cCppOutputCompile = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         buildRuleResolver,
@@ -260,11 +277,14 @@ public class CxxCompilableEnhancerTest {
     assertContains(cCppOutputCompile.getFlags(), explicitCompilerFlags);
     assertContains(cCppOutputCompile.getFlags(), cflags);
     assertContains(cCppOutputCompile.getFlags(), asflags);
+    assertContains(cCppOutputCompile.getFlags(), cCppOutputSourcePerFileFlags);
 
     String assemblerSourceName = "test.s";
+    List<String> assemblerSourcePerFileFlags = ImmutableList.of("-assember-source-par-file-flag");
     CxxSource assemblerSource = ImmutableCxxSource.of(
         CxxSource.Type.ASSEMBLER,
-        new TestSourcePath(assemblerSourceName));
+        new TestSourcePath(assemblerSourceName),
+        assemblerSourcePerFileFlags);
     CxxCompile assemblerCompile = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         buildRuleResolver,
@@ -274,6 +294,7 @@ public class CxxCompilableEnhancerTest {
         assemblerSourceName,
         assemblerSource);
     assertContains(assemblerCompile.getFlags(), asflags);
+    assertContains(assemblerCompile.getFlags(), assemblerSourcePerFileFlags);
   }
 
   // TODO(#5393669): Re-enable once we can handle the language flag in a portable way.
@@ -359,7 +380,8 @@ public class CxxCompilableEnhancerTest {
     String objcSourceName = "test.mi";
     CxxSource objcSource = ImmutableCxxSource.of(
         CxxSource.Type.OBJC_CPP_OUTPUT,
-        new TestSourcePath(objcSourceName));
+        new TestSourcePath(objcSourceName),
+        ImmutableList.<String>of());
     CxxCompile objcCompile = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         buildRuleResolver,
@@ -373,7 +395,8 @@ public class CxxCompilableEnhancerTest {
     String objcxxSourceName = "test.mii";
     CxxSource objcxxSource = ImmutableCxxSource.of(
         CxxSource.Type.OBJCXX_CPP_OUTPUT,
-        new TestSourcePath(objcxxSourceName));
+        new TestSourcePath(objcxxSourceName),
+        ImmutableList.<String>of());
     CxxCompile objcxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
         params,
         buildRuleResolver,

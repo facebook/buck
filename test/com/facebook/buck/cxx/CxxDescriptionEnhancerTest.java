@@ -122,11 +122,13 @@ public class CxxDescriptionEnhancerTest {
             lexSourceName + ".cc",
             ImmutableCxxSource.of(
                 CxxSource.Type.CXX,
-                new BuildTargetSourcePath(filesystem, lex.getBuildTarget(), lexOutputSource)),
+                new BuildTargetSourcePath(filesystem, lex.getBuildTarget(), lexOutputSource),
+                ImmutableList.<String>of()),
             yaccSourceName + ".cc",
             ImmutableCxxSource.of(
                 CxxSource.Type.CXX,
-                new BuildTargetSourcePath(filesystem, yacc.getBuildTarget(), yaccOutputSource))));
+                new BuildTargetSourcePath(filesystem, yacc.getBuildTarget(), yaccOutputSource),
+                ImmutableList.<String>of())));
     assertEquals(expected, actual);
   }
 

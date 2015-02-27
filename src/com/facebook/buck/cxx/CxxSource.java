@@ -23,6 +23,8 @@ import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
+import java.util.List;
+
 /**
  * Describes a source file written in the C programming language or a
  * derivative (C++, Objective-C, Objective-C++, etc.) and the various
@@ -78,5 +80,8 @@ public abstract class CxxSource {
 
   @Value.Parameter
   public abstract SourcePath getPath();
+
+  @Value.Parameter
+  public abstract List<String> getFlags();
 
 }

@@ -299,6 +299,9 @@ public class CxxPreprocessables {
       args.add("-fPIC");
     }
 
+    // Add custom per-file flags.
+    args.addAll(source.getFlags());
+
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     BuildTarget target =
         createPreprocessBuildTarget(
@@ -332,7 +335,8 @@ public class CxxPreprocessables {
             outputType,
             new BuildTargetSourcePath(
                 cxxPreprocess.getProjectFilesystem(),
-                cxxPreprocess.getBuildTarget())));
+                cxxPreprocess.getBuildTarget()),
+            source.getFlags()));
   }
 
   /**

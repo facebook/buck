@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -134,7 +135,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     ImmutableSet<String> options =
         (cpp2 ? args.cpp2Options : args.cppOptions).or(ImmutableSet.<String>of());
 
-    ImmutableMap.Builder<String, SourcePath> cxxSourcesBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, SourceWithFlags> cxxSourcesBuilder = ImmutableMap.builder();
     ImmutableMap.Builder<String, SourcePath> headersBuilder = ImmutableMap.builder();
 
     for (ImmutableMap.Entry<String, ThriftSource> ent : sources.entrySet()) {
@@ -153,10 +154,11 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
         if (CxxCompilables.SOURCE_EXTENSIONS.contains(extension)) {
           cxxSourcesBuilder.put(
               name,
-              new BuildTargetSourcePath(
-                  source.getCompileRule().getProjectFilesystem(),
-                  source.getCompileRule().getBuildTarget(),
-                  outputDir.resolve(name)));
+              SourceWithFlags.of(
+                  new BuildTargetSourcePath(
+                      source.getCompileRule().getProjectFilesystem(),
+                      source.getCompileRule().getBuildTarget(),
+                      outputDir.resolve(name))));
         } else if (CxxCompilables.HEADER_EXTENSIONS.contains(extension)) {
           headersBuilder.put(
               name,
@@ -208,7 +210,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     CxxLibraryDescription.Arg langArgs = cxxLibraryDescription.createEmptyConstructorArg();
     langArgs.srcs =
         Optional.of(
-            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
+            Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofRight(
                 spec.getSources()));
     langArgs.exportedHeaders =
         Optional.of(
@@ -277,11 +279,11 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
   private static class CxxHeadersAndSources {
 
     private final ImmutableMap<String, SourcePath> headers;
-    private final ImmutableMap<String, SourcePath> sources;
+    private final ImmutableMap<String, SourceWithFlags> sources;
 
     public CxxHeadersAndSources(
         ImmutableMap<String, SourcePath> headers,
-        ImmutableMap<String, SourcePath> sources) {
+        ImmutableMap<String, SourceWithFlags> sources) {
       this.headers = headers;
       this.sources = sources;
     }
@@ -290,7 +292,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
       return headers;
     }
 
-    public ImmutableMap<String, SourcePath> getSources() {
+    public ImmutableMap<String, SourceWithFlags> getSources() {
       return sources;
     }
 

@@ -34,14 +34,12 @@ import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
@@ -147,10 +145,6 @@ public class AppleLibraryDescription implements
     AppleDescriptions.populateCxxConstructorArg(
         delegateArg,
         args,
-        ImmutableSet.copyOf(
-            Iterables.transform(
-                args.srcs.get(),
-                SourceWithFlags.TO_SOURCE_PATH)),
         headerMap,
         appleSdkPaths);
     delegateArg.exportedHeaders = Optional.of(

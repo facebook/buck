@@ -56,6 +56,7 @@ import org.junit.rules.ExpectedException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class CxxPreprocessablesTest {
@@ -286,7 +287,10 @@ public class CxxPreprocessablesTest {
 
     String name = "foo/bar.cpp";
     SourcePath input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    CxxSource cxxSource = ImmutableCxxSource.of(CxxSource.Type.CXX, input);
+    CxxSource cxxSource = ImmutableCxxSource.of(
+        CxxSource.Type.CXX,
+        input,
+        ImmutableList.<String>of());
 
     Map.Entry<String, CxxSource> entry =
         CxxPreprocessables.createPreprocessBuildRule(
@@ -311,7 +315,10 @@ public class CxxPreprocessablesTest {
     CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.EMPTY;
 
     String name = "source.cpp";
-    CxxSource cxxSource = ImmutableCxxSource.of(CxxSource.Type.CXX, new TestSourcePath(name));
+    CxxSource cxxSource = ImmutableCxxSource.of(
+        CxxSource.Type.CXX,
+        new TestSourcePath(name),
+        ImmutableList.<String>of());
 
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
     CxxPlatform platform = DefaultCxxPlatforms.build(
@@ -375,7 +382,12 @@ public class CxxPreprocessablesTest {
     CxxPlatform platform = DefaultCxxPlatforms.build(PROJECT_FILESYSTEM, buckConfig);
 
     String cSourceName = "test.c";
-    CxxSource cSource = ImmutableCxxSource.of(CxxSource.Type.C, new TestSourcePath(cSourceName));
+    List<String> perFileFlagsForTestC =
+        ImmutableList.of("-per-file-flag-for-c-file", "-and-another-one");
+    CxxSource cSource = ImmutableCxxSource.of(
+        CxxSource.Type.C,
+        new TestSourcePath(cSourceName),
+        perFileFlagsForTestC);
     Map.Entry<String, CxxSource> cPreprocessEntry =
         CxxPreprocessables.createPreprocessBuildRule(
             params,
@@ -389,11 +401,15 @@ public class CxxPreprocessablesTest {
         (CxxPreprocess) sourcePathResolver.getRule(cPreprocessEntry.getValue().getPath()).get();
     assertContains(cPreprocess.getFlags(), explicitCppflags);
     assertContains(cPreprocess.getFlags(), cppflags);
+    assertContains(cPreprocess.getFlags(), perFileFlagsForTestC);
 
     String cxxSourceName = "test.cpp";
+    List<String> perFileFlagsForTestCpp =
+        ImmutableList.of("-per-file-flag-for-cpp-file");
     CxxSource cxxSource = ImmutableCxxSource.of(
         CxxSource.Type.CXX,
-        new TestSourcePath(cxxSourceName));
+        new TestSourcePath(cxxSourceName),
+        perFileFlagsForTestCpp);
     Map.Entry<String, CxxSource> cxxPreprocessEntry =
         CxxPreprocessables.createPreprocessBuildRule(
             params,
@@ -407,11 +423,15 @@ public class CxxPreprocessablesTest {
         (CxxPreprocess) sourcePathResolver.getRule(cxxPreprocessEntry.getValue().getPath()).get();
     assertContains(cxxPreprocess.getFlags(), explicitCxxppflags);
     assertContains(cxxPreprocess.getFlags(), cxxppflags);
+    assertContains(cxxPreprocess.getFlags(), perFileFlagsForTestCpp);
 
     String assemblerWithCppSourceName = "test.S";
+    List<String> perFileFlagsForTestS =
+        ImmutableList.of("-a-flag-for-s-file", "-another-one", "-one-more");
     CxxSource assemblerWithCppSource = ImmutableCxxSource.of(
         CxxSource.Type.ASSEMBLER_WITH_CPP,
-        new TestSourcePath(assemblerWithCppSourceName));
+        new TestSourcePath(assemblerWithCppSourceName),
+        perFileFlagsForTestS);
     Map.Entry<String, CxxSource> assemblerWithCppCompileEntry =
         CxxPreprocessables.createPreprocessBuildRule(
             params,
@@ -425,6 +445,7 @@ public class CxxPreprocessablesTest {
         (CxxPreprocess) sourcePathResolver.getRule(
             assemblerWithCppCompileEntry.getValue().getPath()).get();
     assertContains(assemblerWithCppPreprocess.getFlags(), asppflags);
+    assertContains(assemblerWithCppPreprocess.getFlags(), perFileFlagsForTestS);
   }
 
   @Test
@@ -436,7 +457,10 @@ public class CxxPreprocessablesTest {
 
     String name = "foo/bar.cpp";
     SourcePath input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    CxxSource cxxSource = ImmutableCxxSource.of(CxxSource.Type.CXX, input);
+    CxxSource cxxSource = ImmutableCxxSource.of(
+        CxxSource.Type.CXX,
+        input,
+        ImmutableList.<String>of());
 
     Map.Entry<String, CxxSource> cxxPreprocessEntry =
         CxxPreprocessables.createPreprocessBuildRule(
@@ -454,7 +478,10 @@ public class CxxPreprocessablesTest {
 
     name = "foo/bar.m";
     input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    cxxSource = ImmutableCxxSource.of(CxxSource.Type.OBJC, input);
+    cxxSource = ImmutableCxxSource.of(
+        CxxSource.Type.OBJC,
+        input,
+        ImmutableList.<String>of());
 
     cxxPreprocessEntry =
         CxxPreprocessables.createPreprocessBuildRule(
@@ -472,7 +499,10 @@ public class CxxPreprocessablesTest {
 
     name = "foo/bar.mm";
     input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    cxxSource = ImmutableCxxSource.of(CxxSource.Type.OBJCXX, input);
+    cxxSource = ImmutableCxxSource.of(
+        CxxSource.Type.OBJCXX,
+        input,
+        ImmutableList.<String>of());
 
     cxxPreprocessEntry =
         CxxPreprocessables.createPreprocessBuildRule(
@@ -490,7 +520,10 @@ public class CxxPreprocessablesTest {
 
     name = "foo/bar.c";
     input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    cxxSource = ImmutableCxxSource.of(CxxSource.Type.C, input);
+    cxxSource = ImmutableCxxSource.of(
+        CxxSource.Type.C,
+        input,
+        ImmutableList.<String>of());
 
     cxxPreprocessEntry =
         CxxPreprocessables.createPreprocessBuildRule(

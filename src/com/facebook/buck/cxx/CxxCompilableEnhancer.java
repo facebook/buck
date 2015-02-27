@@ -25,8 +25,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ImmutableBuildRuleType;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
@@ -66,13 +66,13 @@ public class CxxCompilableEnhancer {
    * Resolve the map of names to SourcePaths to a map of names to CxxSource objects.
    */
   public static ImmutableMap<String, CxxSource> resolveCxxSources(
-      ImmutableMap<String, SourcePath> sources) {
+      ImmutableMap<String, SourceWithFlags> sources) {
 
     ImmutableMap.Builder<String, CxxSource> cxxSources = ImmutableMap.builder();
 
     // For each entry in the input C/C++ source, build a CxxSource object to wrap
     // it's name, input path, and output object file path.
-    for (ImmutableMap.Entry<String, SourcePath> ent : sources.entrySet()) {
+    for (ImmutableMap.Entry<String, SourceWithFlags> ent : sources.entrySet()) {
       String extension = Files.getFileExtension(ent.getKey());
       Optional<CxxSource.Type> type = CxxSource.Type.fromExtension(extension);
       if (!type.isPresent()) {
@@ -85,7 +85,8 @@ public class CxxCompilableEnhancer {
           ent.getKey(),
           ImmutableCxxSource.of(
               type.get(),
-              ent.getValue()));
+              ent.getValue().getSourcePath(),
+              ent.getValue().getFlags()));
     }
 
     return cxxSources.build();
@@ -202,6 +203,9 @@ public class CxxCompilableEnhancer {
     if (pic) {
       args.add("-fPIC");
     }
+
+    // Add custom per-file flags.
+    args.addAll(source.getFlags());
 
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     return new CxxCompile(

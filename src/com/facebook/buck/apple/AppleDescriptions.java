@@ -41,6 +41,7 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -579,12 +580,11 @@ public class AppleDescriptions {
   public static void populateCxxConstructorArg(
       CxxConstructorArg output,
       AppleNativeTargetDescriptionArg arg,
-      Set<SourcePath> sourcePaths,
       ImmutableMap<String, SourcePath> headerMap,
       final Optional<AppleSdkPaths> appleSdkPaths) {
     output.srcs = Optional.of(
-        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-            ImmutableList.copyOf(sourcePaths)));
+        Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofLeft(
+            arg.srcs.get()));
     output.headers = Optional.of(
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
             headerMap));

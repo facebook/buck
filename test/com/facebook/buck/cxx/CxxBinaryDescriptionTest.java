@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -146,9 +147,10 @@ public class CxxBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxBinary binRule = (CxxBinary) new CxxBinaryBuilder(target)
         .setSrcs(
-            ImmutableList.<SourcePath>of(
-                new TestSourcePath("test/bar.cpp"),
-                new BuildTargetSourcePath(projectFilesystem, genSource.getBuildTarget())))
+            ImmutableList.of(
+                SourceWithFlags.of(new TestSourcePath("test/bar.cpp")),
+                SourceWithFlags.of(
+                    new BuildTargetSourcePath(projectFilesystem, genSource.getBuildTarget()))))
         .setHeaders(
             ImmutableList.<SourcePath>of(
                 new TestSourcePath("test/bar.h"),

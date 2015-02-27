@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -178,7 +179,7 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxConstructorArg args) {
-    ImmutableMap<String, SourcePath> sources;
+    ImmutableMap<String, SourceWithFlags> sources;
     if (!args.srcs.isPresent()) {
       sources = ImmutableMap.of();
     } else if (args.srcs.get().isRight()) {
@@ -188,7 +189,8 @@ public class CxxDescriptionEnhancer {
       sources = pathResolver.getSourcePathNames(
           params.getBuildTarget(),
           "srcs",
-          args.srcs.get().getLeft());
+          args.srcs.get().getLeft(),
+          SourceWithFlags.TO_SOURCE_PATH);
     }
     return CxxCompilableEnhancer.resolveCxxSources(sources);
   }
@@ -337,7 +339,8 @@ public class CxxDescriptionEnhancer {
               new BuildTargetSourcePath(
                   lex.getProjectFilesystem(),
                   lex.getBuildTarget(),
-                  outputSource)));
+                  outputSource),
+              ImmutableList.<String>of()));
       lexYaccHeadersBuilder.put(
           params.getBuildTarget().getBasePath().resolve(name + ".h"),
           new BuildTargetSourcePath(
@@ -382,7 +385,8 @@ public class CxxDescriptionEnhancer {
               new BuildTargetSourcePath(
                   yacc.getProjectFilesystem(),
                   yacc.getBuildTarget(),
-                  Yacc.getSourceOutputPath(outputPrefix))));
+                  Yacc.getSourceOutputPath(outputPrefix)),
+              ImmutableList.<String>of()));
 
       lexYaccHeadersBuilder.put(
           params.getBuildTarget().getBasePath().resolve(name + ".h"),

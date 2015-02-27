@@ -40,6 +40,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -160,9 +161,9 @@ public class CxxLibraryDescriptionTest {
                 new TestSourcePath(headerName),
                 new BuildTargetSourcePath(projectFilesystem, genHeaderTarget)))
         .setSrcs(
-            ImmutableList.<SourcePath>of(
-                new TestSourcePath("test/bar.cpp"),
-                new BuildTargetSourcePath(projectFilesystem, genSourceTarget)))
+            ImmutableList.of(
+                SourceWithFlags.of(new TestSourcePath("test/bar.cpp")),
+                SourceWithFlags.of(new BuildTargetSourcePath(projectFilesystem, genSourceTarget))))
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
 
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(
@@ -502,9 +503,11 @@ public class CxxLibraryDescriptionTest {
             ImmutableMap.<String, SourcePath>of(
                 genHeaderName, new BuildTargetSourcePath(projectFilesystem, genHeaderTarget)))
         .setSrcs(
-            ImmutableMap.<String, SourcePath>of(
-                sourceName, new TestSourcePath(sourceName),
-                genSourceName, new BuildTargetSourcePath(projectFilesystem, genSourceTarget)))
+            ImmutableMap.of(
+                sourceName,
+                SourceWithFlags.of(new TestSourcePath(sourceName)),
+                genSourceName,
+                SourceWithFlags.of(new BuildTargetSourcePath(projectFilesystem, genSourceTarget))))
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
 
     // Construct C/C++ library build rules.
