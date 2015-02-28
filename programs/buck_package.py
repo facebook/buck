@@ -13,11 +13,8 @@ BOOTSTRAPPER = Resource("bootstrapper_classes")
 
 class BuckPackage(BuckTool):
 
-    # TODO(agallagher): We need to propagate the git revision here, which
-    # will probably need to wait until we have build info support (needed for
-    # C/C++ support.
     def _get_buck_version_uid(self):
-        return 'buck_version_uid'
+        return pkg_resources.resource_string(__name__, 'buck_package_version')
 
     def _get_resource_dir(self):
         if self._use_buckd():

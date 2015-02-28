@@ -10,6 +10,7 @@ from timing import monotonic_time_nanos
 from tracing import Tracing
 from buck_tool import BuckTool, which, check_output
 from buck_tool import BuckToolException, RestartBuck
+from buck_version import get_clean_buck_version, get_dirty_buck_version
 
 
 JAVA_CLASSPATHS = [
@@ -252,41 +253,6 @@ class BuckRepo(BuckTool):
             if exitcode is not 0:
                 self._print_ant_failure_and_exit(ant_log_path)
 
-    def _compute_local_hash(self):
-        git_tree_in = check_output(
-            ['git', 'log', '-n1', '--pretty=format:%T', 'HEAD', '--'],
-            cwd=self._buck_dir).strip()
-
-        with EmptyTempFile(prefix='buck-git-index',
-                           dir=self._tmp_dir) as index_file:
-            new_environ = os.environ.copy()
-            new_environ['GIT_INDEX_FILE'] = index_file.name
-            subprocess.check_call(
-                ['git', 'read-tree', git_tree_in],
-                cwd=self._buck_dir,
-                env=new_environ)
-
-            subprocess.check_call(
-                ['git', 'add', '-u'],
-                cwd=self._buck_dir,
-                env=new_environ)
-
-            git_tree_out = check_output(
-                ['git', 'write-tree'],
-                cwd=self._buck_dir,
-                env=new_environ).strip()
-
-        with EmptyTempFile(prefix='buck-version-uid-input',
-                           dir=self._tmp_dir,
-                           closed=False) as uid_input:
-            subprocess.check_call(
-                ['git', 'ls-tree', '--full-tree', git_tree_out],
-                cwd=self._buck_dir,
-                stdout=uid_input)
-            return check_output(
-                ['git', 'hash-object', uid_input.name],
-                cwd=self._buck_dir).strip()
-
     def _build(self):
         with Tracing('BuckRepo._build'):
             if not os.path.exists(self._build_success_file):
@@ -306,15 +272,20 @@ class BuckRepo(BuckTool):
 
     def _get_buck_version_uid(self):
         with Tracing('BuckRepo._get_buck_version_uid'):
-            if not self._is_git:
-                return 'N/A'
 
-            if not self._is_dirty():
-                return self._get_git_revision()
+            # First try to get the "clean" buck version.  If it succeeds,
+            # return it.
+            clean_version = get_clean_buck_version(
+                self._buck_dir,
+                allow_dirty=self._is_buck_repo_dirty_override == "1")
+            if clean_version is not None:
+                return clean_version
 
+            # Otherwise, if there is a .nobuckcheck file, or if there isn't
+            # a .buckversion file, fall back to a "dirty" version.
             if (self._buck_project.has_no_buck_check or
                     not self._buck_project.buck_version):
-                return self._compute_local_hash()
+                return get_dirty_buck_version(self._buck_dir)
 
             if self._has_local_changes():
                 print(textwrap.dedent("""\
@@ -342,7 +313,7 @@ class BuckRepo(BuckTool):
                             cwd=self._buck_dir)
                         raise RestartBuck()
 
-            return self._compute_local_hash()
+            return get_dirty_buck_version(self._buck_dir)
 
     def _get_extra_java_args(self):
         return [
@@ -357,27 +328,3 @@ class BuckRepo(BuckTool):
 
     def _get_java_classpath(self):
         return self._pathsep.join([self._join_buck_dir(p) for p in JAVA_CLASSPATHS])
-
-
-class EmptyTempFile(object):
-
-    def __init__(self, prefix=None, dir=None, closed=True):
-        self.file, self.name = tempfile.mkstemp(prefix=prefix, dir=dir)
-        if closed:
-            os.close(self.file)
-        self.closed = closed
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-        os.remove(self.name)
-
-    def close(self):
-        if not self.closed:
-            os.close(self.file)
-        self.closed = True
-
-    def fileno(self):
-        return self.file

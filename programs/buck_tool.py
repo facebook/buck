@@ -11,6 +11,7 @@ import time
 
 from timing import monotonic_time_nanos
 from tracing import Tracing
+from subprocutils import check_output, CalledProcessError
 
 MAX_BUCKD_RUN_COUNT = 64
 BUCKD_CLIENT_TIMEOUT_MILLIS = 60000
@@ -448,33 +449,6 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
                 if _access_check(name, mode):
                     return name
     return None
-
-
-# Backport of the Python 2.7 subprocess.CalledProcessError, including
-# an `output` attribute.
-class CalledProcessError(subprocess.CalledProcessError):
-    def __init__(self, returncode, cmd, output=None):
-        super(CalledProcessError, self).__init__(returncode, cmd)
-        self.output = output
-
-
-# Backport of the Python 2.7 subprocess.check_output. Taken from
-# http://hg.python.org/cpython/file/71cb8f605f77/Lib/subprocess.py
-# Copyright (c) 2003-2005 by Peter Astrand <astrand@lysator.liu.se>
-# Licensed to PSF under a Contributor Agreement.
-# See http://www.python.org/2.4/license for licensing details.
-def check_output(*popenargs, **kwargs):
-    if 'stdout' in kwargs:
-        raise ValueError('stdout argument not allowed, it will be overridden.')
-    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-    output, unused_err = process.communicate()
-    retcode = process.poll()
-    if retcode:
-        cmd = kwargs.get("args")
-        if cmd is None:
-            cmd = popenargs[0]
-        raise CalledProcessError(retcode, cmd, output=output)
-    return output
 
 
 def is_java8():

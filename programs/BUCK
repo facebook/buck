@@ -1,4 +1,42 @@
 python_library(
+  name = 'subprocutils',
+  srcs = [
+    'subprocutils.py',
+  ],
+)
+
+python_library(
+  name = 'buck_version',
+  srcs = [
+    'buck_version.py',
+  ],
+  deps = [
+    ':subprocutils',
+  ],
+)
+
+python_binary(
+  name = 'gen_buck_version',
+  main = 'gen_buck_version.py',
+  deps = [
+    ':buck_version',
+  ],
+)
+
+# This is bit weird.  This rule isn't idempotent, since it calls out
+# to git commands to find repo information -- and this stuff clearly
+# isn't enumerated in the inputs of arguments for this rule (which
+# would normally add it to the rule key).  However, since we're just
+# trying to generate the Buck version UID, this should work, since the
+# in-repo Buck we're using to build this already implicitly adds the
+# same Buck version UID to it's rule key.  But still... gross.
+genrule(
+  name = 'gen_buck_package_version',
+  cmd = '$(exe :gen_buck_version) > $OUT',
+  out = 'buckversion',
+)
+
+python_library(
   name='bucklib',
   srcs=[
     'buck_project.py',
@@ -12,6 +50,7 @@ python_library(
     'android_agent_path': '//assets/android:agent.apk',
     'bootstrapper_classes': '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
     'buck_client': '//third-party/nailgun:ng',
+    'buck_package_version': ':gen_buck_package_version',
     'buck_server': '//src/com/facebook/buck/cli:main-fixed',
     'dx': '//third-party/java/dx-from-kitkat:etc_dx',
     'jacoco_agent_jar': '//third-party/java/jacoco:agent',
@@ -35,6 +74,10 @@ python_library(
     #':path_to_static_content',
     #':quickstart_origin_dir',
   },
+  deps = [
+    ':subprocutils',
+    ':buck_version',
+  ],
 )
 
 python_binary(
