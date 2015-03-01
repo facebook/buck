@@ -107,7 +107,7 @@ public class Build implements Closeable {
       ActionGraph actionGraph,
       Optional<TargetDevice> targetDevice,
       ProjectFilesystem projectFilesystem,
-      Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier,
+      Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
       ArtifactCache artifactCache,
       ListeningExecutorService service,
@@ -181,9 +181,8 @@ public class Build implements Closeable {
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)
         .setEventBus(executionContext.getBuckEventBus())
-        .setAndroidBootclasspathSupplier(
-            BuildContext.getAndroidBootclasspathSupplierForAndroidPlatformTarget(
-                executionContext.getAndroidPlatformTargetOptional()))
+        .setAndroidBootclasspathSupplier(BuildContext.createBootclasspathSupplier(
+            executionContext.getAndroidPlatformTargetSupplier()))
         .setBuildDependencies(buildDependencies)
         .setBuildId(executionContext.getBuildId())
         .putAllEnvironment(executionContext.getEnvironment())

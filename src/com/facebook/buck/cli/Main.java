@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -72,7 +73,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -641,7 +641,7 @@ public final class Main {
         processManager = Optional.<ProcessManager>of(new PkillProcessManager(processExecutor));
       }
       BuckConfig buckConfig = rootRepository.getBuckConfig();
-      Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier =
+      Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
           createAndroidPlatformTargetSupplier(
               rootRepository.getAndroidDirectoryResolver(),
               buckConfig,
@@ -702,7 +702,7 @@ public final class Main {
   }
 
   @VisibleForTesting
-  static Supplier<Optional<AndroidPlatformTarget>> createAndroidPlatformTargetSupplier(
+  static Supplier<AndroidPlatformTarget> createAndroidPlatformTargetSupplier(
       final AndroidDirectoryResolver androidDirectoryResolver,
       final BuckConfig buckConfig,
       final BuckEventBus eventBus) {
@@ -714,12 +714,26 @@ public final class Main {
     //
     // TODO(mbolin): Every build rule that uses AndroidPlatformTarget must include the result of its
     // getName() method in its RuleKey.
-    return Suppliers.memoize(new Supplier<Optional<AndroidPlatformTarget>>() {
+    return new Supplier<AndroidPlatformTarget>() {
+
+      @Nullable
+      private AndroidPlatformTarget androidPlatformTarget;
+
+      @Nullable
+      private NoAndroidSdkException exception;
+
       @Override
-      public Optional<AndroidPlatformTarget> get() {
+      public AndroidPlatformTarget get() {
+        if (androidPlatformTarget != null) {
+          return androidPlatformTarget;
+        } else if (exception != null) {
+          throw exception;
+        }
+
         Optional<Path> androidSdkDirOption = androidDirectoryResolver.findAndroidSdkDirSafe();
         if (!androidSdkDirOption.isPresent()) {
-          return Optional.absent();
+          exception = new NoAndroidSdkException();
+          throw exception;
         }
 
         String androidPlatformTargetId;
@@ -733,12 +747,21 @@ public final class Main {
               androidPlatformTargetId));
         }
 
-        return AndroidPlatformTarget.getTargetForId(
-            androidPlatformTargetId,
-            androidDirectoryResolver,
-            buckConfig.getAaptOverride());
+        Optional<AndroidPlatformTarget> androidPlatformTargetOptional = AndroidPlatformTarget
+            .getTargetForId(
+                androidPlatformTargetId,
+                androidDirectoryResolver,
+                buckConfig.getAaptOverride());
+        if (androidPlatformTargetOptional.isPresent()) {
+          androidPlatformTarget = androidPlatformTargetOptional.get();
+          return androidPlatformTarget;
+        } else {
+          exception = NoAndroidSdkException.createExceptionForPlatformThatCannotBeFound(
+              androidPlatformTargetId);
+          throw exception;
+        }
       }
-    });
+    };
   }
 
   /**

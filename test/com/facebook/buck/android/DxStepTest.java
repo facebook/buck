@@ -28,7 +28,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -58,13 +57,12 @@ public class DxStepTest extends EasyMockSupport {
       Paths.get("buck-out/gen/foo.dex.jar"),
       Paths.get("buck-out/gen/bar.dex.jar"));
 
-  private Optional<AndroidPlatformTarget> androidPlatformTargetOptional;
+  private AndroidPlatformTarget androidPlatformTarget;
 
   @Before
   public void setUp() {
-    AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
+    androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     EasyMock.expect(androidPlatformTarget.getDxExecutable()).andReturn(Paths.get("/usr/bin/dx"));
-    androidPlatformTargetOptional = Optional.of(androidPlatformTarget);
     replayAll();
   }
 
@@ -252,7 +250,7 @@ public class DxStepTest extends EasyMockSupport {
     TestConsole console = new TestConsole(verbosity);
     return TestExecutionContext.newBuilder()
         .setConsole(console)
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTargetOptional))
+        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
         .build();
   }
 }

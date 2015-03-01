@@ -44,7 +44,7 @@ class CommandRunnerParams {
   private final Parser parser;
   private final BuckEventBus eventBus;
   private final Platform platform;
-  private final Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier;
+  private final Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier;
   private final Repository repository;
   private final JavaPackageFinder javaPackageFinder;
   private final ObjectMapper objectMapper;
@@ -54,7 +54,7 @@ class CommandRunnerParams {
   public CommandRunnerParams(
       Console console,
       Repository repository,
-      Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier,
+      Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
@@ -100,7 +100,7 @@ class CommandRunnerParams {
     return eventBus;
   }
 
-  public Supplier<Optional<AndroidPlatformTarget>> getAndroidPlatformTargetSupplier() {
+  public Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier() {
     return androidPlatformTargetSupplier;
   }
 

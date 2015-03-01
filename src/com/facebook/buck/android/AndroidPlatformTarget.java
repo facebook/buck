@@ -22,6 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -48,6 +49,18 @@ public class AndroidPlatformTarget {
 
   public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:21";
   public static final String ANDROID_VERSION_PREFIX = "android-";
+
+  /**
+   * {@link Supplier} for an {@link AndroidPlatformTarget} that always throws a
+   * {@link NoAndroidSdkException}.
+   */
+  public static final Supplier<AndroidPlatformTarget> explodingAndroidPlatformTargetSupplier =
+      new Supplier<AndroidPlatformTarget>() {
+        @Override
+        public AndroidPlatformTarget get() {
+          throw new NoAndroidSdkException();
+        }
+      };
 
   @VisibleForTesting
   static final Pattern PLATFORM_TARGET_PATTERN = Pattern.compile(

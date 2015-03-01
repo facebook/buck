@@ -70,6 +70,7 @@ java_test(
   ],
   deps = [
     ':testutil',
+    '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:steps',

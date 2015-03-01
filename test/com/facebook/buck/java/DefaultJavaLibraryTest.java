@@ -86,6 +86,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1295,8 +1296,7 @@ public class DefaultJavaLibraryTest {
         .setBuildDependencies(BuildDependencies.TRANSITIVE)
         .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
         .setAndroidBootclasspathSupplier(
-            BuildContext.getAndroidBootclasspathSupplierForAndroidPlatformTarget(
-                Optional.of(platformTarget)))
+            BuildContext.createBootclasspathSupplier(Suppliers.ofInstance(platformTarget)))
         .setEventBus(BuckEventBusFactory.newInstance())
         .build();
   }

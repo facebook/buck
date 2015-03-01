@@ -166,6 +166,7 @@ java_library(
   name = 'utils',
   srcs = UTILS_SRCS,
   deps = [
+    ':exceptions',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/io:io',  # While we move classes

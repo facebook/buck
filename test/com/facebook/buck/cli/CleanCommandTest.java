@@ -37,7 +37,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 
 import org.easymock.Capture;
@@ -114,8 +113,8 @@ public class CleanCommandTest extends EasyMockSupport {
     projectFilesystem = createMock(ProjectFilesystem.class);
     Repository repository = new TestRepositoryBuilder().setFilesystem(projectFilesystem).build();
 
-    Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier = Suppliers.ofInstance(
-        Optional.<AndroidPlatformTarget>absent());
+    Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
+        AndroidPlatformTarget.explodingAndroidPlatformTargetSupplier;
     CommandRunnerParams params = new CommandRunnerParams(
         new TestConsole(),
         repository,

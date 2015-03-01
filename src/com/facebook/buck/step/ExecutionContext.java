@@ -36,7 +36,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -63,11 +62,10 @@ public abstract class ExecutionContext implements Closeable {
 
   /**
    * Returns an {@link AndroidPlatformTarget} if the user specified one via {@code local.properties}
-   * or some other mechanism. If the user failed to specify one, {@link Optional#absent()} will be
-   * returned.
+   * or some other mechanism. If the user failed to specify one, an exception will be thrown.
    */
   @Value.Parameter
-  public abstract Supplier<Optional<AndroidPlatformTarget>> getAndroidPlatformTargetSupplier();
+  public abstract Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier();
 
   @Value.Parameter
   public abstract Optional<TargetDevice> getTargetDeviceOptional();
@@ -158,14 +156,6 @@ public abstract class ExecutionContext implements Closeable {
   }
 
   /**
-   * This method is of questionable value. We should audit its use and decide if, when an Android
-   * SDK is requested, if we should tolerate the case where none is provided.
-   */
-  public Optional<AndroidPlatformTarget> getAndroidPlatformTargetOptional() {
-    return getAndroidPlatformTargetSupplier().get();
-  }
-
-  /**
    * Returns the {@link AndroidPlatformTarget}, if present. If not, throws a
    * {@link NoAndroidSdkException}. Use this when your logic requires the user to specify the
    * location of an Android SDK. A user who is building a "pure Java" (i.e., not Android) project
@@ -176,12 +166,7 @@ public abstract class ExecutionContext implements Closeable {
    * @throws NoAndroidSdkException if no AndroidPlatformTarget is available
    */
   public AndroidPlatformTarget getAndroidPlatformTarget() throws NoAndroidSdkException {
-    Optional<AndroidPlatformTarget> androidPlatformTarget = getAndroidPlatformTargetOptional();
-    if (androidPlatformTarget.isPresent()) {
-      return androidPlatformTarget.get();
-    } else {
-      throw new NoAndroidSdkException();
-    }
+    return getAndroidPlatformTargetSupplier().get();
   }
 
   /**
@@ -217,8 +202,8 @@ public abstract class ExecutionContext implements Closeable {
 
     @Nullable private ProjectFilesystem projectFilesystem = null;
     @Nullable private Console console = null;
-    private Supplier<Optional<AndroidPlatformTarget>> androidPlatformTarget = Suppliers.ofInstance(
-        Optional.<AndroidPlatformTarget>absent());
+    private Supplier<AndroidPlatformTarget> androidPlatformTarget =
+        AndroidPlatformTarget.explodingAndroidPlatformTargetSupplier;
     private Optional<TargetDevice> targetDevice = Optional.absent();
     private long defaultTestTimeoutMillis = 0L;
     private boolean isCodeCoverageEnabled = false;
@@ -281,7 +266,7 @@ public abstract class ExecutionContext implements Closeable {
     }
 
     public Builder setAndroidPlatformTargetSupplier(
-        Supplier<Optional<AndroidPlatformTarget>> androidPlatformTarget) {
+        Supplier<AndroidPlatformTarget> androidPlatformTarget) {
       this.androidPlatformTarget = androidPlatformTarget;
       return this;
     }

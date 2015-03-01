@@ -24,14 +24,25 @@ import javax.annotation.Nullable;
 @SuppressWarnings("serial")
 public class NoAndroidSdkException extends HumanReadableException {
 
+  private static final String DEFAULT_MESSAGE =
+      "Must define a local.properties file with a property named 'sdk.dir' " +
+      "that points to the absolute path of your Android SDK directory, " +
+      "or set ANDROID_HOME or ANDROID_SDK.";
+
   public NoAndroidSdkException() {
-    this(null);
+    this((Throwable) null);
   }
 
   public NoAndroidSdkException(@Nullable Throwable cause) {
-    super(cause,
-        "Must define a local.properties file with a property named 'sdk.dir' " +
-        "that points to the absolute path of your Android SDK directory, " +
-        "or set ANDROID_HOME or ANDROID_SDK.");
+    super(cause, DEFAULT_MESSAGE);
+  }
+
+  private NoAndroidSdkException(String message) {
+    super(message);
+  }
+
+  public static NoAndroidSdkException createExceptionForPlatformThatCannotBeFound(String platform) {
+    String messagePrefix = String.format("The Android SDK for '%s' could not be found. ", platform);
+    return new NoAndroidSdkException(messagePrefix + DEFAULT_MESSAGE);
   }
 }

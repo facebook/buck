@@ -59,7 +59,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final Parser parser;
   private final BuckEventBus eventBus;
   private final Platform platform;
-  private final Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier;
+  private final Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier;
   private final ObjectMapper objectMapper;
   private final Optional<ProcessManager> processManager;
   protected final ImmutableMap<String, String> environment;
@@ -161,7 +161,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     return commandRunnerParams;
   }
 
-  public Supplier<Optional<AndroidPlatformTarget>> getAndroidPlatformTargetSupplier() {
+  public Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier() {
     return androidPlatformTargetSupplier;
   }
 

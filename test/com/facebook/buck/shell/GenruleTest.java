@@ -58,7 +58,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -365,7 +364,7 @@ public class GenruleTest {
         .build(resolver);
 
     ExecutionContext context = TestExecutionContext.newBuilder()
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(Optional.of(android)))
+        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(android))
         .build();
 
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();

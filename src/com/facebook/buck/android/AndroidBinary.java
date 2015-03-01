@@ -495,16 +495,10 @@ public class AndroidBinary extends AbstractBuildRule implements
           environmentVariablesBuilder.put(
               "OUT_JARS_DIR", absolutifier.apply(preprocessJavaClassesOutDir).toString());
 
-          Optional<AndroidPlatformTarget> platformTarget =
-              context.getAndroidPlatformTargetOptional();
-
-          if (!platformTarget.isPresent()) {
-            return;
-          }
-
+          AndroidPlatformTarget platformTarget = context.getAndroidPlatformTarget();
           String bootclasspath = Joiner.on(':').join(
               Iterables.transform(
-                  platformTarget.get().getBootclasspathEntries(),
+                  platformTarget.getBootclasspathEntries(),
                   absolutifier));
 
           environmentVariablesBuilder.put("ANDROID_BOOTCLASSPATH", bootclasspath);

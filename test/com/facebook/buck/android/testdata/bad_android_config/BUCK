@@ -1,0 +1,9 @@
+java_library(
+  name = 'hello_java',
+  srcs = [ 'Hello.java' ],
+)
+
+android_library(
+  name = 'hello_android',
+  srcs = [ 'HelloActivity.java' ],
+)

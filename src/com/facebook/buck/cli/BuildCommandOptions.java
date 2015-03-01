@@ -150,7 +150,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
   Build createBuild(BuckConfig buckConfig,
       ActionGraph graph,
       ProjectFilesystem projectFilesystem,
-      Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier,
+      Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
       ArtifactCache artifactCache,
       Console console,

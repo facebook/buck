@@ -115,12 +115,9 @@ public class RobolectricTest extends JavaTest {
   }
 
   @Override
-  protected Set<Path> getBootClasspathEntries(ExecutionContext context) {
-    if (context.getAndroidPlatformTargetOptional().isPresent()) {
-      return FluentIterable.from(context.getAndroidPlatformTarget().getBootclasspathEntries())
-          .toSet();
-    }
-    return ImmutableSet.of();
+  protected ImmutableSet<Path> getBootClasspathEntries(ExecutionContext context) {
+    return FluentIterable.from(context.getAndroidPlatformTarget().getBootclasspathEntries())
+        .toSet();
   }
 
   @Override

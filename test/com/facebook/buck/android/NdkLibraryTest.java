@@ -66,7 +66,7 @@ public class NdkLibraryTest {
         resolver,
         Optional.<Path>absent());
     executionContext = TestExecutionContext.newBuilder()
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(Optional.of(androidPlatformTarget)))
+        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
         .build();
     ndkBuildCommand = executionContext.resolveExecutable(
         resolver.findAndroidNdkDir().get(),

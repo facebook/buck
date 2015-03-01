@@ -34,7 +34,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -186,7 +185,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     replayAll();
 
     return TestExecutionContext.newBuilder()
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(Optional.of(androidPlatformTarget)))
+        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
         .setProjectFilesystem(projectFilesystem)
         .build();
   }

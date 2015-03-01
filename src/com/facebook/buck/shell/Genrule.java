@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
@@ -214,10 +215,15 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
     environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory.toString());
     environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory.toString());
 
-    Optional<AndroidPlatformTarget> optionalAndroid = context.getAndroidPlatformTargetOptional();
-    if (optionalAndroid.isPresent()) {
-      AndroidPlatformTarget android = optionalAndroid.get();
-
+    // TODO(mbolin): This entire hack needs to be removed. The [tools] section of .buckconfig
+    // should be generalized to specify local paths to tools that can be used in genrules.
+    AndroidPlatformTarget android;
+    try {
+      android = context.getAndroidPlatformTarget();
+    } catch (NoAndroidSdkException e) {
+      android = null;
+    }
+    if (android != null) {
       environmentVariablesBuilder.put("DX", android.getDxExecutable().toString());
       environmentVariablesBuilder.put("ZIPALIGN", android.getZipalignExecutable().toString());
     }
@@ -236,7 +242,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
 
     Path output = rule.getPathToOutputFile();
     if (output != null) {
-      // TODO(mbolin): This is a giant hack and we should do away with $DEPS altogether.
+      // TODO(user): This is a giant hack and we should do away with $DEPS altogether.
       // There can be a lot of paths here and the filesystem location can be arbitrarily long.
       // We can easily hit the shell command character limit. What this does is find
       // BuckConstant.GEN_DIR (which should be the same for every path) and replaces

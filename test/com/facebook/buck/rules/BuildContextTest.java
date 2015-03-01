@@ -33,8 +33,8 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -68,9 +68,8 @@ public class BuildContextTest {
 
     replay(androidPlatformTarget);
 
-    builder.setAndroidBootclasspathSupplier(
-        BuildContext.getAndroidBootclasspathSupplierForAndroidPlatformTarget(
-            Optional.of(androidPlatformTarget)));
+    builder.setAndroidBootclasspathSupplier(BuildContext.createBootclasspathSupplier(
+        Suppliers.ofInstance(androidPlatformTarget)));
 
     BuildContext context = builder.build();
     Supplier<String> androidBootclasspathSupplier = context.getAndroidBootclasspathSupplier();
@@ -126,10 +125,10 @@ public class BuildContextTest {
     builder.setClock(createMock(Clock.class));
     builder.setBuildId(createMock(BuildId.class));
 
-    // Set to absent value.
+    // Set to value that throws if executed.
     builder.setAndroidBootclasspathSupplier(
-        BuildContext.getAndroidBootclasspathSupplierForAndroidPlatformTarget(
-            Optional.<AndroidPlatformTarget>absent()));
+        BuildContext.createBootclasspathSupplier(
+            AndroidPlatformTarget.explodingAndroidPlatformTargetSupplier));
 
     BuildContext context = builder.build();
     Supplier<String> androidBootclasspathSupplier = context.getAndroidBootclasspathSupplier();
