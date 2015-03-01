@@ -33,6 +33,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultPropertyFinder;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -65,7 +66,7 @@ public class NdkLibraryTest {
         resolver,
         Optional.<Path>absent());
     executionContext = TestExecutionContext.newBuilder()
-        .setAndroidPlatformTarget(Optional.of(androidPlatformTarget))
+        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(Optional.of(androidPlatformTarget)))
         .build();
     ndkBuildCommand = executionContext.resolveExecutable(
         resolver.findAndroidNdkDir().get(),

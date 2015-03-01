@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -150,7 +150,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
   Build createBuild(BuckConfig buckConfig,
       ActionGraph graph,
       ProjectFilesystem projectFilesystem,
-      AndroidDirectoryResolver androidDirectoryResolver,
+      Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
       ArtifactCache artifactCache,
       Console console,
@@ -168,7 +168,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         graph,
         targetDevice,
         projectFilesystem,
-        androidDirectoryResolver,
+        androidPlatformTargetSupplier,
         buildEngine,
         artifactCache,
         service,
@@ -181,7 +181,6 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         eventBus,
         platform,
         environment,
-        buckConfig,
         objectMapper,
         clock);
   }

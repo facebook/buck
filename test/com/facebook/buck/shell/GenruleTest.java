@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.java.JavaLibraryBuilder;
@@ -29,8 +30,8 @@ import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -50,7 +51,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -59,6 +59,7 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -364,7 +365,7 @@ public class GenruleTest {
         .build(resolver);
 
     ExecutionContext context = TestExecutionContext.newBuilder()
-        .setAndroidPlatformTarget(Optional.of(android))
+        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(Optional.of(android)))
         .build();
 
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();

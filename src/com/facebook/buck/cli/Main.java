@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -69,6 +71,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -636,12 +640,19 @@ public final class Main {
       } else {
         processManager = Optional.<ProcessManager>of(new PkillProcessManager(processExecutor));
       }
+      BuckConfig buckConfig = rootRepository.getBuckConfig();
+      Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier =
+          createAndroidPlatformTargetSupplier(
+              rootRepository.getAndroidDirectoryResolver(),
+              buckConfig,
+              buildEventBus);
+
       exitCode = executingCommand.execute(remainingArgs,
-          rootRepository.getBuckConfig(),
+          buckConfig,
           new CommandRunnerParams(
               console,
               rootRepository,
-              rootRepository.getAndroidDirectoryResolver(),
+              androidPlatformTargetSupplier,
               buildEngine,
               artifactCacheFactory,
               buildEventBus,
@@ -688,6 +699,46 @@ public final class Main {
       }
     }
     return exitCode;
+  }
+
+  @VisibleForTesting
+  static Supplier<Optional<AndroidPlatformTarget>> createAndroidPlatformTargetSupplier(
+      final AndroidDirectoryResolver androidDirectoryResolver,
+      final BuckConfig buckConfig,
+      final BuckEventBus eventBus) {
+    // TODO(mbolin): Only one such Supplier should be created per Repository per Buck execution.
+    // Currently, only one Supplier is created per Buck execution because Main creates the Supplier
+    // and passes it from above all the way through, but it is not parameterized by Repository. It
+    // seems like the Repository concept is not fully baked, so this is likely one of many
+    // multi-Repository issues that need to be addressed to support it properly.
+    //
+    // TODO(mbolin): Every build rule that uses AndroidPlatformTarget must include the result of its
+    // getName() method in its RuleKey.
+    return Suppliers.memoize(new Supplier<Optional<AndroidPlatformTarget>>() {
+      @Override
+      public Optional<AndroidPlatformTarget> get() {
+        Optional<Path> androidSdkDirOption = androidDirectoryResolver.findAndroidSdkDirSafe();
+        if (!androidSdkDirOption.isPresent()) {
+          return Optional.absent();
+        }
+
+        String androidPlatformTargetId;
+        Optional<String> target = buckConfig.getAndroidTarget();
+        if (target.isPresent()) {
+          androidPlatformTargetId = target.get();
+        } else {
+          androidPlatformTargetId = AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET;
+          eventBus.post(ConsoleEvent.warning(
+              "No Android platform target specified. Using default: %s",
+              androidPlatformTargetId));
+        }
+
+        return AndroidPlatformTarget.getTargetForId(
+            androidPlatformTargetId,
+            androidDirectoryResolver,
+            buckConfig.getAaptOverride());
+      }
+    });
   }
 
   /**

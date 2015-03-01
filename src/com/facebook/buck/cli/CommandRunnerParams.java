@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
@@ -28,6 +28,7 @@ import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -43,7 +44,7 @@ class CommandRunnerParams {
   private final Parser parser;
   private final BuckEventBus eventBus;
   private final Platform platform;
-  private final AndroidDirectoryResolver androidDirectoryResolver;
+  private final Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier;
   private final Repository repository;
   private final JavaPackageFinder javaPackageFinder;
   private final ObjectMapper objectMapper;
@@ -53,7 +54,7 @@ class CommandRunnerParams {
   public CommandRunnerParams(
       Console console,
       Repository repository,
-      AndroidDirectoryResolver androidDirectoryResolver,
+      Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
@@ -71,7 +72,7 @@ class CommandRunnerParams {
     this.eventBus = eventBus;
     this.parser = parser;
     this.platform = platform;
-    this.androidDirectoryResolver = androidDirectoryResolver;
+    this.androidPlatformTargetSupplier = androidPlatformTargetSupplier;
     this.environment = environment;
     this.javaPackageFinder = javaPackageFinder;
     this.objectMapper = objectMapper;
@@ -99,8 +100,8 @@ class CommandRunnerParams {
     return eventBus;
   }
 
-  public AndroidDirectoryResolver getAndroidDirectoryResolver() {
-    return androidDirectoryResolver;
+  public Supplier<Optional<AndroidPlatformTarget>> getAndroidPlatformTargetSupplier() {
+    return androidPlatformTargetSupplier;
   }
 
   public Platform getPlatform() {

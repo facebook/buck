@@ -16,10 +16,10 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
-import static com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import static com.facebook.buck.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 
+import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
+import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -52,8 +52,9 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
     return this;
   }
 
+  @SuppressWarnings("unused")
   public AndroidBinaryBuilder setTarget(String target) {
-    arg.target = target;
+    // TODO(mbolin): Support for this field will be removed in an upcoming diff.
     return this;
   }
 

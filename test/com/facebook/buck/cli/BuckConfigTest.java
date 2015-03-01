@@ -463,6 +463,16 @@ public class BuckConfigTest {
   }
 
   @Test
+  public void testGetAndroidTargetSdkWithSpaces() throws IOException {
+    BuckConfig config = createFromText(
+        "[android]",
+        "target = Google Inc.:Google APIs:16");
+    assertEquals(
+        "Google Inc.:Google APIs:16",
+        config.getValue("android", "target").get());
+  }
+
+  @Test
   public void testOverride() throws IOException {
     Reader readerA = new StringReader(Joiner.on('\n').join(
         "[cache]",

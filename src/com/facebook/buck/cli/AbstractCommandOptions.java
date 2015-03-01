@@ -16,11 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.command.Build;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.rules.ActionGraph;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 
@@ -105,17 +100,6 @@ public abstract class AbstractCommandOptions {
       commandLineBuildTargetNormalizer = new CommandLineBuildTargetNormalizer(buckConfig);
     }
     return commandLineBuildTargetNormalizer;
-  }
-
-  protected Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
-      AndroidDirectoryResolver androidDirectoryResolver,
-      ActionGraph actionGraph,
-      BuckEventBus eventBus) {
-    return Build.findAndroidPlatformTarget(
-        actionGraph,
-        androidDirectoryResolver,
-        eventBus,
-        buckConfig);
   }
 
   public boolean getEnableProfiling() {

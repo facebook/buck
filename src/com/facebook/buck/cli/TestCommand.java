@@ -214,7 +214,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
              options.getBuckConfig(),
              graph,
              getProjectFilesystem(),
-             getAndroidDirectoryResolver(),
+             getAndroidPlatformTargetSupplier(),
              getBuildEngine(),
              artifactCache,
              console,
@@ -225,7 +225,6 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
              getCommandRunnerParams().getObjectMapper(),
              getCommandRunnerParams().getClock(),
              pool.getExecutor())) {
-
       // Build all of the test rules.
       int exitCode = build.executeAndPrintFailuresToConsole(
           testRules,

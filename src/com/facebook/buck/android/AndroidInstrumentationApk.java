@@ -60,7 +60,6 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         proGuardJarOverride,
         proGuardMaxHeapSize,
         manifest,
-        apkUnderTest.getTarget(),
         apkUnderTest.getKeystore(),
         PackageType.INSTRUMENTED,
         // Do not split the test apk even if the tested apk is split

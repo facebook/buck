@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.Repository;
@@ -36,6 +35,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -59,7 +59,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final Parser parser;
   private final BuckEventBus eventBus;
   private final Platform platform;
-  private final AndroidDirectoryResolver androidDirectoryResolver;
+  private final Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier;
   private final ObjectMapper objectMapper;
   private final Optional<ProcessManager> processManager;
   protected final ImmutableMap<String, String> environment;
@@ -79,7 +79,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     this.parser = params.getParser();
     this.eventBus = params.getBuckEventBus();
     this.platform = params.getPlatform();
-    this.androidDirectoryResolver = params.getAndroidDirectoryResolver();
+    this.androidPlatformTargetSupplier = params.getAndroidPlatformTargetSupplier();
     this.environment = params.getEnvironment();
     this.objectMapper = params.getObjectMapper();
     this.processManager = params.getProcessManager();
@@ -161,8 +161,8 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     return commandRunnerParams;
   }
 
-  public AndroidDirectoryResolver getAndroidDirectoryResolver() {
-    return androidDirectoryResolver;
+  public Supplier<Optional<AndroidPlatformTarget>> getAndroidPlatformTargetSupplier() {
+    return androidPlatformTargetSupplier;
   }
 
   public ProjectFilesystem getProjectFilesystem() {
@@ -246,16 +246,11 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     }
   }
 
-  protected ExecutionContext createExecutionContext(
-      T options,
-      ActionGraph actionGraph) {
+  protected ExecutionContext createExecutionContext() {
     return ExecutionContext.builder()
         .setProjectFilesystem(getProjectFilesystem())
         .setConsole(console)
-        .setAndroidPlatformTarget(options.findAndroidPlatformTarget(
-                androidDirectoryResolver,
-                actionGraph,
-                getBuckEventBus()))
+        .setAndroidPlatformTargetSupplier(commandRunnerParams.getAndroidPlatformTargetSupplier())
         .setEventBus(eventBus)
         .setPlatform(platform)
         .setEnvironment(environment)
@@ -263,5 +258,4 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
         .setObjectMapper(objectMapper)
         .build();
   }
-
 }

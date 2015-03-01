@@ -68,7 +68,6 @@ RULES_SRCS = [
   'IdentityResourcesProvider.java',
   'GenAidl.java',
   'GenAidlDescription.java',
-  'HasAndroidPlatformTarget.java',
   'HasAndroidResourceDeps.java',
   'MergeAndroidResourcesStep.java',
   'NativeLibraryBuildRule.java',

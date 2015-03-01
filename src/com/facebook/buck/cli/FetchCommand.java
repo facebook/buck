@@ -96,7 +96,7 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
              options.getBuckConfig(),
              actionGraph,
              getProjectFilesystem(),
-             getAndroidDirectoryResolver(),
+             getAndroidPlatformTargetSupplier(),
              getBuildEngine(),
              getArtifactCache(),
              console,

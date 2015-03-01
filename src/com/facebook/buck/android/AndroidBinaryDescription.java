@@ -192,7 +192,6 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),
         args.manifest,
-        args.target,
         (Keystore) keystore,
         packageType,
         dexSplitMode,
@@ -266,6 +265,8 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
   @SuppressFieldNotInitialized
   public static class Arg {
     public SourcePath manifest;
+    // TODO(mbolin): Support for this field will be dropped as it is no longer used. Keeping it
+    // around is misleading. A deprecation warning should be printed if it is set.
     public String target;
     public BuildTarget keystore;
     public Optional<String> packageType;

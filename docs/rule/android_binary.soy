@@ -37,16 +37,6 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 {/call}
 
 {call buck.arg}
-  {param name: 'target' /}
-  {param desc}
-  The version of Android being targeted by this APK. In a traditional
-  Android project, this would be specified in the
-  {sp}<code>project.properties</code> file. This is frequently something
-  like <code>'Google Inc.:Google APIs:16'</code>.
-  {/param}
-{/call}
-
-{call buck.arg}
   {param name: 'keystore' /}
   {param desc}
   A build target that identifies a {call buck.keystore /} to use to
@@ -199,7 +189,6 @@ android_library(
 android_binary(
   name = 'messenger',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:16',
   keystore = '//keystores:prod',
   package_type = 'release',
   proguard_config = 'proguard.cfg',

@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.VersionStringComparator;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -98,6 +97,9 @@ public class AndroidPlatformTarget {
     this.androidDirectoryResolver = androidDirectoryResolver;
   }
 
+  /**
+   * This is likely something like {@code "Google Inc.:Google APIs:21"}.
+   */
   public String getName() {
     return name;
   }

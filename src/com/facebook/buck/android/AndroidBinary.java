@@ -84,7 +84,6 @@ import java.util.Set;
  * android_binary(
  *   name = 'messenger',
  *   manifest = 'AndroidManifest.xml',
- *   target = 'Google Inc.:Google APIs:16',
  *   deps = [
  *     '//src/com/facebook/messenger:messenger_library',
  *   ],
@@ -92,7 +91,7 @@ import java.util.Set;
  * </pre>
  */
 public class AndroidBinary extends AbstractBuildRule implements
-    AbiRule, HasAndroidPlatformTarget, HasClasspathEntries, InstallableApk {
+    AbiRule, HasClasspathEntries, InstallableApk {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
 
@@ -166,7 +165,6 @@ public class AndroidBinary extends AbstractBuildRule implements
   }
 
   private final SourcePath manifest;
-  private final String target;
   private final Keystore keystore;
   private final PackageType packageType;
   private DexSplitMode dexSplitMode;
@@ -185,18 +183,12 @@ public class AndroidBinary extends AbstractBuildRule implements
   protected final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
   protected final AndroidGraphEnhancementResult enhancementResult;
 
-  /**
-   * @param target the Android platform version to target, e.g., "Google Inc.:Google APIs:16". You
-   *     can find the list of valid values on your system by running
-   *     {@code android list targets --compact}.
-   */
   AndroidBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize,
       SourcePath manifest,
-      String target,
       Keystore keystore,
       PackageType packageType,
       DexSplitMode dexSplitMode,
@@ -217,7 +209,6 @@ public class AndroidBinary extends AbstractBuildRule implements
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
     this.manifest = manifest;
-    this.target = target;
     this.keystore = keystore;
     this.packageType = packageType;
     this.dexSplitMode = dexSplitMode;
@@ -259,14 +250,8 @@ public class AndroidBinary extends AbstractBuildRule implements
   }
 
   @Override
-  public String getAndroidPlatformTarget() {
-    return target;
-  }
-
-  @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     builder
-        .setReflectively("target", target)
         .setReflectively("keystore", keystore.getBuildTarget())
         .setReflectively("packageType", packageType)
         .setReflectively("sdkProguardConfig", sdkProguardConfig)
@@ -860,10 +845,6 @@ public class AndroidBinary extends AbstractBuildRule implements
   @Override
   public Path getManifestPath() {
     return enhancementResult.getAaptPackageResources().getAndroidManifestXml();
-  }
-
-  String getTarget() {
-    return target;
   }
 
   boolean shouldSplitDex() {

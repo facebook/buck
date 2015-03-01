@@ -99,7 +99,7 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
     InstallableApk installableApk = (InstallableApk) buildRule;
 
     // We need this in case adb isn't already running.
-    try (ExecutionContext context = createExecutionContext(options, actionGraph)) {
+    try (ExecutionContext context = createExecutionContext()) {
       final AdbHelper adbHelper = new AdbHelper(
           options.adbOptions(),
           options.targetDeviceOptions(),

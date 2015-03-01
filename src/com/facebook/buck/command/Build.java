@@ -16,16 +16,8 @@
 
 package com.facebook.buck.command;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
-
-import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.android.HasAndroidPlatformTarget;
-import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -54,6 +46,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -114,7 +107,7 @@ public class Build implements Closeable {
       ActionGraph actionGraph,
       Optional<TargetDevice> targetDevice,
       ProjectFilesystem projectFilesystem,
-      AndroidDirectoryResolver androidDirectoryResolver,
+      Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
       ArtifactCache artifactCache,
       ListeningExecutorService service,
@@ -127,20 +120,14 @@ public class Build implements Closeable {
       BuckEventBus eventBus,
       Platform platform,
       ImmutableMap<String, String> environment,
-      BuckConfig buckConfig,
       ObjectMapper objectMapper,
       Clock clock) {
     this.actionGraph = actionGraph;
 
-    Optional<AndroidPlatformTarget> androidPlatformTarget = findAndroidPlatformTarget(
-        actionGraph,
-        androidDirectoryResolver,
-        eventBus,
-        buckConfig);
     this.executionContext = ExecutionContext.builder()
         .setProjectFilesystem(projectFilesystem)
         .setConsole(console)
-        .setAndroidPlatformTarget(androidPlatformTarget)
+        .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
         .setTargetDevice(targetDevice)
         .setDefaultTestTimeoutMillis(defaultTestTimeoutMillis)
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
@@ -171,87 +158,6 @@ public class Build implements Closeable {
   @Nullable
   public BuildContext getBuildContext() {
     return buildContext;
-  }
-
-  public static Optional<AndroidPlatformTarget> findAndroidPlatformTarget(
-      final ActionGraph actionGraph,
-      final AndroidDirectoryResolver androidDirectoryResolver,
-      final BuckEventBus eventBus,
-      final BuckConfig buckConfig) {
-    Optional<Path> androidSdkDirOption =
-        androidDirectoryResolver.findAndroidSdkDirSafe();
-    if (!androidSdkDirOption.isPresent()) {
-      return Optional.absent();
-    }
-
-    // Traverse the action graph to determine androidPlatformTarget.
-    TraversableGraph<BuildRule> graph = actionGraph;
-    AbstractBottomUpTraversal<BuildRule, Optional<AndroidPlatformTarget>> traversal =
-        new AbstractBottomUpTraversal<BuildRule, Optional<AndroidPlatformTarget>>(graph) {
-
-      @Nullable
-      private String androidPlatformTargetId = null;
-
-      @Nullable
-      private String androidPlatformTargetIdRuleName = null;
-
-      private boolean isEncounteredAndroidRuleInTraversal = false;
-
-      @Override
-      public void visit(BuildRule rule) {
-        if (rule.getProperties().is(ANDROID)) {
-          isEncounteredAndroidRuleInTraversal = true;
-        }
-
-        if (rule instanceof HasAndroidPlatformTarget) {
-          String target = ((HasAndroidPlatformTarget) rule).getAndroidPlatformTarget();
-          if (androidPlatformTargetId == null) {
-            androidPlatformTargetId = target;
-            androidPlatformTargetIdRuleName = rule.getFullyQualifiedName();
-          } else if (!target.equals(androidPlatformTargetId)) {
-            throw new HumanReadableException(
-                "More than one android platform targeted: '%s' and '%s'\n" +
-                "Target originally set by %s, conflicting with %s",
-                target,
-                androidPlatformTargetId,
-                androidPlatformTargetIdRuleName,
-                rule.getFullyQualifiedName());
-          }
-        }
-      }
-
-      @Override
-      public Optional<AndroidPlatformTarget> getResult() {
-        // Find an appropriate AndroidPlatformTarget for the target attribute specified in one of
-        // the transitively included android_binary() build rules. If no such target has been
-        // specified, then use a default AndroidPlatformTarget so that it is possible to build
-        // non-Android Java code, as well.
-        Optional<AndroidPlatformTarget> result;
-        if (androidPlatformTargetId != null) {
-          Optional<AndroidPlatformTarget> target = AndroidPlatformTarget.getTargetForId(
-              androidPlatformTargetId,
-              androidDirectoryResolver,
-              buckConfig.getAaptOverride());
-          if (target.isPresent()) {
-            result = target;
-          } else {
-            throw new RuntimeException("No target found with id: " + androidPlatformTargetId);
-          }
-        } else if (isEncounteredAndroidRuleInTraversal) {
-          AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
-              .getDefaultPlatformTarget(androidDirectoryResolver, buckConfig.getAaptOverride());
-          eventBus.post(
-              ConsoleEvent.warning("No Android platform target specified. Using default: %s",
-                  androidPlatformTarget.getName()));
-          result = Optional.of(androidPlatformTarget);
-        } else {
-          result = Optional.absent();
-        }
-        return result;
-      }
-    };
-    traversal.traverse();
-    return traversal.getResult();
   }
 
   /**

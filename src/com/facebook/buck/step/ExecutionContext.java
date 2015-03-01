@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step;
 
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -24,10 +25,9 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ClassLoaderCache;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
@@ -35,6 +35,8 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -43,7 +45,6 @@ import org.immutables.value.Value;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,7 +67,7 @@ public abstract class ExecutionContext implements Closeable {
    * returned.
    */
   @Value.Parameter
-  public abstract Optional<AndroidPlatformTarget> getAndroidPlatformTargetOptional();
+  public abstract Supplier<Optional<AndroidPlatformTarget>> getAndroidPlatformTargetSupplier();
 
   @Value.Parameter
   public abstract Optional<TargetDevice> getTargetDeviceOptional();
@@ -157,18 +158,27 @@ public abstract class ExecutionContext implements Closeable {
   }
 
   /**
+   * This method is of questionable value. We should audit its use and decide if, when an Android
+   * SDK is requested, if we should tolerate the case where none is provided.
+   */
+  public Optional<AndroidPlatformTarget> getAndroidPlatformTargetOptional() {
+    return getAndroidPlatformTargetSupplier().get();
+  }
+
+  /**
    * Returns the {@link AndroidPlatformTarget}, if present. If not, throws a
    * {@link NoAndroidSdkException}. Use this when your logic requires the user to specify the
    * location of an Android SDK. A user who is building a "pure Java" (i.e., not Android) project
    * using Buck should never have to exercise this code path.
    * <p>
    * If the location of an Android SDK is optional, then use
-   * {@link #getAndroidPlatformTargetOptional()}.
+   * {@link #getAndroidPlatformTargetSupplier()}.
    * @throws NoAndroidSdkException if no AndroidPlatformTarget is available
    */
   public AndroidPlatformTarget getAndroidPlatformTarget() throws NoAndroidSdkException {
-    if (getAndroidPlatformTargetOptional().isPresent()) {
-      return getAndroidPlatformTargetOptional().get();
+    Optional<AndroidPlatformTarget> androidPlatformTarget = getAndroidPlatformTargetOptional();
+    if (androidPlatformTarget.isPresent()) {
+      return androidPlatformTarget.get();
     } else {
       throw new NoAndroidSdkException();
     }
@@ -207,7 +217,8 @@ public abstract class ExecutionContext implements Closeable {
 
     @Nullable private ProjectFilesystem projectFilesystem = null;
     @Nullable private Console console = null;
-    private Optional<AndroidPlatformTarget> androidPlatformTarget = Optional.absent();
+    private Supplier<Optional<AndroidPlatformTarget>> androidPlatformTarget = Suppliers.ofInstance(
+        Optional.<AndroidPlatformTarget>absent());
     private Optional<TargetDevice> targetDevice = Optional.absent();
     private long defaultTestTimeoutMillis = 0L;
     private boolean isCodeCoverageEnabled = false;
@@ -243,7 +254,7 @@ public abstract class ExecutionContext implements Closeable {
     public Builder setExecutionContext(ExecutionContext executionContext) {
       setProjectFilesystem(executionContext.getProjectFilesystem());
       setConsole(executionContext.getConsole());
-      setAndroidPlatformTarget(executionContext.getAndroidPlatformTargetOptional());
+      setAndroidPlatformTargetSupplier(executionContext.getAndroidPlatformTargetSupplier());
       setTargetDevice(executionContext.getTargetDeviceOptional());
       setDefaultTestTimeoutMillis(executionContext.getDefaultTestTimeoutMillis());
       setCodeCoverageEnabled(executionContext.isCodeCoverageEnabled());
@@ -269,7 +280,8 @@ public abstract class ExecutionContext implements Closeable {
       return this;
     }
 
-    public Builder setAndroidPlatformTarget(Optional<AndroidPlatformTarget> androidPlatformTarget) {
+    public Builder setAndroidPlatformTargetSupplier(
+        Supplier<Optional<AndroidPlatformTarget>> androidPlatformTarget) {
       this.androidPlatformTarget = androidPlatformTarget;
       return this;
     }

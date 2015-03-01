@@ -782,6 +782,10 @@ public class BuckConfig {
     return doStore;
   }
 
+  public Optional<String> getAndroidTarget() {
+    return getValue("android", "target");
+  }
+
   public Optional<String> getNdkVersion() {
     return getValue("ndk", "ndk_version");
   }

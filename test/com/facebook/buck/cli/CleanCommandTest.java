@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import static org.easymock.EasyMock.capture;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
@@ -36,6 +36,8 @@ import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 
 import org.easymock.Capture;
@@ -112,10 +114,12 @@ public class CleanCommandTest extends EasyMockSupport {
     projectFilesystem = createMock(ProjectFilesystem.class);
     Repository repository = new TestRepositoryBuilder().setFilesystem(projectFilesystem).build();
 
+    Supplier<Optional<AndroidPlatformTarget>> androidPlatformTargetSupplier = Suppliers.ofInstance(
+        Optional.<AndroidPlatformTarget>absent());
     CommandRunnerParams params = new CommandRunnerParams(
         new TestConsole(),
         repository,
-        new FakeAndroidDirectoryResolver(),
+        androidPlatformTargetSupplier,
         new CachingBuildEngine(),
         new InstanceArtifactCacheFactory(createMock(ArtifactCache.class)),
         BuckEventBusFactory.newInstance(),

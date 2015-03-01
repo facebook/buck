@@ -195,10 +195,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     // configuration files.
     ActionGraph actionGraph = targetGraphTransformer.apply(targetGraphAndTargets.getTargetGraph());
 
-    try (ExecutionContext executionContext = createExecutionContext(
-            options,
-            actionGraph)) {
-
+    try (ExecutionContext executionContext = createExecutionContext()) {
       Project project = new Project(
           new SourcePathResolver(new BuildRuleResolver(actionGraph.getNodes())),
           FluentIterable

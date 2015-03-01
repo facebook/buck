@@ -44,6 +44,7 @@ The following sections are recognized by Buck:
 {foreach $name in [
     'adb',
     'alias',
+    'android',
     'buildfile',
     'cache',
     'color',
@@ -90,6 +91,25 @@ $ buck build app
 $ buck test apptest
 </pre>{/literal}
 
+{call .section}{param title: 'android' /}{/call}
+
+Specify the version of the Android SDK that all Android code
+in the project should be built against as follows:
+
+{literal}<pre class="prettyprint lang-ini">
+[alias]
+  target = Google Inc.:Google APIs:21
+</pre>{/literal}
+
+<p>
+
+If the SDK version is not specified in your <code>.buckconfig</code> file,
+the version of the SDK that Buck has chosen will be printed to the console.
+
+<p>
+
+You can find the list of valid values on your system by running{sp}
+<code>android list targets --compact</code>.
 
 {call .section}{param title: 'buildfile' /}{/call}
 
