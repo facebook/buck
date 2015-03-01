@@ -76,6 +76,7 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testCxxLibraryDependent() throws IOException {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "android_aar_native_deps/cxx_deps",
@@ -92,6 +93,7 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testNativeLibraryDependent() throws IOException {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "android_aar_native_deps/ndk_deps",
