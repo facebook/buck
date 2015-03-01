@@ -43,7 +43,7 @@ public class CacheCommandTest extends EasyMockSupport {
       throws IOException, InterruptedException {
     Console console = createMock(Console.class);
     console.printErrorText("No cache keys specified.");
-    CommandRunnerParamsForTesting commandRunnerParams = CommandRunnerParamsForTesting
+    CommandRunnerParams commandRunnerParams = CommandRunnerParamsForTesting
         .builder()
         .setConsole(console)
         .build();
@@ -76,7 +76,7 @@ public class CacheCommandTest extends EasyMockSupport {
     Capture<String> successMessage = new Capture<>();
     console.printSuccess(capture(successMessage));
 
-    CommandRunnerParamsForTesting commandRunnerParams = CommandRunnerParamsForTesting.builder()
+    CommandRunnerParams commandRunnerParams = CommandRunnerParamsForTesting.builder()
         .setConsole(console)
         .setArtifactCacheFactory(artifactCacheFactory)
         .build();
@@ -113,7 +113,7 @@ public class CacheCommandTest extends EasyMockSupport {
     Console console = createMock(Console.class);
     console.printErrorText("Failed to retrieve an artifact with id " + ruleKeyHash + ".");
 
-    CommandRunnerParamsForTesting commandRunnerParams = CommandRunnerParamsForTesting.builder()
+    CommandRunnerParams commandRunnerParams = CommandRunnerParamsForTesting.builder()
         .setConsole(console)
         .setArtifactCacheFactory(artifactCacheFactory)
         .build();

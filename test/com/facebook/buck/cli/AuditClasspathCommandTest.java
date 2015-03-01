@@ -71,18 +71,19 @@ public class AuditClasspathCommandTest {
 
     Repository repository = new TestRepositoryBuilder().build();
 
-    auditClasspathCommand = new AuditClasspathCommand(new CommandRunnerParams(
-        console,
-        new FakeRepositoryFactory(),
-        repository,
-        androidDirectoryResolver,
-        new InstanceArtifactCacheFactory(artifactCache),
-        eventBus,
-        new ParserConfig(new FakeBuckConfig()),
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()),
-        new FakeJavaPackageFinder(),
-        new ObjectMapper()));
+    auditClasspathCommand = new AuditClasspathCommand(
+        CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+            console,
+            new FakeRepositoryFactory(),
+            repository,
+            androidDirectoryResolver,
+            new InstanceArtifactCacheFactory(artifactCache),
+            eventBus,
+            new ParserConfig(new FakeBuckConfig()),
+            Platform.detect(),
+            ImmutableMap.copyOf(System.getenv()),
+            new FakeJavaPackageFinder(),
+            new ObjectMapper()));
   }
 
   @Test

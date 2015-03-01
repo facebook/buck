@@ -198,7 +198,7 @@ public class AuditOwnerCommandTest {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     Repository repository = new TestRepositoryBuilder().setFilesystem(filesystem).build();
-    return new AuditOwnerCommand(new CommandRunnerParams(
+    return new AuditOwnerCommand(CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         console,
         new FakeRepositoryFactory(),
         repository,

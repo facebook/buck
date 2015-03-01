@@ -22,23 +22,36 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaPackageFinder;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RepositoryFactory;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.NullFileHashCache;
+import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 
-public class CommandRunnerParamsForTesting extends CommandRunnerParams {
+public class CommandRunnerParamsForTesting {
 
-  private CommandRunnerParamsForTesting(
+  /** Utility class: do not instantiate. */
+  private CommandRunnerParamsForTesting() {}
+
+  public static CommandRunnerParams createCommandRunnerParamsForTesting(
       Console console,
       RepositoryFactory repositoryFactory,
       Repository repository,
@@ -50,23 +63,30 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
       ObjectMapper objectMapper)
-      throws IOException, InterruptedException{
-    super(
+      throws IOException, InterruptedException {
+    return new CommandRunnerParams(
         console,
-        repositoryFactory,
         repository,
         androidDirectoryResolver,
+        new CachingBuildEngine(),
         artifactCacheFactory,
         eventBus,
-        parserConfig,
+        Parser.createParser(
+            repositoryFactory,
+            parserConfig,
+            new RuleKeyBuilderFactory() {
+              @Override
+              public RuleKey.Builder newInstance(BuildRule buildRule, SourcePathResolver resolver) {
+                return RuleKey.builder(buildRule, resolver, new NullFileHashCache());
+              }
+            }),
         platform,
         environment,
         javaPackageFinder,
-        objectMapper);
+        objectMapper,
+        new DefaultClock(),
+        Optional.<ProcessManager>absent());
   }
-
-  // Admittedly, this class has no additional methods beyond its superclass today, but we will
-  // likely add additional observer methods at some point in the future.
 
   public static Builder builder() {
     return new Builder();
@@ -85,9 +105,9 @@ public class CommandRunnerParamsForTesting extends CommandRunnerParams {
     private JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    public CommandRunnerParamsForTesting build()
+    public CommandRunnerParams build()
         throws IOException, InterruptedException{
-      return new CommandRunnerParamsForTesting(
+      return createCommandRunnerParamsForTesting(
           console,
           new FakeRepositoryFactory(),
           new TestRepositoryBuilder().build(),

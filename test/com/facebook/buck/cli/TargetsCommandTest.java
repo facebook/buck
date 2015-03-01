@@ -49,8 +49,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -114,7 +114,7 @@ public class TargetsCommandTest {
     objectMapper = new ObjectMapper();
 
     targetsCommand =
-        new TargetsCommand(new CommandRunnerParams(
+        new TargetsCommand(CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
             console,
             new FakeRepositoryFactory(),
             repository,

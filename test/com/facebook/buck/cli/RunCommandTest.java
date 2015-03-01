@@ -32,7 +32,7 @@ public class RunCommandTest extends EasyMockSupport {
   public void testRunCommandWithNoArguments()
       throws IOException, InterruptedException {
     TestConsole console = new TestConsole();
-    CommandRunnerParamsForTesting commandRunnerParams = CommandRunnerParamsForTesting
+    CommandRunnerParams commandRunnerParams = CommandRunnerParamsForTesting
         .builder()
         .setConsole(console)
         .build();
@@ -51,7 +51,7 @@ public class RunCommandTest extends EasyMockSupport {
   public void testRunCommandWithNonExistentTarget()
       throws IOException, InterruptedException {
     TestConsole console = new TestConsole();
-    CommandRunnerParamsForTesting commandRunnerParams = CommandRunnerParamsForTesting
+    CommandRunnerParams commandRunnerParams = CommandRunnerParamsForTesting
         .builder()
         .setConsole(console)
         .build();

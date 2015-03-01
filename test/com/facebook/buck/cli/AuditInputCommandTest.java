@@ -73,18 +73,19 @@ public class AuditInputCommandTest {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.registerModule(new Jdk7Module());
 
-    auditInputCommand = new AuditInputCommand(new CommandRunnerParams(
-        console,
-        new FakeRepositoryFactory(),
-        repository,
-        new FakeAndroidDirectoryResolver(),
-        new InstanceArtifactCacheFactory(artifactCache),
-        eventBus,
-        new ParserConfig(new FakeBuckConfig()),
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()),
-        new FakeJavaPackageFinder(),
-        objectMapper));
+    auditInputCommand = new AuditInputCommand(
+        CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+            console,
+            new FakeRepositoryFactory(),
+            repository,
+            new FakeAndroidDirectoryResolver(),
+            new InstanceArtifactCacheFactory(artifactCache),
+            eventBus,
+            new ParserConfig(new FakeBuckConfig()),
+            Platform.detect(),
+            ImmutableMap.copyOf(System.getenv()),
+            new FakeJavaPackageFinder(),
+            objectMapper));
   }
 
   @Test

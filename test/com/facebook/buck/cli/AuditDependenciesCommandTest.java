@@ -73,18 +73,19 @@ public class AuditDependenciesCommandTest {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.registerModule(new Jdk7Module());
 
-    auditDependenciesCommand = new AuditDependenciesCommand(new CommandRunnerParams(
-        console,
-        new FakeRepositoryFactory(),
-        repository,
-        new FakeAndroidDirectoryResolver(),
-        new InstanceArtifactCacheFactory(artifactCache),
-        eventBus,
-        new ParserConfig(new FakeBuckConfig()),
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()),
-        new FakeJavaPackageFinder(),
-        objectMapper));
+    auditDependenciesCommand = new AuditDependenciesCommand(
+        CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+            console,
+            new FakeRepositoryFactory(),
+            repository,
+            new FakeAndroidDirectoryResolver(),
+            new InstanceArtifactCacheFactory(artifactCache),
+            eventBus,
+            new ParserConfig(new FakeBuckConfig()),
+            Platform.detect(),
+            ImmutableMap.copyOf(System.getenv()),
+            new FakeJavaPackageFinder(),
+            objectMapper));
   }
 
   @Test

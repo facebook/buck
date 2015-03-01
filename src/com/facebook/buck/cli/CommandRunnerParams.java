@@ -20,28 +20,15 @@ import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuildEngine;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.RepositoryFactory;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKey.Builder;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.timing.Clock;
-import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.NullFileHashCache;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-
-import java.io.IOException;
 
 /**
  * {@link CommandRunnerParams} is the collection of parameters needed to create a
@@ -62,44 +49,6 @@ class CommandRunnerParams {
   private final ObjectMapper objectMapper;
   private final Clock clock;
   private final Optional<ProcessManager> processManager;
-
-  @VisibleForTesting
-  CommandRunnerParams(
-      Console console,
-      RepositoryFactory repositoryFactory,
-      Repository repository,
-      AndroidDirectoryResolver androidDirectoryResolver,
-      ArtifactCacheFactory artifactCacheFactory,
-      BuckEventBus eventBus,
-      ParserConfig parserConfig,
-      Platform platform,
-      ImmutableMap<String, String> environment,
-      JavaPackageFinder javaPackageFinder,
-      ObjectMapper objectMapper)
-      throws IOException, InterruptedException {
-    this(
-        console,
-        repository,
-        androidDirectoryResolver,
-        new CachingBuildEngine(),
-        artifactCacheFactory,
-        eventBus,
-        Parser.createParser(
-            repositoryFactory,
-            parserConfig,
-            new RuleKeyBuilderFactory() {
-              @Override
-              public Builder newInstance(BuildRule buildRule, SourcePathResolver resolver) {
-                return RuleKey.builder(buildRule, resolver, new NullFileHashCache());
-              }
-            }),
-        platform,
-        environment,
-        javaPackageFinder,
-        objectMapper,
-        new DefaultClock(),
-        Optional.<ProcessManager>absent());
-  }
 
   public CommandRunnerParams(
       Console console,
