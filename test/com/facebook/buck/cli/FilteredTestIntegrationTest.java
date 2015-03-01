@@ -51,15 +51,15 @@ public class FilteredTestIntegrationTest {
     // This will attempt to build the broken test, //:broken, which will fail to build.
     workspace.runBuckCommand("test", "--all").assertFailure();
 
-    // This will fail, since we're still trying to build //:broken, even though we're filtering
-    // it form test runs.
+    // This will exclude building //:broken and will therefore pass the build and result
+    // in a test failure while running //:bad_test.
     workspace.runBuckCommand("test", "--all", "--exclude", "flaky")
-        .assertFailure();
-
-    // As per above, but this works, since we're using "--no-build-filtered" to prevent //:broken
-    // from being built.
-    workspace.runBuckCommand("test", "--all", "--exclude", "flaky", "--no-build-filtered")
         .assertTestFailure("hello world");
+
+    // As per above, but using "--build-filtered" will force //:broken to still be built
+    // even though it was filtered out, resulting in a failed build.
+    workspace.runBuckCommand("test", "--all", "--exclude", "flaky", "--build-filtered")
+        .assertFailure();
 
     // Explicitly trying to test //:broken will fail at the build stage.
     workspace.runBuckCommand("test", "//:broken").assertFailure();
@@ -69,15 +69,14 @@ public class FilteredTestIntegrationTest {
     workspace.runBuckCommand("test", "//:broken", "--exclude", "flaky").assertFailure();
 
     // Using "--always_exclude" causes filters to override explicitly specified targets, so this
-    // means we won't build //:broken if we also pass "--no-build-filtered", and will therefore
-    // succeed (but run no tests).
-    workspace.runBuckCommand(
-        "test", "//:broken", "--exclude", "flaky", "--always_exclude", "--no-build-filtered")
+    // means we won't build //:broken and will therefore succeed (but run no tests).
+    workspace.runBuckCommand("test", "//:broken", "--exclude", "flaky", "--always_exclude")
         .assertSuccess();
 
-    // However, not passing "--no-build-filtered" means we'll still build //:broken, even though
-    // we're filtering it, causing a build failure.
-    workspace.runBuckCommand("test", "//:broken", "--exclude", "flaky", "--always_exclude")
+    // Passing "--build-filtered" means we'll still build //:broken, even though we're filtering
+    // it, causing a build failure.
+    workspace.runBuckCommand(
+        "test", "//:broken", "--exclude", "flaky", "--always_exclude", "--build-filtered")
         .assertFailure();
   }
 

@@ -57,8 +57,9 @@ public class TestCommandOptions extends BuildCommandOptions {
   @Option(name = "--no-results-cache", usage = "Whether to use cached test results.")
   private boolean isResultsCacheDisabled = false;
 
-  @Option(name = "--no-build-filtered", usage = "Whether to build filtered out tests.")
-  private boolean isBuildFilteredDisabled = false;
+  @Option(name = "--build-filtered", usage = "Whether to build filtered out tests.")
+  @Nullable
+  private Boolean isBuildFiltered = null;
 
   @Option(
       name = "--ignore-when-dependencies-fail",
@@ -185,7 +186,9 @@ public class TestCommandOptions extends BuildCommandOptions {
   }
 
   public boolean isBuildFiltered() {
-    return !isBuildFilteredDisabled;
+    return isBuildFiltered != null ?
+        isBuildFiltered :
+        getBuckConfig().getBooleanValue("test", "build_filtered_tests", false);
   }
 
 }
