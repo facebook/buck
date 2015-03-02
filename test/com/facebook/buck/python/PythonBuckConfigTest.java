@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cli.FakeBuckEnvironment;
@@ -83,7 +84,7 @@ public class PythonBuckConfigTest {
   @Test(expected = HumanReadableException.class)
   public void whenToolsPythonIsNonExecutableFileThenItIsNotUsed() throws IOException {
     File configPythonFile = temporaryFolder.newFile("python");
-    assertTrue("Should be able to set file non-executable", configPythonFile.setExecutable(false));
+    assumeTrue("Should be able to set file non-executable", configPythonFile.setExecutable(false));
     PythonBuckConfig config =
         new PythonBuckConfig(
             new FakeBuckConfig(
