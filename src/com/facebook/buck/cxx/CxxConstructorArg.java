@@ -17,6 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasTests;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.model.Pair;
@@ -30,7 +32,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 @SuppressFieldNotInitialized
-public class CxxConstructorArg {
+public class CxxConstructorArg implements HasTests {
   public Optional<Either<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>>
       srcs;
   public Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>> headers;
@@ -45,4 +47,10 @@ public class CxxConstructorArg {
   public Optional<ImmutableList<SourcePath>> yaccSrcs;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;
   public Optional<String> headerNamespace;
+  @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+
+  @Override
+  public ImmutableSortedSet<BuildTarget> getTests() {
+    return tests.get();
+  }
 }

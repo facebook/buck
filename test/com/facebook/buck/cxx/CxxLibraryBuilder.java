@@ -23,6 +23,7 @@ import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> {
 
@@ -68,4 +69,8 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
     return this;
   }
 
+  public CxxLibraryBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
+    arg.tests = Optional.of(tests);
+    return this;
+  }
 }

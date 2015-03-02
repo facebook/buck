@@ -557,6 +557,18 @@ ga('send', 'pageview');
 {/call}
 {/template}
 
+/***/
+{template .tests_arg}
+{call buck.arg}
+  {param name : 'tests' /}
+  {param default : '[]' /}
+  {param desc}
+  List of <a href="{ROOT}concept/build_target.html">build target</a> that
+  identify the test rules that exercise this target.
+  {/param}
+{/call}
+{/template}
+
 /**
  *
  */
