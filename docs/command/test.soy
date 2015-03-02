@@ -33,16 +33,16 @@ Builds and runs the tests for one or more specified targets:
   {param name: 'code-coverage' /}
   {param desc}
   Collects code coverage information while running tests.  Currently, this only
-  works with Java using <a href="http://emma.sourceforge.net/">emma</a>.  After
-  running:
+  works with Java using <a href="http://www.eclemma.org/jacoco/">JaCoCo</a>.
+  After running:
 
-  <pre>buck test --all --code-coverage</pre>
+  <pre>buck test --code-coverage</pre>
 
   <p>
 
   The code coverage information can be found in:
 
-  <pre>buck-out/gen/emma/coverage/</pre>
+  <pre>buck-out/gen/jacoco/code-coverage/</pre>
  {/param}
 {/call}
 
