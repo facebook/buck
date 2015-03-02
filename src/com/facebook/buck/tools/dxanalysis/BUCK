@@ -10,7 +10,9 @@ java_library(
   name = 'lib',
   srcs = glob(['*.java']),
   deps = [
+    '//third-party/java/aosp:aosp',
     '//third-party/java/asm:asm',
     '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
   ],
 )
