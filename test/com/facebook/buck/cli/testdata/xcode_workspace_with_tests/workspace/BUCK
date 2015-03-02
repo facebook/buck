@@ -1,0 +1,5 @@
+xcode_workspace_config(
+  name='workspace',
+  src_target='//bin:bin',
+  visibility=['PUBLIC'],
+)

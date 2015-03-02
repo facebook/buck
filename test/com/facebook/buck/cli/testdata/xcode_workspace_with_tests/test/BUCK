@@ -1,0 +1,6 @@
+apple_test(
+  name='test',
+  srcs=glob(['*.m']),
+  extension='xctest',
+  visibility=['PUBLIC'],
+)

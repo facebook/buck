@@ -41,8 +41,8 @@ public class TargetsCommandOptions extends BuildCommandOptions {
   private Supplier<ImmutableSet<String>> referencedFiles;
 
   @Option(name = "--detect-test-changes",
-      usage = "Modifies the --referenced-file flag resolution to pretend that targets depend on " +
-          "their tests (experimental)")
+      usage = "Modifies the --referenced-file and --show-target-hash flags to pretend that " +
+          "tarets depend on their tests (experimental)")
   private boolean isDetectTestChanges;
 
   @Option(name = "--type",

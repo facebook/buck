@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -25,6 +26,7 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.InMemoryBuildFileTree;
+import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -33,13 +35,16 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetGraphHashing;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -53,9 +58,13 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.Hasher;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -69,6 +78,8 @@ import java.util.SortedMap;
 import javax.annotation.Nullable;
 
 public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions> {
+
+  private static final Logger LOG = Logger.get(TargetsCommand.class);
 
   private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
 
@@ -446,59 +457,139 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       return 1;
     }
 
-    TargetGraph targetGraph;
-    try {
-      targetGraph = getParser().buildTargetGraphForBuildTargets(
-          matchingBuildTargets,
-          new ParserConfig(options.getBuckConfig()),
-          getBuckEventBus(),
-          console,
-          environment,
-          options.getEnableProfiling());
-    } catch (BuildTargetException | BuildFileParseException e) {
-      console.printBuildFailureWithoutStacktrace(e);
-      return 1;
-    }
-
-    Optional<ActionGraph> actionGraph;
-    if (options.isShowRuleKey() || options.isShowOutput()) {
-      actionGraph = Optional.of(targetGraphTransformer.apply(targetGraph));
-    } else {
-      actionGraph = Optional.absent();
-    }
-
-    ImmutableMap<BuildTarget, HashCode> buildTargetHashes;
     if (options.isShowTargetHash()) {
-      buildTargetHashes = TargetGraphHashing.hashTargetGraph(
-          getProjectFilesystem(),
-          targetGraph,
-          getParser().getBuildTargetHashCodeCache(),
-          matchingBuildTargets);
+      return doShowTargetHash(options, matchingBuildTargets);
     } else {
-      buildTargetHashes = ImmutableMap.of();
-    }
-
-    for (BuildTarget target : ImmutableSortedSet.copyOf(matchingBuildTargets)) {
-      ImmutableList.Builder<String> builder = ImmutableList.builder();
-      builder.add(target.getFullyQualifiedName());
-      if (options.isShowTargetHash()) {
-        HashCode targetHash = Preconditions.checkNotNull(buildTargetHashes.get(target));
-        builder.add(targetHash.toString());
+      TargetGraph targetGraph;
+      try {
+        targetGraph = getParser().buildTargetGraphForBuildTargets(
+            matchingBuildTargets,
+            new ParserConfig(options.getBuckConfig()),
+            getBuckEventBus(),
+            console,
+            environment,
+            options.getEnableProfiling());
+      } catch (BuildTargetException | BuildFileParseException e) {
+        console.printBuildFailureWithoutStacktrace(e);
+        return 1;
       }
-      if (actionGraph.isPresent()) {
-        BuildRule rule = Preconditions.checkNotNull(
-            actionGraph.get().findBuildRuleByTarget(target));
-        if (options.isShowRuleKey()) {
-          builder.add(rule.getRuleKey().toString());
-        }
-        if (options.isShowOutput()) {
-          Path outputPath = rule.getPathToOutputFile();
-          if (outputPath != null) {
-            builder.add(outputPath.toString());
+
+      Optional<ActionGraph> actionGraph;
+      if (options.isShowRuleKey() || options.isShowOutput()) {
+        actionGraph = Optional.of(targetGraphTransformer.apply(targetGraph));
+      } else {
+        actionGraph = Optional.absent();
+      }
+
+      for (BuildTarget target : ImmutableSortedSet.copyOf(matchingBuildTargets)) {
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        builder.add(target.getFullyQualifiedName());
+        if (actionGraph.isPresent()) {
+          BuildRule rule = Preconditions.checkNotNull(
+              actionGraph.get().findBuildRuleByTarget(target));
+          if (options.isShowRuleKey()) {
+            builder.add(rule.getRuleKey().toString());
+          }
+          if (options.isShowOutput()) {
+            Path outputPath = rule.getPathToOutputFile();
+            if (outputPath != null) {
+              builder.add(outputPath.toString());
+            }
           }
         }
+        getStdOut().println(Joiner.on(' ').join(builder.build()));
       }
-      getStdOut().println(Joiner.on(' ').join(builder.build()));
+    }
+
+    return 0;
+  }
+
+  private int doShowTargetHash(
+      final TargetsCommandOptions options,
+      ImmutableSet<BuildTarget> matchingBuildTargets)
+    throws IOException, InterruptedException {
+    LOG.debug("Getting target hash for %s", matchingBuildTargets);
+
+    ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
+        getParser(),
+        new ParserConfig(options.getBuckConfig()),
+        getBuckEventBus(),
+        console,
+        environment,
+        options.getEnableProfiling());
+
+    // Parse the BUCK files for the targets passed in from the command line and their deps.
+    TargetGraph projectGraph = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
+        Iterables.transform(matchingBuildTargets, BuildTargetSpec.TO_BUILD_TARGET_SPEC));
+
+    LOG.debug("Built project graph with nodes: %s", projectGraph.getNodes());
+
+    Iterable<BuildTarget> matchingBuildTargetsWithTests;
+    final TargetGraph projectGraphWithTests;
+    if (options.isDetectTestChanges()) {
+      ImmutableSet<BuildTarget> explicitTestTargets;
+      explicitTestTargets = TargetGraphAndTargets.getExplicitTestTargets(
+        matchingBuildTargets,
+        projectGraph);
+      LOG.debug("Got explicit test targets: %s", explicitTestTargets);
+      matchingBuildTargetsWithTests =
+          Sets.union(matchingBuildTargets, explicitTestTargets);
+
+      // Parse the BUCK files for the tests of the targets passed in from the command line.
+      projectGraphWithTests = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
+          Iterables.transform(
+              matchingBuildTargetsWithTests,
+              BuildTargetSpec.TO_BUILD_TARGET_SPEC));
+    } else {
+      matchingBuildTargetsWithTests = matchingBuildTargets;
+      projectGraphWithTests = projectGraph;
+    }
+
+    // Hash each target's rule description and contents of any files.
+    ImmutableMap<BuildTarget, HashCode> buildTargetHashes =
+        TargetGraphHashing.hashTargetGraph(
+            getProjectFilesystem(),
+            projectGraphWithTests,
+            getParser().getBuildTargetHashCodeCache(),
+            matchingBuildTargetsWithTests);
+
+    // Now that we've parsed all the BUCK files for the rules and their tests,
+    // we can re-walk the graph for each target passed in to the command,
+    // hashing the target, its deps, the tests, and their deps.
+    for (BuildTarget target : matchingBuildTargets) {
+      TargetNode<?> targetNode = Preconditions.checkNotNull(
+          projectGraphWithTests.get(target),
+          "Could not find target %s in project graph",
+          target);
+      TargetGraph subGraph = projectGraphWithTests.getSubgraph(ImmutableSet.of(targetNode));
+
+      Hasher hasher = Hashing.sha1().newHasher();
+      ImmutableSortedSet.Builder<TargetNode<?>> nodesWithDepsAndTests =
+          ImmutableSortedSet.naturalOrder();
+      // Add the target and its deps.
+      nodesWithDepsAndTests.addAll(subGraph.getNodes());
+
+      if (options.isDetectTestChanges()) {
+        // Add the tests and their deps.
+        nodesWithDepsAndTests.addAll(FluentIterable
+          .from(subGraph.getNodes())
+          .transformAndConcat(
+              new Function<TargetNode<?>, Iterable<TargetNode<?>>>() {
+                @Override
+                public Iterable<TargetNode<?>> apply(TargetNode<?> node) {
+                  return projectGraphWithTests.getAll(TargetNodes.getTestTargetsForNode(node));
+                }
+              }));
+      }
+
+      LOG.debug("Hashing target %s with dependent nodes %s", target, nodesWithDepsAndTests.build());
+      for (TargetNode<?> nodeToHash : nodesWithDepsAndTests.build()) {
+        HashCode dependencyHash = buildTargetHashes.get(
+            nodeToHash.getBuildTarget());
+        Preconditions.checkNotNull(dependencyHash, "Couldn't get hash for node: %s", nodeToHash);
+        hasher.putBytes(dependencyHash.asBytes());
+      }
+      getStdOut().format("%s %s\n", target.getFullyQualifiedName(), hasher.hash().toString());
     }
 
     return 0;
