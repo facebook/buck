@@ -11,6 +11,11 @@
   source based on it's file extension.
   See the <a href="https://gcc.gnu.org/onlinedocs/gcc/Overall-Options.html">GCC documentation</a> for more detail
   on how file extensions are interpreted.
+  Each element can be either a string specifying a source file (e.g. <code>'foo/bar.c'</code>) or
+  a tuple of a string specifying a source file and a list of compilation flags
+  (e.g. <code>('foo/bar.c', ['-Wall', '-Werror'])</code>).
+  In the latter case the specified flags will be used in addition to the rule's
+  other flags when preprocessing and compiling that file (if applicable).
   {/param}
 {/call}
 {/template}
