@@ -146,11 +146,13 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         getBuckEventBus(),
         console,
         environment,
-        options,
-        getProjectFilesystem().getIgnorePaths());
+        options.getEnableProfiling());
 
-    TargetGraph projectGraph = projectGraphParser.buildTargetGraphForBuildTargets(
-        passedInTargetsSet);
+    TargetGraph projectGraph = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
+        getTargetNodeSpecsForIde(
+            options.getIde(),
+            passedInTargetsSet,
+            getProjectFilesystem().getIgnorePaths()));
 
     ProjectPredicates projectPredicates = getProjectPredicates(
         options.getIde(),
@@ -171,7 +173,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           graphRoots,
           projectGraphParser,
           projectPredicates.getAssociatedProjectPredicate(),
-          options.isWithTests());
+          options.isWithTests(),
+          options.getIde(),
+          getProjectFilesystem().getIgnorePaths());
 
     if (options.getDryRun()) {
       for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
@@ -460,35 +464,21 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       final BuckEventBus buckEventBus,
       final Console console,
       final ImmutableMap<String, String> environment,
-      final ProjectCommandOptions options,
-      final ImmutableSet<Path> ignoreDirs
+      final boolean enableProfiling
   ) throws IOException, InterruptedException {
     return new ProjectGraphParser() {
       @Override
-      public TargetGraph buildTargetGraphForBuildTargets(
-          Collection<BuildTarget> passedInTargets)
+      public TargetGraph buildTargetGraphForTargetNodeSpecs(
+          Iterable<? extends TargetNodeSpec> targetNodeSpecs)
         throws IOException, InterruptedException {
         try {
-          ImmutableList.Builder<TargetNodeSpec> specsBuilder = ImmutableList.builder();
-          if (options.getIde() == ProjectCommandOptions.Ide.XCODE &&
-              !passedInTargets.isEmpty()) {
-            specsBuilder.addAll(
-                Iterables.transform(
-                    passedInTargets,
-                    BuildTargetSpec.TO_BUILD_TARGET_SPEC));
-          } else {
-            specsBuilder.add(
-                new TargetNodePredicateSpec(
-                    Predicates.<TargetNode<?>>alwaysTrue(),
-                    ignoreDirs));
-          }
           return parser.buildTargetGraphForTargetNodeSpecs(
-              specsBuilder.build(),
+              targetNodeSpecs,
               parserConfig,
               buckEventBus,
               console,
               environment,
-              options.getEnableProfiling());
+              enableProfiling);
         } catch (BuildTargetException | BuildFileParseException e) {
           throw new HumanReadableException(e);
         }
@@ -588,8 +578,27 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
   @VisibleForTesting
   interface ProjectGraphParser {
-    TargetGraph buildTargetGraphForBuildTargets(Collection<BuildTarget> buildTargets)
+    TargetGraph buildTargetGraphForTargetNodeSpecs(
+        Iterable<? extends TargetNodeSpec> targetNodeSpecs)
       throws IOException, InterruptedException;
+  }
+
+  private static Iterable<? extends TargetNodeSpec> getTargetNodeSpecsForIde(
+      ProjectCommandOptions.Ide ide,
+      Collection<BuildTarget> passedInBuildTargets,
+      ImmutableSet<Path> ignoreDirs
+  ) {
+    if (ide == ProjectCommandOptions.Ide.XCODE &&
+        !passedInBuildTargets.isEmpty()) {
+      return Iterables.transform(
+          passedInBuildTargets,
+          BuildTargetSpec.TO_BUILD_TARGET_SPEC);
+    } else {
+      return ImmutableList.of(
+          new TargetNodePredicateSpec(
+              Predicates.<TargetNode<?>>alwaysTrue(),
+              ignoreDirs));
+    }
   }
 
   private static TargetGraphAndTargets createTargetGraph(
@@ -597,7 +606,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       ImmutableSet<BuildTarget> graphRoots,
       ProjectGraphParser projectGraphParser,
       AssociatedTargetNodePredicate associatedProjectPredicate,
-      boolean isWithTests)
+      boolean isWithTests,
+      ProjectCommandOptions.Ide ide,
+      ImmutableSet<Path> ignoreDirs
+  )
     throws IOException, InterruptedException {
 
     TargetGraph resultProjectGraph;
@@ -608,8 +620,11 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             graphRoots,
             projectGraph);
         resultProjectGraph =
-            projectGraphParser.buildTargetGraphForBuildTargets(
-                Sets.union(graphRoots, explicitTestTargets));
+            projectGraphParser.buildTargetGraphForTargetNodeSpecs(
+                getTargetNodeSpecsForIde(
+                    ide,
+                    Sets.union(graphRoots, explicitTestTargets),
+                    ignoreDirs));
     } else {
       resultProjectGraph = projectGraph;
       explicitTestTargets = ImmutableSet.of();
