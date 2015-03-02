@@ -134,7 +134,7 @@ public class ShellStepTest {
          return cmd.get(0);
       }
       @Override
-      protected Optional<String> getStdin() {
+      protected Optional<String> getStdin(ExecutionContext context) {
         return stdin;
       }
       @Override
