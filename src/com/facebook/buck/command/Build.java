@@ -64,6 +64,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -116,7 +117,7 @@ public class Build implements Closeable {
       AndroidDirectoryResolver androidDirectoryResolver,
       BuildEngine buildEngine,
       ArtifactCache artifactCache,
-      int numThreads,
+      ListeningExecutorService service,
       JavaPackageFinder javaPackageFinder,
       Console console,
       long defaultTestTimeoutMillis,
@@ -152,7 +153,7 @@ public class Build implements Closeable {
         .build();
     this.artifactCache = artifactCache;
     this.buildEngine = buildEngine;
-    this.stepRunner = new DefaultStepRunner(executionContext, numThreads);
+    this.stepRunner = new DefaultStepRunner(executionContext, service);
     this.javaPackageFinder = javaPackageFinder;
     this.buildDependencies = buildDependencies;
     this.clock = clock;
@@ -416,7 +417,6 @@ public class Build implements Closeable {
 
   @Override
   public void close() throws IOException {
-    stepRunner.close();
     executionContext.close();
   }
 

@@ -42,7 +42,7 @@ import javax.annotation.Nullable;
 public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
-  @Nullable private Build build;
+  @Nullable private Build lastBuild;
 
   private ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of();
 
@@ -108,39 +108,36 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return 1;
     }
 
-    // Create and execute the build.
-    build = options.createBuild(
-        options.getBuckConfig(),
-        actionGraph,
-        getProjectFilesystem(),
-        getAndroidDirectoryResolver(),
-        getBuildEngine(),
-        artifactCache,
-        console,
-        getBuckEventBus(),
-        Optional.<TargetDevice>absent(),
-        getCommandRunnerParams().getPlatform(),
-        getCommandRunnerParams().getEnvironment(),
-        getCommandRunnerParams().getObjectMapper(),
-        getCommandRunnerParams().getClock());
-    int exitCode = 0;
-    try {
-      exitCode = build.executeAndPrintFailuresToConsole(
+    try (CommandThreadManager pool = new CommandThreadManager("Build", options.getNumThreads());
+         Build build = options.createBuild(
+             options.getBuckConfig(),
+             actionGraph,
+             getProjectFilesystem(),
+             getAndroidDirectoryResolver(),
+             getBuildEngine(),
+             artifactCache,
+             console,
+             getBuckEventBus(),
+             Optional.<TargetDevice>absent(),
+             getCommandRunnerParams().getPlatform(),
+             getCommandRunnerParams().getEnvironment(),
+             getCommandRunnerParams().getObjectMapper(),
+             getCommandRunnerParams().getClock(),
+             pool.getExecutor())) {
+      lastBuild = build;
+      int exitCode = build.executeAndPrintFailuresToConsole(
           buildTargets,
           options.isKeepGoing(),
           console,
           options.getPathToBuildReport());
-    } finally {
-      build.close(); // Can't use try-with-resources as build is returned by getBuild.
+      getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
+      return exitCode;
     }
-    getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
-
-    return exitCode;
   }
 
   Build getBuild() {
-    Preconditions.checkNotNull(build);
-    return build;
+    Preconditions.checkNotNull(lastBuild);
+    return lastBuild;
   }
 
   ImmutableList<BuildTarget> getBuildTargets() {

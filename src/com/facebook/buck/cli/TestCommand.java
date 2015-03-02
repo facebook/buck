@@ -77,6 +77,7 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 
 import org.w3c.dom.Document;
@@ -208,20 +209,22 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Create artifact cache to initialize Cassandra connection, if appropriate.
     ArtifactCache artifactCache = getArtifactCache();
 
-    try (Build build = options.createBuild(
-        options.getBuckConfig(),
-        graph,
-        getProjectFilesystem(),
-        getAndroidDirectoryResolver(),
-        getBuildEngine(),
-        artifactCache,
-        console,
-        getBuckEventBus(),
-        options.getTargetDeviceOptional(),
-        getCommandRunnerParams().getPlatform(),
-        getCommandRunnerParams().getEnvironment(),
-        getCommandRunnerParams().getObjectMapper(),
-        getCommandRunnerParams().getClock())) {
+    try (CommandThreadManager pool = new CommandThreadManager("Test", options.getNumThreads());
+         Build build = options.createBuild(
+             options.getBuckConfig(),
+             graph,
+             getProjectFilesystem(),
+             getAndroidDirectoryResolver(),
+             getBuildEngine(),
+             artifactCache,
+             console,
+             getBuckEventBus(),
+             options.getTargetDeviceOptional(),
+             getCommandRunnerParams().getPlatform(),
+             getCommandRunnerParams().getEnvironment(),
+             getCommandRunnerParams().getObjectMapper(),
+             getCommandRunnerParams().getClock(),
+             pool.getExecutor())) {
 
       // Build all of the test rules.
       int exitCode = build.executeAndPrintFailuresToConsole(
@@ -246,7 +249,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
             testRules,
             Preconditions.checkNotNull(build.getBuildContext()),
             build.getExecutionContext(),
-            options);
+            options,
+            pool.getExecutor());
       } catch (ExecutionException e) {
         console.printBuildFailureWithoutStacktrace(e);
         return 1;
@@ -440,13 +444,12 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       Iterable<TestRule> tests,
       BuildContext buildContext,
       ExecutionContext executionContext,
-      TestCommandOptions options)
+      TestCommandOptions options,
+      ListeningExecutorService service)
       throws IOException, ExecutionException, InterruptedException {
 
-    try (DefaultStepRunner stepRunner =
-            new DefaultStepRunner(executionContext, options.getNumThreads())) {
-      return runTests(tests, buildContext, executionContext, stepRunner, options);
-    }
+    DefaultStepRunner stepRunner = new DefaultStepRunner(executionContext, service);
+    return runTests(tests, buildContext, executionContext, stepRunner, options);
   }
 
   @SuppressWarnings("PMD.EmptyCatchBlock")

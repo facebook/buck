@@ -349,20 +349,22 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     ActionGraph actionGraph = transformer.apply(targetGraph);
     int exitCode;
-    try (Build build = options.createBuild(
-        options.getBuckConfig(),
-        actionGraph,
-        getProjectFilesystem(),
-        getAndroidDirectoryResolver(),
-        getBuildEngine(),
-        getArtifactCache(),
-        console,
-        getBuckEventBus(),
-        Optional.<TargetDevice>absent(),
-        getCommandRunnerParams().getPlatform(),
-        getCommandRunnerParams().getEnvironment(),
-        getCommandRunnerParams().getObjectMapper(),
-        getCommandRunnerParams().getClock())) {
+    try (CommandThreadManager pool = new CommandThreadManager("Project", options.getNumThreads());
+         Build build = options.createBuild(
+             options.getBuckConfig(),
+             actionGraph,
+             getProjectFilesystem(),
+             getAndroidDirectoryResolver(),
+             getBuildEngine(),
+             getArtifactCache(),
+             console,
+             getBuckEventBus(),
+             Optional.<TargetDevice>absent(),
+             getCommandRunnerParams().getPlatform(),
+             getCommandRunnerParams().getEnvironment(),
+             getCommandRunnerParams().getObjectMapper(),
+             getCommandRunnerParams().getClock(),
+             pool.getExecutor())) {
       exitCode = build.executeAndPrintFailuresToConsole(
           Iterables.transform(nodes, HasBuildTarget.TO_TARGET),
           options.isKeepGoing(),

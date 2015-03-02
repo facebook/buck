@@ -95,6 +95,29 @@ public class MoreExecutors {
   }
 
   /**
+   * Shutdown {@code service} and wait for all it's tasks to terminate.  In the event of
+   * {@link InterruptedException}, propagate the interrupt to all tasks, wait for them to
+   * finish, then re-throw the exception.
+   */
+  public static boolean shutdown(
+      ExecutorService service,
+      long timeout,
+      TimeUnit unit) throws InterruptedException {
+    service.shutdown();
+    try {
+      return service.awaitTermination(timeout, unit);
+    } catch (InterruptedException e) {
+      service.shutdownNow();
+      service.awaitTermination(timeout, unit);
+      throw e;
+    }
+  }
+
+  public static void shutdown(ExecutorService service) throws InterruptedException {
+    shutdown(service, Long.MAX_VALUE, TimeUnit.DAYS);
+  }
+
+  /**
    * Cancel the processing being carried out by the given service and waits for the processing to
    * complete. If processing has still not terminated the method throws the given exception.
    */

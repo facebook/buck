@@ -15,7 +15,10 @@
  */
 package com.facebook.buck.android;
 
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+
 import com.facebook.buck.android.DxStep.Option;
+import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.CompositeStep;
@@ -26,6 +29,7 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -55,6 +59,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 
@@ -148,12 +153,21 @@ public class SmartDexingStep implements Step {
 
   private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)
       throws StepFailedException, IOException, InterruptedException {
-    try (DefaultStepRunner stepRunner =
-             new DefaultStepRunner(context, numThreads.or(determineOptimalThreadCount()))) {
+
+    ExecutorService service =
+        MoreExecutors.newMultiThreadExecutor(
+            new CommandThreadFactory("SmartDexing"),
+            numThreads.or(determineOptimalThreadCount()));
+    try {
+      DefaultStepRunner stepRunner = new DefaultStepRunner(context, listeningDecorator(service));
       // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
       // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
       List<Step> dxSteps = generateDxCommands(context.getProjectFilesystem(), outputToInputs);
       stepRunner.runStepsInParallelAndWait(dxSteps);
+    } finally {
+      // Wait for however long necessary for threads to finish.  This should be fine, since we'll
+      // detect deadlocks at the top-level (since this thread won't return).
+      MoreExecutors.shutdown(service);
     }
   }
 

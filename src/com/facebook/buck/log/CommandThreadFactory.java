@@ -34,10 +34,12 @@ public class CommandThreadFactory implements ThreadFactory {
   private final ConcurrentMap<Long, String> threadIdToCommandId;
   @Nullable private final String commandId;
 
+  public CommandThreadFactory(ThreadFactory threadFactory) {
+    this(threadFactory, GlobalState.THREAD_ID_TO_COMMAND_ID);
+  }
+
   public CommandThreadFactory(String threadName) {
-    this(
-        new MoreExecutors.NamedThreadFactory(threadName),
-        GlobalState.THREAD_ID_TO_COMMAND_ID);
+    this(new MoreExecutors.NamedThreadFactory(threadName));
   }
 
   @VisibleForTesting

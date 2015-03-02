@@ -25,10 +25,13 @@ import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigerator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
 
 public class DefaultStepRunnerTest {
 
@@ -45,15 +48,14 @@ public class DefaultStepRunnerTest {
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setEventBus(eventBus)
         .build();
-    DefaultStepRunner runner = new DefaultStepRunner(context, 3);
+    DefaultStepRunner runner =
+        new DefaultStepRunner(context, MoreExecutors.newDirectExecutorService());
     runner.runStep(passingStep);
     try {
       runner.runStep(failingStep);
       fail("Failing step should have thrown an exception");
     } catch (StepFailedException e) {
       assertEquals(e.getStep(), failingStep);
-    } finally {
-      runner.close();
     }
 
     ImmutableList<StepEvent> expected = ImmutableList.of(
@@ -81,9 +83,10 @@ public class DefaultStepRunnerTest {
     // step will fail so quickly, the result of the 5000ms step will not be observed).
     steps.add(new SleepingStep(5000, 1));
 
-    DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance(), 3);
+    ListeningExecutorService service =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
+    DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance(), service);
     runner.runStepsInParallelAndWait(steps.build());
-    runner.close();
 
     // Success if the test timeout is not reached.
   }
@@ -92,14 +95,13 @@ public class DefaultStepRunnerTest {
   public void testExplodingStep() throws InterruptedException, IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    DefaultStepRunner runner = new DefaultStepRunner(context, 3);
+    DefaultStepRunner runner =
+        new DefaultStepRunner(context, MoreExecutors.newDirectExecutorService());
     try {
       runner.runStep(new ExplosionStep());
       fail("Should have thrown a StepFailedException!");
     } catch (StepFailedException e) {
       assertTrue(e.getMessage().startsWith("Failed on step explode with an exception:\n#yolo"));
-    } finally {
-      runner.close();
     }
   }
 

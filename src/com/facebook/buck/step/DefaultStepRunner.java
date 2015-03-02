@@ -16,16 +16,9 @@
 
 package com.facebook.buck.step;
 
-import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
-
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.InterruptionFailedException;
-import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.facebook.buck.util.concurrent.MoreFutures;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -36,34 +29,18 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
-public final class DefaultStepRunner implements StepRunner, Closeable {
+public final class DefaultStepRunner implements StepRunner {
 
   private static final Logger LOG = Logger.get(DefaultStepRunner.class);
 
-  // Shutdown timeout should be longer than the maximum runtime of a single step as some
-  // steps ignore interruption. The longest ever recorded step execution time as of
-  // 2014-07-08 was ~6 minutes, so a timeout of 10 minutes should be sufficient.
-  private static final long SHUTDOWN_TIMEOUT_MINUTES = 10;
   private final ExecutionContext context;
   private final ListeningExecutorService listeningExecutorService;
 
-  public DefaultStepRunner(ExecutionContext context,
-                           int numThreads) {
-    this(context,
-        listeningDecorator(
-            newMultiThreadExecutor(
-                new CommandThreadFactory("DefaultStepRunner"),
-                numThreads)));
-  }
-
-  @VisibleForTesting
   public DefaultStepRunner(
       ExecutionContext executionContext,
       ListeningExecutorService listeningExecutorService) {
@@ -172,17 +149,4 @@ public final class DefaultStepRunner implements StepRunner, Closeable {
     Futures.addCallback(dependencies, callback, listeningExecutorService);
   }
 
-  @Override
-  public void close() throws IOException {
-    close(SHUTDOWN_TIMEOUT_MINUTES, TimeUnit.MINUTES);
-  }
-
-  @VisibleForTesting
-  void close(long timeout, TimeUnit unit) {
-    MoreExecutors.shutdownOrThrow(
-        listeningExecutorService,
-        timeout,
-        unit,
-        new InterruptionFailedException("Failed to shutdown ExecutorService."));
-  }
 }

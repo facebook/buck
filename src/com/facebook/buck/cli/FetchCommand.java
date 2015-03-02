@@ -91,20 +91,22 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
     }
 
     int exitCode;
-    try (Build build = options.createBuild(
-        options.getBuckConfig(),
-        actionGraph,
-        getProjectFilesystem(),
-        getAndroidDirectoryResolver(),
-        getBuildEngine(),
-        getArtifactCache(),
-        console,
-        getBuckEventBus(),
-        Optional.<TargetDevice>absent(),
-        getCommandRunnerParams().getPlatform(),
-        getCommandRunnerParams().getEnvironment(),
-        getCommandRunnerParams().getObjectMapper(),
-        getCommandRunnerParams().getClock())) {
+    try (CommandThreadManager pool = new CommandThreadManager("Fetch", options.getNumThreads());
+         Build build = options.createBuild(
+             options.getBuckConfig(),
+             actionGraph,
+             getProjectFilesystem(),
+             getAndroidDirectoryResolver(),
+             getBuildEngine(),
+             getArtifactCache(),
+             console,
+             getBuckEventBus(),
+             Optional.<TargetDevice>absent(),
+             getCommandRunnerParams().getPlatform(),
+             getCommandRunnerParams().getEnvironment(),
+             getCommandRunnerParams().getObjectMapper(),
+             getCommandRunnerParams().getClock(),
+             pool.getExecutor())) {
       exitCode = build.executeAndPrintFailuresToConsole(
           buildTargets,
           options.isKeepGoing(),
