@@ -122,6 +122,7 @@ java_test(
     '//test/com/facebook/buck/android:utils',
     '//test/com/facebook/buck/apple:testutil',
     '//test/com/facebook/buck/event:testutil',
+    '//test/com/facebook/buck/io:testutil',
     '//test/com/facebook/buck/java:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -410,15 +411,16 @@ public class BuckConfigTest {
   public void testResolveAbsolutePathThatMayBeOutsideTheProjectFilesystem() throws IOException {
     BuckConfig config = createFromText("");
     assertEquals(
-        Paths.get("/foo/bar"),
-        config.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get("/foo/bar")));
+        MorePathsForTests.rootRelativePath("foo/bar"),
+        config.resolvePathThatMayBeOutsideTheProjectFilesystem(
+            MorePathsForTests.rootRelativePath("foo/bar")));
   }
 
   @Test
   public void testResolveRelativePathThatMayBeOutsideTheProjectFilesystem() throws IOException {
     BuckConfig config = createFromText("");
     assertEquals(
-        Paths.get("/project/foo/bar"),
+        MorePathsForTests.rootRelativePath("project/foo/bar"),
         config.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get("../foo/bar")));
   }
 
@@ -531,7 +533,7 @@ public class BuckConfigTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem() {
       @Override
       public Path getRootPath() {
-        return Paths.get("/project/root");
+        return MorePathsForTests.rootRelativePath("project/root");
       }
     };
     BuildTargetParser parser = new BuildTargetParser();
