@@ -28,6 +28,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 import javax.annotation.Nullable;
@@ -45,11 +46,11 @@ public class StringResources {
    */
   private static final int FORMAT_VERSION = 1;
 
-  public final TreeMap<Integer, String> strings;
-  public final TreeMap<Integer, ImmutableMap<String, String>> plurals;
+  public final SortedMap<Integer, String> strings;
+  public final SortedMap<Integer, ImmutableMap<String, String>> plurals;
   // This is not a TreeMultimap because we only want the keys to be sorted by their natural
   // ordering, not the values array. The values should be in the same order as insertion.
-  public final TreeMap<Integer, ImmutableList<String>> arrays;
+  public final SortedMap<Integer, ImmutableList<String>> arrays;
 
   /**
    * These are the 6 fixed plural categories for string resources in Android. This mapping is not
@@ -73,9 +74,9 @@ public class StringResources {
   private static Charset charset = Charsets.UTF_8;
 
   public StringResources(
-      TreeMap<Integer, String> strings,
-      TreeMap<Integer, ImmutableMap<String, String>> plurals,
-      TreeMap<Integer, ImmutableList<String>> arrays) {
+      SortedMap<Integer, String> strings,
+      SortedMap<Integer, ImmutableMap<String, String>> plurals,
+      SortedMap<Integer, ImmutableList<String>> arrays) {
     this.strings = strings;
     this.plurals = plurals;
     this.arrays = arrays;

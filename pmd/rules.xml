@@ -7,7 +7,7 @@
   <description>Rules for the Buck project.</description>
 
   <!--
-  Visit https://github.com/pmd/pmd/tree/master/pmd/src/main/resources/rulesets/java
+  Visit https://github.com/pmd/pmd/tree/master/pmd-java/src/main/resources/rulesets/java
   for ruleset definitions. Note that Buck is currently built with PMD 5.0.3.
   -->
 
@@ -21,6 +21,8 @@
     -->
     <exclude name="TooManyStaticImports" />
   </rule>
+
+  <rule ref="rulesets/java/coupling.xml/LooseCoupling" />
 
   <rule ref="rulesets/java/junit.xml">
     <!-- This is not practical. -->

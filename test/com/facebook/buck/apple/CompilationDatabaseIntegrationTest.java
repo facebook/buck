@@ -86,6 +86,7 @@ public class CompilationDatabaseIntegrationTest {
   }
 
   @Test
+  @SuppressWarnings("PMD.LooseCoupling") // ArrayList.class
   public void testCreateCompilationDatabaseForAppleLibraryWithNoDeps() throws IOException {
     // buck build the #compilation-database.
     File compilationDatabase = workspace.buildAndReturnOutput(
@@ -154,6 +155,7 @@ public class CompilationDatabaseIntegrationTest {
   }
 
   @Test
+  @SuppressWarnings("PMD.LooseCoupling") // ArrayList.class
   public void testCreateCompilationDatabaseForAppleBinaryWithDeps() throws IOException {
     // buck build the #compilation-database.
     File compilationDatabase = workspace.buildAndReturnOutput(

@@ -637,6 +637,7 @@ public class TypeCoercerTest {
     public ImmutableSortedSet<String> sortedSetOfStrings;
     public List<String> superclassOfImmutableList;
     public Map<String, String> superclassOfImmutableMap;
+    @SuppressWarnings("PMD.LooseCoupling")
     public LinkedList<Integer> subclassOfList;
     public Object object;
     public ImmutableMap<String, ImmutableList<BuildTarget>> stringMapOfListOfBuildTargets;

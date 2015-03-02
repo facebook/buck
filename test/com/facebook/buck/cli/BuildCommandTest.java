@@ -42,6 +42,7 @@ import javax.annotation.Nullable;
 
 public class BuildCommandTest {
 
+  @SuppressWarnings("PMD.LooseCoupling")
   private LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult;
 
   @Before

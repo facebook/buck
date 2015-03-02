@@ -23,6 +23,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGConstants;
 import com.martiansoftware.nailgun.NGContext;
@@ -34,8 +35,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * NGContext test double.
@@ -43,7 +44,7 @@ import java.util.Properties;
 public class TestContext extends NGContext implements Closeable {
 
   private Properties properties;
-  private HashSet<NGClientListener> listeners;
+  private Set<NGClientListener> listeners;
   private CapturingPrintStream serverLog;
   private boolean addListeners;
 
@@ -90,7 +91,7 @@ public class TestContext extends NGContext implements Closeable {
     for (String key : environment.keySet()) {
       properties.setProperty(key, environment.get(key));
     }
-    listeners = new HashSet<>();
+    listeners = Sets.newHashSet();
     addListeners = true;
   }
 

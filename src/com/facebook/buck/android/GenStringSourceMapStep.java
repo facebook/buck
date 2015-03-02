@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -34,7 +36,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 
 
@@ -79,7 +80,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   private final ImmutableList<Path> resDirectories;
   private final Path destinationPath;
 
-  private HashMap<String, Integer> mapResNameToResId = Maps.newHashMap();
+  private Map<String, Integer> mapResNameToResId = Maps.newHashMap();
 
   /**
    * Associates each string resource with it's integer id (as assigned by {@code aapt} during
@@ -185,7 +186,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
       if (!mapResNameToResId.containsKey(resourceName)) {
         continue;
       }
-      int resourceId = mapResNameToResId.get(resourceName);
+      int resourceId = checkNotNull(mapResNameToResId.get(resourceName)).intValue();
       // Add only new resources (don't overwrite existing ones)
       if (!nativeStrings.containsKey(resourceName)) {
         nativeStrings.put(resourceName, new NativeStringInfo(resourceId, stringsFilePath));

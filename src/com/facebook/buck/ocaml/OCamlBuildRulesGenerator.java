@@ -16,6 +16,8 @@
 
 package com.facebook.buck.ocaml;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.Tool;
@@ -41,10 +43,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A generator of fine-grained OCaml build rules
@@ -387,7 +390,7 @@ public class OCamlBuildRulesGenerator {
       ImmutableMap<Path, ImmutableList<Path>> mlSources) {
     ImmutableList.Builder<SourcePath> cmxFiles = ImmutableList.builder();
 
-    final HashMap<Path, BuildRule> sourceToRule = new HashMap<>();
+    final Map<Path, BuildRule> sourceToRule = Maps.newHashMap();
 
     for (ImmutableMap.Entry<Path, ImmutableList<Path>>
         mlSource : mlSources.entrySet()) {
@@ -402,7 +405,7 @@ public class OCamlBuildRulesGenerator {
   }
 
   private void generateSingleMLCompilation(
-      HashMap<Path, BuildRule> sourceToRule,
+      Map<Path, BuildRule> sourceToRule,
       ImmutableList.Builder<SourcePath> cmxFiles,
       Path mlSource,
       ImmutableMap<Path, ImmutableList<Path>> sources,
@@ -424,9 +427,9 @@ public class OCamlBuildRulesGenerator {
 
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
     if (sources.containsKey(mlSource)) {
-      for (Path dep : Preconditions.checkNotNull(sources.get(mlSource))) {
+      for (Path dep : checkNotNull(sources.get(mlSource))) {
         generateSingleMLCompilation(sourceToRule, cmxFiles, dep, sources, newCycleDetector);
-        deps.add(sourceToRule.get(dep));
+        deps.add(checkNotNull(sourceToRule.get(dep)));
       }
     }
 
@@ -473,7 +476,7 @@ public class OCamlBuildRulesGenerator {
       ImmutableMap<Path, ImmutableList<Path>> mlSources) {
     ImmutableList.Builder<SourcePath> cmoFiles = ImmutableList.builder();
 
-    final HashMap<Path, BuildRule> sourceToRule = new HashMap<>();
+    final Map<Path, BuildRule> sourceToRule = Maps.newHashMap();
 
     for (ImmutableMap.Entry<Path, ImmutableList<Path>>
         mlSource : mlSources.entrySet()) {
@@ -488,7 +491,7 @@ public class OCamlBuildRulesGenerator {
   }
 
   private void generateSingleMLBytecodeCompilation(
-      HashMap<Path, BuildRule> sourceToRule,
+      Map<Path, BuildRule> sourceToRule,
       ImmutableList.Builder<SourcePath> cmoFiles,
       Path mlSource,
       ImmutableMap<Path, ImmutableList<Path>> sources,
@@ -509,14 +512,14 @@ public class OCamlBuildRulesGenerator {
 
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
     if (sources.containsKey(mlSource)) {
-      for (Path dep : Preconditions.checkNotNull(sources.get(mlSource))) {
+      for (Path dep : checkNotNull(sources.get(mlSource))) {
         generateSingleMLBytecodeCompilation(
             sourceToRule,
             cmoFiles,
             dep,
             sources,
             newCycleDetector);
-        deps.add(sourceToRule.get(dep));
+        deps.add(checkNotNull(sourceToRule.get(dep)));
       }
     }
 

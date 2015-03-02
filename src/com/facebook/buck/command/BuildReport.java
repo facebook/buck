@@ -33,6 +33,7 @@ import java.util.Map;
 @VisibleForTesting
 public class BuildReport {
 
+  @SuppressWarnings("PMD.LooseCoupling")
   private final LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult;
 
   /**
@@ -40,7 +41,8 @@ public class BuildReport {
    *     the success of each build rule, if it succeeded. ({@link Optional#absent()} represents a
    *     failed build rule.)
    */
-  public BuildReport(LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult) {
+  public BuildReport(@SuppressWarnings("PMD.LooseCoupling") LinkedHashMap<
+      BuildRule, Optional<BuildRuleSuccess>> ruleToResult) {
     this.ruleToResult = ruleToResult;
   }
 

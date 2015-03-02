@@ -48,6 +48,7 @@ import javax.annotation.concurrent.NotThreadSafe;
 @NotThreadSafe
 public class AppendingHasher implements Hasher {
 
+  @SuppressWarnings("PMD.LooseCoupling")
   private final LinkedList<Hasher> hashers;
 
   /**

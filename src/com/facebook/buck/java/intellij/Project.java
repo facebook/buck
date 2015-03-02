@@ -265,6 +265,7 @@ public class Project {
     return modules;
   }
 
+  @SuppressWarnings("PMD.LooseCoupling")
   private Module createModuleForProjectConfig(ProjectConfig projectConfig) throws IOException {
     BuildRule projectRule = Preconditions.checkNotNull(projectConfig.getProjectRule());
     Preconditions.checkState(
@@ -432,6 +433,7 @@ public class Project {
     return module;
   }
 
+  @SuppressWarnings("PMD.LooseCoupling")
   private List<DependentModule> createDependenciesInOrder(
       boolean includeSourceFolder,
       LinkedHashSet<DependentModule> dependencies,
@@ -659,6 +661,7 @@ public class Project {
    * dependencies. See {@code ProjectTest#testThatJarsAreListedBeforeModules()} for details on why
    * this behavior is important.
    */
+  @SuppressWarnings("PMD.LooseCoupling")
   private void walkRuleAndAdd(
       final BuildRule rule,
       final boolean isForTests,

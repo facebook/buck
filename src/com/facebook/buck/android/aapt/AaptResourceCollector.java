@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android.aapt;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.google.common.base.Joiner;
@@ -23,8 +25,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,8 +36,8 @@ import java.util.Set;
 public class AaptResourceCollector {
 
   private int currentTypeId;
-  private final HashMap<RType, ResourceIdEnumerator> enumerators;
-  private final HashSet<RDotTxtEntry> resources;
+  private final Map<RType, ResourceIdEnumerator> enumerators;
+  private final Set<RDotTxtEntry> resources;
 
   public AaptResourceCollector() {
     this.enumerators = Maps.newHashMap();
@@ -51,7 +52,7 @@ public class AaptResourceCollector {
 
     RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name);
     if (!resources.contains(entry)) {
-      String idValue = String.format("0x%08x", enumerators.get(rType).next());
+      String idValue = String.format("0x%08x", checkNotNull(enumerators.get(rType)).next());
       addResource(rType, IdType.INT, name, idValue);
     }
   }
