@@ -41,6 +41,9 @@ public class PythonBuckConfigTest {
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
+  @Rule
+  public DebuggableTemporaryFolder temporaryFolder2 = new DebuggableTemporaryFolder();
+
   @Test
   public void testGetPythonVersion() throws Exception {
     PythonVersion version =
@@ -181,8 +184,6 @@ public class PythonBuckConfigTest {
   public void whenMultiplePythonExecutablesOnPathFirstIsUsed() throws IOException {
     File pythonA = temporaryFolder.newFile("python");
     assertTrue("Should be able to set file executable", pythonA.setExecutable(true));
-    DebuggableTemporaryFolder temporaryFolder2 = new DebuggableTemporaryFolder();
-    temporaryFolder2.create();
     File pythonB = temporaryFolder2.newFile("python");
     assertTrue("Should be able to set file executable", pythonB.setExecutable(true));
     String path = temporaryFolder.getRoot().getAbsolutePath() +

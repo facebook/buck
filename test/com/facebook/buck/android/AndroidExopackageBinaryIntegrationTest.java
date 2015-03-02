@@ -28,6 +28,7 @@ import com.google.common.collect.Lists;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -46,6 +47,7 @@ public class AndroidExopackageBinaryIntegrationTest {
   private static final String DEX_AND_NATIVE_EXOPACKAGE_TARGET =
       "//apps/multidex:app-dex-native-exo";
 
+  @ClassRule
   public static DebuggableTemporaryFolder projectFolderWithPrebuiltTargets =
       new DebuggableTemporaryFolder();
 
@@ -58,7 +60,6 @@ public class AndroidExopackageBinaryIntegrationTest {
   public static void setUpOnce() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    projectFolderWithPrebuiltTargets.create();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         new AndroidBinaryIntegrationTest(),
         "android_project",
@@ -78,7 +79,6 @@ public class AndroidExopackageBinaryIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    tmpFolder.create();
     workspace = new ProjectWorkspace(projectFolderWithPrebuiltTargets.getRoot(), tmpFolder);
     workspace.setUp();
   }

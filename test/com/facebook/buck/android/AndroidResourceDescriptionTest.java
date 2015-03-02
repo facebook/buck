@@ -22,7 +22,6 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Optional;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -35,13 +34,7 @@ import java.util.Set;
 public class AndroidResourceDescriptionTest {
 
   @Rule
-  public TemporaryFolder tmpFolder;
-
-  @Before
-  public void setUp() throws IOException {
-    tmpFolder = new TemporaryFolder();
-    tmpFolder.create();
-  }
+  public TemporaryFolder tmpFolder = new TemporaryFolder();
 
   @Test
   public void testNonAssetFilesAndDirsAreIgnored() throws IOException {

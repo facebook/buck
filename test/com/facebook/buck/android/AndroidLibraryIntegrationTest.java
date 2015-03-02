@@ -38,8 +38,6 @@ public class AndroidLibraryIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    tmpFolder.create();
-
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_project", tmpFolder);
     workspace.setUp();

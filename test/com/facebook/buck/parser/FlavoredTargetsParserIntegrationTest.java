@@ -42,7 +42,6 @@ public class FlavoredTargetsParserIntegrationTest {
 
   @Test
   public void canBuildAnUnflavoredTarget() throws IOException {
-    tempFolder.create();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "unflavored_build",
@@ -59,7 +58,6 @@ public class FlavoredTargetsParserIntegrationTest {
 
   @Test
   public void canBuildAFlavoredTarget() throws IOException {
-    tempFolder.create();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "unflavored_build",
@@ -75,7 +73,6 @@ public class FlavoredTargetsParserIntegrationTest {
   @Test
   public void canBuildBothAFlavoredAndUnflavoredVersionOfTheSameTargetInTheSameBuild()
       throws IOException {
-    tempFolder.create();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "unflavored_build",
@@ -105,7 +102,6 @@ public class FlavoredTargetsParserIntegrationTest {
 
   @Test
   public void canReferToFlavorsInBuildFiles() throws IOException {
-    tempFolder.create();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "flavored_build",   // NB: this is not the same as the other tests in this file!

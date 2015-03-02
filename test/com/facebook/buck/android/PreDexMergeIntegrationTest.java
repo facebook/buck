@@ -46,7 +46,6 @@ public class PreDexMergeIntegrationTest {
   public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    tmpFolder.create();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_project", tmpFolder);
 

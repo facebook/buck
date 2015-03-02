@@ -37,7 +37,6 @@ public class AndroidResourceIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    tmpFolder.create();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_resource", tmpFolder);
     workspace.setUp();

@@ -35,16 +35,18 @@ public class RepositoryFactoryTest {
 
   @ClassRule
   public static TemporaryFolder folder = new TemporaryFolder();
+
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
+  @Rule
+  public DebuggableTemporaryFolder mainProjectFolder = new DebuggableTemporaryFolder();
+
+  @Rule
+  public DebuggableTemporaryFolder subProjectFolder = new DebuggableTemporaryFolder();
+
   @Test
   public void testRepositoryCanonicalNames() throws IOException, InterruptedException {
-    DebuggableTemporaryFolder mainProjectFolder = new DebuggableTemporaryFolder();
-    mainProjectFolder.create();
-    DebuggableTemporaryFolder subProjectFolder = new DebuggableTemporaryFolder();
-    subProjectFolder.create();
-
     String mainBuckConfigString =
         "[repositories]\n" +
         "sub = " + subProjectFolder.getRoot() + "\n";

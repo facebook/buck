@@ -29,6 +29,7 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -38,6 +39,7 @@ import java.nio.file.Path;
 
 public class AndroidBinaryIntegrationTest {
 
+  @ClassRule
   public static DebuggableTemporaryFolder projectFolderWithPrebuiltTargets =
       new DebuggableTemporaryFolder();
 
@@ -53,7 +55,6 @@ public class AndroidBinaryIntegrationTest {
   public static void setUpOnce() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    projectFolderWithPrebuiltTargets.create();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         new AndroidBinaryIntegrationTest(),
         "android_project",
@@ -69,7 +70,6 @@ public class AndroidBinaryIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    tmpFolder.create();
     workspace = new ProjectWorkspace(projectFolderWithPrebuiltTargets.getRoot(), tmpFolder);
     workspace.setUp();
   }

@@ -23,6 +23,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
@@ -30,14 +31,14 @@ import java.io.IOException;
 
 public class ProjectWorkspaceTest {
 
+  @Rule
+  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+
   @Test
   public void testWriteContentsToPath() throws IOException {
     File templateDir = Files.createTempDir();
     File testFile = new File(templateDir, "test.file");
     Files.write("hello world".getBytes(), testFile);
-
-    DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
-    tmpFolder.create();
 
     ProjectWorkspace workspace = new ProjectWorkspace(templateDir, tmpFolder);
     workspace.writeContentsToPath("bye world", "test.file");
