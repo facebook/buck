@@ -104,7 +104,10 @@ public final class FileTypes {
    * Yes, really. Because Xcode.
    */
   public static final ImmutableSet<String> EXPLICIT_FILE_TYPE_BROKEN_UTIS =
-    ImmutableSet.of("file.xib");
+    ImmutableSet.of(
+        "file.xib",
+        "file.storyboard"
+    );
 
   /**
    * Multimap of Apple UTI (Uniform Type Identifier) to file extension(s).
