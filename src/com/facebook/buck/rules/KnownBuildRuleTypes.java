@@ -50,8 +50,6 @@ import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.IosPostprocessResourcesDescription;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
-import com.facebook.buck.apple.graphql.GraphQLConfig;
-import com.facebook.buck.apple.graphql.GraphQLDataDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
@@ -453,7 +451,6 @@ public class KnownBuildRuleTypes {
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
     builder.register(new GenParcelableDescription());
-    builder.register(new GraphQLDataDescription(new GraphQLConfig(config)));
     builder.register(new GwtBinaryDescription());
     builder.register(new IosPostprocessResourcesDescription());
     builder.register(new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform));

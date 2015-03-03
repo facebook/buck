@@ -19,7 +19,6 @@
       bin, \
       src/com/facebook/buck/cli/quickstart, \
       test/com/facebook/buck/android/testdata, \
-      test/com/facebook/buck/apple/graphql/testdata, \
       test/com/facebook/buck/apple/testdata, \
       test/com/facebook/buck/cli/testdata, \
       test/com/facebook/buck/java/testdata, \
