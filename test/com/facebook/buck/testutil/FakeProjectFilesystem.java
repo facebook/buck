@@ -30,6 +30,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -520,7 +521,10 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public void createZip(Collection<Path> pathsToIncludeInZip, File out) throws IOException {
+  public void createZip(
+      Collection<Path> pathsToIncludeInZip,
+      File out,
+      ImmutableMap<Path, String> additionalFileContents) throws IOException {
     throw new UnsupportedOperationException();
   }
 }

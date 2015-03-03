@@ -217,6 +217,10 @@ public class CachingBuildEngine implements BuildEngine {
                   boolean clearExistingMetadata = success.shouldClearAndOverwriteMetadataOnDisk();
                   buildInfoRecorder.get().writeMetadataToDisk(clearExistingMetadata);
                 } catch (IOException e) {
+                  eventBus.post(ThrowableConsoleEvent.create(
+                          e,
+                          "Failed to write metadata to disk for %s.",
+                          rule));
                   onFailure(e);
                 }
               }

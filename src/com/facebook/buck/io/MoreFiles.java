@@ -17,6 +17,7 @@
 package com.facebook.buck.io;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -44,6 +45,10 @@ import java.util.List;
 import java.util.Set;
 
 public final class MoreFiles {
+
+  // Unix has two illegal characters - '/', and '\0'.  Windows has ten, which includes those two.
+  // The full list can be found at https://msdn.microsoft.com/en-us/library/aa365247
+  private static final String ILLEGAL_FILE_NAME_CHARACTERS = "<>:\"/\\|?*\0";
 
   private static class FileAccessedEntry {
     public final File file;
@@ -258,5 +263,14 @@ public final class MoreFiles {
         throw new IOException("The file could not be made executable");
       }
     }
+  }
+
+  /**
+   * Given a file name, replace any illegal characters from it.
+   * @param name The file name to sanitize
+   * @return a properly sanitized filename
+   */
+  public static String sanitize(String name) {
+    return CharMatcher.anyOf(ILLEGAL_FILE_NAME_CHARACTERS).replaceFrom(name, "_");
   }
 }

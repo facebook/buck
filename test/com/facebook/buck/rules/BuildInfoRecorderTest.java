@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -36,7 +37,6 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class BuildInfoRecorderTest {
 
@@ -90,7 +90,7 @@ public class BuildInfoRecorderTest {
 
   @Test
   public void testCannotRecordArtifactWithAbsolutePath() {
-    Path absPath = Paths.get("/some/absolute/path.txt");
+    Path absPath = MorePathsForTests.rootRelativePath("some/absolute/path.txt");
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage(String.format(
             BuildInfoRecorder.ABSOLUTE_PATH_ERROR_FORMAT,
