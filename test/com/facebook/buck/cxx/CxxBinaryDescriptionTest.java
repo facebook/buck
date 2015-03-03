@@ -132,7 +132,8 @@ public class CxxBinaryDescriptionTest {
         return PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
-            ImmutableMap.<Path, SourcePath>of());
+            ImmutableMap.<Path, SourcePath>of(),
+            Optional.<Boolean>absent());
       }
 
       @Override

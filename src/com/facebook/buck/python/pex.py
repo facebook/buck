@@ -56,6 +56,7 @@ def dereference_symlinks(src):
 def main():
     parser = optparse.OptionParser(usage="usage: %prog [options] output")
     parser.add_option('--entry-point', default='__main__')
+    parser.add_option('--no-zip-safe', action='store_false', dest='zip_safe', default=True)
     parser.add_option('--python', default=sys.executable)
     options, args = parser.parse_args()
     if len(args) == 1:
@@ -86,12 +87,11 @@ def main():
             interpreter=interpreter,
         )
 
-        # Mark this PEX as zip-safe, meaning everything will stayed zipped up
+        # Set whether this PEX as zip-safe, meaning everything will stayed zipped up
         # and we'll rely on python's zip-import mechanism to load modules from
         # the PEX.  This may not work in some situations (e.g. native
-        # libraries, libraries that want to find resources via the FS), so
-        # we'll want to revisit this.
-        pex_builder.info.zip_safe = True
+        # libraries, libraries that want to find resources via the FS).
+        pex_builder.info.zip_safe = options.zip_safe
 
         # Set the starting point for this PEX.
         pex_builder.info.entry_point = options.entry_point

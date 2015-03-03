@@ -139,7 +139,8 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
         langParams,
         new SourcePathResolver(resolver),
         modules,
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.<Path, SourcePath>of(),
+        Optional.of(true));
   }
 
   private ImmutableSet<BuildTarget> getImplicitDeps() {
