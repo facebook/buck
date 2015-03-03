@@ -22,7 +22,6 @@ import com.facebook.buck.apple.ProjectGenerator;
 import com.facebook.buck.apple.WorkspaceAndProjectGenerator;
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.intellij.Project;
 import com.facebook.buck.json.BuildFileParseException;
@@ -32,7 +31,6 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.BuildTargetSpec;
-import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
@@ -49,7 +47,6 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -62,7 +59,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -140,7 +136,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     ImmutableSet<BuildTarget> passedInTargetsSet =
         getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
-    ProjectGraphParser projectGraphParser = createProjectGraphParser(
+    ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
         getParser(),
         new ParserConfig(options.getBuckConfig()),
         getBuckEventBus(),
@@ -458,34 +454,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         .toSet();
   }
 
-  private static ProjectGraphParser createProjectGraphParser(
-      final Parser parser,
-      final ParserConfig parserConfig,
-      final BuckEventBus buckEventBus,
-      final Console console,
-      final ImmutableMap<String, String> environment,
-      final boolean enableProfiling
-  ) throws IOException, InterruptedException {
-    return new ProjectGraphParser() {
-      @Override
-      public TargetGraph buildTargetGraphForTargetNodeSpecs(
-          Iterable<? extends TargetNodeSpec> targetNodeSpecs)
-        throws IOException, InterruptedException {
-        try {
-          return parser.buildTargetGraphForTargetNodeSpecs(
-              targetNodeSpecs,
-              parserConfig,
-              buckEventBus,
-              console,
-              environment,
-              enableProfiling);
-        } catch (BuildTargetException | BuildFileParseException e) {
-          throw new HumanReadableException(e);
-        }
-      }
-    };
-  }
-
   @VisibleForTesting
   static ProjectPredicates getProjectPredicates(
       ProjectCommandOptions.Ide targetIde,
@@ -574,13 +542,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return ImmutableProjectCommand.ProjectPredicates.of(
         projectRootsPredicate,
         associatedProjectPredicate);
-  }
-
-  @VisibleForTesting
-  interface ProjectGraphParser {
-    TargetGraph buildTargetGraphForTargetNodeSpecs(
-        Iterable<? extends TargetNodeSpec> targetNodeSpecs)
-      throws IOException, InterruptedException;
   }
 
   private static Iterable<? extends TargetNodeSpec> getTargetNodeSpecsForIde(
