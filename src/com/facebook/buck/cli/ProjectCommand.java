@@ -20,7 +20,6 @@ import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.ProjectGenerator;
 import com.facebook.buck.apple.WorkspaceAndProjectGenerator;
-import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.intellij.Project;
@@ -39,7 +38,6 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ProjectConfig;
-import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
@@ -49,7 +47,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
@@ -64,8 +61,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
-import org.immutables.value.Value;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -77,7 +72,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-@Value.Nested
 public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions> {
 
   private static final Logger LOG = Logger.get(ProjectCommand.class);
@@ -102,17 +96,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
   private static final String XCODE_PROCESS_NAME = "Xcode";
 
   private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
-
-  @Value.Immutable
-  @BuckStyleImmutable
-  @VisibleForTesting
-  interface ProjectPredicates {
-    @Value.Parameter
-    Predicate<TargetNode<?>> getProjectRootsPredicate();
-
-    @Value.Parameter
-    AssociatedTargetNodePredicate getAssociatedProjectPredicate();
-  }
 
   public ProjectCommand(CommandRunnerParams params) {
     super(params);
@@ -150,7 +133,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             passedInTargetsSet,
             getProjectFilesystem().getIgnorePaths()));
 
-    ProjectPredicates projectPredicates = getProjectPredicates(
+    ProjectPredicates projectPredicates = ProjectPredicates.forIde(
         options.getIde(),
         passedInTargetsSet,
         options.getDefaultExcludePaths());
@@ -452,96 +435,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         .filter(rootsPredicate)
         .transform(HasBuildTarget.TO_TARGET)
         .toSet();
-  }
-
-  @VisibleForTesting
-  static ProjectPredicates getProjectPredicates(
-      ProjectCommandOptions.Ide targetIde,
-      final ImmutableSet<BuildTarget> passedInTargetsSet,
-      final ImmutableSet<String> defaultExcludePaths) {
-    Predicate<TargetNode<?>> projectRootsPredicate;
-    AssociatedTargetNodePredicate associatedProjectPredicate;
-
-    // Prepare the predicates to create the project graph based on the IDE.
-    switch (targetIde) {
-      case INTELLIJ:
-        projectRootsPredicate = new Predicate<TargetNode<?>>() {
-          @Override
-          public boolean apply(TargetNode<?> input) {
-            return input.getType() == ProjectConfigDescription.TYPE;
-          }
-        };
-        associatedProjectPredicate = new AssociatedTargetNodePredicate() {
-          @Override
-          public boolean apply(TargetNode<?> targetNode, TargetGraph targetGraph) {
-            ProjectConfigDescription.Arg projectArg;
-            if (targetNode.getType() == ProjectConfigDescription.TYPE) {
-              projectArg = (ProjectConfigDescription.Arg) targetNode.getConstructorArg();
-            } else {
-              return false;
-            }
-
-            BuildTarget projectTarget = null;
-            if (projectArg.srcTarget.isPresent()) {
-              projectTarget = projectArg.srcTarget.get();
-            } else if (projectArg.testTarget.isPresent()) {
-              projectTarget = projectArg.testTarget.get();
-            }
-            return (projectTarget != null && targetGraph.get(projectTarget) != null);
-          }
-        };
-        break;
-      case XCODE:
-        projectRootsPredicate = new Predicate<TargetNode<?>>() {
-          @Override
-          public boolean apply(TargetNode<?> input) {
-            if (XcodeWorkspaceConfigDescription.TYPE != input.getType()) {
-              return false;
-            }
-
-            String targetName = input.getBuildTarget().getFullyQualifiedName();
-            for (String prefix : defaultExcludePaths) {
-              if (targetName.startsWith("//" + prefix) &&
-                  !passedInTargetsSet.contains(input.getBuildTarget())) {
-                LOG.debug(
-                    "Ignoring build target %s (exclude_paths contains %s)",
-                    input.getBuildTarget(),
-                    prefix);
-                return false;
-              }
-            }
-            return true;
-          }
-        };
-        associatedProjectPredicate = new AssociatedTargetNodePredicate() {
-          @Override
-          public boolean apply(
-              TargetNode<?> targetNode, TargetGraph targetGraph) {
-            XcodeProjectConfigDescription.Arg projectArg;
-            if (targetNode.getType() == XcodeProjectConfigDescription.TYPE) {
-              projectArg = (XcodeProjectConfigDescription.Arg) targetNode.getConstructorArg();
-            } else {
-              return false;
-            }
-
-            for (BuildTarget includedBuildTarget : projectArg.rules) {
-              if (targetGraph.get(includedBuildTarget) != null) {
-                return true;
-              }
-            }
-
-            return false;
-          }
-        };
-        break;
-      default:
-        // unreachable
-        throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
-    }
-
-    return ImmutableProjectCommand.ProjectPredicates.of(
-        projectRootsPredicate,
-        associatedProjectPredicate);
   }
 
   private static Iterable<? extends TargetNodeSpec> getTargetNodeSpecsForIde(

@@ -33,8 +33,8 @@ public class ProjectCommandTests {
       ImmutableSet<String> defaultExcludePaths,
       boolean withTests
   ) {
-    ProjectCommand.ProjectPredicates projectPredicates =
-        ProjectCommand.getProjectPredicates(
+    ProjectPredicates projectPredicates =
+        ProjectPredicates.forIde(
             targetIde,
             passedInTargetsSet,
             defaultExcludePaths);
