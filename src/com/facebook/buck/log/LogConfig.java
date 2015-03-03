@@ -53,7 +53,7 @@ import java.util.logging.Logger;
 public class LogConfig {
 
   private static final byte[] NEWLINE = {'\n'};
-  private static final long MAX_LOG_SIZE = 25 * 1024 * 1024;
+  private static final long MAX_LOG_SIZE = 100 * 1024 * 1024;
 
   /**
    * Default constructor, called by LogManager.
