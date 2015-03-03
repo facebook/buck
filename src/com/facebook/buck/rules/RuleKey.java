@@ -313,8 +313,6 @@ public class RuleKey {
     }
 
     private Builder setInputVal(SourcePath path) {
-      setVal(path.toString());
-
       Optional<BuildRule> buildRule = resolver.getRule(path);
       if (buildRule.isPresent()) {
         return setVal(buildRule.get().getRuleKey());
@@ -339,6 +337,7 @@ public class RuleKey {
       setKey(key);
       if (val != null) {
         for (SourcePath path : val) {
+          setVal(path.toString());
           setInputVal(path);
         }
       }
