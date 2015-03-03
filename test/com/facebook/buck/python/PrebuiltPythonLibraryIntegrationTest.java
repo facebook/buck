@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,9 +16,6 @@
 
 package com.facebook.buck.python;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
-
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -30,7 +27,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class PythonTestIntegrationTest {
+public class PrebuiltPythonLibraryIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -39,24 +36,14 @@ public class PythonTestIntegrationTest {
   @Before
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "python_test", tmp);
+        this, "prebuilt_package", tmp);
     workspace.setUp();
   }
 
   @Test
-  public void testPythonTest() throws IOException {
-    // This test should pass.
-    ProcessResult result1 = workspace.runBuckCommand("test", "//:test-success");
-    result1.assertSuccess();
-    workspace.resetBuildLogFile();
-
-    // This test should fail.
-    ProcessResult result2 = workspace.runBuckCommand("test", "//:test-failure");
-    result2.assertTestFailure();
-    assertThat(
-        "`buck test` should fail because test_that_fails() failed.",
-        result2.getStderr(),
-        containsString("test_that_fails"));
+  public void testRunPexWithEggDependency() throws IOException {
+    ProcessResult results = workspace.runBuckCommand("run", "//:main");
+    results.assertSuccess();
   }
 
 }

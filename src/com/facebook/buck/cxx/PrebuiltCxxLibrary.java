@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -194,6 +195,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
         /* modules */ ImmutableMap.<Path, SourcePath>of(),
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
         nativeLibraries,
+        /* prebuiltLibraries */ ImmutableSet.<SourcePath>of(),
         /* zipSafe */ Optional.<Boolean>absent());
   }
 

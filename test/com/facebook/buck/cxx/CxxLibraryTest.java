@@ -41,6 +41,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
@@ -147,6 +148,7 @@ public class CxxLibraryTest {
         ImmutableMap.<Path, SourcePath>of(
             Paths.get(sharedLibrarySoname),
             new PathSourcePath(projectFilesystem, sharedLibraryOutput)),
+        ImmutableSet.<SourcePath>of(),
         Optional.<Boolean>absent());
     assertEquals(
         expectedPythonPackageComponents,

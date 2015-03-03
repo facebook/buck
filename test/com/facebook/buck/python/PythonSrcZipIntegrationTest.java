@@ -26,8 +26,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.Properties;
 
 public class PythonSrcZipIntegrationTest {
 
@@ -37,14 +35,6 @@ public class PythonSrcZipIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    Properties props = System.getProperties();
-    props.setProperty(
-        "buck.path_to_python_test_main",
-        Paths.get("src/com/facebook/buck/python/__test_main__.py").toAbsolutePath().toString());
-    props.setProperty(
-        "buck.path_to_pex",
-        Paths.get("src/com/facebook/buck/python/pex.py").toAbsolutePath().toString());
-
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "src_zip", tmp);
     workspace.setUp();

@@ -96,6 +96,7 @@ import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.python.PythonLibraryDescription;
+import com.facebook.buck.python.PrebuiltPythonLibraryDescription;
 import com.facebook.buck.python.PythonTestDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
@@ -329,7 +330,7 @@ public class KnownBuildRuleTypes {
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, new ExecutableFinder());
 
     // Look up the path to the main module we use for python tests.
-    Optional<Path> pythonPathToPythonTestMain = pyConfig.getPathToTestMain();
+    Path pythonPathToPythonTestMain = pyConfig.getPathToTestMain();
 
     // Look up the timeout to apply to entire test rules.
     Optional<Long> testRuleTimeoutMs = config.getLong("test", "rule_timeout");
@@ -446,6 +447,7 @@ public class KnownBuildRuleTypes {
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());
     builder.register(new PrebuiltOCamlLibraryDescription());
+    builder.register(new PrebuiltPythonLibraryDescription());
     builder.register(new ProjectConfigDescription());
     builder.register(
         new PythonBinaryDescription(
