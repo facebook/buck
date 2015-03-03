@@ -150,7 +150,7 @@ def glob_internal(includes, excludes, include_dotfiles, allow_empty, search_base
             non_special_excludes.add(pattern)
 
     def exclusion(path):
-        if str(path) in non_special_excludes:
+        if path.as_posix() in non_special_excludes:
             return True
         for pattern in match_excludes:
             result = path.match(pattern, match_entire=True)
