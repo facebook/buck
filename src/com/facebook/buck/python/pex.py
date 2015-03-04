@@ -108,7 +108,10 @@ def main():
             # Linux behave different when hard-linking a source that is a
             # symbolic link (Linux does *not* follow symlinks), resolve any
             # layers of symlinks here to get consistent behavior.
-            pex_builder.add_source(dereference_symlinks(src), dst)
+            try:
+                pex_builder.add_source(dereference_symlinks(src), dst)
+            except OSError as e:
+                raise Exception("Failed to add {}: {}".format(src, e))
 
         # Add resources listed in the manifest.
         for dst, src in manifest['resources'].iteritems():

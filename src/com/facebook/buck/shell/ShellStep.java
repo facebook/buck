@@ -109,7 +109,7 @@ public abstract class ShellStep implements Step {
       builder.setDirectory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
     }
 
-    Optional<String> stdin = getStdin();
+    Optional<String> stdin = getStdin(context);
     if (stdin.isPresent()) {
       builder.setRedirectInput(ProcessBuilder.Redirect.PIPE);
     }
@@ -160,7 +160,7 @@ public abstract class ShellStep implements Step {
     ProcessExecutor.Result result = executor.launchAndExecute(
         params,
         options.build(),
-        getStdin(),
+        getStdin(context),
         getTimeout());
     stdout = result.getStdout();
     stderr = result.getStderr();
@@ -206,7 +206,8 @@ public abstract class ShellStep implements Step {
     return shellCommandArgs;
   }
 
-  protected Optional<String> getStdin() {
+  @SuppressWarnings("unused")
+  protected Optional<String> getStdin(ExecutionContext context) {
     return Optional.absent();
   }
 

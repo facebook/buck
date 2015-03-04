@@ -30,6 +30,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -132,10 +133,15 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
     // Make sure the parent directory exists.
     steps.add(new MkdirStep(binPath.getParent()));
 
+    Path workingDirectory = BuildTargets.getGenPath(
+        getBuildTarget(), "__%s__working_directory");
+    steps.add(new MakeCleanDirectoryStep(workingDirectory));
+
     // Generate and return the PEX build step.
     steps.add(new PexStep(
         pathToPex,
         pythonEnvironment.getPythonPath(),
+        workingDirectory,
         binPath,
         PythonUtil.toModuleName(getBuildTarget(), main.toString()),
         getResolver().getMappedPaths(components.getModules()),
