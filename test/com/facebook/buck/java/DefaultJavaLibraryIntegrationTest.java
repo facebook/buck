@@ -381,6 +381,23 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally("//:library");
   }
 
+  @Test
+  public void ensureThatSourcePathIsSetSensibly() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sourcepath",
+        tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckBuild("//:b");
+
+    // This should fail, since we expect the symbol for A not to be found.
+    result.assertFailure();
+    String stderr = result.getStderr();
+
+    assertTrue(stderr, stderr.contains("cannot find symbol"));
+  }
+
   /**
    * Asserts that the specified file exists and returns its contents.
    */

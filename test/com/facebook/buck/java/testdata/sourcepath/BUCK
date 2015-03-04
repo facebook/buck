@@ -1,0 +1,11 @@
+java_library(
+  name = 'a',
+  resources = ['A.java'],
+)
+
+java_library(
+  name = 'b',
+  srcs = ['B.java'],
+  deps = [':a'],
+)
+

@@ -92,7 +92,7 @@ public abstract class JavacOptions implements RuleKeyAppendable {
       ProcessExecutorParams params = ImmutableProcessExecutorParams.builder()
           .setCommand(ImmutableList.of(externalJavac.get().toString(), "-version"))
           .build();
-      ProcessExecutor.Result result = null;
+      ProcessExecutor.Result result;
       try {
         result = getProcessExecutor().get().launchAndExecute(params);
       } catch (InterruptedException | IOException e) {
@@ -118,6 +118,9 @@ public abstract class JavacOptions implements RuleKeyAppendable {
     // Add some standard options.
     optionsBuilder.add("-source", getSourceLevel());
     optionsBuilder.add("-target", getTargetLevel());
+
+    // Set the sourcepath to stop us reading source files out of jars by mistake.
+    optionsBuilder.add("-sourcepath", "");
 
     if (isDebug()) {
       optionsBuilder.add("-g");
