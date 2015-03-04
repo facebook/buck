@@ -54,6 +54,9 @@ public class TargetsCommandOptions extends BuildCommandOptions {
   @Option(name = "--json", usage = "Print JSON representation of each target")
   private boolean json;
 
+  @Option(name = "--print0", usage = "Delimit targets using the ASCII NUL character.")
+  private boolean print0;
+
   @Option(name = "--resolvealias",
       usage = "Print the fully-qualified build target for the specified alias[es]")
   private boolean isResolveAlias;
@@ -92,6 +95,10 @@ public class TargetsCommandOptions extends BuildCommandOptions {
 
   public boolean getPrintJson() {
     return json;
+  }
+
+  public boolean isPrint0() {
+    return print0;
   }
 
   /** @return {@code true} if {@code --resolvealias} was specified. */

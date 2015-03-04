@@ -58,6 +58,7 @@ import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -184,6 +185,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         console.printBuildFailureWithoutStacktrace(e);
         return 1;
       }
+    } else if (options.isPrint0()) {
+      printNullDelimitedTargets(matchingNodes.keySet(), getStdOut());
     } else {
       for (String target : matchingNodes.keySet()) {
         getStdOut().println(target);
@@ -389,6 +392,13 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     }
 
     getStdOut().println("]");
+  }
+
+  @VisibleForTesting
+  static void printNullDelimitedTargets(Iterable<String> targets, PrintStream printStream) {
+    for (String target : targets) {
+      printStream.print(target + '\0');
+    }
   }
 
   /**

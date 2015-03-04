@@ -52,6 +52,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.FakeOutputStream;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
@@ -75,6 +76,8 @@ import org.kohsuke.args4j.CmdLineException;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.SortedMap;
@@ -167,6 +170,16 @@ public class TargetsCommandTest {
     assertEquals(
         "unable to find rule for target //:nonexistent\n",
         console.getTextWrittenToStdErr());
+  }
+
+  @Test
+  public void testPrintNullDelimitedTargets() throws UnsupportedEncodingException {
+    Iterable<String> targets = ImmutableList.of("//foo:bar", "//foo:baz");
+    FakeOutputStream fakeStream = new FakeOutputStream();
+    PrintStream printStream = new PrintStream(fakeStream);
+    TargetsCommand.printNullDelimitedTargets(targets, printStream);
+    printStream.flush();
+    assertEquals("//foo:bar\0//foo:baz\0", fakeStream.toString(Charsets.UTF_8.name()));
   }
 
   @Test

@@ -48,6 +48,7 @@ buck targets --show-output &#x2F;/java/com/myproject:binary
   {param name: 'type' /}
   {param desc}
   The types of target to filter by.  For example:
+  <p>
   <pre>
     buck targets --type java_test java_binary
   </pre>
@@ -64,6 +65,7 @@ buck targets --show-output &#x2F;/java/com/myproject:binary
 
   For example, if a developer wanted to run all tests that could be affected by
   particular file, they would run:
+  <p>
 {literal}<pre>
 buck targets --type java_test \
   --referenced-file java/com/example/Foo.java |
@@ -78,6 +80,18 @@ buck targets --type java_test \
   Print JSON representation of each target
   {/param}
 {/call}
+
+{call buck.param}
+  {param name: 'print0' /}
+  {param desc}
+  Delimit targets using the ASCII NUL character (when <code>--json</code> is not specified).
+  This facilitates use with <code>xargs</code>:
+  <p>
+{literal}<pre>
+buck targets --print0 | xargs -0 buck build
+</pre>{/literal}
+    {/param}
+  {/call}
 
 {call buck.param}
   {param name: 'resolvealias' /}
