@@ -235,6 +235,7 @@ public class HttpArtifactCache implements ArtifactCache {
   }
 
   private void reportConnectionFailure(String context, Exception exception) {
+    logger.warn(exception, "%s: connection failed: %s", context, exception.getMessage());
     if (numConnectionExceptionReports.getAndIncrement() < MAX_CONNECTION_FAILURE_REPORTS) {
       buckEventBus.post(ConsoleEvent.warning(
               "%s: Connection failed: %s",
