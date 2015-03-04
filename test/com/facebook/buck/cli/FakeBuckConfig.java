@@ -18,10 +18,9 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
-
-import org.easymock.EasyMock;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -38,7 +37,11 @@ public class FakeBuckConfig extends BuckConfig {
       ImmutableMap.of();
 
   public FakeBuckConfig() {
-    this(EMPTY_SECTIONS, Platform.detect(), null, ImmutableMap.copyOf(System.getenv()));
+    this(
+        EMPTY_SECTIONS,
+        Platform.detect(),
+        new FakeProjectFilesystem(),
+        ImmutableMap.copyOf(System.getenv()));
   }
 
   public FakeBuckConfig(ProjectFilesystem filesystem) {
@@ -46,7 +49,11 @@ public class FakeBuckConfig extends BuckConfig {
   }
 
   public FakeBuckConfig(Map<String, Map<String, String>> sections) {
-    this(sections, Platform.detect(), null, ImmutableMap.copyOf(System.getenv()));
+    this(
+        sections,
+        Platform.detect(),
+        new FakeProjectFilesystem(),
+        ImmutableMap.copyOf(System.getenv()));
   }
 
   public FakeBuckConfig(Map<String, Map<String, String>> sections, ProjectFilesystem filesystem) {
@@ -54,11 +61,15 @@ public class FakeBuckConfig extends BuckConfig {
   }
 
   public FakeBuckConfig(Platform platform) {
-    this(EMPTY_SECTIONS, platform, null, ImmutableMap.copyOf(System.getenv()));
+    this(
+        EMPTY_SECTIONS,
+        platform,
+        new FakeProjectFilesystem(),
+        ImmutableMap.copyOf(System.getenv()));
   }
 
   public FakeBuckConfig(ImmutableMap<String, String> environment) {
-    this(EMPTY_SECTIONS, Platform.detect(), null, environment);
+    this(EMPTY_SECTIONS, Platform.detect(), new FakeProjectFilesystem(), environment);
   }
 
   private FakeBuckConfig(
@@ -68,7 +79,7 @@ public class FakeBuckConfig extends BuckConfig {
       ImmutableMap<String, String> environment) {
     super(
         sections,
-        filesystem == null ? EasyMock.createMock(ProjectFilesystem.class) : filesystem,
+        filesystem,
         new BuildTargetParser(),
         platform,
         environment,

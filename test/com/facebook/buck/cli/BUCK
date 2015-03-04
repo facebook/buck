@@ -18,6 +18,7 @@ java_library(
     '//src/com/facebook/buck/parser:rule_pattern',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
+    '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/easymock:easymock',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
