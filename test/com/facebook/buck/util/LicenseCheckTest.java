@@ -27,22 +27,23 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 public class LicenseCheckTest {
 
-  // Files where we're okay with the license not being the normal Facebook apache one.
+  // Files where we're okay with the license not being the normal Facebook apache one. We also
+  // exclude all files under "test/**/testdata/"
   private static final Set<String> NON_APACHE_LICENSE_WHITELIST = ImmutableSet.of(
       // Because it's not originally our code.
-      "com/facebook/buck/java/ReportGenerator.java",
-      // It's a golden version of a generated file.
-      "com/facebook/buck/parcelable/testdata/generator/GeneratedStudent.java");
+      "com/facebook/buck/java/ReportGenerator.java");
 
   @Test
   public void ensureAllSrcFilesHaveTheApacheLicense() throws IOException {
-    new JavaCopyrightTraversal(new File("src")).traverse();
-    new JavaCopyrightTraversal(new File("test")).traverse();
+    new JavaCopyrightTraversal(new File("src"), false).traverse();
+    new JavaCopyrightTraversal(new File("test"), true).traverse();
   }
 
   private static class JavaCopyrightTraversal extends DirectoryTraversal {
@@ -55,8 +56,12 @@ public class LicenseCheckTest {
         "\\\\* Licensed under the Apache License, Version 2.0 \\(the \"License\"\\); you may.*",
         Pattern.MULTILINE | Pattern.DOTALL);
 
-    public JavaCopyrightTraversal(File root) {
+    private final boolean ignoreTestData;
+    private final Path TEST_DATA = Paths.get("testdata");
+
+    public JavaCopyrightTraversal(File root, boolean ignoreTestData) {
       super(root);
+      this.ignoreTestData = ignoreTestData;
     }
 
     @Override
@@ -67,6 +72,14 @@ public class LicenseCheckTest {
           NON_APACHE_LICENSE_WHITELIST.contains(relativePath) ||
           relativePath.startsWith("com/facebook/buck/cli/quickstart/android/")) {
         return;
+      }
+
+      if (ignoreTestData) {
+        for (Path path : file.toPath()) {
+           if (TEST_DATA.equals(path)) {
+             return;
+           }
+        }
       }
 
       try {
