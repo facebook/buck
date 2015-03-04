@@ -264,7 +264,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   @Test
   public void testDoNotFetchFromCacheIfDepBuiltLocally()
       throws ExecutionException, InterruptedException, IOException, StepFailedException {
-    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine();
+    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine(1);
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
 
     BuildTarget target1 = BuildTargetFactory.newInstance("//java/com/example:rule1");
@@ -338,6 +338,96 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
     assertNotNull("BuildRule did not fire a BuildRuleEvent.Finished event.", finishedEvent);
     assertEquals(CacheResult.SKIP, finishedEvent.getCacheResult());
+  }
+
+  @Test
+  public void testFetchFromCacheWhenBuiltLocallyDepChainIsSmall()
+      throws IOException, InterruptedException, ExecutionException, StepFailedException {
+
+    // Construct a caching build engine that will only skip fetching when a locally built dep
+    // chain of at least 2 is present.
+    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine(2);
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+
+    // Now setup a locally built dep chain of just 1.
+    BuildTarget target2 = BuildTargetFactory.newInstance("//java/com/example:rule2");
+    FakeBuildRule dep2 = new FakeBuildRule(target2, pathResolver);
+    cachingBuildEngine.setBuildRuleResult(
+        target2,
+        new BuildRuleSuccess(dep2, BuildRuleSuccess.Type.FETCHED_FROM_CACHE));
+    dep2.setRuleKey(new RuleKey(Strings.repeat("b", 40)));
+
+    BuildTarget target1 = BuildTargetFactory.newInstance("//java/com/example:rule1");
+    FakeBuildRule dep1 = new FakeBuildRule(target1, pathResolver, dep2);
+    cachingBuildEngine.setBuildRuleResult(
+        target1,
+        new BuildRuleSuccess(dep1, BuildRuleSuccess.Type.BUILT_LOCALLY));
+    dep1.setRuleKey(new RuleKey(Strings.repeat("a", 40)));
+
+    Step step = new AbstractExecutionStep("exploding step") {
+      @Override
+      public int execute(ExecutionContext context) {
+        throw new UnsupportedOperationException("build step should not be executed");
+      }
+    };
+    BuildRule buildRule = createRule(
+        new SourcePathResolver(new BuildRuleResolver()),
+        /* deps */ ImmutableSet.<BuildRule>of(dep1),
+        ImmutableList.<Path>of(),
+        ImmutableList.of(step),
+        /* pathToOutputFile */ null,
+        CacheMode.ENABLED);
+
+    StepRunner stepRunner = createSameThreadStepRunner();
+
+    // Mock out all of the disk I/O.
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    expect(projectFilesystem
+            .readFileIfItExists(
+                Paths.get("buck-out/bin/src/com/facebook/orca/.orca/metadata/RULE_KEY")))
+        .andReturn(Optional.<String>absent());
+    expect(projectFilesystem.getRootPath()).andReturn(tmp.getRoot().toPath());
+
+    // Simulate successfully fetching the output file from the ArtifactCache.
+    ArtifactCache artifactCache = createMock(ArtifactCache.class);
+    Map<String, String> desiredZipEntries = ImmutableMap.of(
+        "buck-out/gen/src/com/facebook/orca/orca.jar",
+        "Imagine this is the contents of a valid JAR file.");
+    expect(
+        artifactCache.fetch(
+            eq(buildRule.getRuleKey()),
+            capture(new CaptureThatWritesAZipFile(desiredZipEntries))))
+        .andReturn(CacheResult.DIR_HIT);
+
+    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+    BuildContext buildContext = ImmutableBuildContext.builder()
+        .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
+        .setStepRunner(stepRunner)
+        .setProjectFilesystem(projectFilesystem)
+        .setClock(new DefaultClock())
+        .setBuildId(new BuildId())
+        .setArtifactCache(artifactCache)
+        .setJavaPackageFinder(createMock(JavaPackageFinder.class))
+        .setEventBus(buckEventBus)
+        .build();
+
+    // Build the rule!
+    replayAll();
+    ListenableFuture<BuildRuleSuccess> result = cachingBuildEngine.build(buildContext, buildRule);
+    buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
+    verifyAll();
+
+    assertTrue(
+        "We expect build() to be synchronous in this case, " +
+            "so the future should already be resolved.",
+        MoreFutures.isSuccess(result));
+    BuildRuleSuccess success = result.get();
+    assertEquals(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, success.getType());
+    assertTrue(
+        ((BuildableAbstractCachingBuildRule) buildRule).isInitializedFromDisk());
+    assertTrue(
+        "The entries in the zip should be extracted as a result of building the rule.",
+        new File(tmp.getRoot(), "buck-out/gen/src/com/facebook/orca/orca.jar").isFile());
   }
 
   /**

@@ -71,7 +71,16 @@ public class CachingBuildEngine implements BuildEngine {
 
   private final ConcurrentMap<BuildTarget, RuleKey> ruleKeys = Maps.newConcurrentMap();
 
+  private final long skipLocalBuildDepth;
+
+  public CachingBuildEngine(long skipLocalBuildDepth) {
+    Preconditions.checkArgument(skipLocalBuildDepth >= 0L);
+    this.skipLocalBuildDepth = skipLocalBuildDepth;
+  }
+
+  @VisibleForTesting
   public CachingBuildEngine() {
+    this(0L);
   }
 
   @VisibleForTesting
@@ -184,7 +193,7 @@ public class CachingBuildEngine implements BuildEngine {
                     context,
                     onDiskBuildInfo,
                     buildInfoRecorder.get(),
-                    shouldTryToFetchFromCache(rule, deps));
+                    shouldTryToFetchFromCache(rule));
                 if (result.getStatus() == BuildRuleStatus.SUCCESS) {
                   recordBuildRuleSuccess(result);
                 }
@@ -391,27 +400,60 @@ public class CachingBuildEngine implements BuildEngine {
   }
 
   /**
+   * @return whether we found a local build chain of the given depth by recursing down the
+   *     dependency chain.
+   */
+  private boolean hasLocalBuildChain(BuildRule rule, long depth) {
+
+    // Look up the success result for this `BuildRule`.
+    BuildRuleSuccess success;
+    try {
+      success = Preconditions.checkNotNull(getBuildRuleResult(rule.getBuildTarget()));
+    } catch (InterruptedException | ExecutionException e) {
+      // This shouldn't ever happen, as the only way we can get to this point is if the
+      // previous build rules in the dep tree generated results.
+      throw new IllegalStateException(e);
+    }
+
+    // If we built this locally, and caching is enabled for this rule, it means we likely had
+    // a cache miss, and may have a local build chain for the given depth.
+    if (success.getType() == BuildRuleSuccess.Type.BUILT_LOCALLY &&
+        rule.getCacheMode() == CacheMode.ENABLED) {
+
+      // If the given `depth` is zero, we've found our local build chain, so return true.
+      if (depth == 0) {
+        return true;
+
+      // Otherwise, recurse on our deps looking for the local build chain.
+      } else {
+        for (BuildRule dep : rule.getDeps()) {
+          if (hasLocalBuildChain(dep, depth - 1)) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Returns {@code true} if none of the {@link BuildRuleSuccess} objects are built locally.
    */
-  private static boolean shouldTryToFetchFromCache(
-      BuildRule rule,
-      List<BuildRuleSuccess> ruleSuccesses) {
+  private boolean shouldTryToFetchFromCache(BuildRule rule) {
 
     // If this rule explicitly disables caching, we won't try to fetch.
     if (rule.getCacheMode() == CacheMode.DISABLED) {
       return false;
     }
 
-    // Look through the results for our deps.  If a dependency used caching, but was built
-    // locally, use this as a heuristic to avoid fetching this rule from cache, since this
-    // will likely result in a miss.
-    //
-    // NOTE(agallagher): This is not true for caching indexed by a key not formed by recursively
-    // pulling in dependency's rule keys (e.g. input content based keys or ABI keys).
-    for (BuildRuleSuccess success : ruleSuccesses) {
-      if (success.getType() == BuildRuleSuccess.Type.BUILT_LOCALLY &&
-          success.getRule().getCacheMode() == CacheMode.ENABLED) {
-        return false;
+    // Otherwise, look for a sequence of local builds, which we use as a heuristic to avoid
+    // fetching this rule from cache, since this will likely result in a miss.
+    if (skipLocalBuildDepth > 0) {
+      for (BuildRule dep : rule.getDeps()) {
+        if (hasLocalBuildChain(dep, skipLocalBuildDepth - 1)) {
+          return false;
+        }
       }
     }
 

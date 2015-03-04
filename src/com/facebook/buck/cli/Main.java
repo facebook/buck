@@ -627,7 +627,9 @@ public final class Main {
       }
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootRepository.getFilesystem());
 
-      CachingBuildEngine buildEngine = new CachingBuildEngine();
+      CachingBuildEngine buildEngine =
+          new CachingBuildEngine(
+              rootRepository.getBuckConfig().getSkipLocalBuildChainDepth().or(1L));
       Optional<ProcessManager> processManager;
       if (platform == Platform.WINDOWS) {
         processManager = Optional.absent();

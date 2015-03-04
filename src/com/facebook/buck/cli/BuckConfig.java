@@ -661,6 +661,13 @@ public class BuckConfig {
     return asListWithoutComments(getValue("cache", "mode"));
   }
 
+  /**
+   * @return the depth of a local build chain which should trigger skipping the cache.
+   */
+  public Optional<Long> getSkipLocalBuildChainDepth() {
+    return getLong("cache", "skip_local_build_chain_depth");
+  }
+
   @VisibleForTesting
   Path getCacheDir() {
     String cacheDir = getValue("cache", "dir").or(DEFAULT_CACHE_DIR);
