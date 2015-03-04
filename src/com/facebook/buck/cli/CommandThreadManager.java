@@ -39,7 +39,7 @@ public class CommandThreadManager implements AutoCloseable {
   // Shutdown timeout should be longer than the maximum runtime of a single step as some
   // steps ignore interruption. The longest ever recorded step execution time as of
   // 2014-07-08 was ~6 minutes, so a timeout of 10 minutes should be sufficient.
-  private static final long DEFAULT_SHUTDOWN_TIMEOUT = 10;
+  private static final long DEFAULT_SHUTDOWN_TIMEOUT = 30;
   private static final TimeUnit DEFAULT_SHUTDOWN_TIMEOUT_UNIT = TimeUnit.MINUTES;
 
   // Use a thread group purely as a debugging aid to help enumerate the threads we should

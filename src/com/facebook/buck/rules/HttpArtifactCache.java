@@ -21,6 +21,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.FileHashCache;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
 import com.google.common.io.ByteStreams;
@@ -86,8 +87,16 @@ public class HttpArtifactCache implements ArtifactCache {
     this.urlStore = String.format(URL_TEMPLATE_STORE, hostname, port);
   }
 
+  // Make this overrideable by unittests to inject mock connections.
+  @VisibleForTesting
   protected HttpURLConnection getConnection(String url) throws IOException {
     return (HttpURLConnection) new URL(url).openConnection();
+  }
+
+  private HttpURLConnection createConnection(String url) throws IOException {
+    HttpURLConnection connection = getConnection(url);
+    connection.setConnectTimeout(1000 * timeoutSeconds);
+    return connection;
   }
 
   @Override
@@ -95,8 +104,7 @@ public class HttpArtifactCache implements ArtifactCache {
     String url = String.format(URL_TEMPLATE_FETCH, hostname, port, ruleKey.toString());
     HttpURLConnection connection;
     try {
-      connection = getConnection(url);
-      connection.setConnectTimeout(1000 * timeoutSeconds);
+      connection = createConnection(url);
     } catch (MalformedURLException e) {
       logger.error(e, "fetch(%s): malformed URL: %s", ruleKey, url);
       return CacheResult.MISS;
@@ -177,8 +185,7 @@ public class HttpArtifactCache implements ArtifactCache {
     String method = "POST";
     HttpURLConnection connection;
     try {
-      connection = getConnection(urlStore);
-      connection.setConnectTimeout(1000 * timeoutSeconds);
+      connection = createConnection(urlStore);
       connection.setRequestMethod(method);
       // Use "chunked" streaming mode so that we don't buffer the entire contents of the artifact
       // in memory.  Using "0" here as the value causes an internal default to be used (4096).
