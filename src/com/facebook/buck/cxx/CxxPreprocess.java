@@ -107,7 +107,7 @@ public class CxxPreprocess extends AbstractBuildRule {
     // search path, and therefore can accurately capture header file renames.
     for (Path path : ImmutableSortedSet.copyOf(includes.getNameToPathMap().keySet())) {
       SourcePath source = includes.getNameToPathMap().get(path);
-      builder.setReflectively("include(" + path + ")", getResolver().getPath(source));
+      builder.setReflectively("include(" + path + ")", source);
     }
 
     builder.setReflectively(
