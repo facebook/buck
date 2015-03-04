@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.MoreFiles;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.Files;
@@ -98,8 +99,15 @@ public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOp
     Path destination = Paths.get(projectDir);
     MoreFiles.copyRecursively(origin, destination);
 
-    File out = new File(projectDir + "/local.properties");
-    Files.write("sdk.dir=" + sdkLocation + "\n", out, StandardCharsets.UTF_8);
+    // Specify the default Android target so everyone on the project builds against the same SDK.
+    File buckConfig = new File(projectDir + "/.buckconfig");
+    Files.append(
+        "[android]\n    target = " + AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET + "\n",
+        buckConfig,
+        StandardCharsets.UTF_8);
+
+    File localProperties = new File(projectDir + "/local.properties");
+    Files.write("sdk.dir=" + sdkLocation + "\n", localProperties, StandardCharsets.UTF_8);
 
     getStdOut().print(
       Files.toString(origin.resolve("README.md").toFile(), StandardCharsets.UTF_8));

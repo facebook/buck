@@ -8,3 +8,5 @@
     # most of this is unnecessary boilerplate, so we create one
     # "shared" AndroidManifest.xml file that can be used as a default.
     default_android_manifest = //res/AndroidManifest.xml
+[android]
+    target = Google Inc.:Google APIs:21
