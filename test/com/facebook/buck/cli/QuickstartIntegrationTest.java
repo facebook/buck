@@ -19,14 +19,14 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.util.DefaultPropertyFinder;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -72,18 +72,21 @@ public class QuickstartIntegrationTest {
             new DefaultPropertyFinder(projectFilesystem, ImmutableMap.copyOf(System.getenv())));
 
     // looks at local.properties, ANDROID_SDK, and ANDROID_HOME
-    Path androidSdk =
-        androidDirectoryResolver.findAndroidSdkDirSafe().orNull();
+    Path androidSdk = androidDirectoryResolver.findAndroidSdkDirSafe().orNull();
 
-    ProcessResult result = quickstartWorkspace.runBuckCommand("quickstart",
+    ProcessResult result = quickstartWorkspace.runBuckCommand(
+        "quickstart",
         "--dest-dir",
         destDir.getRoot().getAbsolutePath(),
         "--android-sdk",
-        androidSdk.toAbsolutePath().toString());
+        androidSdk.toAbsolutePath().toString()).assertSuccess();
 
-    result.assertSuccess();
-
-    quickstartWorkspace.verify();
+    ProjectWorkspace destinationWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "quickstart_expected_project",
+        destDir);
+    destinationWorkspace.setUp();
+    destinationWorkspace.verify(); // Verifies the project was generated as expected.
 
     File readme = new File(destDir.getRoot(), "README.md");
     assertTrue("`buck quickstart` should create a README file.", readme.isFile());
@@ -99,16 +102,9 @@ public class QuickstartIntegrationTest {
       "sdk.dir=" + androidSdk + "\n",
       Files.toString(localProp, StandardCharsets.UTF_8));
 
-    ProjectWorkspace targetsWorkspace = new ProjectWorkspace(destDir.getRoot(), destDir);
-    targetsWorkspace.setUp();
-
     // We can't test building if the user does not have an Android SDK. First, test targets, since
     // it does not have that dependency.
-    result = targetsWorkspace.runBuckCommand("targets");
-
-    result.assertSuccess();
-
-    targetsWorkspace.verify();
+    result = destinationWorkspace.runBuckCommand("targets").assertSuccess();
 
     assertEquals(
       "`buck targets` should display a list of targets.",
@@ -122,13 +118,9 @@ public class QuickstartIntegrationTest {
           "//res/com/example/activity:res") + "\n",
       result.getStdout());
 
-    result = targetsWorkspace.runBuckCommand("build", "app");
+    destinationWorkspace.runBuckCommand("build", "app").assertSuccess();
 
-    result.assertSuccess();
-
-    targetsWorkspace.verify();
-
-    File buckOut = targetsWorkspace.getFile("buck-out");
+    File buckOut = destinationWorkspace.getFile("buck-out");
     assertTrue("`buck build` should create a buck-out directory.", buckOut.isDirectory());
   }
 }

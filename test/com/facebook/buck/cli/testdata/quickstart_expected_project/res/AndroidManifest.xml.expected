@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  This is the default AndroidManifest.xml used by Android library projects in
+  IntelliJ, as such projects need only the package attribute in order to
+  decide which Java package to use for the generated R.java file.
+
+  Because we use "com.facebook" as the package for all of our R.java files,
+  we can share the same AndroidManifest.xml for all of our our library projects.
+  This helps keep the /java/ directory clear of cruft.
+
+  There is a task filed to make Buck more flexible in terms of how we generate
+  R.java files:
+  https://our.intern.facebook.com/intern/tasks/?t=1820834
+-->
+<manifest package="com.example"/>
