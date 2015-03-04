@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
@@ -470,7 +471,9 @@ public class CachingBuildEngine implements BuildEngine {
     // that we are creating a zip-based FileSystem.
     File zipFile;
     try {
-      zipFile = File.createTempFile(rule.getFullyQualifiedName().replace('/', '_'), ".zip");
+      zipFile = File.createTempFile(
+          MoreFiles.sanitize(rule.getFullyQualifiedName()),
+          ".zip");
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
