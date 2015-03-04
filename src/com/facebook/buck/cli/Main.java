@@ -694,8 +694,9 @@ public final class Main {
       try {
         eventListener.outputTrace(buildId);
       } catch (RuntimeException e) {
-        System.err.println("Skipping over non-fatal error");
-        e.printStackTrace();
+        PrintStream stdErr = console.getStdErr();
+        stdErr.println("Skipping over non-fatal error");
+        e.printStackTrace(stdErr);
       }
     }
     return exitCode;
