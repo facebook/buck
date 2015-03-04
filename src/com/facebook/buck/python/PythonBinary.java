@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -36,11 +35,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.Map;
 
 public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
 
@@ -101,25 +97,15 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
     builder
         .setReflectively("packageType", "pex")
         .setReflectively("pythonVersion", pythonEnvironment.getPythonVersion().toString())
-        .setReflectively("mainModule", main.toString());
-
-    // Hash all the input components here so we can detect changes in both input file content
-    // and module name mappings.
-    for (ImmutableMap.Entry<String, Map<Path, SourcePath>> part : ImmutableMap.of(
-        "module", components.getModules(),
-        "resource", components.getResources(),
-        "nativeLibraries", components.getNativeLibraries()).entrySet()) {
-      for (Path name : ImmutableSortedSet.copyOf(part.getValue().keySet())) {
-        builder.setReflectively(part.getKey() + ":" + name, part.getValue().get(name));
-      }
-    }
-
+        .setReflectively("mainModule", main.toString())
+        .setReflectively("components", components);
     return builder;
   }
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
+    return ImmutableList.copyOf(getResolver().filterInputsToCompareToOutput(
+        components.getInputsToCompareToOutput()));
   }
 
   @Override
