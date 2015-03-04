@@ -18,6 +18,7 @@ package com.facebook.buck.command;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -273,8 +274,10 @@ public class Build implements Closeable {
       BuildReport buildReport = new BuildReport(ruleToResult);
 
       if (isKeepGoing) {
-        String buildReportForConsole = buildReport.generateForConsole(console.getAnsi());
-        console.getStdErr().print(buildReportForConsole);
+        String buildReportText = buildReport.generateForConsole(console.getAnsi());
+        // Remove trailing newline from build report.
+        buildReportText = buildReportText.substring(0, buildReportText.length() - 1);
+        executionContext.getBuckEventBus().post(ConsoleEvent.info(buildReportText));
         exitCode = Iterables.any(ruleToResult.values(), RULES_FAILED_PREDICATE) ? 1 : 0;
         if (exitCode != 0) {
           console.printBuildFailure("Not all rules succeeded.");
