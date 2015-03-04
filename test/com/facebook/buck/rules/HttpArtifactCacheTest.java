@@ -27,8 +27,9 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.FileHashCache;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,15 +41,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.net.HttpURLConnection;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 
 public class HttpArtifactCacheTest {
 
+  private static final HashFunction HASH_FUNCTION = Hashing.crc32();
   private HttpArtifactCache cache;
   private HttpURLConnection connection;
   private ProjectFilesystem projectFilesystem;
-  private FileHashCache fileHashCache;
 
   private byte[] createFileContentsWithHashCode(HashCode code, String contents) throws IOException {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -62,12 +66,10 @@ public class HttpArtifactCacheTest {
   public void setUp() {
     connection = createNiceMock(HttpURLConnection.class);
     projectFilesystem = createMock(ProjectFilesystem.class);
-    fileHashCache = createMock(FileHashCache.class);
     cache = new FakeHttpArtifactCache(
         connection,
         projectFilesystem,
-        BuckEventBusFactory.newInstance(),
-        fileHashCache);
+        BuckEventBusFactory.newInstance());
   }
 
   @Test
@@ -83,13 +85,14 @@ public class HttpArtifactCacheTest {
   @Test
   public void testFetchOK() throws IOException {
     String data = "test";
-    HashCode hashCode = HashCode.fromString("deadbeef");
+    HashCode hashCode = HASH_FUNCTION.hashString(data, Charset.defaultCharset());
     expect(connection.getResponseCode()).andReturn(HttpURLConnection.HTTP_OK);
     InputStream is = new ByteArrayInputStream(createFileContentsWithHashCode(hashCode, data));
     expect(connection.getInputStream()).andReturn(is);
     File file = File.createTempFile("000", "");
     Path path = file.toPath();
     Path temp = File.createTempFile("000", "").toPath();
+    Files.write(temp, data.getBytes(), StandardOpenOption.WRITE);
     projectFilesystem.createParentDirs(path);
     expect(projectFilesystem.createTempFile(
             path.getParent(),
@@ -97,15 +100,12 @@ public class HttpArtifactCacheTest {
             ".tmp"))
         .andReturn(temp);
     projectFilesystem.copyToPath(is, temp, StandardCopyOption.REPLACE_EXISTING);
-    expect(fileHashCache.get(temp)).andReturn(hashCode);
     projectFilesystem.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
-    replay(fileHashCache);
     replay(connection);
     replay(projectFilesystem);
     assertEquals(
         cache.fetch(new RuleKey("00000000000000000000000000000000"), file),
         CacheResult.HTTP_HIT);
-    verify(fileHashCache);
     verify(connection);
     verify(projectFilesystem);
   }
@@ -113,14 +113,14 @@ public class HttpArtifactCacheTest {
   @Test
   public void testFetchBadChecksum() throws IOException {
     String data = "test";
-    HashCode hashCode = HashCode.fromString("deadbeef");
     HashCode badHashCode = HashCode.fromString("deafbead");
     expect(connection.getResponseCode()).andReturn(HttpURLConnection.HTTP_OK);
-    InputStream is = new ByteArrayInputStream(createFileContentsWithHashCode(hashCode, data));
+    InputStream is = new ByteArrayInputStream(createFileContentsWithHashCode(badHashCode, data));
     expect(connection.getInputStream()).andReturn(is);
     File file = File.createTempFile("000", "");
     Path path = file.toPath();
     Path temp = File.createTempFile("000", "").toPath();
+    Files.write(temp, data.getBytes(), StandardOpenOption.WRITE);
     projectFilesystem.createParentDirs(path);
     expect(projectFilesystem.createTempFile(
             path.getParent(),
@@ -128,15 +128,12 @@ public class HttpArtifactCacheTest {
             ".tmp"))
         .andReturn(temp);
     projectFilesystem.copyToPath(is, temp, StandardCopyOption.REPLACE_EXISTING);
-    expect(fileHashCache.get(temp)).andReturn(badHashCode);
     expect(projectFilesystem.deleteFileAtPath(temp)).andReturn(true);
-    replay(fileHashCache);
     replay(connection);
     replay(projectFilesystem);
     assertEquals(
         cache.fetch(new RuleKey("00000000000000000000000000000000"), file),
         CacheResult.MISS);
-    verify(fileHashCache);
     verify(connection);
     verify(projectFilesystem);
   }
@@ -144,22 +141,20 @@ public class HttpArtifactCacheTest {
   @Test
   public void testStore() throws IOException {
     String data = "test";
-    HashCode hashCode = HashCode.fromString("deadbeef");
+    HashCode hashCode = HASH_FUNCTION.hashString(data, Charset.defaultCharset());
     connection.setConnectTimeout(1000);
     connection.setDoOutput(true);
     connection.setRequestMethod("POST");
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     expect(connection.getOutputStream()).andReturn(output);
     File file = File.createTempFile("000", "");
-    expect(fileHashCache.get(file.toPath())).andReturn(hashCode);
+    Files.write(file.toPath(), data.getBytes(), StandardOpenOption.WRITE);
     InputStream is = new ByteArrayInputStream(data.getBytes());
     expect(projectFilesystem.newFileInputStream(file.toPath())).andReturn(is);
     expect(connection.getResponseCode()).andReturn(HttpURLConnection.HTTP_ACCEPTED);
-    replay(fileHashCache);
     replay(connection);
     replay(projectFilesystem);
     cache.store(new RuleKey("00000000000000000000000000000000"), file);
-    verify(fileHashCache);
     verify(connection);
     verify(projectFilesystem);
     assertNotEquals(
@@ -173,9 +168,8 @@ public class HttpArtifactCacheTest {
     FakeHttpArtifactCache(
         HttpURLConnection connectionMock,
         ProjectFilesystem projectFilesystem,
-        BuckEventBus buckEventBus,
-        FileHashCache fileHashCache) {
-      super("localhost", 8080, 1, true, projectFilesystem, buckEventBus, fileHashCache);
+        BuckEventBus buckEventBus) {
+      super("localhost", 8080, 1, true, projectFilesystem, buckEventBus, HASH_FUNCTION);
       this.connectionMock = connectionMock;
     }
 

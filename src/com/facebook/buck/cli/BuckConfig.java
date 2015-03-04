@@ -59,6 +59,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.hash.Hashing;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -640,7 +641,7 @@ public class BuckConfig {
           }
           break;
         case http:
-          ArtifactCache httpArtifactCache = createHttpArtifactCache(buckEventBus, fileHashCache);
+          ArtifactCache httpArtifactCache = createHttpArtifactCache(buckEventBus);
           builder.add(httpArtifactCache);
           break;
         }
@@ -753,9 +754,7 @@ public class BuckConfig {
     }
   }
 
-  private ArtifactCache createHttpArtifactCache(
-      BuckEventBus buckEventBus,
-      FileHashCache fileHashCache) {
+  private ArtifactCache createHttpArtifactCache(BuckEventBus buckEventBus) {
     String host = getValue("cache", "http_host").or("localhost");
     int port = Integer.parseInt(getValue("cache", "http_port").or(DEFAULT_HTTP_CACHE_PORT));
     int timeoutSeconds = Integer.parseInt(
@@ -768,7 +767,7 @@ public class BuckConfig {
         doStore,
         projectFilesystem,
         buckEventBus,
-        fileHashCache);
+        Hashing.crc32());
   }
 
   private boolean readCacheMode(String fieldName, String defaultValue) {
