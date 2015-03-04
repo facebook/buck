@@ -18,17 +18,13 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
 import com.google.common.base.Predicate;
-
-import java.util.Set;
 
 import org.immutables.value.Value;
 
@@ -39,7 +35,6 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 public abstract class ProjectPredicates {
-  private static final Logger LOG = Logger.get(ProjectPredicates.class);
 
   /**
    * {@link Predicate} returning nodes that represent roots of the IDE
@@ -59,10 +54,7 @@ public abstract class ProjectPredicates {
    * Creates a {@link ProjectPredicates} value type configured for
    * the specified IDE.
    */
-  public static ProjectPredicates forIde(
-      ProjectCommandOptions.Ide targetIde,
-      final Set<BuildTarget> passedInTargetsSet,
-      final Set<String> defaultExcludePaths) {
+  public static ProjectPredicates forIde(ProjectCommandOptions.Ide targetIde) {
     Predicate<TargetNode<?>> projectRootsPredicate;
     AssociatedTargetNodePredicate associatedProjectPredicate;
 
@@ -99,22 +91,7 @@ public abstract class ProjectPredicates {
         projectRootsPredicate = new Predicate<TargetNode<?>>() {
           @Override
           public boolean apply(TargetNode<?> input) {
-            if (XcodeWorkspaceConfigDescription.TYPE != input.getType()) {
-              return false;
-            }
-
-            String targetName = input.getBuildTarget().getFullyQualifiedName();
-            for (String prefix : defaultExcludePaths) {
-              if (targetName.startsWith("//" + prefix) &&
-                  !passedInTargetsSet.contains(input.getBuildTarget())) {
-                LOG.debug(
-                    "Ignoring build target %s (exclude_paths contains %s)",
-                    input.getBuildTarget(),
-                    prefix);
-                return false;
-              }
-            }
-            return true;
+            return XcodeWorkspaceConfigDescription.TYPE == input.getType();
           }
         };
         associatedProjectPredicate = new AssociatedTargetNodePredicate() {

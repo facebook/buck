@@ -139,7 +139,6 @@ public class ProjectCommandIntellijTest {
         targetGraph,
         ProjectCommandOptions.Ide.INTELLIJ,
         ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<String>of(),
         /* withTests = */ false);
 
     assertEquals(
@@ -160,7 +159,6 @@ public class ProjectCommandIntellijTest {
         targetGraph,
         ProjectCommandOptions.Ide.INTELLIJ,
         ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<String>of(),
         /* withTests = */ true);
 
     assertEquals(
@@ -184,7 +182,6 @@ public class ProjectCommandIntellijTest {
         targetGraph,
         ProjectCommandOptions.Ide.INTELLIJ,
         ImmutableSet.of(fooProjectNode.getBuildTarget()),
-        ImmutableSet.<String>of(),
         /* withTests = */ false);
 
     assertEquals(
@@ -203,7 +200,6 @@ public class ProjectCommandIntellijTest {
         targetGraph,
         ProjectCommandOptions.Ide.INTELLIJ,
         ImmutableSet.of(fooProjectNode.getBuildTarget()),
-        ImmutableSet.<String>of(),
         /* withTests = */ true);
 
     assertEquals(
@@ -226,7 +222,6 @@ public class ProjectCommandIntellijTest {
         targetGraph,
         ProjectCommandOptions.Ide.INTELLIJ,
         ImmutableSet.of(bazProjectNode.getBuildTarget()),
-        ImmutableSet.<String>of(),
         /* withTests = */ false);
 
     assertEquals(
@@ -243,7 +238,6 @@ public class ProjectCommandIntellijTest {
         targetGraph,
         ProjectCommandOptions.Ide.INTELLIJ,
         ImmutableSet.of(bazProjectNode.getBuildTarget()),
-        ImmutableSet.<String>of(),
         /* withTests = */ true);
 
     assertEquals(

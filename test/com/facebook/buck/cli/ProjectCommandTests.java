@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
-
 import com.google.common.collect.ImmutableSet;
 
 public class ProjectCommandTests {
@@ -30,14 +29,9 @@ public class ProjectCommandTests {
       TargetGraph projectGraph,
       ProjectCommandOptions.Ide targetIde,
       ImmutableSet<BuildTarget> passedInTargetsSet,
-      ImmutableSet<String> defaultExcludePaths,
       boolean withTests
   ) {
-    ProjectPredicates projectPredicates =
-        ProjectPredicates.forIde(
-            targetIde,
-            passedInTargetsSet,
-            defaultExcludePaths);
+    ProjectPredicates projectPredicates = ProjectPredicates.forIde(targetIde);
 
     ImmutableSet<BuildTarget> graphRoots;
     if (!passedInTargetsSet.isEmpty()) {

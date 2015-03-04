@@ -133,10 +133,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             passedInTargetsSet,
             getProjectFilesystem().getIgnorePaths()));
 
-    ProjectPredicates projectPredicates = ProjectPredicates.forIde(
-        options.getIde(),
-        passedInTargetsSet,
-        options.getDefaultExcludePaths());
+    ProjectPredicates projectPredicates = ProjectPredicates.forIde(options.getIde());
 
     ImmutableSet<BuildTarget> graphRoots;
     if (!passedInTargetsSet.isEmpty()) {

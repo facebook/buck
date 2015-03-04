@@ -165,7 +165,6 @@ public class ProjectCommandXcodeTest {
         targetGraph,
         ProjectCommandOptions.Ide.XCODE,
         ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<String>of(),
         /* withTests = */ false);
 
     assertEquals(
@@ -187,7 +186,6 @@ public class ProjectCommandXcodeTest {
         targetGraph,
         ProjectCommandOptions.Ide.XCODE,
         ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<String>of(),
         /* withTests = */ true);
 
     assertEquals(
@@ -212,7 +210,6 @@ public class ProjectCommandXcodeTest {
         targetGraph,
         ProjectCommandOptions.Ide.XCODE,
         ImmutableSet.of(workspaceNode.getBuildTarget()),
-        ImmutableSet.<String>of(),
         /* withTests = */ false);
 
     assertEquals(
@@ -232,7 +229,6 @@ public class ProjectCommandXcodeTest {
         targetGraph,
         ProjectCommandOptions.Ide.XCODE,
         ImmutableSet.of(workspaceNode.getBuildTarget()),
-        ImmutableSet.<String>of(),
         /* withTests = */ true);
 
     assertEquals(
@@ -255,7 +251,6 @@ public class ProjectCommandXcodeTest {
         targetGraph,
         ProjectCommandOptions.Ide.XCODE,
         ImmutableSet.of(smallWorkspaceNode.getBuildTarget()),
-        ImmutableSet.<String>of(),
         /* withTests = */ false);
 
     assertEquals(
@@ -272,7 +267,6 @@ public class ProjectCommandXcodeTest {
         targetGraph,
         ProjectCommandOptions.Ide.XCODE,
         ImmutableSet.of(smallWorkspaceNode.getBuildTarget()),
-        ImmutableSet.<String>of(),
         /* withTests = */ true);
 
     assertEquals(
