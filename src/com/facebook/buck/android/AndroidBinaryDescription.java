@@ -267,7 +267,7 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     public SourcePath manifest;
     // TODO(mbolin): Support for this field will be dropped as it is no longer used. Keeping it
     // around is misleading. A deprecation warning should be printed if it is set.
-    public String target;
+    public Optional<String> target;
     public BuildTarget keystore;
     public Optional<String> packageType;
     @Hint(isDep = false) public Optional<Set<BuildTarget>> noDx;
