@@ -17,6 +17,7 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
@@ -26,6 +27,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +42,8 @@ import java.util.Date;
  * Utility to help with reading data from build trace files.
  */
 public class TracesHelper {
+
+  private static final Logger logger = Logger.get(TracesHelper.class);
 
   private final ProjectFilesystem projectFilesystem;
 
@@ -115,28 +119,49 @@ public class TracesHelper {
         JsonReader jsonReader = new JsonReader(new InputStreamReader(input))) {
       jsonReader.beginArray();
       Gson gson = new Gson();
-      JsonObject json = gson.fromJson(jsonReader, JsonObject.class);
-      JsonElement nameEl = json.get("name");
-      if (nameEl == null || !nameEl.isJsonPrimitive()) {
-        return Optional.absent();
+
+      // Look through the first few elements to see if one matches the schema for an event that
+      // contains the command that the user ran.
+      for (int i = 0; i < 4; i++) {
+        // If END_ARRAY is the next token, then there are no more elements in the array.
+        if (jsonReader.peek().equals(JsonToken.END_ARRAY)) {
+          break;
+        }
+
+        JsonObject json = gson.fromJson(jsonReader, JsonObject.class);
+        Optional<String> command = tryToFindCommand(json);
+        if (command.isPresent()) {
+          return command;
+        }
       }
 
-      JsonElement argsEl = json.get("args");
-      if (argsEl == null ||
-          !argsEl.isJsonObject() ||
-          argsEl.getAsJsonObject().get("command_args") == null ||
-          !argsEl.getAsJsonObject().get("command_args").isJsonPrimitive()) {
-        return Optional.absent();
-      }
-
-      String name = nameEl.getAsString();
-      String commandArgs = argsEl.getAsJsonObject().get("command_args").getAsString();
-      String command = "buck " + name + " " + commandArgs;
-
-      return Optional.of(command);
+      // Oh well, we tried.
+      return Optional.absent();
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      logger.error(e);
+      return Optional.absent();
     }
+  }
+
+  private static Optional<String> tryToFindCommand(JsonObject json) {
+    JsonElement nameEl = json.get("name");
+    if (nameEl == null || !nameEl.isJsonPrimitive()) {
+      return Optional.absent();
+    }
+
+    JsonElement argsEl = json.get("args");
+    if (argsEl == null ||
+        !argsEl.isJsonObject() ||
+        argsEl.getAsJsonObject().get("command_args") == null ||
+        !argsEl.getAsJsonObject().get("command_args").isJsonPrimitive()) {
+      return Optional.absent();
+    }
+
+    String name = nameEl.getAsString();
+    String commandArgs = argsEl.getAsJsonObject().get("command_args").getAsString();
+    String command = "buck " + name + " " + commandArgs;
+
+    return Optional.of(command);
   }
 
   private boolean isTraceForBuild(Path path, String id) {

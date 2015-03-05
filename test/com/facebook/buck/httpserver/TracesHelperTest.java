@@ -42,6 +42,17 @@ public class TracesHelperTest {
         new FakeClock(TimeUnit.MILLISECONDS.toNanos(1000L)));
     projectFilesystem.writeContentsToPath(
         "[" +
+          "{\n" +
+            "\"cat\" : \"buck\",\n" +
+            "\"pid\" : 0,\n" +
+            "\"ts\" : 0,\n" +
+            "\"ph\" : \"M\",\n" +
+            "\"args\" : {\n" +
+              "\"name\" : \"buck\"\n" +
+            "},\n" +
+            "\"name\" : \"process_name\",\n" +
+            "\"tid\" : 0\n" +
+          "}," +
           "{" +
             "\"cat\":\"buck\"," +
             "\"name\":\"build\"," +
