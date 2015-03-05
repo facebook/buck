@@ -194,6 +194,10 @@ public class BuildInfoRecorder {
     }
 
     ImmutableSet<Path> pathsToIncludeInZip = pathsToIncludeInZipBuilder.build();
+    eventBus.post(
+        ArtifactCacheEvent.started(
+            ArtifactCacheEvent.Operation.COMPRESS,
+            ruleKey));
     File zip;
     try {
       zip = File.createTempFile(
@@ -215,6 +219,11 @@ public class BuildInfoRecorder {
           Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInZip))));
       e.printStackTrace();
       return;
+    } finally {
+      eventBus.post(
+          ArtifactCacheEvent.finished(
+              ArtifactCacheEvent.Operation.COMPRESS,
+              ruleKey));
     }
     artifactCache.store(ruleKey, zip);
     zip.delete();

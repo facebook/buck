@@ -42,6 +42,7 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
@@ -240,10 +241,6 @@ public class CachingBuildEngine implements BuildEngine {
 
               doHydrationAfterBuildStepsFinish(rule, result, onDiskBuildInfo);
 
-              // Do the post to the event bus immediately after the future is set so that the
-              // build time measurement is as accurate as possible.
-              logBuildRuleFinished(result);
-
               // Only now that the rule should be in a completely valid state, resolve the future.
               BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(rule, result.getSuccess());
               newFuture.set(buildRuleSuccess);
@@ -253,6 +250,9 @@ public class CachingBuildEngine implements BuildEngine {
                 buildInfoRecorder.get().performUploadToArtifactCache(context.getArtifactCache(),
                     eventBus);
               }
+
+              // Post to the event bus that the rule has finished.
+              logBuildRuleFinished(result);
             }
 
             @Override
@@ -520,11 +520,18 @@ public class CachingBuildEngine implements BuildEngine {
     //
     // Unfortunately, this does not appear to work, in practice, because MoreFiles fails when trying
     // to resolve a Path for a zip entry against a file Path on disk.
-
+    buildContext.getEventBus().post(
+        ArtifactCacheEvent.started(
+            ArtifactCacheEvent.Operation.DECOMPRESS,
+            rule.getRuleKey()));
     try {
       Unzip.extractZipFile(zipFile.toPath().toAbsolutePath(),
           projectRoot.toAbsolutePath(),
           /* overwriteExistingFiles */ true);
+
+      // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
+      // around for debugging purposes.
+      Files.delete(zipFile.toPath());
     } catch (IOException e) {
       // In the wild, we have seen some inexplicable failures during this step. For now, we try to
       // give the user as much information as we can to debug the issue, but return CacheResult.MISS
@@ -537,11 +544,13 @@ public class CachingBuildEngine implements BuildEngine {
               zipFile.getAbsolutePath(),
               Throwables.getStackTraceAsString(e)));
       return CacheResult.MISS;
+    } finally {
+      buildContext.getEventBus().post(
+          ArtifactCacheEvent.finished(
+              ArtifactCacheEvent.Operation.DECOMPRESS,
+              rule.getRuleKey()));
     }
 
-    // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
-    // around for debugging purposes.
-    zipFile.delete();
     return cacheResult;
   }
 
