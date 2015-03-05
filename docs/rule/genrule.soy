@@ -63,6 +63,12 @@
     {sp}<code>cmd</code>, using builtin {call buck.string_parameter_macros /}.
     This expansion takes two supported forms:
     <dl>
+      <dt><code>$(classpath /&#2F;path/to:target)</code></dt>
+      <dd>Expands a build rule for something that has a java classpath
+      to the transitive classpath of that rule. If the rule does not
+      have (or contribute to) a classpath, an exception will be thrown
+      and the build will break.</dd>
+
       <dt><code>$(exe /&#x2F;path/to:target)</code></dt>
       <dd>Expands a build rule that results in an executable to the commands
       necessary to execute that command. For example, a <code>java_binary()

@@ -27,6 +27,10 @@ import com.google.common.collect.Ordering;
 
 import java.io.File;
 
+/**
+ * Used to expand the macro {@literal $(classpath //some:target)} to the transitive classpath of
+ * that target, expanding all paths to be absolute.
+ */
 public class ClasspathMacroExpander extends BuildTargetMacroExpander {
   public ClasspathMacroExpander(BuildTargetParser parser) {
     super(parser);
@@ -44,6 +48,7 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander {
     HasClasspathEntries hasEntries = (HasClasspathEntries) rule;
     return Joiner.on(File.pathSeparator).join(
         FluentIterable.from(hasEntries.getTransitiveClasspathEntries().values())
+            .transform(filesystem.getAbsolutifier())
             .transform(Functions.toStringFunction())
             .toSortedSet(Ordering.natural()));
   }

@@ -12,6 +12,7 @@ java_test(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/rules/macros:macros',
     '//src/com/facebook/buck/util:constants',
+    '//test/com/facebook/buck/io:testutil',
     '//test/com/facebook/buck/java:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',

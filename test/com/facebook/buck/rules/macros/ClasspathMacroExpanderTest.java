@@ -18,6 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -31,15 +32,25 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class ClasspathMacroExpanderTest {
 
+  private static final Path ROOT =
+      MorePathsForTests.rootRelativePath(".").normalize().resolve("opt");
   private ClasspathMacroExpander expander;
+  private FakeProjectFilesystem filesystem;
 
   @Before
   public void createMacroExpander() {
     this.expander = new ClasspathMacroExpander(new BuildTargetParser());
+    this.filesystem = new FakeProjectFilesystem() {
+      @Override
+      public Path resolve(Path path) {
+        return ROOT.resolve(path);
+      }
+    };
   }
 
   @Test
@@ -49,9 +60,9 @@ public class ClasspathMacroExpanderTest {
             .addSrc(Paths.get("Example.java"))  // Force a jar to be created
             .build(new BuildRuleResolver());
 
-    String classpath = expander.expand(new FakeProjectFilesystem(), rule);
+    String classpath = expander.expand(filesystem, rule);
 
-    assertEquals(rule.getPathToOutputFile().toString(), classpath);
+    assertEquals(ROOT + File.separator + rule.getPathToOutputFile(), classpath);
   }
 
   @Test
@@ -68,11 +79,16 @@ public class ClasspathMacroExpanderTest {
             .addDep(dep.getBuildTarget())
             .build(ruleResolver);
 
-    String classpath = expander.expand(new FakeProjectFilesystem(), rule);
+    String classpath = expander.expand(filesystem, rule);
 
     // Alphabetical sorting expected, so "dep" should be before "rule"
     assertEquals(
-        dep.getPathToOutputFile() + File.pathSeparator + rule.getPathToOutputFile(),
+        String.format(
+            "%s/%s:%s/%s",
+            ROOT,
+            dep.getPathToOutputFile(),
+            ROOT,
+            rule.getPathToOutputFile()).replace(':', File.pathSeparatorChar),
         classpath);
   }
 
@@ -83,6 +99,6 @@ public class ClasspathMacroExpanderTest {
           .setSrc(new TestSourcePath("some-file.jar"))
           .build(new BuildRuleResolver());
 
-    expander.expand(new FakeProjectFilesystem(), rule);
+    expander.expand(filesystem, rule);
   }
 }
