@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -34,7 +33,6 @@ public class DefaultCxxPlatformsTest {
   @Test
   public void lexYaccFlags() {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
-        new FakeProjectFilesystem(),
         new FakeBuckConfig(
             ImmutableMap.<String, Map<String, String>>of(
                 "cxx", ImmutableMap.of(
@@ -48,7 +46,6 @@ public class DefaultCxxPlatformsTest {
   @Test
   public void compilerFlagsPropagateToPreprocessorFlags() {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
-        new FakeProjectFilesystem(),
         new FakeBuckConfig(
             ImmutableMap.<String, Map<String, String>>of(
                 "cxx", ImmutableMap.of(

@@ -23,9 +23,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -33,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class ToolTest {
@@ -53,20 +52,20 @@ public class ToolTest {
                     .put("path", Strings.repeat("a", 40))
                     .build()));
 
-    SourcePath path = new TestSourcePath("path");
+    Path path = Paths.get("path");
     RuleKey.Builder.RuleKeyPair pathRuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
             .setReflectively("tool", path)
             .build();
 
-    Tool tool1 = new SourcePathTool(path);
+    Tool tool1 = new HashedFileTool(path);
     RuleKey.Builder.RuleKeyPair tool1RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
             .setReflectively("tool", tool1)
             .build();
     assertEquals(pathRuleKey, tool1RuleKey);
 
-    Tool tool2 = new SourcePathTool(path);
+    Tool tool2 = new HashedFileTool(path);
     RuleKey.Builder.RuleKeyPair tool2RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
             .setReflectively("tool", tool2)

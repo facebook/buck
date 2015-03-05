@@ -22,7 +22,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -32,7 +31,7 @@ public class JavaBinaryRuleBuilder extends AbstractNodeBuilder<JavaBinaryDescrip
     super(
         new JavaBinaryDescription(
             DEFAULT_JAVAC_OPTIONS,
-            DefaultCxxPlatforms.build(new FakeProjectFilesystem(), new FakeBuckConfig())),
+            DefaultCxxPlatforms.build(new FakeBuckConfig())),
         target);
   }
 

@@ -25,11 +25,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
@@ -53,7 +51,6 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void appleSdkPathsBuiltFromDirectory() throws Exception {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AppleSdkPaths appleSdkPaths =
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(Paths.get("."))
@@ -71,7 +68,6 @@ public class AppleCxxPlatformsTest {
 
     CxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            projectFilesystem,
             ApplePlatform.IPHONEOS,
             "iphoneos8.0",
             "7.0",
@@ -112,7 +108,6 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void cxxToolParamsReadFromBuckConfig() throws Exception {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AppleSdkPaths appleSdkPaths =
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(Paths.get("."))
@@ -130,7 +125,6 @@ public class AppleCxxPlatformsTest {
 
     CxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            projectFilesystem,
             ApplePlatform.IPHONEOS,
             "iphoneos8.0",
             "7.0",
@@ -163,7 +157,6 @@ public class AppleCxxPlatformsTest {
   public void pathNotFoundThrows() throws Exception {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(containsString("Cannot find tool"));
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AppleSdkPaths appleSdkPaths =
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(Paths.get("."))
@@ -173,7 +166,6 @@ public class AppleCxxPlatformsTest {
             .build();
 
     AppleCxxPlatforms.buildWithExecutableChecker(
-        projectFilesystem,
         ApplePlatform.IPHONEOS,
         "iphoneos8.0",
         "7.0",

@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Tool;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 
@@ -34,11 +33,10 @@ public class OCamlBuckConfig {
   private final CxxPlatform cxxPlatform;
 
   public OCamlBuckConfig(
-      ProjectFilesystem projectFilesystem,
       Platform platform,
       BuckConfig delegate) {
     this.delegate = delegate;
-    cxxPlatform = DefaultCxxPlatforms.build(projectFilesystem, platform, delegate);
+    cxxPlatform = DefaultCxxPlatforms.build(platform, delegate);
   }
 
   public Optional<Path> getOCamlCompiler() {

@@ -18,15 +18,16 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 
-public class SourcePathTool implements Tool {
+import java.nio.file.Path;
 
-  private final SourcePath path;
+public class HashedFileTool implements Tool {
 
-  public SourcePathTool(SourcePath path) {
+  private final Path path;
+
+  public HashedFileTool(Path path) {
     this.path = path;
   }
 
@@ -37,12 +38,12 @@ public class SourcePathTool implements Tool {
 
   @Override
   public ImmutableList<BuildRule> getBuildRules(SourcePathResolver resolver) {
-    return ImmutableList.copyOf(resolver.filterBuildRuleInputs(ImmutableList.of(path)));
+    return ImmutableList.of();
   }
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return ImmutableList.of(resolver.getPath(path).toString());
+    return ImmutableList.of(path.toString());
   }
 
 }

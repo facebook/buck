@@ -43,7 +43,7 @@ import java.nio.file.Paths;
 
 public class CxxCompileTest {
 
-  private static final Tool DEFAULT_COMPILER = new SourcePathTool(new TestSourcePath("compiler"));
+  private static final Tool DEFAULT_COMPILER = new HashedFileTool(Paths.get("compiler"));
   private static final ImmutableList<String> DEFAULT_FLAGS =
       ImmutableList.of("-fsanitize=address");
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
@@ -104,7 +104,7 @@ public class CxxCompileTest {
         new CxxCompile(
             params,
             pathResolver,
-            new SourcePathTool(new TestSourcePath("different")),
+            new HashedFileTool(Paths.get("different")),
             DEFAULT_PLUGIN,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,

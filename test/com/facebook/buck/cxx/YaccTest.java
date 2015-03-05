@@ -42,7 +42,7 @@ import java.nio.file.Paths;
 
 public class YaccTest {
 
-  private static final SourcePath DEFAULT_YACC = new TestSourcePath("yacc");
+  private static final Path DEFAULT_YACC = Paths.get("yacc");
   private static final ImmutableList<String> DEFAULT_FLAGS = ImmutableList.of("-flag");
   private static final Path DEFAULT_OUTPUT_PREFIX = Paths.get("output.prefix");
   private static final SourcePath DEFAULT_INPUT = new TestSourcePath("input");
@@ -89,7 +89,7 @@ public class YaccTest {
         new Yacc(
             params,
             pathResolver,
-            new TestSourcePath("different"),
+            Paths.get("different"),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_PREFIX,
             DEFAULT_INPUT));

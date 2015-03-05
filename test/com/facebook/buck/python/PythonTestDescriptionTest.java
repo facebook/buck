@@ -51,7 +51,6 @@ public class PythonTestDescriptionTest {
   private static final Optional<Path> TEST_MAIN = Optional.of(Paths.get("main"));
   private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
-      PROJECT_FILESYSTEM,
       new FakeBuckConfig());
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of());

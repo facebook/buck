@@ -21,14 +21,11 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DarwinLinker;
 import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.HashedFileTool;
 import com.facebook.buck.cxx.ImmutableCxxPlatform;
-import com.facebook.buck.cxx.SourcePathTool;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -52,7 +49,6 @@ public class AppleCxxPlatforms {
   private static final Path USR_BIN = Paths.get("usr/bin");
 
   public static CxxPlatform build(
-      ProjectFilesystem projectFilesystem,
       ApplePlatform targetPlatform,
       String targetSdkName,
       String targetVersion,
@@ -60,7 +56,6 @@ public class AppleCxxPlatforms {
       AppleSdkPaths sdkPaths,
       BuckConfig buckConfig) {
     return buildWithExecutableChecker(
-        projectFilesystem,
         targetPlatform,
         targetSdkName,
         targetVersion,
@@ -72,7 +67,6 @@ public class AppleCxxPlatforms {
 
   @VisibleForTesting
   static CxxPlatform buildWithExecutableChecker(
-      ProjectFilesystem projectFilesystem,
       ApplePlatform targetPlatform,
       String targetSdkName,
       String targetVersion,
@@ -91,10 +85,10 @@ public class AppleCxxPlatforms {
     }
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
-    Tool clangPath = new SourcePathTool(
-        getTool(projectFilesystem, "clang", toolSearchPaths, pathIsExecutableChecker));
-    Tool clangXxPath = new SourcePathTool(
-        getTool(projectFilesystem, "clang++", toolSearchPaths, pathIsExecutableChecker));
+    Tool clangPath = new HashedFileTool(
+        getToolPath("clang", toolSearchPaths, pathIsExecutableChecker));
+    Tool clangXxPath = new HashedFileTool(
+        getToolPath("clang++", toolSearchPaths, pathIsExecutableChecker));
 
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
@@ -126,55 +120,51 @@ public class AppleCxxPlatforms {
         .addAllCxxppflags(cflags)
         .setCxxld(clangXxPath)
         .addAllCxxldflags(cflags)
-        .setLex(getOptionalTool(projectFilesystem, "lex", toolSearchPaths, pathIsExecutableChecker))
+        .setLex(
+            getOptionalToolPath(
+                "lex",
+                toolSearchPaths,
+                pathIsExecutableChecker))
         .setYacc(
-            getOptionalTool(projectFilesystem, "yacc", toolSearchPaths, pathIsExecutableChecker))
+            getOptionalToolPath("yacc", toolSearchPaths, pathIsExecutableChecker))
         .setLd(
             new DarwinLinker(
-                new SourcePathTool(
-                    getTool(
-                        projectFilesystem,
+                new HashedFileTool(
+                    getToolPath(
                         "libtool",
                         toolSearchPaths,
                         pathIsExecutableChecker))))
         .setAr(
-            new SourcePathTool(
-                getTool(projectFilesystem, "ar", toolSearchPaths, pathIsExecutableChecker)))
-        .setDebugPathSanitizer(Optional.of(
-            new DebugPathSanitizer(
-                250,
-                File.separatorChar,
-                Paths.get("."),
-                ImmutableBiMap.<Path, Path>of())))
+            new HashedFileTool(
+                getToolPath("ar", toolSearchPaths, pathIsExecutableChecker)))
+        .setDebugPathSanitizer(
+            Optional.of(
+                new DebugPathSanitizer(
+                    250,
+                    File.separatorChar,
+                    Paths.get("."),
+                    ImmutableBiMap.<Path, Path>of())))
         .setSharedLibraryExtension("dylib");
     DefaultCxxPlatforms.addToolFlagsFromConfig(buckConfig, platformBuilder);
     return platformBuilder.build();
   }
 
-  private static Optional<SourcePath> getOptionalTool(
-      ProjectFilesystem projectFilesystem,
+  private static Optional<Path> getOptionalToolPath(
       String tool,
       ImmutableList<Path> toolSearchPaths,
       Function<Path, Boolean> pathIsExecutableChecker) {
-    Optional<Path> toolPath = MorePaths.searchPathsForExecutable(
+    return MorePaths.searchPathsForExecutable(
         Paths.get(tool),
         toolSearchPaths,
         ImmutableList.<String>of(),
         pathIsExecutableChecker);
-    if (toolPath.isPresent()) {
-      return Optional.<SourcePath>of(new PathSourcePath(projectFilesystem, toolPath.get()));
-    } else {
-      return Optional.absent();
-    }
   }
 
-  private static SourcePath getTool(
-      ProjectFilesystem projectFilesystem,
+  private static Path getToolPath(
       String tool,
       ImmutableList<Path> toolSearchPaths,
       Function<Path, Boolean> pathIsExecutableChecker) {
-    Optional<SourcePath> result = getOptionalTool(
-        projectFilesystem,
+    Optional<Path> result = getOptionalToolPath(
         tool,
         toolSearchPaths,
         pathIsExecutableChecker);

@@ -17,11 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
@@ -90,29 +87,28 @@ public class DefaultCxxPlatforms {
               Paths.get("."),
               ImmutableBiMap.<Path, Path>of()));
 
-  public static CxxPlatform build(ProjectFilesystem projectFilesystem, BuckConfig delegate) {
-    return build(projectFilesystem, Platform.detect(), delegate);
+  public static CxxPlatform build(BuckConfig delegate) {
+    return build(Platform.detect(), delegate);
   }
 
   public static CxxPlatform build(
-      ProjectFilesystem projectFilesystem,
       Platform platform,
       BuckConfig delegate) {
     ImmutableCxxPlatform.Builder builder = ImmutableCxxPlatform.builder();
     // TODO(user, agallagher): Generalize this so we don't need all these setters.
     builder
         .setFlavor(FLAVOR)
-        .setAs(getTool("cxx", "as", projectFilesystem, DEFAULT_AS, delegate))
-        .setAspp(getTool("cxx", "aspp", projectFilesystem, DEFAULT_ASPP, delegate))
-        .setCc(getTool("cxx", "cc", projectFilesystem, DEFAULT_CC, delegate))
-        .setCxx(getTool("cxx", "cxx", projectFilesystem, DEFAULT_CXX, delegate))
-        .setCpp(getTool("cxx", "cpp", projectFilesystem, DEFAULT_CPP, delegate))
-        .setCxxpp(getTool("cxx", "cxxpp", projectFilesystem, DEFAULT_CXXPP, delegate))
-        .setCxxld(getTool("cxx", "cxxld", projectFilesystem, DEFAULT_CXXLD, delegate))
-        .setLd(getLd(projectFilesystem, platform, delegate))
-        .setAr(getTool("cxx", "ar", projectFilesystem, DEFAULT_AR, delegate))
-        .setLex(getSourcePath("cxx", "lex", projectFilesystem, DEFAULT_LEX, delegate))
-        .setYacc(getSourcePath("cxx", "yacc", projectFilesystem, DEFAULT_YACC, delegate))
+        .setAs(getTool("cxx", "as", DEFAULT_AS, delegate))
+        .setAspp(getTool("cxx", "aspp", DEFAULT_ASPP, delegate))
+        .setCc(getTool("cxx", "cc", DEFAULT_CC, delegate))
+        .setCxx(getTool("cxx", "cxx", DEFAULT_CXX, delegate))
+        .setCpp(getTool("cxx", "cpp", DEFAULT_CPP, delegate))
+        .setCxxpp(getTool("cxx", "cxxpp", DEFAULT_CXXPP, delegate))
+        .setCxxld(getTool("cxx", "cxxld", DEFAULT_CXXLD, delegate))
+        .setLd(getLd(platform, delegate))
+        .setAr(getTool("cxx", "ar", DEFAULT_AR, delegate))
+        .setLex(getToolPath("cxx", "lex", DEFAULT_LEX, delegate))
+        .setYacc(getToolPath("cxx", "yacc", DEFAULT_YACC, delegate))
         .setSharedLibraryExtension(getSharedLibraryExtension(platform))
         .setDebugPathSanitizer(DEBUG_PATH_SANITIZER);
     addToolFlagsFromConfig(delegate, builder);
@@ -158,23 +154,20 @@ public class DefaultCxxPlatforms {
     return split.build();
   }
 
-  private static SourcePath getSourcePath(
+  private static Path getToolPath(
       String section,
       String field,
-      ProjectFilesystem projectFilesystem,
       Path def,
       BuckConfig delegate) {
-    Optional<Path> path = delegate.getPath(section, field);
-    return new PathSourcePath(projectFilesystem, path.or(def));
+    return delegate.getPath(section, field).or(def);
   }
 
   private static Tool getTool(
       String section,
       String field,
-      ProjectFilesystem projectFilesystem,
       Path def,
       BuckConfig delegate) {
-    return new SourcePathTool(getSourcePath(section, field, projectFilesystem, def, delegate));
+    return new HashedFileTool(getToolPath(section, field, def, delegate));
   }
 
   private static LinkerType getLinkerTypeForPlatform(Platform platform) {
@@ -199,11 +192,10 @@ public class DefaultCxxPlatforms {
   }
 
   private static Linker getLd(
-      ProjectFilesystem projectFilesystem,
       Platform platform,
       BuckConfig delegate) {
-    Tool tool = new SourcePathTool(
-        getSourcePath("cxx", "ld", projectFilesystem, DEFAULT_LD, delegate));
+    Tool tool = new HashedFileTool(
+        getToolPath("cxx", "ld", DEFAULT_LD, delegate));
     LinkerType type = getLinkerType(platform, delegate);
     switch (type) {
       case GNU:

@@ -17,7 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.TestSourcePath;
+
+import java.nio.file.Paths;
 
 public class CxxPlatformUtils {
 
@@ -26,15 +27,15 @@ public class CxxPlatformUtils {
   public static final ImmutableCxxPlatform DEFAULT_PLATFORM =
       ImmutableCxxPlatform.builder()
           .setFlavor(ImmutableFlavor.of("platform"))
-          .setAs(new SourcePathTool(new TestSourcePath("tool")))
-          .setAspp(new SourcePathTool(new TestSourcePath("tool")))
-          .setCc(new SourcePathTool(new TestSourcePath("tool")))
-          .setCpp(new SourcePathTool(new TestSourcePath("tool")))
-          .setCxx(new SourcePathTool(new TestSourcePath("tool")))
-          .setCxxpp(new SourcePathTool(new TestSourcePath("tool")))
-          .setCxxld(new SourcePathTool(new TestSourcePath("tool")))
-          .setLd(new GnuLinker(new SourcePathTool(new TestSourcePath("tool"))))
-          .setAr(new SourcePathTool(new TestSourcePath("tool")))
+          .setAs(new HashedFileTool(Paths.get("tool")))
+          .setAspp(new HashedFileTool(Paths.get("tool")))
+          .setCc(new HashedFileTool(Paths.get("tool")))
+          .setCpp(new HashedFileTool(Paths.get("tool")))
+          .setCxx(new HashedFileTool(Paths.get("tool")))
+          .setCxxpp(new HashedFileTool(Paths.get("tool")))
+          .setCxxld(new HashedFileTool(Paths.get("tool")))
+          .setLd(new GnuLinker(new HashedFileTool(Paths.get("tool"))))
+          .setAr(new HashedFileTool(Paths.get("tool")))
           .setSharedLibraryExtension(".so")
           .build();
 

@@ -8,7 +8,7 @@ PLATFORM_SRCS = [
   'GnuLinker.java',
   'Linker.java',
   'Tool.java',
-  'SourcePathTool.java',
+  'HashedFileTool.java',
   'VersionedTool.java',
 ]
 java_immutables_library(

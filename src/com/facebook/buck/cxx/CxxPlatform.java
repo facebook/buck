@@ -17,13 +17,13 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.collect.Multimap;
 
 import org.immutables.value.Value;
 
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -63,10 +63,10 @@ public interface CxxPlatform {
   Tool getAr();
   List<String> getArflags();
 
-  Optional<SourcePath> getLex();
+  Optional<Path> getLex();
   List<String> getLexFlags();
 
-  Optional<SourcePath> getYacc();
+  Optional<Path> getYacc();
   List<String> getYaccFlags();
 
   String getSharedLibraryExtension();

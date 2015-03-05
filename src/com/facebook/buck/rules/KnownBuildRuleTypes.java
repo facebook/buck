@@ -247,7 +247,6 @@ public class KnownBuildRuleTypes {
   }
 
   private static void buildAppleCxxPlatforms(
-      ProjectFilesystem projectFilesystem,
       Supplier<Path> appleDeveloperDirectorySupplier,
       Platform buildPlatform,
       BuckConfig buckConfig,
@@ -280,7 +279,6 @@ public class KnownBuildRuleTypes {
       LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
       for (String architecture : sdk.getArchitectures()) {
         CxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
-            projectFilesystem,
             sdk.getApplePlatform(),
             sdk.getName(),
             targetSdkVersion,
@@ -313,7 +311,6 @@ public class KnownBuildRuleTypes {
     ImmutableMap.Builder<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPathsBuilder =
         ImmutableMap.builder();
     buildAppleCxxPlatforms(
-        projectFilesystem,
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
         platform,
         config,
@@ -326,7 +323,7 @@ public class KnownBuildRuleTypes {
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
 
     // Construct the OCaml config wrapping the buck config.
-    OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(projectFilesystem, platform, config);
+    OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
 
     // Setup the NDK C/C++ platforms.
     ImmutableMap.Builder<AndroidBinary.TargetCpuType, NdkCxxPlatform> ndkCxxPlatformsBuilder =
@@ -343,7 +340,7 @@ public class KnownBuildRuleTypes {
     ImmutableMap.Builder<Flavor, CxxPlatform> cxxPlatformsBuilder = ImmutableMap.builder();
 
     // Add the default, config-defined C/C++ platform.
-    CxxPlatform defaultCxxPlatform = DefaultCxxPlatforms.build(projectFilesystem, platform, config);
+    CxxPlatform defaultCxxPlatform = DefaultCxxPlatforms.build(platform, config);
     cxxPlatformsBuilder.put(defaultCxxPlatform.getFlavor(), defaultCxxPlatform);
 
     // If an Android NDK is present, add platforms for that.  This is mostly useful for

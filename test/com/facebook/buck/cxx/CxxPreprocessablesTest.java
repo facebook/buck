@@ -64,7 +64,6 @@ public class CxxPreprocessablesTest {
   private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
 
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
-      PROJECT_FILESYSTEM,
       new FakeBuckConfig());
 
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
@@ -150,7 +149,7 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveCxxPreprocessorInput() throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(PROJECT_FILESYSTEM, new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
 
     // Setup a simple CxxPreprocessorDep which contributes components to preprocessing.
     BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance("//:cpp1");
@@ -241,7 +240,7 @@ public class CxxPreprocessablesTest {
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables()
       throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(PROJECT_FILESYSTEM, new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
 
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinal = "bottom";
@@ -322,7 +321,6 @@ public class CxxPreprocessablesTest {
 
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
     CxxPlatform platform = DefaultCxxPlatforms.build(
-        PROJECT_FILESYSTEM,
         new FakeBuckConfig(
             ImmutableMap.<String, Map<String, String>>of(
                 "cxx", ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags)))));
@@ -379,7 +377,7 @@ public class CxxPreprocessablesTest {
                 .put("cxxppflags", space.join(cxxppflags))
                 .build()),
         filesystem);
-    CxxPlatform platform = DefaultCxxPlatforms.build(PROJECT_FILESYSTEM, buckConfig);
+    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
 
     String cSourceName = "test.c";
     List<String> perFileFlagsForTestC =
@@ -543,9 +541,8 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveDependenciesThrowsForConflictingHeaders()
       throws Exception {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(projectFilesystem, new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
 
     CxxPreprocessorInput bottomInput = CxxPreprocessorInput.builder()
         .setIncludes(
@@ -584,9 +581,8 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveDependenciesDoesNotThrowsForCompatibleHeaders()
       throws Exception {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(projectFilesystem, new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
 
     CxxPreprocessorInput bottomInput = CxxPreprocessorInput.builder()
         .setIncludes(

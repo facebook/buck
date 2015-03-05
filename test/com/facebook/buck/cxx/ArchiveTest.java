@@ -42,7 +42,7 @@ import java.nio.file.Paths;
 
 public class ArchiveTest {
 
-  private static final Tool DEFAULT_ARCHIVER = new SourcePathTool(new TestSourcePath("ar"));
+  private static final Tool DEFAULT_ARCHIVER = new HashedFileTool(Paths.get("ar"));
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
       ImmutableList.<SourcePath>of(
@@ -93,7 +93,7 @@ public class ArchiveTest {
         new Archive(
             params,
             pathResolver,
-            new SourcePathTool(new TestSourcePath("different")),
+            new HashedFileTool(Paths.get("different")),
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverChange);

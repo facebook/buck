@@ -61,7 +61,7 @@ public class CxxDescriptionEnhancerTest {
                 "lex", lexPath.toString(),
                 "yacc", yaccPath.toString())),
         filesystem);
-    CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(filesystem, buckConfig);
+    CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(buckConfig);
 
     // Setup the target name and build params.
     BuildTarget target = BuildTargetFactory.newInstance("//:test");

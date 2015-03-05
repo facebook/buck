@@ -52,7 +52,6 @@ public class PythonBinaryDescriptionTest {
   private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
   private static final Path PEX_PATH = Paths.get("pex");
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
-      PROJECT_FILESYSTEM,
       new FakeBuckConfig());
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of());

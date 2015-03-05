@@ -22,9 +22,6 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -50,14 +47,12 @@ public class CxxLexYaccIntegrationTest {
 
   @Before
   public void setUp() {
-    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(
-        new FakeProjectFilesystem(),
         new FakeBuckConfig());
     assumeTrue(cxxBuckConfig.getLex().isPresent());
     assumeTrue(cxxBuckConfig.getYacc().isPresent());
-    assumeExists(pathResolver.getPath(cxxBuckConfig.getLex().get()));
-    assumeExists(pathResolver.getPath(cxxBuckConfig.getYacc().get()));
+    assumeExists(cxxBuckConfig.getLex().get());
+    assumeExists(cxxBuckConfig.getYacc().get());
   }
 
   @Test
@@ -67,7 +62,6 @@ public class CxxLexYaccIntegrationTest {
     workspace.setUp();
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
-        new FakeProjectFilesystem(),
         new FakeBuckConfig());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:main");
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);

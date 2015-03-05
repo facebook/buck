@@ -31,14 +31,13 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxCompilableEnhancer;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxSource;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -72,7 +71,6 @@ public class OCamlIntegrationTest {
         ImmutableMap.copyOf(System.getenv()));
 
     OCamlBuckConfig oCamlBuckConfig = new OCamlBuckConfig(
-        filesystem,
         Platform.detect(),
         buckConfig);
 
@@ -367,7 +365,6 @@ public class OCamlIntegrationTest {
     BuildTarget cclib = BuildTargetFactory.newInstance("//clib:cc");
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
-        new FakeProjectFilesystem(),
         new FakeBuckConfig());
     BuildTarget cclibbin =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(cclib, cxxPlatform.getFlavor());

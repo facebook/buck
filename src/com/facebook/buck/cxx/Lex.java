@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 
 public class Lex extends AbstractBuildRule {
 
-  private final SourcePath lex;
+  private final Path lex;
   private final ImmutableList<String> flags;
   private final Path outputSource;
   private final Path outputHeader;
@@ -44,7 +44,7 @@ public class Lex extends AbstractBuildRule {
   public Lex(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      SourcePath lex,
+      Path lex,
       ImmutableList<String> flags,
       Path outputSource,
       Path outputHeader,
@@ -90,7 +90,7 @@ public class Lex extends AbstractBuildRule {
         new MkdirStep(outputHeader.getParent()),
         new RmStep(outputHeader, /* shouldForceDeletion */ true),
         new LexStep(
-            getResolver().getPath(lex),
+            lex,
             flags,
             outputSource,
             outputHeader,
