@@ -27,6 +27,7 @@ import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -47,6 +48,7 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
           ImmutableMap.<String, MacroExpander>of(
+              "classpath", new ClasspathMacroExpander(BUILD_TARGET_PARSER),
               "exe", new ExecutableMacroExpander(BUILD_TARGET_PARSER),
               "location", new LocationMacroExpander(BUILD_TARGET_PARSER)));
 
