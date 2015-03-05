@@ -31,6 +31,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,7 +40,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -56,8 +56,7 @@ public class HttpArtifactCacheTest {
 
   private byte[] createFileContentsWithHashCode(HashCode code, String contents) throws IOException {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
-    ObjectOutputStream objectStream = new ObjectOutputStream(output);
-    objectStream.writeObject(code);
+    output.write(code.asBytes());
     output.write(contents.getBytes());
     return output.toByteArray();
   }
@@ -145,6 +144,7 @@ public class HttpArtifactCacheTest {
     connection.setConnectTimeout(1000);
     connection.setDoOutput(true);
     connection.setRequestMethod("POST");
+    connection.setFixedLengthStreamingMode(EasyMock.anyLong());
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     expect(connection.getOutputStream()).andReturn(output);
     File file = File.createTempFile("000", "");

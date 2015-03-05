@@ -21,6 +21,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -32,15 +33,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.NotSerializableException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -141,21 +139,13 @@ public class HttpArtifactCache implements ArtifactCache {
           // Open the stream to server just long enough to read the hash code and artifact.
           try (InputStream input = connection.getInputStream()) {
 
-            // Setup an object input stream to deserialize the hash code.
-            try (ObjectInputStream objectStream = new ObjectInputStream(input)) {
+            // First, extract the hash code from the beginning of the request data.
+            byte[] hashCodeBytes = new byte[hashFunction.bits() / Byte.SIZE];
+            ByteStreams.readFully(input, hashCodeBytes);
+            expectedHashCode = HashCode.fromBytes(hashCodeBytes);
 
-              // First, extract the hash code from the beginning of the request data.
-              try {
-                expectedHashCode = (HashCode) objectStream.readObject();
-              } catch (ClassNotFoundException | ClassCastException e) {
-                logger.warn("fetch(%s): could not deserialize artifact checksum", ruleKey);
-                return CacheResult.MISS;
-              }
-
-              // Write the remaining response data to the temp file.
-              projectFilesystem.copyToPath(input, temp, StandardCopyOption.REPLACE_EXISTING);
-
-            }
+            // Write the remaining response data to the temp file.
+            projectFilesystem.copyToPath(input, temp, StandardCopyOption.REPLACE_EXISTING);
           }
 
           // Now form the checksum on the file we got and compare it to the checksum form the
@@ -196,9 +186,6 @@ public class HttpArtifactCache implements ArtifactCache {
       HashCode hashCode = Files.hash(file, hashFunction);
       connection = createConnection(urlStore);
       connection.setRequestMethod(method);
-      // Use "chunked" streaming mode so that we don't buffer the entire contents of the artifact
-      // in memory.  Using "0" here as the value causes an internal default to be used (4096).
-      connection.setChunkedStreamingMode(0);
       prepareFileUpload(connection, file, ruleKey.toString(), hashCode);
     } catch (NotSerializableException e) {
       logger.error(e, "store(%s): could not write hash code: %s", ruleKey);
@@ -258,32 +245,41 @@ public class HttpArtifactCache implements ArtifactCache {
       String key,
       HashCode hashCode)
       throws IOException {
+
     connection.setDoOutput(true);
     connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY);
     // The cache protocol requires we provide the number of artifacts being sent in the request
     connection.setRequestProperty("Buck-Artifact-Count", "1");
-    try (OutputStream os = new BufferedOutputStream(connection.getOutputStream());
-         InputStream is = projectFilesystem.newFileInputStream(file.toPath())) {
-      os.write(("--" + BOUNDARY + "\r\n").getBytes(StandardCharsets.UTF_8));
-      os.write("Content-Disposition: form-data; name=\"key0\"\r\n\r\n".getBytes(
-            StandardCharsets.UTF_8));
-      os.write(key.getBytes(StandardCharsets.UTF_8));
-      os.write(("\r\n--" + BOUNDARY + "\r\n").getBytes(StandardCharsets.UTF_8));
-      os.write("Content-Disposition: form-data; name=\"data0\"\r\n"
-          .getBytes(StandardCharsets.UTF_8));
-      os.write("Content-Type: application/octet-stream\r\n\r\n".getBytes(StandardCharsets.UTF_8));
 
-      // Setup an object output stream to serialize the hash code.
-      try (ObjectOutputStream objectStream = new ObjectOutputStream(os)) {
+    // Construct the header.
+    byte[] header = (
+        "--" + BOUNDARY + "\r\n" +
+        "Content-Disposition: form-data; name=\"key0\"\r\n\r\n" +
+        key +
+        "\r\n--" + BOUNDARY + "\r\n" +
+        "Content-Disposition: form-data; name=\"data0\"\r\n" +
+        "Content-Type: application/octet-stream\r\n\r\n").getBytes(Charsets.UTF_8);
 
-        // Grab the hash code of the file contents and serialize it to the beginning of the
-        // request data.
-        objectStream.writeObject(hashCode);
-        objectStream.flush();
+    // Get the serialized hash code.
+    byte[] hashCodeBytes = hashCode.asBytes();
 
+    // Construct the footer.
+    byte[] footer = ("\r\n--" + BOUNDARY + "--\r\n").getBytes(Charsets.UTF_8);
+
+    // Use fixed streaming mode so that we don't buffer the entire contents of the artifact
+    // in memory.
+    connection.setFixedLengthStreamingMode(
+        header.length + hashCodeBytes.length + file.length() + footer.length);
+
+    // Write out the header, hash code, file conent, and footer.  In that order.
+    try (OutputStream os = new BufferedOutputStream(connection.getOutputStream())) {
+      os.write(header);
+      os.write(hashCodeBytes);
+      try (InputStream is = projectFilesystem.newFileInputStream(file.toPath())) {
         ByteStreams.copy(is, os);
-        os.write(("\r\n--" + BOUNDARY + "--\r\n").getBytes(StandardCharsets.UTF_8));
       }
+      os.write(footer);
     }
   }
+
 }
