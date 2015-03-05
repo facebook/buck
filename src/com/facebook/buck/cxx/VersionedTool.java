@@ -18,13 +18,14 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
+
 /**
  * A {@link Tool} which only contributes a fixed name and version when appended to a rule key.
- * This class also holds a {@link SourcePath} reference to the tool and additional flags used
+ * This class also holds a {@link Path} reference to the tool and additional flags used
  * when invoking the tool, which do *not* themselves contribute to the rule key.  This is useful
  * in situations such as supporting cross-compilation, in which case the different tools themselves
  * might not be bit-by-bit identical (and, similarly, they might need to invoked with slightly
@@ -36,7 +37,7 @@ public class VersionedTool implements Tool {
   /**
    * The path to the tool.  The contents or path to the tool do not contribute to the rule key.
    */
-  private final SourcePath path;
+  private final Path path;
 
   /**
    * Additional flags that we pass to the tool, but which do *not* contribute to the rule key.
@@ -47,7 +48,7 @@ public class VersionedTool implements Tool {
   private final String version;
 
   public VersionedTool(
-      SourcePath path,
+      Path path,
       ImmutableList<String> extraArgs,
       String name,
       String version) {
@@ -59,13 +60,13 @@ public class VersionedTool implements Tool {
 
   @Override
   public ImmutableList<BuildRule> getBuildRules(SourcePathResolver resolver) {
-    return ImmutableList.copyOf(resolver.filterBuildRuleInputs(ImmutableList.of(path)));
+    return ImmutableList.of();
   }
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     return ImmutableList.<String>builder()
-        .add(resolver.getPath(path).toString())
+        .add(path.toString())
         .addAll(extraArgs)
         .build();
   }

@@ -17,12 +17,11 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
-import java.nio.file.Path;
-
 import org.immutables.value.Value;
+
+import java.nio.file.Path;
 
 /**
  * Adds Android-specific tools to {@link CxxPlatform}.
@@ -33,7 +32,7 @@ public interface NdkCxxPlatform {
 
   CxxPlatform getCxxPlatform();
 
-  SourcePath getObjcopy();
+  Path getObjcopy();
 
   NdkCxxPlatforms.CxxRuntime getCxxRuntime();
 

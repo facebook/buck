@@ -150,7 +150,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
               .resolve(entry.getKey().getSecond());
       NdkCxxPlatform platform =
           Preconditions.checkNotNull(nativePlatforms.get(entry.getKey().getFirst()));
-      Path objcopy = getResolver().getPath(platform.getObjcopy());
+      Path objcopy = platform.getObjcopy();
       steps.add(new MkdirStep(destination.getParent()));
       steps.add(
           new ObjcopyStep(

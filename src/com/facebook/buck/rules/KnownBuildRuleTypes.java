@@ -172,7 +172,6 @@ public class KnownBuildRuleTypes {
    * @return the map holding the available {@link NdkCxxPlatform}s.
    */
   private static ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> getNdkCxxPlatforms(
-      ProjectFilesystem projectFilesystem,
       Path ndkRoot,
       Platform platform) {
 
@@ -183,7 +182,6 @@ public class KnownBuildRuleTypes {
         NdkCxxPlatforms.build(
             ImmutableFlavor.of("android-arm"),
             platform,
-            projectFilesystem,
             ndkRoot,
             new NdkCxxPlatforms.TargetConfiguration(
                 NdkCxxPlatforms.Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
@@ -207,7 +205,6 @@ public class KnownBuildRuleTypes {
         NdkCxxPlatforms.build(
             ImmutableFlavor.of("android-armv7"),
             platform,
-            projectFilesystem,
             ndkRoot,
             new NdkCxxPlatforms.TargetConfiguration(
                 NdkCxxPlatforms.Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
@@ -230,7 +227,6 @@ public class KnownBuildRuleTypes {
         NdkCxxPlatforms.build(
             ImmutableFlavor.of("android-x86"),
             platform,
-            projectFilesystem,
             ndkRoot,
             new NdkCxxPlatforms.TargetConfiguration(
                 NdkCxxPlatforms.Toolchain.X86_4_8,
@@ -337,7 +333,7 @@ public class KnownBuildRuleTypes {
         ImmutableMap.builder();
     Optional<Path> ndkRoot = androidDirectoryResolver.findAndroidNdkDir();
     if (ndkRoot.isPresent()) {
-      ndkCxxPlatformsBuilder.putAll(getNdkCxxPlatforms(projectFilesystem, ndkRoot.get(), platform));
+      ndkCxxPlatformsBuilder.putAll(getNdkCxxPlatforms(ndkRoot.get(), platform));
     }
     ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
         ndkCxxPlatformsBuilder.build();

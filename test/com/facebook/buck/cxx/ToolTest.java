@@ -33,6 +33,8 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
+import java.nio.file.Paths;
+
 public class ToolTest {
 
   private RuleKey.Builder createRuleKeyBuilder(
@@ -89,7 +91,7 @@ public class ToolTest {
 
     Tool tool1 =
         new VersionedTool(
-            new TestSourcePath("something"),
+            Paths.get("something"),
             ImmutableList.<String>of(),
             tool,
             version);
@@ -101,7 +103,7 @@ public class ToolTest {
 
     Tool tool2 =
         new VersionedTool(
-            new TestSourcePath("something-else"),
+            Paths.get("something-else"),
             ImmutableList.<String>of(),
             tool,
             version);
