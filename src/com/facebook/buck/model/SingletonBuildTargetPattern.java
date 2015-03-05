@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
  */
 public class SingletonBuildTargetPattern implements BuildTargetPattern {
 
-  private final BuildTarget target;
+  private final UnflavoredBuildTarget target;
 
   /**
    * @param fullyQualifiedName The fully qualified name of valid target. It is expected to
@@ -33,7 +33,7 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
   public SingletonBuildTargetPattern(String fullyQualifiedName) {
 
     int colon = fullyQualifiedName.lastIndexOf(':');
-    target = BuildTarget
+    target = UnflavoredBuildTarget
         .builder(fullyQualifiedName.substring(0, colon), fullyQualifiedName.substring(colon + 1))
         .build();
   }
@@ -44,7 +44,7 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
    */
   @Override
   public boolean apply(@Nullable BuildTarget target) {
-    return target != null && this.target.equals(target.getUnflavoredTarget());
+    return target != null && this.target.equals(target.getUnflavoredBuildTarget());
   }
 
   @Override

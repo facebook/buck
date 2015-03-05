@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -100,37 +101,37 @@ public class OCamlBuildContext {
   @Nullable
   private ImmutableList<String> bytecodeIncludes;
 
-  private static Path getArchiveOutputPath(BuildTarget target) {
+  private static Path getArchiveOutputPath(UnflavoredBuildTarget target) {
     return BuildTargets.getGenPath(
         target,
         "%s/lib" + target.getShortName() + OCamlCompilables.OCAML_CMXA);
   }
 
-  private static Path getArchiveBytecodeOutputPath(BuildTarget target) {
+  private static Path getArchiveBytecodeOutputPath(UnflavoredBuildTarget target) {
     return BuildTargets.getGenPath(
         target,
         "%s/lib" + target.getShortName() + OCamlCompilables.OCAML_CMA);
   }
 
   public static Path getOutputPath(BuildTarget target, boolean isLibrary) {
-    BuildTarget plainTarget = target.getUnflavoredTarget();
+    UnflavoredBuildTarget plainTarget = target.getUnflavoredBuildTarget();
     if (isLibrary) {
       return getArchiveOutputPath(plainTarget);
     } else {
       return BuildTargets.getBinPath(
           plainTarget,
-          "%s/" + plainTarget.getShortNameAndFlavorPostfix() + ".opt");
+          "%s/" + plainTarget.getShortName() + ".opt");
     }
   }
 
   public static Path getBytecodeOutputPath(BuildTarget target, boolean isLibrary) {
-    BuildTarget plainTarget = target.getUnflavoredTarget();
+    UnflavoredBuildTarget plainTarget = target.getUnflavoredBuildTarget();
     if (isLibrary) {
       return getArchiveBytecodeOutputPath(plainTarget);
     } else {
       return BuildTargets.getBinPath(
           plainTarget,
-          "%s/" + plainTarget.getShortNameAndFlavorPostfix());
+          "%s/" + plainTarget.getShortName());
     }
   }
 

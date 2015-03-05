@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -93,7 +94,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver) {
-    BuildTarget prebuiltJarBuildTarget = buildRule.getBuildTarget();
+    UnflavoredBuildTarget prebuiltJarBuildTarget = buildRule.getBuildTarget().checkUnflavored();
     BuildTarget flavoredBuildTarget = BuildTargets.createFlavoredBuildTarget(
         prebuiltJarBuildTarget, JavaLibrary.GWT_MODULE_FLAVOR);
     BuildRuleParams params = new BuildRuleParams(

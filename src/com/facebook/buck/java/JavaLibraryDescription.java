@@ -256,7 +256,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     }
 
     BuildTarget gwtModuleBuildTarget = BuildTargets.createFlavoredBuildTarget(
-        originalBuildTarget.getUnflavoredTarget(),
+        originalBuildTarget.getUnflavoredBuildTarget(),
         JavaLibrary.GWT_MODULE_FLAVOR);
     ImmutableSortedSet<SourcePath> filesForGwtModule = ImmutableSortedSet
         .<SourcePath>naturalOrder()

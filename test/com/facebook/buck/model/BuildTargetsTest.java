@@ -33,18 +33,18 @@ public class BuildTargetsTest {
   public void testCreateFlavoredBuildTarget() {
     BuildTarget fooBar = BuildTarget.builder("//foo", "bar").build();
     BuildTarget fooBarBaz =
-        BuildTargets.createFlavoredBuildTarget(fooBar, ImmutableFlavor.of("baz"));
+        BuildTargets.createFlavoredBuildTarget(fooBar.checkUnflavored(), ImmutableFlavor.of("baz"));
     assertTrue(fooBarBaz.isFlavored());
     assertEquals("//foo:bar#baz", fooBarBaz.getFullyQualifiedName());
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testCreateFlavoredBuildTargetRejectsFlavoredBuildTarget() {
+  @Test(expected = IllegalStateException.class)
+  public void testCheckUnflavoredRejectsFlavoredBuildTarget() {
     BuildTarget fooBarBaz = BuildTarget
         .builder("//foo", "bar")
         .addFlavors(ImmutableFlavor.of("baz"))
         .build();
-    BuildTargets.createFlavoredBuildTarget(fooBarBaz, ImmutableFlavor.of("buzz"));
+    fooBarBaz.checkUnflavored();
   }
 
   @Test

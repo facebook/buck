@@ -112,7 +112,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
   @VisibleForTesting
   protected BuildTarget getBinaryBuildTarget(BuildTarget target) {
-    return BuildTargets.createFlavoredBuildTarget(target, BINARY_FLAVOR);
+    return BuildTargets.createFlavoredBuildTarget(target.checkUnflavored(), BINARY_FLAVOR);
   }
 
   /**
@@ -144,7 +144,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     BuildRuleParams newParams = params.copyWithChanges(
         ImmutableBuildRuleType.of("create_test_modules_list"),
         BuildTargets.createFlavoredBuildTarget(
-            params.getBuildTarget(),
+            params.getBuildTarget().checkUnflavored(),
             ImmutableFlavor.of("test_module")),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));

@@ -123,7 +123,8 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
 
         JavaLibrary javaLibrary = (JavaLibrary) rule;
         BuildTarget gwtModuleTarget = BuildTargets.createFlavoredBuildTarget(
-            javaLibrary, JavaLibrary.GWT_MODULE_FLAVOR);
+            javaLibrary.getBuildTarget().checkUnflavored(),
+            JavaLibrary.GWT_MODULE_FLAVOR);
         Optional<BuildRule> gwtModule = resolver.getRuleOptional(gwtModuleTarget);
 
         // Note that gwtModule could be absent if javaLibrary is a rule with no srcs of its own,

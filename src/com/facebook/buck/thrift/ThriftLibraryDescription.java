@@ -321,7 +321,8 @@ public class ThriftLibraryDescription
     // this rule in the findImplicitDepsFromParams method, so this should always exist by
     // the time we get here.
     ThriftLibrary thriftLibrary =
-        (ThriftLibrary) resolver.getRule(target.getUnflavoredTarget());
+        (ThriftLibrary) resolver.getRule(
+            BuildTarget.of(target.getUnflavoredBuildTarget()));
 
     // We implicitly pass the language-specific flavors of your thrift lib dependencies as
     // language specific deps to the language specific enhancer.
@@ -415,7 +416,7 @@ public class ThriftLibraryDescription
 
     // The flavored versions of this rule must always implicitly depend on the non-flavored
     // version, as it sets up the include rules for dependents.
-    deps.add(buildTarget.getUnflavoredTarget());
+    deps.add(BuildTarget.of(buildTarget.getUnflavoredBuildTarget()));
 
     // Convert all the thrift library deps into their flavored counterparts and
     // add them to our list of deps, to make sure they get included in the target graph.

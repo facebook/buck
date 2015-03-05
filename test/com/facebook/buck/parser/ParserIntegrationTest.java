@@ -25,7 +25,9 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -95,7 +97,13 @@ public class ParserIntegrationTest {
     try {
       workspace.runBuckCommand("build", "//:A");
     } catch (HumanReadableException e) {
-      assertEquals("Cycle found: //:C -> //:E -> //:F -> //:C", e.getHumanReadableErrorMessage());
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          Matchers.isIn(
+              ImmutableSet.of(
+                  "Cycle found: //:C -> //:E -> //:F -> //:C",
+                  "Cycle found: //:E -> //:F -> //:C -> //:E",
+                  "Cycle found: //:F -> //:C -> //:E -> //:F")));
       return;
     }
     fail("An exception should have been thrown because of a circular dependency.");

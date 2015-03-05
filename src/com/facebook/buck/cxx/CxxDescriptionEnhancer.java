@@ -220,7 +220,7 @@ public class CxxDescriptionEnhancer {
   @VisibleForTesting
   protected static BuildTarget createLexBuildTarget(BuildTarget target, String name) {
     return BuildTarget
-        .builder(target.getUnflavoredTarget())
+        .builder(target.getUnflavoredBuildTarget())
         .addFlavors(
             ImmutableFlavor.of(
                 String.format(
@@ -232,7 +232,7 @@ public class CxxDescriptionEnhancer {
   @VisibleForTesting
   protected static BuildTarget createYaccBuildTarget(BuildTarget target, String name) {
     return BuildTarget
-        .builder(target.getUnflavoredTarget())
+        .builder(target.getUnflavoredBuildTarget())
         .addFlavors(
             ImmutableFlavor.of(
                 String.format(

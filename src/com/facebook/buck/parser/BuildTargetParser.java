@@ -20,6 +20,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorParser;
 import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -141,14 +143,16 @@ public class BuildTargetParser {
           String.format("%s must start with %s", fullyQualifiedName, BUILD_RULE_PREFIX));
     }
 
-    ImmutableBuildTarget.Builder builder = BuildTarget.builder(baseName, shortName);
-    for (String flavor : flavorNames) {
-      builder.addFlavors(ImmutableFlavor.of(flavor));
-    }
+    ImmutableUnflavoredBuildTarget.Builder unflavoredBuilder =
+        UnflavoredBuildTarget.builder(baseName, shortName);
     Optional<String> canonicalRepoName = Preconditions.checkNotNull(
         localToCanonicalRepoNamesMap.get(givenRepoName));
     if (canonicalRepoName.isPresent()) {
-      builder.setRepository(canonicalRepoName.get());
+      unflavoredBuilder.setRepository(canonicalRepoName.get());
+    }
+    ImmutableBuildTarget.Builder builder = BuildTarget.builder(unflavoredBuilder.build());
+    for (String flavor : flavorNames) {
+      builder.addFlavors(ImmutableFlavor.of(flavor));
     }
     return builder.build();
   }

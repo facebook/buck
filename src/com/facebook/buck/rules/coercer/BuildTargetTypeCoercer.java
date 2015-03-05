@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
@@ -45,7 +46,7 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
     String param = (String) object;
 
     try {
-        String baseName = BuildTarget.BUILD_TARGET_PREFIX +
+        String baseName = UnflavoredBuildTarget.BUILD_TARGET_PREFIX +
             MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
 
       return buildTargetParser.parse(

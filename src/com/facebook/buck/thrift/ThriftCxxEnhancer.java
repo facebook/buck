@@ -246,7 +246,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     if (cpp2 && options.contains("compatibility")) {
       implicitDeps.add(thriftBuckConfig.getCppDep());
       BuildTarget cppTarget = BuildTargets.createFlavoredBuildTarget(
-          target.getUnflavoredTarget(),
+          target.getUnflavoredBuildTarget(),
           CPP_FLAVOR);
       implicitDeps.add(cppTarget);
     }

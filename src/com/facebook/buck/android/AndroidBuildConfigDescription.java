@@ -112,13 +112,15 @@ public class AndroidBuildConfigDescription
     if (!params.getBuildTarget().isFlavored()) {
       // android_build_config() case.
       Preconditions.checkArgument(!useConstantExpressions);
-      buildConfigBuildTarget = BuildTarget.builder(params.getBuildTarget().getUnflavoredTarget())
+      buildConfigBuildTarget =
+          BuildTarget.builder(params.getBuildTarget().getUnflavoredBuildTarget())
           .addFlavors(GEN_JAVA_FLAVOR)
           .build();
     } else {
       // android_binary() graph enhancement case.
       Preconditions.checkArgument(useConstantExpressions);
-      buildConfigBuildTarget = BuildTarget.builder(params.getBuildTarget().getUnflavoredTarget())
+      buildConfigBuildTarget =
+          BuildTarget.builder(params.getBuildTarget().getUnflavoredBuildTarget())
           .addFlavors(
               ImmutableFlavor.of(GEN_JAVA_FLAVOR.getName() + '_' + javaPackage.replace('.', '_')))
           .build();

@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.FakeRepositoryFactory;
@@ -78,7 +79,8 @@ public class CrossRepoTargetsIntegrationTest {
 
     BuildTarget mainTarget = BuildTarget.builder("//", "main").build();
     BuildTarget externalTarget =
-        BuildTarget.builder("//", "external").setRepository("external").build();
+        BuildTarget.of(
+            UnflavoredBuildTarget.builder("//", "external").setRepository("external").build());
 
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(

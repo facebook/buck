@@ -19,7 +19,6 @@ package com.facebook.buck.model;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -58,6 +57,26 @@ public class BuildTargets {
   }
 
   /**
+   * Return a path to a file in the buck-out/bin/ directory. {@code format} will be prepended with
+   * the {@link com.facebook.buck.util.BuckConstant#BIN_DIR} and the target base path, then
+   * formatted with the target short name.
+   *
+   * @param target The {@link UnflavoredBuildTarget} to scope this path to.
+   * @param format {@link String#format} string for the path name.  It should contain one "%s",
+   *     which will be filled in with the rule's short name.  It should not start with a slash.
+   * @return A {@link java.nio.file.Path} under buck-out/bin, scoped to the base path of
+   * {@code target}.
+   */
+  public static Path getBinPath(UnflavoredBuildTarget target, String format) {
+    return Paths.get(
+        String.format(
+            "%s/%s" + format,
+            BuckConstant.BIN_DIR,
+            target.getBasePathWithSlash(),
+            target.getShortName()));
+  }
+
+  /**
    * Return a path to a file in the buck-out/gen/ directory. {@code format} will be prepended with
    * the {@link com.facebook.buck.util.BuckConstant#GEN_DIR} and the target base path, then
    * formatted with the target short name.
@@ -76,18 +95,31 @@ public class BuildTargets {
   }
 
   /**
+   * Return a path to a file in the buck-out/gen/ directory. {@code format} will be prepended with
+   * the {@link com.facebook.buck.util.BuckConstant#GEN_DIR} and the target base path, then
+   * formatted with the target short name.
+   *
+   * @param target The {@link UnflavoredBuildTarget} to scope this path to.
+   * @param format {@link String#format} string for the path name.  It should contain one "%s",
+   *     which will be filled in with the rule's short name.  It should not start with a slash.
+   * @return A {@link java.nio.file.Path} under buck-out/gen, scoped to the base path of
+   * {@code target}.
+   */
+  public static Path getGenPath(UnflavoredBuildTarget target, String format) {
+    return Paths.get(String.format("%s/%s" + format,
+            BuckConstant.GEN_DIR,
+            target.getBasePathWithSlash(),
+            target.getShortName()));
+  }
+
+  /**
    * Takes the {@link BuildTarget} for {@code hasBuildTarget} and derives a new {@link BuildTarget}
    * from it with the specified flavor.
    * @throws IllegalArgumentException if the original {@link BuildTarget} already has a flavor.
    */
   public static BuildTarget createFlavoredBuildTarget(
-      HasBuildTarget hasBuildTarget,
+      UnflavoredBuildTarget buildTarget,
       Flavor flavor) {
-    BuildTarget buildTarget = hasBuildTarget.getBuildTarget();
-    Preconditions.checkArgument(!buildTarget.isFlavored(),
-        "Cannot add flavor %s to %s.",
-        flavor,
-        buildTarget);
     return BuildTarget.builder(buildTarget)
         .addFlavors(flavor)
         .build();

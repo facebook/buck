@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableBuildTarget;
+import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -74,9 +75,10 @@ public class SourcePathTypeCoercerTest {
         new BuildTargetSourcePath(
             projectFilesystem,
             ImmutableBuildTarget.of(
-                Optional.<String>absent(),
-                "//",
-                "hello",
+                ImmutableUnflavoredBuildTarget.of(
+                    Optional.<String>absent(),
+                    "//",
+                    "hello"),
                 ImmutableSortedSet.<Flavor>of())),
         sourcePath);
   }
@@ -93,9 +95,10 @@ public class SourcePathTypeCoercerTest {
         new BuildTargetSourcePath(
             projectFilesystem,
             ImmutableBuildTarget.of(
-                Optional.<String>absent(),
-                "//",
-                "hello",
+                ImmutableUnflavoredBuildTarget.of(
+                      Optional.<String>absent(),
+                      "//",
+                      "hello"),
                 ImmutableSortedSet.<Flavor>of())),
         sourcePath);
   }
@@ -115,9 +118,10 @@ public class SourcePathTypeCoercerTest {
         new BuildTargetSourcePath(
             projectFilesystem,
             ImmutableBuildTarget.of(
-                Optional.of("hello"),
-                "//",
-                "hello",
+                ImmutableUnflavoredBuildTarget.of(
+                    Optional.of("hello"),
+                    "//",
+                    "hello"),
                 ImmutableSortedSet.<Flavor>of())),
         sourcePath);
   }

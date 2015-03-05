@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -93,8 +94,10 @@ class AndroidPrebuiltAarGraphEnhancer {
       JavacOptions javacOptions) {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
+    UnflavoredBuildTarget originalBuildTarget =
+        originalBuildRuleParams.getBuildTarget().checkUnflavored();
+
     // unzip_aar
-    BuildTarget originalBuildTarget = originalBuildRuleParams.getBuildTarget();
     BuildRuleParams unzipAarParams = originalBuildRuleParams.copyWithChanges(
         UNZIP_AAR_TYPE,
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_UNZIP_FLAVOR),
@@ -170,7 +173,7 @@ class AndroidPrebuiltAarGraphEnhancer {
     // android_library
     BuildRuleParams androidLibraryParams = originalBuildRuleParams.copyWithChanges(
         AndroidLibraryDescription.TYPE,
-        originalBuildTarget,
+        BuildTarget.of(originalBuildTarget),
         /* declaredDeps */ Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>of(
                 androidResource,

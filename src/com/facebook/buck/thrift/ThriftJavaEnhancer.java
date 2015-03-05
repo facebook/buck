@@ -73,7 +73,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
   @VisibleForTesting
   protected BuildTarget getSourceZipBuildTarget(BuildTarget target, String name) {
     return BuildTargets.createFlavoredBuildTarget(
-        target.getUnflavoredTarget(),
+        target.getUnflavoredBuildTarget(),
         ImmutableFlavor.of(
             String.format(
                 "thrift-java-source-zip-%s",
@@ -123,7 +123,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
     BuildRuleParams javaParams = params.copyWithChanges(
         JavaLibraryDescription.TYPE,
         BuildTargets.createFlavoredBuildTarget(
-            params.getBuildTarget().getUnflavoredTarget(),
+            params.getBuildTarget().getUnflavoredBuildTarget(),
             getFlavor()),
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()

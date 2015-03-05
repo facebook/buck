@@ -631,7 +631,7 @@ public class CxxLibraryDescription implements
       Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
       flavors.remove(type.get().getKey());
       BuildTarget target = BuildTarget
-          .builder(params.getBuildTarget().getUnflavoredTarget())
+          .builder(params.getBuildTarget().getUnflavoredBuildTarget())
           .addAllFlavors(flavors)
           .build();
       BuildRuleParams typeParams =

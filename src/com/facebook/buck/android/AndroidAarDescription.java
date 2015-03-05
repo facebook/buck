@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -94,7 +95,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
       BuildRuleResolver resolver,
       A args) {
 
-    BuildTarget originalBuildTarget = originalBuildRuleParams.getBuildTarget();
+    UnflavoredBuildTarget originalBuildTarget =
+        originalBuildRuleParams.getBuildTarget().checkUnflavored();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ImmutableList.Builder<BuildRule> depRules = ImmutableList.builder();
 
@@ -210,12 +212,12 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     depRules.addAll(
         getTargetsAsRules(
             packageableCollection.getNativeLibsTargets(),
-            originalBuildTarget,
+            BuildTarget.of(originalBuildTarget),
             resolver));
 
     BuildRuleParams androidAarParams = originalBuildRuleParams.copyWithChanges(
         TYPE,
-        originalBuildTarget,
+        BuildTarget.of(originalBuildTarget),
         Suppliers.ofInstance(ImmutableSortedSet.copyOf(depRules.build())),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 

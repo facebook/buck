@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -56,7 +57,7 @@ public abstract class BuildTargetPatternParser {
 
   @Nullable
   public String getBaseNameWithSlash() {
-    return BuildTarget.getBaseNameWithSlash(baseName);
+    return UnflavoredBuildTarget.getBaseNameWithSlash(baseName);
   }
 
   protected boolean isPublicVisibilityAllowed() {

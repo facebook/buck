@@ -16,7 +16,6 @@
 
 package com.facebook.buck.model;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -30,7 +29,6 @@ import com.google.common.collect.Ordering;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.SortedSet;
 
 import javax.annotation.Nullable;
@@ -41,86 +39,53 @@ import javax.annotation.Nullable;
     setterVisibility = JsonAutoDetect.Visibility.NONE)
 @BuckStyleImmutable
 @Value.Immutable
-public abstract class BuildTarget implements Comparable<BuildTarget>, HasBuildTarget {
+public abstract class BuildTarget
+    implements
+        Comparable<BuildTarget>,
+        HasUnflavoredBuildTarget,
+        HasBuildTarget {
 
-  public static final String BUILD_TARGET_PREFIX = "//";
+  @Override
+  @Value.Parameter
+  public abstract UnflavoredBuildTarget getUnflavoredBuildTarget();
+
+  @Value.NaturalOrder
+  @Value.Parameter
+  public abstract SortedSet<Flavor> getFlavors();
 
   @Value.Check
   protected void check() {
-    Preconditions.checkArgument(
-        getBaseName().startsWith(BUILD_TARGET_PREFIX),
-        "baseName must start with %s but was %s",
-        BUILD_TARGET_PREFIX,
-        getBaseName());
-
-    // On Windows, baseName may contain backslashes, which are not permitted.
-    Preconditions.checkArgument(
-        !getBaseName().contains("\\"),
-        "baseName may not contain backslashes.");
-
-    Preconditions.checkArgument(
-        getShortName().lastIndexOf("#") == -1,
-        "Build target name cannot contain '#' but was: %s.",
-        getShortName());
-
-    Preconditions.checkArgument(
-        !getShortName().contains("#"),
-        "Build target name cannot contain '#' but was: %s.",
-        getShortName());
-
     Preconditions.checkArgument(
         getFlavors().comparator() == Ordering.natural(),
         "Flavors must be ordered using natural ordering.");
   }
 
   @JsonProperty("repository")
-  @Value.Parameter
-  public abstract Optional<String> getRepository();
+  public Optional<String> getRepository() {
+    return getUnflavoredBuildTarget().getRepository();
+  }
 
-  /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
-   * "//third_party/java/guava".
-   */
   @JsonProperty("baseName")
-  @Value.Parameter
-  public abstract String getBaseName();
+  public String getBaseName() {
+    return getUnflavoredBuildTarget().getBaseName();
+  }
 
-  /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
-   * "//third_party/java/guava/".
-   */
   @Nullable
   public String getBaseNameWithSlash() {
-    return getBaseNameWithSlash(getBaseName());
+    return getUnflavoredBuildTarget().getBaseNameWithSlash();
   }
 
-  /**
-   * Helper function for getting BuildTarget base names with a trailing slash if needed.
-   *
-   * If baseName were //third_party/java/guava, then this would return  "//third_party/java/guava/".
-   * If it were //, it would return //.
-   */
-  public static String getBaseNameWithSlash(String baseName) {
-    return baseName == null || baseName.equals(BUILD_TARGET_PREFIX) ? baseName : baseName + "/";
-  }
-
-  /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
-   * "third_party/java/guava". This does not contain the "//" prefix so that it can be appended to
-   * a file path.
-   */
   public Path getBasePath() {
-    return Paths.get(getBaseName().substring(BUILD_TARGET_PREFIX.length()));
+    return getUnflavoredBuildTarget().getBasePath();
   }
 
-  /**
-   * @return the value of {@link #getBasePath()} with a trailing slash, unless
-   *     {@link #getBasePath()} returns the empty string, in which case this also returns the empty
-   *     string
-   */
   public String getBasePathWithSlash() {
-    String basePath = MorePaths.pathWithUnixSeparators(getBasePath());
-    return basePath.isEmpty() ? "" : basePath + "/";
+    return getUnflavoredBuildTarget().getBasePathWithSlash();
+  }
+
+  @JsonProperty("shortName")
+  public String getShortName() {
+    return getUnflavoredBuildTarget().getShortName();
   }
 
   /**
@@ -138,26 +103,17 @@ public abstract class BuildTarget implements Comparable<BuildTarget>, HasBuildTa
     return "#" + getFlavorsAsString();
   }
 
-  @JsonProperty("shortName")
-  @Value.Parameter
-  public abstract String getShortName();
-
   @JsonProperty("flavor")
   private String getFlavorsAsString() {
     return Joiner.on(",").join(getFlavors());
   }
-
-  @Value.NaturalOrder
-  @Value.Parameter
-  public abstract SortedSet<Flavor> getFlavors();
 
   /**
    * If this build target is //third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava:guava-latest".
    */
   public String getFullyQualifiedName() {
-    return (getRepository().isPresent() ? "@" + getRepository().get() : "") +
-        getBaseName() + ":" + getShortName() + getFlavorPostfix();
+    return getUnflavoredBuildTarget().getFullyQualifiedName() + getFlavorPostfix();
   }
 
   @JsonIgnore
@@ -165,37 +121,35 @@ public abstract class BuildTarget implements Comparable<BuildTarget>, HasBuildTa
     return !(getFlavors().isEmpty());
   }
 
-  /**
-   * @return a {@link BuildTarget} that is equal to the current one, but with the default flavour.
-   *     If this build target does not have a flavor, then this object will be returned.
-   */
-  public BuildTarget getUnflavoredTarget() {
-    if (!isFlavored()) {
-      return this;
-    } else {
-      return ImmutableBuildTarget.of(
-          getRepository(),
-          getBaseName(),
-          getShortName(),
-          ImmutableSortedSet.<Flavor>of());
-    }
+  public UnflavoredBuildTarget checkUnflavored() {
+    Preconditions.checkState(!isFlavored(), "%s is flavored.", this);
+    return getUnflavoredBuildTarget();
+  }
+
+  public static BuildTarget of(UnflavoredBuildTarget unflavoredBuildTarget) {
+    return ImmutableBuildTarget.of(
+        unflavoredBuildTarget,
+        ImmutableSortedSet.<Flavor>of());
   }
 
   public static ImmutableBuildTarget.Builder builder(BuildTarget buildTarget) {
     return ImmutableBuildTarget
         .builder()
-        .setRepository(buildTarget.getRepository())
-        .setBaseName(buildTarget.getBaseName())
-        .setShortName(buildTarget.getShortName())
+        .setUnflavoredBuildTarget(buildTarget.getUnflavoredBuildTarget())
         .addAllFlavors(buildTarget.getFlavors());
+  }
+
+  public static ImmutableBuildTarget.Builder builder(UnflavoredBuildTarget buildTarget) {
+    return ImmutableBuildTarget
+        .builder()
+        .setUnflavoredBuildTarget(buildTarget);
   }
 
   public static ImmutableBuildTarget.Builder builder(String baseName, String shortName) {
     return ImmutableBuildTarget
         .builder()
-        .setRepository(Optional.<String>absent())
-        .setBaseName(baseName)
-        .setShortName(shortName);
+        .setUnflavoredBuildTarget(
+            ImmutableUnflavoredBuildTarget.of(Optional.<String>absent(), baseName, shortName));
   }
 
   /** @return {@link #getFullyQualifiedName()} */

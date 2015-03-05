@@ -26,6 +26,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -104,10 +105,8 @@ public class AppleDescriptions {
       BuildRuleParams params,
       SourcePathResolver resolver,
       AppleNativeTargetDescriptionArg args) {
-    BuildTarget targetForOriginalRule = params.getBuildTarget();
-    if (targetForOriginalRule.isFlavored()) {
-      targetForOriginalRule = targetForOriginalRule.getUnflavoredTarget();
-    }
+    UnflavoredBuildTarget targetForOriginalRule =
+        params.getBuildTarget().getUnflavoredBuildTarget();
     BuildTarget headersTarget = BuildTargets.createFlavoredBuildTarget(
         targetForOriginalRule,
         AppleDescriptions.HEADERS);
@@ -264,10 +263,10 @@ public class AppleDescriptions {
         // In this case, we need the #headers flavor of node so the path to its public headers
         // directory can be included. First, we perform a defensive check to make sure that node is
         // an unflavored node because it may not be safe to request the #headers of a flavored node.
-        BuildTarget buildTarget = node.getBuildTarget();
-        if (buildTarget.isFlavored()) {
+        if (node.getBuildTarget().isFlavored()) {
           return;
         }
+        UnflavoredBuildTarget buildTarget = node.getBuildTarget().checkUnflavored();
 
         // Next, we get the #headers flavor of the rule.
         BuildTarget targetForHeaders = BuildTargets.createFlavoredBuildTarget(
@@ -316,7 +315,7 @@ public class AppleDescriptions {
 
     return Optional.of(
         BuildTargets.getGenPath(
-          targetNode.getBuildTarget().getUnflavoredTarget(),
+          targetNode.getBuildTarget().getUnflavoredBuildTarget(),
           "%s" + headerMapType.getSuffix()));
   }
 
