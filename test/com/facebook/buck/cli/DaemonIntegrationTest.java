@@ -24,15 +24,20 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeNoException;
+import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.DelegatingInputStream;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -40,7 +45,8 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.util.ImmutableProcessExecutorParams;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
@@ -50,6 +56,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.io.Files;
+import com.google.gson.Gson;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
 
@@ -76,13 +83,30 @@ public class DaemonIntegrationTest {
 
   private static final int SUCCESS_EXIT_CODE = 0;
   private ScheduledExecutorService executorService;
+  private static final Gson gson = new Gson();
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Before
-  public void setUp() {
+  public void setUp() throws IOException, InterruptedException{
     executorService = Executors.newScheduledThreadPool(5);
+    // We assume watchman has been installed and configured properly on the system, and that setting
+    // up the watch is successful.
+    try {
+      ProcessExecutor.Result result = new ProcessExecutor(new TestConsole()).launchAndExecute(
+          ImmutableProcessExecutorParams.builder()
+              .setCommand(ImmutableList.of("watchman", "watchzzz", tmp.getRootPath().toString()))
+              .build());
+      assumeTrue(result.getStdout().isPresent());
+      Map<String, Object> response = gson.<Map<String, Object>>fromJson(
+          result.getStdout().get(),
+          Map.class);
+      assumeNotNull(response);
+      assumeFalse(response.containsKey("error"));
+    } catch (IOException e) {
+      assumeNoException(e);
+    }
   }
 
   @After

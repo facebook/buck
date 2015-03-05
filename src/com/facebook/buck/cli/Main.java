@@ -59,7 +59,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.WatchServiceWatcher;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
 import com.facebook.buck.util.concurrent.TimeSpan;
@@ -90,7 +89,6 @@ import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -194,22 +192,14 @@ public final class Main {
 
     private ProjectFilesystemWatcher createWatcher(ProjectFilesystem projectFilesystem)
         throws IOException {
-      if (System.getProperty("buck.buckd_watcher", "WatchService").equals("Watchman")) {
-        LOG.debug("Using watchman to watch for file changes.");
-        return new WatchmanWatcher(
-            projectFilesystem,
-            fileEventBus,
-            clock,
-            objectMapper,
-            repository.getBuckConfig().getIgnorePaths(),
-            DEFAULT_IGNORE_GLOBS
-        );
-      }
-      LOG.debug("Using java.nio.file.WatchService to watch for file changes.");
-      return new WatchServiceWatcher(
+      LOG.debug("Using watchman to watch for file changes.");
+      return new WatchmanWatcher(
           projectFilesystem,
           fileEventBus,
-          FileSystems.getDefault().newWatchService());
+          clock,
+          objectMapper,
+          repository.getBuckConfig().getIgnorePaths(),
+          DEFAULT_IGNORE_GLOBS);
     }
 
     private Optional<WebServer> createWebServer(BuckConfig config, ProjectFilesystem filesystem) {

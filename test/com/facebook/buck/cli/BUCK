@@ -137,6 +137,7 @@ java_test(
     '//third-party/java/args4j:args4j',
     '//third-party/java/ddmlib:ddmlib',
     '//third-party/java/easymock:easymock',
+    '//third-party/java/gson:gson',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest-core',
     '//third-party/java/hamcrest:hamcrest-library',

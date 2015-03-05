@@ -184,7 +184,6 @@ class BuckTool(object):
             command = ["buckd"]
             command.extend(self._get_java_args(buck_version_uid))
             command.append("-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()))
-            command.append("-Dbuck.buckd_watcher=Watchman")
             command.append("-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET))
             command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
             command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
