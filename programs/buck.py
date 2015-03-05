@@ -18,8 +18,6 @@ def main(argv):
         path = os.getenv("PATH", "")
         if java_home:
             pathsep = os.pathsep
-            if sys.platform == 'cygwin':
-                pathsep = ';'
             os.environ["PATH"] = os.path.join(java_home, 'bin') + pathsep + path
 
         tracing_dir = None
