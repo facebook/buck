@@ -48,6 +48,7 @@ The following sections are recognized by Buck:
     'buildfile',
     'cache',
     'color',
+    'cxx',
     'java',
     'httpserver',
     'log',
@@ -211,6 +212,84 @@ Specify the following to disable colorized output:
   ui = false
 </pre>{/literal}
 
+
+{call .section}{param title: 'cxx' /}{param status: 'UNFROZEN' /}{/call}
+
+This section configures the paths to the C++ toolchain's binaries.
+
+{literal}<pre class="prettyprint lang-ini">
+[cxx]
+  # Path to the C preprocessor
+  cpp = /usr/bin/gcc
+
+  # Path to the C compiler
+  cc = /usr/bin/gcc
+
+  # Path to the C linker
+  ld = /usr/bin/ld
+
+  # Path to the C++ preprocessor
+  cxxpp = /usr/bin/g++
+
+  # Path to the C++ compiler
+  cxx = /usr/bin/g++
+
+  # Path to the c++ linker
+  cxxld = /usr/bin/g++
+
+  # Path to the assembly preprocessor
+  aspp = /usr/bin/gcc
+
+  # Path to the assembler
+  as = /usr/bin/as
+
+  # Path to the archiver
+  ar = /usr/bin/ar
+
+  # Path to the lexer
+  lex = /usr/bin/flex
+
+  # Path to the compiler compiler
+  yacc = /usr/bin/bison
+</pre>{/literal}
+
+It also configures configures the default flags to pass to all invocations of said binaries.
+
+{literal}<pre class="prettyprint lang-ini">
+[cxx]
+  # Flags to pass to the C preprocessor
+  cppflags =
+
+  # Flags to pass to the C compiler
+  ccflags =
+
+  # Flags to pass to the C linker
+  ldflags =
+
+  # Flags to pass to the C++ preprocessor
+  cxxppflags =
+
+  # Flags to pass to the C++ compiler
+  cxxflags =
+
+  # Flags to pass to the c++ linker
+  cxxldflags =
+
+  # Flags to pass to the assembly preprocessor
+  asppflags =
+
+  # Flags to pass to the assembler
+  asflags =
+
+  # Flags to pass to the archiver
+  arflags =
+
+  # Flags to pass to the lexer
+  lexflags =
+
+  # Flags to pass to the compiler compiler
+  yaccflags =
+</pre>{/literal}
 
 {call .section}{param title: 'java' /}{/call}
 
