@@ -34,6 +34,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -112,10 +113,10 @@ public class CachingBuildEngine implements BuildEngine {
     return ruleKeys.get(buildTarget);
   }
 
-  @Override
-  public final ListenableFuture<BuildRuleSuccess> build(
+  private ListenableFuture<BuildRuleSuccess> buildInternal(
       final BuildContext context,
-      final BuildRule rule) {
+      final BuildRule rule,
+      List<ListenableFuture<Void>> asyncJobs) {
 
     final SettableFuture<BuildRuleSuccess> newFuture = SettableFuture.create();
     SettableFuture<BuildRuleSuccess> existingFuture = results.putIfAbsent(
@@ -130,17 +131,19 @@ public class CachingBuildEngine implements BuildEngine {
     // Build all of the deps first and then schedule a callback for this rule to build itself once
     // all of those rules are done building.
     try {
+
       // Invoke every dep's build() method and create an uber-ListenableFuture that represents the
       // successful completion of all deps.
       List<ListenableFuture<BuildRuleSuccess>> builtDeps =
           Lists.newArrayListWithCapacity(rule.getDeps().size());
       for (BuildRule dep : rule.getDeps()) {
-        builtDeps.add(build(context, dep));
+        builtDeps.add(buildInternal(context, dep, asyncJobs));
       }
       ListenableFuture<List<BuildRuleSuccess>> allBuiltDeps = Futures.allAsList(builtDeps);
 
       // Schedule this rule to build itself once all of the deps are built.
-      context.getStepRunner().addCallback(allBuiltDeps,
+      ListenableFuture<Void> callbackFuture = context.getStepRunner().addCallback(
+          allBuiltDeps,
           new FutureCallback<List<BuildRuleSuccess>>() {
 
             private final BuckEventBus eventBus = context.getEventBus();
@@ -291,6 +294,11 @@ public class CachingBuildEngine implements BuildEngine {
                       Optional.fromNullable(result.getSuccess())));
             }
           });
+
+      // Record the callback future in our async jobs list, so we remember to wait for it at the
+      // end.
+      asyncJobs.add(callbackFuture);
+
     } catch (Throwable failure) {
       // This is a defensive catch block: if buildRuleResult is never satisfied, then Buck will
       // hang because a callback that is waiting for this rule's future to complete will never be
@@ -301,6 +309,21 @@ public class CachingBuildEngine implements BuildEngine {
     return newFuture;
   }
 
+  @Override
+  public ListenableFuture<BuildRuleSuccess> build(BuildContext context, BuildRule rule) {
+    // Keep track of all jobs that run asynchronously with respect to the build dep chain.  We want
+    // to make sure we wait for these before calling the build finished.
+    List<ListenableFuture<Void>> asyncJobs = Lists.newArrayListWithCapacity(rule.getDeps().size());
+    final ListenableFuture<BuildRuleSuccess> result = buildInternal(context, rule, asyncJobs);
+    return Futures.transform(
+        Futures.allAsList(asyncJobs),
+        new AsyncFunction<List<Void>, BuildRuleSuccess>() {
+          @Override
+          public ListenableFuture<BuildRuleSuccess> apply(List<Void> input) throws Exception {
+            return result;
+          }
+        });
+  }
 
   /**
    * This method is invoked once all of this rule's dependencies are built.

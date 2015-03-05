@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static com.facebook.buck.rules.BuildRuleEvent.Finished;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
@@ -67,10 +68,11 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
+import org.easymock.IAnswer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -85,6 +87,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -484,9 +487,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CachingBuildEngine cachingBuildEngine = new CachingBuildEngine();
 
     ListenableFuture<BuildRuleSuccess> result = cachingBuildEngine.build(buildContext, buildRule);
-    assertTrue("We expect build() to be synchronous in this case, " +
-               "so the future should already be resolved.",
-               MoreFutures.isSuccess(result));
+    assertTrue(
+        "We expect build() to be synchronous in this case, " +
+            "so the future should already be resolved.",
+        MoreFutures.isSuccess(result));
     buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
 
     BuildRuleSuccess success = result.get();
@@ -511,6 +515,12 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   }
 
   private StepRunner createSameThreadStepRunner(@Nullable BuckEventBus eventBus) {
+    return createStepRunner(listeningDecorator(newDirectExecutorService()), eventBus);
+  }
+
+  private StepRunner createStepRunner(
+      ListeningExecutorService service,
+      @Nullable BuckEventBus eventBus) {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.getVerbosity()).andReturn(Verbosity.SILENT).anyTimes();
     if (eventBus != null) {
@@ -519,9 +529,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
     executionContext.postEvent(anyObject(BuckEvent.class));
     expectLastCall().anyTimes();
-    return new DefaultStepRunner(
-        executionContext,
-        listeningDecorator(MoreExecutors.newDirectExecutorService()));
+    return new DefaultStepRunner(executionContext, service);
   }
 
   @Test
@@ -564,6 +572,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // These methods should be invoked after the rule is built locally.
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
+    buildInfoRecorder.performUploadToArtifactCache(artifactCache, buckEventBus);
 
     expect(buildContext.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
     expect(buildContext.getStepRunner()).andReturn(createSameThreadStepRunner());
@@ -574,10 +583,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CachingBuildEngine cachingBuildEngine = new CachingBuildEngine();
     ListenableFuture<BuildRuleSuccess> result = cachingBuildEngine.build(buildContext, buildRule);
     buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
-    assertTrue(
-        "We expect build() to be synchronous in this case, " +
-            "so the future should already be resolved.",
-        MoreFutures.isSuccess(result));
 
     BuildRuleSuccess success = result.get();
     assertEquals(BuildRuleSuccess.Type.BUILT_LOCALLY, success.getType());
@@ -591,6 +596,88 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CacheResult.MISS,
             Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
             buckEventBus));
+
+    verifyAll();
+  }
+
+  @Test
+  public void testAsyncJobsAreNotLeftInExecutor()
+      throws IOException, ExecutionException, InterruptedException {
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget).build();
+    TestAbstractCachingBuildRule buildRule =
+        new LocallyBuiltTestAbstractCachingBuildRule(
+            buildRuleParams,
+            new SourcePathResolver(new BuildRuleResolver()));
+
+    // The EventBus should be updated with events indicating how the rule was built.
+    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+    FakeBuckEventListener listener = new FakeBuckEventListener();
+    buckEventBus.register(listener);
+
+    BuildContext buildContext = createMock(BuildContext.class);
+    expect(buildContext.getProjectRoot()).andReturn(createMock(Path.class));
+    NoopArtifactCache artifactCache = new NoopArtifactCache();
+    expect(buildContext.getArtifactCache()).andStubReturn(artifactCache);
+    expect(buildContext.getStepRunner()).andStubReturn(null);
+
+    BuildInfoRecorder buildInfoRecorder = createMock(BuildInfoRecorder.class);
+    expect(buildContext.createBuildInfoRecorder(
+            eq(buildTarget),
+           /* ruleKey */ anyObject(RuleKey.class),
+           /* ruleKeyWithoutDeps */ anyObject(RuleKey.class)))
+        .andReturn(buildInfoRecorder);
+
+    expect(buildInfoRecorder.fetchArtifactForBuildable(anyObject(File.class), eq(artifactCache)))
+        .andReturn(CacheResult.MISS);
+
+    // Populate the metadata that should be read from disk.
+    OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
+
+    // This metadata must be added to the buildInfoRecorder so that it is written as part of
+    // writeMetadataToDisk().
+    buildInfoRecorder.addMetadata(
+        CachingBuildEngine.ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
+        TestAbstractCachingBuildRule.ABI_KEY_FOR_DEPS_HASH);
+
+    // These methods should be invoked after the rule is built locally.
+    buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
+    buildInfoRecorder.performUploadToArtifactCache(artifactCache, buckEventBus);
+    expectLastCall().andAnswer(
+        new IAnswer<Object>() {
+          @Override
+          public Object answer() throws Throwable {
+            Thread.sleep(500);
+            return null;
+          }
+        });
+
+    ListeningExecutorService service = listeningDecorator(Executors.newFixedThreadPool(2));
+    expect(buildContext.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
+    expect(buildContext.getStepRunner()).andReturn(createStepRunner(service, null));
+    expect(buildContext.getEventBus()).andReturn(buckEventBus).anyTimes();
+
+    replayAll();
+
+    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine();
+    ListenableFuture<BuildRuleSuccess> result = cachingBuildEngine.build(buildContext, buildRule);
+
+    BuildRuleSuccess success = result.get();
+    assertEquals(BuildRuleSuccess.Type.BUILT_LOCALLY, success.getType());
+
+    assertTrue(service.shutdownNow().isEmpty());
+
+    List<BuckEvent> events = listener.getEvents();
+    assertEquals(
+        configureTestEvent(BuildRuleEvent.started(buildRule), buckEventBus).getEventName(),
+        events.get(0).getEventName());
+    assertEquals(
+        configureTestEvent(
+            BuildRuleEvent.finished(buildRule,
+                BuildRuleStatus.SUCCESS,
+                CacheResult.MISS,
+                Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
+            buckEventBus).getEventName(),
+        events.get(1).getEventName());
 
     verifyAll();
   }
@@ -695,6 +782,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Simulate successfully fetching the output file from the ArtifactCache.
     ArtifactCache artifactCache = createMock(ArtifactCache.class);
+    expect(artifactCache.isStoreSupported()).andReturn(false);
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     StepRunner stepRunner = createSameThreadStepRunner(buckEventBus);
     BuildContext buildContext = ImmutableBuildContext.builder()
@@ -715,12 +803,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
     verifyAll();
 
-    result.get();
-
-    assertTrue(
-        "We expect build() to be synchronous in this case, " +
-            "so the future should already be resolved.",
-        MoreFutures.isSuccess(result));
     BuildRuleSuccess success = result.get();
     assertEquals(BuildRuleSuccess.Type.BUILT_LOCALLY, success.getType());
     assertTrue(

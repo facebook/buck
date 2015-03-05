@@ -56,6 +56,7 @@ import com.facebook.buck.util.FileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.easymock.EasyMock;
@@ -258,9 +259,10 @@ public class ExportFileTest {
           }
 
           @Override
-          public <T> void addCallback(
+          public <T> ListenableFuture<Void> addCallback(
               ListenableFuture<List<T>> allBuiltDeps, FutureCallback<List<T>> futureCallback) {
             // Do nothing.
+            return Futures.immediateFuture(null);
           }
         })
         .build();

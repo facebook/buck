@@ -51,7 +51,7 @@ public interface StepRunner {
   /**
    * Execute callback in a new thread, once dependencies have completed.
    */
-  public <T> void addCallback(
+  public <T> ListenableFuture<Void> addCallback(
       ListenableFuture<List<T>> dependencies,
       FutureCallback<List<T>> callback);
 }

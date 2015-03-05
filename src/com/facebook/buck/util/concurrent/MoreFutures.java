@@ -18,14 +18,17 @@ package com.facebook.buck.util.concurrent;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 
 public class MoreFutures {
 
@@ -112,4 +115,47 @@ public class MoreFutures {
       throw new IllegalStateException(e);
     }
   }
+
+  public static <V> ListenableFuture<Void> addListenableCallback(
+      ListenableFuture<V> future,
+      final FutureCallback<? super V> callback,
+      Executor executor) {
+    final SettableFuture<Void> waiter = SettableFuture.create();
+    Futures.addCallback(
+        future,
+        new FutureCallback<V>() {
+          @Override
+          public void onSuccess(V result) {
+            try {
+              callback.onSuccess(result);
+            } catch (Throwable thrown) {
+              waiter.setException(thrown);
+            } finally {
+              waiter.set(null);
+            }
+          }
+          @Override
+          public void onFailure(Throwable throwable) {
+            try {
+              callback.onFailure(throwable);
+            } catch (Throwable thrown) {
+              waiter.setException(thrown);
+            } finally {
+              waiter.set(null);
+            }
+          }
+        },
+        executor);
+    return waiter;
+  }
+
+  public static <V> ListenableFuture<Void> addListenableCallback(
+      ListenableFuture<V> future,
+      final FutureCallback<? super V> callback) {
+    return addListenableCallback(
+        future,
+        callback,
+        com.google.common.util.concurrent.MoreExecutors.directExecutor());
+  }
+
 }
