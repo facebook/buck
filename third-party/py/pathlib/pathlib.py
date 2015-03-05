@@ -461,18 +461,19 @@ class _Selector:
         is_dir = path_cls.is_dir
         exists = path_cls.exists
         listdir = parent_path._accessor.listdir
-        return self._select_from(parent_path, is_dir, exists, listdir)
+        return self._select_from(
+            parent_path, is_dir, exists, listdir, parent_path._flavour.casefold)
 
 
 class _TerminatingSelector:
 
-    def _select_from(self, parent_path, is_dir, exists, listdir):
+    def _select_from(self, parent_path, is_dir, exists, listdir, casefold_func):
         yield parent_path
 
 
 class _EverythingSelector:
 
-    def _select_from(self, parent_path, is_dir, exists, listdir):
+    def _select_from(self, parent_path, is_dir, exists, listdir, casefold_func):
         if not is_dir(parent_path):
             return
         for name in listdir(parent_path):
@@ -485,30 +486,32 @@ class _PreciseSelector(_Selector):
         self.name = name
         _Selector.__init__(self, child_parts)
 
-    def _select_from(self, parent_path, is_dir, exists, listdir):
+    def _select_from(self, parent_path, is_dir, exists, listdir, casefold_func):
         if not is_dir(parent_path):
             return
         path = parent_path._make_child_relpath(self.name)
         if exists(path):
-            for p in self.successor._select_from(path, is_dir, exists, listdir):
+            for p in self.successor._select_from(path, is_dir, exists, listdir, casefold_func):
                 yield p
 
 
 class _WildcardSelector(_Selector):
 
-    def __init__(self, pat, child_parts):
-        self.pat = re.compile(fnmatch.translate(pat))
+    def __init__(self, name, child_parts):
+        self.name = name
         _Selector.__init__(self, child_parts)
 
-    def _select_from(self, parent_path, is_dir, exists, listdir):
+    def _get_pattern(self, casefold_func):
+        return re.compile(fnmatch.translate(casefold_func(self.name)))
+
+    def _select_from(self, parent_path, is_dir, exists, listdir, casefold_func):
         if not is_dir(parent_path):
             return
-        cf = parent_path._flavour.casefold
         for name in listdir(parent_path):
-            casefolded = cf(name)
-            if self.pat.match(casefolded):
+            casefolded = casefold_func(name)
+            if self._get_pattern(casefold_func).match(casefolded):
                 path = parent_path._make_child_relpath(name)
-                for p in self.successor._select_from(path, is_dir, exists, listdir):
+                for p in self.successor._select_from(path, is_dir, exists, listdir, casefold_func):
                     yield p
 
 
@@ -525,7 +528,7 @@ class _RecursiveWildcardSelector(_Selector):
                 for p in self._iterate_directories(path, is_dir, listdir):
                     yield p
 
-    def _select_from(self, parent_path, is_dir, exists, listdir):
+    def _select_from(self, parent_path, is_dir, exists, listdir, casefold_func):
         if not is_dir(parent_path):
             return
         with _cached(listdir) as listdir:
@@ -533,7 +536,7 @@ class _RecursiveWildcardSelector(_Selector):
             try:
                 successor_select = self.successor._select_from
                 for starting_point in self._iterate_directories(parent_path, is_dir, listdir):
-                    for p in successor_select(starting_point, is_dir, exists, listdir):
+                    for p in successor_select(starting_point, is_dir, exists, listdir, casefold_func):
                         if p not in yielded:
                             yield p
                             yielded.add(p)
@@ -1034,7 +1037,6 @@ class Path(PurePath):
         """Iterate over this subtree and yield all existing files (of any
         kind, including directories) matching the given pattern.
         """
-        pattern = self._flavour.casefold(pattern)
         drv, root, pattern_parts = self._flavour.parse_parts((pattern,))
         if drv or root:
             raise NotImplementedError("Non-relative patterns are unsupported")
@@ -1046,7 +1048,6 @@ class Path(PurePath):
         """Recursively yield all existing files (of any kind, including
         directories) matching the given pattern, anywhere in this subtree.
         """
-        pattern = self._flavour.casefold(pattern)
         drv, root, pattern_parts = self._flavour.parse_parts((pattern,))
         if drv or root:
             raise NotImplementedError("Non-relative patterns are unsupported")

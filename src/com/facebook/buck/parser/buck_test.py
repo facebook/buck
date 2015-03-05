@@ -258,6 +258,25 @@ class TestBuck(unittest.TestCase):
         finally:
             shutil.rmtree(d)
 
+    def test_case_preserved(self):
+        d = tempfile.mkdtemp()
+        try:
+            subdir = os.path.join(d, 'java')
+            os.makedirs(subdir)
+            open(os.path.join(subdir, 'Main.java'), 'w').close()
+            self.assertEquals(
+                [
+                    os.path.join('java', 'Main.java'),
+                ],
+                glob_internal(
+                    includes=['java/Main.java'],
+                    excludes=[],
+                    include_dotfiles=False,
+                    allow_empty=False,
+                    search_base=Path(d)))
+        finally:
+            shutil.rmtree(d)
+
 
 if __name__ == '__main__':
     unittest.main()
