@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -46,10 +47,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.Map;
 
 public class HttpArtifactCacheTest {
 
   private static final HashFunction HASH_FUNCTION = Hashing.crc32();
+
   private HttpArtifactCache cache;
   private HttpURLConnection connection;
   private ProjectFilesystem projectFilesystem;
@@ -68,7 +71,8 @@ public class HttpArtifactCacheTest {
     cache = new FakeHttpArtifactCache(
         connection,
         projectFilesystem,
-        BuckEventBusFactory.newInstance());
+        BuckEventBusFactory.newInstance(),
+        ImmutableMap.of("X-Header", "test"));
   }
 
   @Test
@@ -163,13 +167,18 @@ public class HttpArtifactCacheTest {
   }
 
   class FakeHttpArtifactCache extends HttpArtifactCache {
+
     private HttpURLConnection connectionMock;
 
     FakeHttpArtifactCache(
         HttpURLConnection connectionMock,
         ProjectFilesystem projectFilesystem,
-        BuckEventBus buckEventBus) {
-      super("localhost", 8080, 1, true, projectFilesystem, buckEventBus, HASH_FUNCTION);
+        BuckEventBus buckEventBus,
+        ImmutableMap<String, String> headers) {
+      super("localhost", 8080, 1, true, projectFilesystem, buckEventBus, HASH_FUNCTION, headers);
+      for (Map.Entry<String, String> header : headers.entrySet()) {
+        connectionMock.setRequestProperty(header.getKey(), header.getValue());
+      }
       this.connectionMock = connectionMock;
     }
 
@@ -179,4 +188,5 @@ public class HttpArtifactCacheTest {
       return connectionMock;
     }
   }
+
 }

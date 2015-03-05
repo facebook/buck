@@ -71,6 +71,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
@@ -760,6 +762,12 @@ public class BuckConfig {
     int timeoutSeconds = Integer.parseInt(
         getValue("cache", "http_timeout_seconds").or(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS));
     boolean doStore = readCacheMode("http_mode", DEFAULT_HTTP_CACHE_MODE);
+    String localhost;
+    try {
+      localhost = InetAddress.getLocalHost().getHostName();
+    } catch (UnknownHostException e) {
+      localhost = "<unknown>";
+    }
     return new HttpArtifactCache(
         host,
         port,
@@ -767,7 +775,10 @@ public class BuckConfig {
         doStore,
         projectFilesystem,
         buckEventBus,
-        Hashing.crc32());
+        Hashing.crc32(),
+        ImmutableMap.of(
+            "X-BuckCache-User", System.getProperty("user.name"),
+            "X-BuckCache-Host", localhost));
   }
 
   private boolean readCacheMode(String fieldName, String defaultValue) {

@@ -23,6 +23,7 @@ import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.io.ByteStreams;
@@ -41,6 +42,7 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class HttpArtifactCache implements ArtifactCache {
@@ -64,6 +66,7 @@ public class HttpArtifactCache implements ArtifactCache {
   private final BuckEventBus buckEventBus;
   private final HashFunction hashFunction;
   private final String urlStore;
+  private final ImmutableMap<String, String> headers;
 
   public HttpArtifactCache(
       String hostname,
@@ -72,7 +75,8 @@ public class HttpArtifactCache implements ArtifactCache {
       boolean doStore,
       ProjectFilesystem projectFilesystem,
       BuckEventBus buckEventBus,
-      HashFunction hashFunction) {
+      HashFunction hashFunction,
+      ImmutableMap<String, String> headers) {
     Preconditions.checkArgument(0 <= port && port < 65536);
     Preconditions.checkArgument(1 <= timeoutSeconds);
     this.hostname = hostname;
@@ -84,6 +88,7 @@ public class HttpArtifactCache implements ArtifactCache {
     this.hashFunction = hashFunction;
     this.numConnectionExceptionReports = new AtomicInteger(0);
     this.urlStore = String.format(URL_TEMPLATE_STORE, hostname, port);
+    this.headers = headers;
   }
 
   // Make this overrideable by unittests to inject mock connections.
@@ -95,6 +100,9 @@ public class HttpArtifactCache implements ArtifactCache {
   private HttpURLConnection createConnection(String url) throws IOException {
     HttpURLConnection connection = getConnection(url);
     connection.setConnectTimeout(1000 * timeoutSeconds);
+    for (Map.Entry<String, String> header : headers.entrySet()) {
+      connection.setRequestProperty(header.getKey(), header.getValue());
+    }
     return connection;
   }
 
