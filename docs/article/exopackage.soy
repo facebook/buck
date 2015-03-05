@@ -585,9 +585,10 @@ must define a no-arg constructor as follows:
         /* applicationLikeClassName */ "de.danoeh.antennapod.PodcastApp",
 
         // The package for this BuildConfig class must match the package
-        // from the android_build_config() rule. The value of this boolean
-        // will match that of the "exopackage" argument to android_binary().
-        de.danoeh.antennapod.BuildConfig.IS_EXOPACKAGE);
+        // from the android_build_config() rule. The value of the flags
+        // will be set based on the "exopackage_modes" argument to
+        // android_binary().
+        de.danoeh.antennapod.BuildConfig.EXOPACKAGE_FLAGS);
     }
   }
 {/literal}</pre>
@@ -610,7 +611,7 @@ implementation can be simpler:
   public class AppShell extends ExopackageApplication {
 
     public AppShell() {
-      super(de.danoeh.antennapod.BuildConfig.IS_EXOPACKAGE);
+      super(de.danoeh.antennapod.BuildConfig.EXOPACKAGE_FLAGS);
     }
   }
 {/literal}</pre>
@@ -667,7 +668,7 @@ android_binary(
   target = 'Google Inc.:Google APIs:19',
   keystore = ':debug_keystore',
 <span style="color:green">  use_split_dex = True,
-  exopackage = True,
+  exopackage_modes = ['secondary_dex'],
   primary_dex_patterns = [
     '^de/danoeh/antennapod/AppShell^',
     '^de/danoeh/antennapod/BuildConfig^',
@@ -689,9 +690,10 @@ As such, these patterns match the transitive deps of <code>:application-lib</cod
 
 <p>
 
-Setting <code>exopackage = True</code> is what ensures that <code>BuildConfig.IS_EXOPACKAGE</code>
-{sp}will be <code>true</code>, in addition to the other packaging changes that Buck makes
-to support exopackage. This must used with <code>use_split_dex = True</code> because using
+Setting <code>exopackage = ['secondary-dex']</code> is what ensures that
+{sp}<code>BuildConfig.EXOPACKAGE_FLAGS</code> will be set correctly, in
+addition to the other packaging changes that Buck makes to support exopackage.
+This must used with <code>use_split_dex = True</code> because using
 exopackage requires dividing the app into multiple dex files.
 
 <p>
