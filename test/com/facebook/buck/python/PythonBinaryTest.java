@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
@@ -90,37 +91,41 @@ public class PythonBinaryTest {
     Path source2 = tmpDir.newFile().toPath();
     Files.write(source2, "goodbye world".getBytes(Charsets.UTF_8));
 
+    Path mainRelative = MorePaths.relativize(tmpDir.getRoot().toPath(), main);
+    Path source1Relative = MorePaths.relativize(tmpDir.getRoot().toPath(), source1);
+    Path source2Relative = MorePaths.relativize(tmpDir.getRoot().toPath(), source2);
+
     // Setup a rulekey builder factory.
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new FakeRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.of(
-                    main.toString(), Strings.repeat("a", 40),
-                    source1.toString(), Strings.repeat("b", 40),
-                    source2.toString(), Strings.repeat("c", 40))));
+                    mainRelative.toString(), Strings.repeat("a", 40),
+                    source1Relative.toString(), Strings.repeat("b", 40),
+                    source2Relative.toString(), Strings.repeat("c", 40))));
 
     // Calculate the rule keys for the various ways we can layout the source and modules
     // across different python libraries.
     RuleKey.Builder.RuleKeyPair pair1 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
-        "main.py", main,
-        "module/one.py", source1,
-        "module/two.py", source2);
+        "main.py", mainRelative,
+        "module/one.py", source1Relative,
+        "module/two.py", source2Relative);
     RuleKey.Builder.RuleKeyPair pair2 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
-        "main.py", main,
-        "module/two.py", source2,
-        "module/one.py", source1);
+        "main.py", mainRelative,
+        "module/two.py", source2Relative,
+        "module/one.py", source1Relative);
     RuleKey.Builder.RuleKeyPair pair3 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
-        "main.py", main,
-        "module/one.py", source2,
-        "module/two.py", source1);
+        "main.py", mainRelative,
+        "module/one.py", source2Relative,
+        "module/two.py", source1Relative);
     RuleKey.Builder.RuleKeyPair pair4 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
-        "main.py", main,
-        "module/two.py", source1,
-        "module/one.py", source2);
+        "main.py", mainRelative,
+        "module/two.py", source1Relative,
+        "module/one.py", source2Relative);
 
     // Make sure only cases where the actual module layouts are different result
     // in different rules keys.

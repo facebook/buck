@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
@@ -173,16 +174,18 @@ public class ExportFileTest {
 
   @Test
   public void modifyingTheContentsOfTheFileChangesTheRuleKey() throws IOException {
-    Path temp = Files.createTempFile("example", "file");
+    Path root = Files.createTempDirectory("root");
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(root.toFile());
+    Path temp = Files.createTempFile(root, "example", "file");
     temp.toFile().deleteOnExit();
 
     Files.write(temp, "I like cheese".getBytes(UTF_8));
 
     ExportFileBuilder builder = ExportFileBuilder
         .newExportFileBuilder(BuildTargetFactory.newInstance("//some:file"))
-        .setSrc(new TestSourcePath(temp.toAbsolutePath().toString()));
+        .setSrc(new TestSourcePath(MorePaths.relativize(root, temp).toString()));
 
-    ExportFile rule = (ExportFile) builder.build(new BuildRuleResolver());
+    ExportFile rule = (ExportFile) builder.build(new BuildRuleResolver(), projectFilesystem);
 
     RuleKey original = rule.getRuleKey();
 
@@ -190,7 +193,7 @@ public class ExportFileTest {
 
     // Create a new rule. The FileHashCache held by the existing rule will retain a reference to the
     // previous content of the file, so we need to create an identical rule.
-    rule = (ExportFile) builder.build(new BuildRuleResolver());
+    rule = (ExportFile) builder.build(new BuildRuleResolver(), projectFilesystem);
     RuleKey refreshed = rule.getRuleKey();
 
     assertNotEquals(original, refreshed);

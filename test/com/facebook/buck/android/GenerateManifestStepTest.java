@@ -18,14 +18,8 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
@@ -46,9 +40,8 @@ public class GenerateManifestStepTest {
 
   @Before
   public void setUp() {
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
-    manifestPath = resolver.getPath(testDataPath("AndroidManifest.xml"));
-    skeletonPath = resolver.getPath(testDataPath("AndroidManifestSkeleton.xml"));
+    manifestPath = testDataPath("AndroidManifest.xml");
+    skeletonPath = testDataPath("AndroidManifestSkeleton.xml");
   }
 
   @After
@@ -59,10 +52,10 @@ public class GenerateManifestStepTest {
   @Test
   public void testManifestGeneration() throws IOException {
     String expectedOutputPath = testDataPath("AndroidManifest.expected.xml").toString();
-    SourcePath libraryManifestA = testDataPath("AndroidManifestA.xml");
-    SourcePath libraryManifestB = testDataPath("AndroidManifestB.xml");
-    SourcePath libraryManifestC = testDataPath("AndroidManifestC.xml");
-    ImmutableSet.Builder<SourcePath> libraryManifestFiles = ImmutableSet.builder();
+    Path libraryManifestA = testDataPath("AndroidManifestA.xml");
+    Path libraryManifestB = testDataPath("AndroidManifestB.xml");
+    Path libraryManifestC = testDataPath("AndroidManifestC.xml");
+    ImmutableSet.Builder<Path> libraryManifestFiles = ImmutableSet.builder();
     libraryManifestFiles.add(libraryManifestA);
     libraryManifestFiles.add(libraryManifestB);
     libraryManifestFiles.add(libraryManifestC);
@@ -71,8 +64,7 @@ public class GenerateManifestStepTest {
 
     GenerateManifestStep manifestCommand = new GenerateManifestStep(
         skeletonPath,
-        ImmutableSet.copyOf(new SourcePathResolver(new BuildRuleResolver()).getAllPaths(
-                libraryManifestFiles.build())),
+        libraryManifestFiles.build(),
         manifestPath);
     int result = manifestCommand.execute(context);
 
@@ -84,10 +76,9 @@ public class GenerateManifestStepTest {
     assertEquals(expected, output);
   }
 
-  private SourcePath testDataPath(String fileName) {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+  private Path testDataPath(String fileName) {
     Path testData = TestDataHelper.getTestDataDirectory(this).resolve("create_manifest");
 
-    return new PathSourcePath(projectFilesystem, testData.resolve(fileName));
+    return testData.resolve(fileName);
   }
 }

@@ -22,11 +22,10 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Paths;
 
 public class FakeBuildRuleParamsBuilder {
 
@@ -34,8 +33,7 @@ public class FakeBuildRuleParamsBuilder {
   private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
   private ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.of();
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private FileHashCache fileHashCache =
-      new DefaultFileHashCache(new ProjectFilesystem(Paths.get(".")));
+  private Optional<FileHashCache> fileHashCache = Optional.absent();
   private TargetGraph targetGraph = TargetGraph.EMPTY;
 
   private BuildRuleType buildRuleType = ImmutableBuildRuleType.of("fake_build_rule");
@@ -64,7 +62,7 @@ public class FakeBuildRuleParamsBuilder {
   }
 
   public FakeBuildRuleParamsBuilder setFileHashCache(FileHashCache hashCache) {
-    this.fileHashCache = hashCache;
+    this.fileHashCache = Optional.of(hashCache);
     return this;
   }
 
@@ -79,12 +77,18 @@ public class FakeBuildRuleParamsBuilder {
   }
 
   public BuildRuleParams build() {
+    FileHashCache hashCache;
+    if (fileHashCache.isPresent()) {
+      hashCache = fileHashCache.get();
+    } else {
+      hashCache = new DefaultFileHashCache(filesystem);
+    }
     return new BuildRuleParams(
         buildTarget,
         Suppliers.ofInstance(deps),
         Suppliers.ofInstance(extraDeps),
         filesystem,
-        new FakeRuleKeyBuilderFactory(fileHashCache),
+        new FakeRuleKeyBuilderFactory(hashCache),
         buildRuleType,
         targetGraph);
   }
