@@ -291,7 +291,7 @@ class BuckTool(object):
                     Watchman not found, please install when using buckd.
                     See https://github.com/facebook/watchman for details.""")
                 if sys.platform == "darwin":
-                    message += "\n(brew install --HEAD watchman on OS X)"
+                    message += "\n(brew install watchman on OS X)"
                 # Bail if watchman isn't installed as we know java's
                 # FileSystemWatcher will take too long to process events.
                 raise BuckToolException(message)
