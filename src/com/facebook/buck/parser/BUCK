@@ -74,31 +74,3 @@ java_library(
   ],
 )
 
-python_library(
-  name = 'buck',
-  srcs = [
-    'buck.py',
-  ],
-  deps = [
-    '//third-party/py/pathlib:pathlib',
-  ]
-)
-
-python_test(
-  name = 'buck_test',
-  srcs = [
-    'processor_test.py',
-    'buck_test.py',
-  ],
-  deps = [
-    ':buck',
-    '//third-party/py/pathlib:pathlib',
-  ],
-)
-
-export_file(
-  name = 'buck.py',
-  visibility = [
-    'PUBLIC',
-  ],
-)

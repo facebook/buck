@@ -45,7 +45,6 @@ EXPORTED_RESOURCES = [
     Resource("abi_processor_classes"),
     Resource("path_to_asm_jar"),
     Resource("logging_config_file"),
-    Resource("path_to_buck_py"),
     Resource("path_to_pathlib_py", basename='pathlib.py'),
     Resource("path_to_compile_asset_catalogs_py"),
     Resource("path_to_compile_asset_catalogs_build_phase_sh"),

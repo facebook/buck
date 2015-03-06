@@ -18,6 +18,9 @@ java_library(
 java_library(
   name = 'json',
   srcs = glob(['*.java'], excludes = RAW_PARSER_SRCS),
+  resources = [
+    "buck.py",
+  ],
   deps = [
     ':raw_parser',
     '//src/com/facebook/buck/event:event',
@@ -36,5 +39,27 @@ java_library(
   ],
   visibility = [
     'PUBLIC',
+  ],
+)
+
+python_library(
+  name = 'buck',
+  srcs = [
+    'buck.py',
+  ],
+  deps = [
+    '//third-party/py/pathlib:pathlib',
+  ],
+)
+
+python_test(
+  name = 'buck_test',
+  srcs = [
+    'processor_test.py',
+    'buck_test.py',
+  ],
+  deps = [
+    ':buck',
+    '//third-party/py/pathlib:pathlib',
   ],
 )

@@ -37,7 +37,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.CharStreams;
+import com.google.common.io.Resources;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -49,6 +49,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.net.URL;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -66,8 +67,7 @@ import javax.annotation.Nullable;
 public class ProjectBuildFileParser implements AutoCloseable {
 
   /** Path to the buck.py script that is used to evaluate a build file. */
-  private static final String PATH_TO_BUCK_PY = System.getProperty("buck.path_to_buck_py",
-      "src/com/facebook/buck/parser/buck.py");
+  private static final String BUCK_PY_RESOURCE = "com/facebook/buck/json/buck.py";
 
   private static final Path PATH_TO_PATHLIB_PY = Paths.get(
       System.getProperty(
@@ -398,8 +398,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
     Files.createDirectories(buckDotPy.getParent());
 
     try (Writer out = Files.newBufferedWriter(buckDotPy, UTF_8)) {
-      Path original = Paths.get(PATH_TO_BUCK_PY);
-      CharStreams.copy(Files.newBufferedReader(original, UTF_8), out);
+      URL resource = Resources.getResource(BUCK_PY_RESOURCE);
+      Resources.asCharSource(resource, UTF_8).copyTo(out);
       out.write("\n\n");
 
       ConstructorArgMarshaller inspector = new ConstructorArgMarshaller();
