@@ -422,6 +422,8 @@ public class RuleKey {
             setVal(item == null ? null : String.valueOf(item));
           }
           return separate();
+        } else if (determinant instanceof SourcePath) {
+          return setSourcePaths(key, ImmutableSortedSet.copyOf((List<SourcePath>) val));
         } else {
           throw new RuntimeException(
               String.format("Unsupported value type: List<%s>", determinant.getClass()));

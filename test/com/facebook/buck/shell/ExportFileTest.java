@@ -40,8 +40,10 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
@@ -49,6 +51,8 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.DefaultFileHashCache;
+import com.facebook.buck.util.FileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.FutureCallback;
@@ -145,7 +149,7 @@ public class ExportFileTest {
     ExportFile exportFile = (ExportFile) builder
         .build(new BuildRuleResolver());
 
-    assertIterablesEquals(singleton(Paths.get("chips")), exportFile.getInputsToCompareToOutput());
+    assertIterablesEquals(singleton(Paths.get("chips")), exportFile.getSource());
 
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     FakeBuildRule rule = new FakeBuildRule(
@@ -155,12 +159,12 @@ public class ExportFileTest {
 
     builder.setSrc(new BuildTargetSourcePath(projectFilesystem, rule.getBuildTarget()));
     exportFile = (ExportFile) builder.build(ruleResolver);
-    assertTrue(Iterables.isEmpty(exportFile.getInputsToCompareToOutput()));
+    assertTrue(Iterables.isEmpty(exportFile.getSource()));
 
     builder.setSrc(null);
     exportFile = (ExportFile) builder.build(new BuildRuleResolver());
     assertIterablesEquals(
-        singleton(Paths.get("example.html")), exportFile.getInputsToCompareToOutput());
+        singleton(Paths.get("example.html")), exportFile.getSource());
   }
 
   @Test
@@ -175,9 +179,12 @@ public class ExportFileTest {
   @Test
   public void modifyingTheContentsOfTheFileChangesTheRuleKey() throws IOException {
     Path root = Files.createTempDirectory("root");
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(root.toFile());
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(root.toFile());
     Path temp = Files.createTempFile(root, "example", "file");
     temp.toFile().deleteOnExit();
+
+    FileHashCache hashCache = new DefaultFileHashCache(filesystem);
+    RuleKeyBuilderFactory ruleKeyFactory = new DefaultRuleKeyBuilderFactory(hashCache);
 
     Files.write(temp, "I like cheese".getBytes(UTF_8));
 
@@ -185,16 +192,25 @@ public class ExportFileTest {
         .newExportFileBuilder(BuildTargetFactory.newInstance("//some:file"))
         .setSrc(new TestSourcePath(MorePaths.relativize(root, temp).toString()));
 
-    ExportFile rule = (ExportFile) builder.build(new BuildRuleResolver(), projectFilesystem);
+    ExportFile rule = (ExportFile) builder.build(new BuildRuleResolver(), filesystem);
 
-    RuleKey original = rule.getRuleKey();
+    RuleKey original = ruleKeyFactory
+            .newInstance(rule, new SourcePathResolver(new BuildRuleResolver()))
+            .build()
+            .getTotalRuleKey();
 
     Files.write(temp, "I really like cheese".getBytes(UTF_8));
 
     // Create a new rule. The FileHashCache held by the existing rule will retain a reference to the
     // previous content of the file, so we need to create an identical rule.
-    rule = (ExportFile) builder.build(new BuildRuleResolver(), projectFilesystem);
-    RuleKey refreshed = rule.getRuleKey();
+    rule = (ExportFile) builder.build(new BuildRuleResolver(), filesystem);
+
+    hashCache = new DefaultFileHashCache(filesystem);
+    ruleKeyFactory = new DefaultRuleKeyBuilderFactory(hashCache);
+    RuleKey refreshed = ruleKeyFactory
+        .newInstance(rule, new SourcePathResolver(new BuildRuleResolver()))
+        .build()
+        .getTotalRuleKey();
 
     assertNotEquals(original, refreshed);
   }

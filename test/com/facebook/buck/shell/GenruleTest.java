@@ -167,7 +167,7 @@ public class GenruleTest {
         Paths.get("src/com/facebook/katana/AndroidManifest.xml"));
     assertEquals(
         inputsToCompareToOutputs,
-        ((Genrule) genrule).getInputsToCompareToOutput());
+        ((Genrule) genrule).getSrcs());
 
     // Verify that the shell commands that the genrule produces are correct.
     List<Step> steps = genrule.getBuildSteps(

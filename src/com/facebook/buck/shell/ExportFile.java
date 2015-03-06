@@ -34,9 +34,9 @@ import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
-import java.util.Collections;
 
 /**
  * Export a file so that it can be easily referenced by other
@@ -81,6 +81,7 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName {
 
   @AddToRuleKey
   private final String name;
+  @AddToRuleKey
   private final SourcePath src;
   @AddToRuleKey(stringify = true)
   private final Path out;
@@ -103,9 +104,14 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName {
     this.out = BuckConstant.GEN_PATH.resolve(target.getBasePath()).resolve(this.name);
   }
 
+  @VisibleForTesting
+  ImmutableCollection<Path> getSource() {
+    return getResolver().filterInputsToCompareToOutput(src);
+  }
+
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(Collections.singleton(src));
+    return ImmutableSet.of();
   }
 
   @Override

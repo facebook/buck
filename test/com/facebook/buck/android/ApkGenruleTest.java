@@ -184,7 +184,7 @@ public class ApkGenruleTest {
         Paths.get("src/com/facebook/key.properties"));
     MoreAsserts.assertIterablesEquals(
         expectedInputsToCompareToOutputs,
-        apkGenrule.getInputsToCompareToOutput());
+        apkGenrule.getSrcs());
 
     // Verify that the shell commands that the genrule produces are correct.
     List<Step> steps = apkGenrule.getBuildSteps(buildContext, new FakeBuildableContext());

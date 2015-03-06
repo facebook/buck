@@ -22,6 +22,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -45,6 +46,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -106,15 +108,20 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
    */
+  @AddToRuleKey
   protected final ImmutableList<SourcePath> srcs;
 
   protected final Function<String, String> macroExpander;
+  @AddToRuleKey
   protected final Optional<String> cmd;
+  @AddToRuleKey
   protected final Optional<String> bash;
+  @AddToRuleKey
   protected final Optional<String> cmdExe;
 
   protected final Map<Path, Path> srcsToAbsolutePaths;
 
+  @AddToRuleKey
   private final String out;
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
@@ -179,9 +186,14 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
     return relativeToAbsolutePathFunction.apply(getPathToOutputFile()).toString();
   }
 
+  @VisibleForTesting
+  public ImmutableCollection<Path> getSrcs() {
+    return getResolver().filterInputsToCompareToOutput(srcs);
+  }
+
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(srcs);
+    return ImmutableSet.of();
   }
 
   @Override
@@ -191,11 +203,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .setReflectively("cmd", cmd)
-        .setReflectively("bash", bash)
-        .setReflectively("cmd_exe", cmdExe)
-        .setReflectively("out", out);
+    return builder;
   }
 
   protected void addEnvironmentVariables(ExecutionContext context,

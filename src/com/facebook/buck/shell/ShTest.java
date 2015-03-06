@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -55,6 +56,7 @@ import javax.annotation.Nullable;
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class ShTest extends AbstractBuildRule implements TestRule {
 
+  @AddToRuleKey
   private final SourcePath test;
   private final ImmutableSet<Label> labels;
 
@@ -70,7 +72,7 @@ public class ShTest extends AbstractBuildRule implements TestRule {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(ImmutableList.of(test));
+    return ImmutableSet.of();
   }
 
   @Override

@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -31,9 +32,9 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
+import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -42,7 +43,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import org.stringtemplate.v4.ST;
 
@@ -59,7 +59,9 @@ public class ShBinary extends AbstractBuildRule
           "buck.path_to_sh_binary_template",
           "src/com/facebook/buck/shell/sh_binary_template"));
 
+  @AddToRuleKey
   private final SourcePath main;
+  @AddToRuleKey
   private final ImmutableSet<SourcePath> resources;
 
   /** The path where the output will be written. */
@@ -85,12 +87,7 @@ public class ShBinary extends AbstractBuildRule
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    ImmutableSortedSet<SourcePath> allPaths = ImmutableSortedSet.<SourcePath>naturalOrder()
-        .add(main)
-        .addAll(resources)
-        .build();
-
-    return getResolver().filterInputsToCompareToOutput(allPaths);
+    return ImmutableSet.of();
   }
 
   @Override

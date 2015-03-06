@@ -18,6 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -40,8 +41,11 @@ import java.nio.file.Path;
  * build.
  */
 public class RemoteFile extends AbstractBuildRule {
+  @AddToRuleKey(stringify = true)
   private final URI uri;
+  @AddToRuleKey(stringify = true)
   private final HashCode sha1;
+  @AddToRuleKey(stringify = true)
   private final Path output;
   private final Downloader downloader;
 
@@ -70,10 +74,7 @@ public class RemoteFile extends AbstractBuildRule {
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .setReflectively("sha1", sha1.toString())
-        .setReflectively("out", output.toString())
-        .setReflectively("url", uri.toString());
+    return builder;
   }
 
   @Override
