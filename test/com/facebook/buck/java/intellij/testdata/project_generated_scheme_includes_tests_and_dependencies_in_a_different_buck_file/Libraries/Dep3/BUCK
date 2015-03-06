@@ -23,12 +23,3 @@ apple_test(
     ':Dep3',
   ],
 )
-
-xcode_project_config(
-  name = 'project',
-  project_name = 'Libraries',
-  rules = [
-    ':Dep3',
-    ':Dep3Tests',
-  ],
-)

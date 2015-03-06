@@ -23,12 +23,3 @@ apple_test(
     ':Dep2',
   ],
 )
-
-xcode_project_config(
-  name = 'project',
-  project_name = 'Libraries',
-  rules = [
-    ':Dep2',
-    ':Dep2Tests',
-  ],
-)

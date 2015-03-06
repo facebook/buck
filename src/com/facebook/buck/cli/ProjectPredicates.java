@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.apple.XcodeProjectConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
@@ -98,19 +97,6 @@ public abstract class ProjectPredicates {
           @Override
           public boolean apply(
               TargetNode<?> targetNode, TargetGraph targetGraph) {
-            XcodeProjectConfigDescription.Arg projectArg;
-            if (targetNode.getType() == XcodeProjectConfigDescription.TYPE) {
-              projectArg = (XcodeProjectConfigDescription.Arg) targetNode.getConstructorArg();
-            } else {
-              return false;
-            }
-
-            for (BuildTarget includedBuildTarget : projectArg.rules) {
-              if (targetGraph.get(includedBuildTarget) != null) {
-                return true;
-              }
-            }
-
             return false;
           }
         };

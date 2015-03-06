@@ -1,1 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><Workspace version="1.0"><Group location="container:" name="Apps"><FileRef location="container:TestApp/TestApp.xcodeproj"/></Group><Group location="container:" name="Libraries"><FileRef location="container:../Libraries/Dep1/Dep1.xcodeproj"/></Group></Workspace>

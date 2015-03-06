@@ -21,14 +21,6 @@ apple_bundle(
   extension = 'app',
 )
 
-xcode_project_config(
-  name = 'project1',
-  project_name = 'TestApp1',
-  rules = [
-    ':TestApp1',
-  ],
-)
-
 xcode_workspace_config(
   name = 'workspace1',
   src_target = '//Apps:TestApp1'
@@ -50,14 +42,6 @@ apple_bundle(
   deps = [':TestAppBinary2'],
   binary = ':TestAppBinary2',
   extension = 'app',
-)
-
-xcode_project_config(
-  name = 'project2',
-  project_name = 'TestApp2',
-  rules = [
-    ':TestApp2',
-  ],
 )
 
 xcode_workspace_config(

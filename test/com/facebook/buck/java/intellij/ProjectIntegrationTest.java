@@ -468,34 +468,6 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void projectRulesCanReferenceTargetsInOtherBuckFiles() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "project_rules_can_reference_targets_in_other_buck_files",
-        temporaryFolder);
-    workspace.setUp();
-
-    ProcessResult result = workspace.runBuckCommand("project");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
-
-  @Test
-  public void allTargetsInAProjectRuleCanBeInOtherBuckFiles() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "all_targets_in_a_project_rule_can_be_in_other_buck_files",
-        temporaryFolder);
-    workspace.setUp();
-
-    ProcessResult result = workspace.runBuckCommand("project");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
-
-  @Test
   public void generatingAllWorkspacesWillNotIncludeAllProjectsInEachOfThem() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

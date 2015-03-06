@@ -29,27 +29,3 @@ apple_library(
   deps = [],
   visibility = ['PUBLIC'],
 )
-
-xcode_project_config(
-  name = 'project1',
-  project_name = 'Dep1',
-  rules = [
-    ':Dep1',
-  ],
-)
-
-xcode_project_config(
-  name = 'project2',
-  project_name = 'Dep2',
-  rules = [
-    ':Dep2',
-  ],
-)
-
-xcode_project_config(
-  name = 'project3',
-  project_name = 'Dep3',
-  rules = [
-    ':Dep3',
-  ],
-)
