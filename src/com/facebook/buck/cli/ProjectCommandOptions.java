@@ -55,6 +55,7 @@ public class ProjectCommandOptions extends BuildCommandOptions {
 
   private static final Ide DEFAULT_IDE_VALUE = Ide.INTELLIJ;
   private static final boolean DEFAULT_READ_ONLY_VALUE = false;
+  private static final boolean DEFAULT_ANDROID_AUTO_GENERATE = false;
 
   @Option(
       name = "--combined-project",
@@ -100,6 +101,12 @@ public class ProjectCommandOptions extends BuildCommandOptions {
       usage = "Instead of actually generating the project, only print out the targets that " +
           "would be included.")
   private boolean dryRun = false;
+
+  @Option(
+      name = "--enable-android-auto-generate-sources",
+      usage = "If true, turn on auto generate of sources by Android facet. Defaults to '" +
+          DEFAULT_ANDROID_AUTO_GENERATE + "' if not specified in .buckconfig.")
+  private boolean androidAutoGenerateEnabled = DEFAULT_ANDROID_AUTO_GENERATE;
 
   ProjectCommandOptions(BuckConfig buckConfig) {
     super(buckConfig);
@@ -147,6 +154,14 @@ public class ProjectCommandOptions extends BuildCommandOptions {
       return readOnly;
     }
     return getBuckConfig().getBooleanValue("project", "read_only", DEFAULT_READ_ONLY_VALUE);
+  }
+
+  public boolean isAndroidAutoGenerateEnabled() {
+    if (androidAutoGenerateEnabled) {
+      return androidAutoGenerateEnabled;
+    }
+    return getBuckConfig().getBooleanValue("project", "enable_android_auto_generate_sources",
+        DEFAULT_ANDROID_AUTO_GENERATE);
   }
 
   /**

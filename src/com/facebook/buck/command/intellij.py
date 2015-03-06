@@ -17,6 +17,7 @@ ANDROID_FACET = """
   <component name="FacetManager">
     <facet type="android" name="Android">
       <configuration>
+        <option name="ENABLE_SOURCES_AUTOGENERATION" value="%(enable_sources_autogeneration)s" />
         <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="%(module_gen_path)s" />
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="%(module_gen_path)s" />
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="%(android_manifest)s" />
@@ -175,7 +176,7 @@ def create_additional_excludes(modules):
     return additional_excludes
 
 
-def write_modules(modules, generate_minimum_project):
+def write_modules(modules, generate_minimum_project, android_auto_generation_enabled):
     """Writes one XML file for each module."""
     additional_excludes = defaultdict(list)
     if generate_minimum_project:
@@ -214,6 +215,12 @@ def write_modules(modules, generate_minimum_project):
                 'keystore': keystore,
                 'libs_path': '/%s' % module.get('nativeLibs', 'libs'),
             }
+
+            if android_auto_generation_enabled:
+                android_params['enable_sources_autogeneration'] = 'true'
+            else:
+                android_params['enable_sources_autogeneration'] = 'false'
+
             xml += ANDROID_FACET % android_params
 
         # Source code and libraries component.
@@ -492,8 +499,13 @@ def clean_old_files():
 if __name__ == '__main__':
     json_file = sys.argv[1]
     generate_minimum_project = False
-    if len(sys.argv) == 3:
-        generate_minimum_project = sys.argv[2] == '--generate_minimum_project'
+    android_auto_generation_enabled = False
+
+    for key in sys.argv[2:]:
+        if key == '--generate_minimum_project':
+            generate_minimum_project = True
+        if key == '--enable_android_auto_generation':
+            android_auto_generation_enabled = True
 
     parsed_json = json.load(open(json_file, 'r'))
 
@@ -501,7 +513,7 @@ if __name__ == '__main__':
     write_libraries(libraries)
 
     modules = parsed_json['modules']
-    write_modules(modules, generate_minimum_project)
+    write_modules(modules, generate_minimum_project, android_auto_generation_enabled)
     write_all_modules(modules)
     write_run_configs()
 

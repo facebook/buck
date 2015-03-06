@@ -739,7 +739,8 @@ public class ProjectTest {
         /* pathToDefaultAndroidManifest */ Optional.<String>absent(),
         /* pathToPostProcessScript */ Optional.<String>absent(),
         BuckTestConstant.PYTHON_INTERPRETER,
-        new ObjectMapper());
+        new ObjectMapper(),
+        false);
 
     // Execute Project's business logic.
     EasyMock.replay(executionContext, projectFilesystem);

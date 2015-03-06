@@ -129,6 +129,7 @@ public class Project {
   private final Set<BuildRule> libraryJars;
   private final String pythonInterpreter;
   private final ObjectMapper objectMapper;
+  private final boolean turnOnAutoSourceGeneration;
 
   public Project(
       SourcePathResolver resolver,
@@ -142,7 +143,8 @@ public class Project {
       Optional<String> pathToDefaultAndroidManifest,
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      boolean turnOnAutoSourceGeneration) {
     this.resolver = resolver;
     this.rules = rules;
     this.actionGraph = actionGraph;
@@ -156,6 +158,7 @@ public class Project {
     this.libraryJars = Sets.newHashSet();
     this.pythonInterpreter = pythonInterpreter;
     this.objectMapper = objectMapper;
+    this.turnOnAutoSourceGeneration = turnOnAutoSourceGeneration;
   }
 
   public int createIntellijProject(
@@ -881,6 +884,10 @@ public class Project {
 
     if (generateMinimalProject) {
       argsBuilder.add("--generate_minimum_project");
+    }
+
+    if (turnOnAutoSourceGeneration) {
+      argsBuilder.add("--enable_android_auto_generation");
     }
 
     final ImmutableList<String> args = argsBuilder.build();

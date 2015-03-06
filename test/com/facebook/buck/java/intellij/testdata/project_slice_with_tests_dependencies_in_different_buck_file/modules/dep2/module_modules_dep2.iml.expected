@@ -3,6 +3,7 @@
   <component name="FacetManager">
     <facet type="android" name="Android">
       <configuration>
+        <option name="ENABLE_SOURCES_AUTOGENERATION" value="false" />
         <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="/../../buck-out/android/modules/dep2/gen" />
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="/../../buck-out/android/modules/dep2/gen" />
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="/AndroidManifest.xml" />
