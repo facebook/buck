@@ -9,6 +9,7 @@ from pathlib import Path
 import optparse
 import os
 import os.path
+import subprocess
 import sys
 
 
@@ -400,7 +401,6 @@ class BuildFileProcessor(object):
         """
         Process a build file returning a dict of it's rules and includes.
         """
-
         build_env, mod = self._process_build_file(
             os.path.join(self._project_root, path),
             implicit_includes=self._implicit_includes)
@@ -408,6 +408,12 @@ class BuildFileProcessor(object):
         values.append({"__includes": [path] + sorted(build_env.includes)})
         return values
 
+
+def cygwin_adjusted_path(path):
+    if sys.platform == 'cygwin':
+        return subprocess.check_output(['cygpath', path]).rstrip()
+    else:
+        return path
 
 # Inexplicably, this script appears to run faster when the arguments passed
 # into it are absolute paths. However, we want the "buck.base_path" property
@@ -460,6 +466,12 @@ def main():
 
     # Even though project_root is absolute path, it may not be concise. For
     # example, it might be like "C:\project\.\rule".
+    #
+    # Under cygwin, the project root will be invoked from buck as C:\path, but
+    # the cygwin python uses UNIX-style paths. They can be converted using
+    # cygpath, which is necessary because abspath will treat C:\path as a
+    # relative path.
+    options.project_root = cygwin_adjusted_path(options.project_root)
     project_root = os.path.abspath(options.project_root)
 
     buildFileProcessor = BuildFileProcessor(
@@ -469,12 +481,14 @@ def main():
         implicit_includes=options.include or [])
 
     for build_file in args:
+        build_file = cygwin_adjusted_path(build_file)
         values = buildFileProcessor.process(build_file)
         to_parent.write(json.dumps(values))
         to_parent.flush()
 
     # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
     for build_file in iter(sys.stdin.readline, ''):
+        build_file = cygwin_adjusted_path(build_file)
         values = buildFileProcessor.process(build_file.rstrip())
         to_parent.write(json.dumps(values))
         to_parent.flush()
