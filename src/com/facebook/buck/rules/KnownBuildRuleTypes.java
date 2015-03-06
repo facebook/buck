@@ -197,7 +197,7 @@ public class KnownBuildRuleTypes {
                     "-mthumb",
                     "-Os"),
                 /* linkerFlags */ ImmutableList.of(
-                    "-march=armv7-a",
+                    "-march=armv5te",
                     "-Wl,--fix-cortex-a8")),
             NdkCxxPlatforms.CxxRuntime.GNUSTL);
     ndkCxxPlatformBuilder.put(AndroidBinary.TargetCpuType.ARM, armeabi);
