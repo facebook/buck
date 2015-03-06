@@ -18,11 +18,13 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeThat;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.File;
@@ -35,6 +37,8 @@ public class ByteBufferReplacerTest {
 
   @Test
   public void charSets() {
+    assumeThat(Charset.defaultCharset(), Matchers.equalTo(Charsets.UTF_8));
+
     String blob = "something \n \ud003\ud001hello/world \n something";
     String fixedBlob = "something \n \ud003\ud001replaced/// \n something";
 
