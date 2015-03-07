@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -45,13 +46,18 @@ public class AarWithLibsIntegrationTest {
     workspace.runBuckCommand("build", "//java/com/example/aar:extract-classes-dex").assertSuccess();
 
     String smali = workspace.getFileContents("buck-out/gen/java/com/example/aar/smali-files.txt");
+
+    String primaryClass = MorePaths.pathWithPlatformSeparators("com/example/PrimaryClass.smali");
+    String dependency = MorePaths.pathWithPlatformSeparators(
+        "com/example/dependency/Dependency.smali");
+
     assertThat(
         "A class from the classes.jar in the .aar should make it into the APK.",
         smali,
-        containsString("com/example/PrimaryClass.smali"));
+        containsString(primaryClass));
     assertThat(
         "A class from a jar in the libs directory in the .aar should make it into the APK.",
         smali,
-        containsString("com/example/dependency/Dependency.smali"));
+        containsString(dependency));
   }
 }

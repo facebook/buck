@@ -13,8 +13,10 @@ genrule(
   srcs = [
     'AndroidManifest.xml',
     'build_aar.sh',
+    'build_aar.bat',
   ],
   bash = './build_aar.sh $OUT $TMP AndroidManifest.xml $(location :primary) $(location :dep)',
+  cmd_exe = 'build_aar.bat %OUT% %TMP% AndroidManifest.xml $(location :primary) $(location :dep)',
   out = 'example.aar',
   deps = [
     ':primary',
@@ -51,5 +53,12 @@ genrule(
       '$(exe //third-party/smali:baksmali) -o $TMP $(location :app)',
       'find $TMP -name \\*.smali > $OUT',
       ]),
+  cmd_exe = ' && '.join([
+      '$(exe //third-party/smali:baksmali) -o %TMP% $(location :app)',
+      'dir /s/b %TMP% | findstr /L .smali > %OUT%',
+      ]),
   out = 'smali-files.txt',
+  deps = [
+    '//third-party/smali:baksmali'
+  ],
 )

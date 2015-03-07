@@ -116,7 +116,11 @@ public class CopyStep implements Step {
         //
         // To work around this, we use "sourceDir/*" as the source to
         // copy in this mode.
-        args.add(source.resolve("*").toString());
+
+        // N.B., on Windows, java.nio.AbstractPath does not resolve *
+        // as a path, causing InvalidPathException. Since this is purely a
+        // description, manually create the source argument.
+        args.add(source.toString() + "/*");
         break;
     }
     args.add(destination.toString());

@@ -17,6 +17,7 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -73,6 +74,18 @@ public class MorePaths {
 
   public static String pathWithUnixSeparators(Path path) {
     return path.toString().replace("\\", "/");
+  }
+
+  public static String pathWithPlatformSeparators(String path) {
+    return pathWithPlatformSeparators(Paths.get(path));
+  }
+
+  public static String pathWithPlatformSeparators(Path path) {
+    if (Platform.detect() == Platform.WINDOWS) {
+      return path.toString().replace("/", "\\");
+    } else {
+      return pathWithUnixSeparators(path);
+    }
   }
 
   /**
