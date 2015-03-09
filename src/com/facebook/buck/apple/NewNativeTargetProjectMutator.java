@@ -481,25 +481,42 @@ public class NewNativeTargetProjectMutator {
     // Map asset catalog paths to their shell script arguments relative to the project's root
     Path buildScript = pathRelativizer.outputDirToRootRelative(assetCatalogBuildScript);
     StringBuilder scriptBuilder = new StringBuilder("set -e\n");
+    scriptBuilder
+        .append("TMPDIR=`mktemp -d -t buckAssetCatalogs.XXXXXX`\n")
+        .append("trap \"rm -rf '${TMPDIR}'\" exit\n");
     if (commonAssetCatalogs.size() != 0) {
       scriptBuilder
+          .append("COMMON_ARGS_FILE=\"${TMPDIR}\"/common_args\n")
+          .append("cat <<EOT >\"${COMMON_ARGS_FILE}\"\n");
+
+      Joiner.on('\n').appendTo(scriptBuilder, commonAssetCatalogs);
+
+      scriptBuilder
+          .append("\n")
+          .append("EOT\n")
           .append("\"${PROJECT_DIR}/\"")
           .append(buildScript.toString())
-          .append(" ")
-          .append(Joiner.on(' ').join(commonAssetCatalogs))
-          .append("\n");
+          .append(" @\"${COMMON_ARGS_FILE}\"\n");
     }
     if (assetCatalogsToSplitIntoBundles.size() != 0) {
       scriptBuilder
-          .append("\"${PROJECT_DIR}/\"")
-          .append(buildScript.toString())
-          .append(" -b ")
-          .append(Joiner.on(' ').join(assetCatalogsToSplitIntoBundles))
-          .append("\n");
+        .append("BUNDLE_ARGS_FILE=\"${TMPDIR}\"/bundle_args\n")
+        .append("cat <<EOT >\"${BUNDLE_ARGS_FILE}\"\n");
+
+      Joiner.on('\n').appendTo(scriptBuilder, assetCatalogsToSplitIntoBundles);
+
+      scriptBuilder
+        .append("\n")
+        .append("EOT\n")
+        .append("\"${PROJECT_DIR}/\"")
+        .append(buildScript.toString())
+        .append(" -b ")
+        .append("@\"${BUNDLE_ARGS_FILE}\"\n");
     }
 
     PBXShellScriptBuildPhase phase = new PBXShellScriptBuildPhase();
     target.getBuildPhases().add(phase);
+    phase.setShellPath("/bin/bash");
     phase.setShellScript(scriptBuilder.toString());
     LOG.debug("Added asset catalog build phase %s", phase);
   }

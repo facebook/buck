@@ -237,7 +237,7 @@ def compile_asset_catalogs(target, platform, devices, output, catalogs,
 
 
 if __name__ == "__main__":
-    parser = optparse.OptionParser()
+    parser = optparse.OptionParser(fromfile_prefix_chars='@')
     parser.add_option('-t', '--target',
                       help='Target operating system version for deployment')
     parser.add_option('-p', '--platform',
