@@ -69,24 +69,24 @@ public class CxxLexYaccIntegrationTest {
     String yaccSourceName = "mainy.yy";
     String yaccSourceFull = "foo/" + yaccSourceName;
     BuildTarget yaccTarget = CxxDescriptionEnhancer.createYaccBuildTarget(target, yaccSourceName);
-    BuildTarget yaccPreprocessTarget = CxxPreprocessables.createPreprocessBuildTarget(
+    BuildTarget yaccPreprocessTarget = CxxSourceRuleFactory.createPreprocessBuildTarget(
         target,
         cxxPlatform.getFlavor(),
         CxxSource.Type.CXX,
         /* pic */ false,
         yaccSourceName + ".cc");
-    BuildTarget yaccCompileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
+    BuildTarget yaccCompileTarget = CxxSourceRuleFactory.createCompileBuildTarget(
         target,
         cxxPlatform.getFlavor(),
         yaccSourceName + ".cc",
         /* pic */ false);
-    BuildTarget preprocessTarget = CxxPreprocessables.createPreprocessBuildTarget(
+    BuildTarget preprocessTarget = CxxSourceRuleFactory.createPreprocessBuildTarget(
         target,
         cxxPlatform.getFlavor(),
         CxxSource.Type.CXX,
         /* pic */ false,
         sourceName);
-    BuildTarget compileTarget = CxxCompilableEnhancer.createCompileBuildTarget(
+    BuildTarget compileTarget = CxxSourceRuleFactory.createCompileBuildTarget(
         target,
         cxxPlatform.getFlavor(),
         sourceName,

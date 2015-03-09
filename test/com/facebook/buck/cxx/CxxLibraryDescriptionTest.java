@@ -225,12 +225,12 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(archiveRule);
     assertEquals(
         ImmutableSet.of(
-            CxxCompilableEnhancer.createCompileBuildTarget(
+            CxxSourceRuleFactory.createCompileBuildTarget(
                 target,
                 cxxPlatform.getFlavor(),
                 "test/bar.cpp",
                 /* pic */ false),
-            CxxCompilableEnhancer.createCompileBuildTarget(
+            CxxSourceRuleFactory.createCompileBuildTarget(
                 target,
                 cxxPlatform.getFlavor(),
                 genSourceName,
@@ -242,7 +242,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the preprocess rule for our user-provided source has correct deps setup
     // for the various header rules.
     BuildRule preprocessRule1 = resolver.getRule(
-        CxxPreprocessables.createPreprocessBuildTarget(
+        CxxSourceRuleFactory.createPreprocessBuildTarget(
             target,
             cxxPlatform.getFlavor(),
             CxxSource.Type.CXX,
@@ -268,7 +268,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
     BuildRule compileRule1 = resolver.getRule(
-        CxxCompilableEnhancer.createCompileBuildTarget(
+        CxxSourceRuleFactory.createCompileBuildTarget(
             target,
             cxxPlatform.getFlavor(),
             "test/bar.cpp",
@@ -284,7 +284,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the preprocess rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
     BuildRule preprocessRule2 = resolver.getRule(
-        CxxPreprocessables.createPreprocessBuildTarget(
+        CxxSourceRuleFactory.createPreprocessBuildTarget(
             target,
             cxxPlatform.getFlavor(),
             CxxSource.Type.CXX,
@@ -311,7 +311,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
     BuildRule compileRule2 = resolver.getRule(
-        CxxCompilableEnhancer.createCompileBuildTarget(
+        CxxSourceRuleFactory.createCompileBuildTarget(
             target,
             cxxPlatform.getFlavor(),
             genSourceName,
@@ -572,12 +572,12 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(staticRule);
     assertEquals(
         ImmutableSet.of(
-            CxxCompilableEnhancer.createCompileBuildTarget(
+            CxxSourceRuleFactory.createCompileBuildTarget(
                 target,
                 cxxPlatform.getFlavor(),
                 "test/bar.cpp",
                 /* pic */ false),
-            CxxCompilableEnhancer.createCompileBuildTarget(
+            CxxSourceRuleFactory.createCompileBuildTarget(
                 target,
                 cxxPlatform.getFlavor(),
                 genSourceName,
@@ -589,7 +589,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
     BuildRule staticPreprocessRule1 = resolver.getRule(
-        CxxPreprocessables.createPreprocessBuildTarget(
+        CxxSourceRuleFactory.createPreprocessBuildTarget(
             target,
             cxxPlatform.getFlavor(),
             CxxSource.Type.CXX,
@@ -616,7 +616,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
     BuildRule staticCompileRule1 = resolver.getRule(
-        CxxCompilableEnhancer.createCompileBuildTarget(
+        CxxSourceRuleFactory.createCompileBuildTarget(
             target,
             cxxPlatform.getFlavor(),
             "test/bar.cpp",
@@ -631,7 +631,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
     BuildRule staticPreprocessRule2 = resolver.getRule(
-        CxxPreprocessables.createPreprocessBuildTarget(
+        CxxSourceRuleFactory.createPreprocessBuildTarget(
             target,
             cxxPlatform.getFlavor(),
             CxxSource.Type.CXX,
@@ -659,7 +659,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
     BuildRule staticCompileRule2 = resolver.getRule(
-        CxxCompilableEnhancer.createCompileBuildTarget(
+        CxxSourceRuleFactory.createCompileBuildTarget(
             target,
             cxxPlatform.getFlavor(),
             genSourceName,
@@ -679,12 +679,12 @@ public class CxxLibraryDescriptionTest {
     assertEquals(
         ImmutableSet.of(
             sharedLibraryDep.getBuildTarget(),
-            CxxCompilableEnhancer.createCompileBuildTarget(
+            CxxSourceRuleFactory.createCompileBuildTarget(
                 target,
                 cxxPlatform.getFlavor(),
                 "test/bar.cpp",
                 /* pic */ true),
-            CxxCompilableEnhancer.createCompileBuildTarget(
+            CxxSourceRuleFactory.createCompileBuildTarget(
                 target,
                 cxxPlatform.getFlavor(),
                 genSourceName,
@@ -696,7 +696,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
     BuildRule sharedPreprocessRule1 = resolver.getRule(
-        CxxPreprocessables.createPreprocessBuildTarget(
+        CxxSourceRuleFactory.createPreprocessBuildTarget(
             target,
             cxxPlatform.getFlavor(),
             CxxSource.Type.CXX,
@@ -723,7 +723,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
     BuildRule sharedCompileRule1 = resolver.getRule(
-        CxxCompilableEnhancer.createCompileBuildTarget(
+        CxxSourceRuleFactory.createCompileBuildTarget(
             target,
             cxxPlatform.getFlavor(),
             "test/bar.cpp",
@@ -738,7 +738,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
     BuildRule sharedPreprocessRule2 = resolver.getRule(
-        CxxPreprocessables.createPreprocessBuildTarget(
+        CxxSourceRuleFactory.createPreprocessBuildTarget(
             target,
             cxxPlatform.getFlavor(),
             CxxSource.Type.CXX,
@@ -766,7 +766,7 @@ public class CxxLibraryDescriptionTest {
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
     BuildRule sharedCompileRule2 = resolver.getRule(
-        CxxCompilableEnhancer.createCompileBuildTarget(
+        CxxSourceRuleFactory.createCompileBuildTarget(
             target,
             cxxPlatform.getFlavor(),
             genSourceName,

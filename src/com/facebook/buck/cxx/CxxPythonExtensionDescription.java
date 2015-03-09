@@ -149,7 +149,7 @@ public class CxxPythonExtensionDescription implements
             .build();
 
     ImmutableMap<String, CxxSource> preprocessed =
-        CxxPreprocessables.createPreprocessBuildRules(
+        CxxSourceRuleFactory.createPreprocessBuildRules(
             params,
             ruleResolver,
             cxxPlatform,

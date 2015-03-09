@@ -597,7 +597,7 @@ public class CxxDescriptionEnhancer {
       boolean pic,
       ImmutableMap<String, CxxSource> sources) {
 
-    ImmutableSortedSet<BuildRule> objectRules = CxxCompilableEnhancer.createCompileBuildRules(
+    ImmutableSortedSet<BuildRule> objectRules = CxxSourceRuleFactory.createCompileBuildRules(
         params,
         resolver,
         config,
@@ -719,7 +719,7 @@ public class CxxDescriptionEnhancer {
 
     // Generate whatever rules are needed to preprocess all the input sources.
     ImmutableMap<String, CxxSource> preprocessed =
-        CxxPreprocessables.createPreprocessBuildRules(
+        CxxSourceRuleFactory.createPreprocessBuildRules(
             params,
             resolver,
             cxxPlatform,

@@ -29,11 +29,10 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxCompilableEnhancer;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -369,13 +368,13 @@ public class OCamlIntegrationTest {
     BuildTarget cclibbin =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(cclib, cxxPlatform.getFlavor());
     String sourceName = "cc/cc.cpp";
-    BuildTarget ppObj = CxxPreprocessables.createPreprocessBuildTarget(
+    BuildTarget ppObj = CxxSourceRuleFactory.createPreprocessBuildTarget(
         cclib,
         cxxPlatform.getFlavor(),
         CxxSource.Type.CXX,
         /* pic */ false,
         sourceName);
-    BuildTarget ccObj = CxxCompilableEnhancer.createCompileBuildTarget(
+    BuildTarget ccObj = CxxSourceRuleFactory.createCompileBuildTarget(
         cclib,
         cxxPlatform.getFlavor(),
         sourceName,
