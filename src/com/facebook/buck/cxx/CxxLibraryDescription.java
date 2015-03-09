@@ -74,12 +74,15 @@ public class CxxLibraryDescription implements
 
   private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final CxxSourceRuleFactory.Strategy compileStrategy;
 
   public CxxLibraryDescription(
       CxxBuckConfig cxxBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      CxxSourceRuleFactory.Strategy compileStrategy) {
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
+    this.compileStrategy = compileStrategy;
   }
 
   @Override
@@ -101,7 +104,8 @@ public class CxxLibraryDescription implements
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
       ImmutableList<Path> frameworkSearchPaths,
-      boolean pic) {
+      CxxSourceRuleFactory.Strategy compileStrategy,
+      CxxSourceRuleFactory.PicType pic) {
 
     CxxHeaderSourceSpec lexYaccSources =
         CxxDescriptionEnhancer.requireLexYaccSources(
@@ -153,23 +157,17 @@ public class CxxLibraryDescription implements
             .putAll(lexYaccSources.getCxxSources())
             .build();
 
-    ImmutableMap<String, CxxSource> preprocessed =
-        CxxSourceRuleFactory.createPreprocessBuildRules(
-            params,
-            ruleResolver,
-            cxxPlatform,
-            cxxPreprocessorInputFromDependencies,
-            pic,
-            allSources);
-
-    // Create rules for compiling the non-PIC object files.
-    return CxxDescriptionEnhancer.createCompileBuildRules(
+    // Create rule to build the object files.
+    return CxxSourceRuleFactory.createPreprocessAndCompileRules(
         params,
         ruleResolver,
+        pathResolver,
         cxxPlatform,
+        cxxPreprocessorInputFromDependencies,
         compilerFlags,
-        pic,
-        preprocessed);
+        compileStrategy,
+        allSources,
+        pic);
   }
 
   /**
@@ -190,7 +188,8 @@ public class CxxLibraryDescription implements
       ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
-      ImmutableList<Path> frameworkSearchPaths) {
+      ImmutableList<Path> frameworkSearchPaths,
+      CxxSourceRuleFactory.Strategy compileStrategy) {
 
     // Create rules for compiling the non-PIC object files.
     ImmutableList<SourcePath> objects = requireObjects(
@@ -207,7 +206,8 @@ public class CxxLibraryDescription implements
         compilerFlags,
         sources,
         frameworkSearchPaths,
-        /* pic */ false);
+        compileStrategy,
+        CxxSourceRuleFactory.PicType.PDC);
 
     // Write a build rule to create the archive for this C/C++ library.
     BuildTarget staticTarget =
@@ -249,7 +249,8 @@ public class CxxLibraryDescription implements
       ImmutableMap<String, CxxSource> sources,
       ImmutableList<String> linkerFlags,
       ImmutableList<Path> frameworkSearchPaths,
-      Optional<String> soname) {
+      Optional<String> soname,
+      CxxSourceRuleFactory.Strategy compileStrategy) {
 
     // Create rules for compiling the PIC object files.
     ImmutableList<SourcePath> objects = requireObjects(
@@ -266,7 +267,8 @@ public class CxxLibraryDescription implements
         compilerFlags,
         sources,
         frameworkSearchPaths,
-        /* pic */ true);
+        compileStrategy,
+        CxxSourceRuleFactory.PicType.PIC);
 
     // Setup the rules to link the shared library.
     BuildTarget sharedTarget =
@@ -372,7 +374,8 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      A args) {
+      A args,
+      CxxSourceRuleFactory.Strategy compileStrategy) {
     return createStaticLibrary(
         params,
         resolver,
@@ -395,7 +398,8 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
         args.compilerFlags.or(ImmutableList.<String>of()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
-        args.frameworkSearchPaths.get());
+        args.frameworkSearchPaths.get(),
+        compileStrategy);
   }
 
   /**
@@ -405,7 +409,8 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      A args) {
+      A args,
+      CxxSourceRuleFactory.Strategy compileStrategy) {
     return createSharedLibrary(
         params,
         resolver,
@@ -436,7 +441,8 @@ public class CxxLibraryDescription implements
                     cxxPlatform.getFlavor().toString()))
             .build(),
         args.frameworkSearchPaths.get(),
-        args.soname);
+        args.soname,
+        compileStrategy);
   }
 
   @Value.Immutable
@@ -478,7 +484,7 @@ public class CxxLibraryDescription implements
     return createBuildRule(params, resolver, args, typeAndPlatform);
   }
 
-  public static <A extends Arg> BuildRule createBuildRule(
+  public <A extends Arg> BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,
@@ -518,13 +524,15 @@ public class CxxLibraryDescription implements
             typeParams,
             resolver,
             platform.get().getValue(),
-            args);
+            args,
+            compileStrategy);
       } else {
         return createStaticLibraryBuildRule(
             typeParams,
             resolver,
             platform.get().getValue(),
-            args);
+            args,
+            compileStrategy);
       }
     }
 

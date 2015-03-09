@@ -21,7 +21,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FunctionLineProcessorThread;
-import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreThrowables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -34,92 +33,65 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A step that preprocesses C/C++ sources.
+ * A step that preprocesses and/or compiles C/C++ sources in a single step.
  */
-public class CxxPreprocessStep implements Step {
+public class CxxPreprocessAndCompileStep implements Step {
 
-  private static final Logger LOG = Logger.get(CxxCompileStep.class);
+  private static final Logger LOG = Logger.get(CxxPreprocessAndCompileStep.class);
 
-  private final ImmutableList<String> preprocessor;
+  private final ImmutableList<String> compilerPrefix;
+  private final Operation operation;
   private final ImmutableList<String> flags;
   private final Path output;
   private final Path input;
-  private final ImmutableList<Path> prefixHeaders;
-  private final ImmutableList<Path> includes;
-  private final ImmutableList<Path> systemIncludes;
-  private final ImmutableList<Path> frameworkRoots;
   private final ImmutableMap<Path, Path> replacementPaths;
   private final Optional<DebugPathSanitizer> sanitizer;
 
-  public CxxPreprocessStep(
-      ImmutableList<String> preprocessor,
+  public CxxPreprocessAndCompileStep(
+      ImmutableList<String> compilerPrefix,
+      Operation operation,
       ImmutableList<String> flags,
       Path output,
       Path input,
-      ImmutableList<Path> prefixHeaders,
-      ImmutableList<Path> includes,
-      ImmutableList<Path> systemIncludes,
-      ImmutableList<Path> frameworkRoots,
       ImmutableMap<Path, Path> replacementPaths,
       Optional<DebugPathSanitizer> sanitizer) {
-    this.preprocessor = preprocessor;
+    this.compilerPrefix = compilerPrefix;
+    this.operation = operation;
     this.flags = flags;
     this.output = output;
     this.input = input;
-    this.prefixHeaders = prefixHeaders;
-    this.includes = includes;
-    this.systemIncludes = systemIncludes;
-    this.frameworkRoots = frameworkRoots;
     this.replacementPaths = replacementPaths;
     this.sanitizer = sanitizer;
   }
 
   @Override
   public String getShortName() {
-    return "c++ preprocess";
+    return "c++ " + operation.toString().toLowerCase();
   }
 
   @VisibleForTesting
   protected ImmutableList<String> getCommand() {
-    return ImmutableList.<String>builder()
-        .addAll(preprocessor)
-        .add("-E")
-        .addAll(flags)
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-include"),
-                Iterables.transform(prefixHeaders, Functions.toStringFunction())))
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-I"),
-                Iterables.transform(includes, Functions.toStringFunction())))
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-isystem"),
-                Iterables.transform(systemIncludes, Functions.toStringFunction())))
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-F"),
-                Iterables.transform(frameworkRoots, Functions.toStringFunction())))
-        .add(input.toString())
-        .build();
+    ImmutableList.Builder<String> cmd = ImmutableList.builder();
+    cmd.addAll(compilerPrefix);
+    cmd.add(operation.getFlag());
+    cmd.addAll(flags);
+    if (operation == Operation.COMPILE) {
+      cmd.add("-o", output.toString());
+    }
+    cmd.add(input.toString());
+    return cmd.build();
   }
 
   @VisibleForTesting
-  protected static Function<String, String> createOutputLineProcessor(
-      final Path workingDir,
-      final ImmutableMap<Path, Path> replacementPaths,
-      final Optional<DebugPathSanitizer> sanitizer) {
-
+  protected Function<String, String> createPreprocessOutputLineProcessor(final Path workingDir) {
     return new Function<String, String>() {
 
       private final Pattern lineMarkers =
@@ -156,29 +128,55 @@ public class CxxPreprocessStep implements Step {
   }
 
   @VisibleForTesting
-  protected Function<String, String> createErrorLineProcessor() {
+  protected Function<String, String> createErrorLineProcessor(final Path workingDir) {
     return CxxDescriptionEnhancer.createErrorMessagePathProcessor(
         new Function<String, String>() {
           @Override
-          public String apply(String path) {
-            Path replacement = replacementPaths.get(Paths.get(path));
-            return replacement != null ? replacement.toString() : path;
+          public String apply(String original) {
+            Path path = Paths.get(original);
+
+            // If we're compiling, we also need to restore the original working directory in the
+            // error output.
+            if (operation == Operation.COMPILE) {
+              path =
+                  sanitizer.isPresent() ?
+                      Paths.get(sanitizer.get().restore(Optional.of(workingDir), original)) :
+                      path;
+            }
+
+            // And, of course, we need to fixup any replacement paths.
+            path = Optional.fromNullable(replacementPaths.get(path)).or(path);
+
+            return path.toString();
           }
         });
   }
 
   @Override
-  @SuppressWarnings("PMD.EmptyTryBlock")
   public int execute(ExecutionContext context) throws InterruptedException {
-    LOG.debug("Preprocessing %s -> %s", input, output);
+    LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
+
     ProcessBuilder builder = new ProcessBuilder();
     builder.command(getCommand());
     builder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
-    builder.redirectOutput(ProcessBuilder.Redirect.PIPE);
     builder.redirectError(ProcessBuilder.Redirect.PIPE);
 
-    Path outputPath = context.getProjectFilesystem().resolve(this.output);
-    Path outputTempPath = context.getProjectFilesystem().resolve(this.output + ".tmp");
+    // If we're preprocessing, file output goes through stdout, so we can postprocess it.
+    if (operation == Operation.PREPROCESS) {
+      builder.redirectOutput(ProcessBuilder.Redirect.PIPE);
+    }
+
+    // A forced compilation directory is set in the constructor.  Now, we can't actually
+    // force the compiler to embed this into the binary -- all we can do set the PWD environment
+    // to variations of the actual current working directory (e.g. /actual/dir or /actual/dir////).
+    // So we use this knob to expand the space used to store the compilation directory to the
+    // size we need for the compilation directory we really want, then do an in-place
+    // find-and-replace to update the compilation directory after the fact.
+    if (operation == Operation.COMPILE && sanitizer.isPresent()) {
+      builder.environment().put(
+          "PWD",
+          sanitizer.get().getExpandedPath(context.getProjectDirectoryRoot().toAbsolutePath()));
+    }
 
     try {
       LOG.debug(
@@ -195,35 +193,32 @@ public class CxxPreprocessStep implements Step {
       // Open the temp file to write the intermediate output to and also fire up managed threads
       // to process the stdout and stderr lines from the preprocess command.
       int exitCode;
-      try (OutputStream output = Files.newOutputStream(outputTempPath);
-           FunctionLineProcessorThread outputProcessor =
-               new FunctionLineProcessorThread(
-                   process.getInputStream(),
-                   output,
-                   createOutputLineProcessor(
-                       context.getProjectDirectoryRoot(),
-                       replacementPaths,
-                       sanitizer));
-           FunctionLineProcessorThread errorProcessor =
-               new FunctionLineProcessorThread(
-                   process.getErrorStream(),
-                   error,
-                   createErrorLineProcessor())) {
-        outputProcessor.start();
-        errorProcessor.start();
+      try {
+        try (FunctionLineProcessorThread errorProcessor =
+                 new FunctionLineProcessorThread(
+                     process.getErrorStream(),
+                     error,
+                     createErrorLineProcessor(context.getProjectDirectoryRoot()))) {
+          errorProcessor.start();
+
+          // If we're preprocessing, we pipe the output through a processor to sanitize the line
+          // markers.  So fire that up...
+          if (operation == Operation.PREPROCESS) {
+            try (OutputStream output =
+                     context.getProjectFilesystem().newFileOutputStream(this.output);
+                 FunctionLineProcessorThread outputProcessor =
+                     new FunctionLineProcessorThread(
+                         process.getInputStream(),
+                         output,
+                         createPreprocessOutputLineProcessor(context.getProjectDirectoryRoot()))) {
+              outputProcessor.start();
+            }
+          }
+        }
         exitCode = process.waitFor();
       } finally {
         process.destroy();
         process.waitFor();
-      }
-
-      // If the process finished successfully, move the preprocessed output into it's final place.
-      if (exitCode == 0) {
-        Files.move(
-            outputTempPath,
-            outputPath,
-            StandardCopyOption.REPLACE_EXISTING,
-            StandardCopyOption.ATOMIC_MOVE);
       }
 
       // If we generated any error output, print that to the console.
@@ -232,8 +227,22 @@ public class CxxPreprocessStep implements Step {
         context.getConsole().printErrorText(err);
       }
 
+      // If the compilation completed successfully, perform the in-place update of the compilation
+      // as per above.  This locates the relevant debug section and swaps out the expanded actual
+      // compilation directory with the one we really want.
+      if (exitCode == 0 && operation == Operation.COMPILE && sanitizer.isPresent()) {
+        try {
+          sanitizer.get().restoreCompilationDirectory(
+              context.getProjectDirectoryRoot().toAbsolutePath().resolve(output),
+              context.getProjectDirectoryRoot().toAbsolutePath());
+        } catch (IOException e) {
+          context.logError(e, "error updating compilation directory");
+          return 1;
+        }
+      }
+
       if (exitCode != 0) {
-        LOG.warn("Error %d preprocessing %s: %s", exitCode, input, err);
+        LOG.warn("error %d %s %s: %s", exitCode, operation.toString().toLowerCase(), input, err);
       }
 
       return exitCode;
@@ -250,6 +259,24 @@ public class CxxPreprocessStep implements Step {
     return Joiner.on(' ').join(
         FluentIterable.from(getCommand())
             .transform(Escaper.BASH_ESCAPER));
+  }
+
+  public static enum Operation {
+
+    COMPILE("-c"),
+    PREPROCESS("-E"),
+    ;
+
+    private final String flag;
+
+    private Operation(String flag) {
+      this.flag = flag;
+    }
+
+    public String getFlag() {
+      return flag;
+    }
+
   }
 
 }

@@ -96,6 +96,7 @@ public class CxxPythonExtensionDescription implements
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
       A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
@@ -148,23 +149,18 @@ public class CxxPythonExtensionDescription implements
             .putAll(lexYaccSources.getCxxSources())
             .build();
 
-    ImmutableMap<String, CxxSource> preprocessed =
-        CxxSourceRuleFactory.createPreprocessBuildRules(
+    // Generate rule to build the object files.
+    ImmutableList<SourcePath> picObjects =
+        CxxSourceRuleFactory.createPreprocessAndCompileRules(
             params,
             ruleResolver,
+            pathResolver,
             cxxPlatform,
             cxxPreprocessorInput,
-            /* pic */ true,
-            allSources);
-
-    ImmutableList<SourcePath> picObjects =
-        CxxDescriptionEnhancer.createCompileBuildRules(
-            params,
-            ruleResolver,
-            cxxPlatform,
             args.compilerFlags.or(ImmutableList.<String>of()),
-            /* pic */ true,
-            preprocessed);
+            CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE,
+            allSources,
+            CxxSourceRuleFactory.PicType.PIC);
 
     // Setup the rules to link the shared library.
     String extensionName = getExtensionName(params.getBuildTarget());
@@ -172,7 +168,7 @@ public class CxxPythonExtensionDescription implements
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
-        new SourcePathResolver(ruleResolver),
+        pathResolver,
         /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>builder()
             .addAll(args.linkerFlags.or(ImmutableList.<String>of()))

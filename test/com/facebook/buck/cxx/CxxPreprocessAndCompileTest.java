@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -44,7 +44,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class CxxPreprocessTest {
+public class CxxPreprocessAndCompileTest {
 
   private static final Tool DEFAULT_COMPILER = new HashedFileTool(Paths.get("compiler"));
   private static final ImmutableList<String> DEFAULT_FLAGS =
@@ -96,10 +96,11 @@ public class CxxPreprocessTest {
     RuleKey.Builder.RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxPreprocess(
+        new CxxPreprocessAndCompile(
             params,
             pathResolver,
             DEFAULT_COMPILER,
+            CxxPreprocessAndCompileStep.Operation.COMPILE,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
@@ -113,10 +114,11 @@ public class CxxPreprocessTest {
     RuleKey.Builder.RuleKeyPair compilerChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxPreprocess(
+        new CxxPreprocessAndCompile(
             params,
             pathResolver,
             new HashedFileTool(Paths.get("different")),
+            CxxPreprocessAndCompileStep.Operation.COMPILE,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
@@ -127,14 +129,34 @@ public class CxxPreprocessTest {
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, compilerChange);
 
+    // Verify that changing the operation causes a rulekey change.
+    RuleKey.Builder.RuleKeyPair operationChange = generateRuleKey(
+        ruleKeyBuilderFactory,
+        pathResolver,
+        new CxxPreprocessAndCompile(
+            params,
+            pathResolver,
+            DEFAULT_COMPILER,
+            CxxPreprocessAndCompileStep.Operation.PREPROCESS,
+            DEFAULT_FLAGS,
+            DEFAULT_OUTPUT,
+            DEFAULT_INPUT,
+            DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_FRAMEWORK_ROOTS,
+            DEFAULT_INCLUDES,
+            DEFAULT_SANITIZER));
+    assertNotEquals(defaultRuleKey, operationChange);
+
     // Verify that changing the flags causes a rulekey change.
     RuleKey.Builder.RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxPreprocess(
+        new CxxPreprocessAndCompile(
             params,
             pathResolver,
             DEFAULT_COMPILER,
+            CxxPreprocessAndCompileStep.Operation.COMPILE,
             ImmutableList.of("-different"),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
@@ -149,10 +171,11 @@ public class CxxPreprocessTest {
     RuleKey.Builder.RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxPreprocess(
+        new CxxPreprocessAndCompile(
             params,
             pathResolver,
             DEFAULT_COMPILER,
+            CxxPreprocessAndCompileStep.Operation.COMPILE,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             new TestSourcePath("different"),
@@ -168,10 +191,11 @@ public class CxxPreprocessTest {
     RuleKey.Builder.RuleKeyPair includesChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxPreprocess(
+        new CxxPreprocessAndCompile(
             params,
             pathResolver,
             DEFAULT_COMPILER,
+            CxxPreprocessAndCompileStep.Operation.COMPILE,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
@@ -187,10 +211,11 @@ public class CxxPreprocessTest {
     RuleKey.Builder.RuleKeyPair systemIncludesChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxPreprocess(
+        new CxxPreprocessAndCompile(
             params,
             pathResolver,
             DEFAULT_COMPILER,
+            CxxPreprocessAndCompileStep.Operation.COMPILE,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
@@ -205,10 +230,11 @@ public class CxxPreprocessTest {
     RuleKey.Builder.RuleKeyPair frameworkRootsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxPreprocess(
+        new CxxPreprocessAndCompile(
             params,
             pathResolver,
             DEFAULT_COMPILER,
+            CxxPreprocessAndCompileStep.Operation.COMPILE,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
@@ -256,10 +282,11 @@ public class CxxPreprocessTest {
     RuleKey.Builder.RuleKeyPair ruleKey1 = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxPreprocess(
+        new CxxPreprocessAndCompile(
             params,
             pathResolver,
             DEFAULT_COMPILER,
+            CxxPreprocessAndCompileStep.Operation.PREPROCESS,
             flags1,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
@@ -274,10 +301,11 @@ public class CxxPreprocessTest {
     RuleKey.Builder.RuleKeyPair ruleKey2 = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
-        new CxxPreprocess(
+        new CxxPreprocessAndCompile(
             params,
             pathResolver,
             DEFAULT_COMPILER,
+            CxxPreprocessAndCompileStep.Operation.PREPROCESS,
             flags2,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,

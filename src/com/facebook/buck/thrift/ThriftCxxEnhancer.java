@@ -16,14 +16,11 @@
 
 package com.facebook.buck.thrift;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxCompilables;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -55,11 +52,10 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
   public ThriftCxxEnhancer(
       ThriftBuckConfig thriftBuckConfig,
-      CxxBuckConfig cxxBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
+      CxxLibraryDescription cxxLibraryDescription,
       boolean cpp2) {
     this.thriftBuckConfig = thriftBuckConfig;
-    this.cxxLibraryDescription = new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms);
+    this.cxxLibraryDescription = cxxLibraryDescription;
     this.cpp2 = cpp2;
   }
 

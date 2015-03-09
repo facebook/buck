@@ -110,7 +110,7 @@ public class CxxPreprocessables {
   /**
    * Build the {@link SymlinkTree} rule using the original build params from a target node.
    * In particular, make sure to drop all dependencies from the original build rule params,
-   * as these are modeled via {@link CxxCompile}.
+   * as these are modeled via {@link CxxPreprocessAndCompile}.
    */
   public static SymlinkTree createHeaderSymlinkTreeBuildRule(
       SourcePathResolver resolver,

@@ -26,7 +26,13 @@ public class CxxBinaryBuilder extends AbstractCxxSourceBuilder<CxxBinaryDescript
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(new CxxBinaryDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms), target);
+    super(
+        new CxxBinaryDescription(
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            cxxPlatforms,
+            CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE),
+        target);
   }
 
   public CxxBinaryBuilder(BuildTarget target) {

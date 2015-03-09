@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
@@ -582,35 +581,6 @@ public class CxxDescriptionEnhancer {
     }
   }
 
-  /**
-   * Build up the rules to track headers and compile sources for descriptions which handle C/C++
-   * sources and headers.
-   *
-   * @return a list of {@link SourcePath} objects representing the object files from the result of
-   *    compiling the given C/C++ source.
-   */
-  public static ImmutableList<SourcePath> createCompileBuildRules(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CxxPlatform config,
-      ImmutableList<String> compilerFlags,
-      boolean pic,
-      ImmutableMap<String, CxxSource> sources) {
-
-    ImmutableSortedSet<BuildRule> objectRules = CxxSourceRuleFactory.createCompileBuildRules(
-        params,
-        resolver,
-        config,
-        compilerFlags,
-        pic,
-        sources);
-    resolver.addAllToIndex(objectRules);
-
-    return FluentIterable.from(objectRules)
-        .transform(SourcePaths.getToBuildTargetSourcePath(params.getProjectFilesystem()))
-        .toList();
-  }
-
   public static BuildTarget createStaticLibraryBuildTarget(
       BuildTarget target,
       Flavor platform) {
@@ -669,7 +639,8 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      CxxBinaryDescription.Arg args) {
+      CxxBinaryDescription.Arg args,
+      CxxSourceRuleFactory.Strategy compileStrategy) {
 
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(params, resolver, args);
     ImmutableMap<Path, SourcePath> headers = parseHeaders(params, resolver, args);
@@ -717,26 +688,19 @@ public class CxxDescriptionEnhancer {
             .putAll(lexYaccSources.getCxxSources())
             .build();
 
-    // Generate whatever rules are needed to preprocess all the input sources.
-    ImmutableMap<String, CxxSource> preprocessed =
-        CxxSourceRuleFactory.createPreprocessBuildRules(
+    // Generate and add all the build rules to preprocess and compile the source to the
+    // resolver and get the `SourcePath`s representing the generated object files.
+    ImmutableList<SourcePath> objects =
+        CxxSourceRuleFactory.createPreprocessAndCompileRules(
             params,
             resolver,
+            sourcePathResolver,
             cxxPlatform,
             cxxPreprocessorInput,
-            /* pic */ false,
-            sources);
-
-    // Generate the rules for setting up and headers, preprocessing, and compiling the input
-    // sources and return the source paths for the object files.
-    ImmutableList<SourcePath> objects =
-        createCompileBuildRules(
-            params,
-            resolver,
-            cxxPlatform,
             args.compilerFlags.or(ImmutableList.<String>of()),
-            /* pic */ false,
-            preprocessed);
+            compileStrategy,
+            sources,
+            CxxSourceRuleFactory.PicType.PDC);
 
     // Generate the final link rule.  We use the top-level target as the link rule's
     // target, so that it corresponds to the actual binary we build.

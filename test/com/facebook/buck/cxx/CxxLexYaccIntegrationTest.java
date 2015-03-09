@@ -64,33 +64,30 @@ public class CxxLexYaccIntegrationTest {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new FakeBuckConfig());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:main");
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "main.cpp";
     String yaccSourceName = "mainy.yy";
     String yaccSourceFull = "foo/" + yaccSourceName;
     BuildTarget yaccTarget = CxxDescriptionEnhancer.createYaccBuildTarget(target, yaccSourceName);
-    BuildTarget yaccPreprocessTarget = CxxSourceRuleFactory.createPreprocessBuildTarget(
-        target,
-        cxxPlatform.getFlavor(),
-        CxxSource.Type.CXX,
-        /* pic */ false,
-        yaccSourceName + ".cc");
-    BuildTarget yaccCompileTarget = CxxSourceRuleFactory.createCompileBuildTarget(
-        target,
-        cxxPlatform.getFlavor(),
-        yaccSourceName + ".cc",
-        /* pic */ false);
-    BuildTarget preprocessTarget = CxxSourceRuleFactory.createPreprocessBuildTarget(
-        target,
-        cxxPlatform.getFlavor(),
-        CxxSource.Type.CXX,
-        /* pic */ false,
-        sourceName);
-    BuildTarget compileTarget = CxxSourceRuleFactory.createCompileBuildTarget(
-        target,
-        cxxPlatform.getFlavor(),
-        sourceName,
-        /* pic */ false);
+    BuildTarget yaccPreprocessTarget =
+        cxxSourceRuleFactory.createPreprocessBuildTarget(
+            yaccSourceName + ".cc",
+            CxxSource.Type.CXX,
+            CxxSourceRuleFactory.PicType.PDC);
+    BuildTarget yaccCompileTarget =
+        cxxSourceRuleFactory.createCompileBuildTarget(
+            yaccSourceName + ".cc",
+            CxxSourceRuleFactory.PicType.PDC);
+    BuildTarget preprocessTarget =
+        cxxSourceRuleFactory.createPreprocessBuildTarget(
+            sourceName,
+            CxxSource.Type.CXX,
+            CxxSourceRuleFactory.PicType.PDC);
+    BuildTarget compileTarget =
+        cxxSourceRuleFactory.createCompileBuildTarget(
+            sourceName,
+            CxxSourceRuleFactory.PicType.PDC);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             target,

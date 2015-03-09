@@ -213,4 +213,9 @@ public class SourcePathResolver {
             })
         .toList();
   }
+
+  public Collection<BuildRule> filterBuildRuleInputs(SourcePath... sources) {
+    return filterBuildRuleInputs(Arrays.asList(sources));
+  }
+
 }

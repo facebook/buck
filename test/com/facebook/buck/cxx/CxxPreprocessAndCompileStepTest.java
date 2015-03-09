@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -30,61 +30,69 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class CxxPreprocessStepTest {
+public class CxxPreprocessAndCompileStepTest {
 
   @Test
-  public void cxxLinkStepUsesCorrectCommand() {
+  public void usesCorrectCommandForCompile() {
 
-    // Setup some dummy values for inputs to the CxxPreprocessStep
+    // Setup some dummy values for inputs to the CxxPreprocessAndCompileStep
     ImmutableList<String> compiler = ImmutableList.of("compiler");
-    ImmutableList<String> flags =
-        ImmutableList.of("-Dtest=blah");
-    Path output = Paths.get("test.ii");
-    Path input = Paths.get("test.cpp");
-    ImmutableList<Path> prefixHeaders = ImmutableList.of(
-        Paths.get("first/prefix/header.h"),
-        Paths.get("another/prefix/header.h"));
-    ImmutableList<Path> includes = ImmutableList.of(
-        Paths.get("foo/bar"),
-        Paths.get("test"));
-    ImmutableList<Path> systemIncludes = ImmutableList.of(
-        Paths.get("/usr/include"),
-        Paths.get("/include"));
-    ImmutableList<Path> frameworkRoots = ImmutableList.of(
-        Paths.get("/absolute/path/to/frameworks"),
-        Paths.get("relative/path/to/frameworks"));
+    ImmutableList<String> flags = ImmutableList.of("-ffunction-sections");
+    Path output = Paths.get("test.o");
+    Path input = Paths.get("test.ii");
     ImmutableMap<Path, Path> replacementPaths = ImmutableMap.of();
 
-    // Create our CxxPreprocessStep to test.
-    CxxPreprocessStep cxxPreprocessStep = new CxxPreprocessStep(
+    // Create our CxxPreprocessAndCompileStep to test.
+    CxxPreprocessAndCompileStep compileStep = new CxxPreprocessAndCompileStep(
         compiler,
+        CxxPreprocessAndCompileStep.Operation.COMPILE,
         flags,
         output,
         input,
-        prefixHeaders,
-        includes,
-        systemIncludes,
-        frameworkRoots,
         replacementPaths,
         Optional.<DebugPathSanitizer>absent());
 
     // Verify it uses the expected command.
-    ImmutableList<String> expected = ImmutableList.<String>builder()
+    ImmutableList<String> expectedCompileCommand = ImmutableList.<String>builder()
+        .addAll(compiler)
+        .add("-c")
+        .add("-ffunction-sections")
+        .add("-o", output.toString())
+        .add(input.toString())
+        .build();
+    ImmutableList<String> actualCompileCommand = compileStep.getCommand();
+    assertEquals(expectedCompileCommand, actualCompileCommand);
+  }
+
+  @Test
+  public void usesCorrectCommandForPreprocess() {
+
+    // Setup some dummy values for inputs to the CxxPreprocessAndCompileStep
+    ImmutableList<String> compiler = ImmutableList.of("compiler");
+    ImmutableList<String> flags = ImmutableList.of("-Dtest=blah");
+    Path output = Paths.get("test.ii");
+    Path input = Paths.get("test.cpp");
+    ImmutableMap<Path, Path> replacementPaths = ImmutableMap.of();
+
+    // Create our CxxPreprocessAndCompileStep to test.
+    CxxPreprocessAndCompileStep preprocessStep = new CxxPreprocessAndCompileStep(
+        compiler,
+        CxxPreprocessAndCompileStep.Operation.PREPROCESS,
+        flags,
+        output,
+        input,
+        replacementPaths,
+        Optional.<DebugPathSanitizer>absent());
+
+    // Verify it uses the expected command.
+    ImmutableList<String> expectedPreprocessCommand = ImmutableList.<String>builder()
         .addAll(compiler)
         .add("-E")
         .add("-Dtest=blah")
-        .add("-include", "first/prefix/header.h")
-        .add("-include", "another/prefix/header.h")
-        .add("-I", "foo/bar")
-        .add("-I", "test")
-        .add("-isystem", "/usr/include")
-        .add("-isystem", "/include")
-        .add("-F", "/absolute/path/to/frameworks")
-        .add("-F", "relative/path/to/frameworks")
         .add(input.toString())
         .build();
-    ImmutableList<String> actual = cxxPreprocessStep.getCommand();
-    assertEquals(expected, actual);
+    ImmutableList<String> actualPreprocessCommand = preprocessStep.getCommand();
+    assertEquals(expectedPreprocessCommand, actualPreprocessCommand);
   }
 
   @Test
@@ -94,16 +102,32 @@ public class CxxPreprocessStepTest {
         ImmutableMap.of(original, Paths.get("hello/////world.h"));
     Path finalPath = Paths.get("SANITIZED/world.h");
 
+    // Setup some dummy values for inputs to the CxxPreprocessAndCompileStep
+    ImmutableList<String> compiler = ImmutableList.of("compiler");
+    ImmutableList<String> flags = ImmutableList.of("-Dtest=blah");
+    Path output = Paths.get("test.ii");
+    Path input = Paths.get("test.cpp");
+
+    Path compilationDirectory = Paths.get("compDir");
     DebugPathSanitizer sanitizer = new DebugPathSanitizer(
         9,
         File.separatorChar,
         "PWD",
         ImmutableBiMap.of(Paths.get("hello"), "SANITIZED"));
-    Function<String, String> processor =
-        CxxPreprocessStep.createOutputLineProcessor(
-            Paths.get("PWD"),
+
+    // Create our CxxPreprocessAndCompileStep to test.
+    CxxPreprocessAndCompileStep cxxPreprocessStep =
+        new CxxPreprocessAndCompileStep(
+            compiler,
+            CxxPreprocessAndCompileStep.Operation.PREPROCESS,
+            flags,
+            output,
+            input,
             replacementPaths,
             Optional.of(sanitizer));
+
+    Function<String, String> processor =
+        cxxPreprocessStep.createPreprocessOutputLineProcessor(compilationDirectory);
 
     // Fixup line marker lines properly.
     assertEquals(
@@ -125,31 +149,35 @@ public class CxxPreprocessStepTest {
     Path original = Paths.get("buck-out/foo#bar/world.h");
     Path replacement = Paths.get("hello/world.h");
 
-    // Setup some dummy values for inputs to the CxxPreprocessStep
+    // Setup some dummy values for inputs to the CxxPreprocessAndCompileStep
     ImmutableList<String> compiler = ImmutableList.of("compiler");
     ImmutableList<String> flags = ImmutableList.of("-Dtest=blah");
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
-    ImmutableList<Path> prefixHeaders = ImmutableList.of();
-    ImmutableList<Path> includes = ImmutableList.of();
-    ImmutableList<Path> systemIncludes = ImmutableList.of();
-    ImmutableList<Path> frameworkRoots = ImmutableList.of();
     ImmutableMap<Path, Path> replacementPaths = ImmutableMap.of(original, replacement);
 
-    // Create our CxxPreprocessStep to test.
-    CxxPreprocessStep cxxPreprocessStep = new CxxPreprocessStep(
-        compiler,
-        flags,
-        output,
-        input,
-        prefixHeaders,
-        includes,
-        systemIncludes,
-        frameworkRoots,
-        replacementPaths,
-        Optional.<DebugPathSanitizer>absent());
+    Path compilationDirectory = Paths.get("compDir");
+    Path sanitizedDir = Paths.get("hello");
+    Path unsanitizedDir = Paths.get("buck-out/foo#bar");
+    DebugPathSanitizer sanitizer = new DebugPathSanitizer(
+        unsanitizedDir.toString().length(),
+        File.separatorChar,
+        compilationDirectory,
+        ImmutableBiMap.of(unsanitizedDir, sanitizedDir));
 
-    Function<String, String> processor = cxxPreprocessStep.createErrorLineProcessor();
+    // Create our CxxPreprocessAndCompileStep to test.
+    CxxPreprocessAndCompileStep cxxPreprocessStep =
+        new CxxPreprocessAndCompileStep(
+            compiler,
+            CxxPreprocessAndCompileStep.Operation.COMPILE,
+            flags,
+            output,
+            input,
+            replacementPaths,
+            Optional.of(sanitizer));
+
+    Function<String, String> processor =
+        cxxPreprocessStep.createErrorLineProcessor(compilationDirectory);
 
     // Fixup lines in included traces.
     assertEquals(

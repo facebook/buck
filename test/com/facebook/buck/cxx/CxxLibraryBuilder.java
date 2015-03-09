@@ -31,7 +31,12 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
       BuildTarget target,
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(new CxxLibraryDescription(cxxBuckConfig, cxxPlatforms), target);
+    super(
+        new CxxLibraryDescription(
+            cxxBuckConfig,
+            cxxPlatforms,
+            CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE),
+        target);
   }
 
   public CxxLibraryBuilder(BuildTarget target) {

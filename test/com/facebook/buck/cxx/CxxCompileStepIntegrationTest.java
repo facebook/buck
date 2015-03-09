@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -65,11 +66,13 @@ public class CxxCompileStepIntegrationTest {
         ImmutableBiMap.<Path, Path>of());
 
     // Build an archive step.
-    CxxCompileStep step = new CxxCompileStep(
+    CxxPreprocessAndCompileStep step = new CxxPreprocessAndCompileStep(
         compiler,
+        CxxPreprocessAndCompileStep.Operation.COMPILE,
         ImmutableList.of("-g"),
         output,
         relativeInput,
+        ImmutableMap.<Path, Path>of(),
         Optional.of(sanitizer));
 
     // Execute the archive step and verify it ran successfully.

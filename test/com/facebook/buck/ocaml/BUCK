@@ -26,6 +26,7 @@ java_test(
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/util/environment:platform',
+    '//test/com/facebook/buck/cxx:testutil',
     '//test/com/facebook/buck/event:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',

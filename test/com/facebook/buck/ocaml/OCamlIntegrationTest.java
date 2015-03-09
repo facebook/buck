@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.CxxSourceRuleFactoryHelper;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -365,20 +366,19 @@ public class OCamlIntegrationTest {
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new FakeBuckConfig());
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(cclib, cxxPlatform);
     BuildTarget cclibbin =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(cclib, cxxPlatform.getFlavor());
     String sourceName = "cc/cc.cpp";
-    BuildTarget ppObj = CxxSourceRuleFactory.createPreprocessBuildTarget(
-        cclib,
-        cxxPlatform.getFlavor(),
-        CxxSource.Type.CXX,
-        /* pic */ false,
-        sourceName);
-    BuildTarget ccObj = CxxSourceRuleFactory.createCompileBuildTarget(
-        cclib,
-        cxxPlatform.getFlavor(),
-        sourceName,
-        /* pic */ false);
+    BuildTarget ppObj =
+        cxxSourceRuleFactory.createPreprocessBuildTarget(
+            sourceName,
+            CxxSource.Type.CXX,
+            CxxSourceRuleFactory.PicType.PDC);
+    BuildTarget ccObj =
+        cxxSourceRuleFactory.createCompileBuildTarget(
+            sourceName,
+            CxxSourceRuleFactory.PicType.PDC);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             cclib,

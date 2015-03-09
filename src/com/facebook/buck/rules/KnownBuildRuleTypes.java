@@ -55,6 +55,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPythonExtensionDescription;
+import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
@@ -391,16 +392,21 @@ public class KnownBuildRuleTypes {
     CxxBinaryDescription cxxBinaryDescription = new CxxBinaryDescription(
         cxxBuckConfig,
         defaultCxxPlatform,
-        cxxPlatforms);
+        cxxPlatforms,
+        CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE);
 
     CxxLibraryDescription cxxLibraryDescription = new CxxLibraryDescription(
         cxxBuckConfig,
-        cxxPlatforms);
+        cxxPlatforms,
+        CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE);
 
     AppleLibraryDescription appleLibraryDescription =
         new AppleLibraryDescription(
             appleConfig,
-            cxxLibraryDescription,
+            new CxxLibraryDescription(
+                cxxBuckConfig,
+                cxxPlatforms,
+                CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE),
             cxxPlatforms,
             appleCxxPlatformsToAppleSdkPaths);
     builder.register(appleLibraryDescription);
@@ -427,7 +433,11 @@ public class KnownBuildRuleTypes {
     builder.register(
         new AppleBinaryDescription(
             appleConfig,
-            cxxBinaryDescription,
+            new CxxBinaryDescription(
+                cxxBuckConfig,
+                defaultCxxPlatform,
+                cxxPlatforms,
+                CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE),
             cxxPlatforms,
             appleCxxPlatformsToAppleSdkPaths));
     builder.register(new AppleBundleDescription());
@@ -485,13 +495,11 @@ public class KnownBuildRuleTypes {
                 new ThriftJavaEnhancer(thriftBuckConfig, defaultJavacOptions),
                 new ThriftCxxEnhancer(
                     thriftBuckConfig,
-                    cxxBuckConfig,
-                    cxxPlatforms,
+                    cxxLibraryDescription,
                     /* cpp2 */ false),
                 new ThriftCxxEnhancer(
                     thriftBuckConfig,
-                    cxxBuckConfig,
-                    cxxPlatforms,
+                    cxxLibraryDescription,
                     /* cpp2 */ true),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.NORMAL),
                 new ThriftPythonEnhancer(thriftBuckConfig, ThriftPythonEnhancer.Type.TWISTED))));

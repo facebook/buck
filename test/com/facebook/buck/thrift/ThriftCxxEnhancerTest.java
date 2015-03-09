@@ -20,7 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -59,16 +61,21 @@ public class ThriftCxxEnhancerTest {
       new FlavorDomain<>(
           "C/C++ Platform",
           ImmutableMap.of(CXX_PLATFORM.getFlavor(), CXX_PLATFORM));
-  private static final ThriftCxxEnhancer ENHANCER_CPP = new ThriftCxxEnhancer(
-      THRIFT_BUCK_CONFIG,
-      CXX_BUCK_CONFIG,
-      CXX_PLATFORMS,
-      /* cpp2 */ false);
-  private static final ThriftCxxEnhancer ENHANCER_CPP2 = new ThriftCxxEnhancer(
-      THRIFT_BUCK_CONFIG,
-      CXX_BUCK_CONFIG,
-      CXX_PLATFORMS,
-      /* cpp2 */ true);
+  private static final CxxLibraryDescription CXX_LIBRARY_DESCRIPTION =
+      new CxxLibraryDescription(
+          CXX_BUCK_CONFIG,
+          CXX_PLATFORMS,
+          CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE);
+  private static final ThriftCxxEnhancer ENHANCER_CPP =
+      new ThriftCxxEnhancer(
+          THRIFT_BUCK_CONFIG,
+          CXX_LIBRARY_DESCRIPTION,
+          /* cpp2 */ false);
+  private static final ThriftCxxEnhancer ENHANCER_CPP2 =
+      new ThriftCxxEnhancer(
+          THRIFT_BUCK_CONFIG,
+          CXX_LIBRARY_DESCRIPTION,
+          /* cpp2 */ true);
 
   private static FakeBuildRule createFakeBuildRule(
       String target,
@@ -195,13 +202,11 @@ public class ThriftCxxEnhancerTest {
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftCxxEnhancer cppEnhancerWithSettings = new ThriftCxxEnhancer(
         thriftBuckConfig,
-        CXX_BUCK_CONFIG,
-        CXX_PLATFORMS,
+        CXX_LIBRARY_DESCRIPTION,
         /* cpp2 */ false);
     ThriftCxxEnhancer cpp2EnhancerWithSettings = new ThriftCxxEnhancer(
         thriftBuckConfig,
-        CXX_BUCK_CONFIG,
-        CXX_PLATFORMS,
+        CXX_LIBRARY_DESCRIPTION,
         /* cpp2 */ true);
 
     // With no options we just need to find the C/C++ thrift library.

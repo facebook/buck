@@ -88,7 +88,7 @@ public abstract class AbstractNodeBuilder<A> {
   }
 
   @SuppressWarnings("unchecked")
-  private BuildRuleParams createBuildRuleParams(
+  public BuildRuleParams createBuildRuleParams(
       BuildRuleResolver resolver,
       ProjectFilesystem filesystem,
       TargetGraph targetGraph) {

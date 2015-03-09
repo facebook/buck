@@ -48,14 +48,17 @@ public class CxxBinaryDescription implements
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final CxxSourceRuleFactory.Strategy compileStrategy;
 
   public CxxBinaryDescription(
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      CxxSourceRuleFactory.Strategy compileStrategy) {
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
+    this.compileStrategy = compileStrategy;
   }
 
   /**
@@ -124,11 +127,13 @@ public class CxxBinaryDescription implements
           args);
     }
 
-    CxxLink cxxLink = CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
-        params,
-        resolver,
-        cxxPlatform,
-        args);
+    CxxLink cxxLink =
+        CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+            params,
+            resolver,
+            cxxPlatform,
+            args,
+            compileStrategy);
 
     // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
     // rule above for a couple reasons:
