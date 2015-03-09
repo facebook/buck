@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -30,6 +31,7 @@ import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
@@ -62,6 +64,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private static final Logger LOG = Logger.get(SuperConsoleEventBusListener.class);
 
+  private final Optional<WebServer> webServer;
   private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent>> threadsToRunningEvent;
   private final ConcurrentMap<Long, Optional<? extends LeafEvent>> threadsToRunningStep;
   private final AtomicInteger numRulesCompleted = new AtomicInteger();
@@ -78,9 +81,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Console console,
       Clock clock,
       ExecutionEnvironment executionEnvironment,
-      boolean isTreatingAssumptionsAsErrors) {
+      boolean isTreatingAssumptionsAsErrors,
+      Optional<WebServer> webServer) {
     super(console, clock);
-
+    this.webServer = webServer;
     this.threadsToRunningEvent = new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
     this.threadsToRunningStep = new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
 
@@ -168,15 +172,34 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     // If parsing has not finished, then there is no build rule information to print yet.
     if (parseTime != UNFINISHED_EVENT_PAIR) {
       // Log build time, excluding time spent in parsing.
-      Optional<String> suffix = Optional.absent();
+      String jobsCount = null;
       if (ruleCount.isPresent()) {
-        suffix = Optional.of(String.format(
+        jobsCount = String.format(
                 "(%d/%d JOBS)",
                 numRulesCompleted.get(),
-                ruleCount.get()));
+                ruleCount.get());
       }
+
+      // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
+      String buildTrace = null;
+      if (buildFinished != null && webServer.isPresent()) {
+        Optional<Integer> port = webServer.get().getPort();
+        if (port.isPresent()) {
+          buildTrace = String.format(
+               "Details: http://localhost:%s/trace/%s",
+               port.get(),
+               buildFinished.getBuildId());
+        }
+      }
+
+      String suffix = Joiner.on(" ")
+          .join(FluentIterable.of(new String[] {jobsCount, buildTrace})
+              .filter(Predicates.notNull()));
+      Optional<String> suffixOptional =
+          suffix.isEmpty() ? Optional.<String>absent() : Optional.of(suffix);
+
       long buildTime = logEventPair("BUILDING",
-          suffix,
+          suffixOptional,
           currentTimeMillis,
           parseTime,
           buildStarted,

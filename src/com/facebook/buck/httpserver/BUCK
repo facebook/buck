@@ -24,6 +24,8 @@ java_library(
   resources = glob(['*.soy']),
   visibility = [
     '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/event/listener:listener',
     '//test/com/facebook/buck/httpserver:',
+    '//test/com/facebook/buck/event/listener:',
   ],
 )

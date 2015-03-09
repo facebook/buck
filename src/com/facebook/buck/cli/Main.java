@@ -545,6 +545,10 @@ public final class Main {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(rootRepository.getFilesystem());
 
     @Nullable ArtifactCacheFactory artifactCacheFactory = null;
+    Optional<WebServer> webServer = getWebServerIfDaemon(
+        context,
+        repositoryFactory,
+        clock);
 
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
     // be the last resource, so that it is closed first and can deliver its queued events to the
@@ -562,9 +566,9 @@ public final class Main {
                  console,
                  verbosity,
                  executionEnvironment,
-                 rootRepository.getBuckConfig());
+                 rootRepository.getBuckConfig(),
+                 webServer);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
-
       // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
       // running commands such as `buck clean`.
       artifactCacheFactory = new LoggingArtifactCacheFactory(
@@ -572,10 +576,6 @@ public final class Main {
           buildEventBus,
           fileHashCache);
 
-      Optional<WebServer> webServer = getWebServerIfDaemon(
-          context,
-          repositoryFactory,
-          clock);
       eventListeners = addEventListeners(buildEventBus,
           rootRepository.getFilesystem(),
           rootRepository.getBuckConfig(),
@@ -653,18 +653,7 @@ public final class Main {
               objectMapper,
               clock,
               processManager));
-
       parser.cleanCache();
-
-      // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
-      if (webServer.isPresent()) {
-        Optional<Integer> port = webServer.get().getPort();
-        if (port.isPresent()) {
-          buildEventBus.post(ConsoleEvent.info(
-              "See trace at http://localhost:%s/trace/%s", port.get(), buildId));
-        }
-      }
-
       buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
     } catch (Throwable t) {
       LOG.debug(t, "Failing build on exception.");
@@ -915,7 +904,8 @@ public final class Main {
       Console console,
       Verbosity verbosity,
       ExecutionEnvironment executionEnvironment,
-      BuckConfig config) {
+      BuckConfig config,
+      Optional<WebServer> webServer) {
     if (Platform.WINDOWS != Platform.detect() &&
         console.getAnsi().isAnsiTerminal() &&
         !verbosity.shouldPrintCommand() &&
@@ -924,7 +914,8 @@ public final class Main {
           console,
           clock,
           executionEnvironment,
-          config.isTreatingAssumptionsAsErrors());
+          config.isTreatingAssumptionsAsErrors(),
+          webServer);
       superConsole.startRenderScheduler(SUPER_CONSOLE_REFRESH_RATE.getDuration(),
           SUPER_CONSOLE_REFRESH_RATE.getUnit());
       return superConsole;

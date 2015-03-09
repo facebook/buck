@@ -10,6 +10,7 @@ java_test(
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/httpserver:httpserver',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/json:json',
     '//src/com/facebook/buck/model:model',

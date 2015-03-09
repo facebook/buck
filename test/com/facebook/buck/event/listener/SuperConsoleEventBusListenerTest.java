@@ -22,6 +22,7 @@ import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -110,7 +111,8 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            /* isTreatingAssumptionsAsErrors */ false);
+            /* isTreatingAssumptionsAsErrors */ false,
+        Optional.<WebServer>absent());
     eventBus.register(listener);
 
     rawEventBus.post(configureTestEventAtTime(
