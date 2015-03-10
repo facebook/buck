@@ -53,12 +53,26 @@ public class TargetGraphAndTargets {
     return associatedTests;
   }
 
+  /**
+   * @param buildTargets The set of targets for which we would like to find tests
+   * @param projectGraph A TargetGraph containing all nodes and their tests.
+   * @return A set of all test targets that test any of {@code buildTargets} or their dependencies.
+   */
   public static ImmutableSet<BuildTarget> getExplicitTestTargets(
       ImmutableSet<BuildTarget> buildTargets,
       TargetGraph projectGraph) {
     ImmutableSet<TargetNode<?>> projectRoots = checkAndGetTargetNodes(buildTargets, projectGraph);
+    return getExplicitTestTargets(projectGraph.getSubgraph(projectRoots).getNodes());
+  }
+
+  /**
+   * @param nodes Nodes whose test targets we would like to find
+   * @return A set of all test targets that test the targets in {@code nodes}.
+   */
+  public static ImmutableSet<BuildTarget> getExplicitTestTargets(
+      Iterable<TargetNode<?>> nodes) {
     return FluentIterable
-        .from(projectGraph.getSubgraph(projectRoots).getNodes())
+        .from(nodes)
         .transformAndConcat(
             new Function<TargetNode<?>, Iterable<BuildTarget>>() {
               @Override

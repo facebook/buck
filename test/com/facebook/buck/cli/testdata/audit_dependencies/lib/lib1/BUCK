@@ -1,0 +1,5 @@
+apple_library(
+  name = 'lib1',
+  srcs = [ 'lib1.txt' ],
+  tests = [ '//test/test-lib:test-lib' ],
+)

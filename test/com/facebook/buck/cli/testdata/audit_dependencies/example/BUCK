@@ -5,6 +5,7 @@ apple_library(
     ':two',
     ':three',
   ],
+  tests = [ ':one-tests' ],
 )
 
 apple_library(
@@ -30,6 +31,10 @@ apple_library(
   deps = [
     ':six',
   ],
+  tests = [
+    ':four-tests',
+    ':four-application-tests',
+  ],
 )
 
 apple_library(
@@ -43,4 +48,40 @@ apple_library(
 apple_library(
   name = 'six',
   srcs = [ '6.txt' ],
+  tests = [ ':six-tests' ],
+)
+
+apple_test(
+  name = 'one-tests',
+  extension = 'xctest',
+  srcs = [ '1-test.txt' ],
+  deps = [ ':one' ],
+)
+
+apple_test(
+  name = 'four-tests',
+  extension = 'xctest',
+  srcs = [ '4-test.txt' ],
+  deps = [ ':four' ],
+)
+
+apple_test(
+  name = 'four-application-tests',
+  extension = 'xctest',
+  srcs = [ '4-application-test.txt' ],
+  deps = [
+    ':four',
+    ':application-test-lib',
+  ],
+)
+
+apple_test(
+  name = 'six-tests',
+  extension = 'xctest',
+  srcs = [ '6-test.txt' ],
+  deps = [ ':six' ],
+)
+
+apple_library(
+  name = 'application-test-lib',
 )

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -31,9 +32,11 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Set;
 
 
 public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDependenciesOptions> {
@@ -91,6 +94,14 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
     ImmutableSet<BuildTarget> targetsToPrint = options.shouldShowTransitiveDependencies() ?
         getTransitiveDependencies(targets, graph) :
         getImmediateDependencies(targets, graph);
+
+    if (options.shouldIncludeTests()) {
+      ImmutableSet.Builder<BuildTarget> targetsBuilder = ImmutableSet.builder();
+      targetsToPrint = targetsBuilder
+          .addAll(targetsToPrint)
+          .addAll(getTestTargetDependencies(targets, graph, options))
+          .build();
+    }
 
     Collection<String> namesToPrint = Collections2.transform(
         targetsToPrint, new Function<BuildTarget, String>() {
@@ -152,6 +163,41 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
     }
 
     return builder.build();
+  }
+
+  @VisibleForTesting
+  Collection<BuildTarget> getTestTargetDependencies(
+      final ImmutableSet<BuildTarget> targets,
+      TargetGraph graph,
+      AuditDependenciesOptions options) throws IOException, InterruptedException {
+    if (!options.shouldShowTransitiveDependencies()) {
+      return TargetGraphAndTargets.getExplicitTestTargets(graph.getAll(targets));
+    }
+
+    ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
+        getParser(),
+        new ParserConfig(options.getBuckConfig()),
+        getBuckEventBus(),
+        console,
+        environment,
+        options.getEnableProfiling());
+
+    TargetGraph graphWithTests = TargetGraphTestParsing.expandedTargetGraphToIncludeTestsForTargets(
+        projectGraphParser,
+        graph,
+        targets);
+    ImmutableSet<BuildTarget> tests = TargetGraphAndTargets.getExplicitTestTargets(
+        targets,
+        graphWithTests);
+    // We want to return the set of all tests plus their dependencies. Luckily
+    // `getTransitiveDependencies` will give us the last part, but we need to make sure we include
+    // the tests themselves in our final output
+    Set<BuildTarget> testsWithDependencies = Sets.union(
+        tests,
+        getTransitiveDependencies(tests, graphWithTests));
+    // Tests normally depend on the code they are testing, but we don't want to include that in our
+    // output, so explicitly filter that here.
+    return Sets.difference(testsWithDependencies, targets);
   }
 
   private void printJSON(Collection<String> names) throws IOException {

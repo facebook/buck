@@ -60,6 +60,10 @@ Provide build information about build targets and outputs.
     Lists the dependencies used to build the given targets. Results are listed
     in alphabetical order. By default, only direct dependencies are listed.
     To show transitive dependencies, use the <code>--transitive</code> flag.
+    To show tests for a rule, use the <code>--include-tests</code> flag. This
+    prints out a rule's tests as if they were a dependency of the rule.
+    Combined with the <code>--transitive</code> flag, this will print out all
+    of the test's dependencies as well.
     {/param}
   {/call}
 </ul>

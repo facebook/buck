@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -21,6 +21,12 @@ import org.kohsuke.args4j.Option;
 
 public class AuditDependenciesOptions extends AuditCommandOptions {
 
+  @Option(
+      name = "--include-tests",
+      usage = "Includes a target's tests with its dependencies. With the transitive flag, this " +
+          "prints the dependencies of the tests as well")
+  private boolean includeTests = false;
+
   @Option(name = "--transitive",
       aliases = { "-t" },
       usage = "Whether to include transitive dependencies in the output")
@@ -32,6 +38,10 @@ public class AuditDependenciesOptions extends AuditCommandOptions {
 
   public boolean shouldShowTransitiveDependencies() {
     return transitive;
+  }
+
+  public boolean shouldIncludeTests() {
+    return includeTests;
   }
 
 }
