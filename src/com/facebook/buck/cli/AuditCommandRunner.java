@@ -59,12 +59,15 @@ public class AuditCommandRunner implements CommandRunner {
   }
 
   private void setAuditCommands(CommandRunnerParams params) {
-    auditCommands = ImmutableMap.of(
-        "input",     new AuditInputCommand(params),
-        "classpath", new AuditClasspathCommand(params),
-        "dependencies", new AuditDependenciesCommand(params),
-        "owner",     new AuditOwnerCommand(params),
-        "rules",     new AuditRulesCommand(params));
+    ImmutableMap.Builder<String, AbstractCommandRunner<?>> commandBuilder = ImmutableMap.builder();
+    auditCommands = commandBuilder
+        .put("classpath", new AuditClasspathCommand(params))
+        .put("dependencies", new AuditDependenciesCommand(params))
+        .put("input", new AuditInputCommand(params))
+        .put("owner", new AuditOwnerCommand(params))
+        .put("rules", new AuditRulesCommand(params))
+        .put("tests", new AuditTestsCommand(params))
+        .build();
   }
 
   private void printUsage() {

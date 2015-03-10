@@ -66,6 +66,22 @@ Provide build information about build targets and outputs.
     of the test's dependencies as well.
     {/param}
   {/call}
+
+  {call buck.audit.command}
+    {param name: 'tests <targets>' /}
+    {param desc}
+    Lists the tests for the given targets. Results are listed in alphabetical
+    order. Only tests for the given targets are printed, though multiple
+    targets may be provided at once. This command is meant to be used in
+    conjunction with the <code>audit dependencies</code> command. For example,
+    to retrieve a list of all tests for a given project, use
+    <br>
+    <br>
+    <pre>
+    buck audit dependencies --transitive PROJECT | xargs buck audit tests
+    </pre>
+    {/param}
+  {/call}
 </ul>
 {/param}
 
