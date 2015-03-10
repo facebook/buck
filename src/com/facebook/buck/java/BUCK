@@ -47,6 +47,7 @@ java_binary(
   ],
   visibility = [
     '//programs:bucklib',
+    '//programs:bucklib-no-nailgun',
   ]
 )
 

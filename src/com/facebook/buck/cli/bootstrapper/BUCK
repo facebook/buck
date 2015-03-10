@@ -6,6 +6,7 @@ java_library(
   ],
   visibility = [
     '//programs:bucklib',
+    '//programs:bucklib-no-nailgun',
     '//test/com/facebook/buck/cli/bootstrapper:bootstrapper',
   ],
 )

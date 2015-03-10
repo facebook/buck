@@ -36,20 +36,9 @@ genrule(
   out = 'buckversion',
 )
 
-python_library(
-  name='bucklib',
-  srcs=[
-    'buck_project.py',
-    'buck_tool.py',
-    'buck_repo.py',
-    'buck_package.py',
-    'timing.py',
-    'tracing.py',
-  ],
-  resources={
+BUCK_CORE_RESOURCES = {
     'android_agent_path': '//assets/android:agent.apk',
     'bootstrapper_classes': '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
-    'buck_client': '//third-party/nailgun:ng',
     'buck_package_version': ':gen_buck_package_version',
     'buck_server': '//src/com/facebook/buck/cli:main-fixed',
     'dx': '//third-party/java/dx-from-kitkat:etc_dx',
@@ -65,13 +54,30 @@ python_library(
     'path_to_sh_binary_template': '//src/com/facebook/buck/shell:sh_binary_template',
     'report_generator_jar': '//src/com/facebook/buck/java:report-generator',
     'testrunner_classes': '//src/com/facebook/buck/junit:junit-bin-fixed',
-    
+
     # TODO(#5448619): We currently don't have a great way of packaging up
     # entire directories into a PEX file, so for now, we aren't pulling in
     # the following resources.
     #':path_to_static_content',
     #':quickstart_origin_dir',
-  },
+}
+
+BUCK_WITH_NAILGUN_RESOURCES = {
+    'buck_client': '//third-party/nailgun:ng',
+}
+BUCK_WITH_NAILGUN_RESOURCES.update(BUCK_CORE_RESOURCES)
+
+python_library(
+  name='bucklib',
+  srcs=[
+    'buck_project.py',
+    'buck_tool.py',
+    'buck_repo.py',
+    'buck_package.py',
+    'timing.py',
+    'tracing.py',
+  ],
+  resources=BUCK_WITH_NAILGUN_RESOURCES,
   deps = [
     ':subprocutils',
     ':buck_version',
@@ -83,6 +89,31 @@ python_binary(
   main='buck.py',
   deps=[
     ':bucklib',
+  ],
+)
+
+python_library(
+  name='bucklib-no-nailgun',
+  srcs=[
+    'buck_project.py',
+    'buck_tool.py',
+    'buck_repo.py',
+    'buck_package.py',
+    'timing.py',
+    'tracing.py',
+  ],
+  resources=BUCK_CORE_RESOURCES,
+  deps = [
+    ':subprocutils',
+    ':buck_version',
+  ],
+)
+
+python_binary(
+  name='buck-no-nailgun',
+  main='buck.py',
+  deps=[
+    ':bucklib-no-nailgun',
   ],
 )
 
