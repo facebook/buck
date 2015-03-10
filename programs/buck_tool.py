@@ -352,6 +352,16 @@ class BuckTool(object):
             "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
             "-Dlog4j.configuration=file:{0}".format(
                 self._get_resource(LOG4J_CONFIG)),
+
+            # It's important that this number is greater than the `-j` parallelism,
+            # as if it's too small, we'll overflow the reusable connection pool and
+            # start spamming new connections.  While this isn't the best location,
+            # the other current option is setting this wherever we construct a `Build`
+            # object and have access to the `-j` argument.  Howevert, since that is
+            # created in several places leave it here for now.  The better long-term
+            # option is to have the `HttpArtifactCache` handle this stuff explicitly,
+            # which we can do when we move to a better HTTP client.
+            "-Dhttp.maxConnections=200",
         ])
         for resource in EXPORTED_RESOURCES:
             if self._has_resource(resource):
