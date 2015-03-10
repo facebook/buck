@@ -88,6 +88,13 @@ public class ProjectFilesystemTest {
   }
 
   @Test
+  public void testSetLastModifiedTime() throws IOException {
+    Path path = tmp.newFile("somefile").toPath();
+    filesystem.setLastModifiedTime(path, FileTime.fromMillis(0));
+    assertEquals(java.nio.file.Files.getLastModifiedTime(path).toMillis(), 0);
+  }
+
+  @Test
   public void testIsDirectory() throws IOException {
     File dir = tmp.newFolder("src");
     File file = tmp.newFile("BUCK");
@@ -99,6 +106,13 @@ public class ProjectFilesystemTest {
   public void testMkdirsCanCreateNestedFolders() throws IOException {
     filesystem.mkdirs(new File("foo/bar/baz").toPath());
     assertTrue(new File(tmp.getRoot(), "foo/bar/baz").isDirectory());
+  }
+
+  @Test
+  public void testCreateNewFile() throws IOException {
+    Path path = Paths.get("somefile");
+    filesystem.createNewFile(path);
+    assertTrue(Paths.get(tmp.getRoot().getAbsolutePath()).resolve(path).toFile().exists());
   }
 
   @Test

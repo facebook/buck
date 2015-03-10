@@ -154,11 +154,13 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   public FakeProjectFilesystem(Clock clock, File root, Set<Path> files) {
     super(root.toPath());
     fileContents = Maps.newHashMap();
+    fileLastModifiedTimes = Maps.newHashMap();
+    FileTime modifiedTime = FileTime.fromMillis(clock.currentTimeMillis());
     for (Path file : files) {
       fileContents.put(file, new byte[0]);
+      fileLastModifiedTimes.put(file, modifiedTime);
     }
     fileAttributes = Maps.newHashMap();
-    fileLastModifiedTimes = Maps.newHashMap();
     symLinks = Maps.newHashMap();
     directories = Sets.newHashSet();
     this.clock = Preconditions.checkNotNull(clock);
@@ -300,6 +302,16 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
+  public Path setLastModifiedTime(Path path, FileTime time) throws IOException {
+    Path normalizedPath = path.normalize();
+    if (!exists(normalizedPath)) {
+      throw new NoSuchFileException(path.toString());
+    }
+    fileLastModifiedTimes.put(normalizedPath, time);
+    return normalizedPath;
+  }
+
+  @Override
   public void rmdir(Path path) throws IOException {
     Path normalizedPath = path.normalize();
     for (Iterator<Path> iterator = fileContents.keySet().iterator(); iterator.hasNext();) {
@@ -321,6 +333,12 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       directories.add(subpath);
       fileLastModifiedTimes.put(subpath, FileTime.fromMillis(clock.currentTimeMillis()));
     }
+  }
+
+  @Override
+  public Path createNewFile(Path path) throws IOException {
+    writeBytesToPath(new byte[0], path);
+    return path;
   }
 
   @Override
@@ -479,10 +497,6 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     }
   }
 
-  public void touch(Path path) throws IOException {
-    writeContentsToPath("", path);
-  }
-
   private Collection<Path> filesUnderPath(final Path dirPath) {
     return Collections2.filter(fileContents.keySet(), new Predicate<Path>() {
           @Override
@@ -526,5 +540,14 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       File out,
       ImmutableMap<Path, String> additionalFileContents) throws IOException {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void touch(Path fileToTouch) throws IOException {
+    if (exists(fileToTouch)) {
+      setLastModifiedTime(fileToTouch, FileTime.fromMillis(clock.currentTimeMillis()));
+    } else {
+      createNewFile(fileToTouch);
+    }
   }
 }

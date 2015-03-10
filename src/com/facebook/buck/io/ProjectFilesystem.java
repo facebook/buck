@@ -424,6 +424,15 @@ public class ProjectFilesystem {
   }
 
   /**
+   * Sets the last modified time for the given path.
+   */
+  public Path setLastModifiedTime(Path pathRelativeToProjectRoot, FileTime time)
+      throws IOException {
+    Path path = getPathForRelativePath(pathRelativeToProjectRoot);
+    return Files.setLastModifiedTime(path, time);
+  }
+
+  /**
    * Recursively delete everything under the specified path.
    */
   public void rmdir(Path pathRelativeToProjectRoot) throws IOException {
@@ -437,6 +446,14 @@ public class ProjectFilesystem {
    */
   public void mkdirs(Path pathRelativeToProjectRoot) throws IOException {
     Files.createDirectories(resolve(pathRelativeToProjectRoot));
+  }
+
+  /**
+   * Creates a new file relative to the project root.
+   */
+  public Path createNewFile(Path pathRelativeToProjectRoot) throws IOException {
+    Path path = getPathForRelativePath(pathRelativeToProjectRoot);
+    return Files.createFile(path);
   }
 
   /**
@@ -815,4 +832,11 @@ public class ProjectFilesystem {
     return Files.createTempFile(directory, prefix, suffix, attrs);
   }
 
+  public void touch(Path fileToTouch) throws IOException {
+    if (exists(fileToTouch)) {
+      setLastModifiedTime(fileToTouch, FileTime.fromMillis(System.currentTimeMillis()));
+    } else {
+      createNewFile(fileToTouch);
+    }
+  }
 }

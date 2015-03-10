@@ -16,16 +16,16 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.step.Step;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 /**
  * {@link com.facebook.buck.step.Step} that runs {@code touch <filename>} in the shell.
  */
-public class TouchStep extends ShellStep {
+public class TouchStep implements Step {
 
   private final Path fileToTouch;
 
@@ -39,10 +39,14 @@ public class TouchStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    return ImmutableList.of(
-        "touch",
-        context.getProjectFilesystem().resolve(fileToTouch).toString());
+  public int execute(ExecutionContext context) throws IOException, InterruptedException {
+    context.getProjectFilesystem().touch(fileToTouch);
+    return 0;
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return "touch " + context.getProjectFilesystem().resolve(fileToTouch).toString();
   }
 
   @Override

@@ -17,19 +17,28 @@
 package com.facebook.buck.step.fs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.timing.IncrementingFakeClock;
+import com.google.common.collect.ImmutableSet;
 
+import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 public class TouchStepTest {
+  @Rule
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
   public void testGetShortName() {
@@ -39,22 +48,39 @@ public class TouchStepTest {
   }
 
   @Test
-  public void testGetShellCommand() {
-    Path someFile = Paths.get("a/file.txt");
-    TouchStep touchStep = new TouchStep(someFile);
-
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem() {
-      @Override
-      public Path resolve(Path relativePath) {
-        return Paths.get("/abs/path").resolve(relativePath);
-      }
-    };
+  public void testFileGetsCreated() throws IOException, InterruptedException {
+    tmp.create();
+    Path path = Paths.get("somefile");
+    assertFalse(path.toFile().exists());
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
+        new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1)),
+        tmp.getRoot(),
+        ImmutableSet.<Path>of());
+    TouchStep touchStep = new TouchStep(path);
     ExecutionContext executionContext = TestExecutionContext
         .newBuilder()
         .setProjectFilesystem(projectFilesystem)
         .build();
-    assertEquals(
-        ImmutableList.of("touch", "/abs/path/a/file.txt"),
-        touchStep.getShellCommandInternal(executionContext));
+    touchStep.execute(executionContext);
+    assertTrue(projectFilesystem.exists(path));
+  }
+
+  @Test
+  public void testFileLastModifiedTimeUpdated() throws IOException, InterruptedException {
+    tmp.create();
+    Path path = Paths.get("somefile");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
+        new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1)),
+        tmp.getRoot(),
+        ImmutableSet.of(path));
+    long lastModifiedTime = projectFilesystem.getLastModifiedTime(path);
+    TouchStep touchStep = new TouchStep(path);
+    ExecutionContext executionContext = TestExecutionContext
+        .newBuilder()
+        .setProjectFilesystem(projectFilesystem)
+        .build();
+    touchStep.execute(executionContext);
+    assertTrue(projectFilesystem.exists(path));
+    assertTrue(lastModifiedTime < projectFilesystem.getLastModifiedTime(path));
   }
 }
