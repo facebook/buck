@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import java.util.EnumSet;
+
 public class BuildableProperties {
   public static final BuildableProperties NONE = new BuildableProperties();
 
@@ -23,38 +25,32 @@ public class BuildableProperties {
     /**
      * Whether this rule exists only in an Android project.
      */
-    ANDROID(1),
-    LIBRARY(2),
+    ANDROID,
+
+    LIBRARY,
 
     /**
      * Whether or not this rule is considered a packaging rule.  Packaging rules
      *   (like java_binary) are rules that package up all of their transitive dependencies in their
      *   final output.
      */
-    PACKAGING(4),
-    TEST(8);
+    PACKAGING,
 
-    private final int code;
-
-    private Kind(int code) {
-      this.code = code;
-    }
+    TEST,
+    ;
   }
 
-  private int code;
+  private final EnumSet<Kind> properties;
 
   public BuildableProperties(Kind primaryKind, Kind... kinds) {
-    code = primaryKind.code;
-    for (Kind kind : kinds) {
-      code |= kind.code;
-    }
+    this.properties = EnumSet.of(primaryKind, kinds);
   }
 
   private BuildableProperties() {
-    code = -1;
+    properties = EnumSet.noneOf(Kind.class);
   }
 
   public boolean is(Kind kind) {
-    return kind.code == (code & kind.code);
+    return properties.contains(kind);
   }
 }
