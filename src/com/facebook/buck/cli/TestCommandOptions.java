@@ -93,6 +93,13 @@ public class TestCommandOptions extends BuildCommandOptions {
           "WARNING: only works for Java tests!")
   private boolean isShufflingTests;
 
+  @Option(
+      name = "--exclude-transitive-tests",
+      usage =
+          "Only run the tests targets that were specified on the command line (without adding " +
+          "more tests by following dependencies).")
+  private boolean shouldExcludeTransitiveTests;
+
   @AdditionalOptions
   @SuppressFieldNotInitialized
   private TargetDeviceOptions targetDeviceOptions;
@@ -179,6 +186,10 @@ public class TestCommandOptions extends BuildCommandOptions {
 
   public boolean isShufflingTests() {
     return isShufflingTests;
+  }
+
+  public boolean shouldExcludeTransitiveTests() {
+    return shouldExcludeTransitiveTests;
   }
 
   public boolean shouldExcludeWin() {

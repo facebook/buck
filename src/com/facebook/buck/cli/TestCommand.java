@@ -417,24 +417,29 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
               }
             });
 
-    // We always want to run the rules that are given on the command line. Always. Unless we don't
-    // want to.
-    if (!options.shouldExcludeWin()) {
-      ImmutableSet<String> allTargets = options.getArgumentsFormattedAsBuildTargets();
-      for (TestRule rule : testRules) {
-        if (allTargets.contains(rule.getBuildTarget().getFullyQualifiedName())) {
-          builder.add(rule);
-        }
+    ImmutableSet<String> allTargets = options.getArgumentsFormattedAsBuildTargets();
+    for (TestRule rule : testRules) {
+      boolean explicitArgument = allTargets.contains(rule.getBuildTarget().getFullyQualifiedName());
+      boolean matchesLabel = options.isMatchedByLabelOptions(rule.getLabels());
+
+      // We always want to run the rules that are given on the command line. Always. Unless we don't
+      // want to.
+      if (options.shouldExcludeWin() && !matchesLabel) {
+        continue;
+      }
+
+      // The testRules Iterable contains transitive deps of the arguments given on the command line,
+      // filter those out if such is the user's will.
+      if (options.shouldExcludeTransitiveTests() && !explicitArgument) {
+        continue;
+      }
+
+      // Normal behavior is to include all rules that match the given label as well as any that
+      // were explicitly specified by the user.
+      if (explicitArgument || matchesLabel) {
+        builder.add(rule);
       }
     }
-
-    // Filter out all test rules that contain labels we've excluded.
-    builder.addAll(Iterables.filter(testRules, new Predicate<TestRule>() {
-      @Override
-      public boolean apply(TestRule rule) {
-        return options.isMatchedByLabelOptions(rule.getLabels());
-      }
-    }));
 
     return builder.build();
   }

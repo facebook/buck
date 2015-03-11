@@ -517,6 +517,69 @@ public class TestCommandTest {
   }
 
   @Test
+  public void testNoTransitiveTests() throws CmdLineException {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    TestCommandOptions options = getOptions("--exclude-transitive-tests", "//:wow");
+
+    FakeTestRule rule1 = new FakeTestRule(
+        JavaTestDescription.TYPE,
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows"), ImmutableLabel.of("linux")),
+        BuildTargetFactory.newInstance("//:for"),
+        pathResolver,
+        ImmutableSortedSet.<BuildRule>of()
+    );
+
+    FakeTestRule rule2 = new FakeTestRule(
+        JavaTestDescription.TYPE,
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows")),
+        BuildTargetFactory.newInstance("//:lulz"),
+        pathResolver,
+        ImmutableSortedSet.<BuildRule>of(rule1)
+    );
+
+    FakeTestRule rule3 = new FakeTestRule(
+        JavaTestDescription.TYPE,
+        ImmutableSet.<Label>of(ImmutableLabel.of("linux")),
+        BuildTargetFactory.newInstance("//:wow"),
+        pathResolver,
+        ImmutableSortedSet.<BuildRule>of(rule2)
+    );
+
+    List<TestRule> testRules = ImmutableList.<TestRule>of(rule1, rule2, rule3);
+    Iterable<TestRule> filtered = TestCommand.filterTestRules(options, testRules);
+
+    assertEquals(rule3, Iterables.getOnlyElement(filtered));
+  }
+
+  @Test
+  public void testNoTransitiveTestsWhenLabelExcludeWins() throws CmdLineException {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    TestCommandOptions options = getOptions("--labels", "!linux", "--always-exclude",
+        "--exclude-transitive-tests", "//:for", "//:lulz");
+
+    FakeTestRule rule1 = new FakeTestRule(
+        JavaTestDescription.TYPE,
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows"), ImmutableLabel.of("linux")),
+        BuildTargetFactory.newInstance("//:for"),
+        pathResolver,
+        ImmutableSortedSet.<BuildRule>of()
+    );
+
+    FakeTestRule rule2 = new FakeTestRule(
+        JavaTestDescription.TYPE,
+        ImmutableSet.<Label>of(ImmutableLabel.of("windows")),
+        BuildTargetFactory.newInstance("//:lulz"),
+        pathResolver,
+        ImmutableSortedSet.<BuildRule>of(rule1)
+    );
+
+    List<TestRule> testRules = ImmutableList.<TestRule>of(rule1, rule2);
+    Iterable<TestRule> filtered = TestCommand.filterTestRules(options, testRules);
+
+    assertEquals(rule2, Iterables.getOnlyElement(filtered));
+  }
+
+  @Test
   public void testIsTestRunRequiredForTestInDebugMode()
       throws IOException, ExecutionException, InterruptedException {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
