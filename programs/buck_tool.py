@@ -147,7 +147,7 @@ class BuckTool(object):
                         exit_code = subprocess.call(command, cwd=self._buck_project.root, env=env)
                         if exit_code == 2:
                             print('Daemon is busy, please wait',
-                                  'or run "buckd --kill" to terminate it.',
+                                  'or run "buck kill" to terminate it.',
                                   file=sys.stderr)
                         return exit_code
 

@@ -77,7 +77,7 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
     // user's shell. Currently, if you use `buck run` with buckd and ctrl-C to kill the command
     // being run, occasionally I get the following error when I try to run `buck run` again:
     //
-    //   Daemon is busy, please wait or run "buckd --kill" to terminate it.
+    //   Daemon is busy, please wait or run "buck kill" to terminate it.
     //
     // Clearly something bad has happened here. If you are using `buck run` to start up a server
     // or some other process that is meant to "run forever," then it's pretty common to do:
