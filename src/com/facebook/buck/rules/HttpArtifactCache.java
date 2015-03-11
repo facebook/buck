@@ -43,6 +43,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class HttpArtifactCache implements ArtifactCache {
@@ -99,7 +100,7 @@ public class HttpArtifactCache implements ArtifactCache {
 
   private HttpURLConnection createConnection(String url) throws IOException {
     HttpURLConnection connection = getConnection(url);
-    connection.setConnectTimeout(1000 * timeoutSeconds);
+    connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
     for (Map.Entry<String, String> header : headers.entrySet()) {
       connection.setRequestProperty(header.getKey(), header.getValue());
     }
@@ -127,6 +128,9 @@ public class HttpArtifactCache implements ArtifactCache {
       reportConnectionFailure(String.format("fetch(%s)", ruleKey), e);
       return CacheResult.MISS;
     }
+
+    // Set a read timeout for fetches.
+    connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
 
     switch (responseCode) {
       case HttpURLConnection.HTTP_OK:

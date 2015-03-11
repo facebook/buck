@@ -48,10 +48,16 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class HttpArtifactCacheTest {
 
   private static final HashFunction HASH_FUNCTION = Hashing.crc32();
+
+  // This timeout is only ever consumed by the mocked connection, so it doesn't really
+  // matter what it is, just that it's used consistently.
+  private static final long TIMEOUT = 1;
+  private static final TimeUnit TIMEOUT_UNIT = TimeUnit.SECONDS;
 
   private HttpArtifactCache cache;
   private HttpURLConnection connection;
@@ -77,6 +83,7 @@ public class HttpArtifactCacheTest {
 
   @Test
   public void testFetchNotFound() throws IOException {
+    connection.setReadTimeout((int) TIMEOUT_UNIT.toMillis(TIMEOUT));
     expect(connection.getResponseCode()).andReturn(HttpURLConnection.HTTP_NOT_FOUND);
     replay(connection);
     assertEquals(cache.fetch(new RuleKey("00000000000000000000000000000000"),
@@ -89,6 +96,7 @@ public class HttpArtifactCacheTest {
   public void testFetchOK() throws IOException {
     String data = "test";
     HashCode hashCode = HASH_FUNCTION.hashString(data, Charset.defaultCharset());
+    connection.setReadTimeout((int) TIMEOUT_UNIT.toMillis(TIMEOUT));
     expect(connection.getResponseCode()).andReturn(HttpURLConnection.HTTP_OK);
     InputStream is = new ByteArrayInputStream(createFileContentsWithHashCode(hashCode, data));
     expect(connection.getInputStream()).andReturn(is);
@@ -117,6 +125,7 @@ public class HttpArtifactCacheTest {
   public void testFetchBadChecksum() throws IOException {
     String data = "test";
     HashCode badHashCode = HashCode.fromString("deafbead");
+    connection.setReadTimeout((int) TIMEOUT_UNIT.toMillis(TIMEOUT));
     expect(connection.getResponseCode()).andReturn(HttpURLConnection.HTTP_OK);
     InputStream is = new ByteArrayInputStream(createFileContentsWithHashCode(badHashCode, data));
     expect(connection.getInputStream()).andReturn(is);
@@ -175,7 +184,15 @@ public class HttpArtifactCacheTest {
         ProjectFilesystem projectFilesystem,
         BuckEventBus buckEventBus,
         ImmutableMap<String, String> headers) {
-      super("localhost", 8080, 1, true, projectFilesystem, buckEventBus, HASH_FUNCTION, headers);
+      super(
+          "localhost",
+          8080,
+          (int) TIMEOUT_UNIT.toSeconds(TIMEOUT),
+          true,
+          projectFilesystem,
+          buckEventBus,
+          HASH_FUNCTION,
+          headers);
       for (Map.Entry<String, String> header : headers.entrySet()) {
         connectionMock.setRequestProperty(header.getKey(), header.getValue());
       }
