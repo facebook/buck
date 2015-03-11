@@ -22,6 +22,7 @@ import static com.facebook.buck.test.result.groups.MockingDSL.mockLibrary;
 import static com.facebook.buck.test.result.groups.MockingDSL.mockTest;
 import static com.facebook.buck.test.result.groups.MockingDSL.passTests;
 import static com.facebook.buck.test.result.groups.MockingDSL.sourceUnderTest;
+import static org.easymock.EasyMock.newCapture;
 import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -179,8 +180,8 @@ public class MockedMealTest {
     List<TestRule> tests = ImmutableList.of(beerTest, hopsTest);
     TestResultsGrouper grouper = new TestResultsGrouper(tests);
 
-    Capture<Boolean> isBeerDependenciesPass = new Capture<>();
-    Capture<Boolean> isHopsDependenciesPass = new Capture<>();
+    Capture<Boolean> isBeerDependenciesPass = newCapture();
+    Capture<Boolean> isHopsDependenciesPass = newCapture();
 
     TestResults beerTestResults = failTestsAndCapture(isBeerDependenciesPass);
     TestResults hopsTestResults = failTestsAndCapture(isHopsDependenciesPass);
@@ -197,9 +198,9 @@ public class MockedMealTest {
     List<TestRule> tests = ImmutableList.of(mealTest, beerTest, hopsTest);
     TestResultsGrouper grouper = new TestResultsGrouper(tests);
 
-    Capture<Boolean> isMealDependenciesPass = new Capture<>();
-    Capture<Boolean> isBeerDependenciesPass = new Capture<>();
-    Capture<Boolean> isHopsDependenciesPass = new Capture<>();
+    Capture<Boolean> isMealDependenciesPass = newCapture();
+    Capture<Boolean> isBeerDependenciesPass = newCapture();
+    Capture<Boolean> isHopsDependenciesPass = newCapture();
 
     TestResults mealTestResults = failTestsAndCapture(isMealDependenciesPass);
     TestResults beerTestResults = failTestsAndCapture(isBeerDependenciesPass);

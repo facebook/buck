@@ -25,6 +25,8 @@ import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.isA;
+import static org.easymock.EasyMock.newCapture;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -205,7 +207,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Configure the BuildInfoRecorder.
     BuildInfoRecorder buildInfoRecorder = createMock(BuildInfoRecorder.class);
-    Capture<RuleKey> ruleKeyForRecorder = new Capture<>();
+    Capture<RuleKey> ruleKeyForRecorder = newCapture();
     expect(
         context.createBuildInfoRecorder(
             eq(buildTarget),
@@ -399,8 +401,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     expect(
         artifactCache.fetch(
             eq(buildRule.getRuleKey()),
-            capture(new CaptureThatWritesAZipFile(desiredZipEntries))))
-        .andReturn(CacheResult.DIR_HIT);
+            isA(File.class)))
+        .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     BuildContext buildContext = ImmutableBuildContext.builder()
@@ -717,8 +719,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     expect(
         artifactCache.fetch(
             eq(buildRule.getRuleKey()),
-            capture(new CaptureThatWritesAZipFile(desiredZipEntries))))
-        .andReturn(CacheResult.DIR_HIT);
+            isA(File.class)))
+        .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     BuildContext buildContext = ImmutableBuildContext.builder()
@@ -1018,33 +1020,31 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   }
 
   /**
-   * Subclass of {@link Capture} that, when its {@link File} value is set, takes the location of
-   * that {@link File} and writes a zip file there with the entries specified to the constructor of
-   * {@link CaptureThatWritesAZipFile}.
+   * Implementation of {@link ArtifactCache} that, when its fetch method is called, takes the
+   * location of requested {@link File} and writes a zip file there with the entries specified to
+   * its constructor.
    * <p>
-   * This makes it possible to capture a call to {@link ArtifactCache#store(RuleKey, File)} and
+   * This makes it possible to react to a call to {@link ArtifactCache#store(RuleKey, File)} and
    * ensure that there will be a zip file in place immediately after the captured method has been
    * invoked.
    */
-  @SuppressWarnings("serial")
-  private static class CaptureThatWritesAZipFile extends Capture<File> {
+  private static class FakeArtifactCacheThatWritesAZipFile implements ArtifactCache {
 
     private final Map<String, String> desiredEntries;
 
-    public CaptureThatWritesAZipFile(Map<String, String> desiredEntries) {
+    public FakeArtifactCacheThatWritesAZipFile(Map<String, String> desiredEntries) {
       this.desiredEntries = ImmutableMap.copyOf(desiredEntries);
     }
 
     @Override
-    public void setValue(File file) {
-      super.setValue(file);
-
+    public CacheResult fetch(RuleKey ruleKey, File file) throws InterruptedException {
       // This must have the side-effect of writing a zip file in the specified place.
       try {
         writeEntries(file);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
+      return CacheResult.DIR_HIT;
     }
 
     private void writeEntries(File file) throws IOException {
@@ -1058,6 +1058,21 @@ public class CachingBuildEngineTest extends EasyMockSupport {
           zip.closeEntry();
         }
       }
+    }
+
+    @Override
+    public void store(RuleKey ruleKey, File output) throws InterruptedException {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isStoreSupported() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void close() throws IOException {
+      throw new UnsupportedOperationException();
     }
   }
 

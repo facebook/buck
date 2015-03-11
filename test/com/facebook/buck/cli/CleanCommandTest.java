@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import static org.easymock.EasyMock.capture;
+import static org.easymock.EasyMock.newCapture;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
@@ -63,9 +64,9 @@ public class CleanCommandTest extends EasyMockSupport {
       throws CmdLineException, IOException, InterruptedException {
     // Set up mocks.
     CleanCommand cleanCommand = createCommand();
-    Capture<Path> binDir = new Capture<>();
+    Capture<Path> binDir = newCapture();
     projectFilesystem.rmdir(capture(binDir));
-    Capture<Path> genDir = new Capture<>();
+    Capture<Path> genDir = newCapture();
     projectFilesystem.rmdir(capture(genDir));
 
     replayAll();
@@ -85,9 +86,9 @@ public class CleanCommandTest extends EasyMockSupport {
       throws CmdLineException, IOException, InterruptedException {
     // Set up mocks.
     CleanCommand cleanCommand = createCommand();
-    Capture<Path> androidGenDir = new Capture<>();
+    Capture<Path> androidGenDir = newCapture();
     projectFilesystem.rmdir(capture(androidGenDir));
-    Capture<Path> annotationDir = new Capture<>();
+    Capture<Path> annotationDir = newCapture();
     projectFilesystem.rmdir(capture(annotationDir));
 
     replayAll();

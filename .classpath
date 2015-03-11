@@ -19,7 +19,7 @@
 	<classpathentry kind="lib" path="third-party/java/commons-compress/commons-compress-1.8.1.jar"/>
 	<classpathentry kind="lib" path="third-party/java/dd-plist/dd-plist.jar" sourcepath="third-party/java/dd-plist/dd-plist-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/ddmlib/ddmlib-22.5.3.jar"/>
-	<classpathentry kind="lib" path="third-party/java/easymock/easymock-3.0.jar"/>
+	<classpathentry kind="lib" path="third-party/java/easymock/easymock-3.3.1.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.jobs_3.5.300.v20130429-1813.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.resources_3.8.101.v20130717-0806.jar"/>

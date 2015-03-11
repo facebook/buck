@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static org.easymock.EasyMock.newCapture;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -104,8 +105,8 @@ public class FilterResourcesStepTest {
     // Create mock FilteredDirectoryCopier to find what we're calling on it.
     FilteredDirectoryCopier copier = EasyMock.createMock(FilteredDirectoryCopier.class);
     // We'll want to see what the filtering command passes to the copier.
-    Capture<Map<Path, Path>> dirMapCapture = new Capture<>();
-    Capture<Predicate<Path>> predCapture = new Capture<>();
+    Capture<Map<Path, Path>> dirMapCapture = newCapture();
+    Capture<Predicate<Path>> predCapture = newCapture();
     copier.copyDirs(EasyMock.<ProjectFilesystem>anyObject(),
         EasyMock.capture(dirMapCapture),
         EasyMock.capture(predCapture));
@@ -206,7 +207,7 @@ public class FilterResourcesStepTest {
   @Test
   public void testFilterStrings() throws IOException {
     FilteredDirectoryCopier copier = EasyMock.createMock(FilteredDirectoryCopier.class);
-    Capture<Predicate<Path>> capturedPredicate = new Capture<>();
+    Capture<Predicate<Path>> capturedPredicate = newCapture();
     copier.copyDirs(EasyMock.<ProjectFilesystem>anyObject(),
         EasyMock.<Map<Path, Path>>anyObject(),
         EasyMock.capture(capturedPredicate));
@@ -238,7 +239,7 @@ public class FilterResourcesStepTest {
   @Test
   public void testFilterLocales() throws IOException {
     FilteredDirectoryCopier copier = EasyMock.createMock(FilteredDirectoryCopier.class);
-    Capture<Predicate<Path>> capturedPredicate = new Capture<>();
+    Capture<Predicate<Path>> capturedPredicate = newCapture();
     copier.copyDirs(EasyMock.<ProjectFilesystem>anyObject(),
         EasyMock.<Map<Path, Path>>anyObject(),
         EasyMock.capture(capturedPredicate));

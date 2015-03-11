@@ -16,9 +16,10 @@
 
 package com.facebook.buck.test.result.groups;
 
-import static org.easymock.EasyMock.capture;
+import static org.easymock.EasyMock.captureBoolean;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.newCapture;
 import static org.easymock.EasyMock.replay;
 
 import com.facebook.buck.model.BuildTarget;
@@ -50,7 +51,8 @@ class MockingDSL {
   }
 
   static TestResults passTests() {
-    return testResults(true, new Capture<Boolean>());
+    Capture<Boolean> hasPassingDependencies = newCapture();
+    return testResults(true, hasPassingDependencies);
   }
 
   static TestResults failTestsAndCapture(Capture<Boolean> param) {
@@ -62,8 +64,7 @@ class MockingDSL {
       Capture<Boolean> capturesHasPassingDependencies) {
     TestResults mock = createMock(TestResults.class);
     expect(mock.isSuccess()).andReturn(isSuccess).anyTimes();
-    boolean capture = capture(capturesHasPassingDependencies);
-    mock.setDependenciesPassTheirTests(capture);
+    mock.setDependenciesPassTheirTests(captureBoolean(capturesHasPassingDependencies));
     replay(mock);
     return mock;
   }

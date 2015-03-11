@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.newCapture;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
@@ -92,7 +93,7 @@ public class WatchmanWatcherTest {
                 "\"name\": \"foo/bar/baz\"",
             "}",
         "]}");
-    Capture<WatchEvent<Path>> eventCapture = new Capture<>();
+    Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput);
@@ -121,7 +122,7 @@ public class WatchmanWatcherTest {
                 "\"new\": true",
             "}",
         "]}");
-    Capture<WatchEvent<Path>> eventCapture = new Capture<>();
+    Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput);
@@ -148,7 +149,7 @@ public class WatchmanWatcherTest {
                 "\"exists\": false",
             "}",
         "]}");
-    Capture<WatchEvent<Path>> eventCapture = new Capture<>();
+    Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput);
@@ -176,7 +177,7 @@ public class WatchmanWatcherTest {
                 "\"exists\": false",
              "}",
         "]}");
-    Capture<WatchEvent<Path>> eventCapture = new Capture<>();
+    Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput);
@@ -206,8 +207,8 @@ public class WatchmanWatcherTest {
             "}",
         "]}");
     EventBus eventBus = createStrictMock(EventBus.class);
-    Capture<WatchEvent<Path>> firstEvent = new Capture<>();
-    Capture<WatchEvent<Path>> secondEvent = new Capture<>();
+    Capture<WatchEvent<Path>> firstEvent = newCapture();
+    Capture<WatchEvent<Path>> secondEvent = newCapture();
     eventBus.post(capture(firstEvent));
     eventBus.post(capture(secondEvent));
     Process process = createWaitForProcessMock(watchmanOutput);
@@ -236,7 +237,7 @@ public class WatchmanWatcherTest {
                 "\"name\": \"foo/bar/baz\"",
             "}",
         "]}");
-    Capture<WatchEvent<Path>> eventCapture = new Capture<>();
+    Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     Process process = createProcessMock(watchmanOutput);
@@ -261,7 +262,7 @@ public class WatchmanWatcherTest {
   public void whenWatchmanFailsThenOverflowEventGenerated()
       throws IOException, InterruptedException {
     String watchmanOutput = "";
-    Capture<WatchEvent<Path>> eventCapture = new Capture<>();
+    Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput, 1);
@@ -288,7 +289,7 @@ public class WatchmanWatcherTest {
       throws IOException, InterruptedException {
     String watchmanOutput = "";
     String message = "Boo!";
-    Capture<WatchEvent<Path>> eventCapture = new Capture<>();
+    Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
     eventBus.post(capture(eventCapture));
     Process process = createWaitForProcessMock(watchmanOutput, new InterruptedException(message));

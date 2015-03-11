@@ -1,6 +1,6 @@
 prebuilt_jar(
   name = 'easymock',
-  binary_jar = 'easymock-3.0.jar',
+  binary_jar = 'easymock-3.3.1.jar',
   deps = [
     '//third-party/java/cglib:cglib',
     '//third-party/java/objenesis:objenesis',
