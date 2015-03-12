@@ -5,6 +5,9 @@ java_library(
     # DO NOT ADD ANY DEPS.
   ],
   visibility = [
+    '//src/com/facebook/buck/java:steps',
+    '//src/com/facebook/buck/junit:junit',
+    '//test/com/facebook/buck/java:java',
     '//test/com/facebook/buck/java/runner:runner',
   ],
 )

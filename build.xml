@@ -146,7 +146,7 @@
   <target name="compile-testrunner" depends="checkversion">
     <mkdir dir="${testrunner.classes.dir}" />
     <javac srcdir="${src.dir}"
-           includes="com/facebook/buck/junit/**,src/com/facebook/buck/util/concurrent/MoreExecutors.java"
+           includes="com/facebook/buck/junit/**,src/com/facebook/buck/util/concurrent/MoreExecutors.java,com/facebook/buck/java/runner/**"
            destdir="${testrunner.classes.dir}"
            classpathref="junit"
            debug="on"

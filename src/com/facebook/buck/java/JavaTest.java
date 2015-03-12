@@ -303,7 +303,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
   }
 
   private Path getPathToTmpDirectory() {
-    Path base = BuildTargets.getBinPath(getBuildTarget(), "__java_test_%s_tmp__").toAbsolutePath();
+    Path base = BuildTargets.getBinPath(getBuildTarget(), "__java_test_%s_tmp__");
     String subdir = BuckConstant.oneTimeTestSubdirectory;
     if (subdir != null && !subdir.isEmpty()) {
       base = base.resolve(subdir);

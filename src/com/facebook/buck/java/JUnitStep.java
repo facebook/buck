@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.java.runner.FileClassPathRunner;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -23,15 +24,17 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -161,7 +164,10 @@ public class JUnitStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("java");
-    args.add(String.format("-Djava.io.tmpdir=%s", tmpDirectory));
+    args.add(
+        String.format(
+            "-Djava.io.tmpdir=%s",
+            context.getProjectFilesystem().resolve(tmpDirectory)));
 
     // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
     // to find the test runner classes, so propagate these down via the relevant properties.
@@ -197,14 +203,13 @@ public class JUnitStep extends ShellStep {
       args.add("-verbose");
     }
 
-    // Build up the -classpath argument, starting with the classpath entries the client specified.
-    List<Path> classpath = Lists.newArrayList(classpathEntries);
-
-    // Finally, include an entry for the test runner.
-    classpath.add(testRunnerClasspath);
-
     // Add the -classpath argument.
-    args.add("-classpath").add(Joiner.on(File.pathSeparator).join(classpath));
+    args.add("-classpath").add(
+        Joiner.on(File.pathSeparator).join(
+            "@" + context.getProjectFilesystem().resolve(getClassPathFile()),
+            testRunnerClasspath));
+
+    args.add(FileClassPathRunner.class.getName());
 
     // Specify the Java class whose main() method should be run. This is the class that is
     // responsible for running the tests.
@@ -248,11 +253,30 @@ public class JUnitStep extends ShellStep {
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    return ImmutableMap.of("TMP", tmpDirectory.toString());
+    return ImmutableMap.of("TMP", context.getProjectFilesystem().resolve(tmpDirectory).toString());
   }
 
   private void warnUser(ExecutionContext context, String message) {
     context.getStdErr().println(context.getAnsi().asWarningText(message));
+  }
+
+  @VisibleForTesting
+  protected Path getClassPathFile() {
+    return tmpDirectory.resolve("classpath-file");
+  }
+
+  @Override
+  public int execute(ExecutionContext context) throws InterruptedException {
+    try {
+      context.getProjectFilesystem().writeLinesToPath(
+          FluentIterable.from(classpathEntries)
+              .transform(Functions.toStringFunction()),
+          getClassPathFile());
+    } catch (IOException e) {
+      e.printStackTrace(context.getStdErr());
+      return 1;
+    }
+    return super.execute(context);
   }
 
   @Override

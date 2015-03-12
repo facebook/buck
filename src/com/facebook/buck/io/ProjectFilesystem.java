@@ -487,7 +487,9 @@ public class ProjectFilesystem {
       throws IOException {
     try (Writer writer =
          new BufferedWriter(
-             new OutputStreamWriter(newFileOutputStream(pathRelativeToProjectRoot, attrs)))) {
+             new OutputStreamWriter(
+                 newFileOutputStream(pathRelativeToProjectRoot, attrs),
+                 Charsets.UTF_8))) {
       for (String line : lines) {
         writer.write(line);
         writer.write('\n');
