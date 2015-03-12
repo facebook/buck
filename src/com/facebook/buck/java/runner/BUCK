@@ -1,0 +1,10 @@
+java_library(
+  name = 'runner',
+  srcs = glob(['*.java']),
+  deps = [
+    # DO NOT ADD ANY DEPS.
+  ],
+  visibility = [
+    '//test/com/facebook/buck/java/runner:runner',
+  ],
+)

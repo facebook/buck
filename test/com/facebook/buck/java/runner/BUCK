@@ -1,0 +1,9 @@
+java_test(
+  name = 'runner',
+  srcs = glob(['*.java']),
+  deps = [
+    '//src/com/facebook/buck/java/runner:runner',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
+  ],
+)
