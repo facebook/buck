@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 
-public class AuditTestsCommand extends AbstractCommandRunner<AuditTestsOptions> {
+public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions> {
 
   private static final Logger LOG = Logger.get(AuditTestsCommand.class);
 
@@ -41,12 +41,12 @@ public class AuditTestsCommand extends AbstractCommandRunner<AuditTestsOptions> 
   }
 
   @Override
-  AuditTestsOptions createOptions(BuckConfig buckConfig) {
-    return new AuditTestsOptions(buckConfig);
+  AuditCommandOptions createOptions(BuckConfig buckConfig) {
+    return new AuditCommandOptions(buckConfig);
   }
 
   @Override
-  int runCommandWithOptionsInternal(AuditTestsOptions options)
+  int runCommandWithOptionsInternal(AuditCommandOptions options)
       throws IOException, InterruptedException {
     final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
         options.getArgumentsFormattedAsBuildTargets());
