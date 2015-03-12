@@ -173,7 +173,7 @@ public class BuckConfigTest {
       BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader, parser);
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
-      assertEquals(":fb4a must start with //", e.getHumanReadableErrorMessage());
+      assertEquals("Path in :fb4a must start with //", e.getHumanReadableErrorMessage());
     }
 
     EasyMock.verify(projectFilesystem);

@@ -26,11 +26,12 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class BuildTargetParser {
 
@@ -38,7 +39,7 @@ public class BuildTargetParser {
   private static final String BUILD_RULE_SEPARATOR = ":";
   private static final String REPOSITORY_STARTER = "@";
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
-  private static final List<String> INVALID_BUILD_RULE_SUBSTRINGS = ImmutableList.of("..", "./");
+  private static final Set<String> INVALID_BASE_NAME_PARTS = ImmutableSet.of("", ".", "..");
 
   private final ImmutableMap<Optional<String>, Optional<String>> localToCanonicalRepoNamesMap;
   private final FlavorParser flavorParser = new FlavorParser();
@@ -77,13 +78,6 @@ public class BuildTargetParser {
   public BuildTarget parse(
       String buildTargetName,
       BuildTargetPatternParser buildTargetPatternParser) {
-
-    for (String invalidSubstring : INVALID_BUILD_RULE_SUBSTRINGS) {
-      if (buildTargetName.contains(invalidSubstring)) {
-        throw new BuildTargetParseException(
-            String.format("%s cannot contain %s", buildTargetName, invalidSubstring));
-      }
-    }
 
     if (buildTargetName.endsWith(BUILD_RULE_SEPARATOR) &&
         !buildTargetPatternParser.isWildCardAllowed()) {
@@ -137,11 +131,7 @@ public class BuildTargetParser {
     Preconditions.checkNotNull(baseName);
     // On Windows, baseName may contain backslashes, which are not permitted by BuildTarget.
     baseName = baseName.replace("\\", "/");
-    String fullyQualifiedName = baseName + ':' + shortName;
-    if (!fullyQualifiedName.startsWith(BUILD_RULE_PREFIX)) {
-      throw new BuildTargetParseException(
-          String.format("%s must start with %s", fullyQualifiedName, BUILD_RULE_PREFIX));
-    }
+    checkBaseName(baseName, buildTargetName);
 
     ImmutableUnflavoredBuildTarget.Builder unflavoredBuilder =
         UnflavoredBuildTarget.builder(baseName, shortName);
@@ -155,5 +145,27 @@ public class BuildTargetParser {
       builder.addFlavors(ImmutableFlavor.of(flavor));
     }
     return builder.build();
+  }
+
+  private static void checkBaseName(String baseName, String buildTargetName) {
+    if (baseName.equals(BUILD_RULE_PREFIX)) {
+      return;
+    }
+    if (!baseName.startsWith(BUILD_RULE_PREFIX)) {
+      throw new BuildTargetParseException(
+          String.format(
+              "Path in %s must start with %s",
+              buildTargetName,
+              BUILD_RULE_PREFIX));
+    }
+    String baseNamePath = baseName.substring(BUILD_RULE_PREFIX.length());
+    for (String baseNamePart : Splitter.on('/').split(baseNamePath)) {
+      if (INVALID_BASE_NAME_PARTS.contains(baseNamePart)) {
+        throw new BuildTargetParseException(
+            String.format(
+                "Build target path cannot be absolute or contain . or .. (found %s)",
+                buildTargetName));
+      }
+    }
   }
 }
