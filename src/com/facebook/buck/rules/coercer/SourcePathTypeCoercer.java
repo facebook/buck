@@ -65,6 +65,12 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
           filesystem,
           pathRelativeToProjectRoot,
           object);
+      if (path.isAbsolute()) {
+        throw CoerceFailedException.simple(
+            object,
+            getOutputClass(),
+            "SourcePath cannot contain an absolute path");
+      }
       return new PathSourcePath(filesystem, path);
     }
   }

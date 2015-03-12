@@ -31,7 +31,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -48,6 +50,9 @@ public class SourcePathTypeCoercerTest {
   public void setUp() {
     projectFilesystem = new FakeProjectFilesystem();
   }
+
+  @Rule
+  public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void coercePath() throws CoerceFailedException, IOException {
@@ -124,5 +129,21 @@ public class SourcePathTypeCoercerTest {
                     "hello"),
                 ImmutableSortedSet.<Flavor>of())),
         sourcePath);
+  }
+
+  @Test
+  public void coercingAbsolutePathThrows() throws CoerceFailedException, IOException {
+    String path = "/hello.a";
+    projectFilesystem.touch(Paths.get(path));
+
+    exception.expect(CoerceFailedException.class);
+    exception.expectMessage(
+        "SourcePath cannot contain an absolute path");
+
+    sourcePathTypeCoercer.coerce(
+        buildTargetParser,
+        projectFilesystem,
+        pathRelativeToProjectRoot,
+        path);
   }
 }
