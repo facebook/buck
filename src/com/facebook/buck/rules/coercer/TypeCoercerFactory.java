@@ -103,6 +103,7 @@ public class TypeCoercerFactory {
         new AppleBundleDestinationTypeCoercer(stringTypeCoercer),
         new BuildConfigFieldsTypeCoercer(),
         new UriTypeCoercer(),
+        new FrameworkPathTypeCoercer(sourcePathTypeCoercer),
     };
   }
 

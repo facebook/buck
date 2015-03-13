@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
  * Utility class representing a tuple of (SourceTree, Path) used for uniquely describing a file
  * reference in a group.
  */
-public class SourceTreePath {
+public class SourceTreePath implements Comparable<SourceTreePath> {
   private final PBXReference.SourceTree sourceTree;
   private final Path path;
 
@@ -50,6 +50,16 @@ public class SourceTreePath {
   }
 
   @Override
+  public int compareTo(SourceTreePath o) {
+    int sourceTreeComparisonResult = getSourceTree().ordinal() - o.getSourceTree().ordinal();
+    if (sourceTreeComparisonResult != 0) {
+      return sourceTreeComparisonResult;
+    }
+
+    return getPath().compareTo(o.getPath());
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(sourceTree, path);
   }
@@ -63,5 +73,10 @@ public class SourceTreePath {
     SourceTreePath that = (SourceTreePath) other;
     return Objects.equals(this.sourceTree, that.sourceTree) &&
         Objects.equals(this.path, that.path);
+  }
+
+  @Override
+  public String toString() {
+    return "$" + sourceTree + "/" + path;
   }
 }

@@ -56,8 +56,9 @@ public class LicenseCheckTest {
         "\\\\* Licensed under the Apache License, Version 2.0 \\(the \"License\"\\); you may.*",
         Pattern.MULTILINE | Pattern.DOTALL);
 
+    private static final Path TEST_DATA = Paths.get("testdata");
+
     private final boolean ignoreTestData;
-    private final Path TEST_DATA = Paths.get("testdata");
 
     public JavaCopyrightTraversal(File root, boolean ignoreTestData) {
       super(root);

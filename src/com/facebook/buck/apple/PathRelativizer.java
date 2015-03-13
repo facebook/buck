@@ -20,6 +20,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Function;
 
 import java.nio.file.Path;
 
@@ -57,6 +58,15 @@ public final class PathRelativizer {
    */
   public Path outputDirToRootRelative(Path path) {
     return outputPathToProjectRoot.resolve(path).normalize();
+  }
+
+  public Function<Path, Path> outputDirToRootRelative() {
+    return new Function<Path, Path>() {
+      @Override
+      public Path apply(Path input) {
+        return outputDirToRootRelative(input);
+      }
+    };
   }
 
   /**

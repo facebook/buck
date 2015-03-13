@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -39,4 +40,14 @@ public class Optionals {
       collection.put(key, optional.get());
     }
   }
+
+  public static <T, U> Optional<U> bind(
+      Optional<? extends T> optional,
+      Function<? super T, Optional<U>> f) {
+    if (!optional.isPresent()) {
+      return Optional.absent();
+    }
+    return f.apply(optional.get());
+  }
+
 }

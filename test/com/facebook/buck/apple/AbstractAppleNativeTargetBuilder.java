@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -69,7 +70,7 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
-  public BUILDER setFrameworks(Optional<ImmutableSortedSet<String>> frameworks) {
+  public BUILDER setFrameworks(Optional<ImmutableSortedSet<FrameworkPath>> frameworks) {
     arg.frameworks = frameworks;
     return getThis();
   }

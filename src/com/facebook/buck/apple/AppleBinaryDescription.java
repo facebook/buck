@@ -30,6 +30,8 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.Optionals;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -110,8 +112,14 @@ public class AppleBinaryDescription
         CxxLibraryDescription.getTypeAndPlatform(
             params.getBuildTarget(),
             cxxPlatformFlavorDomain);
-    Optional<AppleSdkPaths> appleSdkPaths = Optional.fromNullable(
-        appleCxxPlatformsToAppleSdkPaths.get(typeAndPlatform.getPlatform()));
+    Optional<AppleSdkPaths> appleSdkPaths = Optionals.bind(
+        typeAndPlatform.getPlatform(),
+        new Function<Map.Entry<Flavor, CxxPlatform>, Optional<AppleSdkPaths>>() {
+          @Override
+          public Optional<AppleSdkPaths> apply(Map.Entry<Flavor, CxxPlatform> input) {
+            return Optional.fromNullable(appleCxxPlatformsToAppleSdkPaths.get(input.getValue()));
+          }
+        });
     Sets.SetView<SourcePath> allHeaderPaths = Sets.union(
         args.exportedHeaders.get(),
         args.headers.get());
@@ -129,6 +137,7 @@ public class AppleBinaryDescription
                 allHeaderPaths))
         .build();
     AppleDescriptions.populateCxxConstructorArg(
+        pathResolver,
         delegateArg,
         args,
         headerMap,

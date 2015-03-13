@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.CompilationDatabase.GenerateCompilationCommandsJson;
 import com.facebook.buck.apple.CompilationDatabase.JsonSerializableDatabaseEntry;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
+import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -34,6 +36,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -78,7 +81,7 @@ public class CompilationDatabaseTest {
         testSourcesWithFlags,
         testPublicHeaders,
         testPrivateHeaders,
-        /* frameworks */ ImmutableSortedSet.<String>of(),
+        /* frameworks */ ImmutableSortedSet.<FrameworkPath>of(),
         /* includePaths */ ImmutableSet.<Path>of(),
         /* pchFile */ Optional.<SourcePath>absent());
 
@@ -107,7 +110,7 @@ public class CompilationDatabaseTest {
         sourcesWithFlags,
         exportedHeaders,
         headers,
-        /* frameworks */ ImmutableSortedSet.<String>of(),
+        /* frameworks */ ImmutableSortedSet.<FrameworkPath>of(),
         /* includePaths */ ImmutableSet.<Path>of(),
         /* pchFile */ Optional.<SourcePath>absent());
 
@@ -260,10 +263,19 @@ public class CompilationDatabaseTest {
     setUpTestValues();
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    ImmutableSortedSet<String> frameworks = ImmutableSortedSet.of(
-        "$SDKROOT/System/Library/Frameworks/CoreLocation.framework",
-        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
-        "$SDKROOT/System/Library/Frameworks/UIKit.framework");
+    ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of(
+        FrameworkPath.ofSourceTreePath(
+            new SourceTreePath(
+                PBXReference.SourceTree.SDKROOT,
+                Paths.get("System/Library/Frameworks/CoreLocation.framework"))),
+        FrameworkPath.ofSourceTreePath(
+            new SourceTreePath(
+                PBXReference.SourceTree.SDKROOT,
+                Paths.get("System/Library/Frameworks/Foundation.framework"))),
+        FrameworkPath.ofSourceTreePath(
+            new SourceTreePath(
+                PBXReference.SourceTree.SDKROOT,
+                Paths.get("System/Library/Frameworks/UIKit.framework"))));
     ImmutableSet<Path> includePaths = ImmutableSet.of(
         Paths.get("/Users/user/src/buck-out/gen/library/lib.hmap"));
     Optional<SourcePath> pchFile = Optional.<SourcePath>of(

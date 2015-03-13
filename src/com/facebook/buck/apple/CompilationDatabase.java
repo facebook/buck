@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -28,11 +29,13 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -77,7 +80,7 @@ public class CompilationDatabase extends AbstractBuildRule {
   private final ImmutableSortedSet<SourcePath> publicHeaders;
   private final ImmutableSortedSet<SourcePath> privateHeaders;
   private final Path outputJsonFile;
-  private final ImmutableSortedSet<String> frameworks;
+  private final ImmutableSortedSet<FrameworkPath> frameworks;
   private final ImmutableSet<Path> includePaths;
   private final Optional<SourcePath> pchFile;
 
@@ -99,7 +102,7 @@ public class CompilationDatabase extends AbstractBuildRule {
       ImmutableSortedSet<SourceWithFlags> sourcesWithFlags,
       ImmutableSortedSet<SourcePath> publicHeaders,
       ImmutableSortedSet<SourcePath> privateHeaders,
-      ImmutableSortedSet<String> frameworks,
+      ImmutableSortedSet<FrameworkPath> frameworks,
       ImmutableSet<Path> includePaths,
       Optional<SourcePath> pchFile) {
     super(buildRuleParams, resolver);
@@ -289,14 +292,16 @@ public class CompilationDatabase extends AbstractBuildRule {
       Path sysroot = appleSdkPaths.getSdkPath();
       commandArgs.add(sysroot.toString());
 
-      String sdkRoot = appleSdkPaths.getSdkPath().toString();
-      for (String framework : frameworks) {
-        // TODO(mbolin): Other placeholders are possible, but do not appear to be used yet.
-        // Specifically, PBXReference.SourceTree#fromBuildSetting() seems to have more
-        // flexible parsing. We should figure out how to refactor that could so it can be used
-        // here.
-        framework = framework.replace("$SDKROOT", sdkRoot);
-        commandArgs.add("-F" + framework);
+      for (FrameworkPath framework : frameworks) {
+
+        Optional<SourceTreePath> sourceTreePath = framework.getSourceTreePath();
+        if (!sourceTreePath.isPresent()) {
+          throw new HumanReadableException(
+              "Cannot add framework '%s' to compilation database:\nCompilation database " +
+                  "generation only supports source tree path framework references",
+              framework.getSourcePath().get());
+        }
+        commandArgs.add("-F" + appleSdkPaths.resolve(sourceTreePath.get()));
       }
 
       // Add -I and -iquote flags, as appropriate.

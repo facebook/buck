@@ -1,0 +1,5 @@
+apple_binary(
+  name = 'TestApp',
+  srcs = ['main.c'],
+  frameworks = ['$SDKROOT/System/Library/Frameworks/CoreFoundation.framework'],
+)

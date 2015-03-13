@@ -51,6 +51,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.util.BuckConstant;
@@ -58,10 +59,12 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -580,12 +583,7 @@ public class ProjectGenerator {
 
     if (includeFrameworks) {
       ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
-      frameworksBuilder.addAll(
-          Iterables.transform(
-              targetNode.getConstructorArg().frameworks.get(),
-              FrameworkPath.transformFromString(
-                  targetNode.getRuleFactoryParams().getProjectFilesystem(),
-                  targetNode.getBuildTarget())));
+      frameworksBuilder.addAll(targetNode.getConstructorArg().frameworks.get());
       frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(ImmutableList.of(targetNode)));
       mutator.setFrameworks(frameworksBuilder.build());
       mutator.setArchives(
@@ -785,12 +783,7 @@ public class ProjectGenerator {
     ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
     frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(tests));
     for (TargetNode<AppleTestDescription.Arg> test : tests) {
-      frameworksBuilder.addAll(
-          Iterables.transform(
-              test.getConstructorArg().frameworks.get(),
-              FrameworkPath.transformFromString(
-                  test.getRuleFactoryParams().getProjectFilesystem(),
-                  test.getBuildTarget())));
+      frameworksBuilder.addAll(test.getConstructorArg().frameworks.get());
     }
     mutator.setFrameworks(frameworksBuilder.build());
 
@@ -1440,12 +1433,16 @@ public class ProjectGenerator {
                 return getTargetOutputPath(input);
               }
             })
+        .append(
+            collectRecursiveSearchPathsForFrameworkPaths(
+                targetNodes,
+                FrameworkPath.FrameworkType.LIBRARY))
         .toSet();
   }
 
   private <T> ImmutableSet<String> collectRecursiveFrameworkSearchPaths(
       Iterable<TargetNode<T>> targetNodes,
-      boolean includeInputs) {
+      final boolean includeInputs) {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
@@ -1467,6 +1464,10 @@ public class ProjectGenerator {
                 return getTargetOutputPath(input);
               }
             })
+        .append(
+            collectRecursiveSearchPathsForFrameworkPaths(
+                targetNodes,
+                FrameworkPath.FrameworkType.FRAMEWORK))
         .toSet();
   }
 
@@ -1487,14 +1488,32 @@ public class ProjectGenerator {
                 if (library.isPresent() &&
                     !AppleLibraryDescription.isSharedLibraryTarget(
                         library.get().getBuildTarget())) {
-                  return Iterables.transform(
-                      library.get().getConstructorArg().frameworks.get(),
-                      FrameworkPath.transformFromString(
-                          input.getRuleFactoryParams().getProjectFilesystem(),
-                          input.getBuildTarget()));
+                  return library.get().getConstructorArg().frameworks.get();
                 } else {
                   return ImmutableList.of();
                 }
+              }
+            });
+  }
+
+  private <T> Iterable<String> collectRecursiveSearchPathsForFrameworkPaths(
+      Iterable<TargetNode<T>> targetNodes,
+      final FrameworkPath.FrameworkType type) {
+    return FluentIterable
+        .from(targetNodes)
+        .transformAndConcat(
+            newRecursiveRuleDependencyTransformer(
+                AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                ImmutableSet.of(AppleLibraryDescription.TYPE)))
+        .append(targetNodes)
+        .transformAndConcat(
+            new Function<TargetNode<?>, Iterable<String>>() {
+              @Override
+              public Iterable<String> apply(TargetNode<?> input) {
+                return input
+                    .castArg(AppleNativeTargetDescriptionArg.class)
+                    .transform(getTargetFrameworkSearchPaths(type))
+                    .or(ImmutableSet.<String>of());
               }
             });
   }
@@ -1521,6 +1540,31 @@ public class ProjectGenerator {
                 return getLibraryFileReference(input);
               }
             }).toSet();
+  }
+
+  private Function<
+      TargetNode<AppleNativeTargetDescriptionArg>,
+      Iterable<String>> getTargetFrameworkSearchPaths(final FrameworkPath.FrameworkType type) {
+
+    final Predicate<FrameworkPath> byType = Predicates.compose(
+        Predicates.equalTo(type),
+        FrameworkPath.getFrameworkTypeFunction(sourcePathResolver.getPathFunction()));
+
+    final Function<FrameworkPath, Path> toSearchPath = FrameworkPath
+        .getUnexpandedSearchPathFunction(
+            sourcePathResolver.getPathFunction(),
+            pathRelativizer.outputDirToRootRelative());
+
+    return new Function<TargetNode<AppleNativeTargetDescriptionArg>, Iterable<String>>() {
+      @Override
+      public Iterable<String> apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
+        return FluentIterable
+            .from(input.getConstructorArg().frameworks.get())
+            .filter(byType)
+            .transform(toSearchPath)
+            .transform(Functions.toStringFunction());
+      }
+    };
   }
 
   private Function<TargetNode<?>, Iterable<TargetNode<?>>> newRecursiveRuleDependencyTransformer(

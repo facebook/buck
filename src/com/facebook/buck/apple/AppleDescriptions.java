@@ -38,7 +38,9 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -53,7 +55,6 @@ import com.google.common.collect.Maps;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -319,20 +320,6 @@ public class AppleDescriptions {
           "%s" + headerMapType.getSuffix()));
   }
 
-  private static Path translateAppleSdkPaths(
-      Path path,
-      AppleSdkPaths appleSdkPaths) {
-    if (path.startsWith("$SDKROOT")) {
-      path = appleSdkPaths.getSdkPath().resolve(
-          path.subpath(1, path.getNameCount()));
-    } else if (path.startsWith("$DEVELOPER_DIR")) {
-      path = appleSdkPaths.getDeveloperPath().resolve(
-          path.subpath(1, path.getNameCount()));
-    }
-
-    return path;
-  }
-
   public static String getHeaderPathPrefix(
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget) {
@@ -353,6 +340,7 @@ public class AppleDescriptions {
   }
 
   public static void populateCxxConstructorArg(
+      SourcePathResolver resolver,
       CxxConstructorArg output,
       AppleNativeTargetDescriptionArg arg,
       ImmutableMap<String, SourcePath> headerMap,
@@ -365,7 +353,7 @@ public class AppleDescriptions {
             headerMap));
     output.prefixHeaders = Optional.of(ImmutableList.copyOf(arg.prefixHeader.asSet()));
     output.compilerFlags = arg.compilerFlags;
-    output.linkerFlags = Optional.of(ImmutableList.<String>of());
+    output.linkerFlags = arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver));
     output.platformLinkerFlags = Optional.of(
         ImmutableList.<Pair<String, ImmutableList<String>>>of());
     output.preprocessorFlags = arg.preprocessorFlags;
@@ -373,20 +361,7 @@ public class AppleDescriptions {
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     if (appleSdkPaths.isPresent()) {
       output.frameworkSearchPaths = arg.frameworks.transform(
-          new Function<ImmutableSortedSet<String>, ImmutableList<Path>>() {
-            @Override
-            public ImmutableList<Path> apply(ImmutableSortedSet<String> frameworkPaths) {
-                ImmutableSet.Builder<Path> frameworksSearchPathsBuilder = ImmutableSet.builder();
-                for (String frameworkPath : frameworkPaths) {
-                  Path parentDirectory = Paths.get(frameworkPath).getParent();
-                  if (parentDirectory != null) {
-                    frameworksSearchPathsBuilder.add(
-                        translateAppleSdkPaths(parentDirectory, appleSdkPaths.get()));
-                  }
-                }
-                return ImmutableList.copyOf(frameworksSearchPathsBuilder.build());
-            }
-          });
+          frameworksToSearchPathsFunction(resolver, appleSdkPaths.get()));
     } else {
       output.frameworkSearchPaths = Optional.of(ImmutableList.<Path>of());
     }
@@ -394,6 +369,59 @@ public class AppleDescriptions {
     output.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.deps = arg.deps;
     output.headerNamespace = Optional.of("");
+  }
+
+  @VisibleForTesting
+  static Function<
+      ImmutableSortedSet<FrameworkPath>,
+      ImmutableList<String>> frameworksToLinkerFlagsFunction(final SourcePathResolver resolver) {
+    return new Function<ImmutableSortedSet<FrameworkPath>, ImmutableList<String>>() {
+      @Override
+      public ImmutableList<String> apply(ImmutableSortedSet<FrameworkPath> input) {
+        return FluentIterable
+            .from(input)
+            .transformAndConcat(linkerFlagsForFrameworkPathFunction(resolver.getPathFunction()))
+            .toList();
+      }
+    };
+  }
+
+  @VisibleForTesting
+  static Function<
+      ImmutableSortedSet<FrameworkPath>,
+      ImmutableList<Path>> frameworksToSearchPathsFunction(
+      final SourcePathResolver resolver,
+      final AppleSdkPaths appleSdkPaths) {
+    return new Function<ImmutableSortedSet<FrameworkPath>, ImmutableList<Path>>() {
+      @Override
+      public ImmutableList<Path> apply(ImmutableSortedSet<FrameworkPath> frameworkPaths) {
+        return FluentIterable
+            .from(frameworkPaths)
+            .transform(
+                FrameworkPath.getExpandedSearchPathFunction(
+                    resolver.getPathFunction(),
+                    appleSdkPaths.resolveFunction()))
+            .toList();
+      }
+    };
+  }
+
+  private static Function<FrameworkPath, Iterable<String>> linkerFlagsForFrameworkPathFunction(
+      final Function<SourcePath, Path> resolver) {
+    return new Function<FrameworkPath, Iterable<String>>() {
+      @Override
+      public Iterable<String> apply(FrameworkPath input) {
+        FrameworkPath.FrameworkType frameworkType = input.getFrameworkType(resolver);
+        switch (frameworkType) {
+          case FRAMEWORK:
+            return ImmutableList.of("-framework", input.getName(resolver));
+          case LIBRARY:
+            return ImmutableList.of("-l" + input.getName(resolver));
+          default:
+            throw new RuntimeException("Unsupported framework type: " + frameworkType);
+        }
+      }
+    };
   }
 
 }

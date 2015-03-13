@@ -17,11 +17,13 @@
 package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,6 +43,19 @@ public class AppleBinaryIntegrationTest {
     workspace.setUp();
 
     workspace.runBuckCommand("build", "//Apps/TestApp:TestApp").assertSuccess();
+
+    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+  }
+
+  @Test
+  public void testAppleBinaryWithSystemFrameworksBuildsSomething() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_with_system_frameworks_builds_something", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//Apps/TestApp:TestApp#macosx-x86_64").assertSuccess();
 
     assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
   }

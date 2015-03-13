@@ -44,6 +44,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -52,8 +53,9 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.ImmutableFrameworkPath;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;
@@ -760,7 +762,13 @@ public class ProjectGeneratorTest {
         .setConfigs(Optional.of(configs))
         .setSrcs(
             Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.m")))))
-        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework")))
+        .setFrameworks(
+            Optional.of(
+                ImmutableSortedSet.of(
+                    ImmutableFrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("Library.framework"))))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
@@ -771,7 +779,13 @@ public class ProjectGeneratorTest {
         .setSrcs(
             Optional.of(
                 ImmutableList.of(SourceWithFlags.of(new TestSourcePath("fooTest.m")))))
-        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework")))
+        .setFrameworks(
+            Optional.of(
+                ImmutableSortedSet.of(
+                    ImmutableFrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("Test.framework"))))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
@@ -787,16 +801,16 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
-        "$(inherited) " + "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
+        "$(inherited) $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "$(inherited) ",
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
-        "$(inherited) " + "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
+        "$(inherited) $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
-        "$(inherited) ",
+        "$(inherited) $SDKROOT",
         settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
@@ -816,7 +830,13 @@ public class ProjectGeneratorTest {
         .setConfigs(Optional.of(configs))
         .setSrcs(
             Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.m")))))
-        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework")))
+        .setFrameworks(
+            Optional.of(
+                ImmutableSortedSet.of(
+                    ImmutableFrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("Library.framework"))))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
@@ -827,7 +847,13 @@ public class ProjectGeneratorTest {
         .setSrcs(
             Optional.of(
                 ImmutableList.of(SourceWithFlags.of(new TestSourcePath("fooTest.m")))))
-        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework")))
+        .setFrameworks(
+            Optional.of(
+                ImmutableSortedSet.of(
+                    ImmutableFrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("Test.framework"))))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
@@ -843,16 +869,16 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
-        "headers " + "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
+        "headers $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "user_headers ",
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
-        "libraries " + "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
+        "libraries $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
-        "frameworks ",
+        "frameworks $SDKROOT",
         settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
@@ -867,7 +893,13 @@ public class ProjectGeneratorTest {
         .setConfigs(Optional.of(configs))
         .setSrcs(
             Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.m")))))
-        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework")))
+        .setFrameworks(
+            Optional.of(
+                ImmutableSortedSet.of(
+                    ImmutableFrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("Library.framework"))))))
         .build();
 
     BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
@@ -876,7 +908,13 @@ public class ProjectGeneratorTest {
         .setConfigs(Optional.of(configs))
         .setSrcs(
             Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.m")))))
-        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Library.framework")))
+        .setFrameworks(
+            Optional.of(
+                ImmutableSortedSet.of(
+                    ImmutableFrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("Library.framework"))))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryDepTarget)))
         .build();
 
@@ -888,7 +926,13 @@ public class ProjectGeneratorTest {
         .setSrcs(
             Optional.of(
                 ImmutableList.of(SourceWithFlags.of(new TestSourcePath("fooTest.m")))))
-        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Test.framework")))
+        .setFrameworks(
+            Optional.of(
+                ImmutableSortedSet.of(
+                    ImmutableFrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("Test.framework"))))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
@@ -917,7 +961,8 @@ public class ProjectGeneratorTest {
             "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
-        "$(inherited) ",
+        "$(inherited) " +
+            "$SDKROOT",
         settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
@@ -966,7 +1011,13 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedSet.<SourcePath>of(
                     new TestSourcePath("foo.h"))))
-        .setFrameworks(Optional.of(ImmutableSortedSet.of("$SDKROOT/Foo.framework")))
+        .setFrameworks(
+            Optional.of(
+                ImmutableSortedSet.of(
+                    ImmutableFrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("Foo.framework"))))))
         .setDeps(Optional.of(ImmutableSortedSet.of(depTarget)))
         .setGid(Optional.<String>absent())
         .setHeaderPathPrefix(Optional.<String>absent())
@@ -1591,12 +1642,26 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
         .setFrameworks(
             Optional.of(
                 ImmutableSortedSet.of(
-                    "$BUILT_PRODUCTS_DIR/libfoo.a",
-                    "$SDKROOT/libfoo.a",
-                    "$SOURCE_ROOT/libfoo.a")))
+                    ImmutableFrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+                            Paths.get("libfoo.a"))),
+                    ImmutableFrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("libfoo.a"))),
+                    ImmutableFrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SOURCE_ROOT,
+                            Paths.get("libfoo.a"))))))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1611,22 +1676,21 @@ public class ProjectGeneratorTest {
             "$BUILT_PRODUCTS_DIR/libfoo.a",
             "$SDKROOT/libfoo.a",
             "$SOURCE_ROOT/libfoo.a"));
-  }
 
-  @Test(expected = HumanReadableException.class)
-  public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws IOException {
-    BuildTarget buildTarget = BuildTarget
-        .builder("//foo", "rule")
-        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-        .build();
-    TargetNode<?> node = AppleLibraryBuilder
-        .createBuilder(buildTarget)
-        .setFrameworks(Optional.of(ImmutableSortedSet.of("$FOOBAR/libfoo.a")))
-        .build();
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals(
+        "$(inherited) ",
+        settings.get("HEADER_SEARCH_PATHS"));
+    assertEquals(
+        "$(inherited) ",
+        settings.get("USER_HEADER_SEARCH_PATHS"));
+    assertEquals(
+        "$(inherited) $BUILT_PRODUCTS_DIR $SDKROOT $SOURCE_ROOT",
+        settings.get("LIBRARY_SEARCH_PATHS"));
+    assertEquals(
+        "$(inherited) ",
+        settings.get("FRAMEWORK_SEARCH_PATHS"));
 
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node));
-    projectGenerator.createXcodeProjects();
   }
 
   @Test
@@ -1882,14 +1946,24 @@ public class ProjectGeneratorTest {
     TargetNode<AppleNativeTargetDescriptionArg> testLibDepLib =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder("//libs", "deplib").build())
             .setFrameworks(
-                Optional.of(ImmutableSortedSet.of("$SDKROOT/DeclaredInTestLibDep.framework")))
+                Optional.of(
+                    ImmutableSortedSet.of(
+                        ImmutableFrameworkPath.ofSourceTreePath(
+                            new SourceTreePath(
+                                PBXReference.SourceTree.SDKROOT,
+                                Paths.get("DeclaredInTestLibDep.framework"))))))
             .setDeps(Optional.of(ImmutableSortedSet.of(testLibDepResource.getBuildTarget())))
             .build();
     TargetNode<AppleNativeTargetDescriptionArg> dep1 =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder("//foo", "dep1").build())
             .setDeps(Optional.of(ImmutableSortedSet.of(testLibDepLib.getBuildTarget())))
             .setFrameworks(
-                Optional.of(ImmutableSortedSet.of("$SDKROOT/DeclaredInTestLib.framework")))
+                Optional.of(
+                    ImmutableSortedSet.of(
+                        ImmutableFrameworkPath.ofSourceTreePath(
+                            new SourceTreePath(
+                                PBXReference.SourceTree.SDKROOT,
+                                Paths.get("DeclaredInTestLib.framework"))))))
             .build();
     TargetNode<AppleNativeTargetDescriptionArg> dep2 =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder("//foo", "dep2").build())
@@ -1899,7 +1973,12 @@ public class ProjectGeneratorTest {
             .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
             .setDeps(Optional.of(ImmutableSortedSet.of(dep1.getBuildTarget())))
             .setFrameworks(
-                Optional.of(ImmutableSortedSet.of("$SDKROOT/DeclaredInTest.framework")))
+                Optional.of(
+                    ImmutableSortedSet.of(
+                        ImmutableFrameworkPath.ofSourceTreePath(
+                            new SourceTreePath(
+                                PBXReference.SourceTree.SDKROOT,
+                                Paths.get("DeclaredInTest.framework"))))))
             .build();
     TargetNode<AppleTestDescription.Arg> xctest2 =
         AppleTestBuilder.createBuilder(BuildTarget.builder("//foo", "xctest2").build())
