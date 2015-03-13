@@ -19,8 +19,8 @@ package com.facebook.buck.apple;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
@@ -31,11 +31,14 @@ import java.nio.file.Path;
  * path referenced from Y to one that is referenced from X.
  */
 public final class PathRelativizer {
-  private SourcePathResolver resolver;
+  private Function<SourcePath, Path> resolver;
 
   private final Path outputPathToProjectRoot;
 
-  public PathRelativizer(Path projectRoot, Path outputDirectory, SourcePathResolver resolver) {
+  public PathRelativizer(
+      Path projectRoot,
+      Path outputDirectory,
+      Function<SourcePath, Path> resolver) {
     this.resolver = resolver;
     this.outputPathToProjectRoot = MorePaths.relativize(
         outputDirectory.toAbsolutePath(),
@@ -73,6 +76,7 @@ public final class PathRelativizer {
    * Map a SourcePath to one that's relative to the output directory.
    */
   public Path outputPathToSourcePath(SourcePath sourcePath) {
-    return outputDirToRootRelative(resolver.getPath(sourcePath).normalize());
+    return outputDirToRootRelative(
+        Preconditions.checkNotNull(resolver.apply(sourcePath)).normalize());
   }
 }

@@ -18,10 +18,10 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -47,7 +47,7 @@ public class RuleUtils {
   private RuleUtils() {}
 
   public static ImmutableList<GroupedSource> createGroupsFromSourcePaths(
-      SourcePathResolver resolver,
+      Function<SourcePath, Path> resolver,
       Iterable<SourceWithFlags> sources,
       Iterable<SourcePath> publicHeaders,
       Iterable<SourcePath> privateHeaders) {
@@ -55,17 +55,17 @@ public class RuleUtils {
 
     ImmutableMultimap.Builder<Path, GroupedSource> entriesBuilder = ImmutableMultimap.builder();
     for (SourceWithFlags sourceWithFlags : sources) {
-      Path path = rootPath.resolve(resolver.getPath(sourceWithFlags.getSourcePath()));
+      Path path = rootPath.resolve(resolver.apply(sourceWithFlags.getSourcePath()));
       GroupedSource groupedSource = GroupedSource.ofSourceWithFlags(sourceWithFlags);
       entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
     }
     for (SourcePath publicHeader : publicHeaders) {
-      Path path = rootPath.resolve(resolver.getPath(publicHeader));
+      Path path = rootPath.resolve(resolver.apply(publicHeader));
       GroupedSource groupedSource = GroupedSource.ofPublicHeader(publicHeader);
       entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
     }
     for (SourcePath privateHeader : privateHeaders) {
-      Path path = rootPath.resolve(resolver.getPath(privateHeader));
+      Path path = rootPath.resolve(resolver.apply(privateHeader));
       GroupedSource groupedSource = GroupedSource.ofPrivateHeader(privateHeader);
       entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
     }
@@ -102,9 +102,9 @@ public class RuleUtils {
   }
 
   static class GroupedSourceNameComparator implements Comparator<GroupedSource> {
-    private final SourcePathResolver pathResolver;
+    private final Function<SourcePath, Path> pathResolver;
 
-    public GroupedSourceNameComparator(SourcePathResolver pathResolver) {
+    public GroupedSourceNameComparator(Function<SourcePath, Path> pathResolver) {
       this.pathResolver = pathResolver;
     }
 

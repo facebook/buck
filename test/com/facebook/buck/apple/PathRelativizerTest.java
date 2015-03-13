@@ -41,7 +41,7 @@ public class PathRelativizerTest {
     pathRelativizer = new PathRelativizer(
         root,
         outputPath,
-        new SourcePathResolver(new BuildRuleResolver()));
+        new SourcePathResolver(new BuildRuleResolver()).getPathFunction());
   }
 
   @Test

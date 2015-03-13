@@ -50,12 +50,16 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.ImmutableFrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.shell.ExportFileBuilder;
+import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;
@@ -2037,6 +2041,84 @@ public class ProjectGeneratorTest {
         "bar.png");
   }
 
+  @Test
+  public void testResolvingExportFile() throws IOException {
+    BuildTarget source1Target = BuildTarget.builder("//Vendor", "source1").build();
+    BuildTarget source2Target = BuildTarget.builder("//Vendor", "source2").build();
+    BuildTarget source2RefTarget = BuildTarget.builder("//Vendor", "source2ref").build();
+    BuildTarget source3Target = BuildTarget.builder("//Vendor", "source3").build();
+    BuildTarget headerTarget = BuildTarget.builder("//Vendor", "header").build();
+    BuildTarget libTarget = BuildTarget.builder("//Libraries", "foo").build();
+
+    TargetNode<ExportFileDescription.Arg> source1 = ExportFileBuilder
+        .newExportFileBuilder(source1Target)
+        .setSrc(new PathSourcePath(projectFilesystem, Paths.get("Vendor/sources/source1")))
+        .build();
+
+    TargetNode<ExportFileDescription.Arg> source2 = ExportFileBuilder
+        .newExportFileBuilder(source2Target)
+        .setSrc(new PathSourcePath(projectFilesystem, Paths.get("Vendor/source2")))
+        .build();
+
+    TargetNode<ExportFileDescription.Arg> source2Ref = ExportFileBuilder
+        .newExportFileBuilder(source2RefTarget)
+        .setSrc(new BuildTargetSourcePath(projectFilesystem, source2Target))
+        .build();
+
+    TargetNode<ExportFileDescription.Arg> source3 = ExportFileBuilder
+        .newExportFileBuilder(source3Target)
+        .build();
+
+    TargetNode<ExportFileDescription.Arg> header = ExportFileBuilder
+        .newExportFileBuilder(headerTarget)
+        .build();
+
+    TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
+        .createBuilder(libTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(
+                    SourceWithFlags.of(
+                        new BuildTargetSourcePath(projectFilesystem, source1Target)),
+                    SourceWithFlags.of(
+                        new BuildTargetSourcePath(projectFilesystem, source2RefTarget)),
+                    SourceWithFlags.of(
+                        new BuildTargetSourcePath(projectFilesystem, source3Target)))))
+        .setPrefixHeader(
+            Optional.<SourcePath>of(new BuildTargetSourcePath(projectFilesystem, headerTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(
+            source1,
+            source2,
+            source2Ref,
+            source3,
+            header,
+            library));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        libTarget.toString());
+
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+        target,
+        ImmutableMap.of(
+            "Vendor/sources/source1", Optional.<String>absent(),
+            "Vendor/source2", Optional.<String>absent(),
+            "Vendor/source3", Optional.<String>absent()));
+
+    ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
+    assertEquals("../Vendor/header", settings.get("GCC_PREFIX_HEADER"));
+  }
+
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Iterable<TargetNode<?>> nodes) {
     return createProjectGeneratorForCombinedProject(
@@ -2134,7 +2216,7 @@ public class ProjectGeneratorTest {
     for (PBXBuildFile file : sourcesBuildPhase.getFiles()) {
       String filePath = assertFileRefIsRelativeAndResolvePath(file.getFileRef());
       Optional<String> flags = absolutePathFlagMap.get(filePath);
-      assertNotNull("Source file is expected", flags);
+      assertNotNull(String.format("Unexpected file ref '%s' found", filePath), flags);
       if (flags.isPresent()) {
         assertTrue("Build file should have settings dictionary", file.getSettings().isPresent());
 

@@ -43,16 +43,16 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
@@ -154,7 +154,7 @@ public class ProjectGenerator {
           PosixFilePermission.GROUP_READ,
           PosixFilePermission.OTHERS_READ));
 
-  private final SourcePathResolver sourcePathResolver;
+  private final Function<SourcePath, Path> sourcePathResolver;
   private final TargetGraph targetGraph;
   private final ProjectFilesystem projectFilesystem;
   private final Path outputDirectory;
@@ -199,10 +199,16 @@ public class ProjectGenerator {
       String projectName,
       String buildFileName,
       Set<Option> options) {
+    this.sourcePathResolver = new Function<SourcePath, Path>() {
+      @Override
+      public Path apply(SourcePath input) {
+        return resolveSourcePath(input);
+      }
+    };
+
     this.targetGraph = targetGraph;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectFilesystem = projectFilesystem;
-    this.sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
     this.outputDirectory = outputDirectory;
     this.projectName = projectName;
     this.buildFileName = buildFileName;
@@ -405,7 +411,7 @@ public class ProjectGenerator {
         }
       }
       for (SourcePath file : arg.files) {
-        if (!projectFilesystem.isFile(sourcePathResolver.getPath(file))) {
+        if (!projectFilesystem.isFile(sourcePathResolver.apply(file))) {
           throw new HumanReadableException(
               "%s specified in the files parameter of %s is not a regular file",
               file.toString(), resource.toString());
@@ -424,7 +430,7 @@ public class ProjectGenerator {
     Optional<Path> infoPlistPath;
     if (targetNode.getConstructorArg().getInfoPlist().isPresent()) {
       infoPlistPath = Optional.of(
-          sourcePathResolver.getPath(targetNode.getConstructorArg().getInfoPlist().get()));
+          sourcePathResolver.apply(targetNode.getConstructorArg().getInfoPlist().get()));
     } else {
       infoPlistPath = Optional.absent();
     }
@@ -634,7 +640,7 @@ public class ProjectGenerator {
     }
     Optional<SourcePath> prefixHeaderOptional = targetNode.getConstructorArg().prefixHeader;
     if (prefixHeaderOptional.isPresent()) {
-        Path prefixHeaderRelative = sourcePathResolver.getPath(prefixHeaderOptional.get());
+        Path prefixHeaderRelative = sourcePathResolver.apply(prefixHeaderOptional.get());
         Path prefixHeaderPath = pathRelativizer.outputDirToRootRelative(prefixHeaderRelative);
         extraSettingsBuilder.put("GCC_PREFIX_HEADER", prefixHeaderPath.toString());
         extraSettingsBuilder.put("GCC_PRECOMPILE_PREFIX_HEADER", "YES");
@@ -802,7 +808,7 @@ public class ProjectGenerator {
       overrideBuildSettingsBuilder.put(
           "INFOPLIST_FILE",
           pathRelativizer.outputDirToRootRelative(
-                sourcePathResolver.getPath(key.getInfoPlist().get())).toString());
+                sourcePathResolver.apply(key.getInfoPlist().get())).toString());
     }
     setTargetBuildConfigurations(
         new Function<String, Path>() {
@@ -1012,10 +1018,13 @@ public class ProjectGenerator {
       HeaderMap.Builder targetHeaderMap,
       HeaderMap.Builder targetUserHeaderMap,
       HeaderVisibility visibility) {
-    String fileName = sourcePathResolver.getPath(headerPath).getFileName().toString();
+    String fileName = Preconditions
+        .checkNotNull(sourcePathResolver.apply(headerPath))
+        .getFileName()
+        .toString();
     String prefixedFileName = prefix.resolve(fileName).toString();
     Path value =
-        projectFilesystem.getPathForRelativePath(sourcePathResolver.getPath(headerPath))
+        projectFilesystem.getPathForRelativePath(sourcePathResolver.apply(headerPath))
             .toAbsolutePath().normalize();
 
     // Add an entry Prefix/File.h -> AbsolutePathTo/File.h
@@ -1548,11 +1557,11 @@ public class ProjectGenerator {
 
     final Predicate<FrameworkPath> byType = Predicates.compose(
         Predicates.equalTo(type),
-        FrameworkPath.getFrameworkTypeFunction(sourcePathResolver.getPathFunction()));
+        FrameworkPath.getFrameworkTypeFunction(sourcePathResolver));
 
     final Function<FrameworkPath, Path> toSearchPath = FrameworkPath
         .getUnexpandedSearchPathFunction(
-            sourcePathResolver.getPathFunction(),
+            sourcePathResolver,
             pathRelativizer.outputDirToRootRelative());
 
     return new Function<TargetNode<AppleNativeTargetDescriptionArg>, Iterable<String>>() {
@@ -1785,6 +1794,31 @@ public class ProjectGenerator {
       }
     }
     return path;
+  }
+
+  private Path resolveSourcePath(SourcePath sourcePath) {
+    if (sourcePath instanceof PathSourcePath) {
+      return ((PathSourcePath) sourcePath).getRelativePath();
+    }
+    Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
+    BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
+    BuildTarget buildTarget = buildTargetSourcePath.getTarget();
+    TargetNode<?> node = Preconditions.checkNotNull(targetGraph.get(buildTarget));
+    Optional<TargetNode<ExportFileDescription.Arg>> exportFileNode = node.castArg(
+        ExportFileDescription.Arg.class);
+    if (!exportFileNode.isPresent()) {
+      throw new HumanReadableException(
+          "Project generation only supports source paths that refer to paths or export_file " +
+              "targets.\n" + "'%s' is a '%s' target.",
+          node.getBuildTarget(), node.getType());
+    }
+
+    Optional<SourcePath> src = exportFileNode.get().getConstructorArg().src;
+    if (!src.isPresent()) {
+      return buildTarget.getBasePath().resolve(buildTarget.getShortNameAndFlavorPostfix());
+    }
+
+    return resolveSourcePath(src.get());
   }
 
   /**

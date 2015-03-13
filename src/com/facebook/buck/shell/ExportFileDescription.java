@@ -50,7 +50,7 @@ public class ExportFileDescription implements Description<ExportFileDescription.
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public Optional<? extends SourcePath> src;
+    public Optional<SourcePath> src;
     public Optional<String> out;
   }
 }

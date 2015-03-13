@@ -17,15 +17,16 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
@@ -96,16 +97,16 @@ public abstract class GroupedSource {
     }
   }
 
-  public String getName(SourcePathResolver pathResolver) {
+  public String getName(Function<SourcePath, Path> pathResolver) {
     SourcePath sourcePath;
     switch (getType()) {
       case SOURCE_WITH_FLAGS:
         sourcePath = getSourceWithFlags().get().getSourcePath();
-        return pathResolver.getPath(sourcePath).getFileName().toString();
+        return Preconditions.checkNotNull(pathResolver.apply(sourcePath)).getFileName().toString();
       case PUBLIC_HEADER:
       case PRIVATE_HEADER:
         sourcePath = getSourcePath().get();
-        return pathResolver.getPath(sourcePath).getFileName().toString();
+        return Preconditions.checkNotNull(pathResolver.apply(sourcePath)).getFileName().toString();
       case SOURCE_GROUP:
         return getSourceGroupName().get();
       default:

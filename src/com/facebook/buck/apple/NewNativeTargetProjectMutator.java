@@ -37,11 +37,11 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleDescription;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -72,7 +72,7 @@ public class NewNativeTargetProjectMutator {
   }
 
   private final PathRelativizer pathRelativizer;
-  private final SourcePathResolver sourcePathResolver;
+  private final Function<SourcePath, Path> sourcePathResolver;
 
   private PBXTarget.ProductType productType = PBXTarget.ProductType.BUNDLE;
   private Path productOutputPath = Paths.get("");
@@ -94,7 +94,7 @@ public class NewNativeTargetProjectMutator {
 
   public NewNativeTargetProjectMutator(
       PathRelativizer pathRelativizer,
-      SourcePathResolver sourcePathResolver) {
+      Function<SourcePath, Path> sourcePathResolver) {
     this.pathRelativizer = pathRelativizer;
     this.sourcePathResolver = sourcePathResolver;
   }
@@ -312,7 +312,7 @@ public class NewNativeTargetProjectMutator {
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
             pathRelativizer.outputDirToRootRelative(
-                sourcePathResolver.getPath(sourceWithFlags.getSourcePath()))));
+                sourcePathResolver.apply(sourceWithFlags.getSourcePath()))));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     sourcesBuildPhase.getFiles().add(buildFile);
     List<String> customFlags = sourceWithFlags.getFlags();
@@ -405,7 +405,7 @@ public class NewNativeTargetProjectMutator {
     target.getBuildPhases().add(phase);
     for (AppleResourceDescription.Arg resource : resources) {
       Iterable<Path> paths = Iterables.concat(
-          sourcePathResolver.getAllPaths(resource.files),
+          Iterables.transform(resource.files, sourcePathResolver),
           resource.dirs);
       for (Path path : paths) {
         PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
@@ -532,7 +532,7 @@ public class NewNativeTargetProjectMutator {
       target.getBuildPhases().add(shellScriptBuildPhase);
       if (GenruleDescription.TYPE.equals(node.getType())) {
         GenruleDescription.Arg arg = (GenruleDescription.Arg) node.getConstructorArg();
-        for (Path path : sourcePathResolver.getAllPaths(arg.srcs.get())) {
+        for (Path path : Iterables.transform(arg.srcs.get(), sourcePathResolver)) {
           shellScriptBuildPhase.getInputPaths().add(
               pathRelativizer.outputDirToRootRelative(path).toString());
         }
