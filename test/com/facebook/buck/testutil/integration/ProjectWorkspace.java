@@ -299,7 +299,15 @@ public class ProjectWorkspace {
         "ANDROID_NDK_REPOSITORY",
         "ANDROID_SDK",
         "PATH",
-        "PATHEXT");
+        "PATHEXT",
+
+        // Needed by ndk-build on Windows
+        "OS",
+        "ProgramW6432",
+        "ProgramFiles(x86)",
+
+        // TODO(#6586154): set TMP variable for ShellSteps
+        "TMP");
     ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
     for (String variable : inheritedEnvVars) {
       String value = System.getenv(variable);
