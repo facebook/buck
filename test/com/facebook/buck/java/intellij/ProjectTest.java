@@ -773,8 +773,12 @@ public class ProjectTest {
     //   src_target = ':foo-jni',
     // )
 
+    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     BuildTarget fooJni = BuildTargetFactory.newInstance("//third_party/java/foo/jni:foo-jni");
-    NdkLibrary ndkLibrary = NdkLibraryBuilder.createNdkLibrary(fooJni, pathResolver)
+    NdkLibrary ndkLibrary = NdkLibraryBuilder.createNdkLibrary(fooJni,
+        pathResolver,
+        ruleResolver,
+        projectFilesystem)
         .addSrc(Paths.get("Android.mk"))
         .build();
 

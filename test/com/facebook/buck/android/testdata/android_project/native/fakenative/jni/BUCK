@@ -1,7 +1,7 @@
 ndk_library(
   name = 'fakenative',
   flags = [
-    'NDK_APPLICATION_MK=${PWD}/native/fakenative/jni/Application.mk',
+    'NDK_APPLICATION_MK=$(env PWD)/native/fakenative/jni/Application.mk',
   ],
   visibility = ['PUBLIC'],
 )

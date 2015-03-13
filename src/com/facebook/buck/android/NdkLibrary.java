@@ -34,6 +34,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -78,6 +79,7 @@ public class NdkLibrary extends AbstractBuildRule
   private final ImmutableSortedSet<SourcePath> sources;
   private final ImmutableList<String> flags;
   private final Optional<String> ndkVersion;
+  private final Function<String, String> macroExpander;
 
   protected NdkLibrary(
       BuildRuleParams params,
@@ -86,7 +88,8 @@ public class NdkLibrary extends AbstractBuildRule
       Set<SourcePath> sources,
       List<String> flags,
       boolean isAsset,
-      Optional<String> ndkVersion) {
+      Optional<String> ndkVersion,
+      Function<String, String> macroExpander) {
     super(params, resolver);
     this.isAsset = isAsset;
 
@@ -103,6 +106,7 @@ public class NdkLibrary extends AbstractBuildRule
     this.flags = ImmutableList.copyOf(flags);
 
     this.ndkVersion = ndkVersion;
+    this.macroExpander = macroExpander;
   }
 
   @Override
@@ -135,7 +139,8 @@ public class NdkLibrary extends AbstractBuildRule
         makefile,
         buildArtifactsDirectory,
         binDirectory,
-        flags);
+        flags,
+        macroExpander);
 
     Step mkDirStep = new MakeCleanDirectoryStep(genDirectory);
     Step copyStep = CopyStep.forDirectory(

@@ -53,11 +53,12 @@ public class NdkLibraryTest {
 
   private ExecutionContext executionContext;
   private String ndkBuildCommand;
+  private ProjectFilesystem projectFilesystem;
 
   @Before
   public void setUp() {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
+    projectFilesystem = new ProjectFilesystem(Paths.get("."));
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(projectFilesystem,
         Optional.<String>absent(),
         new DefaultPropertyFinder(projectFilesystem, ImmutableMap.copyOf(System.getenv())));
@@ -84,7 +85,9 @@ public class NdkLibraryTest {
         NdkLibraryBuilder.createNdkLibrary(
             BuildTargetFactory.newInstance(
                 String.format("//%s:base", basePath)),
-            pathResolver)
+            pathResolver,
+            ruleResolver,
+            projectFilesystem)
             .setNdkVersion("r8b")
             .addSrc(Paths.get(basePath + "/Application.mk"))
             .addSrc(Paths.get(basePath + "/main.cpp"))

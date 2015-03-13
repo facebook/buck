@@ -40,6 +40,9 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
+import com.facebook.buck.rules.macros.MacroExpander;
+import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -47,6 +50,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
@@ -85,6 +89,12 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       Pattern.compile(
               ".*\\." +
               MoreStrings.regexPatternForAny("mk", "h", "hpp", "c", "cpp", "cc", "cxx") + "$");
+
+  public static final MacroHandler MACRO_HANDLER = new MacroHandler(
+      ImmutableMap.<String, MacroExpander>of(
+          "env", new EnvironmentVariableMacroExpander(Platform.detect())
+      )
+  );
 
   private final Optional<String> ndkVersion;
   private final ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> cxxPlatforms;
@@ -342,7 +352,11 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         srcs.build(),
         args.flags.get(),
         args.isAsset.or(false),
-        ndkVersion);
+        ndkVersion,
+        MACRO_HANDLER.getExpander(
+            params.getBuildTarget(),
+            resolver,
+            params.getProjectFilesystem()));
   }
 
   @SuppressFieldNotInitialized

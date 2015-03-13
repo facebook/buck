@@ -24,6 +24,7 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -36,19 +37,22 @@ public class NdkBuildStep extends ShellStep {
   private final Path binDirectory;
   private final ImmutableList<String> flags;
   private final int maxJobCount;
+  private final Function<String, String> macroExpander;
 
   public NdkBuildStep(
       Path root,
       Path makefile,
       Path buildArtifactsDirectory,
       Path binDirectory,
-      Iterable<String> flags) {
+      Iterable<String> flags,
+      Function<String, String> macroExpander) {
     this.root = root;
     this.makefile = makefile;
     this.buildArtifactsDirectory = buildArtifactsDirectory;
     this.binDirectory = binDirectory;
     this.flags = ImmutableList.copyOf(flags);
     this.maxJobCount = Runtime.getRuntime().availableProcessors();
+    this.macroExpander = macroExpander;
   }
 
   @Override
@@ -82,7 +86,9 @@ public class NdkBuildStep extends ShellStep {
         "-C",
         this.root.toString());
 
-    builder.addAll(this.flags);
+
+    Iterable<String> flags = Iterables.transform(this.flags, macroExpander);
+    builder.addAll(flags);
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     Function<Path, Path> absolutifier = projectFilesystem.getAbsolutifier();

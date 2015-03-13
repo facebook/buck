@@ -15,7 +15,9 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -36,8 +38,11 @@ public class NdkLibraryBuilder {
     // Utility class
   }
 
-  public static Builder createNdkLibrary(BuildTarget target, SourcePathResolver resolver) {
-    return new Builder(target, resolver);
+  public static Builder createNdkLibrary(BuildTarget target,
+      SourcePathResolver resolver,
+      BuildRuleResolver ruleResolver,
+      ProjectFilesystem projectFilesystem) {
+    return new Builder(target, resolver, ruleResolver, projectFilesystem);
   }
   public static class Builder {
     private final SourcePathResolver resolver;
@@ -47,10 +52,15 @@ public class NdkLibraryBuilder {
     private ImmutableList.Builder<String> flags = ImmutableList.builder();
     private boolean isAsset = false;
     private Optional<String> ndkVersion = Optional.absent();
+    private BuildRuleResolver ruleResolver;
+    private ProjectFilesystem projectFilesystem;
 
-    public Builder(BuildTarget buildTarget, SourcePathResolver resolver) {
+    public Builder(BuildTarget buildTarget, SourcePathResolver resolver,
+        BuildRuleResolver ruleResolver, ProjectFilesystem projectFilesystem) {
       this.buildTarget = Preconditions.checkNotNull(buildTarget);
       this.resolver = Preconditions.checkNotNull(resolver);
+      this.ruleResolver = ruleResolver;
+      this.projectFilesystem = projectFilesystem;
     }
 
     public Builder addSrc(Path source) {
@@ -81,7 +91,12 @@ public class NdkLibraryBuilder {
           sources.build(),
           flags.build(),
           isAsset,
-          ndkVersion);
+          ndkVersion,
+          NdkLibraryDescription.MACRO_HANDLER.getExpander(
+              buildTarget,
+              ruleResolver,
+              projectFilesystem
+          ));
     }
   }
 }

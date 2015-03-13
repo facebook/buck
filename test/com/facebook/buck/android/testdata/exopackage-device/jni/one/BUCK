@@ -1,7 +1,7 @@
 ndk_library(
   name = 'one',
   flags = [
-    'NDK_APPLICATION_MK=${PWD}/jni/one/Application.mk',
+    'NDK_APPLICATION_MK=$(env PWD)/jni/one/Application.mk',
   ],
   visibility = ['PUBLIC']
 )

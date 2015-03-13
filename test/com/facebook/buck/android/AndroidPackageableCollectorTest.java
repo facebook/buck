@@ -74,7 +74,9 @@ public class AndroidPackageableCollectorTest {
         NdkLibraryBuilder
             .createNdkLibrary(BuildTargetFactory.newInstance(
                 "//java/com/facebook/native_library:library"),
-                pathResolver)
+                pathResolver,
+                ruleResolver,
+                projectFilesystem)
             .addSrc(Paths.get("Android.mk"))
             .setIsAsset(false).build();
     ruleResolver.addToIndex(ndkLibrary);
