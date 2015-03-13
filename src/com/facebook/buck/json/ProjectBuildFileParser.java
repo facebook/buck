@@ -27,6 +27,7 @@ import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.InputStreamConsumer;
+import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.Threads;
 import com.google.common.annotations.VisibleForTesting;
@@ -44,13 +45,11 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
-import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -248,13 +247,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
       throws BuildFileParseException, InterruptedException {
     try {
       return getAllRulesInternal(buildFile);
-    } catch (InterruptedIOException | ClosedByInterruptException e) {
-      // I/O operations will throw these types of `IOException` when interrupted, so
-      // propagate these along as an `InterruptedException`, so we handle this as expected.
-      InterruptedException interruptedException = new InterruptedException();
-      interruptedException.initCause(e);
-      throw interruptedException;
     } catch (IOException e) {
+      MoreThrowables.propagateIfInterrupt(e);
       throw BuildFileParseException.createForBuildFileParseError(buildFile, e);
     }
   }
