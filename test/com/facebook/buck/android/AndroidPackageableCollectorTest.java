@@ -158,11 +158,6 @@ public class AndroidPackageableCollectorTest {
         ImmutableSet.of(Paths.get("assets")),
         packageableCollection.getAssetsDirectories());
     assertEquals(
-        "Because manifest file was passed an AndroidResourceRule it should be added to the " +
-            "transitive dependencies",
-        ImmutableSet.of(Paths.get("java/src/com/facebook/module/AndroidManifest.xml")),
-        packageableCollection.getManifestFiles());
-    assertEquals(
         "Because a native library was declared as a dependency, it should be added to the " +
             "transitive dependencies.",
         ImmutableSet.of(((NativeLibraryBuildRule) ndkLibrary).getLibraryPath()),

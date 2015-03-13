@@ -100,14 +100,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     }
   }
 
-  @Override
-  public void addToCollector(AndroidPackageableCollector collector) {
-    super.addToCollector(collector);
-    if (manifestFile.isPresent()) {
-      collector.addManifestFile(getBuildTarget(), getResolver().getPath(manifestFile.get()));
-    }
-  }
-
   /** @return whether this library was generated from an {@link AndroidPrebuiltAarDescription}. */
   public boolean isPrebuiltAar() {
     return isPrebuiltAar;

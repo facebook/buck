@@ -103,11 +103,6 @@ public interface AndroidPackageableCollection {
   Set<Path> getAssetsDirectories();
 
   /**
-   * AndroidManifest.xml files to be included in manifest merging.
-   */
-  Set<Path> getManifestFiles();
-
-  /**
    * Proguard configurations to include when running release builds.
    */
   Set<Path> getProguardConfigs();

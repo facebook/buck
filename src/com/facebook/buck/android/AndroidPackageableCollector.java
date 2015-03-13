@@ -166,14 +166,6 @@ public class AndroidPackageableCollector {
     return this;
   }
 
-  public AndroidPackageableCollector addManifestFile(BuildTarget owner, Path manifestFile) {
-    if (!buildTargetsToExcludeFromDex.contains(owner) &&
-        !resourcesToExclude.contains(owner)) {
-      collectionBuilder.addManifestFiles(manifestFile);
-    }
-    return this;
-  }
-
   public AndroidPackageableCollector addProguardConfig(BuildTarget owner, Path proguardConfig) {
     if (!buildTargetsToExcludeFromDex.contains(owner)) {
       collectionBuilder.addProguardConfigs(proguardConfig);

@@ -381,9 +381,6 @@ public class AndroidResource extends AbstractBuildRule
     if (assets != null) {
       collector.addAssetsDirectory(getBuildTarget(), assets);
     }
-    if (manifestFile != null) {
-      collector.addManifestFile(getBuildTarget(), getResolver().getPath(manifestFile));
-    }
   }
 
   public static class BuildOutput {
