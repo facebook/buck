@@ -44,22 +44,6 @@ public abstract class AbstractGenruleStep extends ShellStep {
     this.commandString = commandString;
   }
 
-  public static class CommandString {
-    private Optional<String> cmd;
-    private Optional<String> bash;
-    private Optional<String> cmdExe;
-
-    public CommandString(Optional<String> cmd, Optional<String> bash, Optional<String> cmdExe) {
-      this.cmd = cmd;
-      this.bash = bash;
-      this.cmdExe = cmdExe;
-    }
-  }
-
-  private String getFullyQualifiedName() {
-    return target.getFullyQualifiedName();
-  }
-
   @Override
   public String getShortName() {
     return "genrule";
@@ -67,40 +51,12 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ExecutionArgsAndCommand commandAndExecutionArgs = getCommandAndExecutionArgs(context);
+    ExecutionArgsAndCommand commandAndExecutionArgs =
+        commandString.getCommandAndExecutionArgs(context.getPlatform(), target);
     return ImmutableList.<String>builder()
         .addAll(commandAndExecutionArgs.executionArgs)
         .add(commandAndExecutionArgs.command)
         .build();
-  }
-
-  private ExecutionArgsAndCommand getCommandAndExecutionArgs(ExecutionContext context) {
-    // The priority sequence is
-    //   "cmd.exe /c winCommand" (Windows Only)
-    //   "/bin/bash -e -c shCommand" (Non-windows Only)
-    //   "(/bin/bash -c) or (cmd.exe /c) cmd" (All platforms)
-    String command;
-    if (context.getPlatform() == Platform.WINDOWS) {
-      if (!commandString.cmdExe.or("").isEmpty()) {
-        command = commandString.cmdExe.get();
-      } else if (!commandString.cmd.or("").isEmpty()) {
-        command = commandString.cmd.get();
-      } else {
-        throw new HumanReadableException("You must specify either cmd_exe or cmd for genrule %s.",
-            getFullyQualifiedName());
-      }
-      return new ExecutionArgsAndCommand(ImmutableList.of("cmd.exe", "/c"), command);
-    } else {
-      if (!commandString.bash.or("").isEmpty()) {
-        command = commandString.bash.get();
-      } else if (!commandString.cmd.or("").isEmpty()) {
-        command = commandString.cmd.get();
-      } else {
-        throw new HumanReadableException("You must specify either bash or cmd for genrule %s.",
-            getFullyQualifiedName());
-      }
-      return new ExecutionArgsAndCommand(ImmutableList.of("/bin/bash", "-e", "-c"), command);
-    }
   }
 
   @Override
@@ -112,7 +68,8 @@ public abstract class AbstractGenruleStep extends ShellStep {
     // Long lists of environment variables can extend the length of the command such that it exceeds
     // exec()'s ARG_MAX limit. Defend against this by filtering out variables that do not appear in
     // the command string.
-    String command = getCommandAndExecutionArgs(context).command;
+    String command =
+        commandString.getCommandAndExecutionArgs(context.getPlatform(), target).command;
     ImmutableMap.Builder<String, String> usedEnvironmentVariablesBuilder = ImmutableMap.builder();
     for (Map.Entry<String, String> environmentVariable : allEnvironmentVariables.entrySet()) {
       // We check for the presence of the variable without adornment for $ or %% so it works on both
@@ -140,12 +97,56 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   private static class ExecutionArgsAndCommand {
+
     private final ImmutableList<String> executionArgs;
     private final String command;
-
     private ExecutionArgsAndCommand(ImmutableList<String> executionArgs, String command) {
       this.executionArgs = executionArgs;
       this.command = command;
+    }
+
+  }
+
+  public static class CommandString {
+    private Optional<String> cmd;
+    private Optional<String> bash;
+    private Optional<String> cmdExe;
+
+    public CommandString(Optional<String> cmd, Optional<String> bash, Optional<String> cmdExe) {
+      this.cmd = cmd;
+      this.bash = bash;
+      this.cmdExe = cmdExe;
+    }
+
+    public ExecutionArgsAndCommand getCommandAndExecutionArgs(
+        Platform platform,
+        BuildTarget target) {
+      // The priority sequence is
+      //   "cmd.exe /c winCommand" (Windows Only)
+      //   "/bin/bash -e -c shCommand" (Non-windows Only)
+      //   "(/bin/bash -c) or (cmd.exe /c) cmd" (All platforms)
+      String command;
+      if (platform == Platform.WINDOWS) {
+        if (!cmdExe.or("").isEmpty()) {
+          command = cmdExe.get();
+        } else if (!cmd.or("").isEmpty()) {
+          command = cmd.get();
+        } else {
+          throw new HumanReadableException("You must specify either cmd_exe or cmd for genrule %s.",
+              target.getFullyQualifiedName());
+        }
+        return new ExecutionArgsAndCommand(ImmutableList.of("cmd.exe", "/c"), command);
+      } else {
+        if (!bash.or("").isEmpty()) {
+          command = bash.get();
+        } else if (!cmd.or("").isEmpty()) {
+          command = cmd.get();
+        } else {
+          throw new HumanReadableException("You must specify either bash or cmd for genrule %s.",
+              target.getFullyQualifiedName());
+        }
+        return new ExecutionArgsAndCommand(ImmutableList.of("/bin/bash", "-e", "-c"), command);
+      }
     }
   }
 }
