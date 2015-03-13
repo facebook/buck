@@ -135,11 +135,12 @@ public class PrebuiltCxxLibraryDescription
       CxxPlatform cxxPlatform,
       Optional<String> soname,
       Optional<String> libName) {
+    String extension = cxxPlatform.getSharedLibraryExtension();
     return getOptionalArg(
         target,
         cxxPlatform,
         soname,
-        String.format("lib%s.so", getLibName(target, cxxPlatform, libName)));
+        String.format("lib%s.%s", getLibName(target, cxxPlatform, libName), extension));
   }
 
   private static Path getLibraryPath(
@@ -158,7 +159,8 @@ public class PrebuiltCxxLibraryDescription
       CxxPlatform cxxPlatform,
       Optional<String> libDir,
       Optional<String> libName) {
-    return getLibraryPath(target, cxxPlatform, libDir, libName, ".so");
+    return getLibraryPath(target, cxxPlatform, libDir, libName,
+                          String.format(".%s", cxxPlatform.getSharedLibraryExtension()));
   }
 
   public static Path getStaticLibraryPath(

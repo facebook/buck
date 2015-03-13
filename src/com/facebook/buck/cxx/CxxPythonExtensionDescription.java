@@ -82,6 +82,7 @@ public class CxxPythonExtensionDescription implements
 
   @VisibleForTesting
   protected String getExtensionName(BuildTarget target) {
+    // .so is used on OS X too (as opposed to dylib).
     return String.format("%s.so", target.getShortName());
   }
 
