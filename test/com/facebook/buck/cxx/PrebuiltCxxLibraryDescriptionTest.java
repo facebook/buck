@@ -60,12 +60,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
     String libDir = arg.libDir.or("lib");
     String libName = arg.libName.or(TARGET.getShortName());
     return TARGET.getBasePath().resolve(libDir).resolve(
-        String.format("lib%s.so", libName));
+        String.format("lib%s.%s", libName, CXX_PLATFORM.getSharedLibraryExtension()));
   }
 
   private static String getSharedLibrarySoname(PrebuiltCxxLibraryDescription.Arg arg) {
     String libName = arg.libName.or(TARGET.getShortName());
-    return arg.soname.or(String.format("lib%s.so", libName));
+    return arg.soname.or(
+        String.format("lib%s.%s", libName, CXX_PLATFORM.getSharedLibraryExtension()));
   }
 
   private static ImmutableList<Path> getIncludeDirs(PrebuiltCxxLibraryDescription.Arg arg) {
@@ -320,19 +321,22 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .withFlavor(ImmutableFlavor.of("PLATFORM2"));
 
     assertEquals(
-        "libtest-PLATFORM1.so",
+        String.format("libtest-PLATFORM1.%s", platform1.getSharedLibraryExtension()),
         PrebuiltCxxLibraryDescription.getSoname(
             TARGET,
             platform1, soname, libName));
     assertEquals(
-        "libtest-PLATFORM2.so",
+        String.format("libtest-PLATFORM2.%s", platform2.getSharedLibraryExtension()),
         PrebuiltCxxLibraryDescription.getSoname(
             TARGET,
             platform2, soname, libName));
 
     assertEquals(
         TARGET.getBasePath()
-            .resolve("libs/PLATFORM1/libtest-PLATFORM1.so"),
+            .resolve(
+                String.format(
+                    "libs/PLATFORM1/libtest-PLATFORM1.%s",
+                    platform1.getSharedLibraryExtension())),
         PrebuiltCxxLibraryDescription.getSharedLibraryPath(TARGET, platform1, libDir, libName));
     assertEquals(
         TARGET.getBasePath()
@@ -341,7 +345,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     assertEquals(
         TARGET.getBasePath()
-            .resolve("libs/PLATFORM2/libtest-PLATFORM2.so"),
+            .resolve(
+                String.format(
+                    "libs/PLATFORM2/libtest-PLATFORM2.%s",
+                    platform2.getSharedLibraryExtension())),
         PrebuiltCxxLibraryDescription.getSharedLibraryPath(TARGET, platform2, libDir, libName));
     assertEquals(
         TARGET.getBasePath()
