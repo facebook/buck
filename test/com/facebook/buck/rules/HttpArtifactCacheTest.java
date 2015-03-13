@@ -42,6 +42,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -71,7 +73,7 @@ public class HttpArtifactCacheTest {
   }
 
   @Before
-  public void setUp() {
+  public void setUp() throws MalformedURLException {
     connection = createNiceMock(HttpURLConnection.class);
     projectFilesystem = createMock(ProjectFilesystem.class);
     cache = new FakeHttpArtifactCache(
@@ -183,10 +185,9 @@ public class HttpArtifactCacheTest {
         HttpURLConnection connectionMock,
         ProjectFilesystem projectFilesystem,
         BuckEventBus buckEventBus,
-        ImmutableMap<String, String> headers) {
+        ImmutableMap<String, String> headers) throws MalformedURLException {
       super(
-          "localhost",
-          8080,
+          new URL("http://localhost:8080"),
           (int) TIMEOUT_UNIT.toSeconds(TIMEOUT),
           true,
           projectFilesystem,
@@ -200,10 +201,11 @@ public class HttpArtifactCacheTest {
     }
 
     @Override
-    protected HttpURLConnection getConnection(String url)
+    protected HttpURLConnection getConnection(URL url)
         throws IOException {
       return connectionMock;
     }
+
   }
 
 }

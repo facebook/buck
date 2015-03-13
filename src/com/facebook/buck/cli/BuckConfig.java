@@ -72,6 +72,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -110,10 +112,11 @@ public class BuckConfig {
   private static final String DEFAULT_CASSANDRA_PORT = "9160";
   private static final String DEFAULT_CASSANDRA_MODE = CacheMode.readwrite.name();
   private static final String DEFAULT_CASSANDRA_TIMEOUT_SECONDS = "10";
-  private static final String DEFAULT_HTTP_CACHE_MODE = CacheMode.readwrite.name();
-  private static final String DEFAULT_HTTP_CACHE_PORT = "8080";
-  private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "10";
   private static final String DEFAULT_MAX_TRACES = "25";
+
+  private static final String DEFAULT_HTTP_URL = "http://localhost:8080";
+  private static final String DEFAULT_HTTP_CACHE_MODE = CacheMode.readwrite.name();
+  private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "10";
 
   private final ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
 
@@ -757,20 +760,27 @@ public class BuckConfig {
   }
 
   private ArtifactCache createHttpArtifactCache(BuckEventBus buckEventBus) {
-    String host = getValue("cache", "http_host").or("localhost");
-    int port = Integer.parseInt(getValue("cache", "http_port").or(DEFAULT_HTTP_CACHE_PORT));
+    URL url;
+    try {
+      url = new URL(getValue("cache", "http_url").or(DEFAULT_HTTP_URL));
+    } catch (MalformedURLException e) {
+      throw new HumanReadableException(e, "Malformed [cache]http_url: %s", e.getMessage());
+    }
+
     int timeoutSeconds = Integer.parseInt(
         getValue("cache", "http_timeout_seconds").or(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS));
+
     boolean doStore = readCacheMode("http_mode", DEFAULT_HTTP_CACHE_MODE);
+
     String localhost;
     try {
       localhost = InetAddress.getLocalHost().getHostName();
     } catch (UnknownHostException e) {
       localhost = "<unknown>";
     }
+
     return new HttpArtifactCache(
-        host,
-        port,
+        url,
         timeoutSeconds,
         doStore,
         projectFilesystem,

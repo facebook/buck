@@ -53,52 +53,44 @@ public class HttpArtifactCache implements ArtifactCache {
    * should print enough to provide a signal of how flaky the connection is.
    */
   private static final int MAX_CONNECTION_FAILURE_REPORTS = 1;
-  private static final String URL_TEMPLATE_FETCH = "http://%s:%d/artifact/key/%s";
-  private static final String URL_TEMPLATE_STORE = "http://%s:%d/artifact/";
   private static final Logger logger = Logger.get(HttpArtifactCache.class);
   private static final String BOUNDARY = "buckcacheFormPartBoundaryCHk4TK4bRHXDX0cICpSAbBXWzkXbtt";
 
   private final AtomicInteger numConnectionExceptionReports;
-  private final String hostname;
-  private final int port;
+  private final URL url;
   private final int timeoutSeconds;
   private final boolean doStore;
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus buckEventBus;
   private final HashFunction hashFunction;
-  private final String urlStore;
   private final ImmutableMap<String, String> headers;
 
   public HttpArtifactCache(
-      String hostname,
-      int port,
+      URL url,
       int timeoutSeconds,
       boolean doStore,
       ProjectFilesystem projectFilesystem,
       BuckEventBus buckEventBus,
       HashFunction hashFunction,
       ImmutableMap<String, String> headers) {
-    Preconditions.checkArgument(0 <= port && port < 65536);
     Preconditions.checkArgument(1 <= timeoutSeconds);
-    this.hostname = hostname;
-    this.port = port;
+    this.url = url;
     this.timeoutSeconds = timeoutSeconds;
     this.doStore = doStore;
     this.projectFilesystem = projectFilesystem;
     this.buckEventBus = buckEventBus;
     this.hashFunction = hashFunction;
     this.numConnectionExceptionReports = new AtomicInteger(0);
-    this.urlStore = String.format(URL_TEMPLATE_STORE, hostname, port);
     this.headers = headers;
   }
 
   // Make this overrideable by unittests to inject mock connections.
   @VisibleForTesting
-  protected HttpURLConnection getConnection(String url) throws IOException {
-    return (HttpURLConnection) new URL(url).openConnection();
+  protected HttpURLConnection getConnection(URL url) throws IOException {
+    return (HttpURLConnection) url.openConnection();
   }
 
-  private HttpURLConnection createConnection(String url) throws IOException {
+  private HttpURLConnection createConnection(URL url) throws IOException {
     HttpURLConnection connection = getConnection(url);
     connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
     for (Map.Entry<String, String> header : headers.entrySet()) {
@@ -109,10 +101,9 @@ public class HttpArtifactCache implements ArtifactCache {
 
   @Override
   public CacheResult fetch(RuleKey ruleKey, File file) {
-    String url = String.format(URL_TEMPLATE_FETCH, hostname, port, ruleKey.toString());
     HttpURLConnection connection;
     try {
-      connection = createConnection(url);
+      connection = createConnection(new URL(url, "artifact/key/" + ruleKey.toString()));
     } catch (MalformedURLException e) {
       logger.error(e, "fetch(%s): malformed URL: %s", ruleKey, url);
       return CacheResult.MISS;
@@ -196,14 +187,14 @@ public class HttpArtifactCache implements ArtifactCache {
     HttpURLConnection connection;
     try {
       HashCode hashCode = Files.hash(file, hashFunction);
-      connection = createConnection(urlStore);
+      connection = createConnection(new URL(url, "artifact"));
       connection.setRequestMethod(method);
       prepareFileUpload(connection, file, ruleKey.toString(), hashCode);
     } catch (NotSerializableException e) {
       logger.error(e, "store(%s): could not write hash code: %s", ruleKey);
       return;
     } catch (MalformedURLException e) {
-      logger.error(e, "store(%s): malformed URL: %s", ruleKey, urlStore);
+      logger.error(e, "store(%s): malformed URL: %s", ruleKey, e.getMessage());
       return;
     } catch (ProtocolException e) {
       logger.error(e, "store(%s): invalid protocol: %s", ruleKey, method);
