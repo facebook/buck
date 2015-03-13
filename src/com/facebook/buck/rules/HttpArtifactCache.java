@@ -112,6 +112,10 @@ public class HttpArtifactCache implements ArtifactCache {
       return CacheResult.MISS;
     }
 
+    // Set a read timeout for fetches *before* we call `getResponseCode`, otherwise it
+    // has no effect.
+    connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
+
     int responseCode;
     try {
       responseCode = connection.getResponseCode();
@@ -119,9 +123,6 @@ public class HttpArtifactCache implements ArtifactCache {
       reportConnectionFailure(String.format("fetch(%s)", ruleKey), e);
       return CacheResult.MISS;
     }
-
-    // Set a read timeout for fetches.
-    connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
 
     switch (responseCode) {
       case HttpURLConnection.HTTP_OK:

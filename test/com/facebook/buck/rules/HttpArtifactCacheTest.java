@@ -16,8 +16,10 @@
 
 package com.facebook.buck.rules;
 
+import static org.easymock.EasyMock.anyString;
 import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
@@ -74,7 +76,7 @@ public class HttpArtifactCacheTest {
 
   @Before
   public void setUp() throws MalformedURLException {
-    connection = createNiceMock(HttpURLConnection.class);
+    connection = createStrictMock(HttpURLConnection.class);
     projectFilesystem = createMock(ProjectFilesystem.class);
     cache = new FakeHttpArtifactCache(
         connection,
@@ -156,9 +158,10 @@ public class HttpArtifactCacheTest {
   public void testStore() throws IOException {
     String data = "test";
     HashCode hashCode = HASH_FUNCTION.hashString(data, Charset.defaultCharset());
-    connection.setConnectTimeout(1000);
-    connection.setDoOutput(true);
     connection.setRequestMethod("POST");
+    connection.setDoOutput(true);
+    connection.setRequestProperty(eq("Content-Type"), anyString());
+    connection.setRequestProperty("Buck-Artifact-Count", "1");
     connection.setFixedLengthStreamingMode(EasyMock.anyLong());
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     expect(connection.getOutputStream()).andReturn(output);
@@ -194,6 +197,7 @@ public class HttpArtifactCacheTest {
           buckEventBus,
           HASH_FUNCTION,
           headers);
+      connectionMock.setConnectTimeout((int) TIMEOUT_UNIT.toMillis(TIMEOUT));
       for (Map.Entry<String, String> header : headers.entrySet()) {
         connectionMock.setRequestProperty(header.getKey(), header.getValue());
       }
