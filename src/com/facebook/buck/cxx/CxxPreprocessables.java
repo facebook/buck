@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -182,6 +183,7 @@ public class CxxPreprocessables {
       CxxSource.Type type,
       boolean pic,
       String name) {
+    String outputName = MoreFiles.sanitize(getOutputName(type, name));
     return BuildTarget
         .builder(target)
         .addFlavors(platform)
@@ -190,11 +192,7 @@ public class CxxPreprocessables {
                 String.format(
                     "preprocess-%s%s",
                     pic ? "pic-" : "",
-                    getOutputName(type, name)
-                        .replace('/', '-')
-                        .replace('.', '-')
-                        .replace('+', '-')
-                        .replace(' ', '-'))))
+                    outputName)))
         .build();
   }
 
