@@ -204,7 +204,9 @@ public class MiniAapt implements Step {
     Collection<Path> contents = filesystem.getDirectoryContents(resDirectory);
     for (Path dir : contents) {
       if (!filesystem.isDirectory(dir) && !filesystem.isIgnored(dir)) {
-        eventBus.post(ConsoleEvent.warning("MiniAapt [warning]: ignoring file '%s'.", dir));
+        if (!shouldIgnoreFile(dir, filesystem)) {
+          eventBus.post(ConsoleEvent.warning("MiniAapt [warning]: ignoring file '%s'.", dir));
+        }
         continue;
       }
 
