@@ -20,12 +20,13 @@ import com.facebook.buck.rules.BuildRule;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class AndroidPrebuiltAARCollection implements Iterable<AndroidPrebuiltAar>{
+public class AndroidPrebuiltAARCollection implements Iterable<AndroidPrebuiltAar> {
 
-  private final HashMap<String, AndroidPrebuiltAar> rules = new HashMap<String, AndroidPrebuiltAar>();
+  private final Map<String, AndroidPrebuiltAar> rules = new HashMap<String, AndroidPrebuiltAar>();
 
   public AndroidPrebuiltAARCollection add(AndroidPrebuiltAar rule) {
     String name = computeKey(rule);
@@ -46,7 +47,7 @@ public class AndroidPrebuiltAARCollection implements Iterable<AndroidPrebuiltAar
 
   private static String computeKey(BuildRule dep) {
     String baseName = dep.getBuildTarget().getBasePath().toString();
-    String shortName = dep.getBuildTarget().getShortNameOnly();
+    String shortName = dep.getBuildTarget().getShortName();
     return baseName + ":" + shortName;
   }
 

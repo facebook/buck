@@ -14,11 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.java.intellij;
 
 import com.google.common.base.Optional;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class AndroidBuckConfig {
 
@@ -27,14 +28,14 @@ public class AndroidBuckConfig {
   private static final String DEFAULT_RESOURCES_PATH_TOKEN = "default_android_resource_path";
   private static final String DEFAULT_ASSETS_PATH_TOKEN = "default_android_assets_path";
 
-  private final HashMap<String, Optional<String>> values;
+  private final Map<String, Optional<String>> values;
 
-  public AndroidBuckConfig(HashMap<String, Optional<String>> values) {
+  public AndroidBuckConfig(Map<String, Optional<String>> values) {
     this.values = values;
   }
 
   public static AndroidBuckConfig emptyAndroidConfig() {
-    HashMap<String, Optional<String>> values = new HashMap<String, Optional<String>>();
+    Map<String, Optional<String>> values = new HashMap<String, Optional<String>>();
     for (String token : getConfigTokens()) {
       values.put(token, Optional.<String>absent());
     }
@@ -42,13 +43,12 @@ public class AndroidBuckConfig {
   }
 
   public static String[] getConfigTokens() {
-    String[] supportedConfigProperties = {
+    return new String[]{
         DEFAULT_MANIFEST_TOKEN,
         DEFAULT_MANIFEST_PATH_TOKEN,
         DEFAULT_RESOURCES_PATH_TOKEN,
         DEFAULT_ASSETS_PATH_TOKEN
     };
-    return supportedConfigProperties;
   }
 
   public Optional<String> getDefaultManifest() {

@@ -14,11 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.java.intellij;
 
 import com.google.common.base.Optional;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class JavaProjectBuckConfig {
 
@@ -26,14 +27,14 @@ public class JavaProjectBuckConfig {
   private static final String JDK_TYPE_TOKEN = "jdk_type";
   private static final String JAVA_LANGUAGE_LEVEL_TOKEN = "language_level";
 
-  private final HashMap<String, Optional<String>> values;
+  private final Map<String, Optional<String>> values;
 
-  public JavaProjectBuckConfig(HashMap<String, Optional<String>> values) {
+  public JavaProjectBuckConfig(Map<String, Optional<String>> values) {
     this.values = values;
   }
 
   public static JavaProjectBuckConfig emptyJavaConfig() {
-    HashMap<String, Optional<String>> values = new HashMap<String, Optional<String>>();
+    Map<String, Optional<String>> values = new HashMap<String, Optional<String>>();
     for (String token : getJavaConfigTokens()) {
       values.put(token, Optional.<String>absent());
     }
@@ -41,12 +42,11 @@ public class JavaProjectBuckConfig {
   }
 
   public static String[] getJavaConfigTokens() {
-    String[] configTokens = {
+    return new String[]{
         JDK_NAME_TOKEN,
         JDK_TYPE_TOKEN,
         JAVA_LANGUAGE_LEVEL_TOKEN,
     };
-    return configTokens;
   }
 
   public String resolveJDKName() {

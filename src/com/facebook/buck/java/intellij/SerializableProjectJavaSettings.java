@@ -14,12 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.json;
+package com.facebook.buck.java.intellij;
 
-import com.facebook.buck.cli.JavaProjectBuckConfig;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import javax.annotation.Nullable;
 
@@ -45,7 +44,7 @@ public class SerializableProjectJavaSettings {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(SerializableProjectJavaSettings.class)
+    return MoreObjects.toStringHelper(SerializableProjectJavaSettings.class)
         .add("languageLevel", languageLevel)
         .add("jdkName", jdkName)
         .add("jdkType", jdkType)

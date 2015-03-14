@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.json;
+package com.facebook.buck.java.intellij;
 
 import com.facebook.buck.android.AndroidPrebuiltAar;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -25,10 +25,10 @@ import javax.annotation.Nullable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SerializableAndroidAAR {
-  @JsonProperty @Nonnull private final String name;
-  @JsonProperty @Nullable private final String res;
-  @JsonProperty @Nullable private final String assets;
-  @JsonProperty @Nonnull private final String jar;
+  private final String name;
+  private final String res;
+  private final String assets;
+  private final String jar;
 
   private SerializableAndroidAAR(String name, String res, String assets, String jar) {
     this.name = name;
@@ -37,11 +37,36 @@ public class SerializableAndroidAAR {
     this.jar = jar;
   }
 
-  public static SerializableAndroidAAR newSerializableAndroidAAR(String aarName, AndroidPrebuiltAar preBuiltAAR) {
-    String name = aarName;
-    String res =  preBuiltAAR.getResPath();
+  public static SerializableAndroidAAR newSerializableAndroidAAR(
+      String aarName,
+      AndroidPrebuiltAar preBuiltAAR) {
+    String res = preBuiltAAR.getResPath();
     String assets = preBuiltAAR.getAssetsPath();
     String jar = preBuiltAAR.getBinaryJarPath();
-    return new SerializableAndroidAAR(name, res, assets, jar);
+    return new SerializableAndroidAAR(aarName, res, assets, jar);
+  }
+
+  @JsonProperty
+  @Nonnull
+  public String getName() {
+    return name;
+  }
+
+  @JsonProperty
+  @Nullable
+  public String getRes() {
+    return res;
+  }
+
+  @JsonProperty
+  @Nullable
+  public String getAssets() {
+    return assets;
+  }
+
+  @JsonProperty
+  @Nonnull
+  public String getJar() {
+    return jar;
   }
 }
