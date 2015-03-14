@@ -130,7 +130,7 @@ public class RuleKeyTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(
-        ImmutableBuildRuleType.of("example"),
+        BuildRuleType.of("example"),
         target,
         pathResolver);
     rule.setRuleKey(RuleKey.TO_RULE_KEY.apply("cafebabe"));
@@ -290,7 +290,7 @@ public class RuleKeyTest {
   private RuleKey.Builder createEmptyRuleKey(SourcePathResolver resolver) {
     return RuleKey.builder(
         BuildTargetFactory.newInstance("//some:example"),
-        ImmutableBuildRuleType.of("example"),
+        BuildRuleType.of("example"),
         resolver,
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSortedSet.<BuildRule>of(), new FileHashCache() {

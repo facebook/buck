@@ -132,7 +132,7 @@ public class TargetNodeTest {
 
     @Override
     public BuildRuleType getBuildRuleType() {
-      return ImmutableBuildRuleType.of("example");
+      return BuildRuleType.of("example");
     }
 
     @Override

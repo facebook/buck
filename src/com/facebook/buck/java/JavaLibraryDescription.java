@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FlavorableDescription;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -46,7 +45,7 @@ import java.nio.file.Path;
 public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg>,
     FlavorableDescription<JavaLibraryDescription.Arg>, Flavored {
 
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("java_library");
+  public static final BuildRuleType TYPE = BuildRuleType.of("java_library");
 
   @VisibleForTesting
   final JavacOptions defaultOptions;

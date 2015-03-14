@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
@@ -49,7 +48,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 public class AndroidResourceDescription implements Description<AndroidResourceDescription.Arg> {
 
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("android_resource");
+  public static final BuildRuleType TYPE = BuildRuleType.of("android_resource");
 
   private static final ImmutableSet<String> NON_ASSET_FILENAMES =
       ImmutableSet.of(".svn", ".git", ".ds_store", ".scc", "cvs", "thumbs.db", "picasa.ini");

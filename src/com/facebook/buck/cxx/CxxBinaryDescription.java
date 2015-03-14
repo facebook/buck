@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
@@ -44,7 +43,7 @@ public class CxxBinaryDescription implements
     Flavored,
     ImplicitDepsInferringDescription<CxxBinaryDescription.Arg> {
 
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("cxx_binary");
+  public static final BuildRuleType TYPE = BuildRuleType.of("cxx_binary");
 
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;

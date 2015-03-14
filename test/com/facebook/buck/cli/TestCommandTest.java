@@ -43,7 +43,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.FakeTestRule;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ImmutableLabel;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -750,7 +750,7 @@ public class TestCommandTest {
     new CmdLineParserAdditionalOptions(options).parseArgument("//example:test");
 
     FakeTestRule rule = new FakeTestRule(
-        ImmutableBuildRuleType.of("java_test"),
+        BuildRuleType.of("java_test"),
         /* labels */ ImmutableSet.<Label>of(ImmutableLabel.of(excludedLabel)),
         BuildTargetFactory.newInstance("//example:test"),
         new SourcePathResolver(new BuildRuleResolver()),

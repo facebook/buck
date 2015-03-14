@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -60,11 +59,11 @@ public class ThriftLibraryDescription
     Flavored,
     ImplicitDepsInferringDescription<ThriftConstructorArg> {
 
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("thrift_library");
+  public static final BuildRuleType TYPE = BuildRuleType.of("thrift_library");
   private static final Flavor INCLUDE_SYMLINK_TREE_FLAVOR =
       ImmutableFlavor.of("include_symlink_tree");
   private static final BuildRuleType INCLUDE_SYMLINK_TREE_TYPE =
-      ImmutableBuildRuleType.of("include_symlink_tree");
+      BuildRuleType.of("include_symlink_tree");
 
   private final ThriftBuckConfig thriftBuckConfig;
   private final FlavorDomain<ThriftLanguageSpecificEnhancer> enhancers;
@@ -150,7 +149,7 @@ public class ThriftLibraryDescription
    * Build rule type to use for the rule which generates the language sources.
    */
   private static final BuildRuleType THRIFT_COMPILE_TYPE =
-      ImmutableBuildRuleType.of("thrift_compile");
+      BuildRuleType.of("thrift_compile");
 
   /**
    * Create the build rules which compile the input thrift sources into their respective

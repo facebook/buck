@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
@@ -37,7 +36,7 @@ import java.nio.file.Path;
  * for use with Apple's Core Data.
  */
 public class CoreDataModelDescription implements Description<CoreDataModelDescription.Arg> {
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("core_data_model");
+  public static final BuildRuleType TYPE = BuildRuleType.of("core_data_model");
   private static final String CORE_DATA_MODEL_EXTENSION = "xcdatamodel";
   private static final String VERSIONED_CORE_DATA_MODEL_EXTENSION = "xcdatamodeld";
 

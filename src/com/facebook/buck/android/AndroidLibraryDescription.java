@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -44,7 +43,7 @@ import java.nio.file.Path;
 public class AndroidLibraryDescription
     implements Description<AndroidLibraryDescription.Arg>, Flavored {
 
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("android_library");
+  public static final BuildRuleType TYPE = BuildRuleType.of("android_library");
 
   private final JavacOptions defaultOptions;
 

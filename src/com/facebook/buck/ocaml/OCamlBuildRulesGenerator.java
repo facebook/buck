@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
@@ -55,14 +54,14 @@ import java.util.Map;
 public class OCamlBuildRulesGenerator {
 
   private static final BuildRuleType OCAML_C_COMPILE_TYPE =
-      ImmutableBuildRuleType.of("ocaml_c_compile");
+      BuildRuleType.of("ocaml_c_compile");
   private static final BuildRuleType OCAML_BYTECODE_LINK =
-      ImmutableBuildRuleType.of("ocaml_bytecode_link");
-  private static final BuildRuleType OCAML_DEBUG = ImmutableBuildRuleType.of("ocaml_debug");
+      BuildRuleType.of("ocaml_bytecode_link");
+  private static final BuildRuleType OCAML_DEBUG = BuildRuleType.of("ocaml_debug");
   private static final BuildRuleType OCAML_ML_COMPILE_TYPE =
-      ImmutableBuildRuleType.of("ocaml_ml_compile");
+      BuildRuleType.of("ocaml_ml_compile");
   private static final BuildRuleType OCAML_ML_BYTECODE_COMPILE_TYPE =
-      ImmutableBuildRuleType.of("ocaml_ml_bytecode_compile");
+      BuildRuleType.of("ocaml_ml_bytecode_compile");
   private static final Flavor DEBUG_FLAVOR = ImmutableFlavor.of("debug");
 
   private final BuildRuleParams params;

@@ -21,7 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class ProjectConfigDescription implements Description<ProjectConfigDescription.Arg> {
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("project_config");
+  public static final BuildRuleType TYPE = BuildRuleType.of("project_config");
 
   @Override
   public BuildRuleType getBuildRuleType() {

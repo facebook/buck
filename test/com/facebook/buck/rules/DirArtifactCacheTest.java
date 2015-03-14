@@ -352,7 +352,7 @@ public class DirArtifactCacheTest {
   }
 
   private static class BuildRuleForTest extends FakeBuildRule {
-    private static final BuildRuleType TYPE = ImmutableBuildRuleType.of("fake");
+    private static final BuildRuleType TYPE = BuildRuleType.of("fake");
 
     private final File file;
 

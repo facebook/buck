@@ -35,7 +35,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -62,7 +61,7 @@ import java.util.regex.Pattern;
 
 public class AndroidBinaryDescription implements Description<AndroidBinaryDescription.Arg> {
 
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("android_binary");
+  public static final BuildRuleType TYPE = BuildRuleType.of("android_binary");
 
   /**
    * By default, assume we have 5MB of linear alloc,

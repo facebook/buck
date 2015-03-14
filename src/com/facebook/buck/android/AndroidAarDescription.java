@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -56,7 +55,7 @@ import java.util.Collection;
  */
 public class AndroidAarDescription implements Description<AndroidAarDescription.Arg> {
 
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("android_aar");
+  public static final BuildRuleType TYPE = BuildRuleType.of("android_aar");
 
   private static final Flavor AAR_ANDROID_MANIFEST_FLAVOR =
       ImmutableFlavor.of("aar_android_manifest");

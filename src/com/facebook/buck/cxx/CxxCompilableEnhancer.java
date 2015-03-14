@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
@@ -43,7 +42,7 @@ import java.nio.file.Path;
 
 public class CxxCompilableEnhancer {
 
-  private static final BuildRuleType COMPILE_TYPE = ImmutableBuildRuleType.of("compile");
+  private static final BuildRuleType COMPILE_TYPE = BuildRuleType.of("compile");
 
   private CxxCompilableEnhancer() {}
 

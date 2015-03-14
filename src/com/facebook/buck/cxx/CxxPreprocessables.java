@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
@@ -51,9 +50,9 @@ public class CxxPreprocessables {
   private CxxPreprocessables() {}
 
   private static final BuildRuleType HEADER_SYMLINK_TREE_TYPE =
-      ImmutableBuildRuleType.of("header_symlink_tree");
+      BuildRuleType.of("header_symlink_tree");
 
-  private static final BuildRuleType PREPROCESS_TYPE = ImmutableBuildRuleType.of("preprocess");
+  private static final BuildRuleType PREPROCESS_TYPE = BuildRuleType.of("preprocess");
 
   /**
    * Resolve the map of name to {@link SourcePath} to a map of full header name to

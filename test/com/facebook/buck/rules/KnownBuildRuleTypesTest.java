@@ -76,7 +76,7 @@ public class KnownBuildRuleTypesTest {
 
   private static class TestDescription implements Description<Object> {
 
-    public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("known_rule_test");
+    public static final BuildRuleType TYPE = BuildRuleType.of("known_rule_test");
 
     private final String value;
 

@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -39,7 +38,7 @@ import java.nio.file.Path;
 
 public class RobolectricTestDescription implements Description<RobolectricTestDescription.Arg> {
 
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("robolectric_test");
+  public static final BuildRuleType TYPE = BuildRuleType.of("robolectric_test");
 
   private final JavacOptions templateOptions;
   private final Optional<Long> testRuleTimeoutMs;

@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -48,7 +47,7 @@ public class GenruleDescription
     Description<GenruleDescription.Arg>,
     ImplicitDepsInferringDescription<GenruleDescription.Arg> {
 
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("genrule");
+  public static final BuildRuleType TYPE = BuildRuleType.of("genrule");
 
   private final MacroHandler macroHandler;
 

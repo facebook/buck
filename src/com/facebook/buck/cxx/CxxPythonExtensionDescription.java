@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -58,7 +57,7 @@ public class CxxPythonExtensionDescription implements
           ImmutableMap.of(
               CxxDescriptionEnhancer.SHARED_FLAVOR, Type.EXTENSION));
 
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("cxx_python_extension");
+  public static final BuildRuleType TYPE = BuildRuleType.of("cxx_python_extension");
 
   private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;

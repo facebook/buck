@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FlavorableDescription;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
@@ -60,7 +59,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("prebuilt_jar");
+  public static final BuildRuleType TYPE = BuildRuleType.of("prebuilt_jar");
 
   @Override
   public BuildRuleType getBuildRuleType() {

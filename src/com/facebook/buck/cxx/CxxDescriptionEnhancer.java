@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -69,8 +68,8 @@ public class CxxDescriptionEnhancer {
   public static final Flavor CXX_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
   public static final Flavor LEX_YACC_SOURCE_FLAVOR = ImmutableFlavor.of("lex_yacc_sources");
 
-  public static final BuildRuleType LEX_TYPE = ImmutableBuildRuleType.of("lex");
-  public static final BuildRuleType YACC_TYPE = ImmutableBuildRuleType.of("yacc");
+  public static final BuildRuleType LEX_TYPE = BuildRuleType.of("lex");
+  public static final BuildRuleType YACC_TYPE = BuildRuleType.of("yacc");
 
   public static enum HeaderVisibility {
     PUBLIC,

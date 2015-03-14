@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Suppliers;
@@ -36,7 +35,7 @@ public class Archives {
 
   private Archives() {}
 
-  private static final BuildRuleType ARCHIVE_TYPE = ImmutableBuildRuleType.of("archive");
+  private static final BuildRuleType ARCHIVE_TYPE = BuildRuleType.of("archive");
 
   /**
    * Construct an {@link com.facebook.buck.cxx.Archive} from a

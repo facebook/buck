@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -63,7 +62,7 @@ public class PrebuiltCxxLibraryDescription
           ImmutableMap.of(
               CxxDescriptionEnhancer.SHARED_FLAVOR, Type.SHARED));
 
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("prebuilt_cxx_library");
+  public static final BuildRuleType TYPE = BuildRuleType.of("prebuilt_cxx_library");
 
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 

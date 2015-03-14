@@ -56,6 +56,7 @@ java_immutables_library(
 java_immutables_library(
   name = 'build_rule',
   srcs = [
+    'AbstractBuildRuleType.java',
     'ActionGraph.java',
     'ActionGraphEvent.java',
     'AddToRuleKey.java',
@@ -78,7 +79,6 @@ java_immutables_library(
     'BuildRule.java',
     'BuildRules.java',
     'BuildRuleSuccess.java',
-    'BuildRuleType.java',
     'BuildTargetSourcePath.java',
     'CacheMode.java',
     'CacheResult.java',

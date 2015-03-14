@@ -326,12 +326,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
    */
   private static class EmptyRule implements BuildRule {
 
-    private static final BuildRuleType TYPE = new BuildRuleType() {
-      @Override
-      public String getName() {
-        return "empty";
-      }
-    };
+    private static final BuildRuleType TYPE = BuildRuleType.of("empty");
     private final BuildTarget target;
 
     public EmptyRule(BuildTarget target) {

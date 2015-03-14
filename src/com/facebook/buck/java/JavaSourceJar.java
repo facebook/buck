@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -46,7 +45,7 @@ import java.util.Set;
 
 
 public class JavaSourceJar extends AbstractBuildRule {
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("source_jar");
+  public static final BuildRuleType TYPE = BuildRuleType.of("source_jar");
 
   private final ImmutableSortedSet<SourcePath> sources;
   private final Path output;

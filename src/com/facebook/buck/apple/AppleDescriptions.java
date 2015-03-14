@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
@@ -67,7 +66,7 @@ public class AppleDescriptions {
 
   public static final Flavor HEADERS = ImmutableFlavor.of("headers");
 
-  private static final BuildRuleType HEADERS_RULE_TYPE = ImmutableBuildRuleType.of("headers");
+  private static final BuildRuleType HEADERS_RULE_TYPE = BuildRuleType.of("headers");
 
   /** Utility class: do not instantiate. */
   private AppleDescriptions() {}

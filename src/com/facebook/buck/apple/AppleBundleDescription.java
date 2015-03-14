@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
-import com.facebook.buck.rules.ImmutableBuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.AppleBundleDestination;
@@ -34,7 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class AppleBundleDescription implements Description<AppleBundleDescription.Arg> {
-  public static final BuildRuleType TYPE = ImmutableBuildRuleType.of("apple_bundle");
+  public static final BuildRuleType TYPE = BuildRuleType.of("apple_bundle");
 
   @Override
   public BuildRuleType getBuildRuleType() {

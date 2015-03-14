@@ -63,7 +63,7 @@ public class ConstructorArgMarshallerTest {
     marshaller = new ConstructorArgMarshaller();
     ruleResolver = new BuildRuleResolver();
     filesystem = new FakeProjectFilesystem();
-    ruleType = ImmutableBuildRuleType.of("example");
+    ruleType = BuildRuleType.of("example");
   }
 
   @Test
@@ -461,7 +461,7 @@ public class ConstructorArgMarshallerTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildRule rule = new FakeBuildRule(
-        ImmutableBuildRuleType.of("example"),
+        BuildRuleType.of("example"),
         BuildTargetFactory.newInstance("//will:happen"), pathResolver);
     ruleResolver.addToIndex(rule);
     Dto dto = new Dto();
@@ -615,7 +615,7 @@ public class ConstructorArgMarshallerTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:manifest");
     BuildRule rule = new FakeBuildRule(
-        ImmutableBuildRuleType.of("py"),
+        BuildRuleType.of("py"),
         target,
         new SourcePathResolver(resolver));
     resolver.addToIndex(rule);
