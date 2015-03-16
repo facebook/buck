@@ -16,9 +16,13 @@
 
 package com.facebook.buck.apple;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -30,6 +34,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class AppleLibraryIntegrationTest {
 
@@ -68,4 +74,76 @@ public class AppleLibraryIntegrationTest {
     assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
   }
 
+  @Test
+  public void testAppleLibraryHeaderSymlinkTree() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_header_symlink_tree", tmp);
+    workspace.setUp();
+
+    BuildTarget buildTarget = BuildTarget.builder("//Libraries/TestLibrary", "TestLibrary")
+        .addFlavors(ImmutableFlavor.of("default"))
+        .addFlavors(ImmutableFlavor.of("header-symlink-tree"))
+        .build();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        buildTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+
+    Path inputPath = projectRoot.resolve(
+        buildTarget.getBasePath());
+    Path outputPath = projectRoot.resolve(
+        BuildTargets.getGenPath(buildTarget, "%s"));
+
+    assertIsSymbolicLink(
+        outputPath.resolve("PrivateHeader.h"),
+        inputPath.resolve("PrivateHeader.h"));
+    assertIsSymbolicLink(
+        outputPath.resolve("TestLibrary/PrivateHeader.h"),
+        inputPath.resolve("PrivateHeader.h"));
+    assertIsSymbolicLink(
+        outputPath.resolve("PublicHeader.h"),
+        inputPath.resolve("PublicHeader.h"));
+  }
+
+  @Test
+  public void testAppleLibraryExportedHeaderSymlinkTree() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_header_symlink_tree", tmp);
+    workspace.setUp();
+
+    BuildTarget buildTarget = BuildTarget.builder("//Libraries/TestLibrary", "TestLibrary")
+        .addFlavors(ImmutableFlavor.of("default"))
+        .addFlavors(ImmutableFlavor.of("exported-header-symlink-tree"))
+        .build();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        buildTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+
+    Path inputPath = projectRoot.resolve(
+        buildTarget.getBasePath());
+    Path outputPath = projectRoot.resolve(
+        BuildTargets.getGenPath(buildTarget, "%s"));
+
+    assertIsSymbolicLink(
+        outputPath.resolve("TestLibrary/PublicHeader.h"),
+        inputPath.resolve("PublicHeader.h"));
+  }
+
+  private static void assertIsSymbolicLink(
+      Path link,
+      Path target) throws IOException {
+    assertTrue(Files.isSymbolicLink(link));
+    assertEquals(
+        target,
+        Files.readSymbolicLink(link));
+  }
 }

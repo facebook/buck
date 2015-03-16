@@ -16,9 +16,13 @@
 
 package com.facebook.buck.apple;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -30,6 +34,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class AppleBinaryIntegrationTest {
 
@@ -60,4 +66,44 @@ public class AppleBinaryIntegrationTest {
     assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
   }
 
+  @Test
+  public void testAppleBinaryHeaderSymlinkTree() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_header_symlink_tree", tmp);
+    workspace.setUp();
+
+    BuildTarget buildTarget = BuildTarget.builder("//Apps/TestApp", "TestApp")
+        .addFlavors(ImmutableFlavor.of("default"))
+        .addFlavors(ImmutableFlavor.of("header-symlink-tree"))
+        .build();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        buildTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+
+    Path inputPath = projectRoot.resolve(
+        buildTarget.getBasePath());
+    Path outputPath = projectRoot.resolve(
+        BuildTargets.getGenPath(buildTarget, "%s"));
+
+    assertIsSymbolicLink(
+        outputPath.resolve("Header.h"),
+        inputPath.resolve("Header.h"));
+    assertIsSymbolicLink(
+        outputPath.resolve("TestApp/Header.h"),
+        inputPath.resolve("Header.h"));
+  }
+
+  private static void assertIsSymbolicLink(
+      Path link,
+      Path target) throws IOException {
+    assertTrue(Files.isSymbolicLink(link));
+    assertEquals(
+        target,
+        Files.readSymbolicLink(link));
+  }
 }

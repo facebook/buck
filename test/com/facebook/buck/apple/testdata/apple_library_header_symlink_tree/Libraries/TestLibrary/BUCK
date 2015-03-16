@@ -1,0 +1,5 @@
+apple_library(
+  name = 'TestLibrary',
+  headers = ['PrivateHeader.h'],
+  exported_headers = ['PublicHeader.h'],
+)
