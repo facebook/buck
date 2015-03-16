@@ -67,6 +67,7 @@ public class CxxDescriptionEnhancer {
   public static final Flavor SHARED_FLAVOR = ImmutableFlavor.of("shared");
 
   public static final Flavor CXX_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
+  public static final Flavor LEX_YACC_SOURCE_FLAVOR = ImmutableFlavor.of("lex_yacc_sources");
 
   public static final BuildRuleType LEX_TYPE = ImmutableBuildRuleType.of("lex");
   public static final BuildRuleType YACC_TYPE = ImmutableBuildRuleType.of("yacc");
@@ -77,6 +78,95 @@ public class CxxDescriptionEnhancer {
   }
 
   private CxxDescriptionEnhancer() {}
+
+  private static BuildTarget createLexYaccSourcesBuildTarget(BuildTarget target) {
+    return BuildTarget.builder(target).addFlavors(LEX_YACC_SOURCE_FLAVOR).build();
+  }
+
+  public static CxxHeaderSourceSpec requireLexYaccSources(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      ImmutableMap<String, SourcePath> lexSources,
+      ImmutableMap<String, SourcePath> yaccSources) {
+    BuildTarget lexYaccTarget = createLexYaccSourcesBuildTarget(params.getBuildTarget());
+
+    // Check the cache...
+    Optional<BuildRule> rule = ruleResolver.getRuleOptional(lexYaccTarget);
+    if (rule.isPresent()) {
+      @SuppressWarnings("unchecked")
+      ContainerBuildRule<CxxHeaderSourceSpec> containerRule =
+          (ContainerBuildRule<CxxHeaderSourceSpec>) rule.get();
+      return containerRule.get();
+    }
+
+    // Setup the rules to run lex/yacc.
+    CxxHeaderSourceSpec lexYaccSources =
+        CxxDescriptionEnhancer.createLexYaccBuildRules(
+            params,
+            ruleResolver,
+            cxxPlatform,
+            ImmutableList.<String>of(),
+            lexSources,
+            ImmutableList.<String>of(),
+            yaccSources);
+
+    ruleResolver.addToIndex(
+        ContainerBuildRule.of(
+            params,
+            pathResolver,
+            lexYaccTarget,
+            lexYaccSources));
+
+    return lexYaccSources;
+  }
+
+  public static SymlinkTree createHeaderSymlinkTree(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      boolean includeLexYaccHeaders,
+      ImmutableMap<String, SourcePath> lexSources,
+      ImmutableMap<String, SourcePath> yaccSources,
+      ImmutableMap<Path, SourcePath> headers,
+      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
+
+    BuildTarget headerSymlinkTreeTarget =
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor(),
+            headerVisibility);
+    Path headerSymlinkTreeRoot =
+        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor(),
+            headerVisibility);
+
+    CxxHeaderSourceSpec lexYaccSources;
+    if (includeLexYaccHeaders) {
+      lexYaccSources = requireLexYaccSources(
+          params,
+          ruleResolver,
+          pathResolver,
+          cxxPlatform,
+          lexSources,
+          yaccSources);
+    } else {
+      lexYaccSources = ImmutableCxxHeaderSourceSpec.builder().build();
+    }
+
+    return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
+        pathResolver,
+        headerSymlinkTreeTarget,
+        params,
+        headerSymlinkTreeRoot,
+        ImmutableMap.<Path, SourcePath>builder()
+            .putAll(headers)
+            .putAll(lexYaccSources.getCxxHeaders())
+            .build());
+  }
 
   /**
    * @return the {@link BuildTarget} to use for the {@link BuildRule} generating the

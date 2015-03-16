@@ -21,7 +21,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -89,97 +88,6 @@ public class CxxLibraryDescription implements
     return cxxPlatforms.containsAnyOf(flavors);
   }
 
-  private static final Flavor LEX_YACC_SOURCE_FLAVOR = ImmutableFlavor.of("lex_yacc_sources");
-
-  private static BuildTarget createLexYaccSourcesBuildTarget(BuildTarget target) {
-    return BuildTarget.builder(target).addFlavors(LEX_YACC_SOURCE_FLAVOR).build();
-  }
-
-  private static CxxHeaderSourceSpec requireLexYaccSources(
-      BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
-      CxxPlatform cxxPlatform,
-      ImmutableMap<String, SourcePath> lexSources,
-      ImmutableMap<String, SourcePath> yaccSources) {
-    BuildTarget lexYaccTarget = createLexYaccSourcesBuildTarget(params.getBuildTarget());
-
-    // Check the cache...
-    Optional<BuildRule> rule = ruleResolver.getRuleOptional(lexYaccTarget);
-    if (rule.isPresent()) {
-      @SuppressWarnings("unchecked")
-      ContainerBuildRule<CxxHeaderSourceSpec> containerRule =
-          (ContainerBuildRule<CxxHeaderSourceSpec>) rule.get();
-      return containerRule.get();
-    }
-
-    // Setup the rules to run lex/yacc.
-    CxxHeaderSourceSpec lexYaccSources =
-        CxxDescriptionEnhancer.createLexYaccBuildRules(
-            params,
-            ruleResolver,
-            cxxPlatform,
-            ImmutableList.<String>of(),
-            lexSources,
-            ImmutableList.<String>of(),
-            yaccSources);
-
-    ruleResolver.addToIndex(
-        ContainerBuildRule.of(
-            params,
-            pathResolver,
-            lexYaccTarget,
-            lexYaccSources));
-
-    return lexYaccSources;
-  }
-
-  private static SymlinkTree createHeaderSymlinkTree(
-      BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
-      CxxPlatform cxxPlatform,
-      boolean includeLexYaccHeaders,
-      ImmutableMap<String, SourcePath> lexSources,
-      ImmutableMap<String, SourcePath> yaccSources,
-      ImmutableMap<Path, SourcePath> headers,
-      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
-
-    BuildTarget headerSymlinkTreeTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-            params.getBuildTarget(),
-            cxxPlatform.getFlavor(),
-            headerVisibility);
-    Path headerSymlinkTreeRoot =
-        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-            params.getBuildTarget(),
-            cxxPlatform.getFlavor(),
-            headerVisibility);
-
-    CxxHeaderSourceSpec lexYaccSources;
-    if (includeLexYaccHeaders) {
-      lexYaccSources = requireLexYaccSources(
-          params,
-          ruleResolver,
-          pathResolver,
-          cxxPlatform,
-          lexSources,
-          yaccSources);
-    } else {
-      lexYaccSources = ImmutableCxxHeaderSourceSpec.builder().build();
-    }
-
-    return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-        pathResolver,
-        headerSymlinkTreeTarget,
-        params,
-        headerSymlinkTreeRoot,
-        ImmutableMap.<Path, SourcePath>builder()
-            .putAll(headers)
-            .putAll(lexYaccSources.getCxxHeaders())
-            .build());
-  }
-
   /**
    * Make sure all build rules needed to generate the headers symlink tree are added to the action
    * graph.
@@ -210,7 +118,7 @@ public class CxxLibraryDescription implements
     }
 
     SymlinkTree symlinkTree =
-        createHeaderSymlinkTree(
+        CxxDescriptionEnhancer.createHeaderSymlinkTree(
             params,
             ruleResolver,
             pathResolver,
@@ -243,7 +151,7 @@ public class CxxLibraryDescription implements
       boolean pic) {
 
     CxxHeaderSourceSpec lexYaccSources =
-        requireLexYaccSources(
+        CxxDescriptionEnhancer.requireLexYaccSources(
             params,
             ruleResolver,
             pathResolver,
@@ -472,7 +380,7 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       A args) {
-    return createHeaderSymlinkTree(
+    return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
         new SourcePathResolver(resolver),
@@ -492,7 +400,7 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       A args) {
-    return createHeaderSymlinkTree(
+    return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
         new SourcePathResolver(resolver),
