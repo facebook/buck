@@ -91,11 +91,11 @@ public class CxxLibraryDescription implements
 
   private static final Flavor LEX_YACC_SOURCE_FLAVOR = ImmutableFlavor.of("lex_yacc_sources");
 
-  private BuildTarget createLexYaccSourcesBuildTarget(BuildTarget target) {
+  private static BuildTarget createLexYaccSourcesBuildTarget(BuildTarget target) {
     return BuildTarget.builder(target).addFlavors(LEX_YACC_SOURCE_FLAVOR).build();
   }
 
-  private CxxHeaderSourceSpec requireLexYaccSources(
+  private static CxxHeaderSourceSpec requireLexYaccSources(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -134,7 +134,7 @@ public class CxxLibraryDescription implements
     return lexYaccSources;
   }
 
-  private SymlinkTree createHeaderSymlinkTree(
+  private static SymlinkTree createHeaderSymlinkTree(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -186,7 +186,7 @@ public class CxxLibraryDescription implements
    *
    * @return the {@link com.facebook.buck.rules.SymlinkTree} rule representing the header tree.
    */
-  private SymlinkTree requireHeaderSymlinkTree(
+  private static SymlinkTree requireHeaderSymlinkTree(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -226,7 +226,7 @@ public class CxxLibraryDescription implements
     return symlinkTree;
   }
 
-  private ImmutableList<SourcePath> requireObjects(
+  private static ImmutableList<SourcePath> requireObjects(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -316,7 +316,7 @@ public class CxxLibraryDescription implements
    *
    * @return the {@link Archive} rule representing the actual static library.
    */
-  private Archive createStaticLibrary(
+  private static Archive createStaticLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -373,7 +373,7 @@ public class CxxLibraryDescription implements
    *
    * @return the {@link CxxLink} rule representing the actual shared library.
    */
-  private CxxLink createSharedLibrary(
+  private static CxxLink createSharedLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -441,7 +441,7 @@ public class CxxLibraryDescription implements
     return new Arg();
   }
 
-  public Arg createEmptyConstructorArg() {
+  public static Arg createEmptyConstructorArg() {
     Arg arg = new Arg();
     arg.deps = Optional.absent();
     arg.srcs = Optional.absent();
@@ -467,7 +467,7 @@ public class CxxLibraryDescription implements
   /**
    * @return a {@link SymlinkTree} for the headers of this C/C++ library.
    */
-  public <A extends Arg> SymlinkTree createHeaderSymlinkTreeBuildRule(
+  public static <A extends Arg> SymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -487,7 +487,7 @@ public class CxxLibraryDescription implements
   /**
    * @return a {@link SymlinkTree} for the exported headers of this C/C++ library.
    */
-  public <A extends Arg> SymlinkTree createExportedHeaderSymlinkTreeBuildRule(
+  public static <A extends Arg> SymlinkTree createExportedHeaderSymlinkTreeBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -507,7 +507,7 @@ public class CxxLibraryDescription implements
   /**
    * @return a {@link Archive} rule which builds a static library version of this C/C++ library.
    */
-  public <A extends Arg> Archive createStaticLibraryBuildRule(
+  public static <A extends Arg> Archive createStaticLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -540,7 +540,7 @@ public class CxxLibraryDescription implements
   /**
    * @return a {@link CxxLink} rule which builds a shared library version of this C/C++ library.
    */
-  public <A extends Arg> CxxLink createSharedLibraryBuildRule(
+  public static <A extends Arg> CxxLink createSharedLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -617,7 +617,7 @@ public class CxxLibraryDescription implements
     return createBuildRule(params, resolver, args, typeAndPlatform);
   }
 
-  public <A extends Arg> BuildRule createBuildRule(
+  public static <A extends Arg> BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,

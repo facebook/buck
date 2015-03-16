@@ -168,7 +168,7 @@ public class AppleLibraryDescription implements
     delegateArg.soname = Optional.absent();
     delegateArg.linkWhole = Optional.of(!isSharedLibraryTarget(params.getBuildTarget()));
 
-    return delegate.createBuildRule(params, resolver, delegateArg, typeAndPlatform);
+    return CxxLibraryDescription.createBuildRule(params, resolver, delegateArg, typeAndPlatform);
   }
 
   public static boolean isSharedLibraryTarget(BuildTarget target) {

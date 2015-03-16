@@ -207,7 +207,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     // Construct the C/C++ library description argument to pass to the
-    CxxLibraryDescription.Arg langArgs = cxxLibraryDescription.createEmptyConstructorArg();
+    CxxLibraryDescription.Arg langArgs = CxxLibraryDescription.createEmptyConstructorArg();
     langArgs.srcs =
         Optional.of(
             Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofRight(
