@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -126,11 +125,6 @@ public class ProjectCommandOptions extends BuildCommandOptions {
 
   public boolean shouldProcessAnnotations() {
     return processAnnotations;
-  }
-
-  @VisibleForTesting
-  public void setProcessAnnotations(boolean value) {
-    processAnnotations = value;
   }
 
   public ImmutableMap<Path, String> getBasePathToAliasMap() {
