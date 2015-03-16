@@ -22,14 +22,15 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetGraphAndTargets;
+import com.facebook.buck.rules.TargetNodes;
 import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.TreeMultimap;
 
 import java.io.IOException;
-import java.util.Collection;
 
 
 public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions> {
@@ -73,44 +74,46 @@ public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions
       return 1;
     }
 
-    ImmutableSet<BuildTarget> targetsToPrint = getTestsForTargets(targets, graph);
+    TreeMultimap<BuildTarget, BuildTarget> targetsToPrint =
+        getTestsForTargets(targets, graph);
     LOG.debug("Printing out the following targets: " + targetsToPrint);
 
-    Collection<String> namesToPrint = Collections2.transform(
-        targetsToPrint, new Function<BuildTarget, String>() {
-
-          @Override
-          public String apply(final BuildTarget target) {
-            return target.getFullyQualifiedName();
-          }
-        });
-
-    ImmutableSortedSet<String> sortedNames = ImmutableSortedSet.copyOf(namesToPrint);
-
     if (options.shouldGenerateJsonOutput()) {
-      printJSON(sortedNames);
+      printJSON(targetsToPrint);
     } else {
-      printToConsole(sortedNames);
+      printToConsole(targetsToPrint);
     }
 
     return 0;
   }
 
-  ImmutableSet<BuildTarget> getTestsForTargets(
+  TreeMultimap<BuildTarget, BuildTarget> getTestsForTargets(
       final ImmutableSet<BuildTarget> targets,
-      TargetGraph graph) {
-    return TargetGraphAndTargets.getExplicitTestTargets(graph.getAll(targets));
+      final TargetGraph graph) {
+    TreeMultimap<BuildTarget, BuildTarget> multimap = TreeMultimap.create();
+    for (BuildTarget target : targets) {
+      multimap.putAll(target, TargetNodes.getTestTargetsForNode(graph.get(target)));
+    }
+    return multimap;
   }
 
-  private void printJSON(Collection<String> names) throws IOException {
+  private void printJSON(Multimap<BuildTarget, BuildTarget> targetsAndTests)
+      throws IOException {
+    Multimap<BuildTarget, String> targetsAndTestNames =
+        Multimaps.transformValues(targetsAndTests, new Function<BuildTarget, String>() {
+              @Override
+              public String apply(BuildTarget input) {
+                return Preconditions.checkNotNull(input.getFullyQualifiedName());
+              }
+            });
     getObjectMapper().writeValue(
         console.getStdOut(),
-        names);
+        targetsAndTestNames.asMap());
   }
 
-  private void printToConsole(Collection<String> names) {
-    for (String name : names) {
-      getStdOut().println(name);
+  private void printToConsole(Multimap<BuildTarget, BuildTarget> targetsAndTests) {
+    for (BuildTarget target : targetsAndTests.values()) {
+      getStdOut().println(target.getFullyQualifiedName());
     }
   }
 

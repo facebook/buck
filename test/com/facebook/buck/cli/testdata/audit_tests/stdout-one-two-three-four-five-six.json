@@ -1,1 +1,1 @@
-["//example:four-application-tests","//example:four-tests","//example:one-tests","//example:six-tests"]
+{"//example:four":["//example:four-application-tests","//example:four-tests"],"//example:one":["//example:one-tests"],"//example:six":["//example:six-tests"]}
