@@ -21,6 +21,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FunctionLineProcessorThread;
+import com.facebook.buck.util.MoreThrowables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -31,7 +32,6 @@ import com.google.common.collect.Iterables;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.nio.file.Path;
 
 /**
@@ -123,16 +123,18 @@ public class CxxCompileStep implements Step {
 
       // Open the temp file to write the intermediate output to and also fire up managed threads
       // to process the stdout and stderr lines from the preprocess command.
+      int exitCode;
       try (FunctionLineProcessorThread errorProcessor =
                new FunctionLineProcessorThread(
                    process.getErrorStream(),
                    error,
                    createErrorLineProcessor(context.getProjectDirectoryRoot().toAbsolutePath()))) {
         errorProcessor.start();
+        exitCode = process.waitFor();
+      } finally {
+        process.destroy();
+        process.waitFor();
       }
-
-      // Wait for the process to finish, and grab it's exit code.
-      int exitCode = process.waitFor();
 
       // If we generated any error output, print that to the console.
       String err = new String(error.toByteArray());
@@ -158,14 +160,10 @@ public class CxxCompileStep implements Step {
         }
       }
 
-      LOG.warn("Error compiling %s: %s (%d)", input, err, exitCode);
-
       return exitCode;
 
-    } catch (InterruptedException | InterruptedIOException e) {
-      throw new InterruptedException();
-
     } catch (Exception e) {
+      MoreThrowables.propagateIfInterrupt(e);
       context.getConsole().printBuildFailureWithStacktrace(e);
       return 1;
     }

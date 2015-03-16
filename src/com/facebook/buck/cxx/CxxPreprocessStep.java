@@ -22,6 +22,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FunctionLineProcessorThread;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.MoreThrowables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -33,7 +34,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -194,6 +194,7 @@ public class CxxPreprocessStep implements Step {
 
       // Open the temp file to write the intermediate output to and also fire up managed threads
       // to process the stdout and stderr lines from the preprocess command.
+      int exitCode;
       try (OutputStream output = Files.newOutputStream(outputTempPath);
            FunctionLineProcessorThread outputProcessor =
                new FunctionLineProcessorThread(
@@ -210,10 +211,11 @@ public class CxxPreprocessStep implements Step {
                    createErrorLineProcessor())) {
         outputProcessor.start();
         errorProcessor.start();
+        exitCode = process.waitFor();
+      } finally {
+        process.destroy();
+        process.waitFor();
       }
-
-      // Wait for the process to finish, and grab it's exit code.
-      int exitCode = process.waitFor();
 
       // If the process finished successfully, move the preprocessed output into it's final place.
       if (exitCode == 0) {
@@ -236,10 +238,8 @@ public class CxxPreprocessStep implements Step {
 
       return exitCode;
 
-    } catch (InterruptedException | InterruptedIOException e) {
-      throw new InterruptedException();
-
     } catch (Exception e) {
+      MoreThrowables.propagateIfInterrupt(e);
       context.getConsole().printBuildFailureWithStacktrace(e);
       return 1;
     }
