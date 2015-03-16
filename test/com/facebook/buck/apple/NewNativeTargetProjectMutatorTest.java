@@ -84,8 +84,7 @@ public class NewNativeTargetProjectMutatorTest {
     generatedProject = new PBXProject("TestProject");
     sourcePathResolver = new SourcePathResolver(buildRuleResolver);
     pathRelativizer = new PathRelativizer(
-        Paths.get("/test/project/root/"),
-        Paths.get("/test/project/root/_output"),
+        Paths.get("_output"),
         sourcePathResolver.getPathFunction());
   }
 

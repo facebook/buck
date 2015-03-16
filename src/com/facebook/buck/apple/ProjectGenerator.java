@@ -216,7 +216,6 @@ public class ProjectGenerator {
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
     this.pathRelativizer = new PathRelativizer(
-        projectFilesystem.getRootPath(),
         outputDirectory,
         sourcePathResolver);
 
@@ -624,7 +623,7 @@ public class ProjectGenerator {
 
     SourceTreePath buckFilePath = new SourceTreePath(
         PBXReference.SourceTree.SOURCE_ROOT,
-        pathRelativizer.outputPathToBuildTargetPath(buildTarget, Paths.get(buildFileName)));
+        pathRelativizer.outputPathToBuildTargetPath(buildTarget).resolve(buildFileName));
     PBXFileReference buckReference =
         targetGroup.getOrCreateFileReferenceBySourceTreePath(buckFilePath);
     buckReference.setExplicitFileType(Optional.of("text.script.python"));

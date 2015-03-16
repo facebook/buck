@@ -64,6 +64,8 @@ public class MorePaths {
     }
   };
 
+  private static final Path EMPTY_PATH = Paths.get("");
+
   public static String pathWithUnixSeparators(String path) {
     return pathWithUnixSeparators(Paths.get(path));
   }
@@ -108,8 +110,6 @@ public class MorePaths {
    * returns incorrect result if path contains "." or "..").
    */
   public static Path relativize(Path path1, Path path2) {
-    Path emptyPath = Paths.get("");
-
     Preconditions.checkArgument(
         path1.isAbsolute() == path2.isAbsolute(),
         "Both paths must be absolute or both paths must be relative. (%s is %s, %s is %s)",
@@ -118,19 +118,27 @@ public class MorePaths {
         path2,
         path2.isAbsolute() ? "absolute" : "relative");
 
-    // Work around JDK-8037945 (Paths.get("").normalize() throws ArrayIndexOutOfBoundsException).
-    if (!path1.equals(emptyPath)) {
-      path1 = path1.normalize();
-    }
-    if (!path2.equals(emptyPath)) {
-      path2 = path2.normalize();
-    }
+    path1 = normalize(path1);
+    path2 = normalize(path2);
 
     // On Windows, if path1 is "" then Path.relativize returns ../path2 instead of path2 or ./path2
-    if (path1.equals(emptyPath)) {
+    if (EMPTY_PATH.equals(path1)) {
       return path2;
     }
     return path1.relativize(path2);
+  }
+
+  /**
+   * Get a path without unnecessary path parts.
+   *
+   * This method is a workaround for JDK-8037945 (Paths.get("").normalize() throws
+   * ArrayIndexOutOfBoundsException).
+   */
+  public static Path normalize(Path path) {
+    if (!EMPTY_PATH.equals(path)) {
+      path = path.normalize();
+    }
+    return path;
   }
 
   /**

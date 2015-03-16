@@ -30,16 +30,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PathRelativizerTest {
-  private Path root;
   private Path outputPath;
   private PathRelativizer pathRelativizer;
 
   @Before
   public void setUp() {
-    root = Paths.get("/my/repo/root/");
-    outputPath = root.resolve("output0/output1");
+    outputPath = Paths.get("output0/output1");
     pathRelativizer = new PathRelativizer(
-        root,
         outputPath,
         new SourcePathResolver(new BuildRuleResolver()).getPathFunction());
   }
@@ -61,9 +58,29 @@ public class PathRelativizerTest {
   @Test
   public void testOutputDirToRootRelative() {
     assertEquals(
-        Paths.get("../../foo/bar/file"),
+        Paths.get("../../foo/bar"),
         pathRelativizer.outputPathToBuildTargetPath(
-            BuildTarget.builder("//foo/bar", "baz").build(),
-            Paths.get("file")));
+            BuildTarget.builder("//foo/bar", "baz").build()));
+  }
+
+  @Test
+  public void testOutputDirToRootRelativeDoesNotAddExtraDotDots() {
+    assertEquals(
+        Paths.get("something"),
+        pathRelativizer.outputDirToRootRelative(Paths.get("output0/output1/something")));
+  }
+
+  @Test
+  public void testOutputDirToRootRelativeWorksForCurrentDir() {
+    assertEquals(
+        Paths.get("."),
+        pathRelativizer.outputDirToRootRelative(Paths.get("output0/output1")));
+  }
+
+  @Test
+  public void testOutputDirToRootRelativeWorksForParentDir() {
+    assertEquals(
+        Paths.get(".."),
+        pathRelativizer.outputDirToRootRelative(Paths.get("output0")));
   }
 }

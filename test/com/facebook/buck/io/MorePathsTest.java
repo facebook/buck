@@ -225,6 +225,13 @@ public class MorePathsTest {
     assertThat(MorePaths.relativize(p1, p2), equalTo(Paths.get("foo")));
   }
 
+  @Test
+  public void normalizeWithEmptyPath() {
+    // Ensure workaround for Java Path normalize bug
+    Path emptyPath = Paths.get("");
+    assertThat(MorePaths.normalize(emptyPath), equalTo(emptyPath));
+  }
+
   private Path createExecutable(String executablePath) throws IOException {
     File file = tmp.newFile(executablePath);
     file.setExecutable(true);
