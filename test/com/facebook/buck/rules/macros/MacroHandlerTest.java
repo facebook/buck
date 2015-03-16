@@ -23,19 +23,34 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import java.io.IOException;
 
 public class MacroHandlerTest {
+
+  @Rule
+  public TemporaryFolder tmp = new TemporaryFolder();
+
+  private ProjectFilesystem filesystem;
+  private BuildTarget target;
+  private BuildRuleResolver resolver;
+
+  @Before
+  public void before() throws IOException {
+    filesystem = new ProjectFilesystem(tmp.newFolder().toPath());
+    target = BuildTargetFactory.newInstance("//:test");
+    resolver = new BuildRuleResolver();
+  }
 
   @Test
   public void noSuchMacro() {
     MacroHandler handler = new MacroHandler(ImmutableMap.<String, MacroExpander>of());
-    BuildTarget target = BuildTargetFactory.newInstance("//:test");
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     try {
       handler.expand(target, resolver, filesystem, "$(badmacro hello)");
     } catch (MacroException e) {
@@ -51,12 +66,18 @@ public class MacroHandlerTest {
   @Test
   public void escapeMacro() throws MacroException {
     MacroHandler handler = new MacroHandler(ImmutableMap.<String, MacroExpander>of());
-    BuildTarget target = BuildTargetFactory.newInstance("//:test");
-    BuildRuleResolver resolver = new BuildRuleResolver();
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     String raw = "hello \\$(notamacro hello)";
     String expanded = handler.expand(target, resolver, filesystem, raw);
     assertEquals("hello $(notamacro hello)", expanded);
+  }
+
+  @Test
+  public void automaticallyAddsOutputToFileVariant() throws MacroException {
+    MacroHandler handler =
+        new MacroHandler(ImmutableMap.<String, MacroExpander>of("foo", new StringExpander("cake")));
+    String expanded = handler.expand(target, resolver, filesystem, "Hello $(@foo //:test)");
+
+    assertTrue(expanded, expanded.startsWith("Hello @"));
   }
 
 }

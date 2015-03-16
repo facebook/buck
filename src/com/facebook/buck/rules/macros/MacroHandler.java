@@ -37,7 +37,7 @@ public class MacroHandler {
   private final ImmutableMap<String, MacroExpander> expanders;
 
   public MacroHandler(ImmutableMap<String, MacroExpander> expanders) {
-    this.expanders = expanders;
+    this.expanders = addOutputToFileExpanders(expanders);
   }
 
   public Function<String, String> getExpander(
@@ -60,8 +60,18 @@ public class MacroHandler {
     return new MacroHandler(
         ImmutableMap.<String, MacroExpander>builder()
             .putAll(expanders)
-            .putAll(additionalExpanders)
+            .putAll(addOutputToFileExpanders(additionalExpanders))
             .build());
+  }
+
+  private static ImmutableMap<String, MacroExpander> addOutputToFileExpanders(
+      ImmutableMap<String, MacroExpander> source) {
+    ImmutableMap.Builder<String, MacroExpander> builder = ImmutableMap.builder();
+    for (Map.Entry<String, MacroExpander> entry : source.entrySet()) {
+      builder.put(entry.getKey(), entry.getValue());
+      builder.put("@" + entry.getKey(), new OutputToFileExpander(entry.getValue()));
+    }
+    return builder.build();
   }
 
   private MacroExpander getExpander(String name) throws MacroException {
