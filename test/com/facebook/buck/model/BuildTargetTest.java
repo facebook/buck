@@ -102,7 +102,7 @@ public class BuildTargetTest {
       BuildTarget.builder("//foo/bar", "baz").addFlavors(ImmutableFlavor.of("d!x")).build();
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
-      assertEquals("Invalid flavor: d!x", e.getMessage());
+      assertEquals("Invalid characters in flavor name: d!x", e.getMessage());
     }
   }
 

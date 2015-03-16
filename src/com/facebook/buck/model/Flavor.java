@@ -25,7 +25,11 @@ import java.util.regex.Pattern;
 @Value.Immutable
 public abstract class Flavor implements Comparable<Flavor> {
 
-  private static final Pattern VALID_FLAVOR_PATTERN = Pattern.compile("[-a-zA-Z0-9_\\.]+");
+  private static final Pattern INVALID_FLAVOR_CHARACTERS = Pattern.compile("[^-a-zA-Z0-9_\\.]");
+
+  public static String replaceInvalidCharacters(String name) {
+    return INVALID_FLAVOR_CHARACTERS.matcher(name).replaceAll("_");
+  }
 
   @Value.Parameter
   public abstract String getName();
@@ -33,8 +37,11 @@ public abstract class Flavor implements Comparable<Flavor> {
   @Value.Check
   protected void check() {
     Preconditions.checkArgument(
-        VALID_FLAVOR_PATTERN.matcher(getName()).matches(),
-        "Invalid flavor: " + getName());
+        !getName().isEmpty(),
+        "Empty flavor name");
+    Preconditions.checkArgument(
+        !INVALID_FLAVOR_CHARACTERS.matcher(getName()).find(),
+        "Invalid characters in flavor name: " + getName());
   }
 
   @Override
