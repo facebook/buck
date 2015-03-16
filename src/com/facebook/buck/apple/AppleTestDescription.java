@@ -39,6 +39,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import java.util.Set;
 
@@ -55,6 +56,12 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
       LIBRARY_FLAVOR, BUNDLE_FLAVOR);
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = Predicates.in(SUPPORTED_FLAVORS);
+
+  private static final Set<Flavor> NON_LIBRARY_FLAVORS = ImmutableSet.of(
+      CompilationDatabase.COMPILATION_DATABASE,
+      AppleDescriptions.HEADERS,
+      CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
+      CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
   private final AppleLibraryDescription appleLibraryDescription;
 
@@ -79,21 +86,32 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
   }
 
   @Override
-  public <A extends Arg> AppleTest createBuildRule(
+  public <A extends Arg> BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    boolean createBundle = Sets.intersection(
+        params.getBuildTarget().getFlavors(),
+        NON_LIBRARY_FLAVORS).isEmpty();
+    Set<Flavor> extraFlavors = ImmutableSet.of();
+    if (createBundle) {
+      extraFlavors = ImmutableSet.of(
+          LIBRARY_FLAVOR,
+          CxxDescriptionEnhancer.SHARED_FLAVOR);
+    }
     BuildRule library = appleLibraryDescription.createBuildRule(
         params.copyWithChanges(
             AppleLibraryDescription.TYPE,
             BuildTarget.builder(params.getBuildTarget())
-                .addFlavors(LIBRARY_FLAVOR)
-                .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+                .addAllFlavors(extraFlavors)
                 .build(),
             Suppliers.ofInstance(params.getDeclaredDeps()),
             Suppliers.ofInstance(params.getExtraDeps())),
         resolver,
         args);
+    if (!createBundle) {
+      return library;
+    }
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     AppleBundle bundle = new AppleBundle(
         params.copyWithChanges(
