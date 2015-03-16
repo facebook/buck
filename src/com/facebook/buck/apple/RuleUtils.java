@@ -90,6 +90,7 @@ public class RuleUtils {
             subgroups,
             entries,
             groupedSourceNameComparator,
+            rootPath,
             rootPath);
 
     // Remove the longest common prefix from all paths.
@@ -122,6 +123,7 @@ public class RuleUtils {
       Multimap<Path, String> subgroups,
       Multimap<Path, GroupedSource> entries,
       Comparator<GroupedSource> comparator,
+      Path rootGroupPath,
       Path groupPath) {
     ImmutableList.Builder<GroupedSource> groupBuilder = ImmutableList.builder();
 
@@ -130,7 +132,13 @@ public class RuleUtils {
       groupBuilder.add(
           GroupedSource.ofSourceGroup(
               subgroupName,
-              createGroupsFromEntryMaps(subgroups, entries, comparator, subgroupPath)));
+              subgroupPath.subpath(rootGroupPath.getNameCount(), subgroupPath.getNameCount()),
+              createGroupsFromEntryMaps(
+                  subgroups,
+                  entries,
+                  comparator,
+                  rootGroupPath,
+                  subgroupPath)));
     }
 
     SortedSet<GroupedSource> sortedEntries =

@@ -241,7 +241,12 @@ public class NewNativeTargetProjectMutator {
             ? Optional.<PBXHeadersBuildPhase>absent()
             : Optional.of(headersBuildPhase),
         RuleUtils.createGroupsFromSourcePaths(
-            sourcePathResolver,
+            new Function<SourcePath, Path>() {
+              @Override
+              public Path apply(SourcePath sourcePath) {
+                return pathRelativizer.outputPathToSourcePath(sourcePath);
+              }
+            },
             sourcesWithFlags,
             publicHeaders,
             privateHeaders));
@@ -288,8 +293,12 @@ public class NewNativeTargetProjectMutator {
 
       @Override
       public void visitSourceGroup(
-          String sourceGroupName, List<GroupedSource> sourceGroup) {
+          String sourceGroupName,
+          Path sourceGroupPathRelativeToTarget,
+          List<GroupedSource> sourceGroup) {
         PBXGroup newSourceGroup = sourcesGroup.getOrCreateChildGroupByName(sourceGroupName);
+        newSourceGroup.setSourceTree(PBXReference.SourceTree.SOURCE_ROOT);
+        newSourceGroup.setPath(sourceGroupPathRelativeToTarget.toString());
         // Sources groups stay in the order in which they're in the GroupedSource.
         newSourceGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
         traverseGroupsTreeAndHandleSources(

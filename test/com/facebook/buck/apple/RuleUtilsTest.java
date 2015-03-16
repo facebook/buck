@@ -54,6 +54,7 @@ public class RuleUtilsTest {
         ImmutableList.of(
             GroupedSource.ofSourceGroup(
                 "Group1",
+                Paths.get("Group1"),
                 ImmutableList.of(
                     GroupedSource.ofSourceWithFlags(
                         SourceWithFlags.of(
@@ -64,6 +65,7 @@ public class RuleUtilsTest {
                 )),
             GroupedSource.ofSourceGroup(
                 "Group2",
+                Paths.get("Group2"),
                 ImmutableList.of(
                     GroupedSource.ofSourceWithFlags(
                         SourceWithFlags.of(new TestSourcePath("Group2/baz.m"))),
@@ -89,12 +91,15 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> expected = ImmutableList.of(
         ImmutableGroupedSource.ofSourceGroup(
             "App",
+            Paths.get("App"),
             ImmutableList.of(
                 ImmutableGroupedSource.ofSourceGroup(
                     "Foo",
+                    Paths.get("App/Foo"),
                     ImmutableList.of(
                         ImmutableGroupedSource.ofSourceGroup(
                             "Bar",
+                            Paths.get("App/Foo/Bar"),
                             ImmutableList.of(
                                 ImmutableGroupedSource.ofPrivateHeader(
                                     new TestSourcePath("App/Foo/Bar/File.h")))),
@@ -104,14 +109,17 @@ public class RuleUtilsTest {
                     new TestSourcePath("App/File.h")))),
         ImmutableGroupedSource.ofSourceGroup(
             "Lib",
+            Paths.get("Lib"),
             ImmutableList.of(
                 ImmutableGroupedSource.ofSourceGroup(
                     "Bar",
+                    Paths.get("Lib/Bar"),
                     ImmutableList.of(
                         ImmutableGroupedSource.ofPrivateHeader(
                             new TestSourcePath("Lib/Bar/File1.h")))),
                 ImmutableGroupedSource.ofSourceGroup(
                     "Foo",
+                    Paths.get("Lib/Foo"),
                     ImmutableList.of(
                         ImmutableGroupedSource.ofPrivateHeader(
                             new TestSourcePath("Lib/Foo/File1.h")),
@@ -140,11 +148,13 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> expected = ImmutableList.of(
         ImmutableGroupedSource.ofSourceGroup(
             "Bar",
+            Paths.get("Lib/Bar"),
             ImmutableList.of(
                 ImmutableGroupedSource.ofPrivateHeader(
                     new TestSourcePath("Lib/Bar/File1.h")))),
         ImmutableGroupedSource.ofSourceGroup(
             "Foo",
+            Paths.get("Lib/Foo"),
             ImmutableList.of(
                 ImmutableGroupedSource.ofPrivateHeader(
                     new TestSourcePath("Lib/Foo/File1.h")),
@@ -235,12 +245,15 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> expected = ImmutableList.of(
         ImmutableGroupedSource.ofSourceGroup(
             "App",
+            Paths.get("App"),
             ImmutableList.of(
                 ImmutableGroupedSource.ofSourceGroup(
                     "Foo",
+                    Paths.get("App/Foo"),
                     ImmutableList.of(
                         ImmutableGroupedSource.ofSourceGroup(
                             "Bar",
+                            Paths.get("App/Foo/Bar"),
                             ImmutableList.of(
                                 ImmutableGroupedSource.ofPrivateHeader(
                                     new TestSourcePath("App/Foo/Bar/File.h")))),
@@ -250,14 +263,17 @@ public class RuleUtilsTest {
                     new TestSourcePath("App/File.h")))),
         ImmutableGroupedSource.ofSourceGroup(
             "Lib",
+            Paths.get("Lib"),
             ImmutableList.of(
                 ImmutableGroupedSource.ofSourceGroup(
                     "Bar",
+                    Paths.get("Lib/Bar"),
                     ImmutableList.of(
                         ImmutableGroupedSource.ofPrivateHeader(
                             new TestSourcePath("Lib/Bar/File1.h")))),
                 ImmutableGroupedSource.ofSourceGroup(
                     "Foo",
+                    Paths.get("Lib/Foo"),
                     ImmutableList.of(
                         ImmutableGroupedSource.ofPrivateHeader(
                             new TestSourcePath("Lib/Foo/File1.h")),
@@ -270,6 +286,7 @@ public class RuleUtilsTest {
         entries,
         new RuleUtils.GroupedSourceNameComparator(
             new SourcePathResolver(new BuildRuleResolver()).getPathFunction()),
+        Paths.get("root"),
         Paths.get("root"));
 
     assertEquals(expected, actual);
@@ -298,14 +315,17 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> expected = ImmutableList.of(
         ImmutableGroupedSource.ofSourceGroup(
             "Lib",
+            Paths.get("Lib"),
             ImmutableList.of(
                 ImmutableGroupedSource.ofSourceGroup(
                     "Bar",
+                    Paths.get("Lib/Bar"),
                     ImmutableList.of(
                         ImmutableGroupedSource.ofPrivateHeader(
                             new TestSourcePath("Lib/Bar/File1.h")))),
                 ImmutableGroupedSource.ofSourceGroup(
                     "Foo",
+                    Paths.get("Lib/Foo"),
                     ImmutableList.of(
                         ImmutableGroupedSource.ofPrivateHeader(
                             new TestSourcePath("Lib/Foo/File1.h")),
@@ -317,6 +337,7 @@ public class RuleUtilsTest {
         entries,
         new RuleUtils.GroupedSourceNameComparator(
             new SourcePathResolver(new BuildRuleResolver()).getPathFunction()),
+        Paths.get("root"),
         Paths.get("root"));
 
     assertEquals(expected, actual);
@@ -337,6 +358,7 @@ public class RuleUtilsTest {
         entries,
         new RuleUtils.GroupedSourceNameComparator(
             new SourcePathResolver(new BuildRuleResolver()).getPathFunction()),
+        Paths.get("root"),
         Paths.get("root"));
 
     assertEquals(expected, actual);
@@ -354,6 +376,7 @@ public class RuleUtilsTest {
         entries,
         new RuleUtils.GroupedSourceNameComparator(
             new SourcePathResolver(new BuildRuleResolver()).getPathFunction()),
+        Paths.get("root"),
         Paths.get("root"));
 
     assertEquals(expected, actual);

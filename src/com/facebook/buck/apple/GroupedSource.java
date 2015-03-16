@@ -68,6 +68,9 @@ public abstract class GroupedSource {
   protected abstract Optional<String> getSourceGroupName();
 
   @Value.Parameter
+  protected abstract Optional<Path> getSourceGroupPathRelativeToTarget();
+
+  @Value.Parameter
   protected abstract Optional<List<GroupedSource>> getSourceGroup();
 
   @Value.Check
@@ -77,6 +80,7 @@ public abstract class GroupedSource {
         Preconditions.checkArgument(getSourceWithFlags().isPresent());
         Preconditions.checkArgument(!getSourcePath().isPresent());
         Preconditions.checkArgument(!getSourceGroupName().isPresent());
+        Preconditions.checkArgument(!getSourceGroupPathRelativeToTarget().isPresent());
         Preconditions.checkArgument(!getSourceGroup().isPresent());
         break;
       case PUBLIC_HEADER:
@@ -84,12 +88,14 @@ public abstract class GroupedSource {
         Preconditions.checkArgument(!getSourceWithFlags().isPresent());
         Preconditions.checkArgument(getSourcePath().isPresent());
         Preconditions.checkArgument(!getSourceGroupName().isPresent());
+        Preconditions.checkArgument(!getSourceGroupPathRelativeToTarget().isPresent());
         Preconditions.checkArgument(!getSourceGroup().isPresent());
         break;
       case SOURCE_GROUP:
         Preconditions.checkArgument(!getSourceWithFlags().isPresent());
         Preconditions.checkArgument(!getSourcePath().isPresent());
         Preconditions.checkArgument(getSourceGroupName().isPresent());
+        Preconditions.checkArgument(getSourceGroupPathRelativeToTarget().isPresent());
         Preconditions.checkArgument(getSourceGroup().isPresent());
         break;
       default:
@@ -123,6 +129,7 @@ public abstract class GroupedSource {
         Optional.of(sourceWithFlags),
         Optional.<SourcePath>absent(),
         Optional.<String>absent(),
+        Optional.<Path>absent(),
         Optional.<List<GroupedSource>>absent());
   }
 
@@ -135,6 +142,7 @@ public abstract class GroupedSource {
         Optional.<SourceWithFlags>absent(),
         Optional.of(headerPath),
         Optional.<String>absent(),
+        Optional.<Path>absent(),
         Optional.<List<GroupedSource>>absent());
   }
 
@@ -147,6 +155,7 @@ public abstract class GroupedSource {
         Optional.<SourceWithFlags>absent(),
         Optional.of(headerPath),
         Optional.<String>absent(),
+        Optional.<Path>absent(),
         Optional.<List<GroupedSource>>absent());
   }
 
@@ -156,12 +165,14 @@ public abstract class GroupedSource {
    */
   public static GroupedSource ofSourceGroup(
       String sourceGroupName,
+      Path sourceGroupPathRelativeToTarget,
       Collection<GroupedSource> sourceGroup) {
     return ImmutableGroupedSource.of(
         Type.SOURCE_GROUP,
         Optional.<SourceWithFlags>absent(),
         Optional.<SourcePath>absent(),
         Optional.of(sourceGroupName),
+        Optional.of(sourceGroupPathRelativeToTarget),
         Optional.of((List<GroupedSource>) ImmutableList.copyOf(sourceGroup)));
   }
 
@@ -169,7 +180,10 @@ public abstract class GroupedSource {
     void visitSourceWithFlags(SourceWithFlags sourceWithFlags);
     void visitPublicHeader(SourcePath publicHeader);
     void visitPrivateHeader(SourcePath privateHeader);
-    void visitSourceGroup(String sourceGroupName, List<GroupedSource> sourceGroup);
+    void visitSourceGroup(
+        String sourceGroupName,
+        Path sourceGroupPathRelativeToTarget,
+        List<GroupedSource> sourceGroup);
   }
 
   public void visit(Visitor visitor) {
@@ -184,7 +198,10 @@ public abstract class GroupedSource {
         visitor.visitPrivateHeader(getSourcePath().get());
         break;
       case SOURCE_GROUP:
-        visitor.visitSourceGroup(getSourceGroupName().get(), getSourceGroup().get());
+        visitor.visitSourceGroup(
+            getSourceGroupName().get(),
+            getSourceGroupPathRelativeToTarget().get(),
+            getSourceGroup().get());
     }
   }
 }
