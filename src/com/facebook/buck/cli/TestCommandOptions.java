@@ -202,4 +202,10 @@ public class TestCommandOptions extends BuildCommandOptions {
         getBuckConfig().getBooleanValue("test", "build_filtered_tests", false);
   }
 
+  public int getNumTestThreads() {
+    if (isDebugEnabled()) {
+      return 1;
+    }
+    return getNumThreads();
+  }
 }

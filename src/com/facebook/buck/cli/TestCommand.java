@@ -243,13 +243,14 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
 
       // Once all of the rules are built, then run the tests.
-      try {
+      try (CommandThreadManager testPool =
+               new CommandThreadManager("Test-Run", options.getNumTestThreads())) {
         return runTestsAndShutdownExecutor(
             testRules,
             Preconditions.checkNotNull(build.getBuildContext()),
             build.getExecutionContext(),
             options,
-            pool.getExecutor());
+            testPool.getExecutor());
       } catch (ExecutionException e) {
         console.printBuildFailureWithoutStacktrace(e);
         return 1;

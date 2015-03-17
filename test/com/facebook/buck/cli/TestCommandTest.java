@@ -761,4 +761,16 @@ public class TestCommandTest {
 
     assertEquals(rule, Iterables.getOnlyElement(filtered));
   }
+
+  @Test
+  public void shouldAlwaysDefaultToOneThreadWhenRunningTestsWithDebugFlag()
+      throws CmdLineException {
+    TestCommandOptions options = getOptions("-j", "15");
+
+    assertEquals(15, options.getNumTestThreads());
+
+    options = getOptions("-j", "15", "--debug");
+
+    assertEquals(1, options.getNumTestThreads());
+  }
 }
