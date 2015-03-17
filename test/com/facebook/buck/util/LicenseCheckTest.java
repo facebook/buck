@@ -38,7 +38,9 @@ public class LicenseCheckTest {
   // exclude all files under "test/**/testdata/"
   private static final Set<String> NON_APACHE_LICENSE_WHITELIST = ImmutableSet.of(
       // Because it's not originally our code.
-      "com/facebook/buck/java/ReportGenerator.java");
+      "com/facebook/buck/java/ReportGenerator.java",
+      "com/facebook/buck/util/WindowsCommandLineEscape.java",
+      "com/facebook/buck/util/WindowsCommandLineEscapeTest.java");
 
   @Test
   public void ensureAllSrcFilesHaveTheApacheLicense() throws IOException {
