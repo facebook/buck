@@ -731,6 +731,9 @@ public class ProjectFilesystem {
         // going to have to copy things recursively.
         MoreFiles.copyRecursively(sourcePath, targetPath);
       } else {
+        // When sourcePath is relative, resolve it from the targetPath. We're creating a hard link
+        // anyway.
+        sourcePath = targetPath.getParent().resolve(sourcePath).normalize();
         Files.createLink(targetPath, sourcePath);
       }
     } else {
