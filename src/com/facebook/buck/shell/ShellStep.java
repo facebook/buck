@@ -231,7 +231,7 @@ public abstract class ShellStep implements Step {
 
     // Quote the arguments to the shell command as needed (this applies to $0 as well
     // e.g. if we run '/path/a b.sh' quoting is needed).
-    Iterable<String> cmd = Iterables.transform(getShellCommand(context), Escaper.BASH_ESCAPER);
+    Iterable<String> cmd = Iterables.transform(getShellCommand(context), Escaper.SHELL_ESCAPER);
 
     String shellCommand = Joiner.on(" ").join(Iterables.concat(env, cmd));
     if (getWorkingDirectory() == null) {

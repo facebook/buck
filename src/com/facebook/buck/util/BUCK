@@ -87,6 +87,7 @@ java_library(
     '//src/com/facebook/buck/io:io',  # While we move classes
     '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/timing:timing',
+    '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/zip:stream',
     '//third-party/java/aosp:aosp',
     '//third-party/java/guava:guava',

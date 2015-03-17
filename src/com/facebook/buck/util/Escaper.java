@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
@@ -127,6 +128,18 @@ public final class Escaper {
   public static final Function<String, String> BASH_ESCAPER =
       escaper(Quoter.SINGLE, BASH_SPECIAL_CHARS);
 
+  /**
+   * cmd.EXE quoting {@link com.google.common.base.Function Function} which can be passed to
+   * {@link com.google.common.collect.Iterables#transform Iterables.transform()}
+   */
+  public static final Function<String, String> CMD_ESCAPER =
+      new Function<String, String>() {
+        @Override
+        public String apply(String input) {
+          return WindowsCommandLineEscape.quote(input);
+        }
+      };
+
   public static final Function<String, String> JAVA_ESCAPER =
       new Function<String, String>() {
         @Override
@@ -134,6 +147,13 @@ public final class Escaper {
           return escapeAsJavaString(input);
         }
       };
+
+  /**
+   * Platform-aware shell quoting {@link com.google.common.base.Function Function} which can be
+   * passed to {@link com.google.common.collect.Iterables#transform Iterables.transform()}
+   */
+  public static final Function<String, String> SHELL_ESCAPER =
+      Platform.detect() == Platform.WINDOWS ? CMD_ESCAPER : BASH_ESCAPER;
 
   /**
    * Quotes a string to be passed to Bash, if necessary. Uses single quotes to prevent variable

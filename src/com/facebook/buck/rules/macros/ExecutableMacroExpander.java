@@ -45,7 +45,7 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
     return Joiner.on(' ').join(
         Iterables.transform(
             binary.getExecutableCommand(filesystem),
-            Escaper.BASH_ESCAPER));
+            Escaper.SHELL_ESCAPER));
   }
 
 }
