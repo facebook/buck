@@ -30,6 +30,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
@@ -55,6 +56,13 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final Path input;
   private final ImmutableMap<Path, Path> replacementPaths;
   private final Optional<DebugPathSanitizer> sanitizer;
+
+  // N.B. These include paths are special to GCC. They aren't real files and there is no remapping
+  // needed, so we can just ignore them everywhere.
+  private static final ImmutableSet<String> SPECIAL_INCLUDE_PATHS = ImmutableSet.of(
+      "<built-in>",
+      "<command-line>"
+  );
 
   public CxxPreprocessAndCompileStep(
       ImmutableList<String> compilerPrefix,
@@ -110,7 +118,8 @@ public class CxxPreprocessAndCompileStep implements Step {
       public String apply(String line) {
         if (line.startsWith("# ")) {
           Matcher m = lineMarkers.matcher(line);
-          if (m.find()) {
+
+          if (m.find() && !SPECIAL_INCLUDE_PATHS.contains(m.group("path"))) {
             String originalPath = m.group("path");
             String replacementPath = originalPath;
 
@@ -132,7 +141,6 @@ public class CxxPreprocessAndCompileStep implements Step {
         }
         return line;
       }
-
     };
   }
 
