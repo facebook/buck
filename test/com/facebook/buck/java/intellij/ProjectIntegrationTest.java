@@ -432,4 +432,38 @@ public class ProjectIntegrationTest {
         "project",
         "//nonexistent/path:target");
   }
+
+  @Test
+  public void testBuckProjectGeneratedWithRDotFiles001() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project_r_001",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--enable-android-auto-generate-sources",
+        "app");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testBuckProjectGeneratedWithRDotFiles002() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project_r_002",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "app");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
 }

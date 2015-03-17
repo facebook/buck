@@ -1,0 +1,12 @@
+[alias]
+    app = //apps/myapp:app
+[java]
+    src_roots = /java/
+[project]
+    # IntelliJ requires that every Android module have an
+    # AndroidManifest.xml file associated with it. In practice,
+    # most of this is unnecessary boilerplate, so we create one
+    # "shared" AndroidManifest.xml file that can be used as a default.
+    default_android_manifest = //res/AndroidManifest.xml
+[android]
+    target = Google Inc.:Google APIs:21

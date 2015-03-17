@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/apps/myapp/app.iml" filepath="$PROJECT_DIR$/apps/myapp/app.iml" group="modules"/>
+      <module fileurl="file://$PROJECT_DIR$/java/com/example/activity/module_java_com_example_activity.iml" filepath="$PROJECT_DIR$/java/com/example/activity/module_java_com_example_activity.iml" group="modules"/>
+      <module fileurl="file://$PROJECT_DIR$/res/com/example/activity/module_res_com_example_activity.iml" filepath="$PROJECT_DIR$/res/com/example/activity/module_res_com_example_activity.iml" group="modules"/>
+    </modules>
+  </component>
+</project>

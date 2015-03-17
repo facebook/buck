@@ -1,0 +1,14 @@
+android_resource(
+  name = 'res',
+  res = 'res',
+  package = 'com.example',
+  visibility = [
+    '//apps/myapp:',
+    '//java/com/example/activity:activity',
+  ],
+)
+
+project_config(
+  src_target = ':res',
+  src_roots = None,
+)

@@ -375,6 +375,12 @@ def add_buck_android_source_folder(xml, module):
         xml += '\n    <content url="file://$MODULE_DIR$%s">' % module['moduleGenPath']
         xml += '\n      <sourceFolder url="file://$MODULE_DIR$%s" isTestSource="false" />' % module['moduleGenPath']
         xml += '\n    </content>'
+    if 'moduleRJavaPath' in module:
+        xml += '\n    <content url="file://$MODULE_DIR$%s">' % module['moduleRJavaPath']
+        xml += '\n      <sourceFolder '
+        xml += 'url="file://$MODULE_DIR$%s" ' % module['moduleRJavaPath']
+        xml += 'isTestSource="false" />'
+        xml += '\n    </content>'
     return xml
 
 

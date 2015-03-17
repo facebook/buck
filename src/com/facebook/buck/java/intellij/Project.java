@@ -22,8 +22,10 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidLibrary;
+import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidPackageableCollection;
 import com.facebook.buck.android.AndroidResource;
+import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -34,6 +36,7 @@ import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
@@ -257,7 +260,26 @@ public class Project {
         noDxJarsBuilder.addAll(packageableCollection.getNoDxClasspathEntries());
       }
 
-      Module module = createModuleForProjectConfig(projectConfig);
+      final Optional<Path> rJava;
+      if (srcRule instanceof AndroidLibrary) {
+        AndroidLibrary androidLibrary = (AndroidLibrary) srcRule;
+        ImmutableBuildTarget dummyRDotJavaTarget =
+            AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(
+                androidLibrary.getBuildTarget());
+        Path src = DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJavaTarget);
+        rJava = Optional.of(src);
+      } else if (srcRule instanceof AndroidResource) {
+        AndroidResource androidResource = (AndroidResource) srcRule;
+        ImmutableBuildTarget dummyRDotJavaTarget =
+            AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(
+                androidResource.getBuildTarget());
+        Path src = DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJavaTarget);
+        rJava = Optional.of(src);
+      } else {
+        rJava = Optional.absent();
+      }
+
+      Module module = createModuleForProjectConfig(projectConfig, rJava);
       modules.add(module);
     }
     ImmutableSet<Path> noDxJars = noDxJarsBuilder.build();
@@ -269,7 +291,9 @@ public class Project {
   }
 
   @SuppressWarnings("PMD.LooseCoupling")
-  private Module createModuleForProjectConfig(ProjectConfig projectConfig) throws IOException {
+  private Module createModuleForProjectConfig(
+      ProjectConfig projectConfig,
+      Optional<Path> rJava) throws IOException {
     BuildRule projectRule = Preconditions.checkNotNull(projectConfig.getProjectRule());
     Preconditions.checkState(
         projectRule instanceof JavaLibrary ||
@@ -344,6 +368,12 @@ public class Project {
     // To specify the location of gen, Intellij requires the relative path from
     // the base path of current build target.
     module.moduleGenPath = generateRelativeGenPath(basePathWithSlash).toString();
+    if (rJava.isPresent() && !turnOnAutoSourceGeneration) {
+      module.moduleRJavaPath = Paths.get(
+          "/",
+          Paths.get(basePathWithSlash).relativize(Paths.get("")).toString(),
+          rJava.get().toString()).toString();
+    }
 
     DependentModule jdkDependency;
     if (isAndroidRule) {

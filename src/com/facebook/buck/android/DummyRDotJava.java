@@ -145,7 +145,7 @@ public class DummyRDotJava extends AbstractBuildRule
     return javacOptions.appendToRuleKey(builder, "javacOptions");
   }
 
-  private static Path getRDotJavaSrcFolder(BuildTarget buildTarget) {
+  public static Path getRDotJavaSrcFolder(BuildTarget buildTarget) {
     return BuildTargets.getBinPath(buildTarget, "__%s_rdotjava_src__");
   }
 

@@ -66,6 +66,9 @@ final class Module {
   @JsonProperty String moduleGenPath;
 
   @Nullable
+  @JsonProperty String moduleRJavaPath;
+
+  @Nullable
   @JsonProperty String name;
   @Nullable
   @JsonProperty String pathToImlFile;
