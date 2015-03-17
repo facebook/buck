@@ -194,8 +194,8 @@ public class DefaultCxxPlatforms {
   private static Linker getLd(
       Platform platform,
       BuckConfig delegate) {
-    Tool tool = new HashedFileTool(
-        getToolPath("cxx", "ld", DEFAULT_LD, delegate));
+    Path toolPath = getToolPath("cxx", "ld", DEFAULT_LD, delegate);
+    Tool tool = new HashedFileTool(toolPath);
     LinkerType type = getLinkerType(platform, delegate);
     switch (type) {
       case GNU:
@@ -203,7 +203,11 @@ public class DefaultCxxPlatforms {
       case DARWIN:
         return new DarwinLinker(tool);
       case WINDOWS:
-        return new WindowsLinker(tool);
+        if (toolPath.getFileName().toString().equalsIgnoreCase("ld.exe")) {
+          return new GnuLinker(tool);
+        } else {
+          return new WindowsLinker(tool);
+        }
       // Add a "default" case, even thought we've handled all cases above, just to make the
       // compiler happy.
       default:
