@@ -315,7 +315,9 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Iterable<Path> bootclasspathPaths = androidPlatformTarget.getBootclasspathEntries();
       Iterable<Path> libraryJars = Iterables.concat(bootclasspathPaths,
           additionalLibraryJarsForProguard);
-      args.add("-libraryjars").add(Joiner.on(':').join(libraryJars));
+
+      Character separator = File.pathSeparatorChar;
+      args.add("-libraryjars").add(Joiner.on(separator).join(libraryJars));
 
       // -dump
       args.add("-printmapping").add(getMappingTxt().toString());
