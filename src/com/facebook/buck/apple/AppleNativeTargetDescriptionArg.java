@@ -49,6 +49,7 @@ public class AppleNativeTargetDescriptionArg implements HasTests {
   @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
   public Optional<ImmutableList<String>> preprocessorFlags;
   public Optional<ImmutableList<String>> compilerFlags;
+  public Optional<ImmutableList<String>> linkerFlags;
 
   public boolean getUseBuckHeaderMaps() {
     return useBuckHeaderMaps.or(false);

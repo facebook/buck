@@ -154,6 +154,16 @@ public class ProjectGenerator {
           PosixFilePermission.GROUP_READ,
           PosixFilePermission.OTHERS_READ));
 
+  public static final Function<
+      TargetNode<AppleNativeTargetDescriptionArg>,
+      Iterable<String>> GET_LINKER_FLAGS =
+      new Function<TargetNode<AppleNativeTargetDescriptionArg>, Iterable<String>>() {
+        @Override
+        public Iterable<String> apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
+          return input.getConstructorArg().linkerFlags.get();
+        }
+      };
+
   private final Function<SourcePath, Path> sourcePathResolver;
   private final TargetGraph targetGraph;
   private final ProjectFilesystem projectFilesystem;
@@ -429,7 +439,8 @@ public class ProjectGenerator {
     Optional<Path> infoPlistPath;
     if (targetNode.getConstructorArg().getInfoPlist().isPresent()) {
       infoPlistPath = Optional.of(
-          sourcePathResolver.apply(targetNode.getConstructorArg().getInfoPlist().get()));
+          Preconditions.checkNotNull(
+              sourcePathResolver.apply(targetNode.getConstructorArg().getInfoPlist().get())));
     } else {
       infoPlistPath = Optional.absent();
     }
@@ -702,7 +713,10 @@ public class ProjectGenerator {
                 .join(
                     Iterables.concat(
                         targetNode.getConstructorArg().compilerFlags.get(),
-                        targetNode.getConstructorArg().preprocessorFlags.get())));
+                        targetNode.getConstructorArg().preprocessorFlags.get())))
+        .put(
+            "OTHER_LDFLAGS",
+            Joiner.on(' ').join(collectRecursiveLinkerFlags(ImmutableList.of(targetNode))));
 
     setTargetBuildConfigurations(
         new Function<String, Path>() {
@@ -846,7 +860,6 @@ public class ProjectGenerator {
   /**
    * Create target level configuration entries.
    *
-   * @param configurationNameToXcconfigPath
    * @param target      Xcode target for which the configurations will be set.
    * @param targetGroup Xcode group in which the configuration file references will be placed.
    * @param configurations  Configurations as extracted from the BUCK file.
@@ -899,7 +912,7 @@ public class ProjectGenerator {
           combinedOverrideConfigs.entrySet());
 
       Path xcconfigPath = configurationNameToXcconfigPath.apply(configurationEntry.getKey());
-      projectFilesystem.mkdirs(xcconfigPath.getParent());
+      projectFilesystem.mkdirs(Preconditions.checkNotNull(xcconfigPath).getParent());
 
       StringBuilder stringBuilder = new StringBuilder();
       for (Map.Entry<String, String> entry : entries) {
@@ -1518,6 +1531,26 @@ public class ProjectGenerator {
                 return input
                     .castArg(AppleNativeTargetDescriptionArg.class)
                     .transform(getTargetFrameworkSearchPaths(type))
+                    .or(ImmutableSet.<String>of());
+              }
+            });
+  }
+
+  private <T> Iterable<String> collectRecursiveLinkerFlags(Iterable<TargetNode<T>> targetNodes) {
+    return FluentIterable
+        .from(targetNodes)
+        .transformAndConcat(
+            newRecursiveRuleDependencyTransformer(
+                AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                ImmutableSet.of(AppleLibraryDescription.TYPE)))
+        .append(targetNodes)
+        .transformAndConcat(
+            new Function<TargetNode<?>, Iterable<? extends String>>() {
+              @Override
+              public Iterable<String> apply(TargetNode<?> input) {
+                return input
+                    .castArg(AppleNativeTargetDescriptionArg.class)
+                    .transform(GET_LINKER_FLAGS)
                     .or(ImmutableSet.<String>of());
               }
             });

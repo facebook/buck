@@ -352,7 +352,11 @@ public class AppleDescriptions {
             headerMap));
     output.prefixHeaders = Optional.of(ImmutableList.copyOf(arg.prefixHeader.asSet()));
     output.compilerFlags = arg.compilerFlags;
-    output.linkerFlags = arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver));
+    output.linkerFlags = Optional.of(
+        FluentIterable
+            .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
+            .append(arg.linkerFlags.get())
+            .toList());
     output.platformLinkerFlags = Optional.of(
         ImmutableList.<Pair<String, ImmutableList<String>>>of());
     output.preprocessorFlags = arg.preprocessorFlags;

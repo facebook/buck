@@ -693,7 +693,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedMap.of(
                     "Debug",
-                    ImmutableMap.of("PUBLIC_HEADERS_FOLDER_PATH", "FooHeaders"))))
+                    ImmutableMap.<String, String>of())))
         .setCompilerFlags(Optional.of(ImmutableList.of("-fhello")))
         .setPreprocessorFlags(Optional.of(ImmutableList.of("-fworld")))
         .build();
@@ -707,11 +707,74 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(),
         "//foo:lib");
-    assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.STATIC_LIBRARY));
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals("$(inherited) -fhello -fworld", settings.get("OTHER_CFLAGS"));
+  }
+
+  @Test
+  public void testAppleLibraryLinkerFlags() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setLinkerFlags(Optional.of(ImmutableList.of("-lhello")))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals("$(inherited) -lhello", settings.get("OTHER_LDFLAGS"));
+  }
+
+  @Test
+  public void testAppleLibraryLinkerFlagsPropagate() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setLinkerFlags(Optional.of(ImmutableList.of("-lhello")))
+        .build();
+
+    BuildTarget dependentBuildTarget = BuildTarget.builder("//foo", "bin").build();
+    TargetNode<?> dependentNode = AppleBinaryBuilder
+        .createBuilder(dependentBuildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setDeps(Optional.of(ImmutableSortedSet.of(buildTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node, dependentNode),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:bin");
+
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals("$(inherited) -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
