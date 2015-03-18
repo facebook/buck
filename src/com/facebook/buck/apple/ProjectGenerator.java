@@ -689,11 +689,11 @@ public class ProjectGenerator {
         .put(
             "LIBRARY_SEARCH_PATHS",
             Joiner.on(' ').join(
-                collectRecursiveLibrarySearchPaths(ImmutableSet.of(targetNode), false)))
+                collectRecursiveLibrarySearchPaths(ImmutableSet.of(targetNode))))
         .put(
             "FRAMEWORK_SEARCH_PATHS",
             Joiner.on(' ').join(
-                collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode), false)))
+                collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode))))
         .put(
             "OTHER_CFLAGS",
             Joiner
@@ -826,9 +826,9 @@ public class ProjectGenerator {
             "WRAPPER_EXTENSION", getExtensionString(key.getExtension())),
         ImmutableMap.of(
             "FRAMEWORK_SEARCH_PATHS", Joiner.on(' ').join(
-                collectRecursiveFrameworkSearchPaths(tests, true)),
+                collectRecursiveFrameworkSearchPaths(tests)),
             "LIBRARY_SEARCH_PATHS", Joiner.on(' ').join(
-                collectRecursiveLibrarySearchPaths(tests, true))));
+                collectRecursiveLibrarySearchPaths(tests))));
     buildableCombinedTestTargets.add(result.target);
   }
 
@@ -1425,15 +1425,13 @@ public class ProjectGenerator {
   }
 
   private <T> ImmutableSet<String> collectRecursiveLibrarySearchPaths(
-      Iterable<TargetNode<T>> targetNodes,
-      boolean includeInputs) {
+      Iterable<TargetNode<T>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
             newRecursiveRuleDependencyTransformer(
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 ImmutableSet.of(AppleLibraryDescription.TYPE)))
-        .append(includeInputs ? targetNodes : ImmutableList.<TargetNode<?>>of())
         .transform(
             new Function<TargetNode<?>, String>() {
               @Override
@@ -1449,15 +1447,13 @@ public class ProjectGenerator {
   }
 
   private <T> ImmutableSet<String> collectRecursiveFrameworkSearchPaths(
-      Iterable<TargetNode<T>> targetNodes,
-      final boolean includeInputs) {
+      Iterable<TargetNode<T>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
             newRecursiveRuleDependencyTransformer(
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 ImmutableSet.of(AppleBundleDescription.TYPE)))
-        .append(includeInputs ? targetNodes : ImmutableList.<TargetNode<?>>of())
         .filter(
             new Predicate<TargetNode<?>>() {
               @Override
