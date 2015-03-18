@@ -19,8 +19,10 @@ package com.facebook.buck.testutil.integration;
 import static java.nio.charset.StandardCharsets.UTF_16;
 import static org.junit.Assert.assertFalse;
 
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -87,7 +89,22 @@ public class HttpdForTests implements AutoCloseable {
   }
 
   public URI getUri(String path) throws URISyntaxException {
-    URI baseUri = server.getURI();
+    URI baseUri;
+    try {
+      baseUri = server.getURI();
+    } catch (Exception e) {
+      // We'd rather catch UnknownHostException, but that's a checked exception that is claimed
+      // never to be thrown.
+      baseUri = null;
+    }
+    if (baseUri == null) {
+      for (Connector connector : server.getConnectors()) {
+        if (connector instanceof NetworkConnector) {
+          return new URI("http://localhost:" + ((NetworkConnector) connector).getLocalPort());
+        }
+      }
+      throw new RuntimeException("Unable to determine URL of localhost.");
+    }
     return new URI(
         baseUri.getScheme(), /* user info */
         null,
