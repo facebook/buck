@@ -16,19 +16,19 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.collect.ImmutableSet;
-
 import java.io.InterruptedIOException;
+import java.net.SocketTimeoutException;
 import java.nio.channels.ClosedByInterruptException;
 
 public class MoreThrowables {
 
-  private static final ImmutableSet<Class<? extends Throwable>> INTERRUPTED_EXCEPTIONS =
-      ImmutableSet.<Class<? extends Throwable>>of(
-          ClosedByInterruptException.class,
-          InterruptedIOException.class);
-
   private MoreThrowables() {}
+
+  private static InterruptedException asInterruptedException(Throwable throwable) {
+    InterruptedException e = new InterruptedException();
+    e.initCause(throwable);
+    return e;
+  }
 
   /**
    * Propagates an {@link InterruptedException} masquerading as another {@code Throwable}.
@@ -40,14 +40,18 @@ public class MoreThrowables {
       throw (InterruptedException) thrown;
     }
 
-    // I/O operations will throw these types of `IOException` when interrupted, so
-    // propagate these along as an `InterruptedException`, so we handle this as expected.
-    for (Class<? extends Throwable> clazz : INTERRUPTED_EXCEPTIONS) {
-      if (clazz.isInstance(thrown)) {
-        InterruptedException e = new InterruptedException();
-        e.initCause(thrown);
-        throw e;
-      }
+    // Thrown when a thread is interrupted while blocked on I/O.  So propagate this as
+    // an `InterruptedException`.
+    if (thrown instanceof ClosedByInterruptException) {
+      throw asInterruptedException(thrown);
+    }
+
+    // `InterruptedIOException` can also be thrown when a thread is interrupted while blocked
+    // by I/O, so propagate this -- unless it's a `SocketTimeoutException` which is thrown when
+    // when a the timeout set on a socket is triggered.
+    if (thrown instanceof InterruptedIOException &&
+        !(thrown instanceof SocketTimeoutException)) {
+      throw asInterruptedException(thrown);
     }
   }
 

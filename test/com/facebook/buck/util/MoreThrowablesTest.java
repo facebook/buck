@@ -28,6 +28,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.net.SocketTimeoutException;
 import java.nio.channels.ClosedByInterruptException;
 
 public class MoreThrowablesTest {
@@ -57,6 +58,11 @@ public class MoreThrowablesTest {
     expected.expect(InterruptedException.class);
     expected.expect(is(e));
     MoreThrowables.propagateIfInterrupt(e);
+  }
+
+  @Test
+  public void socketTimeoutException() throws InterruptedException {
+    MoreThrowables.propagateIfInterrupt(new SocketTimeoutException());
   }
 
   @Test
