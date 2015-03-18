@@ -517,6 +517,10 @@ public class ProjectGeneratorTest {
                     SourceWithFlags.of(
                         new TestSourcePath("foo.m"), ImmutableList.of("-foo")),
                     SourceWithFlags.of(new TestSourcePath("bar.m")))))
+        .setExtraXcodeSources(
+            Optional.of(
+                ImmutableList.<SourcePath>of(
+                    new TestSourcePath("libsomething.a"))))
         .setHeaders(
             Optional.of(
                 ImmutableSortedSet.<SourcePath>of(new TestSourcePath("foo.h"))))
@@ -538,7 +542,8 @@ public class ProjectGeneratorTest {
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
-            "bar.m", Optional.<String>absent()));
+            "bar.m", Optional.<String>absent(),
+            "libsomething.a", Optional.<String>absent()));
 
    // check headers
     {
@@ -1011,6 +1016,10 @@ public class ProjectGeneratorTest {
                 ImmutableList.of(
                     SourceWithFlags.of(
                         new TestSourcePath("foo.m"), ImmutableList.of("-foo")))))
+        .setExtraXcodeSources(
+            Optional.of(
+                ImmutableList.<SourcePath>of(
+                    new TestSourcePath("libsomething.a"))))
         .setHeaders(
             Optional.of(
                 ImmutableSortedSet.<SourcePath>of(
@@ -1042,7 +1051,8 @@ public class ProjectGeneratorTest {
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
-            "foo.m", Optional.of("-foo")));
+            "foo.m", Optional.of("-foo"),
+            "libsomething.a", Optional.<String>absent()));
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(

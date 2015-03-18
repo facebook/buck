@@ -60,6 +60,11 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
+  public BUILDER setExtraXcodeSources(Optional<ImmutableList<SourcePath>> extraXcodeSources) {
+    arg.extraXcodeSources = extraXcodeSources;
+    return getThis();
+  }
+
   public BUILDER setHeaders(Optional<ImmutableSortedSet<SourcePath>> headers) {
     arg.headers = headers;
     return getThis();

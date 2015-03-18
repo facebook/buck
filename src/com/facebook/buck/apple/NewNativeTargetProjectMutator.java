@@ -81,6 +81,7 @@ public class NewNativeTargetProjectMutator {
   private ImmutableList<String> targetGroupPath = ImmutableList.of();
   private Optional<String> gid = Optional.absent();
   private ImmutableSet<SourceWithFlags> sourcesWithFlags = ImmutableSet.of();
+  private ImmutableSet<SourcePath> extraXcodeSources = ImmutableSet.of();
   private ImmutableSet<SourcePath> publicHeaders = ImmutableSet.of();
   private ImmutableSet<SourcePath> privateHeaders = ImmutableSet.of();
   private boolean shouldGenerateCopyHeadersPhase = true;
@@ -134,6 +135,12 @@ public class NewNativeTargetProjectMutator {
   public NewNativeTargetProjectMutator setSourcesWithFlags(
       Iterable<SourceWithFlags> sourcesWithFlags) {
     this.sourcesWithFlags = ImmutableSet.copyOf(sourcesWithFlags);
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setExtraXcodeSources(
+      Iterable<SourcePath> extraXcodeSources) {
+    this.extraXcodeSources = ImmutableSet.copyOf(extraXcodeSources);
     return this;
   }
 
@@ -248,6 +255,7 @@ public class NewNativeTargetProjectMutator {
               }
             },
             sourcesWithFlags,
+            extraXcodeSources,
             publicHeaders,
             privateHeaders));
 

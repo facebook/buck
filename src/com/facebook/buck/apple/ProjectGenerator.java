@@ -570,6 +570,7 @@ public class ProjectGenerator {
         .setShouldGenerateCopyHeadersPhase(
             !targetNode.getConstructorArg().getUseBuckHeaderMaps())
         .setSourcesWithFlags(arg.srcs.get())
+        .setExtraXcodeSources(arg.extraXcodeSources.get())
         .setPublicHeaders(arg.exportedHeaders.get())
         .setPrivateHeaders(arg.headers.get())
         .setResources(resources);

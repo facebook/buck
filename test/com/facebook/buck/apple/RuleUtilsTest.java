@@ -48,6 +48,7 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> sources = RuleUtils.createGroupsFromSourcePaths(
         resolver.getPathFunction(),
         input,
+        /* extraXcodeSources */ ImmutableSortedSet.<SourcePath>of(),
         /* publicHeaders */ ImmutableSortedSet.<SourcePath>of(),
         /* privateHeaders */ ImmutableSortedSet.<SourcePath>of());
     assertEquals(
@@ -132,6 +133,7 @@ public class RuleUtilsTest {
         RuleUtils.createGroupsFromSourcePaths(
             resolver.getPathFunction(),
             ImmutableList.<SourceWithFlags>of(),
+            ImmutableSortedSet.<SourcePath>of(),
             ImmutableList.<SourcePath>of(),
             input);
 
@@ -166,6 +168,7 @@ public class RuleUtilsTest {
         RuleUtils.createGroupsFromSourcePaths(
             resolver.getPathFunction(),
             ImmutableList.<SourceWithFlags>of(),
+            ImmutableSortedSet.<SourcePath>of(),
             ImmutableList.<SourcePath>of(),
             input);
 
@@ -187,6 +190,7 @@ public class RuleUtilsTest {
             resolver.getPathFunction(),
             ImmutableList.<SourceWithFlags>of(),
             ImmutableList.<SourcePath>of(),
+            ImmutableList.<SourcePath>of(),
             input);
 
     assertEquals(expected, actual);
@@ -201,6 +205,7 @@ public class RuleUtilsTest {
         RuleUtils.createGroupsFromSourcePaths(
             resolver.getPathFunction(),
             ImmutableList.<SourceWithFlags>of(),
+            ImmutableList.<SourcePath>of(),
             ImmutableList.<SourcePath>of(),
             ImmutableList.<SourcePath>of());
 

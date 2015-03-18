@@ -49,6 +49,7 @@ public class RuleUtils {
   public static ImmutableList<GroupedSource> createGroupsFromSourcePaths(
       Function<SourcePath, Path> resolver,
       Iterable<SourceWithFlags> sources,
+      Iterable<SourcePath> extraXcodeSources,
       Iterable<SourcePath> publicHeaders,
       Iterable<SourcePath> privateHeaders) {
     Path rootPath = Paths.get("root");
@@ -57,6 +58,11 @@ public class RuleUtils {
     for (SourceWithFlags sourceWithFlags : sources) {
       Path path = rootPath.resolve(resolver.apply(sourceWithFlags.getSourcePath()));
       GroupedSource groupedSource = GroupedSource.ofSourceWithFlags(sourceWithFlags);
+      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+    }
+    for (SourcePath sourcePath : extraXcodeSources) {
+      Path path = rootPath.resolve(resolver.apply(sourcePath));
+      GroupedSource groupedSource = GroupedSource.ofSourceWithFlags(SourceWithFlags.of(sourcePath));
       entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
     }
     for (SourcePath publicHeader : publicHeaders) {
