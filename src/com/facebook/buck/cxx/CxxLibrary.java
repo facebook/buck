@@ -48,6 +48,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
   private final ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags;
   private final ImmutableList<String> linkerFlags;
   private final ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags;
+  private final ImmutableList<Path> frameworkSearchPaths;
   private final boolean linkWhole;
   private final Optional<String> soname;
 
@@ -58,6 +59,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
       ImmutableList<String> linkerFlags,
       ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags,
+      ImmutableList<Path> frameworkSearchPaths,
       boolean linkWhole,
       Optional<String> soname) {
     super(params, pathResolver);
@@ -66,6 +68,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
     this.linkerFlags = linkerFlags;
     this.platformLinkerFlags = platformLinkerFlags;
+    this.frameworkSearchPaths = frameworkSearchPaths;
     this.linkWhole = linkWhole;
     this.soname = soname;
   }
@@ -88,6 +91,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
                 .putAllFullNameToPathMap(symlinkTree.getFullLinks())
                 .build())
         .addIncludeRoots(symlinkTree.getRoot())
+        .addAllFrameworkRoots(frameworkSearchPaths)
         .build();
   }
 

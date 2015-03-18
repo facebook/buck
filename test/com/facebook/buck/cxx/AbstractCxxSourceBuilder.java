@@ -26,6 +26,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 public class AbstractCxxSourceBuilder<T extends CxxConstructorArg> extends AbstractCxxBuilder<T> {
 
   public AbstractCxxSourceBuilder(
@@ -88,6 +90,12 @@ public class AbstractCxxSourceBuilder<T extends CxxConstructorArg> extends Abstr
 
   public AbstractCxxSourceBuilder<T> setLinkerFlags(ImmutableList<String> linkerFlags) {
     arg.linkerFlags = Optional.of(linkerFlags);
+    return this;
+  }
+
+  public AbstractCxxSourceBuilder<T> setFrameworkSearchPaths(
+      ImmutableList<Path> frameworkSearchPaths) {
+    arg.frameworkSearchPaths = Optional.of(frameworkSearchPaths);
     return this;
   }
 

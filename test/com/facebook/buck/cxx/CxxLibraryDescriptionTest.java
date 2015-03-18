@@ -164,6 +164,10 @@ public class CxxLibraryDescriptionTest {
             ImmutableList.of(
                 SourceWithFlags.of(new TestSourcePath("test/bar.cpp")),
                 SourceWithFlags.of(new BuildTargetSourcePath(projectFilesystem, genSourceTarget))))
+        .setFrameworkSearchPaths(
+            ImmutableList.of(
+                Paths.get("/some/framework/path"),
+                Paths.get("/another/framework/path")))
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
 
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(
@@ -208,6 +212,9 @@ public class CxxLibraryDescriptionTest {
                     target,
                     cxxPlatform.getFlavor(),
                     CxxDescriptionEnhancer.HeaderVisibility.PUBLIC))
+            .addFrameworkRoots(
+                Paths.get("/some/framework/path"),
+                Paths.get("/another/framework/path"))
             .build(),
         rule.getCxxPreprocessorInput(cxxPlatform));
 
@@ -508,6 +515,10 @@ public class CxxLibraryDescriptionTest {
                 SourceWithFlags.of(new TestSourcePath(sourceName)),
                 genSourceName,
                 SourceWithFlags.of(new BuildTargetSourcePath(projectFilesystem, genSourceTarget))))
+        .setFrameworkSearchPaths(
+            ImmutableList.of(
+                Paths.get("/some/framework/path"),
+                Paths.get("/another/framework/path")))
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
 
     // Construct C/C++ library build rules.
@@ -548,6 +559,9 @@ public class CxxLibraryDescriptionTest {
                     target,
                     cxxPlatform.getFlavor(),
                     CxxDescriptionEnhancer.HeaderVisibility.PUBLIC))
+            .addFrameworkRoots(
+                Paths.get("/some/framework/path"),
+                Paths.get("/another/framework/path"))
             .build(),
         rule.getCxxPreprocessorInput(cxxPlatform));
 

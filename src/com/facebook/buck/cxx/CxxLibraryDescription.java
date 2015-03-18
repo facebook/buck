@@ -586,6 +586,7 @@ public class CxxLibraryDescription implements
             args.exportedLangPreprocessorFlags),
         args.linkerFlags.or(ImmutableList.<String>of()),
         args.platformLinkerFlags.get(),
+        args.frameworkSearchPaths.get(),
         args.linkWhole.or(false),
         args.soname);
   }
