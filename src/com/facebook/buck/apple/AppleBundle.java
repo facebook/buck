@@ -16,7 +16,9 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -26,6 +28,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -39,66 +44,27 @@ import javax.annotation.Nullable;
  */
 public class AppleBundle extends AbstractBuildRule {
 
-  private final Either<AppleBundleExtension, String> extension;
+  @AddToRuleKey
+  private final String extension;
+
+  @AddToRuleKey
   private final Optional<SourcePath> infoPlist;
+
+  @AddToRuleKey
   private final BuildRule binary;
-  private final Optional<String> xcodeProductType;
 
   AppleBundle(
       BuildRuleParams params,
       SourcePathResolver resolver,
       Either<AppleBundleExtension, String> extension,
       Optional<SourcePath> infoPlist,
-      BuildRule binary,
-      Optional<String> xcodeProductType) {
+      BuildRule binary) {
     super(params, resolver);
-    this.extension = extension;
+    this.extension = extension.isLeft() ?
+        extension.getLeft().toFileExtension() :
+        extension.getRight();
     this.infoPlist = infoPlist;
     this.binary = binary;
-    this.xcodeProductType = xcodeProductType;
-  }
-
-  /**
-   * Returns the bundle's extension as a known value, if it is known.
-   */
-  public Optional<AppleBundleExtension> getExtensionValue() {
-    if (extension.isLeft()) {
-      return Optional.of(extension.getLeft());
-    } else {
-      return Optional.absent();
-    }
-  }
-
-  /**
-   * Returns the bundle's extension as a string.
-   */
-  public String getExtensionString() {
-    return extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
-  }
-
-  /**
-   * Returns the path to the Info.plist.
-   */
-  public Optional<SourcePath> getInfoPlist() {
-    return infoPlist;
-  }
-
-  /**
-   * Returns the binary inside the bundle.
-   */
-  public BuildRule getBinary() {
-    return binary;
-  }
-
-  /**
-   * If present, the value to use for the productType field of a generated
-   * Xcode project's PBXNativeTarget entry for this target.
-   *
-   * If not present, will be automatically generated based on the extension
-   * of this bundle.
-   */
-  public Optional<String> getXcodeProductType() {
-    return xcodeProductType;
   }
 
   @Override
@@ -114,13 +80,23 @@ public class AppleBundle extends AbstractBuildRule {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.setReflectively("extension", getExtensionString());
+    return builder;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    return ImmutableList.of();
+    Path output = BuildTargets.getGenPath(getBuildTarget(), "%s");
+    Path bundleRoot = output.resolve(getBuildTarget().getShortName() + "." + extension);
+    return ImmutableList.of(
+        new MkdirStep(bundleRoot),
+        CopyStep.forFile(
+            binary.getPathToOutputFile(),
+            bundleRoot.resolve(getBuildTarget().getShortName())),
+        new WriteFileStep("APPLWRUN", bundleRoot.resolve("PkgInfo")),
+        CopyStep.forFile(
+            getResolver().getPath(infoPlist.get()),
+            bundleRoot.resolve("Info.plist")));
   }
 }

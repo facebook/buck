@@ -55,8 +55,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         new SourcePathResolver(resolver),
         args.extension,
         args.infoPlist,
-        resolver.getRule(args.binary),
-        args.xcodeProductType);
+        resolver.getRule(args.binary));
   }
 
   @SuppressFieldNotInitialized

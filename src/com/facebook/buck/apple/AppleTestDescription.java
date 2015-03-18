@@ -121,8 +121,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         sourcePathResolver,
         args.extension,
         args.infoPlist,
-        library,
-        args.xcodeProductType);
+        library);
     return new AppleTest(
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)),
