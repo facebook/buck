@@ -744,6 +744,19 @@ that have painfully slow clean builds, this is a tremendous win.
 
 .center[ ![abi dependencies](images/generated/abi-graph.png) ]
 
+???
+
+We have an important optimization for incremental builds
+called the "ABI optimization".
+When you change a Java library,
+Buck can tell whether you've changed the Application Binary Interface,
+or just the implementation.
+In the latter case, it can avoid some rebuilding.
+
+Imagine a simple case:
+a high-level UI library depends on a low-level logging library.
+Each rule also has a dex rule that depends on the Java rule.
+
 ---
 
 # ABI
@@ -765,6 +778,12 @@ public class Logger {
   }
 }
 ```
+
+???
+
+Here's what the code might look like.
+The UI's click handler is calling the log method.
+(I left off `public static` to fit on the slide.)
 
 ---
 
@@ -788,11 +807,23 @@ public class Logger {
 }
 ```
 
+???
+
+Now imagine you make this change.
+The logging prefix changes from ">" to ">>>".
+The implementation of the logger has changed, but not the interface.
+
 ---
 
 # ABI
 
 .center[ ![abi method body](images/generated/abi-change-method-body.png) ]
+
+???
+
+Buck will recompile and re-dex the logging library,
+but the UI library does not need to be rebuilt at all
+because the logging interface has not changed.
 
 ---
 
@@ -815,6 +846,10 @@ public class Logger {
   }
 }
 ```
+
+???
+
+Back to our original code.
 
 ---
 
@@ -838,11 +873,24 @@ public class Logger {
 }
 ```
 
+???
+
+Let's say you change the priority argument from int to Integer.
+Now the interface has changed in an important way.
+The UI library needs to auto-box the priority argument.
+
 ---
 
 # ABI
 
 .center[ ![abi method signature](images/generated/abi-change-method-signature.png) ]
+
+???
+
+In this case,
+we obviously still need to recompile and re-dex the logging library.
+We also need to recompile and re-dex the UI library
+to pick up the auto-boxing code.
 
 ---
 
@@ -865,6 +913,10 @@ public class Logger {
   }
 }
 ```
+
+???
+
+Back to our original code.
 
 ---
 
@@ -889,18 +941,41 @@ public class Logger {
 }
 ```
 
+???
+
+Now we've added a new overload of the log method
+that doesn't require a priority.
+
 ---
 
 # ABI
 
 .center[ ![abi new method](images/generated/abi-add-unused-public-method.png) ]
 
+???
+
+Obviously,
+we still need to recompile and re-dex the logging library
+to pick up the new method.
+We also need to recompile the UI library.
+Even something as simple as adding a public method
+can break the build by creating an ambiguous overload.
+However, the compiled output of the UI library does not change,
+so we can skip re-dexing the output.
+
+Note that compiling the UI library
+and dexing the logging library can happen in parallel.
 
 ---
 
 # dx improvements
 
 * Forked `dx`
+
+???
+
+Buck includes a fork of Android's dx tool
+that has some (compile-time) performance improvements.
 
 --
 
@@ -916,6 +991,11 @@ Instagram merge went from ~11s to ~2.5s
 
 * Verified was safe to run in-process
 * Made it safe to run concurrently in-process
+
+???
+
+We run multiple copies of dx concurrently
+within the buckd process.
 
 --
 
@@ -984,7 +1064,9 @@ Even slower with ant due to separate signing step
 
 ???
 
-Debug only
+In debug builds, we put most of our code into secondary dex files.
+We don't put them into the APK, though.
+Buck loads them directly onto the device.
 
 ---
 
@@ -997,6 +1079,12 @@ Debug only
 * Only install changed files
 * Skip PackageManager for Java-only changes
 * Bigger effect with ART
+
+???
+
+Since this presentation was given,
+we have added support for doing the same with native code as well,
+so apkbuilder is only necessary if bootstrap code or assets change.
 
 ---
 
@@ -1016,6 +1104,11 @@ Debug only
 
 <span class="big-picture"> ![split dex](images/exo/incr-exo-3.png) </span>
 
+???
+
+If you only change one class,
+only the dex file containing that class is reinstalled.
+
 ---
 
 # Exopackage: skip work
@@ -1028,6 +1121,12 @@ Debug only
 * Skip PackageManager for Java-only changes
 * Bigger effect with ART
 
+???
+
+Skipping the package manager saves a lot of time.
+It's even more significant on ART devices
+because ART does more up-front optimization.
+
 ---
 
 # The result
@@ -1039,6 +1138,11 @@ Debug only
 
 More details on Buck's website.
 
+???
+
+A sub-5-second build+install is not uncommon with Buck,
+even for a very large app like Facebook for Android.
+
 ---
 
 # Exopackage in the future
@@ -1047,9 +1151,21 @@ More details on Buck's website.
 
 * Exopackage for native libraries and images.
 
+???
+
+Exopackage for native libraries has been implemented
+since this presentation was given.
+
+Pulling images out of the apk would speed up installation
+in the cases where reinstalling the apk is unavoidable.
+
 --
 
 * Exopackage for xml layouts?
+
+???
+
+Exopackage for xml changes is harder, but I believe it is possible.
 
 ---
 
