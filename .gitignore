@@ -1,40 +1,38 @@
 # Ant
-build/
+/build/
 
 # IntelliJ build
-build-ij/
+/build-ij/
 
 # Buck
-# buck-out may also be generated under an integration test directory
-# when someone runs Buck locally out of that directory to reproduce
-# a failure, so we exclude all directories named buck-out, not just
-# the one in the root directory.
-buck-out
-local.properties
-.buckconfig.local
-.buckd
+/buck-out
+/local.properties
+/.buckconfig.local
+/.buckd
 
 # Compiled Python
 *.pyc
 *py.class
 
 # buckconfig in Ocaml test project directory to override compiler paths.
-test/com/facebook/buck/ocaml/testdata/ocaml/.buckconfig
+/test/com/facebook/buck/ocaml/testdata/ocaml/.buckconfig
+# bootstrapper test is run in the source tree
+/test/com/facebook/buck/cli/bootstrapper/testdata/old_guava/buck-out/
 
 # Eclipse
 /.settings/
 /.apt_generated/
 
 # IntelliJ, based on http://devnet.jetbrains.net/docs/DOC-1186
-.idea/ant.xml
-.idea/dictionaries
-.idea/inspectionProfiles
-.idea/tasks.xml
-.idea/uiDesigner.xml
-.idea/workspace.xml
-.idea/misc.xml
-.idea/runConfigurations
-.idea/copyright/profiles_settings.xml
+/.idea/ant.xml
+/.idea/dictionaries
+/.idea/inspectionProfiles
+/.idea/tasks.xml
+/.idea/uiDesigner.xml
+/.idea/workspace.xml
+/.idea/misc.xml
+/.idea/runConfigurations
+/.idea/copyright/profiles_settings.xml
 
 # From building Emma with Ant.
 /third-party/java/emma-2.0.5312/out/
