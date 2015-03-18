@@ -1,19 +1,23 @@
 prebuilt_jar(
   name = 'jetty-all',
-  binary_jar = 'jetty-all-9.0.4.v20130625.jar',
+  binary_jar = 'jetty-all-9.2.10.v20150310.jar',
+#  source_jar = ':jetty-source',
 )
 
-prebuilt_jar(
-  name = 'servlet-api',
-  binary_jar = 'servlet-api.jar',
-)
+# Uncomment this to get hold of the source jar.
+#remote_file(
+#  name = 'jetty-source',
+#  out = 'jetty-all-9.2.10.v20150310-sources.jar',
+#  url = 'mvn:org.eclipse.jetty.aggregate:jetty-all:src:9.2.10.v20150310',
+#  sha1 = '311da310416d2feb3de227081d7c3f48742d7075',
+#)
 
 java_library(
   name = 'jetty',
   deps = [],
   exported_deps = [
     ':jetty-all',
-    ':servlet-api',
+    '//third-party/java/servlet-api:servlet-api',
   ],
   visibility = [
     '//src/com/facebook/buck/httpserver:',

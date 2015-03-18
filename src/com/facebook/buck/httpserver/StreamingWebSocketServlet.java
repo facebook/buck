@@ -22,9 +22,9 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.UpgradeRequest;
-import org.eclipse.jetty.websocket.api.UpgradeResponse;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
 import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
@@ -51,7 +51,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     // parent class. This is why we override the default WebSocketCreator for the factory.
     WebSocketCreator wrapperCreator = new WebSocketCreator() {
       @Override
-      public Object createWebSocket(UpgradeRequest req, UpgradeResponse resp) {
+      public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
         return new MyWebSocket();
       }
     };

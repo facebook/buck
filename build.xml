@@ -89,13 +89,13 @@
     <include name="infer-annotations/infer-annotations-1.5.jar" />
     <include name="jacoco/org.jacoco.core-0.7.2.201409121644.jar" />
     <include name="jacoco/org.jacoco.report-0.7.2.201409121644.jar" />
-    <include name="jetty/jetty-all-9.0.4.v20130625.jar" />
-    <include name="jetty/servlet-api.jar" />
+    <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
     <include name="joda-time/joda-time-2.2.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="log4j/log4j-1.2.16.jar" />
     <include name="parboiled/parboiled-core-1.1.6.jar" />
     <include name="parboiled/parboiled-java-1.1.6.jar" />
+    <include name="servlet-api/javax.servlet-api-3.1.0.jar" />
     <include name="slf4j/slf4j-api-1.7.2.jar" />
     <include name="slf4j/slf4j-log4j12-1.7.2.jar" />
     <include name="stringtemplate/ST-4.0.8.jar" />

@@ -9,6 +9,8 @@
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
 [buildfile]
     includes = //DEFS
+[download]
+    maven_repo = https://repo1.maven.org/maven2
 [project]
     ; Directories that do not contain input files.
     ; All of these directories should also appear in the "ignore_dirs" list
