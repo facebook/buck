@@ -87,52 +87,6 @@ public class CxxLibraryDescription implements
     return cxxPlatforms.containsAnyOf(flavors);
   }
 
-  /**
-   * Make sure all build rules needed to generate the headers symlink tree are added to the action
-   * graph.
-   *
-   * @return the {@link com.facebook.buck.rules.SymlinkTree} rule representing the header tree.
-   */
-  private static SymlinkTree requireHeaderSymlinkTree(
-      BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
-      CxxPlatform cxxPlatform,
-      boolean includeLexYaccHeaders,
-      ImmutableMap<String, SourcePath> lexSources,
-      ImmutableMap<String, SourcePath> yaccSources,
-      ImmutableMap<Path, SourcePath> headers,
-      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
-
-    BuildTarget headerTarget =
-        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-            params.getBuildTarget(),
-            cxxPlatform.getFlavor(),
-            headerVisibility);
-
-    // Check the cache...
-    Optional<BuildRule> rule = ruleResolver.getRuleOptional(headerTarget);
-    if (rule.isPresent()) {
-      return (SymlinkTree) rule.get();
-    }
-
-    SymlinkTree symlinkTree =
-        CxxDescriptionEnhancer.createHeaderSymlinkTree(
-            params,
-            ruleResolver,
-            pathResolver,
-            cxxPlatform,
-            includeLexYaccHeaders,
-            lexSources,
-            yaccSources,
-            headers,
-            headerVisibility);
-
-    ruleResolver.addToIndex(symlinkTree);
-
-    return symlinkTree;
-  }
-
   private static ImmutableList<SourcePath> requireObjects(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -159,7 +113,7 @@ public class CxxLibraryDescription implements
             yaccSources);
 
     SymlinkTree headerSymlinkTree =
-        requireHeaderSymlinkTree(
+        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             params,
             ruleResolver,
             pathResolver,
@@ -171,7 +125,7 @@ public class CxxLibraryDescription implements
             CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
 
     SymlinkTree exportedHeaderSymlinkTree =
-        requireHeaderSymlinkTree(
+        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             params,
             ruleResolver,
             pathResolver,

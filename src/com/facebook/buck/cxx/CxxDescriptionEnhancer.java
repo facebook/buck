@@ -167,6 +167,45 @@ public class CxxDescriptionEnhancer {
             .build());
   }
 
+  public static SymlinkTree requireHeaderSymlinkTree(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      boolean includeLexYaccHeaders,
+      ImmutableMap<String, SourcePath> lexSources,
+      ImmutableMap<String, SourcePath> yaccSources,
+      ImmutableMap<Path, SourcePath> headers,
+      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
+    BuildTarget headerSymlinkTreeTarget =
+        CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor(),
+            headerVisibility);
+
+    // Check the cache...
+    Optional<BuildRule> rule = ruleResolver.getRuleOptional(headerSymlinkTreeTarget);
+    if (rule.isPresent()) {
+      Preconditions.checkState(rule.get() instanceof SymlinkTree);
+      return (SymlinkTree) rule.get();
+    }
+
+    SymlinkTree symlinkTree = createHeaderSymlinkTree(
+        params,
+        ruleResolver,
+        pathResolver,
+        cxxPlatform,
+        includeLexYaccHeaders,
+        lexSources,
+        yaccSources,
+        headers,
+        headerVisibility);
+
+    ruleResolver.addToIndex(symlinkTree);
+
+    return symlinkTree;
+  }
+
   /**
    * @return the {@link BuildTarget} to use for the {@link BuildRule} generating the
    *    symlink tree of headers.
@@ -490,29 +529,6 @@ public class CxxDescriptionEnhancer {
         lexYaccCxxSourcesBuilder.build());
   }
 
-  public static SymlinkTree createHeaderSymlinkTreeBuildRule(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      Flavor platform,
-      ImmutableMap<Path, SourcePath> headers,
-      HeaderVisibility headerVisibility) {
-
-    // Setup the header and symlink tree rules
-    BuildTarget headerSymlinkTreeTarget =
-        createHeaderSymlinkTreeTarget(params.getBuildTarget(), platform, headerVisibility);
-    Path headerSymlinkTreeRoot =
-        getHeaderSymlinkTreePath(params.getBuildTarget(), platform, headerVisibility);
-    final SymlinkTree headerSymlinkTree = CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-        new SourcePathResolver(resolver),
-        headerSymlinkTreeTarget,
-        params,
-        headerSymlinkTreeRoot,
-        headers);
-    resolver.addToIndex(headerSymlinkTree);
-
-    return headerSymlinkTree;
-  }
-
   public static CxxPreprocessorInput combineCxxPreprocessorInput(
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
@@ -660,27 +676,29 @@ public class CxxDescriptionEnhancer {
     ImmutableMap<String, SourcePath> lexSrcs = parseLexSources(params, resolver, args);
     ImmutableMap<String, SourcePath> yaccSrcs = parseYaccSources(params, resolver, args);
 
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+
     // Setup the rules to run lex/yacc.
     CxxHeaderSourceSpec lexYaccSources =
-        createLexYaccBuildRules(
+        requireLexYaccSources(
             params,
             resolver,
+            sourcePathResolver,
             cxxPlatform,
-            ImmutableList.<String>of(),
             lexSrcs,
-            ImmutableList.<String>of(),
             yaccSrcs);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
-    SymlinkTree headerSymlinkTree = createHeaderSymlinkTreeBuildRule(
+    SymlinkTree headerSymlinkTree = requireHeaderSymlinkTree(
         params,
         resolver,
-        cxxPlatform.getFlavor(),
-        ImmutableMap.<Path, SourcePath>builder()
-            .putAll(headers)
-            .putAll(lexYaccSources.getCxxHeaders())
-            .build(),
+        sourcePathResolver,
+        cxxPlatform,
+        /* includeLexYaccHeaders */ true,
+        lexSrcs,
+        yaccSrcs,
+        headers,
         HeaderVisibility.PRIVATE);
     CxxPreprocessorInput cxxPreprocessorInput = combineCxxPreprocessorInput(
         params,
@@ -726,7 +744,7 @@ public class CxxDescriptionEnhancer {
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
-        new SourcePathResolver(resolver),
+        sourcePathResolver,
         /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>builder()
             .addAll(args.linkerFlags.or(ImmutableList.<String>of()))

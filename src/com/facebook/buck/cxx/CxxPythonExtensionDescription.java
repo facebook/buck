@@ -122,14 +122,15 @@ public class CxxPythonExtensionDescription implements
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
-    SymlinkTree headerSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTreeBuildRule(
+    SymlinkTree headerSymlinkTree = CxxDescriptionEnhancer.requireHeaderSymlinkTree(
         params,
         ruleResolver,
-        cxxPlatform.getFlavor(),
-        ImmutableMap.<Path, SourcePath>builder()
-            .putAll(headers)
-            .putAll(lexYaccSources.getCxxHeaders())
-            .build(),
+        new SourcePathResolver(ruleResolver),
+        cxxPlatform,
+        /* includeLexYaccHeaders */ true,
+        lexSrcs,
+        yaccSrcs,
+        headers,
         CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
     CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
         params,
