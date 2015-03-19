@@ -65,12 +65,6 @@ public class ProjectCommandOptions extends BuildCommandOptions {
   private boolean processAnnotations;
 
   @Option(
-      name = "--with-tests",
-      hidden = true)
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  private boolean withTests = false;
-
-  @Option(
       name = "--without-tests",
       usage = "When generating a project slice, exclude tests that test the code in that slice")
   private boolean withoutTests = false;
