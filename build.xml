@@ -93,6 +93,8 @@
     <include name="joda-time/joda-time-2.2.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="log4j/log4j-1.2.16.jar" />
+    <include name="okhttp/okhttp-2.2.0.jar" />
+    <include name="okio/okio-1.2.0.jar" />
     <include name="parboiled/parboiled-core-1.1.6.jar" />
     <include name="parboiled/parboiled-java-1.1.6.jar" />
     <include name="servlet-api/javax.servlet-api-3.1.0.jar" />

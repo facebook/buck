@@ -13,6 +13,8 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-jdk7-2.5.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nailgun/nailgun-server-0.9.2-SNAPSHOT.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/okhttp/okhttp-2.2.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/okio/okio-1.2.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/stringtemplate/ST-4.0.8.jar!/" />
     </CLASSES>
     <JAVADOC />

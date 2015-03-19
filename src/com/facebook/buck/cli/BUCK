@@ -42,6 +42,7 @@ java_library(
     '//third-party/java/guava:guava',
     '//third-party/java/ini4j:ini4j',
     '//third-party/java/jsr:jsr305',
+    '//third-party/java/okhttp:okhttp',
   ],
   visibility = [
     '//src/com/facebook/buck/android:rules',

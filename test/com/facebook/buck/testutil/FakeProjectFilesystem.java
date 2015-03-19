@@ -49,6 +49,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.math.BigInteger;
 import java.nio.file.CopyOption;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystems;
@@ -68,12 +69,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
 // TODO(natthu): Implement methods that throw UnsupportedOperationException.
 public class FakeProjectFilesystem extends ProjectFilesystem {
+
+  private static final Random RANDOM = new Random();
 
   private static final BasicFileAttributes DEFAULT_FILE_ATTRIBUTES =
       new BasicFileAttributes() {
@@ -550,4 +554,27 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       createNewFile(fileToTouch);
     }
   }
+
+  @Override
+  public Path createTempFile(
+      Path directory,
+      String prefix,
+      String suffix,
+      FileAttribute<?>... attrs) throws IOException {
+    Path path;
+    do {
+      String str = new BigInteger(130, RANDOM).toString(32);
+      path = directory.resolve(prefix + str + suffix);
+    } while (exists(path));
+    touch(path);
+    return path;
+  }
+
+  @Override
+  public void move(Path source, Path target, CopyOption... options) throws IOException {
+    fileContents.put(target.normalize(), fileContents.remove(source.normalize()));
+    fileAttributes.put(target.normalize(), fileAttributes.remove(source.normalize()));
+    fileLastModifiedTimes.put(target.normalize(), fileLastModifiedTimes.remove(source.normalize()));
+  }
+
 }

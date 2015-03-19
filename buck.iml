@@ -55,5 +55,7 @@
     <orderEntry type="library" name="infer-annotations" level="project" />
     <orderEntry type="library" name="jacoco" level="project" />
     <orderEntry type="library" name="immutables-annotations" level="project" />
+    <orderEntry type="library" name="okhttp-2.2.0" level="project" />
+    <orderEntry type="library" name="okio-1.2.0" level="project" />
   </component>
 </module>

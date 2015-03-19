@@ -16,207 +16,209 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
+import com.google.common.hash.HashingInputStream;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 
-import java.io.BufferedOutputStream;
+import org.apache.commons.compress.utils.BoundedInputStream;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.NotSerializableException;
 import java.io.OutputStream;
-import java.net.ConnectException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import okio.BufferedSink;
 
 public class HttpArtifactCache implements ArtifactCache {
+
   /**
    * If the user is offline, then we do not want to print every connection failure that occurs.
    * However, in practice, it appears that some connection failures can be intermittent, so we
    * should print enough to provide a signal of how flaky the connection is.
    */
-  private static final int MAX_CONNECTION_FAILURE_REPORTS = 1;
-  private static final Logger logger = Logger.get(HttpArtifactCache.class);
-  private static final String BOUNDARY = "buckcacheFormPartBoundaryCHk4TK4bRHXDX0cICpSAbBXWzkXbtt";
+  private static final Logger LOGGER = Logger.get(HttpArtifactCache.class);
+  private static final MediaType OCTET_STREAM = MediaType.parse("application/octet-stream");
 
-  private final AtomicInteger numConnectionExceptionReports;
+  private final OkHttpClient fetchClient;
+  private final OkHttpClient storeClient;
   private final URL url;
-  private final int timeoutSeconds;
   private final boolean doStore;
   private final ProjectFilesystem projectFilesystem;
-  private final BuckEventBus buckEventBus;
   private final HashFunction hashFunction;
-  private final ImmutableMap<String, String> headers;
 
   public HttpArtifactCache(
+      OkHttpClient fetchClient,
+      OkHttpClient storeClient,
       URL url,
-      int timeoutSeconds,
       boolean doStore,
       ProjectFilesystem projectFilesystem,
-      BuckEventBus buckEventBus,
-      HashFunction hashFunction,
-      ImmutableMap<String, String> headers) {
-    Preconditions.checkArgument(1 <= timeoutSeconds);
+      HashFunction hashFunction) {
+    this.fetchClient = fetchClient;
+    this.storeClient = storeClient;
     this.url = url;
-    this.timeoutSeconds = timeoutSeconds;
     this.doStore = doStore;
     this.projectFilesystem = projectFilesystem;
-    this.buckEventBus = buckEventBus;
     this.hashFunction = hashFunction;
-    this.numConnectionExceptionReports = new AtomicInteger(0);
-    this.headers = headers;
   }
 
-  // Make this overrideable by unittests to inject mock connections.
-  @VisibleForTesting
-  protected HttpURLConnection getConnection(URL url) throws IOException {
-    return (HttpURLConnection) url.openConnection();
+  private Request.Builder createRequestBuilder(String key) throws IOException {
+    return new Request.Builder()
+        .url(new URL(url, "artifact/key/" + key));
   }
 
-  private HttpURLConnection createConnection(URL url) throws IOException {
-    HttpURLConnection connection = getConnection(url);
-    connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
-    for (Map.Entry<String, String> header : headers.entrySet()) {
-      connection.setRequestProperty(header.getKey(), header.getValue());
-    }
-    return connection;
+  protected Response fetchCall(Request request) throws IOException {
+    return fetchClient.newCall(request).execute();
   }
 
-  @Override
-  public CacheResult fetch(RuleKey ruleKey, File file) {
-    HttpURLConnection connection;
-    try {
-      connection = createConnection(new URL(url, "artifact/key/" + ruleKey.toString()));
-    } catch (MalformedURLException e) {
-      logger.error(e, "fetch(%s): malformed URL: %s", ruleKey, url);
-      return CacheResult.MISS;
-    } catch (IOException e) {
-      logger.warn(e, "fetch(%s): [init] IOException: %s", ruleKey, e.getMessage());
+  public CacheResult fetchImpl(RuleKey ruleKey, File file) throws IOException {
+    Request request =
+        createRequestBuilder(ruleKey.toString())
+            .get()
+            .build();
+    Response response = fetchCall(request);
+
+    if (response.code() == HttpURLConnection.HTTP_NOT_FOUND) {
+      LOGGER.info("fetch(%s): cache miss", ruleKey);
       return CacheResult.MISS;
     }
 
-    // Set a read timeout for fetches *before* we call `getResponseCode`, otherwise it
-    // has no effect.
-    connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(timeoutSeconds));
-
-    int responseCode;
-    try {
-      responseCode = connection.getResponseCode();
-    } catch (IOException e) {
-      reportConnectionFailure(String.format("fetch(%s)", ruleKey), e);
+    if (response.code() != HttpURLConnection.HTTP_OK) {
+      LOGGER.warn("fetch(%s): unexpected response: %d", ruleKey, response.code());
       return CacheResult.MISS;
     }
 
-    switch (responseCode) {
-      case HttpURLConnection.HTTP_OK:
-        try {
+    // The hash code shipped with the artifact to/from the cache.
+    HashCode expectedHashCode, actualHashCode;
 
-          // The hash code shipped with the artifact to/from the cache.
-          HashCode expectedHashCode;
+    // Setup a temporary file, which sits next to the destination, to write to and
+    // make sure all parent dirs exist.
+    Path path = file.toPath();
+    projectFilesystem.createParentDirs(path);
+    Path temp = projectFilesystem.createTempFile(
+        path.getParent(),
+        path.getFileName().toString(),
+        ".tmp");
 
-          // Setup a temporary file, which sits next to the destination, to write to and
-          // make sure all parent dirs exist.
-          Path path = file.toPath();
-          projectFilesystem.createParentDirs(path);
-          Path temp = projectFilesystem.createTempFile(
-              path.getParent(),
-              path.getFileName().toString(),
-              ".tmp");
+    // Open the stream to server just long enough to read the hash code and artifact.
+    try (DataInputStream input = new DataInputStream(response.body().byteStream())) {
 
-          // Open the stream to server just long enough to read the hash code and artifact.
-          try (InputStream input = connection.getInputStream()) {
+      // First, extract the size of the file data portion, which we put in the beginning of
+      // the artifact.
+      long length = input.readLong();
 
-            // First, extract the hash code from the beginning of the request data.
-            byte[] hashCodeBytes = new byte[hashFunction.bits() / Byte.SIZE];
-            ByteStreams.readFully(input, hashCodeBytes);
-            expectedHashCode = HashCode.fromBytes(hashCodeBytes);
+      // Now, write the remaining response data to the temp file, while grabbing the hash.
+      try (BoundedInputStream boundedInput = new BoundedInputStream(input, length);
+           HashingInputStream hashingInput = new HashingInputStream(hashFunction, boundedInput);
+           OutputStream output = projectFilesystem.newFileOutputStream(temp)) {
+        ByteStreams.copy(hashingInput, output);
+        actualHashCode = hashingInput.hash();
+      }
 
-            // Write the remaining response data to the temp file.
-            projectFilesystem.copyToPath(input, temp, StandardCopyOption.REPLACE_EXISTING);
-          }
+      // Lastly, extract the hash code from the end of the request data.
+      byte[] hashCodeBytes = new byte[hashFunction.bits() / Byte.SIZE];
+      ByteStreams.readFully(input, hashCodeBytes);
+      expectedHashCode = HashCode.fromBytes(hashCodeBytes);
 
-          // Now form the checksum on the file we got and compare it to the checksum form the
-          // the HTTP header.  If it's incorrect, log this and return a miss.
-          HashCode actualHashCode = Files.hash(temp.toFile(), hashFunction);
-          if (!expectedHashCode.equals(actualHashCode)) {
-            logger.warn("fetch(%s): artifact had invalid checksum", ruleKey);
-            projectFilesystem.deleteFileAtPath(temp);
-            return CacheResult.MISS;
-          }
-
-          // Finally, move the temp file into it's final place.
-          projectFilesystem.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
-
-        } catch (IOException e) {
-          logger.warn(e, "fetch(%s): [write] IOException: %s", ruleKey, e.getMessage());
+      // We should be at the end of output -- verify this.  Also, we could just try to read a
+      // single byte here, instead of all remaining input, but some network stack implementations
+      // require that we exhaust the input stream before the connection can be reusable.
+      try (OutputStream output = ByteStreams.nullOutputStream()) {
+        if (ByteStreams.copy(input, output) != 0) {
+          LOGGER.warn("fetch(%s): unexpected end of input", ruleKey);
           return CacheResult.MISS;
         }
-        logger.info("fetch(%s): cache hit", ruleKey);
-        return CacheResult.HTTP_HIT;
-      case HttpURLConnection.HTTP_NOT_FOUND:
-        logger.info("fetch(%s): cache miss", ruleKey);
-        return CacheResult.MISS;
-      default:
-        logger.warn("fetch(%s): unexpected response: %d", ruleKey, responseCode);
-        return CacheResult.MISS;
+      }
+    }
+
+    // Now form the checksum on the file we got and compare it to the checksum form the
+    // the HTTP header.  If it's incorrect, log this and return a miss.
+    if (!expectedHashCode.equals(actualHashCode)) {
+      LOGGER.warn("fetch(%s): artifact had invalid checksum", ruleKey);
+      projectFilesystem.deleteFileAtPath(temp);
+      return CacheResult.MISS;
+    }
+
+    // Finally, move the temp file into it's final place.
+    projectFilesystem.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
+
+    LOGGER.info("fetch(%s): cache hit", ruleKey);
+    return CacheResult.HTTP_HIT;
+  }
+
+  @Override
+  public CacheResult fetch(RuleKey ruleKey, File output) throws InterruptedException {
+    try {
+      return fetchImpl(ruleKey, output);
+    } catch (IOException e) {
+      LOGGER.warn(e, "fetch(%s): IOException: %s", ruleKey, e.getMessage());
+      return CacheResult.MISS;
+    }
+  }
+
+  protected Response storeCall(Request request) throws IOException {
+    return storeClient.newCall(request).execute();
+  }
+
+  public void storeImpl(RuleKey ruleKey, final File file) throws IOException {
+    Request request = createRequestBuilder(ruleKey.toString())
+        .put(
+            new RequestBody() {
+              @Override
+              public MediaType contentType() {
+                return OCTET_STREAM;
+              }
+
+              @Override
+              public long contentLength() throws IOException {
+                return
+                    Long.SIZE / Byte.SIZE +
+                    projectFilesystem.getFileSize(file.toPath()) +
+                    hashFunction.bits() / Byte.SIZE;
+              }
+
+              @Override
+              public void writeTo(BufferedSink sink) throws IOException {
+                try (DataOutputStream output = new DataOutputStream(sink.outputStream());
+                     InputStream input = projectFilesystem.newFileInputStream(file.toPath());
+                     HashingInputStream hasher = new HashingInputStream(hashFunction, input)) {
+                  output.writeLong(projectFilesystem.getFileSize(file.toPath()));
+                  ByteStreams.copy(hasher, output);
+                  output.write(hasher.hash().asBytes());
+                }
+              }
+            })
+        .build();
+
+    Response response = storeCall(request);
+
+    if (response.code() != HttpURLConnection.HTTP_ACCEPTED) {
+      LOGGER.warn("store(%s): unexpected response: %d", ruleKey, response.code());
     }
   }
 
   @Override
-  public void store(RuleKey ruleKey, File file) {
+  public void store(RuleKey ruleKey, File output) throws InterruptedException {
     if (!isStoreSupported()) {
       return;
     }
-    String method = "POST";
-    HttpURLConnection connection;
     try {
-      HashCode hashCode = Files.hash(file, hashFunction);
-      connection = createConnection(new URL(url, "artifact"));
-      connection.setRequestMethod(method);
-      prepareFileUpload(connection, file, ruleKey.toString(), hashCode);
-    } catch (NotSerializableException e) {
-      logger.error(e, "store(%s): could not write hash code: %s", ruleKey);
-      return;
-    } catch (MalformedURLException e) {
-      logger.error(e, "store(%s): malformed URL: %s", ruleKey, e.getMessage());
-      return;
-    } catch (ProtocolException e) {
-      logger.error(e, "store(%s): invalid protocol: %s", ruleKey, method);
-      return;
-    } catch (ConnectException e) {
-      reportConnectionFailure(String.format("store(%s)", ruleKey), e);
-      return;
+      storeImpl(ruleKey, output);
     } catch (IOException e) {
-      logger.warn(e, "store(%s): IOException: %s", ruleKey, e.getMessage());
-      return;
-    }
-
-    int responseCode;
-    try {
-      responseCode = connection.getResponseCode();
-    } catch (IOException e) {
-      reportConnectionFailure(String.format("store(%s)", ruleKey), e);
-      return;
-    }
-    if (responseCode != HttpURLConnection.HTTP_ACCEPTED) {
-      logger.warn("store(%s): unexpected response: %d", ruleKey, responseCode);
+      LOGGER.warn(e, "store(%s): IOException: %s", ruleKey, e.getMessage());
     }
   }
 
@@ -226,64 +228,6 @@ public class HttpArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public void close() {
-    int failures = numConnectionExceptionReports.get();
-    if (failures > 0) {
-      logger.warn("Total connection failures: %s", failures);
-    }
-  }
-
-  private void reportConnectionFailure(String context, Exception exception) {
-    logger.warn(exception, "%s: connection failed: %s", context, exception.getMessage());
-    if (numConnectionExceptionReports.getAndIncrement() < MAX_CONNECTION_FAILURE_REPORTS) {
-      buckEventBus.post(ConsoleEvent.warning(
-              "%s: Connection failed: %s",
-              context,
-              exception.getMessage()));
-    }
-  }
-
-  private void prepareFileUpload(
-      HttpURLConnection connection,
-      File file,
-      String key,
-      HashCode hashCode)
-      throws IOException {
-
-    connection.setDoOutput(true);
-    connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY);
-    // The cache protocol requires we provide the number of artifacts being sent in the request
-    connection.setRequestProperty("Buck-Artifact-Count", "1");
-
-    // Construct the header.
-    byte[] header = (
-        "--" + BOUNDARY + "\r\n" +
-        "Content-Disposition: form-data; name=\"key0\"\r\n\r\n" +
-        key +
-        "\r\n--" + BOUNDARY + "\r\n" +
-        "Content-Disposition: form-data; name=\"data0\"\r\n" +
-        "Content-Type: application/octet-stream\r\n\r\n").getBytes(Charsets.UTF_8);
-
-    // Get the serialized hash code.
-    byte[] hashCodeBytes = hashCode.asBytes();
-
-    // Construct the footer.
-    byte[] footer = ("\r\n--" + BOUNDARY + "--\r\n").getBytes(Charsets.UTF_8);
-
-    // Use fixed streaming mode so that we don't buffer the entire contents of the artifact
-    // in memory.
-    connection.setFixedLengthStreamingMode(
-        header.length + hashCodeBytes.length + file.length() + footer.length);
-
-    // Write out the header, hash code, file conent, and footer.  In that order.
-    try (OutputStream os = new BufferedOutputStream(connection.getOutputStream())) {
-      os.write(header);
-      os.write(hashCodeBytes);
-      try (InputStream is = projectFilesystem.newFileInputStream(file.toPath())) {
-        ByteStreams.copy(is, os);
-      }
-      os.write(footer);
-    }
-  }
+  public void close() {}
 
 }

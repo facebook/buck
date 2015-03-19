@@ -1,0 +1,8 @@
+prebuilt_jar(
+  name = 'okio',
+  binary_jar = 'okio-1.2.0.jar',
+  javadoc_url = 'http://square.github.io/okio',
+  visibility = [
+    'PUBLIC',
+  ],
+)

@@ -63,6 +63,10 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.squareup.okhttp.ConnectionPool;
+import com.squareup.okhttp.Interceptor;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Response;
 
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
@@ -81,6 +85,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -646,7 +651,7 @@ public class BuckConfig {
           }
           break;
         case http:
-          ArtifactCache httpArtifactCache = createHttpArtifactCache(buckEventBus);
+          ArtifactCache httpArtifactCache = createHttpArtifactCache();
           builder.add(httpArtifactCache);
           break;
         }
@@ -759,7 +764,15 @@ public class BuckConfig {
     }
   }
 
-  private ArtifactCache createHttpArtifactCache(BuckEventBus buckEventBus) {
+  private String getLocalhost() {
+    try {
+      return InetAddress.getLocalHost().getHostName();
+    } catch (UnknownHostException e) {
+      return "<unknown>";
+    }
+  }
+
+  private ArtifactCache createHttpArtifactCache() {
     URL url;
     try {
       url = new URL(getValue("cache", "http_url").or(DEFAULT_HTTP_URL));
@@ -772,23 +785,43 @@ public class BuckConfig {
 
     boolean doStore = readCacheMode("http_mode", DEFAULT_HTTP_CACHE_MODE);
 
-    String localhost;
-    try {
-      localhost = InetAddress.getLocalHost().getHostName();
-    } catch (UnknownHostException e) {
-      localhost = "<unknown>";
-    }
+    // Setup the defaut client to use.
+    OkHttpClient client = new OkHttpClient();
+    final String localhost = getLocalhost();
+    client.networkInterceptors().add(
+        new Interceptor() {
+          @Override
+          public Response intercept(Chain chain) throws IOException {
+            return chain.proceed(
+                chain.request().newBuilder()
+                    .addHeader("X-BuckCache-User", System.getProperty("user.name", "<unknown>"))
+                    .addHeader("X-BuckCache-Host", localhost)
+                    .build());
+          }
+        });
+    client.setConnectTimeout(timeoutSeconds, TimeUnit.SECONDS);
+    client.setConnectionPool(
+        new ConnectionPool(
+            // It's important that this number is greater than the `-j` parallelism,
+            // as if it's too small, we'll overflow the reusable connection pool and
+            // start spamming new connections.  While this isn't the best location,
+            // the other current option is setting this wherever we construct a `Build`
+            // object and have access to the `-j` argument.  However, since that is
+            // created in several places leave it here for now.
+            /* maxIdleConnections */ 200,
+            /* keepAliveDurationMs */ TimeUnit.MINUTES.toMillis(5)));
+
+    // For fetches, use a client with a read timeout.
+    OkHttpClient fetchClient = client.clone();
+    fetchClient.setReadTimeout(timeoutSeconds, TimeUnit.SECONDS);
 
     return new HttpArtifactCache(
+        fetchClient,
+        client,
         url,
-        timeoutSeconds,
         doStore,
         projectFilesystem,
-        buckEventBus,
-        Hashing.crc32(),
-        ImmutableMap.of(
-            "X-BuckCache-User", System.getProperty("user.name"),
-            "X-BuckCache-Host", localhost));
+        Hashing.crc32());
   }
 
   private boolean readCacheMode(String fieldName, String defaultValue) {

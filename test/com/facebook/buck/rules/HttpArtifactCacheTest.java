@@ -16,200 +16,299 @@
 
 package com.facebook.buck.rules;
 
-import static org.easymock.EasyMock.anyString;
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.createStrictMock;
-import static org.easymock.EasyMock.eq;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.Protocol;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 
-import org.easymock.EasyMock;
-import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import okio.Buffer;
 
 public class HttpArtifactCacheTest {
 
   private static final HashFunction HASH_FUNCTION = Hashing.crc32();
 
-  // This timeout is only ever consumed by the mocked connection, so it doesn't really
-  // matter what it is, just that it's used consistently.
-  private static final long TIMEOUT = 1;
-  private static final TimeUnit TIMEOUT_UNIT = TimeUnit.SECONDS;
-
-  private HttpArtifactCache cache;
-  private HttpURLConnection connection;
-  private ProjectFilesystem projectFilesystem;
-
-  private byte[] createFileContentsWithHashCode(HashCode code, String contents) throws IOException {
-    ByteArrayOutputStream output = new ByteArrayOutputStream();
+  private byte[] createArtifact(long length, HashCode code, String contents) throws IOException {
+    ByteArrayOutputStream byteSteam = new ByteArrayOutputStream();
+    DataOutputStream output = new DataOutputStream(byteSteam);
+    output.writeLong(length);
+    output.write(contents.getBytes(Charsets.UTF_8));
     output.write(code.asBytes());
-    output.write(contents.getBytes());
-    return output.toByteArray();
+    return byteSteam.toByteArray();
   }
 
-  @Before
-  public void setUp() throws MalformedURLException {
-    connection = createStrictMock(HttpURLConnection.class);
-    projectFilesystem = createMock(ProjectFilesystem.class);
-    cache = new FakeHttpArtifactCache(
-        connection,
-        projectFilesystem,
-        BuckEventBusFactory.newInstance(),
-        ImmutableMap.of("X-Header", "test"));
+  private byte[] createArtifact(HashCode code, String contents) throws IOException {
+    return createArtifact(
+        contents.getBytes(Charsets.UTF_8).length,
+        code,
+        contents);
   }
 
-  @Test
-  public void testFetchNotFound() throws IOException {
-    connection.setReadTimeout((int) TIMEOUT_UNIT.toMillis(TIMEOUT));
-    expect(connection.getResponseCode()).andReturn(HttpURLConnection.HTTP_NOT_FOUND);
-    replay(connection);
-    assertEquals(cache.fetch(new RuleKey("00000000000000000000000000000000"),
-          File.createTempFile("000", "")),
-        CacheResult.MISS);
-    verify(connection);
+  private byte[] createArtifact(int length, String contents) throws IOException {
+    return createArtifact(
+        length,
+        HASH_FUNCTION.hashString(contents, Charsets.UTF_8),
+        contents);
   }
 
-  @Test
-  public void testFetchOK() throws IOException {
-    String data = "test";
-    HashCode hashCode = HASH_FUNCTION.hashString(data, Charset.defaultCharset());
-    connection.setReadTimeout((int) TIMEOUT_UNIT.toMillis(TIMEOUT));
-    expect(connection.getResponseCode()).andReturn(HttpURLConnection.HTTP_OK);
-    InputStream is = new ByteArrayInputStream(createFileContentsWithHashCode(hashCode, data));
-    expect(connection.getInputStream()).andReturn(is);
-    File file = File.createTempFile("000", "");
-    Path path = file.toPath();
-    Path temp = File.createTempFile("000", "").toPath();
-    Files.write(temp, data.getBytes(), StandardOpenOption.WRITE);
-    projectFilesystem.createParentDirs(path);
-    expect(projectFilesystem.createTempFile(
-            path.getParent(),
-            path.getFileName().toString(),
-            ".tmp"))
-        .andReturn(temp);
-    projectFilesystem.copyToPath(is, temp, StandardCopyOption.REPLACE_EXISTING);
-    projectFilesystem.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
-    replay(connection);
-    replay(projectFilesystem);
-    assertEquals(
-        cache.fetch(new RuleKey("00000000000000000000000000000000"), file),
-        CacheResult.HTTP_HIT);
-    verify(connection);
-    verify(projectFilesystem);
+  private byte[] createArtifact(String contents) throws IOException {
+    return createArtifact(HASH_FUNCTION.hashString(contents, Charsets.UTF_8), contents);
+  }
+
+  private ResponseBody createBody(HashCode code, String contents) throws IOException {
+    return ResponseBody.create(
+        MediaType.parse("application/octet-stream"),
+        createArtifact(code, contents));
+  }
+
+  private ResponseBody createBody(int length, String contents) throws IOException {
+    return ResponseBody.create(
+        MediaType.parse("application/octet-stream"),
+        createArtifact(length, contents));
+  }
+
+  private ResponseBody createBody(String contents) throws IOException {
+    return ResponseBody.create(
+        MediaType.parse("application/octet-stream"),
+        createArtifact(contents));
   }
 
   @Test
-  public void testFetchBadChecksum() throws IOException {
-    String data = "test";
-    HashCode badHashCode = HashCode.fromString("deafbead");
-    connection.setReadTimeout((int) TIMEOUT_UNIT.toMillis(TIMEOUT));
-    expect(connection.getResponseCode()).andReturn(HttpURLConnection.HTTP_OK);
-    InputStream is = new ByteArrayInputStream(createFileContentsWithHashCode(badHashCode, data));
-    expect(connection.getInputStream()).andReturn(is);
-    File file = File.createTempFile("000", "");
-    Path path = file.toPath();
-    Path temp = File.createTempFile("000", "").toPath();
-    Files.write(temp, data.getBytes(), StandardOpenOption.WRITE);
-    projectFilesystem.createParentDirs(path);
-    expect(projectFilesystem.createTempFile(
-            path.getParent(),
-            path.getFileName().toString(),
-            ".tmp"))
-        .andReturn(temp);
-    projectFilesystem.copyToPath(is, temp, StandardCopyOption.REPLACE_EXISTING);
-    expect(projectFilesystem.deleteFileAtPath(temp)).andReturn(true);
-    replay(connection);
-    replay(projectFilesystem);
-    assertEquals(
-        cache.fetch(new RuleKey("00000000000000000000000000000000"), file),
-        CacheResult.MISS);
-    verify(connection);
-    verify(projectFilesystem);
+  public void testFetchNotFound() throws Exception {
+    HttpArtifactCache cache =
+        new HttpArtifactCache(
+            null,
+            null,
+            new URL("http://localhost:8080"),
+            /* doStore */ true,
+            new FakeProjectFilesystem(),
+            HASH_FUNCTION) {
+          @Override
+          protected Response fetchCall(Request request) throws IOException {
+            return new Response.Builder()
+                .code(HttpURLConnection.HTTP_NOT_FOUND)
+                .protocol(Protocol.HTTP_1_1)
+                .request(request)
+                .build();
+          }
+        };
+    CacheResult result =
+        cache.fetch(
+            new RuleKey("00000000000000000000000000000000"),
+            new File("output/file"));
+    assertEquals(result, CacheResult.MISS);
+    cache.close();
   }
 
   @Test
-  public void testStore() throws IOException {
-    String data = "test";
-    HashCode hashCode = HASH_FUNCTION.hashString(data, Charset.defaultCharset());
-    connection.setRequestMethod("POST");
-    connection.setDoOutput(true);
-    connection.setRequestProperty(eq("Content-Type"), anyString());
-    connection.setRequestProperty("Buck-Artifact-Count", "1");
-    connection.setFixedLengthStreamingMode(EasyMock.anyLong());
-    ByteArrayOutputStream output = new ByteArrayOutputStream();
-    expect(connection.getOutputStream()).andReturn(output);
-    File file = File.createTempFile("000", "");
-    Files.write(file.toPath(), data.getBytes(), StandardOpenOption.WRITE);
-    InputStream is = new ByteArrayInputStream(data.getBytes());
-    expect(projectFilesystem.newFileInputStream(file.toPath())).andReturn(is);
-    expect(connection.getResponseCode()).andReturn(HttpURLConnection.HTTP_ACCEPTED);
-    replay(connection);
-    replay(projectFilesystem);
-    cache.store(new RuleKey("00000000000000000000000000000000"), file);
-    verify(connection);
-    verify(projectFilesystem);
-    assertNotEquals(
-        -1,
-        output.toString().indexOf(new String(createFileContentsWithHashCode(hashCode, data))));
+  public void testFetchOK() throws Exception {
+    File output = new File("output/file");
+    final String data = "test";
+    final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    HttpArtifactCache cache =
+        new HttpArtifactCache(
+            null,
+            null,
+            new URL("http://localhost:8080"),
+            /* doStore */ true,
+            filesystem,
+            HASH_FUNCTION) {
+          @Override
+          protected Response fetchCall(Request request) throws IOException {
+            return new Response.Builder()
+                .code(HttpURLConnection.HTTP_OK)
+                .request(request)
+                .protocol(Protocol.HTTP_1_1)
+                .body(createBody(data))
+                .build();
+          }
+        };
+    CacheResult result = cache.fetch(ruleKey, output);
+    assertEquals(CacheResult.HTTP_HIT, result);
+    assertEquals(Optional.of(data), filesystem.readFileIfItExists(output.toPath()));
+    cache.close();
   }
 
-  class FakeHttpArtifactCache extends HttpArtifactCache {
+  @Test
+  public void testFetchUrl() throws Exception {
+    final URL url = new URL("http://localhost:8080");
+    final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
+    HttpArtifactCache cache =
+        new HttpArtifactCache(
+            null,
+            null,
+            new URL("http://localhost:8080"),
+            /* doStore */ true,
+            new FakeProjectFilesystem(),
+            HASH_FUNCTION) {
+          @Override
+          protected Response fetchCall(Request request) throws IOException {
+            assertEquals(new URL(url, "artifact/key/" + ruleKey.toString()), request.url());
+            return new Response.Builder()
+                .code(HttpURLConnection.HTTP_OK)
+                .protocol(Protocol.HTTP_1_1)
+                .request(request)
+                .body(createBody("data"))
+                .build();
+          }
+        };
+    cache.fetch(ruleKey, new File("output/file"));
+    cache.close();
+  }
 
-    private HttpURLConnection connectionMock;
+  @Test
+  public void testFetchBadChecksum() throws Exception {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    HttpArtifactCache cache =
+        new HttpArtifactCache(
+            null,
+            null,
+            new URL("http://localhost:8080"),
+            /* doStore */ true,
+            filesystem,
+            HASH_FUNCTION) {
+          @Override
+          protected Response fetchCall(Request request) throws IOException {
+            return new Response.Builder()
+                .code(HttpURLConnection.HTTP_OK)
+                .protocol(Protocol.HTTP_1_1)
+                .request(request)
+                .body(createBody(HashCode.fromInt(0), "test"))
+                .build();
+          }
+        };
+    File output = new File("output/file");
+    CacheResult result = cache.fetch(new RuleKey("00000000000000000000000000000000"), output);
+    assertEquals(CacheResult.MISS, result);
+    assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output.toPath()));
+    cache.close();
+  }
 
-    FakeHttpArtifactCache(
-        HttpURLConnection connectionMock,
-        ProjectFilesystem projectFilesystem,
-        BuckEventBus buckEventBus,
-        ImmutableMap<String, String> headers) throws MalformedURLException {
-      super(
-          new URL("http://localhost:8080"),
-          (int) TIMEOUT_UNIT.toSeconds(TIMEOUT),
-          true,
-          projectFilesystem,
-          buckEventBus,
-          HASH_FUNCTION,
-          headers);
-      connectionMock.setConnectTimeout((int) TIMEOUT_UNIT.toMillis(TIMEOUT));
-      for (Map.Entry<String, String> header : headers.entrySet()) {
-        connectionMock.setRequestProperty(header.getKey(), header.getValue());
-      }
-      this.connectionMock = connectionMock;
-    }
+  @Test
+  public void testFetchExtraPayload() throws Exception {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    HttpArtifactCache cache =
+        new HttpArtifactCache(
+            null,
+            null,
+            new URL("http://localhost:8080"),
+            /* doStore */ true,
+            filesystem,
+            HASH_FUNCTION) {
+          @Override
+          protected Response fetchCall(Request request) throws IOException {
+            return new Response.Builder()
+                .code(HttpURLConnection.HTTP_OK)
+                .protocol(Protocol.HTTP_1_1)
+                .request(request)
+                .body(createBody(4, "more data than length"))
+                .build();
+          }
+        };
+    File output = new File("output/file");
+    CacheResult result = cache.fetch(new RuleKey("00000000000000000000000000000000"), output);
+    assertEquals(CacheResult.MISS, result);
+    assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output.toPath()));
+    cache.close();
+  }
 
-    @Override
-    protected HttpURLConnection getConnection(URL url)
-        throws IOException {
-      return connectionMock;
-    }
+  @Test
+  public void testFetchIOException() throws Exception {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    HttpArtifactCache cache =
+        new HttpArtifactCache(
+            null,
+            null,
+            new URL("http://localhost:8080"),
+            /* doStore */ true,
+            filesystem,
+            HASH_FUNCTION) {
+          @Override
+          protected Response fetchCall(Request request) throws IOException {
+            throw new IOException();
+          }
+        };
+    File output = new File("output/file");
+    CacheResult result = cache.fetch(new RuleKey("00000000000000000000000000000000"), output);
+    assertEquals(CacheResult.MISS, result);
+    assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output.toPath()));
+    cache.close();
+  }
 
+  @Test
+  public void testStore() throws Exception {
+    final String data = "data";
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    File output = new File("output/file");
+    filesystem.writeContentsToPath(data, output.toPath());
+    final AtomicBoolean hasCalled = new AtomicBoolean(false);
+    HttpArtifactCache cache =
+        new HttpArtifactCache(
+            null,
+            null,
+            new URL("http://localhost:8080"),
+            /* doStore */ true,
+            filesystem,
+            HASH_FUNCTION) {
+          @Override
+          protected Response storeCall(Request request) throws IOException {
+            hasCalled.set(true);
+            Buffer buf = new Buffer();
+            request.body().writeTo(buf);
+            assertArrayEquals(createArtifact(data), buf.readByteArray());
+            return new Response.Builder()
+                .code(HttpURLConnection.HTTP_ACCEPTED)
+                .protocol(Protocol.HTTP_1_1)
+                .request(request)
+                .build();
+          }
+        };
+    cache.store(new RuleKey("00000000000000000000000000000000"), output);
+    assertTrue(hasCalled.get());
+    cache.close();
+  }
+
+  @Test
+  public void testStoreIOException() throws Exception {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    File output = new File("output/file");
+    filesystem.writeContentsToPath("data", output.toPath());
+    HttpArtifactCache cache =
+        new HttpArtifactCache(
+            null,
+            null,
+            new URL("http://localhost:8080"),
+            /* doStore */ true,
+            filesystem,
+            HASH_FUNCTION) {
+          @Override
+          protected Response storeCall(Request request) throws IOException {
+            throw new IOException();
+          }
+        };
+    cache.store(new RuleKey("00000000000000000000000000000000"), output);
+    cache.close();
   }
 
 }
