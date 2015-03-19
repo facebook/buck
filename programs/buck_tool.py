@@ -352,6 +352,7 @@ class BuckTool(object):
             "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
             "-Dlog4j.configuration=file:{0}".format(
                 self._get_resource(LOG4J_CONFIG)),
+            "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
         ])
         for resource in EXPORTED_RESOURCES:
             if self._has_resource(resource):

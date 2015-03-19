@@ -600,6 +600,7 @@
       <sysproperty key="buck.logging_config_file" value="${buck.test_logging_config_file}" />
       <sysproperty key="log4j.configuration" value="file:${buck.log4j_config_file}" />
       <sysproperty key="java.util.logging.config.class" value="com.facebook.buck.log.LogConfig" />
+      <sysproperty key="org.eclipse.jetty.util.log.class" value="org.eclipse.jetty.util.log.JavaUtilLog" />
 
       <!-- See DEFS for details on why this property is needed. -->
       <sysproperty key="sun.zip.disableMemoryMapping" value="true" />
