@@ -59,6 +59,8 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
+import com.facebook.buck.d.DBinaryDescription;
+import com.facebook.buck.d.DBuckConfig;
 import com.facebook.buck.extension.BuckExtensionDescription;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.ExplodingDownloader;
@@ -360,6 +362,8 @@ public class KnownBuildRuleTypes {
         "C/C++ platform",
         cxxPlatformsBuilder.build());
 
+    DBuckConfig dBuckConfig = new DBuckConfig(config);
+
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
     PythonBuckConfig pyConfig = new PythonBuckConfig(config);
@@ -449,6 +453,7 @@ public class KnownBuildRuleTypes {
     builder.register(cxxLibraryDescription);
     builder.register(new CxxPythonExtensionDescription(cxxBuckConfig, cxxPlatforms));
     builder.register(new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms));
+    builder.register(new DBinaryDescription(dBuckConfig));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());

@@ -1,0 +1,24 @@
+java_library(
+  name='d',
+  srcs=[
+    'DBinary.java',
+    'DBinaryDescription.java',
+    'DBuckConfig.java',
+    'DCompileStep.java',
+  ],
+  deps=[
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/cxx:platform',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:steps',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:exceptions',
+    '//third-party/java/guava:guava',
+    '//third-party/java/infer-annotations:infer-annotations',
+  ],
+  visibility=['PUBLIC'],
+)
