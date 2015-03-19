@@ -132,7 +132,7 @@ public class Project {
   private final Set<BuildRule> libraryJars;
   private final String pythonInterpreter;
   private final ObjectMapper objectMapper;
-  private final boolean turnOnAutoSourceGeneration;
+  private final boolean turnOffAutoSourceGeneration;
 
   public Project(
       SourcePathResolver resolver,
@@ -147,7 +147,7 @@ public class Project {
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter,
       ObjectMapper objectMapper,
-      boolean turnOnAutoSourceGeneration) {
+      boolean turnOffAutoSourceGeneration) {
     this.resolver = resolver;
     this.rules = rules;
     this.actionGraph = actionGraph;
@@ -161,7 +161,7 @@ public class Project {
     this.libraryJars = Sets.newHashSet();
     this.pythonInterpreter = pythonInterpreter;
     this.objectMapper = objectMapper;
-    this.turnOnAutoSourceGeneration = turnOnAutoSourceGeneration;
+    this.turnOffAutoSourceGeneration = turnOffAutoSourceGeneration;
   }
 
   public int createIntellijProject(
@@ -368,7 +368,7 @@ public class Project {
     // To specify the location of gen, Intellij requires the relative path from
     // the base path of current build target.
     module.moduleGenPath = generateRelativeGenPath(basePathWithSlash).toString();
-    if (rJava.isPresent() && !turnOnAutoSourceGeneration) {
+    if (turnOffAutoSourceGeneration && rJava.isPresent()) {
       module.moduleRJavaPath = Paths.get(
           "/",
           Paths.get(basePathWithSlash).relativize(Paths.get("")).toString(),
@@ -916,8 +916,8 @@ public class Project {
       argsBuilder.add("--generate_minimum_project");
     }
 
-    if (turnOnAutoSourceGeneration) {
-      argsBuilder.add("--enable_android_auto_generation");
+    if (turnOffAutoSourceGeneration) {
+      argsBuilder.add("--disable_android_auto_generation_setting");
     }
 
     final ImmutableList<String> args = argsBuilder.build();

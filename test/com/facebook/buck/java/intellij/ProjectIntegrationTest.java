@@ -443,7 +443,6 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
-        "--enable-android-auto-generate-sources",
         "app");
     result.assertSuccess();
 
@@ -460,6 +459,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "project",
+        "--disable-r-java-idea-generator",
         "app");
     result.assertSuccess();
 

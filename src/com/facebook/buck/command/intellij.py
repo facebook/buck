@@ -176,7 +176,7 @@ def create_additional_excludes(modules):
     return additional_excludes
 
 
-def write_modules(modules, generate_minimum_project, android_auto_generation_enabled):
+def write_modules(modules, generate_minimum_project, android_auto_generation_disabled):
     """Writes one XML file for each module."""
     additional_excludes = defaultdict(list)
     if generate_minimum_project:
@@ -216,10 +216,10 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_ena
                 'libs_path': '/%s' % module.get('nativeLibs', 'libs'),
             }
 
-            if android_auto_generation_enabled:
-                android_params['enable_sources_autogeneration'] = 'true'
-            else:
+            if android_auto_generation_disabled:
                 android_params['enable_sources_autogeneration'] = 'false'
+            else:
+                android_params['enable_sources_autogeneration'] = 'true'
 
             xml += ANDROID_FACET % android_params
 
@@ -505,13 +505,13 @@ def clean_old_files():
 if __name__ == '__main__':
     json_file = sys.argv[1]
     generate_minimum_project = False
-    android_auto_generation_enabled = False
+    android_auto_generation_disabled = False
 
     for key in sys.argv[2:]:
         if key == '--generate_minimum_project':
             generate_minimum_project = True
-        if key == '--enable_android_auto_generation':
-            android_auto_generation_enabled = True
+        if key == '--disable_android_auto_generation_setting':
+            android_auto_generation_disabled = True
 
     parsed_json = json.load(open(json_file, 'r'))
 
@@ -519,7 +519,7 @@ if __name__ == '__main__':
     write_libraries(libraries)
 
     modules = parsed_json['modules']
-    write_modules(modules, generate_minimum_project, android_auto_generation_enabled)
+    write_modules(modules, generate_minimum_project, android_auto_generation_disabled)
     write_all_modules(modules)
     write_run_configs()
 

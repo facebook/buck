@@ -740,7 +740,7 @@ public class ProjectTest {
         /* pathToPostProcessScript */ Optional.<String>absent(),
         BuckTestConstant.PYTHON_INTERPRETER,
         new ObjectMapper(),
-        false);
+        true);
 
     // Execute Project's business logic.
     EasyMock.replay(executionContext, projectFilesystem);
