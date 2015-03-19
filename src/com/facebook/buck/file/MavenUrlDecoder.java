@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * <pre>
  *   mvn:optionalServer:group:id:type:classifier:version
  * </pre>
- * If the {@code optionalServer} is omitted, the default one configured in "tools -> maven_repo" in
+ * If the {@code optionalServer} is omitted, the default one configured in "download -> maven_repo" in
  * the project's {@code .buckconfig} is used, or an exception is thrown. The optionalServer URL is
  * expected to be a valid {@link java.net.URL}.
  * <p>
@@ -55,7 +55,8 @@ public class MavenUrlDecoder {
     Preconditions.checkArgument("mvn".equals(uri.getScheme()), "URI must start with mvn: " + uri);
     Preconditions.checkArgument(
         mavenRepo.isPresent(),
-        "You must specify the maven repo in the \"tools->maven_repo\" section of your .buckconfig");
+        "You must specify the maven repo in the \"download->maven_repo\" section of your " +
+            ".buckconfig");
 
     String repo = mavenRepo.get();
 
