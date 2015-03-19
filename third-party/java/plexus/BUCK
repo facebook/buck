@@ -1,0 +1,31 @@
+prebuilt_jar(
+  name = 'plexus-utils',
+  binary_jar = 'plexus-utils-3.0.20.jar',
+  source_jar = 'plexus-utils-3.0.20-sources.jar',
+  visibility = [
+    '//third-party/java/maven:maven-aether-provider',
+    '//third-party/java/maven:maven-model',
+    '//third-party/java/maven:maven-model-builder',
+    '//third-party/java/maven:maven-repository-metadata',
+  ],
+)
+
+prebuilt_jar(
+  name = 'plexus-component-annotations',
+  binary_jar = 'plexus-component-annotations-1.5.5.jar',
+  source_jar = 'plexus-component-annotations-1.5.5-sources.jar',
+  visibility = [
+    '//third-party/java/maven:maven-aether-provider',
+    '//third-party/java/maven:maven-model-builder',
+  ],
+)
+
+prebuilt_jar(
+  name = 'plexus-interpolation',
+  binary_jar = 'plexus-interpolation-1.21.jar',
+  source_jar = 'plexus-interpolation-1.21-sources.jar',
+  visibility = [
+    '//third-party/java/maven:maven-model-builder',
+  ],
+)
+

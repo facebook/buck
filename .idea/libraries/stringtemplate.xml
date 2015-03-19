@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="stringtemplate">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/stringtemplate/ST-4.0.8.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -1,0 +1,87 @@
+prebuilt_jar(
+  name = 'aether-util',
+  binary_jar = 'aether-util-1.0.2.v20150114.jar',
+  source_jar = 'aether-util-1.0.2.v20150114-sources.jar',
+  deps = [
+    ':aether-api',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/maven:maven',
+    '//third-party/java/maven:maven-aether-provider',
+  ],
+)
+
+prebuilt_jar(
+  name = 'aether-connector-basic',
+  binary_jar = 'aether-connector-basic-1.0.2.v20150114.jar',
+  source_jar = 'aether-connector-basic-1.0.2.v20150114-sources.jar',
+  deps = [
+    '//third-party/java/jsr:jsr305',
+    ':aether-api',
+    ':aether-spi',
+    ':aether-util',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/maven:maven',
+  ],
+)
+
+prebuilt_jar(
+  name = 'aether-api',
+  binary_jar = 'aether-api-1.0.2.v20150114.jar',
+  source_jar = 'aether-api-1.0.2.v20150114-sources.jar',
+  visibility = [
+    '//src/com/facebook/buck/maven:maven',
+    '//test/com/facebook/buck/maven:maven',
+    '//third-party/java/maven:maven-aether-provider',
+  ],
+)
+
+prebuilt_jar(
+  name = 'aether-transport-http',
+  binary_jar = 'aether-transport-http-1.0.2.v20150114.jar',
+  source_jar = 'aether-transport-http-1.0.2.v20150114-sources.jar',
+  deps = [
+    '//third-party/java/httpcomponents:httpclient',
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/slf4j:slf4j',
+    ':aether-api',
+    ':aether-spi',
+    ':aether-util',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/maven:maven',
+  ],
+)
+
+prebuilt_jar(
+  name = 'aether-spi',
+  binary_jar = 'aether-spi-1.0.2.v20150114.jar',
+  source_jar = 'aether-spi-1.0.2.v20150114-sources.jar',
+  deps = [
+    ':aether-api',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/maven:maven',
+    '//third-party/java/maven:maven-aether-provider',
+  ],
+)
+
+prebuilt_jar(
+  name = 'aether-impl',
+  binary_jar = 'aether-impl-1.0.0.v20140518.jar',
+  source_jar = 'aether-impl-1.0.0.v20140518-sources.jar',
+  deps = [
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/sisu:sisu-guice',
+    '//third-party/java/slf4j:slf4j-api',
+    ':aether-api',
+    ':aether-spi',
+    ':aether-util',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/maven:maven',
+    '//third-party/java/maven:maven-aether-provider',
+  ],
+)
+

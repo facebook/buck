@@ -1,0 +1,51 @@
+prebuilt_jar(
+  name = 'maven-repository-metadata',
+  binary_jar = 'maven-repository-metadata-3.2.5.jar',
+  source_jar = 'maven-repository-metadata-3.2.5-sources.jar',
+  deps = [
+    '//third-party/java/plexus:plexus-utils',
+  ],
+)
+
+prebuilt_jar(
+  name = 'maven-model-builder',
+  binary_jar = 'maven-model-builder-3.2.5.jar',
+  source_jar = 'maven-model-builder-3.2.5-sources.jar',
+  deps = [
+    '//third-party/java/plexus:plexus-component-annotations',
+    '//third-party/java/plexus:plexus-interpolation',
+    '//third-party/java/plexus:plexus-utils',
+    ':maven-model',
+  ],
+)
+
+prebuilt_jar(
+  name = 'maven-model',
+  binary_jar = 'maven-model-3.2.5.jar',
+  source_jar = 'maven-model-3.2.5-sources.jar',
+  deps = [
+    '//third-party/java/plexus:plexus-utils',
+  ],
+)
+
+prebuilt_jar(
+  name = 'maven-aether-provider',
+  binary_jar = 'maven-aether-provider-3.2.5.jar',
+  source_jar = 'maven-aether-provider-3.2.5-sources.jar',
+  deps = [
+    '//third-party/java/aether:aether-api',
+    '//third-party/java/aether:aether-impl',
+    '//third-party/java/aether:aether-spi',
+    '//third-party/java/aether:aether-util',
+    '//third-party/java/plexus:plexus-component-annotations',
+    '//third-party/java/plexus:plexus-utils',
+    '//third-party/java/sisu:sisu-guice',
+    ':maven-model',
+    ':maven-model-builder',
+    ':maven-repository-metadata',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/maven:maven',
+  ],
+)
+

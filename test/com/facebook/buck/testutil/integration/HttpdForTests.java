@@ -78,6 +78,7 @@ public class HttpdForTests implements AutoCloseable {
 
     handlerList.addHandler(new DefaultHandler());
     server.setHandler(handlerList);
+
     server.start();
   }
 

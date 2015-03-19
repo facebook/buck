@@ -1,0 +1,40 @@
+<component name="libraryTable">
+  <library name="maven-lib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-transport-http-1.0.2.v20150114.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-util-1.0.2.v20150114.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-api-1.0.2.v20150114.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-spi-1.0.2.v20150114.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-connector-basic-1.0.2.v20150114.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-impl-1.0.0.v20140518.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/maven/maven-aether-provider-3.2.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/maven/maven-model-3.2.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/maven/maven-repository-metadata-3.2.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/maven/maven-model-builder-3.2.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/plexus/plexus-utils-3.0.20.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/plexus/plexus-interpolation-1.21.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/plexus/plexus-component-annotations-1.5.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/commons-logging/commons-logging-1.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/httpcomponents/httpclient-4.2.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/httpcomponents/httpcore-4.2.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-api-1.0.2.v20150114-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-transport-http-1.0.2.v20150114-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-connector-basic-1.0.2.v20150114-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-impl-1.0.0.v20140518-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-spi-1.0.2.v20150114-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-util-1.0.2.v20150114-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/maven/maven-aether-provider-3.2.5-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/maven/maven-model-3.2.5-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/maven/maven-repository-metadata-3.2.5-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/maven/maven-model-builder-3.2.5-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/plexus/plexus-component-annotations-1.5.5-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/plexus/plexus-utils-3.0.20-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/plexus/plexus-interpolation-1.21-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/httpcomponents/httpclient-4.2.6-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/httpcomponents/httpcore-4.2.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -25,6 +25,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.io.ByteSource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -343,6 +344,15 @@ public class MorePaths {
       }
     }
     return Optional.absent();
+  }
+
+  public static ByteSource asByteSource(final Path path) {
+    return new ByteSource() {
+      @Override
+      public InputStream openStream() throws IOException {
+        return Files.newInputStream(path);
+      }
+    };
   }
 
   private static byte[] inputStreamDigest(InputStream inputStream, MessageDigest messageDigest)

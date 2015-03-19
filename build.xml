@@ -400,6 +400,8 @@
         <exclude name="com/facebook/buck/cli/bootstrapper/**" />
         <exclude name="com/facebook/buck/cli/quickstart/**" />
         <exclude name="com/facebook/buck/junit/**" />
+        <!-- Excluded since the maven functionality is bolted on later -->
+        <exclude name="com/facebook/buck/maven/**" />
         <src path="${immutables.gensrc.dir}" />
       </javac-params>
     </ecj>
@@ -580,6 +582,7 @@
          >
       <javac-params>
         <exclude name="**/testdata/**" />
+        <exclude name="com/facebook/buck/maven/**" />
       </javac-params>
     </ecj>
   </target>
@@ -611,6 +614,7 @@
           -->
           <include name="**/*${test.class}.java" />
           <exclude name="**/testdata/**" />
+          <exclude name="com/facebook/buck/maven/**" />
         </fileset>
       </batchtest>
       <classpath refid="tests.classpath" />
@@ -789,6 +793,16 @@
     <!-- Buck test runner has references to JUnit and TestNG. -->
     <pathelement location="${third-party.dir}/java/junit/junit-4.11.jar" />
     <pathelement location="${third-party.dir}/java/testng/testng-6.8.jar" />
+
+    <!-- Include the jars required to document the maven interop pieces -->
+    <pathelement location="${third-party.dir}/java/aether/aether-api-1.0.2.v20150114.jar" />
+    <pathelement location="${third-party.dir}/java/aether/aether-connector-basic-1.0.2.v20150114.jar" />
+    <pathelement location="${third-party.dir}/java/aether/aether-impl-1.0.0.v20140518.jar" />
+    <pathelement location="${third-party.dir}/java/aether/aether-spi-1.0.2.v20150114.jar" />
+    <pathelement location="${third-party.dir}/java/aether/aether-transport-http-1.0.2.v20150114.jar" />
+    <pathelement location="${third-party.dir}/java/aether/aether-util-1.0.2.v20150114.jar" />
+    <pathelement location="${third-party.dir}/java/maven/maven-aether-provider-3.2.5.jar" />
+    <pathelement location="${third-party.dir}/java/slf4j/slf4j-api-1.7.5.jar" />
   </path>
 
   <target name="javadoc"

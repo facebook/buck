@@ -1,0 +1,15 @@
+prebuilt_jar(
+  name = 'sisu-guice',
+  binary_jar = 'sisu-guice-3.2.3.jar',
+  source_jar = 'sisu-guice-3.2.3-sources.jar',
+  deps = [
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/slf4j:slf4j-api',
+  ],
+  visibility = [
+    '//third-party/java/aether:aether-impl',
+    '//third-party/java/maven:maven-aether-provider',
+  ],
+)
+

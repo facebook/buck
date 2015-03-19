@@ -1,0 +1,30 @@
+java_library(
+  name = 'maven',
+  srcs = glob(['*.java']),
+  resources = [
+    'build-file.st',
+  ],
+  deps = [
+    '//src/com/facebook/buck/graph:graph',
+    '//third-party/java/aether:aether-api',
+    '//third-party/java/aether:aether-connector-basic',
+    '//third-party/java/aether:aether-impl',
+    '//third-party/java/aether:aether-spi',
+    '//third-party/java/aether:aether-transport-http',
+    '//third-party/java/aether:aether-util',
+    '//third-party/java/guava:guava',
+    '//third-party/java/maven:maven-aether-provider',
+    '//third-party/java/stringtemplate:stringtemplate',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/maven:maven',
+  ],
+)
+
+java_binary(
+  name = 'resolver',
+  main_class = 'com.facebook.buck.maven.Resolver',
+  deps = [
+    ':maven',
+  ],
+)

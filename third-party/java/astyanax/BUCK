@@ -13,7 +13,7 @@ java_library(
     '//third-party/java/commons-codec:commons-codec',
     '//third-party/java/commons-lang:commons-lang',
     '//third-party/java/joda-time:joda-time',
-    '//third-party/java/slf4j:slf4j-log4j',
+    '//third-party/java/slf4j:slf4j',
     '//third-party/java/thrift:thrift',
   ],
   visibility = ['PUBLIC'],

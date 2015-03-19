@@ -1,16 +1,23 @@
 prebuilt_jar(
   name = 'slf4j-api',
-  binary_jar = 'slf4j-api-1.7.2.jar',
+  binary_jar = 'slf4j-api-1.7.5.jar',
+  source_jar = 'slf4j-api-1.7.5-sources.jar',
+  visibility = [
+    '//third-party/java/aether:aether-impl',
+    '//third-party/java/sisu:sisu-guice',
+  ],
 )
 
-prebuilt_jar(
-  name = 'slf4j-log4j',
-  binary_jar = 'slf4j-log4j12-1.7.2.jar',
+prebuilt_jar(  
+  name = 'slf4j',
+  binary_jar = 'jcl-over-slf4j-1.6.2.jar',
+  source_jar = 'jcl-over-slf4j-1.6.2-sources.jar',
   deps = [
     ':slf4j-api',
-    '//third-party/java/log4j:log4j',
   ],
   visibility = [
+    '//third-party/java/aether:aether-transport-http',
     '//third-party/java/astyanax:cassandra',
   ],
 )
+
