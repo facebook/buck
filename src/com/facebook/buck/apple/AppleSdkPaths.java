@@ -56,9 +56,9 @@ public abstract class AppleSdkPaths {
    *
    * Example:
    *
-   * {@code /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer}
+   * {@code /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform}
    */
-  public abstract Path getPlatformDeveloperPath();
+  public abstract Path getPlatformPath();
 
   /**
    * Absolute path to tools and files which depend on a particular SDK on a particular platform.
@@ -72,6 +72,8 @@ public abstract class AppleSdkPaths {
   public Path resolve(SourceTreePath path) {
     if (path.getSourceTree().equals(PBXReference.SourceTree.SDKROOT)) {
       return getSdkPath().resolve(path.getPath());
+    } else if (path.getSourceTree().equals(PBXReference.SourceTree.PLATFORM_DIR)) {
+      return getPlatformPath().resolve(path.getPath());
     } else if (path.getSourceTree().equals(PBXReference.SourceTree.DEVELOPER_DIR)) {
       return getDeveloperPath().resolve(path.getPath());
     }

@@ -43,6 +43,11 @@ public class PBXReference extends PBXContainerItem {
     BUILT_PRODUCTS_DIR("BUILT_PRODUCTS_DIR"),
 
     /**
+     * Relative to the build setting {@code PLATFORM_DIR}.
+     */
+    PLATFORM_DIR("PLATFORM_DIR"),
+
+    /**
      * Relative to the build setting {@code SDKROOT}.
      */
     SDKROOT("SDKROOT"),
@@ -79,6 +84,8 @@ public class PBXReference extends PBXContainerItem {
       switch (CharMatcher.is('$').trimLeadingFrom(buildSetting)) {
         case "BUILT_PRODUCTS_DIR":
           return Optional.of(BUILT_PRODUCTS_DIR);
+        case "PLATFORM_DIR":
+          return Optional.of(PLATFORM_DIR);
         case "SDKROOT":
           return Optional.of(SDKROOT);
         case "SOURCE_ROOT":

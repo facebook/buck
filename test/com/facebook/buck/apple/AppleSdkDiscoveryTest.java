@@ -120,7 +120,7 @@ public class AppleSdkDiscoveryTest {
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformDeveloperPath(root.resolve("Platforms/MacOSX.platform/Developer"))
+            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
             .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
             .build();
 
@@ -136,7 +136,7 @@ public class AppleSdkDiscoveryTest {
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformDeveloperPath(root.resolve("Platforms/iPhoneOS.platform/Developer"))
+            .setPlatformPath(root.resolve("Platforms/iPhoneOS.platform"))
             .setSdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
             .build();
 
@@ -152,7 +152,7 @@ public class AppleSdkDiscoveryTest {
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformDeveloperPath(root.resolve("Platforms/iPhoneSimulator.platform/Developer"))
+            .setPlatformPath(root.resolve("Platforms/iPhoneSimulator.platform"))
             .setSdkPath(
                 root.resolve(
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"))
@@ -215,7 +215,7 @@ public class AppleSdkDiscoveryTest {
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformDeveloperPath(root.resolve("Platforms/MacOSX.platform/Developer"))
+            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
             .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
             .build();
 
@@ -231,7 +231,7 @@ public class AppleSdkDiscoveryTest {
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformDeveloperPath(root.resolve("Platforms/iPhoneOS.platform/Developer"))
+            .setPlatformPath(root.resolve("Platforms/iPhoneOS.platform"))
             .setSdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
 
@@ -247,7 +247,7 @@ public class AppleSdkDiscoveryTest {
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformDeveloperPath(root.resolve("Platforms/iPhoneSimulator.platform/Developer"))
+            .setPlatformPath(root.resolve("Platforms/iPhoneSimulator.platform"))
             .setSdkPath(
                 root.resolve(
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
@@ -265,7 +265,7 @@ public class AppleSdkDiscoveryTest {
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformDeveloperPath(root.resolve("Platforms/iPhoneOS.platform/Developer"))
+            .setPlatformPath(root.resolve("Platforms/iPhoneOS.platform"))
             .setSdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
             .build();
 
@@ -281,7 +281,7 @@ public class AppleSdkDiscoveryTest {
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformDeveloperPath(root.resolve("Platforms/iPhoneSimulator.platform/Developer"))
+            .setPlatformPath(root.resolve("Platforms/iPhoneSimulator.platform"))
             .setSdkPath(
                 root.resolve(
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"))

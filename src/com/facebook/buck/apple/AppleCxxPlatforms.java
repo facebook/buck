@@ -79,7 +79,7 @@ public class AppleCxxPlatforms {
     // Search for tools from most specific to least specific.
     toolSearchPathsBuilder
         .add(sdkPaths.getSdkPath().resolve(USR_BIN))
-        .add(sdkPaths.getPlatformDeveloperPath().resolve(USR_BIN));
+        .add(sdkPaths.getPlatformPath().resolve("Developer").resolve(USR_BIN));
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
       toolSearchPathsBuilder.add(toolchainPath.resolve(USR_BIN));
     }

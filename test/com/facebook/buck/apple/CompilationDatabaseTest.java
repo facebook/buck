@@ -290,7 +290,7 @@ public class CompilationDatabaseTest {
           (AppleSdkPaths) ImmutableAppleSdkPaths.builder()
               .setDeveloperPath(Paths.get("developerPath"))
               .addToolchainPaths(Paths.get("toolchainPath"))
-              .setPlatformDeveloperPath(Paths.get("platformDeveloperPath"))
+              .setPlatformPath(Paths.get("platformPath"))
               .setSdkPath(Paths.get("/path/to/somewhere" +
                   "/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
               .build());

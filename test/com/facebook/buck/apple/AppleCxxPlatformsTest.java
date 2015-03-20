@@ -55,7 +55,7 @@ public class AppleCxxPlatformsTest {
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(Paths.get("."))
             .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformDeveloperPath(Paths.get("Platforms/iPhoneOS.platform/Developer"))
+            .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
             .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
 
@@ -112,7 +112,7 @@ public class AppleCxxPlatformsTest {
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(Paths.get("."))
             .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformDeveloperPath(Paths.get("Platforms/iPhoneOS.platform/Developer"))
+            .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
             .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
 
@@ -161,7 +161,7 @@ public class AppleCxxPlatformsTest {
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(Paths.get("."))
             .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformDeveloperPath(Paths.get("Platforms/iPhoneOS.platform/Developer"))
+            .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
             .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
 

@@ -115,7 +115,7 @@ public class AppleDescriptionsTest {
         ImmutableAppleSdkPaths.builder()
             .setDeveloperPath(appleSdkRoot)
             .addToolchainPaths(appleSdkRoot.resolve("Toolchain"))
-            .setPlatformDeveloperPath(appleSdkRoot.resolve("Developer"))
+            .setPlatformPath(appleSdkRoot.resolve("Platform"))
             .setSdkPath(appleSdkRoot.resolve("SDK"))
             .build();
 
