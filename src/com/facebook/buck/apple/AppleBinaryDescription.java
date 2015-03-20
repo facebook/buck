@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Function;
@@ -36,9 +35,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 
@@ -119,27 +116,11 @@ public class AppleBinaryDescription
             return Optional.fromNullable(appleCxxPlatformsToAppleSdkPaths.get(input.getValue()));
           }
         });
-    Sets.SetView<SourcePath> allHeaderPaths = Sets.union(
-        args.exportedHeaders.get(),
-        args.headers.get());
-    String headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, params.getBuildTarget());
-    ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>builder()
-        .putAll(
-            AppleDescriptions.convertToFlatCxxHeaders(
-                Paths.get(""),
-                pathResolver,
-                allHeaderPaths))
-        .putAll(
-            AppleDescriptions.convertToFlatCxxHeaders(
-                Paths.get(headerPathPrefix),
-                pathResolver,
-                allHeaderPaths))
-        .build();
     AppleDescriptions.populateCxxConstructorArg(
         pathResolver,
         delegateArg,
         args,
-        headerMap,
+        params.getBuildTarget(),
         appleSdkPaths);
 
     return delegate.createBuildRule(params, resolver, delegateArg);

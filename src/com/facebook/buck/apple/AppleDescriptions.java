@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxConstructorArg;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal.CycleException;
@@ -51,9 +52,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -342,8 +345,25 @@ public class AppleDescriptions {
       SourcePathResolver resolver,
       CxxConstructorArg output,
       AppleNativeTargetDescriptionArg arg,
-      ImmutableMap<String, SourcePath> headerMap,
+      BuildTarget buildTarget,
       final Optional<AppleSdkPaths> appleSdkPaths) {
+    Sets.SetView<SourcePath> allHeaderPaths = Sets.union(
+        arg.exportedHeaders.get(),
+        arg.headers.get());
+    Path headerPathPrefix = Paths.get(AppleDescriptions.getHeaderPathPrefix(arg, buildTarget));
+    ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>builder()
+        .putAll(
+            AppleDescriptions.convertToFlatCxxHeaders(
+                Paths.get(""),
+                resolver,
+                allHeaderPaths))
+        .putAll(
+            AppleDescriptions.convertToFlatCxxHeaders(
+                headerPathPrefix,
+                resolver,
+                allHeaderPaths))
+        .build();
+
     output.srcs = Optional.of(
         Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofLeft(
             arg.srcs.get()));
@@ -372,6 +392,52 @@ public class AppleDescriptions {
     output.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.deps = arg.deps;
     output.headerNamespace = Optional.of("");
+  }
+
+  public static void populateCxxLibraryDescriptionArg(
+      SourcePathResolver resolver,
+      CxxLibraryDescription.Arg output,
+      AppleNativeTargetDescriptionArg arg,
+      BuildTarget buildTarget,
+      final Optional<AppleSdkPaths> appleSdkPaths,
+      boolean linkWhole) {
+    populateCxxConstructorArg(
+        resolver,
+        output,
+        arg,
+        buildTarget,
+        appleSdkPaths);
+    Path headerPathPrefix = Paths.get(AppleDescriptions.getHeaderPathPrefix(arg, buildTarget));
+    ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>builder()
+        .putAll(
+            AppleDescriptions.convertToFlatCxxHeaders(
+                Paths.get(""),
+                resolver,
+                Sets.union(
+                    arg.exportedHeaders.get(),
+                    arg.headers.get())))
+        .putAll(
+            AppleDescriptions.convertToFlatCxxHeaders(
+                headerPathPrefix,
+                resolver,
+                arg.headers.get()))
+        .build();
+
+    output.headers = Optional.of(
+        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
+            headerMap));
+    output.exportedPreprocessorFlags = arg.exportedPreprocessorFlags;
+    output.exportedHeaders = Optional.of(
+        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
+            AppleDescriptions.convertToFlatCxxHeaders(
+                headerPathPrefix,
+                resolver,
+                arg.exportedHeaders.get())));
+    output.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
+    output.exportedLangPreprocessorFlags = Optional.of(
+        ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
+    output.soname = Optional.absent();
+    output.linkWhole = Optional.of(linkWhole);
   }
 
   @VisibleForTesting

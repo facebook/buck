@@ -48,6 +48,7 @@ public class AppleNativeTargetDescriptionArg implements HasTests {
   public Optional<SourcePath> prefixHeader;
   @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
   public Optional<ImmutableList<String>> preprocessorFlags;
+  public Optional<ImmutableList<String>> exportedPreprocessorFlags;
   public Optional<ImmutableList<String>> compilerFlags;
   public Optional<ImmutableList<String>> linkerFlags;
 

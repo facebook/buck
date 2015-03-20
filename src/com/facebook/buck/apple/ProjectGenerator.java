@@ -164,6 +164,16 @@ public class ProjectGenerator {
         }
       };
 
+  public static final Function<
+      TargetNode<AppleNativeTargetDescriptionArg>,
+      Iterable<String>> GET_EXPORTED_PREPROCESSOR_FLAGS =
+      new Function<TargetNode<AppleNativeTargetDescriptionArg>, Iterable<String>>() {
+        @Override
+        public Iterable<String> apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
+          return input.getConstructorArg().exportedPreprocessorFlags.get();
+        }
+      };
+
   private final Function<SourcePath, Path> sourcePathResolver;
   private final TargetGraph targetGraph;
   private final ProjectFilesystem projectFilesystem;
@@ -713,7 +723,8 @@ public class ProjectGenerator {
                 .join(
                     Iterables.concat(
                         targetNode.getConstructorArg().compilerFlags.get(),
-                        targetNode.getConstructorArg().preprocessorFlags.get())))
+                        targetNode.getConstructorArg().preprocessorFlags.get(),
+                        collectRecursiveExportedPreprocessorFlags(ImmutableList.of(targetNode)))))
         .put(
             "OTHER_LDFLAGS",
             Joiner.on(' ').join(collectRecursiveLinkerFlags(ImmutableList.of(targetNode))));
@@ -1531,6 +1542,27 @@ public class ProjectGenerator {
                 return input
                     .castArg(AppleNativeTargetDescriptionArg.class)
                     .transform(getTargetFrameworkSearchPaths(type))
+                    .or(ImmutableSet.<String>of());
+              }
+            });
+  }
+
+  private <T> Iterable<String> collectRecursiveExportedPreprocessorFlags(
+      Iterable<TargetNode<T>> targetNodes) {
+    return FluentIterable
+        .from(targetNodes)
+        .transformAndConcat(
+            newRecursiveRuleDependencyTransformer(
+                AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+                ImmutableSet.of(AppleLibraryDescription.TYPE)))
+        .append(targetNodes)
+        .transformAndConcat(
+            new Function<TargetNode<?>, Iterable<? extends String>>() {
+              @Override
+              public Iterable<? extends String> apply(TargetNode<?> input) {
+                return input
+                    .castArg(AppleNativeTargetDescriptionArg.class)
+                    .transform(GET_EXPORTED_PREPROCESSOR_FLAGS)
                     .or(ImmutableSet.<String>of());
               }
             });

@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -30,21 +29,15 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 
@@ -130,42 +123,13 @@ public class AppleLibraryDescription implements
             return Optional.fromNullable(appleCxxPlatformsToAppleSdkPaths.get(input.getValue()));
           }
         });
-    ImmutableSet<SourcePath> publicHeaders = args.exportedHeaders.get();
-    ImmutableSet<SourcePath> privateHeaders = args.headers.get();
-    Sets.SetView<SourcePath> allHeaderPaths = Sets.union(
-        publicHeaders,
-        privateHeaders);
-    Path headerPathPrefix = Paths.get(
-        AppleDescriptions.getHeaderPathPrefix(args, params.getBuildTarget()));
-    ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>builder()
-        .putAll(
-            AppleDescriptions.convertToFlatCxxHeaders(
-                Paths.get(""),
-                pathResolver,
-                allHeaderPaths))
-        .putAll(
-            AppleDescriptions.convertToFlatCxxHeaders(
-                headerPathPrefix,
-                pathResolver,
-                privateHeaders))
-        .build();
-    AppleDescriptions.populateCxxConstructorArg(
+    AppleDescriptions.populateCxxLibraryDescriptionArg(
         pathResolver,
         delegateArg,
         args,
-        headerMap,
-        appleSdkPaths);
-    delegateArg.exportedHeaders = Optional.of(
-        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
-            AppleDescriptions.convertToFlatCxxHeaders(
-                headerPathPrefix,
-                pathResolver,
-                publicHeaders)));
-    delegateArg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
-    delegateArg.exportedLangPreprocessorFlags = Optional.of(
-        ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
-    delegateArg.soname = Optional.absent();
-    delegateArg.linkWhole = Optional.of(!isSharedLibraryTarget(params.getBuildTarget()));
+        params.getBuildTarget(),
+        appleSdkPaths,
+        !isSharedLibraryTarget(params.getBuildTarget()));
 
     return delegate.createBuildRule(
         params,

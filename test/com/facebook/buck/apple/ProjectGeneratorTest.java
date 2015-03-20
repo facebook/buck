@@ -713,6 +713,110 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testAppleLibraryCompilerAndPreprocessorFlagsDontPropagate() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setCompilerFlags(Optional.of(ImmutableList.of("-fhello")))
+        .setPreprocessorFlags(Optional.of(ImmutableList.of("-fworld")))
+        .build();
+
+    BuildTarget dependentBuildTarget = BuildTarget.builder("//foo", "bin").build();
+    TargetNode<?> dependentNode = AppleBinaryBuilder
+        .createBuilder(dependentBuildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setDeps(Optional.of(ImmutableSortedSet.of(buildTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node, dependentNode),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:bin");
+
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals("$(inherited) ", settings.get("OTHER_CFLAGS"));
+  }
+
+  @Test
+  public void testAppleLibraryExportedPreprocessorFlags() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setExportedPreprocessorFlags(Optional.of(ImmutableList.of("-DHELLO")))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals("$(inherited) -DHELLO", settings.get("OTHER_CFLAGS"));
+  }
+
+  @Test
+  public void testAppleLibraryExportedPreprocessorFlagsPropagate() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setExportedPreprocessorFlags(Optional.of(ImmutableList.of("-DHELLO")))
+        .build();
+
+    BuildTarget dependentBuildTarget = BuildTarget.builder("//foo", "bin").build();
+    TargetNode<?> dependentNode = AppleBinaryBuilder
+        .createBuilder(dependentBuildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setDeps(Optional.of(ImmutableSortedSet.of(buildTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node, dependentNode),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:bin");
+
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals("$(inherited) -DHELLO", settings.get("OTHER_CFLAGS"));
+  }
+
+  @Test
   public void testAppleLibraryLinkerFlags() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
