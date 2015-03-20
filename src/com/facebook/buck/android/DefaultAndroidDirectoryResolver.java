@@ -16,15 +16,17 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.PropertyFinder;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.PropertyFinder;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.StringTokenizer;
@@ -153,9 +155,9 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     if (repositoryPathOptional.isPresent()) {
       Path repositoryPath = repositoryPathOptional.get();
 
-      ImmutableCollection<Path> repositoryPathContents;
-      try {
-        repositoryPathContents = projectFilesystem.getDirectoryContents(repositoryPath);
+      ImmutableSortedSet<Path> repositoryPathContents;
+      try (DirectoryStream<Path> stream = Files.newDirectoryStream(repositoryPath)) {
+        repositoryPathContents = ImmutableSortedSet.copyOf(stream);
       } catch (IOException e) {
         throw new HumanReadableException(
             e,

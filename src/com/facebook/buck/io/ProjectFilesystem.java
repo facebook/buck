@@ -28,8 +28,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -199,6 +199,25 @@ public class ProjectFilesystem {
   }
 
   /**
+   * @param path Absolute path or path relative to the project root.
+   * @return If {@code path} is relative, it is returned. If it is absolute and is inside the
+   *         project root, it is relativized to the project root and returned. Otherwise an absent
+   *         value is returned.
+   */
+  public Optional<Path> getPathRelativeToProjectRoot(Path path) {
+    path = path.normalize();
+    if (path.isAbsolute()) {
+      if (path.startsWith(projectRoot)) {
+        return Optional.of(MorePaths.relativize(projectRoot, path));
+      } else {
+        return Optional.absent();
+      }
+    } else {
+      return Optional.of(path);
+    }
+  }
+
+  /**
    * As {@link #getFileForRelativePath(java.nio.file.Path)}, but with the added twist that the
    * existence of the path is checked before returning.
    */
@@ -365,7 +384,7 @@ public class ProjectFilesystem {
    * Allows {@link Files#isDirectory} to be faked in tests.
    */
   public boolean isDirectory(Path child, LinkOption... linkOptions) {
-    return Files.isDirectory(child, linkOptions);
+    return Files.isDirectory(resolve(child), linkOptions);
   }
 
   /**
@@ -387,9 +406,18 @@ public class ProjectFilesystem {
 
   public ImmutableCollection<Path> getDirectoryContents(Path pathRelativeToProjectRoot)
       throws IOException {
+    Preconditions.checkArgument(!pathRelativeToProjectRoot.isAbsolute());
     Path path = getPathForRelativePath(pathRelativeToProjectRoot);
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
-      return ImmutableList.copyOf(stream);
+      return FluentIterable.from(stream)
+          .transform(
+              new Function<Path, Path>() {
+                @Override
+                public Path apply(Path absolutePath) {
+                  return MorePaths.relativize(projectRoot, absolutePath);
+                }
+              })
+          .toList();
     }
   }
 
@@ -817,6 +845,7 @@ public class ProjectFilesystem {
    * @return whether ignoredPaths contains path or any of its ancestors.
    */
   public boolean isIgnored(Path path) {
+    Preconditions.checkArgument(!path.isAbsolute());
     for (Path ignoredPath : getIgnorePaths()) {
       if (path.startsWith(ignoredPath)) {
         return true;

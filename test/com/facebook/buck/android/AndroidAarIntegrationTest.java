@@ -52,7 +52,7 @@ public class AndroidAarIntegrationTest {
     zipInspector.assertFileExists("R.txt");
     zipInspector.assertFileExists("assets/a.txt");
     zipInspector.assertFileExists("assets/b.txt");
-    zipInspector.assertFileExists("res/helloworld.txt");
+    zipInspector.assertFileExists("res/raw/helloworld.txt");
     zipInspector.assertFileExists("res/values/A.xml");
   }
 
