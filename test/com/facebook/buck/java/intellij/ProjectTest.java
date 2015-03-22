@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java.intellij;
 
+import static com.facebook.buck.java.intellij.AndroidBuckConfig.emptyAndroidConfig;
+import static com.facebook.buck.java.intellij.JavaProjectBuckConfig.emptyJavaConfig;
 import static com.facebook.buck.testutil.MoreAsserts.assertListEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -27,6 +29,7 @@ import com.facebook.buck.android.AndroidResourceRuleBuilder;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.java.intellij.Project.SourceFolder;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavaLibraryDescription;
@@ -34,7 +37,6 @@ import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.java.PrebuiltJarBuilder;
-import com.facebook.buck.java.intellij.Project.SourceFolder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InMemoryBuildFileTree;
@@ -737,6 +739,8 @@ public class ProjectTest {
                 BuildTarget.TO_TARGET)),
         projectFilesystem,
         /* pathToDefaultAndroidManifest */ Optional.<String>absent(),
+        emptyAndroidConfig(),
+        emptyJavaConfig(),
         /* pathToPostProcessScript */ Optional.<String>absent(),
         BuckTestConstant.PYTHON_INTERPRETER,
         new ObjectMapper(),

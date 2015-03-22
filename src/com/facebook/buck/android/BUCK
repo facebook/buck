@@ -50,6 +50,7 @@ RULES_SRCS = [
   'AndroidManifest.java',
   'AndroidManifestDescription.java',
   'AndroidPrebuiltAar.java',
+  'AndroidPrebuiltAARCollection.java',
   'AndroidPrebuiltAarDescription.java',
   'AndroidPrebuiltAarGraphEnhancer.java',
   'AndroidResource.java',

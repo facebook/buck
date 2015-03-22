@@ -6,6 +6,12 @@ import sys
 
 from collections import defaultdict
 
+
+MISC_XML = """<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectRootManager" version="2" languageLevel="%(java_language_level)s" assert-keyword="true" jdk-15="true" project-jdk-name="%(project_jdk_name)s" project-jdk-type="%(project_jdk_type)s" />
+</project>"""
+
 MODULE_XML_START = """<?xml version="1.0" encoding="UTF-8"?>
 <module type="%(type)s" version="4">"""
 
@@ -22,13 +28,13 @@ ANDROID_FACET = """
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="%(module_gen_path)s" />
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="%(android_manifest)s" />
         <option name="RES_FOLDER_RELATIVE_PATH" value="%(res)s" />
-        <option name="ASSETS_FOLDER_RELATIVE_PATH" value="/assets" />
+        <option name="ASSETS_FOLDER_RELATIVE_PATH" value="%(asset_folder)s" />
         <option name="LIBS_FOLDER_RELATIVE_PATH" value="%(libs_path)s" />
         <option name="USE_CUSTOM_APK_RESOURCE_FOLDER" value="false" />
         <option name="CUSTOM_APK_RESOURCE_FOLDER" value="" />
         <option name="USE_CUSTOM_COMPILER_MANIFEST" value="false" />
         <option name="CUSTOM_COMPILER_MANIFEST" value="" />
-        <option name="APK_PATH" value="" />
+        <option name="APK_PATH" value="%(apk_path)s" />
         <option name="LIBRARY_PROJECT" value="%(is_android_library_project)s" />
         <option name="RUN_PROCESS_RESOURCES_MAVEN_TASK" value="true" />
         <option name="GENERATE_UNSIGNED_APK" value="false" />
@@ -53,6 +59,20 @@ ALL_MODULES_XML_END = """
     </modules>
   </component>
 </project>
+"""
+
+AAR_XML_START = """<component name="libraryTable">
+  <library name="%(name)s">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/%(binary_jar)s!/" />"""
+
+AAR_XML_RESOURCE = """
+      <root url="file://$PROJECT_DIR$/%(resource_path)s/" />"""
+
+AAR_XML_END = """
+    </CLASSES>
+  </library>
+</component>
 """
 
 LIBRARY_XML_START = """<component name="libraryTable">
@@ -175,6 +195,14 @@ def create_additional_excludes(modules):
 
     return additional_excludes
 
+def get_value_in_map(map, key, fallback=None):
+  if key in map:
+    return map[key]
+
+  if None != fallback:
+    return fallback
+
+  return ''
 
 def write_modules(modules, generate_minimum_project, android_auto_generation_disabled):
     """Writes one XML file for each module."""
@@ -199,21 +227,22 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
             else:
                 keystore = ''
 
-            if 'androidManifest' in module:
-                android_manifest = module['androidManifest']
-            else:
-                android_manifest = '/AndroidManifest.xml'
+            android_manifest = get_value_in_map(module, 'androidManifest', '/AndroidManifest.xml')
+            res_folder = get_value_in_map(module, 'resFolder', '/res')
+            asset_folder = get_value_in_map(module, 'assetFolder', '/assets')
 
             is_library_project = module['isAndroidLibraryProject']
             android_params = {
                 'android_manifest': android_manifest,
-                'res': '/res',
+                'res': res_folder,
+                'asset_folder': asset_folder,
                 'is_android_library_project': str(is_library_project).lower(),
                 'run_proguard': 'false',
                 'module_gen_path': module['moduleGenPath'],
                 'proguard_config': '/proguard.cfg',
                 'keystore': keystore,
                 'libs_path': '/%s' % module.get('nativeLibs', 'libs'),
+                'apk_path' : get_value_in_map(module, 'binaryPath'),
             }
 
             if android_auto_generation_disabled:
@@ -416,6 +445,35 @@ def write_all_modules(modules):
     # Write the modules to a file.
     write_file_if_changed('.idea/modules.xml', xml)
 
+def write_misc_file(java_settings):
+  """Writes a misc.xml file to define some settings specific to the project."""
+  xml = MISC_XML % {
+    'java_language_level' : get_value_in_map(java_settings, 'languageLevel'),
+    'project_jdk_name' : get_value_in_map(java_settings, 'jdkName'),
+    'project_jdk_type' : get_value_in_map(java_settings, 'jdkType'),
+  }
+  write_file_if_changed('.idea/misc.xml', xml)
+
+def write_aars(aars):
+  """Writes an XML file to define each prebuilt aar."""
+  mkdir_p('.idea/libraries')
+  for aar in aars:
+    # Build up the XML.
+    name = aar['name']
+    xml = AAR_XML_START % {
+      'name': name,
+      'binary_jar': aar['jar'],
+      }
+
+    if 'res' in aar:
+      xml += AAR_XML_RESOURCE % {'resource_path' : aar['res']}
+    if 'assets' in aar:
+      xml += AAR_XML_RESOURCE % {'resource_path' : aar['assets']}
+
+    xml += AAR_XML_END
+
+    # Write the library to a file
+    write_file_if_changed('.idea/libraries/%s.xml' % name, xml)
 
 def write_libraries(libraries):
     """Writes an XML file to define each library."""
@@ -518,10 +576,16 @@ if __name__ == '__main__':
     libraries = parsed_json['libraries']
     write_libraries(libraries)
 
+    aars = parsed_json['aars']
+    write_aars(aars)
+
     modules = parsed_json['modules']
     write_modules(modules, generate_minimum_project, android_auto_generation_disabled)
     write_all_modules(modules)
     write_run_configs()
+
+    java_settings = parsed_json['java']
+    write_misc_file(java_settings)
 
     # Write the list of modified files to stdout
     for path in MODIFIED_FILES:

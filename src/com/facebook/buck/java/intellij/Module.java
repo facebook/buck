@@ -92,6 +92,8 @@ final class Module {
   @Nullable
   @JsonProperty String resFolder;
   @Nullable
+  @JsonProperty String assetFolder;
+  @Nullable
   @JsonProperty String keystorePath;
   @Nullable
   @JsonProperty String androidManifest;
@@ -105,6 +107,9 @@ final class Module {
   @JsonProperty String annotationGenPath;
   @Nullable
   @JsonProperty Boolean annotationGenIsForTest;
+
+  @Nullable
+  @JsonProperty String binaryPath;
 
   Module(BuildRule srcRule, BuildTarget target) {
     this.srcRule = srcRule;

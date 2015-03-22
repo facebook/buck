@@ -208,6 +208,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
               new ParserConfig(options.getBuckConfig()).getBuildFileName()),
           getProjectFilesystem(),
           options.getPathToDefaultAndroidManifest(),
+          options.getDefaultAndroidConfig(),
+          options.getJDKConfig(),
           options.getPathToPostProcessScript(),
           new PythonBuckConfig(options.getBuckConfig()).getPythonInterpreter(),
           getObjectMapper(),

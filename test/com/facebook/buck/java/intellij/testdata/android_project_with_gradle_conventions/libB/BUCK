@@ -1,0 +1,28 @@
+DEPENDENCIES = [ '//libA:src' ]
+
+android_library(
+    name='src',
+    srcs=glob(['src/main/java/**/*.java']),
+    deps=DEPENDENCIES + [':res'],
+    visibility=['PUBLIC'],
+    exported_deps=DEPENDENCIES
+)
+
+android_resource(
+    name='manifest',
+    manifest='src/main/AndroidManifest.xml',
+    deps=['//libA:manifest'],
+    visibility=['PUBLIC'],
+)
+
+android_resource(
+    name='res',
+    res='src/main/res',
+    package='com.example',
+    visibility=['PUBLIC'],
+)
+
+project_config(
+    src_target=':src',
+    src_roots=['src/main/java']
+)

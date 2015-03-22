@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java.intellij;
 
+import static com.facebook.buck.java.intellij.SerializableAndroidAAR.newSerializableAndroidAAR;
+import static com.facebook.buck.java.intellij.SerializableProjectJavaSettings.newSerializableJavaProjectSettings;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
@@ -24,6 +26,8 @@ import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidPackageableCollection;
+import com.facebook.buck.android.AndroidPrebuiltAARCollection;
+import com.facebook.buck.android.AndroidPrebuiltAar;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.android.NdkLibrary;
@@ -97,13 +101,14 @@ public class Project {
   /**
    * This directory is analogous to the gen/ directory that IntelliJ would produce when building an
    * Android module. It contains files such as R.java, BuildConfig.java, and Manifest.java.
-   * <p>
+   * <p/>
    * By default, IntelliJ generates its gen/ directories in our source tree, which would likely
    * mess with the user's use of {@code glob(['**&#x2f;*.java'])}. For this reason, we encourage
    * users to target
    */
   public static final String ANDROID_GEN_DIR = BuckConstant.BUCK_OUTPUT_DIRECTORY + "/android";
   public static final Path ANDROID_GEN_PATH = BuckConstant.BUCK_OUTPUT_PATH.resolve("android");
+  public static final String ANDROID_APK_DIR = BuckConstant.BUCK_OUTPUT_DIRECTORY + "/gen";
 
   /**
    * Prefix for build targets whose output will be in {@link #ANDROID_GEN_DIR}.
@@ -130,9 +135,12 @@ public class Project {
   private final Optional<String> pathToDefaultAndroidManifest;
   private final Optional<String> pathToPostProcessScript;
   private final Set<BuildRule> libraryJars;
+  private final AndroidPrebuiltAARCollection androidAars;
   private final String pythonInterpreter;
   private final ObjectMapper objectMapper;
   private final boolean turnOffAutoSourceGeneration;
+  private final AndroidBuckConfig defaultAndroidConfig;
+  private final JavaProjectBuckConfig javaConfig;
 
   public Project(
       SourcePathResolver resolver,
@@ -144,6 +152,8 @@ public class Project {
       BuildFileTree buildFileTree,
       ProjectFilesystem projectFilesystem,
       Optional<String> pathToDefaultAndroidManifest,
+      AndroidBuckConfig defaultAndroidConfig,
+      JavaProjectBuckConfig javaConfig,
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter,
       ObjectMapper objectMapper,
@@ -159,8 +169,11 @@ public class Project {
     this.pathToDefaultAndroidManifest = pathToDefaultAndroidManifest;
     this.pathToPostProcessScript = pathToPostProcessScript;
     this.libraryJars = Sets.newHashSet();
+    this.androidAars = new AndroidPrebuiltAARCollection();
     this.pythonInterpreter = pythonInterpreter;
     this.objectMapper = objectMapper;
+    this.defaultAndroidConfig = defaultAndroidConfig;
+    this.javaConfig = javaConfig;
     this.turnOffAutoSourceGeneration = turnOffAutoSourceGeneration;
   }
 
@@ -198,7 +211,7 @@ public class Project {
     // If the user specified a post-processing script, then run it.
     if (pathToPostProcessScript.isPresent()) {
       String pathToScript = pathToPostProcessScript.get();
-      Process process = Runtime.getRuntime().exec(new String[] {pathToScript});
+      Process process = Runtime.getRuntime().exec(new String[]{pathToScript});
       ProcessExecutor.Result postProcessResult = processExecutor.execute(process);
       int postProcessExitCode = postProcessResult.getExitCode();
       if (postProcessExitCode != 0) {
@@ -297,11 +310,11 @@ public class Project {
     BuildRule projectRule = Preconditions.checkNotNull(projectConfig.getProjectRule());
     Preconditions.checkState(
         projectRule instanceof JavaLibrary ||
-        projectRule instanceof JavaBinary ||
-        projectRule instanceof AndroidLibrary ||
-        projectRule instanceof AndroidResource ||
-        projectRule instanceof AndroidBinary ||
-        projectRule instanceof NdkLibrary,
+            projectRule instanceof JavaBinary ||
+            projectRule instanceof AndroidLibrary ||
+            projectRule instanceof AndroidResource ||
+            projectRule instanceof AndroidBinary ||
+            projectRule instanceof NdkLibrary,
         "project_config() does not know how to process a src_target of type %s.",
         projectRule.getType().getName());
 
@@ -321,7 +334,8 @@ public class Project {
     // their classpath entries may be deliberately shadowing production classpath entries.
 
     // tests folder
-    boolean hasSourceFoldersForTestRule = addSourceFolders(module,
+    boolean hasSourceFoldersForTestRule = addSourceFolders(
+        module,
         projectConfig.getTestRule(),
         projectConfig.getTestsSourceRoots(),
         true /* isTestSource */);
@@ -333,7 +347,8 @@ public class Project {
     }
 
     // src folder
-    boolean hasSourceFoldersForSrcRule = addSourceFolders(module,
+    boolean hasSourceFoldersForSrcRule = addSourceFolders(
+        module,
         projectConfig.getSrcRule(),
         projectConfig.getSourceRoots(),
         false /* isTestSource */);
@@ -384,6 +399,11 @@ public class Project {
         module.keystorePath = null;
         module.nativeLibs =
             Paths.get(relativePath).relativize(ndkLibrary.getLibraryPath()).toString();
+      } else if (projectRule instanceof AndroidLibrary) {
+        module.isAndroidLibraryProject = true;
+        module.keystorePath = null;
+        module.resFolder = defaultAndroidConfig.getResourceDefaultRelativePath();
+        module.assetFolder = defaultAndroidConfig.getAssetsDefaultRelativePath();
       } else if (projectRule instanceof AndroidResource) {
         AndroidResource androidResource = (AndroidResource) projectRule;
         module.resFolder = createRelativePath(androidResource.getRes(), target);
@@ -391,8 +411,12 @@ public class Project {
         module.keystorePath = null;
       } else if (projectRule instanceof AndroidBinary) {
         AndroidBinary androidBinary = (AndroidBinary) projectRule;
-        module.resFolder = null;
+        module.resFolder = defaultAndroidConfig.getResourceDefaultRelativePath();
+        module.assetFolder = defaultAndroidConfig.getAssetsDefaultRelativePath();
         module.isAndroidLibraryProject = false;
+        module.binaryPath = generateRelativeAPKPath(
+            projectRule.getBuildTarget().getShortName(),
+            basePathWithSlash);
         KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
             androidBinary.getKeystore().getPathToStore(),
             androidBinary.getKeystore().getPathToPropertiesFile(),
@@ -409,26 +433,7 @@ public class Project {
 
       module.hasAndroidFacet = true;
       module.proguardConfigPath = null;
-
-      // If there is a default AndroidManifest.xml specified in .buckconfig, use it if
-      // AndroidManifest.xml is not present in the root of the [Android] IntelliJ module.
-      if (pathToDefaultAndroidManifest.isPresent()) {
-        Path androidManifest = Paths.get(basePathWithSlash, "AndroidManifest.xml");
-        if (!projectFilesystem.exists(androidManifest)) {
-          String manifestPath = this.pathToDefaultAndroidManifest.get();
-          String rootPrefix = "//";
-          Preconditions.checkState(manifestPath.startsWith(rootPrefix),
-              "Currently, we expect this option to start with '%s', " +
-              "indicating that it is relative to the root of the repository.",
-              rootPrefix);
-          manifestPath = manifestPath.substring(rootPrefix.length());
-          String relativePathToManifest =
-              Paths.get(basePathWithSlash).relativize(Paths.get(manifestPath)).toString();
-          // IntelliJ requires that the path start with a slash to indicate that it is relative to
-          // the module.
-          module.androidManifest = "/" + relativePathToManifest;
-        }
-      }
+      module.androidManifest = resolveAndroidManifestRelativePath(basePathWithSlash);
 
       // List this last so that classes from modules can shadow classes in the JDK.
       jdkDependency = DependentModule.newInheritedJdk();
@@ -466,6 +471,41 @@ public class Project {
     return module;
   }
 
+  private String resolveAndroidManifestRelativePath(String basePathWithSlash) {
+    String fallbackManifestPath = resolveAndroidManifestFileRelativePath(basePathWithSlash);
+    String manifestPath = defaultAndroidConfig.resolveManifestRelativePath();
+
+    if (manifestPath != null) {
+      Path path = Paths.get(basePathWithSlash, manifestPath);
+      return projectFilesystem.exists(path) ? manifestPath : fallbackManifestPath;
+    }
+    return fallbackManifestPath;
+  }
+
+  private String resolveAndroidManifestFileRelativePath(String basePathWithSlash) {
+    // If there is a default AndroidManifest.xml specified in .buckconfig, use it if
+    // AndroidManifest.xml is not present in the root of the [Android] IntelliJ module.
+    if (pathToDefaultAndroidManifest.isPresent()) {
+      Path androidManifest = Paths.get(basePathWithSlash, "AndroidManifest.xml");
+      if (!projectFilesystem.exists(androidManifest)) {
+        String manifestPath = this.pathToDefaultAndroidManifest.get();
+        String rootPrefix = "//";
+        Preconditions.checkState(
+            manifestPath.startsWith(rootPrefix),
+            "Currently, we expect this option to start with '%s', " +
+                "indicating that it is relative to the root of the repository.",
+            rootPrefix);
+        manifestPath = manifestPath.substring(rootPrefix.length());
+        String relativePathToManifest =
+            Paths.get(basePathWithSlash).relativize(Paths.get(manifestPath)).toString();
+        // IntelliJ requires that the path start with a slash to indicate that it is relative to
+        // the module.
+        return "/" + relativePathToManifest;
+      }
+    }
+    return null;
+  }
+
   @SuppressWarnings("PMD.LooseCoupling")
   private List<DependentModule> createDependenciesInOrder(
       boolean includeSourceFolder,
@@ -497,10 +537,10 @@ public class Project {
   /**
    * Paths.computeRelativePath(basePathWithSlash, "") generates the relative path
    * from base path of current build target to the root of the project.
-   *
+   * <p/>
    * Paths.computeRelativePath("", basePathWithSlash) generates the relative path
    * from the root of the project to base path of current build target.
-   *
+   * <p/>
    * For example, for the build target in $PROJECT_DIR$/android_res/com/facebook/gifts/,
    * Intellij will generate $PROJECT_DIR$/buck-out/android/android_res/com/facebook/gifts/gen
    *
@@ -515,7 +555,17 @@ public class Project {
         "gen");
   }
 
-  private boolean addSourceFolders(Module module,
+  static String generateRelativeAPKPath(String targetName, String basePathOfModuleWithSlash) {
+    return Paths.get(
+        "/",
+        Paths.get(basePathOfModuleWithSlash).relativize(Paths.get("")).toString(),
+        ANDROID_APK_DIR,
+        Paths.get("").relativize(Paths.get(basePathOfModuleWithSlash)).toString(),
+        targetName + ".apk").toString();
+  }
+
+  private boolean addSourceFolders(
+      Module module,
       @Nullable BuildRule buildRule,
       @Nullable ImmutableList<SourceRoot> sourceRoots,
       boolean isTestSource) {
@@ -589,7 +639,8 @@ public class Project {
   }
 
   @VisibleForTesting
-  static void addRootExcludes(Module module,
+  static void addRootExcludes(
+      Module module,
       @Nullable BuildRule buildRule,
       ProjectFilesystem projectFilesystem) {
     // If in the root of the project, specify ignored paths.
@@ -622,11 +673,11 @@ public class Project {
 
   /**
    * Modifies the {@code scope} of a library dependency to {@code "PROVIDED"}, where appropriate.
-   * <p>
+   * <p/>
    * If an {@code android_binary()} rule uses the {@code no_dx} argument, then the jars in the
    * libraries that should not be dex'ed must be included with {@code scope="PROVIDED"} in
    * IntelliJ.
-   * <p>
+   * <p/>
    * The problem is that if a library is included by two android_binary rules that each need it in a
    * different way (i.e., for one it should be {@code scope="COMPILE"} and another it should be
    * {@code scope="PROVIDED"}), then it must be tagged as {@code scope="PROVIDED"} in all
@@ -635,7 +686,7 @@ public class Project {
    */
   @VisibleForTesting
   static void markNoDxJarsAsProvided(List<Module> modules, Set<Path> noDxJars) {
-  Map<String, Path> intelliJLibraryNameToJarPath = Maps.newHashMap();
+    Map<String, Path> intelliJLibraryNameToJarPath = Maps.newHashMap();
     for (Path jarPath : noDxJars) {
       String libraryName = getIntellijNameForBinaryJar(jarPath);
       intelliJLibraryNameToJarPath.put(libraryName, jarPath);
@@ -651,8 +702,10 @@ public class Project {
         AndroidBinary androidBinary = (AndroidBinary) module.srcRule;
         AndroidPackageableCollection packageableCollection =
             androidBinary.getAndroidPackageableCollection();
-        classpathEntriesToDex = Sets.newHashSet(Sets.intersection(noDxJars,
-            packageableCollection.getClasspathEntriesToDex()));
+        classpathEntriesToDex = Sets.newHashSet(
+            Sets.intersection(
+                noDxJars,
+                packageableCollection.getClasspathEntriesToDex()));
       } else {
         classpathEntriesToDex = ImmutableSet.of();
       }
@@ -715,10 +768,7 @@ public class Project {
             dep == rule) {
           depsToVisit = dep.getDeps();
         } else if (dep.getProperties().is(LIBRARY) && dep instanceof ExportDependencies) {
-            depsToVisit = ((ExportDependencies) dep).getExportedDeps();
-        } else if (dep.getProperties().is(LIBRARY) &&
-            dep instanceof ExportDependencies) {
-            depsToVisit = ((ExportDependencies) dep).getExportedDeps();
+          depsToVisit = ((ExportDependencies) dep).getExportedDeps();
         } else {
           depsToVisit = ImmutableSet.of();
         }
@@ -759,20 +809,36 @@ public class Project {
         }
 
         DependentModule dependentModule;
-        if (dep instanceof PrebuiltJar) {
+
+        if (androidAars.contains(dep)) {
+          AndroidPrebuiltAar aar = androidAars.getParentAAR(dep);
+          dependentModule = DependentModule.newLibrary(
+              aar.getBuildTarget(),
+              getIntellijNameForAAR(aar));
+          depsToVisit = ImmutableSet.of();
+        } else if (dep instanceof PrebuiltJar) {
           libraryJars.add(dep);
           String libraryName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newLibrary(dep.getBuildTarget(), libraryName);
+        } else if (dep instanceof AndroidPrebuiltAar) {
+          androidAars.add((AndroidPrebuiltAar) dep);
+          String libraryName = getIntellijNameForAAR(dep);
+          dependentModule = DependentModule.newLibrary(dep.getBuildTarget(), libraryName);
+          depsToVisit = ImmutableSet.of();
         } else if (dep instanceof NdkLibrary) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else if (dep.getFullyQualifiedName().startsWith(ANDROID_GEN_BUILD_TARGET_PREFIX)) {
           return depsToVisit;
         } else if ((dep instanceof JavaLibrary) ||
-                   dep instanceof AndroidResource) {
+            dep instanceof AndroidResource) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else {
+          return depsToVisit;
+        }
+
+        if (librariesToAdd.contains(dependentModule) || modulesToAdd.contains(dependentModule)) {
           return depsToVisit;
         }
 
@@ -816,10 +882,11 @@ public class Project {
   }
 
   /**
-   * @param rule whose corresponding IntelliJ module name will be returned
+   * @param rule               whose corresponding IntelliJ module name will be returned
    * @param basePathToAliasMap may be null if rule is a {@link PrebuiltJar}
    */
-  private static String getIntellijNameForRule(BuildRule rule,
+  private static String getIntellijNameForRule(
+      BuildRule rule,
       @Nullable Map<Path, String> basePathToAliasMap) {
     // Get basis for the library/module name.
     String name;
@@ -859,7 +926,8 @@ public class Project {
    * @param pathRelativeToProjectRoot if {@code null}, then this method returns {@code null}
    */
   @Nullable
-  private static String createRelativePath(@Nullable Path pathRelativeToProjectRoot,
+  private static String createRelativePath(
+      @Nullable Path pathRelativeToProjectRoot,
       BuildTarget target) {
     if (pathRelativeToProjectRoot == null) {
       return null;
@@ -890,9 +958,20 @@ public class Project {
       libraries.add(new SerializablePrebuiltJarRule(name, binaryJar, sourceJar, javadocUrl));
     }
 
+    List<SerializableAndroidAAR> aars = Lists.newArrayListWithCapacity(
+        androidAars.size());
+    for (BuildRule aar : androidAars) {
+      Preconditions.checkState(aar instanceof AndroidPrebuiltAar);
+      AndroidPrebuiltAar preBuiltAAR = (AndroidPrebuiltAar) aar;
+      String name = getIntellijNameForAAR(preBuiltAAR);
+      aars.add(newSerializableAndroidAAR(name, preBuiltAAR));
+    }
+
     Map<String, Object> config = ImmutableMap.<String, Object>of(
         "modules", modules,
-        "libraries", libraries);
+        "libraries", libraries,
+        "aars", aars,
+        "java", newSerializableJavaProjectSettings(javaConfig));
 
     // Write out the JSON config to be consumed by the Python.
     try (Writer writer = new FileWriter(jsonTempFile)) {
@@ -903,6 +982,10 @@ public class Project {
         objectMapper.writeValue(writer, config);
       }
     }
+  }
+
+  private String getIntellijNameForAAR(BuildRule aar) {
+    return getIntellijNameForBinaryJar(aar.getFullyQualifiedName()).replaceAll(":", "_");
   }
 
   private ExitCodeAndOutput processJsonConfig(File jsonTempFile, boolean generateMinimalProject)
@@ -956,6 +1039,7 @@ public class Project {
     private final int exitCode;
     private final String stdOut;
     private final String stdErr;
+
     ExitCodeAndOutput(int exitCode, String stdOut, String stdErr) {
       this.exitCode = exitCode;
       this.stdOut = stdOut;
@@ -1023,12 +1107,16 @@ public class Project {
   @JsonInclude(Include.NON_NULL)
   @VisibleForTesting
   static class SerializablePrebuiltJarRule {
-    @JsonProperty private final String name;
-    @JsonProperty private final String binaryJar;
+    @JsonProperty
+    private final String name;
+    @JsonProperty
+    private final String binaryJar;
     @Nullable
-    @JsonProperty private final String sourceJar;
+    @JsonProperty
+    private final String sourceJar;
     @Nullable
-    @JsonProperty private final String javadocUrl;
+    @JsonProperty
+    private final String javadocUrl;
 
     private SerializablePrebuiltJarRule(
         String name,
