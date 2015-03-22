@@ -472,4 +472,19 @@ public class ProjectIntegrationTest {
     workspace.verify();
   }
 
+  @Test
+  public void testAndroidProjectGeneratedWithGradleConventions() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "android_project_with_gradle_conventions",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "app");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
 }
