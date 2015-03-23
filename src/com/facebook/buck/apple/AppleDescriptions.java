@@ -391,7 +391,10 @@ public class AppleDescriptions {
     output.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.deps = arg.deps;
+    // This is intentionally an empty string; we put all prefixes into
+    // the header map itself.
     output.headerNamespace = Optional.of("");
+    output.tests = arg.tests;
   }
 
   public static void populateCxxLibraryDescriptionArg(
