@@ -48,6 +48,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -544,6 +545,27 @@ public class CxxDescriptionEnhancer {
               cxxPlatform,
               FluentIterable.from(params.getDeps())
                   .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
+
+      // Add the private includes of any libraries which list this
+      // rule as a test.
+      BuildTarget targetWithoutFlavor = BuildTarget.of(
+          params.getBuildTarget().getUnflavoredBuildTarget());
+      ImmutableSet.Builder<AbstractCxxLibrary> librariesTestedByTargetBuilder =
+          ImmutableSet.builder();
+      for (BuildRule rule : params.getDeps()) {
+        if (rule instanceof AbstractCxxLibrary) {
+          AbstractCxxLibrary libraryRule = (AbstractCxxLibrary) rule;
+          if (libraryRule.getTests().contains(targetWithoutFlavor)) {
+            librariesTestedByTargetBuilder.add(libraryRule);
+          }
+        }
+      }
+      cxxPreprocessorInputFromDeps = CxxPreprocessorInput.concat(
+          ImmutableList.of(
+              cxxPreprocessorInputFromDeps,
+              getPrivateCxxPreprocessorInputFromLibraries(
+                  cxxPlatform,
+                  librariesTestedByTargetBuilder.build())));
     } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
       throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
     }
@@ -821,4 +843,19 @@ public class CxxDescriptionEnhancer {
     return platformFlagsBuilder.build();
   }
 
+  private static CxxPreprocessorInput getPrivateCxxPreprocessorInputFromLibraries(
+      CxxPlatform cxxPlatform,
+      Iterable<? extends AbstractCxxLibrary> libraries)
+    throws CxxPreprocessorInput.ConflictingHeadersException {
+    ImmutableList.Builder<CxxPreprocessorInput> libraryInputsBuilder = ImmutableList.builder();
+
+    for (AbstractCxxLibrary library : libraries) {
+      libraryInputsBuilder.add(
+          library.getCxxPreprocessorInput(
+              cxxPlatform,
+              HeaderVisibility.PRIVATE));
+    }
+
+    return CxxPreprocessorInput.concat(libraryInputsBuilder.build());
+  }
 }
