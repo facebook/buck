@@ -111,11 +111,22 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
-    return CxxPreprocessorInput.builder()
-        // Just pass the include dirs as system includes.
-        .addAllSystemIncludeRoots(includeDirs)
-        .build();
+  public CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform,
+      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
+    switch (headerVisibility) {
+      case PUBLIC:
+        return CxxPreprocessorInput.builder()
+            // Just pass the include dirs as system includes.
+            .addAllSystemIncludeRoots(includeDirs)
+            .build();
+      case PRIVATE:
+        return CxxPreprocessorInput.EMPTY;
+    }
+
+    // We explicitly don't put this in a default statement because we
+    // want the compiler to warn if someone modifies the HeaderVisibility enum.
+    throw new RuntimeException("Invalid header visibility: " + headerVisibility);
   }
 
   @Override

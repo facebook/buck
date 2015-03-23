@@ -101,7 +101,9 @@ public class CxxBinaryDescriptionTest {
     AbstractCxxLibrary dep = new AbstractCxxLibrary(depParams, pathResolver) {
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+      public CxxPreprocessorInput getCxxPreprocessorInput(
+          CxxPlatform cxxPlatform,
+          CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
         return CxxPreprocessorInput.builder()
             .addRules(
                 header.getBuildTarget(),

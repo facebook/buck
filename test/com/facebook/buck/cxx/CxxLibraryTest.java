@@ -75,7 +75,9 @@ public class CxxLibraryTest {
     AbstractCxxLibrary cxxLibrary = new AbstractCxxLibrary(params, pathResolver) {
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+      public CxxPreprocessorInput getCxxPreprocessorInput(
+          CxxPlatform cxxPlatform,
+          CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
         return CxxPreprocessorInput.builder()
             .addRules(headerTarget, headerSymlinkTreeTarget)
             .addIncludeRoots(headerSymlinkTreeRoot)
@@ -130,7 +132,11 @@ public class CxxLibraryTest {
         .addRules(headerTarget, headerSymlinkTreeTarget)
         .addIncludeRoots(headerSymlinkTreeRoot)
         .build();
-    assertEquals(expectedCxxPreprocessorInput, cxxLibrary.getCxxPreprocessorInput(cxxPlatform));
+    assertEquals(
+        expectedCxxPreprocessorInput,
+        cxxLibrary.getCxxPreprocessorInput(
+            cxxPlatform,
+            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
 
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.

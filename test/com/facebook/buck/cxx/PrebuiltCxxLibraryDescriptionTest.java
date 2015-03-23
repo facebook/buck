@@ -96,7 +96,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .build();
     assertEquals(
         expectedCxxPreprocessorInput,
-        lib.getCxxPreprocessorInput(CXX_PLATFORM));
+        lib.getCxxPreprocessorInput(
+            CXX_PLATFORM,
+            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = ImmutableNativeLinkableInput.of(
@@ -141,7 +143,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .build();
     assertEquals(
         expectedCxxPreprocessorInput,
-        lib.getCxxPreprocessorInput(CXX_PLATFORM));
+        lib.getCxxPreprocessorInput(
+            CXX_PLATFORM,
+            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = ImmutableNativeLinkableInput.of(
@@ -184,7 +188,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .build();
     assertEquals(
         expectedCxxPreprocessorInput,
-        lib.getCxxPreprocessorInput(CXX_PLATFORM));
+        lib.getCxxPreprocessorInput(
+            CXX_PLATFORM,
+            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = ImmutableNativeLinkableInput.of(
@@ -227,7 +233,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .build();
     assertEquals(
         expectedCxxPreprocessorInput,
-        lib.getCxxPreprocessorInput(CXX_PLATFORM));
+        lib.getCxxPreprocessorInput(
+            CXX_PLATFORM,
+            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = ImmutableNativeLinkableInput.of(

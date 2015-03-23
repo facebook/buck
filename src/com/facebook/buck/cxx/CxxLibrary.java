@@ -74,12 +74,14 @@ public class CxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform,
+      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
     BuildRule rule = CxxDescriptionEnhancer.requireBuildRule(
         params,
         ruleResolver,
         cxxPlatform.getFlavor(),
-        CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
+        CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility));
     Preconditions.checkState(rule instanceof SymlinkTree);
     SymlinkTree symlinkTree = (SymlinkTree) rule;
     return CxxPreprocessorInput.builder()

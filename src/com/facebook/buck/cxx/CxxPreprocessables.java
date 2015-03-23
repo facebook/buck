@@ -86,7 +86,11 @@ public class CxxPreprocessables {
             if (rule instanceof CxxPreprocessorDep) {
               CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
               Preconditions.checkState(!deps.containsKey(rule.getBuildTarget()));
-              deps.put(rule.getBuildTarget(), dep.getCxxPreprocessorInput(cxxPlatform));
+              deps.put(
+                  rule.getBuildTarget(),
+                  dep.getCxxPreprocessorInput(
+                      cxxPlatform,
+                      CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
             }
             return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
           }

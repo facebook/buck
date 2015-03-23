@@ -102,6 +102,12 @@ public class CxxLibraryDescriptionTest {
     final BuildRule header = new FakeBuildRule("//:header", pathResolver);
     final BuildRule headerSymlinkTree = new FakeBuildRule("//:symlink", pathResolver);
     final Path headerSymlinkTreeRoot = Paths.get("symlink/tree/root");
+
+    final BuildRule privateHeader = new FakeBuildRule("//:header-private", pathResolver);
+    final BuildRule privateHeaderSymlinkTree = new FakeBuildRule(
+        "//:symlink-private", pathResolver);
+    final Path privateHeaderSymlinkTreeRoot = Paths.get("private/symlink/tree/root");
+
     final BuildRule archive = new FakeBuildRule("//:archive", pathResolver);
     final Path archiveOutput = Paths.get("output/path/lib.a");
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
@@ -109,13 +115,26 @@ public class CxxLibraryDescriptionTest {
     AbstractCxxLibrary dep = new AbstractCxxLibrary(depParams, pathResolver) {
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
-        return CxxPreprocessorInput.builder()
-            .addRules(
-                header.getBuildTarget(),
-                headerSymlinkTree.getBuildTarget())
-            .addIncludeRoots(headerSymlinkTreeRoot)
-            .build();
+      public CxxPreprocessorInput getCxxPreprocessorInput(
+          CxxPlatform cxxPlatform,
+          CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
+        switch (headerVisibility) {
+          case PUBLIC:
+            return CxxPreprocessorInput.builder()
+                .addRules(
+                    header.getBuildTarget(),
+                    headerSymlinkTree.getBuildTarget())
+                .addIncludeRoots(headerSymlinkTreeRoot)
+                .build();
+          case PRIVATE:
+            return CxxPreprocessorInput.builder()
+                .addRules(
+                    privateHeader.getBuildTarget(),
+                    privateHeaderSymlinkTree.getBuildTarget())
+                .addIncludeRoots(privateHeaderSymlinkTreeRoot)
+                .build();
+        }
+        throw new RuntimeException("Invalid header visibility: " + headerVisibility);
       }
 
       @Override
@@ -150,17 +169,23 @@ public class CxxLibraryDescriptionTest {
       }
 
     };
-    resolver.addAllToIndex(ImmutableList.of(header, headerSymlinkTree, archive, dep));
+    resolver.addAllToIndex(
+        ImmutableList.of(
+            header, headerSymlinkTree, privateHeader, privateHeaderSymlinkTree, archive, dep));
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
     String headerName = "test/bar.h";
+    String privateHeaderName = "test/bar_private.h";
     CxxLibraryBuilder cxxLibraryBuilder = (CxxLibraryBuilder) new CxxLibraryBuilder(target)
         .setExportedHeaders(
             ImmutableList.<SourcePath>of(
                 new TestSourcePath(headerName),
                 new BuildTargetSourcePath(projectFilesystem, genHeaderTarget)))
+        .setHeaders(
+            ImmutableList.<SourcePath>of(
+                new TestSourcePath(privateHeaderName)))
         .setSrcs(
             ImmutableList.of(
                 SourceWithFlags.of(new TestSourcePath("test/bar.cpp")),
@@ -217,7 +242,43 @@ public class CxxLibraryDescriptionTest {
                 Paths.get("/some/framework/path"),
                 Paths.get("/another/framework/path"))
             .build(),
-        rule.getCxxPreprocessorInput(cxxPlatform));
+        rule.getCxxPreprocessorInput(
+            cxxPlatform,
+            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
+
+    Path privateHeaderRoot =
+        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+            target,
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+    assertEquals(
+        CxxPreprocessorInput.builder()
+            .addRules(
+                CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                    target,
+                    cxxPlatform.getFlavor(),
+                    CxxDescriptionEnhancer.HeaderVisibility.PRIVATE))
+            .setIncludes(
+                ImmutableCxxHeaders.builder()
+                    .putNameToPathMap(
+                        Paths.get(privateHeaderName),
+                        new TestSourcePath(privateHeaderName))
+                    .putFullNameToPathMap(
+                        privateHeaderRoot.resolve(privateHeaderName),
+                        new TestSourcePath(privateHeaderName))
+                    .build())
+            .addIncludeRoots(
+                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                    target,
+                    cxxPlatform.getFlavor(),
+                    CxxDescriptionEnhancer.HeaderVisibility.PRIVATE))
+            .addFrameworkRoots(
+                Paths.get("/some/framework/path"),
+                Paths.get("/another/framework/path"))
+            .build(),
+        rule.getCxxPreprocessorInput(
+            cxxPlatform,
+            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
     rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC);
@@ -432,7 +493,9 @@ public class CxxLibraryDescriptionTest {
     AbstractCxxLibrary dep = new AbstractCxxLibrary(depParams, pathResolver) {
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+      public CxxPreprocessorInput getCxxPreprocessorInput(
+          CxxPlatform cxxPlatform,
+          CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
         return CxxPreprocessorInput.builder()
             .addRules(
                 header.getBuildTarget(),
@@ -553,7 +616,7 @@ public class CxxLibraryDescriptionTest {
                 Paths.get("/some/framework/path"),
                 Paths.get("/another/framework/path"))
             .build(),
-        rule.getCxxPreprocessorInput(cxxPlatform));
+        rule.getCxxPreprocessorInput(cxxPlatform, CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
     rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC);

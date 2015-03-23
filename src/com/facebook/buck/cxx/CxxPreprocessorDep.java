@@ -22,5 +22,7 @@ package com.facebook.buck.cxx;
  * file (e.g. a C++ source from a C++ library rule).
  */
 public interface CxxPreprocessorDep {
-  CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform);
+  CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform,
+      CxxDescriptionEnhancer.HeaderVisibility headerVisibility);
 }
