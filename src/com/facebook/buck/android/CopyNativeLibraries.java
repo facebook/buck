@@ -99,7 +99,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   }
 
   private Path getBinPath() {
-    return BuildTargets.getBinPath(getBuildTarget(), "__native_libs_%s__");
+    return BuildTargets.getScratchPath(getBuildTarget(), "__native_libs_%s__");
   }
 
   @Override

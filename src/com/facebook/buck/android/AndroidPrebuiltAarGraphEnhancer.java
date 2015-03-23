@@ -201,10 +201,10 @@ class AndroidPrebuiltAarGraphEnhancer {
         SourcePath aarFile) {
       super(buildRuleParams, resolver);
       this.aarFile = aarFile;
-      this.unpackDirectory = BuildTargets.getBinPath(
+      this.unpackDirectory = BuildTargets.getScratchPath(
           buildRuleParams.getBuildTarget(),
           "__unpack_%s__");
-      this.uberClassesJar = BuildTargets.getBinPath(
+      this.uberClassesJar = BuildTargets.getScratchPath(
           buildRuleParams.getBuildTarget(),
           "__uber_classes_%s__/classes.jar");
     }

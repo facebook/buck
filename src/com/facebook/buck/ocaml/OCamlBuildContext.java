@@ -118,7 +118,7 @@ public class OCamlBuildContext {
     if (isLibrary) {
       return getArchiveOutputPath(plainTarget);
     } else {
-      return BuildTargets.getBinPath(
+      return BuildTargets.getScratchPath(
           plainTarget,
           "%s/" + plainTarget.getShortName() + ".opt");
     }
@@ -129,7 +129,7 @@ public class OCamlBuildContext {
     if (isLibrary) {
       return getArchiveBytecodeOutputPath(plainTarget);
     } else {
-      return BuildTargets.getBinPath(
+      return BuildTargets.getScratchPath(
           plainTarget,
           "%s/" + plainTarget.getShortName());
     }

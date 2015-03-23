@@ -52,7 +52,7 @@ public class DBinary extends AbstractBuildRule implements BinaryBuildRule {
       Tool compiler) {
     super(params, resolver);
     BuildTarget target = params.getBuildTarget();
-    this.output = BuildTargets.getBinPath(target, "%s/" + target.getShortName());
+    this.output = BuildTargets.getScratchPath(target, "%s/" + target.getShortName());
     this.inputs = inputs;
     this.compiler = compiler;
   }

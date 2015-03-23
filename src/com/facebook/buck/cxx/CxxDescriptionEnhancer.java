@@ -597,7 +597,7 @@ public class CxxDescriptionEnhancer {
       BuildTarget target,
       Flavor platform) {
     String name = String.format("lib%s.a", target.getShortName());
-    return BuildTargets.getBinPath(createStaticLibraryBuildTarget(target, platform), "%s")
+    return BuildTargets.getScratchPath(createStaticLibraryBuildTarget(target, platform), "%s")
         .resolve(name);
   }
 
@@ -620,14 +620,14 @@ public class CxxDescriptionEnhancer {
       CxxPlatform platform) {
     String extension = platform.getSharedLibraryExtension();
     String name = String.format("lib%s.%s", target.getShortName(), extension);
-    return BuildTargets.getBinPath(
+    return BuildTargets.getScratchPath(
         createSharedLibraryBuildTarget(target, platform.getFlavor()),
         "%s/" + name);
   }
 
   @VisibleForTesting
   protected static Path getOutputPath(BuildTarget target) {
-    return BuildTargets.getBinPath(target, "%s/" + target.getShortNameAndFlavorPostfix());
+    return BuildTargets.getScratchPath(target, "%s/" + target.getShortNameAndFlavorPostfix());
   }
 
   @VisibleForTesting

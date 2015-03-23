@@ -112,7 +112,7 @@ public class NdkLibraryTest {
 
     List<Step> steps = ndkLibrary.getBuildSteps(context, new FakeBuildableContext());
 
-    String libbase = Paths.get(BuckConstant.BIN_DIR, basePath, "__libbase").toString();
+    String libbase = Paths.get(BuckConstant.SCRATCH_DIR, basePath, "__libbase").toString();
     MoreAsserts.assertShellCommands(
         "ndk_library() should invoke ndk-build on the given path with some -j value",
         ImmutableList.of(

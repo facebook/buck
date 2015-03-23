@@ -193,11 +193,11 @@ public class AaptPackageResources extends AbstractBuildRule
    *     built.
    */
   public Path getPathToCompiledRDotJavaFiles() {
-    return BuildTargets.getBinPath(getBuildTarget(), "__%s_rdotjava_bin__");
+    return BuildTargets.getScratchPath(getBuildTarget(), "__%s_rdotjava_bin__");
   }
 
   public Path getPathToRDotTxtDir() {
-    return BuildTargets.getBinPath(getBuildTarget(), "__%s_res_symbols__");
+    return BuildTargets.getScratchPath(getBuildTarget(), "__%s_res_symbols__");
   }
 
   @Override
@@ -396,7 +396,7 @@ public class AaptPackageResources extends AbstractBuildRule
    * {@link #manifest}.
    */
   Path getAndroidManifestXml() {
-    return BuildTargets.getBinPath(getBuildTarget(), "__manifest_%s__/AndroidManifest.xml");
+    return BuildTargets.getScratchPath(getBuildTarget(), "__manifest_%s__/AndroidManifest.xml");
   }
 
   /**
@@ -457,7 +457,7 @@ public class AaptPackageResources extends AbstractBuildRule
 
   @VisibleForTesting
   Path getPathToAllAssetsDirectory() {
-    return BuildTargets.getBinPath(getBuildTarget(), "__assets_%s__");
+    return BuildTargets.getScratchPath(getBuildTarget(), "__assets_%s__");
   }
 
   public Sha1HashCode getResourcePackageHash() {
@@ -512,11 +512,11 @@ public class AaptPackageResources extends AbstractBuildRule
   }
 
   private Path getPathToRDotJavaDexFiles() {
-    return BuildTargets.getBinPath(getBuildTarget(), "__%s_rdotjava_dex__");
+    return BuildTargets.getScratchPath(getBuildTarget(), "__%s_rdotjava_dex__");
   }
 
   private Path getPathToRDotJavaClassesTxt() {
-    return BuildTargets.getBinPath(getBuildTarget(), "__%s_rdotjava_classes__")
+    return BuildTargets.getScratchPath(getBuildTarget(), "__%s_rdotjava_classes__")
         .resolve("classes.txt");
   }
 
@@ -533,7 +533,7 @@ public class AaptPackageResources extends AbstractBuildRule
   }
 
   private Path getPathForNativeStringInfoDirectory() {
-    return BuildTargets.getBinPath(getBuildTarget(), "__%s_string_source_map__");
+    return BuildTargets.getScratchPath(getBuildTarget(), "__%s_string_source_map__");
   }
 
   /**
@@ -555,7 +555,7 @@ public class AaptPackageResources extends AbstractBuildRule
 
   @VisibleForTesting
   static Path getPathToGeneratedRDotJavaSrcFiles(BuildTarget buildTarget) {
-    return BuildTargets.getBinPath(buildTarget, "__%s_rdotjava_src__");
+    return BuildTargets.getScratchPath(buildTarget, "__%s_rdotjava_src__");
   }
 
   @VisibleForTesting

@@ -67,7 +67,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
   }
 
   public Path getBinPath() {
-    return BuildTargets.getBinPath(getBuildTarget(), "%s.pex");
+    return BuildTargets.getScratchPath(getBuildTarget(), "%s.pex");
   }
 
   @Override

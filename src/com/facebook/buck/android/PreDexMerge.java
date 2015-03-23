@@ -142,7 +142,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     private final Path metadataFile;
 
     private SplitDexPaths() {
-      Path workDir = BuildTargets.getBinPath(getBuildTarget(), "_%s_output");
+      Path workDir = BuildTargets.getScratchPath(getBuildTarget(), "_%s_output");
 
       metadataDir = workDir.resolve("metadata");
       jarfilesDir = workDir.resolve("jarfiles");

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.util.BuckConstant.BIN_PATH;
+import static com.facebook.buck.util.BuckConstant.SCRATCH_PATH;
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.junit.Assert.assertEquals;
@@ -252,11 +252,11 @@ public class AndroidBinaryTest {
         .build(ruleResolver);
 
     Path proguardDir = rule.getProguardOutputFromInputClasspath(
-        BIN_PATH.resolve("first-party/orca/lib-base/lib__lib-base__classes"));
+        SCRATCH_PATH.resolve("first-party/orca/lib-base/lib__lib-base__classes"));
     assertEquals(GEN_PATH.resolve(
             "__fbandroid_with_dash_debug_fbsign#aapt_package__proguard__/.proguard")
             .resolve(
-                BIN_PATH.resolve(
+                SCRATCH_PATH.resolve(
                     "first-party/orca/lib-base/lib__lib-base__classes-obfuscated.jar")),
         proguardDir);
   }
@@ -291,7 +291,7 @@ public class AndroidBinaryTest {
     Set<Path> classpath = Sets.newHashSet();
     ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
     ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
-    Path primaryDexPath = BIN_PATH.resolve(".dex/classes.dex");
+    Path primaryDexPath = SCRATCH_PATH.resolve(".dex/classes.dex");
     splitDexRule.addDexingSteps(
         classpath,
         Suppliers.<Map<String, HashCode>>ofInstance(ImmutableMap.<String, HashCode>of()),

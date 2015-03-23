@@ -64,7 +64,7 @@ public class OutputToFileExpander implements MacroExpander {
    */
   private Path createTempFile(ProjectFilesystem filesystem, BuildTarget target, String input)
       throws IOException {
-    Path directory = BuildTargets.getBinPath(target, "%s/tmp");
+    Path directory = BuildTargets.getScratchPath(target, "%s/tmp");
     filesystem.mkdirs(directory);
 
     // "prefix" should give a stable name, so that the same delegate with the same input can output

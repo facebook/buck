@@ -93,7 +93,7 @@ public class CleanCommand implements CommandRunner {
       // On Windows, you have to close all files that will be deleted.
       // Because buck clean will delete build.log, you must close it first.
       JavaUtilsLoggingBuildListener.closeLogFile();
-      filesystem.rmdir(BuckConstant.BIN_PATH);
+      filesystem.rmdir(BuckConstant.SCRATCH_PATH);
       filesystem.rmdir(BuckConstant.GEN_PATH);
     }
 

@@ -89,7 +89,7 @@ public class ThriftLibraryDescription
    */
   @VisibleForTesting
   protected Path getIncludeRoot(BuildTarget target) {
-    return BuildTargets.getBinPath(target, "%s/include-symlink-tree");
+    return BuildTargets.getScratchPath(target, "%s/include-symlink-tree");
   }
 
   @VisibleForTesting

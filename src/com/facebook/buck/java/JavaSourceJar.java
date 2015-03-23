@@ -59,7 +59,7 @@ public class JavaSourceJar extends AbstractBuildRule {
     this.sources = sources;
     BuildTarget target = params.getBuildTarget();
     this.output = BuildTargets.getGenPath(target, String.format("%%s%s", Javac.SRC_ZIP));
-    this.temp = BuildTargets.getBinPath(target, "%s-srcs");
+    this.temp = BuildTargets.getScratchPath(target, "%s-srcs");
   }
 
   @Override

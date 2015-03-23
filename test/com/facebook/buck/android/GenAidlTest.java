@@ -96,7 +96,7 @@ public class GenAidlTest {
     replay(androidPlatformTarget, executionContext);
 
     Path outputDirectory = Paths.get(
-        BuckConstant.BIN_DIR,
+        BuckConstant.SCRATCH_DIR,
         "/java/com/example/base/__IWhateverService.aidl");
     MakeCleanDirectoryStep mkdirStep = (MakeCleanDirectoryStep) steps.get(1);
     assertEquals("gen_aidl() should make a directory at " + outputDirectory,

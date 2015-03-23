@@ -37,7 +37,7 @@ public class BuildTargets {
 
   /**
    * Return a path to a file in the buck-out/bin/ directory. {@code format} will be prepended with
-   * the {@link com.facebook.buck.util.BuckConstant#BIN_DIR} and the target base path, then
+   * the {@link com.facebook.buck.util.BuckConstant#SCRATCH_DIR} and the target base path, then
    * formatted with the target short name.
    *
    * @param target The {@link BuildTarget} to scope this path to.
@@ -47,18 +47,18 @@ public class BuildTargets {
    * {@code target}.
    */
 
-  public static Path getBinPath(BuildTarget target, String format) {
+  public static Path getScratchPath(BuildTarget target, String format) {
     return Paths.get(
         String.format(
             "%s/%s" + format,
-            BuckConstant.BIN_DIR,
+            BuckConstant.SCRATCH_DIR,
             target.getBasePathWithSlash(),
             target.getShortNameAndFlavorPostfix()));
   }
 
   /**
    * Return a path to a file in the buck-out/bin/ directory. {@code format} will be prepended with
-   * the {@link com.facebook.buck.util.BuckConstant#BIN_DIR} and the target base path, then
+   * the {@link com.facebook.buck.util.BuckConstant#SCRATCH_DIR} and the target base path, then
    * formatted with the target short name.
    *
    * @param target The {@link UnflavoredBuildTarget} to scope this path to.
@@ -67,11 +67,11 @@ public class BuildTargets {
    * @return A {@link java.nio.file.Path} under buck-out/bin, scoped to the base path of
    * {@code target}.
    */
-  public static Path getBinPath(UnflavoredBuildTarget target, String format) {
+  public static Path getScratchPath(UnflavoredBuildTarget target, String format) {
     return Paths.get(
         String.format(
             "%s/%s" + format,
-            BuckConstant.BIN_DIR,
+            BuckConstant.SCRATCH_DIR,
             target.getBasePathWithSlash(),
             target.getShortName()));
   }

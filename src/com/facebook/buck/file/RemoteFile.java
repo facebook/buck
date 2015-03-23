@@ -82,7 +82,7 @@ public class RemoteFile extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    Path tempFile = BuildTargets.getBinPath(
+    Path tempFile = BuildTargets.getScratchPath(
         getBuildTarget(), String.format("%%s/%s", output.getFileName()));
 
     steps.add(new MakeCleanDirectoryStep(tempFile.getParent()));

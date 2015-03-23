@@ -128,7 +128,7 @@ public class CompilationDatabase extends AbstractBuildRule {
     // to be necessary when the .pch uses quoted imports for headers that exist in a subdirectory of
     // the project, such as Categories.
     final AtomicReference<Path> internalHeaderMap = new AtomicReference<>();
-    final Path headerMapPath = BuildTargets.getBinPath(getBuildTarget(), "__my_%s__.hmap");
+    final Path headerMapPath = BuildTargets.getScratchPath(getBuildTarget(), "__my_%s__.hmap");
     steps.add(new MkdirStep(headerMapPath.getParent()));
     steps.add(new AbstractExecutionStep("generate_internal_header_map") {
       @Override

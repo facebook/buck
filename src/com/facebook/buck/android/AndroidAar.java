@@ -62,7 +62,7 @@ public class AndroidAar extends AbstractBuildRule {
     super(params, resolver);
     BuildTarget buildTarget = params.getBuildTarget();
     this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, "%s.aar");
-    this.temp = BuildTargets.getBinPath(buildTarget, "__temp__%s");
+    this.temp = BuildTargets.getScratchPath(buildTarget, "__temp__%s");
     this.manifest = manifest;
     this.androidResource = androidResource;
     this.javaBinary = javaBinary;

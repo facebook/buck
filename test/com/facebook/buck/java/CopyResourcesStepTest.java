@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.java;
 
-import static com.facebook.buck.util.BuckConstant.BIN_PATH;
+import static com.facebook.buck.util.BuckConstant.SCRATCH_PATH;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
@@ -50,16 +50,17 @@ public class CopyResourcesStepTest {
         ImmutableSet.of(
             new TestSourcePath("android/java/src/com/facebook/base/data.json"),
             new TestSourcePath("android/java/src/com/facebook/common/util/data.json")),
-        BIN_PATH.resolve("android/java/lib__resources__classes"),
+        SCRATCH_PATH.resolve("android/java/lib__resources__classes"),
         javaPackageFinder);
 
     List<? extends Step> expected = ImmutableList.of(
         new MkdirAndSymlinkFileStep(
             Paths.get("android/java/src/com/facebook/base/data.json"),
-            BIN_PATH.resolve("android/java/lib__resources__classes/com/facebook/base/data.json")),
+            SCRATCH_PATH.resolve(
+                "android/java/lib__resources__classes/com/facebook/base/data.json")),
         new MkdirAndSymlinkFileStep(
             Paths.get("android/java/src/com/facebook/common/util/data.json"),
-            BIN_PATH.resolve(
+            SCRATCH_PATH.resolve(
                 "android/java/lib__resources__classes/com/facebook/common/util/data.json")));
     assertEquals(expected, step.buildSteps());
   }
@@ -79,17 +80,17 @@ public class CopyResourcesStepTest {
         ImmutableSet.<SourcePath>of(
             new TestSourcePath("android/java/src/com/facebook/base/data.json"),
             new TestSourcePath("android/java/src/com/facebook/common/util/data.json")),
-        BIN_PATH.resolve("android/java/src/lib__resources__classes"),
+        SCRATCH_PATH.resolve("android/java/src/lib__resources__classes"),
         javaPackageFinder);
 
     List<? extends Step> expected = ImmutableList.of(
         new MkdirAndSymlinkFileStep(
             Paths.get("android/java/src/com/facebook/base/data.json"),
-            BIN_PATH.resolve(
+            SCRATCH_PATH.resolve(
                 "android/java/src/lib__resources__classes/com/facebook/base/data.json")),
         new MkdirAndSymlinkFileStep(
             Paths.get("android/java/src/com/facebook/common/util/data.json"),
-            BIN_PATH.resolve(
+            SCRATCH_PATH.resolve(
                 "android/java/src/lib__resources__classes/com/facebook/common/util/data.json")));
     assertEquals(expected, step.buildSteps());
   }
@@ -110,18 +111,18 @@ public class CopyResourcesStepTest {
         ImmutableSet.of(
             new TestSourcePath("android/java/src/com/facebook/base/data.json"),
             new TestSourcePath("android/java/src/com/facebook/common/util/data.json")),
-        BIN_PATH.resolve("android/java/src/com/facebook/lib__resources__classes"),
+        SCRATCH_PATH.resolve("android/java/src/com/facebook/lib__resources__classes"),
         javaPackageFinder);
 
     List<? extends Step> expected = ImmutableList.of(
         new MkdirAndSymlinkFileStep(
             Paths.get("android/java/src/com/facebook/base/data.json"),
-            BIN_PATH.resolve(
+            SCRATCH_PATH.resolve(
                 "android/java/src/com/facebook/lib__resources__classes/" +
                     "com/facebook/base/data.json")),
         new MkdirAndSymlinkFileStep(
             Paths.get("android/java/src/com/facebook/common/util/data.json"),
-            BIN_PATH.resolve(
+            SCRATCH_PATH.resolve(
                 "android/java/src/com/facebook/lib__resources__classes/" +
                     "com/facebook/common/util/data.json")));
     assertEquals(expected, step.buildSteps());

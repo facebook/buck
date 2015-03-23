@@ -17,7 +17,7 @@
 package com.facebook.buck.java;
 
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
-import static com.facebook.buck.util.BuckConstant.BIN_PATH;
+import static com.facebook.buck.util.BuckConstant.SCRATCH_PATH;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -1199,7 +1199,7 @@ public class DefaultJavaLibraryTest {
   @Test
   public void testAddPostprocessClassesCommands() {
     ImmutableList<String> postprocessClassesCommands = ImmutableList.of("tool arg1", "tool2");
-    Path outputDirectory = BIN_PATH.resolve("android/java/lib__java__classes");
+    Path outputDirectory = SCRATCH_PATH.resolve("android/java/lib__java__classes");
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     DefaultJavaLibrary.addPostprocessClassesCommands(

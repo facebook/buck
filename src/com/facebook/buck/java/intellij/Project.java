@@ -603,7 +603,7 @@ public class Project {
         // ignore (which makes sense for other parts of Buck, such as Watchman), then we will ignore
         // only the appropriate subfolders of buck-out instead.
         if (BuckConstant.BUCK_OUTPUT_PATH.equals(path)) {
-          addRootExclude(module, BuckConstant.BIN_PATH);
+          addRootExclude(module, BuckConstant.SCRATCH_PATH);
           addRootExclude(module, BuckConstant.LOG_PATH);
         } else {
           addRootExclude(module, path);

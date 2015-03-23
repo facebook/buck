@@ -148,7 +148,7 @@ public class CxxSourceRuleFactory {
    */
   @VisibleForTesting
   protected Path getPreprocessOutputPath(BuildTarget target, CxxSource.Type type, String name) {
-    return BuildTargets.getBinPath(target, "%s").resolve(getPreprocessOutputName(type, name));
+    return BuildTargets.getScratchPath(target, "%s").resolve(getPreprocessOutputName(type, name));
   }
 
   @VisibleForTesting
@@ -218,7 +218,7 @@ public class CxxSourceRuleFactory {
    */
   @VisibleForTesting
   protected Path getCompileOutputPath(BuildTarget target, String name) {
-    return BuildTargets.getBinPath(target, "%s").resolve(getCompileOutputName(name));
+    return BuildTargets.getScratchPath(target, "%s").resolve(getCompileOutputName(name));
   }
 
   /**

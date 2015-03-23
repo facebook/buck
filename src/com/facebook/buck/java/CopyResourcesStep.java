@@ -47,7 +47,7 @@ public class CopyResourcesStep implements Step {
       "^(?:" +
           Joiner.on('|').join(
               BuckConstant.ANNOTATION_DIR,
-              BuckConstant.BIN_DIR,
+              BuckConstant.SCRATCH_DIR,
               BuckConstant.GEN_DIR
           ) + ")/(.*)");
 

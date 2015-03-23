@@ -241,7 +241,7 @@ public class AndroidBinary extends AbstractBuildRule implements
   }
 
   public static Path getPrimaryDexPath(BuildTarget buildTarget) {
-    return BuildTargets.getBinPath(buildTarget, ".dex/%s/classes.dex");
+    return BuildTargets.getScratchPath(buildTarget, ".dex/%s/classes.dex");
   }
 
   @Override
@@ -626,7 +626,7 @@ public class AndroidBinary extends AbstractBuildRule implements
   }
 
   private Path getBinPath(String format) {
-    return BuildTargets.getBinPath(getBuildTarget(), format);
+    return BuildTargets.getScratchPath(getBuildTarget(), format);
   }
 
   @VisibleForTesting

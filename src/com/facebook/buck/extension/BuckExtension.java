@@ -76,7 +76,7 @@ public class BuckExtension extends AbstractBuildRule {
 
     BuildTarget target = params.getBuildTarget();
     this.output = BuildTargets.getGenPath(target, "%s-buck.jar");
-    this.working = BuildTargets.getBinPath(target, "__%s__");
+    this.working = BuildTargets.getScratchPath(target, "__%s__");
   }
 
   @Override

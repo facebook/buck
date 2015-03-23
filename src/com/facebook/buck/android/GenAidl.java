@@ -115,7 +115,7 @@ public class GenAidl extends AbstractBuildRule {
     commands.add(new MakeCleanDirectoryStep(genPath));
 
     BuildTarget target = getBuildTarget();
-    Path outputDirectory = BuildTargets.getBinPath(target, "__%s.aidl");
+    Path outputDirectory = BuildTargets.getScratchPath(target, "__%s.aidl");
     commands.add(new MakeCleanDirectoryStep(outputDirectory));
 
     AidlStep command = new AidlStep(

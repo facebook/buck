@@ -81,7 +81,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
   private Path getSourceZipOutputPath(BuildTarget target, String name) {
     BuildTarget flavoredTarget = getSourceZipBuildTarget(target, name);
-    return BuildTargets.getBinPath(flavoredTarget, "%s" + Javac.SRC_ZIP);
+    return BuildTargets.getScratchPath(flavoredTarget, "%s" + Javac.SRC_ZIP);
   }
 
   @Override

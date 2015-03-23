@@ -129,7 +129,7 @@ public class AppleDescriptions {
   }
 
   public static Path getPathToHeaders(BuildTarget buildTarget) {
-    return BuildTargets.getBinPath(buildTarget, "__%s_public_headers__");
+    return BuildTargets.getScratchPath(buildTarget, "__%s_public_headers__");
   }
 
   private static SymlinkTree createSymlinkTree(

@@ -45,6 +45,6 @@ class BuildInfo {
    * @return A path relative to the project root that includes a trailing slash.
    */
   static Path getPathToMetadataDirectory(BuildTarget target) {
-    return BuildTargets.getBinPath(target, ".%s/metadata/");
+    return BuildTargets.getScratchPath(target, ".%s/metadata/");
   }
 }

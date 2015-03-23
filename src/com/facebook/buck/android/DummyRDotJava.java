@@ -146,11 +146,11 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   public static Path getRDotJavaSrcFolder(BuildTarget buildTarget) {
-    return BuildTargets.getBinPath(buildTarget, "__%s_rdotjava_src__");
+    return BuildTargets.getScratchPath(buildTarget, "__%s_rdotjava_src__");
   }
 
   private static Path getRDotJavaBinFolder(BuildTarget buildTarget) {
-    return BuildTargets.getBinPath(buildTarget, "__%s_rdotjava_bin__");
+    return BuildTargets.getScratchPath(buildTarget, "__%s_rdotjava_bin__");
   }
 
   private static Path getPathToAbiOutputDir(BuildTarget buildTarget) {

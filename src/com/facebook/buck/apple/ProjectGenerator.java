@@ -246,7 +246,7 @@ public class ProjectGenerator {
         this.pathRelativizer.outputDirToRootRelative(Paths.get(".")));
 
     this.placedAssetCatalogBuildPhaseScript =
-        BuckConstant.BIN_PATH.resolve("xcode-scripts/compile_asset_catalogs_build_phase.sh");
+        BuckConstant.SCRATCH_PATH.resolve("xcode-scripts/compile_asset_catalogs_build_phase.sh");
 
     this.project = new PBXProject(projectName);
     this.headerMaps = new ArrayList<>();
@@ -350,7 +350,7 @@ public class ProjectGenerator {
 
       if (shouldPlaceAssetCatalogCompiler) {
         Path placedAssetCatalogCompilerPath = projectFilesystem.getPathForRelativePath(
-            BuckConstant.BIN_PATH.resolve(
+            BuckConstant.SCRATCH_PATH.resolve(
                 "xcode-scripts/compile_asset_catalogs.py"));
         LOG.debug("Ensuring asset catalog is copied to path [%s]", placedAssetCatalogCompilerPath);
         projectFilesystem.createParentDirs(placedAssetCatalogCompilerPath);

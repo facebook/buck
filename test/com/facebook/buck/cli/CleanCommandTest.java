@@ -75,7 +75,7 @@ public class CleanCommandTest extends EasyMockSupport {
     CleanCommandOptions options = createOptionsFromArgs();
     int exitCode = cleanCommand.runCommandWithOptions(options);
     assertEquals(0, exitCode);
-    assertEquals(BuckConstant.BIN_PATH, binDir.getValue());
+    assertEquals(BuckConstant.SCRATCH_PATH, binDir.getValue());
     assertEquals(BuckConstant.GEN_PATH, genDir.getValue());
 
     verifyAll();
