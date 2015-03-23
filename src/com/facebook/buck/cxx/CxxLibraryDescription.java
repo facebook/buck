@@ -32,6 +32,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -41,6 +42,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import org.immutables.value.Value;
@@ -306,24 +308,33 @@ public class CxxLibraryDescription implements
 
   public static Arg createEmptyConstructorArg() {
     Arg arg = new Arg();
-    arg.deps = Optional.absent();
-    arg.srcs = Optional.absent();
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    arg.srcs = Optional.of(
+        Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofLeft(
+            ImmutableList.<SourceWithFlags>of()));
     arg.prefixHeaders = Optional.of(ImmutableList.<SourcePath>of());
-    arg.headers = Optional.absent();
-    arg.exportedHeaders = Optional.absent();
-    arg.compilerFlags = Optional.absent();
-    arg.exportedPreprocessorFlags = Optional.absent();
-    arg.exportedLangPreprocessorFlags = Optional.absent();
-    arg.preprocessorFlags = Optional.absent();
-    arg.langPreprocessorFlags = Optional.absent();
-    arg.linkerFlags = Optional.absent();
+    arg.headers = Optional.of(
+        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
+            ImmutableList.<SourcePath>of()));
+    arg.exportedHeaders = Optional.of(
+        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
+            ImmutableList.<SourcePath>of()));
+    arg.compilerFlags = Optional.of(ImmutableList.<String>of());
+    arg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
+    arg.exportedLangPreprocessorFlags = Optional.of(
+        ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
+    arg.preprocessorFlags = Optional.of(ImmutableList.<String>of());
+    arg.langPreprocessorFlags = Optional.of(
+        ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
+    arg.linkerFlags = Optional.of(ImmutableList.<String>of());
     arg.platformLinkerFlags = Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     arg.linkWhole = Optional.absent();
-    arg.lexSrcs = Optional.absent();
-    arg.yaccSrcs = Optional.absent();
+    arg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
+    arg.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     arg.headerNamespace = Optional.absent();
     arg.soname = Optional.absent();
     arg.frameworkSearchPaths = Optional.of(ImmutableList.<Path>of());
+    arg.tests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     return arg;
   }
 
@@ -550,7 +561,8 @@ public class CxxLibraryDescription implements
         args.platformLinkerFlags.get(),
         args.frameworkSearchPaths.get(),
         args.linkWhole.or(false),
-        args.soname);
+        args.soname,
+        args.tests.get());
   }
 
   @Override

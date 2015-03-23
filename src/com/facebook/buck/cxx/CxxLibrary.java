@@ -24,6 +24,7 @@ import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -33,6 +34,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,6 +53,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
   private final ImmutableList<Path> frameworkSearchPaths;
   private final boolean linkWhole;
   private final Optional<String> soname;
+  private final ImmutableSortedSet<BuildTarget> tests;
 
   public CxxLibrary(
       BuildRuleParams params,
@@ -61,7 +64,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
       ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags,
       ImmutableList<Path> frameworkSearchPaths,
       boolean linkWhole,
-      Optional<String> soname) {
+      Optional<String> soname,
+      ImmutableSortedSet<BuildTarget> tests) {
     super(params, pathResolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
@@ -71,6 +75,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     this.frameworkSearchPaths = frameworkSearchPaths;
     this.linkWhole = linkWhole;
     this.soname = soname;
+    this.tests = tests;
   }
 
   @Override
@@ -192,4 +197,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
             sharedLibraryBuildRule.getBuildTarget()));
   }
 
+  @Override
+  public ImmutableSortedSet<BuildTarget> getTests() {
+    return tests;
+  }
 }

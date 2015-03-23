@@ -18,9 +18,12 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.java.JavaNativeLinkable;
 import com.facebook.buck.android.AndroidPackageable;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePathResolver;
+
+import com.google.common.collect.ImmutableSortedSet;
 
 public abstract class AbstractCxxLibrary
     extends NoopBuildRule
@@ -37,4 +40,7 @@ public abstract class AbstractCxxLibrary
     super(params, pathResolver);
   }
 
+  public ImmutableSortedSet<BuildTarget> getTests() {
+    return ImmutableSortedSet.of();
+  }
 }
