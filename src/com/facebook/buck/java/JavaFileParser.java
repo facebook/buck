@@ -66,7 +66,7 @@ public class JavaFileParser {
 
   public static JavaFileParser createJavaFileParser(JavacOptions options) {
     String javaVersion = Preconditions.checkNotNull(javaVersionMap.get(options.getSourceLevel()));
-    return new JavaFileParser(AST.JLS4, javaVersion);
+    return new JavaFileParser(AST.JLS8, javaVersion);
   }
 
   public ImmutableSortedSet<String> getExportedSymbolsFromString(String code) throws IOException {

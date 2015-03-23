@@ -190,7 +190,6 @@ public class ProcessExecutor {
     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
     boolean shouldPrintStdOut = options.contains(Option.PRINT_STD_OUT);
     boolean expectingStdOut = options.contains(Option.EXPECTING_STD_OUT);
-    @SuppressWarnings("resource")
     PrintStream stdOutToWriteTo = shouldPrintStdOut ?
         stdOutStream : new CapturingPrintStream();
     InputStreamConsumer stdOut = new InputStreamConsumer(
@@ -202,7 +201,6 @@ public class ProcessExecutor {
 
     boolean shouldPrintStdErr = options.contains(Option.PRINT_STD_ERR);
     boolean expectingStdErr = options.contains(Option.EXPECTING_STD_ERR);
-    @SuppressWarnings("resource")
     PrintStream stdErrToWriteTo = shouldPrintStdErr ?
         stdErrStream : new CapturingPrintStream();
     InputStreamConsumer stdErr = new InputStreamConsumer(

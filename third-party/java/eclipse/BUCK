@@ -15,22 +15,22 @@ java_library(
 
 prebuilt_jar(
     name = 'contenttype',
-    binary_jar = 'org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar',
+    binary_jar = 'org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar',
 )
 
 prebuilt_jar(
     name = 'jobs',
-    binary_jar = 'org.eclipse.core.jobs_3.5.300.v20130429-1813.jar',
+    binary_jar = 'org.eclipse.core.jobs_3.6.1.v20141014-1248.jar',
 )
 
 prebuilt_jar(
     name = 'resources',
-    binary_jar = 'org.eclipse.core.resources_3.8.101.v20130717-0806.jar',
+    binary_jar = 'org.eclipse.core.resources_3.9.1.v20140825-1431.jar',
 )
 
 prebuilt_jar(
     name = 'runtime',
-    binary_jar = 'org.eclipse.core.runtime_3.9.100.v20131218-1515.jar',
+    binary_jar = 'org.eclipse.core.runtime_3.10.0.v20140318-2214.jar',
 )
 
 prebuilt_jar(
@@ -40,15 +40,15 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = 'equinox-preferences',
-    binary_jar = 'org.eclipse.equinox.preferences_3.5.100.v20130422-1538.jar',
+    binary_jar = 'org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar',
 )
 
 prebuilt_jar(
     name = 'jdt',
-    binary_jar = 'org.eclipse.jdt.core_3.9.2.v20140114-1555.jar',
+    binary_jar = 'org.eclipse.jdt.core_3.10.2.v20150120-1634.jar',
 )
 
 prebuilt_jar(
     name = 'osgi',
-    binary_jar = 'org.eclipse.osgi_3.9.1.v20140110-1610.jar',
+    binary_jar = 'org.eclipse.osgi_3.10.2.v20150203-1939.jar',
 )

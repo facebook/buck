@@ -2,34 +2,45 @@ These jars are extracted from the Eclipse project. Here's how you get them.
 
 ---
 
-file="eclipse-standard-kepler-SR2-linux-gtk-x86_64.tar.gz"
+file="eclipse-standard-luna-R-macosx-cocoa-x86_64.tar.gz"
 
-wget "http://mirrors.ibiblio.org/eclipse/technology/epp/downloads/release/kepler/SR2/$file"
+wget "http://mirrors.ibiblio.org/eclipse/technology/epp/downloads/release/luna/R/$file"
 
 sha1sum $file
-# ef3be20a7c9abb05c9208c7796a4a2b79ffacdbb
+# 36518f4d635622f8e0d23b08e4baec1b317279f5
 
 tar xf $file
 
 cd eclipse/plugins
 
 jars=(
-    org.eclipse.core.contenttype_3.4.200.v20130326-1255.jar
-    org.eclipse.core.jobs_3.5.300.v20130429-1813.jar
-    org.eclipse.core.resources_3.8.101.v20130717-0806.jar
-    org.eclipse.core.runtime_3.9.100.v20131218-1515.jar
-    org.eclipse.equinox.common_3.6.200.v20130402-1505.jar
-    org.eclipse.equinox.preferences_3.5.100.v20130422-1538.jar
-    org.eclipse.jdt.core_3.9.2.v20140114-1555.jar
-    org.eclipse.osgi_3.9.1.v20140110-1610.jar
+  org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar
+  org.eclipse.core.jobs_3.6.1.v20141014-1248.jar
+  org.eclipse.core.resources_3.9.1.v20140825-1431.jar
+  org.eclipse.core.runtime_3.10.0.v20140318-2214.jar
+  org.eclipse.equinox.common_3.6.200.v20130402-1505.jar
+  org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar
+  org.eclipse.jdt.core.prefs
+  org.eclipse.jdt.core_3.10.2.v20150120-1634.jar
+  org.eclipse.osgi_3.10.2.v20150203-1939.jar
 )
 
 sha1sum "${jars[@]}"
-# 0335ae99862a28b05778fbd10fbf65e000ae3cfe
-# 69a54a3766004fc09222e2be6da544dde50ba50f
-# 5fc550dca872450b3929ff0d5903cc1b1950d03d
-# 1dfb8e5e844373ab86487f254242228771764065
-# f930417b1602dafb370d7b9ed7871c87e0b355b1
-# 75b77bdb8eb93ed5c6d36267c46bf4ff50476747
-# a37fce6ebabea1ad21399c2f74ce955d10349e3b
-# 4499d6104182d349f0ec59d6d166123aa5f09174
+# db44eacfdced003f806846810b1a62a1066bb8fd  org.eclipse.core.contenttype_3.4.200.v20140207-1251.jar
+# 53b9a5826d0f0564f9652c05d2b5f69bf4a1cc1e  org.eclipse.core.jobs_3.6.1.v20141014-1248.jar
+# 24a0e4b809d9cb102e7bf8123a2844657b916090  org.eclipse.core.resources_3.9.1.v20140825-1431.jar
+# a537de26c1e322a68536a3a2c3cb2389d5dbcb00  org.eclipse.core.runtime_3.10.0.v20140318-2214.jar
+# 5354112138f6e420a8152fc9526b15f25ed5f163  org.eclipse.equinox.common_3.6.200.v20130402-1505.jar
+# 9ea0f3c0b18d0a1e904743b19c2f7c0c7163c61e  org.eclipse.equinox.preferences_3.5.200.v20140224-1527.jar
+# c6a4c0c0bc6eb03bd3778d8f4737060d9b3e7562  org.eclipse.jdt.core.prefs
+# 75a5b85a4ed68d9d6dad499ad2b48936a647327d  org.eclipse.jdt.core_3.10.2.v20150120-1634.jar
+# 6dfc2f30f29e426dcc6b86826bd6d59f905bb01e  org.eclipse.osgi_3.10.2.v20150203-1939.jar
+
+jar xvf org.eclipse.jdt.core.source_3.10.2.v20150120-1634.jar jdtCompilerAdaptersrc
+find jdtCompilerAdaptersrc -name "*.java" | \
+  xargs javac -classpath $(printf ":%s" ${jars[@]}):$ANT_HOME/lib/ant.jar && \
+  cd jdtCompilerAdaptersrc && \
+  find . -name "*.class" | \
+  xargs jar cvf ../jdtCompilerAdapter.jar  org/eclipse/jdt/internal/antadapter/messages.properties
+
+# Don't forget to clean up after yourself.
