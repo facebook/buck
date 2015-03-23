@@ -54,7 +54,6 @@ public class ApkGenrule extends Genrule implements InstallableApk {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
   private final InstallableApk apk;
-  private final Function<Path, Path> relativeToAbsolutePathFunction;
 
   ApkGenrule(
       BuildRuleParams params,
@@ -78,7 +77,6 @@ public class ApkGenrule extends Genrule implements InstallableApk {
         relativeToAbsolutePathFunction);
 
     this.apk = apk;
-    this.relativeToAbsolutePathFunction = relativeToAbsolutePathFunction;
   }
 
   @Override

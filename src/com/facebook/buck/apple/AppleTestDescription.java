@@ -137,7 +137,6 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
   public static class Arg extends AppleNativeTargetDescriptionArg implements HasAppleBundleFields {
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<Boolean> canGroup;
 
     // Bundle related fields.

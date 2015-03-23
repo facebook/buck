@@ -589,11 +589,11 @@ public class DaemonIntegrationTest {
   private void waitForChange(final Path path) throws IOException, InterruptedException {
 
     class Watcher {
-      private Path path;
+      private Path watchedPath;
       private boolean watchedChange = false;
 
-      public Watcher(Path path) {
-        this.path = path;
+      public Watcher(Path watchedPath) {
+        this.watchedPath = watchedPath;
         watchedChange = false;
       }
 
@@ -603,7 +603,8 @@ public class DaemonIntegrationTest {
 
       @Subscribe
       public synchronized void onEvent(WatchEvent<?> event) throws IOException {
-        if (path.equals(event.context()) || event.kind() == StandardWatchEventKinds.OVERFLOW) {
+        if (watchedPath.equals(event.context()) ||
+            event.kind() == StandardWatchEventKinds.OVERFLOW) {
           watchedChange = true;
         }
       }

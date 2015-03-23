@@ -234,16 +234,16 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
   @Test
   public void fieldsFromParentClassesShouldBeAddedAndFieldsRetainOverallAlphabeticalOrdering() {
-    BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    BuildTarget topLevelTarget = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    BuildRule rule = new EmptyRule(target);
+    BuildRule rule = new EmptyRule(topLevelTarget);
 
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
     RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
 
     builder.setReflectively("exoticCheese", "bavarian smoked");
-    builder.setReflectively("target", target.getFullyQualifiedName());
+    builder.setReflectively("target", topLevelTarget.getFullyQualifiedName());
     RuleKey.Builder.RuleKeyPair expected = builder.build();
 
     class Parent extends EmptyRule {
@@ -267,7 +267,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKey.Builder seen = factory.newInstance(new Child(target), pathResolver);
+    RuleKey.Builder seen = factory.newInstance(new Child(topLevelTarget), pathResolver);
 
     assertEquals(expected, seen.build());
   }

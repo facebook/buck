@@ -32,7 +32,7 @@ import java.nio.file.Paths;
 
 public class ParamInfoTest {
 
-  private Path path = Paths.get("path");
+  private Path testPath = Paths.get("path");
   private TypeCoercerFactory typeCoercerFactory = new TypeCoercerFactory();
 
   @Test
@@ -116,13 +116,13 @@ public class ParamInfoTest {
 
     ParamInfo<?> info = new ParamInfo<Object>(typeCoercerFactory, Example.class.getField("field"));
 
-    info.set(buildTargetParser, filesystem, path, example, null);
+    info.set(buildTargetParser, filesystem, testPath, example, null);
     assertEquals(Optional.<String>absent(), example.field);
 
-    info.set(buildTargetParser, filesystem, path, example, "");
+    info.set(buildTargetParser, filesystem, testPath, example, "");
     assertEquals(Optional.of(""), example.field);
 
-    info.set(buildTargetParser, filesystem, path, example, "foo");
+    info.set(buildTargetParser, filesystem, testPath, example, "foo");
     assertEquals(Optional.of("foo"), example.field);
   }
 }

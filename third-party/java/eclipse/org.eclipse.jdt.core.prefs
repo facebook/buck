@@ -11,6 +11,7 @@ org.eclipse.jdt.core.compiler.problem.deprecation=error
 org.eclipse.jdt.core.compiler.problem.deprecationWhenOverridingDeprecatedMethod=error
 org.eclipse.jdt.core.compiler.problem.enumIdentifier=error
 org.eclipse.jdt.core.compiler.problem.fallthroughCase=error
+org.eclipse.jdt.core.compiler.problem.fieldHiding=error
 org.eclipse.jdt.core.compiler.problem.incompleteEnumSwitch=error
 # Most Javadoc checks are enabled because `ant verify-javadoc` takes care
 # of this for us and allows us the desired flexibility in references
