@@ -392,10 +392,12 @@ public class Resolver {
       this.binaryJar = binaryJar;
     }
 
+    @SuppressWarnings("unused") // This method is read reflectively.
     public String getName() {
       return name;
     }
 
+    @SuppressWarnings("unused") // This method is read reflectively.
     public Path getBinaryJar() {
       return binaryJar;
     }
@@ -404,6 +406,7 @@ public class Resolver {
       this.sourceJar = sourceJar;
     }
 
+    @SuppressWarnings("unused") // This method is read reflectively.
     public Path getSourceJar() {
       return sourceJar;
     }
@@ -412,6 +415,7 @@ public class Resolver {
       this.deps.add(dep);
     }
 
+    @SuppressWarnings("unused") // This method is read reflectively.
     public SortedSet<String> getDeps() {
       return deps;
     }
@@ -420,6 +424,7 @@ public class Resolver {
       this.visibilities.add(dep);
     }
 
+    @SuppressWarnings("unused") // This method is read reflectively.
     public SortedSet<String> getVisibility() {
       return visibilities;
     }

@@ -249,6 +249,6 @@ public class ResolverIntegrationTest {
 
     // Although the "deps-in-same-project" could be in the visibility param, it doesn't need to be
     // because it's declared in the same build file.
-    assertEquals(0, ((Collection) noDeps.get("visibility")).size());
+    assertEquals(0, ((Collection<?>) noDeps.get("visibility")).size());
   }
 }
