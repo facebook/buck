@@ -191,7 +191,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       LOG.debug(
           "Running command (pwd=%s): %s",
           builder.directory(),
-          Joiner.on(' ').join(Iterables.transform(builder.command(), Escaper.BASH_ESCAPER)));
+          Joiner.on(' ').join(Iterables.transform(builder.command(), Escaper.SHELL_ESCAPER)));
 
       // Start the process.
       Process process = builder.start();
@@ -267,7 +267,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   public String getDescription(ExecutionContext context) {
     return Joiner.on(' ').join(
         FluentIterable.from(getCommand())
-            .transform(Escaper.BASH_ESCAPER));
+            .transform(Escaper.SHELL_ESCAPER));
   }
 
   public static enum Operation {
