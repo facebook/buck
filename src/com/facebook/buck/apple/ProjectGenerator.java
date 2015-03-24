@@ -20,7 +20,6 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
-import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.ImmutableProductType;
@@ -36,6 +35,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -96,9 +96,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -198,8 +196,9 @@ public class ProjectGenerator {
   private final ImmutableMap.Builder<TargetNode<?>, PBXTarget>
       targetNodeToGeneratedProjectTargetBuilder;
   private boolean projectGenerated;
-  private List<Path> headerMaps;
   private final ImmutableSet.Builder<PBXTarget> buildableCombinedTestTargets =
+      ImmutableSet.builder();
+  private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
 
   /**
@@ -249,7 +248,6 @@ public class ProjectGenerator {
         BuckConstant.SCRATCH_PATH.resolve("xcode-scripts/compile_asset_catalogs_build_phase.sh");
 
     this.project = new PBXProject(projectName);
-    this.headerMaps = new ArrayList<>();
 
     this.targetNodeToGeneratedProjectTargetBuilder = ImmutableMap.builder();
     this.targetNodeToProjectTarget = CacheBuilder.newBuilder().build(
@@ -289,11 +287,6 @@ public class ProjectGenerator {
     return project;
   }
 
-  @VisibleForTesting
-  List<Path> getGeneratedHeaderMaps() {
-    return headerMaps;
-  }
-
   public Path getProjectPath() {
     return projectPath;
   }
@@ -311,6 +304,11 @@ public class ProjectGenerator {
   public ImmutableSet<PBXTarget> getBuildableCombinedTestTargets() {
     Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
     return buildableCombinedTestTargets.build();
+  }
+
+  public ImmutableSet<BuildTarget> getRequiredBuildTargets() {
+    Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
+    return requiredBuildTargetsBuilder.build();
   }
 
   public void createXcodeProjects() throws IOException {
@@ -521,31 +519,6 @@ public class ProjectGenerator {
     return target;
   }
 
-  private void writeHeaderMap(
-      HeaderMap headerMap,
-      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
-      HeaderMapType headerMapType)
-      throws IOException {
-    if (headerMap.getNumEntries() == 0) {
-      return;
-    }
-    Path headerMapFile = AppleDescriptions
-        .getPathToHeaderMap(targetNode, headerMapType)
-        .get();
-    headerMaps.add(headerMapFile);
-    projectFilesystem.mkdirs(headerMapFile.getParent());
-    if (shouldGenerateReadOnlyFiles()) {
-      projectFilesystem.writeBytesToPath(
-          headerMap.getBytes(),
-          headerMapFile,
-          READ_ONLY_FILE_ATTRIBUTE);
-    } else {
-      projectFilesystem.writeBytesToPath(
-          headerMap.getBytes(),
-          headerMapFile);
-    }
-  }
-
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
       Optional<? extends TargetNode<? extends HasAppleBundleFields>> bundle,
@@ -704,10 +677,7 @@ public class ProjectGenerator {
             Joiner.on(' ').join(
                 Iterators.concat(
                     collectRecursiveHeaderSearchPaths(targetNode).iterator(),
-                    collectRecursiveHeaderMaps(targetNode).iterator())))
-        .put(
-            "USER_HEADER_SEARCH_PATHS",
-            Joiner.on(' ').join(collectUserHeaderMaps(targetNode)))
+                    collectRecursiveHeaderSymlinkTrees(targetNode).iterator())))
         .put(
             "LIBRARY_SEARCH_PATHS",
             Joiner.on(' ').join(
@@ -744,12 +714,21 @@ public class ProjectGenerator {
         appendConfigsBuilder.build());
 
     // -- phases
-    if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
-      addHeaderMapsForHeaders(
-          targetNode,
-          targetNode.getConstructorArg().headerPathPrefix,
-          arg.exportedHeaders.get(),
-          arg.headers.get());
+    if (arg.getUseBuckHeaderMaps()) {
+      requiredBuildTargetsBuilder.add(
+          CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+              BuildTarget.of(targetNode.getBuildTarget().getUnflavoredBuildTarget()),
+              DefaultCxxPlatforms.FLAVOR,
+              CxxDescriptionEnhancer.HeaderVisibility.PRIVATE));
+      requireAllBuildRuleDependencies(arg.headers.get());
+      if (targetNode.getType() == AppleLibraryDescription.TYPE) {
+        requiredBuildTargetsBuilder.add(
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                BuildTarget.of(targetNode.getBuildTarget().getUnflavoredBuildTarget()),
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
+        requireAllBuildRuleDependencies(arg.exportedHeaders.get());
+      }
     }
 
     // Use Core Data models from immediate dependencies only.
@@ -781,6 +760,19 @@ public class ProjectGenerator {
             .toSet());
 
     return target;
+  }
+
+  private void requireAllBuildRuleDependencies(Iterable<SourcePath> sourcePaths) {
+    requiredBuildTargetsBuilder.addAll(
+        FluentIterable.from(sourcePaths)
+            .filter(BuildTargetSourcePath.class)
+            .transform(
+                new Function<BuildTargetSourcePath, BuildTarget>() {
+                  @Override
+                  public BuildTarget apply(BuildTargetSourcePath sourcePath) {
+                    return sourcePath.getTarget();
+                  }
+                }));
   }
 
   private void generateCombinedTestTarget(
@@ -972,97 +964,6 @@ public class ProjectGenerator {
     }
   }
 
-  /**
-   * Create header map files and write them to disk.
-   */
-  private void addHeaderMapsForHeaders(
-      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
-      Optional<String> headerPathPrefix,
-      Iterable<SourcePath> publicHeaders,
-      Iterable<SourcePath> privateHeaders) throws IOException {
-    HeaderMap.Builder publicMapBuilder = HeaderMap.builder();
-    HeaderMap.Builder targetMapBuilder = HeaderMap.builder();
-    HeaderMap.Builder targetUserMapBuilder = HeaderMap.builder();
-    addGroupedSourcesToHeaderMaps(
-        publicMapBuilder,
-        targetMapBuilder,
-        targetUserMapBuilder,
-        Paths.get(headerPathPrefix.or(getProductName(targetNode.getBuildTarget()))),
-        publicHeaders,
-        privateHeaders);
-    writeHeaderMap(publicMapBuilder.build(), targetNode, HeaderMapType.PUBLIC_HEADER_MAP);
-    writeHeaderMap(targetMapBuilder.build(), targetNode, HeaderMapType.TARGET_HEADER_MAP);
-    writeHeaderMap(targetUserMapBuilder.build(), targetNode, HeaderMapType.TARGET_USER_HEADER_MAP);
-  }
-
-  private void addGroupedSourcesToHeaderMaps(
-      HeaderMap.Builder publicHeaderMap,
-      HeaderMap.Builder targetHeaderMap,
-      HeaderMap.Builder targetUserHeaderMap,
-      Path prefix,
-      Iterable<SourcePath> publicHeaders,
-      Iterable<SourcePath> privateHeaders) {
-    for (SourcePath headerPath : publicHeaders) {
-      addSourcePathToHeaderMaps(
-          headerPath,
-          prefix,
-          publicHeaderMap,
-          targetHeaderMap,
-          targetUserHeaderMap,
-          HeaderVisibility.PUBLIC);
-    }
-    for (SourcePath headerPath : privateHeaders) {
-      addSourcePathToHeaderMaps(
-          headerPath,
-          prefix,
-          publicHeaderMap,
-          targetHeaderMap,
-          targetUserHeaderMap,
-          HeaderVisibility.PROJECT);
-    }
-  }
-
-  private void addHeaderMapEntry(
-      HeaderMap.Builder builder,
-      String builderName,
-      String key,
-      Path value) {
-    builder.add(key, value);
-    LOG.verbose(
-        "Adding %s mapping %s -> %s",
-        builderName,
-        key,
-        value);
-  }
-
-  private void addSourcePathToHeaderMaps(
-      SourcePath headerPath,
-      Path prefix,
-      HeaderMap.Builder publicHeaderMap,
-      HeaderMap.Builder targetHeaderMap,
-      HeaderMap.Builder targetUserHeaderMap,
-      HeaderVisibility visibility) {
-    String fileName = Preconditions
-        .checkNotNull(sourcePathResolver.apply(headerPath))
-        .getFileName()
-        .toString();
-    String prefixedFileName = prefix.resolve(fileName).toString();
-    Path value =
-        projectFilesystem.getPathForRelativePath(sourcePathResolver.apply(headerPath))
-            .toAbsolutePath().normalize();
-
-    // Add an entry Prefix/File.h -> AbsolutePathTo/File.h
-    // to targetHeaderMap and possibly publicHeaderMap
-    addHeaderMapEntry(targetHeaderMap, "target", prefixedFileName, value);
-    if (visibility == HeaderVisibility.PUBLIC) {
-      addHeaderMapEntry(publicHeaderMap, "public", prefixedFileName, value);
-    }
-
-    // Add an entry File.h -> AbsolutePathTo/File.h
-    // to targetUserHeaderMap
-    addHeaderMapEntry(targetUserHeaderMap, "target-user", fileName, value);
-  }
-
   private void addCoreDataModelBuildPhase(
       PBXGroup targetGroup,
       Iterable<CoreDataModelDescription.Arg> dataModels) throws IOException {
@@ -1249,17 +1150,14 @@ public class ProjectGenerator {
         headerPathPrefix.or("$TARGET_NAME"));
   }
 
-  /**
-   * @param targetNode Must have a header map or an exception will be thrown.
-   */
-  private String getHeaderMapRelativePath(
+  private Path getHeaderSymlinkTreeRelativePath(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
-      HeaderMapType headerMapType) {
-    Optional<Path> filePath = AppleDescriptions.getPathToHeaderMap(
-        targetNode,
-        headerMapType);
-    Preconditions.checkState(filePath.isPresent(), "%s does not have a header map.", targetNode);
-    return pathRelativizer.outputDirToRootRelative(filePath.get()).toString();
+      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
+    Path filePath = CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+        BuildTarget.of(targetNode.getBuildTarget().getUnflavoredBuildTarget()),
+        DefaultCxxPlatforms.FLAVOR,
+        headerVisibility);
+    return pathRelativizer.outputDirToRootRelative(filePath);
   }
 
   private String getHeaderSearchPath(TargetNode<?> targetNode) {
@@ -1369,12 +1267,19 @@ public class ProjectGenerator {
         .toSet();
   }
 
-  private ImmutableSet<String> collectRecursiveHeaderMaps(
+  private ImmutableSet<String> collectRecursiveHeaderSymlinkTrees(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
-      builder.add(getHeaderMapRelativePath(targetNode, HeaderMapType.TARGET_HEADER_MAP));
+      builder.add(
+          getHeaderSymlinkTreeRelativePath(
+              targetNode,
+              CxxDescriptionEnhancer.HeaderVisibility.PRIVATE).toString());
+      builder.add(
+          getHeaderSymlinkTreeRelativePath(
+              targetNode,
+              CxxDescriptionEnhancer.HeaderVisibility.PUBLIC).toString());
     }
 
     for (TargetNode<?> input :
@@ -1386,35 +1291,25 @@ public class ProjectGenerator {
       Optional<TargetNode<AppleNativeTargetDescriptionArg>> nativeNode =
           getAppleNativeNode(targetGraph, input);
       if (nativeNode.isPresent() && nativeNode.get().getConstructorArg().getUseBuckHeaderMaps()) {
-        builder.add(getHeaderMapRelativePath(nativeNode.get(), HeaderMapType.PUBLIC_HEADER_MAP));
+        builder.add(
+            getHeaderSymlinkTreeRelativePath(
+                nativeNode.get(),
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC).toString());
       }
     }
 
-    addHeaderMapsForSourceUnderTest(targetNode, builder, HeaderMapType.TARGET_HEADER_MAP);
+    addHeaderSymlinkTreeForSourceUnderTest(
+        targetNode,
+        builder,
+        CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
 
     return builder.build();
   }
 
-  private ImmutableSet<String> collectUserHeaderMaps(
-      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-
-    if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
-      builder.add(
-          getHeaderMapRelativePath(
-              targetNode,
-              HeaderMapType.TARGET_USER_HEADER_MAP));
-    }
-
-    addHeaderMapsForSourceUnderTest(targetNode, builder, HeaderMapType.TARGET_USER_HEADER_MAP);
-
-    return builder.build();
-  }
-
-  private void addHeaderMapsForSourceUnderTest(
+  private void addHeaderSymlinkTreeForSourceUnderTest(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
-      ImmutableSet.Builder<String> headerMapsBuilder,
-      HeaderMapType headerMapType) {
+      ImmutableSet.Builder<String> headerSymlinkTreesBuilder,
+      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
     ImmutableSet<TargetNode<?>> directDependencies = ImmutableSet.copyOf(
         targetGraph.getAll(targetNode.getDeps()));
     for (TargetNode<?> dependency : directDependencies) {
@@ -1423,10 +1318,10 @@ public class ProjectGenerator {
       if (nativeNode.isPresent() &&
           isSourceUnderTest(dependency, nativeNode.get(), targetNode) &&
           nativeNode.get().getConstructorArg().getUseBuckHeaderMaps()) {
-        headerMapsBuilder.add(
-            getHeaderMapRelativePath(
+        headerSymlinkTreesBuilder.add(
+            getHeaderSymlinkTreeRelativePath(
                 nativeNode.get(),
-                headerMapType));
+                headerVisibility).toString());
       }
     }
   }

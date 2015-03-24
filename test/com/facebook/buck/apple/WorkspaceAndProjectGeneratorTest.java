@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -27,6 +28,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
@@ -106,6 +109,7 @@ public class WorkspaceAndProjectGeneratorTest {
     BuildTarget barLibTarget = BuildTarget.builder("//bar", "lib").build();
     TargetNode<?> barLibNode = AppleLibraryBuilder
         .createBuilder(barLibTarget)
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
@@ -113,12 +117,14 @@ public class WorkspaceAndProjectGeneratorTest {
         .createBuilder(fooLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
         .setTests(Optional.of(ImmutableSortedSet.of(fooTestTarget)))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     BuildTarget fooBinBinaryTarget = BuildTarget.builder("//foo", "binbinary").build();
     TargetNode<?> fooBinBinaryNode = AppleBinaryBuilder
         .createBuilder(fooBinBinaryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     BuildTarget fooBinTarget = BuildTarget.builder("//foo", "bin").build();
@@ -134,30 +140,35 @@ public class WorkspaceAndProjectGeneratorTest {
         .createBuilder(bazLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
         .setTests(Optional.of(ImmutableSortedSet.of(bazTestTarget)))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     TargetNode<?> bazTestNode = AppleTestBuilder
         .createBuilder(bazTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     TargetNode<?> fooTestNode = AppleTestBuilder
         .createBuilder(fooTestTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     TargetNode<?> fooBinTestNode = AppleTestBuilder
         .createBuilder(fooBinTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooBinTarget)))
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     BuildTarget quxBinTarget = BuildTarget.builder("//qux", "bin").build();
     TargetNode<?> quxBinNode = AppleBinaryBuilder
         .createBuilder(quxBinTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     BuildTarget workspaceTarget = BuildTarget.builder("//foo", "workspace").build();
@@ -325,6 +336,80 @@ public class WorkspaceAndProjectGeneratorTest {
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
         barProjectGenerator.getGeneratedProject(),
         "//bar:lib");
+  }
+
+  @Test
+  public void requiredBuildTargets() throws IOException {
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        targetGraph,
+        workspaceNode,
+        ImmutableSet.<ProjectGenerator.Option>of(),
+        false /* combinedProject */,
+        "BUCK");
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    assertThat(
+        generator.getRequiredBuildTargets(),
+        hasItems(
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                BuildTarget.builder("//foo", "binbinary").build(),
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                BuildTarget.builder("//foo", "lib").build(),
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                BuildTarget.builder("//foo", "lib").build(),
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                BuildTarget.builder("//bar", "lib").build(),
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                BuildTarget.builder("//bar", "lib").build(),
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC)));
+  }
+
+  @Test
+  public void requiredBuildTargetsForCombinedProject() throws IOException {
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        targetGraph,
+        workspaceNode,
+        ImmutableSet.<ProjectGenerator.Option>of(),
+        true /* combinedProject */,
+        "BUCK");
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    assertThat(
+        generator.getRequiredBuildTargets(),
+        hasItems(
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                BuildTarget.builder("//foo", "binbinary").build(),
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                BuildTarget.builder("//foo", "lib").build(),
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                BuildTarget.builder("//foo", "lib").build(),
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                BuildTarget.builder("//bar", "lib").build(),
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                BuildTarget.builder("//bar", "lib").build(),
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC)));
   }
 
   @Test

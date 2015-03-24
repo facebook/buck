@@ -45,7 +45,7 @@ public class DefaultCxxPlatforms {
     WINDOWS,
   }
 
-  private static final Flavor FLAVOR = ImmutableFlavor.of("default");
+  public static final Flavor FLAVOR = ImmutableFlavor.of("default");
 
   private static final Path DEFAULT_AS = Paths.get("/usr/bin/as");
   private static final ImmutableList<String> DEFAULT_ASFLAGS = ImmutableList.of();
