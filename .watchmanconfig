@@ -8,6 +8,7 @@
     "src/com/facebook/buck/cli/quickstart",
     "test/com/facebook/buck/android/testdata",
     "test/com/facebook/buck/cli/testdata",
+    "test/com/facebook/buck/d/testdata",
     "test/com/facebook/buck/java/testdata",
     "test/com/facebook/buck/junit/testdata",
     "test/com/facebook/buck/parser/testdata",
