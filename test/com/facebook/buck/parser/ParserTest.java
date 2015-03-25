@@ -21,7 +21,9 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
@@ -1429,11 +1431,11 @@ public class ParserTest extends EasyMockSupport {
 
     BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
 
-    assertEquals(
-        ImmutableMap.of(
-            fooLibTarget,
-            HashCode.fromString("89ea162462da33de83d3ceed77bf3e87dc4e9a24")),
-        buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
+    // We can't precalculate the hash, since it depends on the buck version. Check for the presence
+    // of a hash for the right key.
+    HashCode hashCode = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
+
+    assertNotNull(hashCode);
   }
 
   @Test
@@ -1447,20 +1449,18 @@ public class ParserTest extends EasyMockSupport {
         "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n",
         testFooBuckFile,
         Charsets.UTF_8);
+    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+    HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
+    parser = createParser(emptyBuildTargets());
     File testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(
         "// Ceci n'est pas une Javafile\n",
         testFooJavaFile,
         Charsets.UTF_8);
+    HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
-    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
-
-    assertEquals(
-        ImmutableMap.of(
-            fooLibTarget,
-            HashCode.fromString("d57f85b354fba3fc10722747c2048af7d88b7625")),
-        buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
+    assertNotEquals(original, updated);
   }
 
   @Test
@@ -1488,24 +1488,17 @@ public class ParserTest extends EasyMockSupport {
         Charsets.UTF_8);
 
     BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+    HashCode originalHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
-    assertEquals(
-        ImmutableMap.of(
-            fooLibTarget,
-            HashCode.fromString("576a2a847bd78def7ac842d40735aa0a358d82a4")),
-        buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
-
-    testBarJavaFile.delete();
+    assertTrue(testBarJavaFile.delete());
     WatchEvent<Path> deleteEvent = createPathEvent(
         Paths.get("foo/Bar.java"),
         StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(deleteEvent);
 
-    assertEquals(
-        ImmutableMap.of(
-            fooLibTarget,
-            HashCode.fromString("d57f85b354fba3fc10722747c2048af7d88b7625")),
-        buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
+    HashCode updatedHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
+
+    assertNotEquals(originalHash, updatedHash);
   }
 
   @Test
@@ -1528,11 +1521,7 @@ public class ParserTest extends EasyMockSupport {
 
     BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
 
-    assertEquals(
-        ImmutableMap.of(
-            fooLibTarget,
-            HashCode.fromString("d57f85b354fba3fc10722747c2048af7d88b7625")),
-        buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
+    HashCode originalHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
     Path testFooJavaFilePath = testFooJavaFile.toPath();
     java.nio.file.Files.move(testFooJavaFilePath, testFooJavaFilePath.resolveSibling("Bar.java"));
@@ -1545,11 +1534,9 @@ public class ParserTest extends EasyMockSupport {
     parser.onFileSystemChange(deleteEvent);
     parser.onFileSystemChange(createEvent);
 
-    assertEquals(
-        ImmutableMap.of(
-            fooLibTarget,
-            HashCode.fromString("361b267b0c9a71296fca5d3f11aec39912289c42")),
-        buildTargetGraphAndGetHashCodes(parser, fooLibTarget));
+    HashCode updatedHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
+
+    assertNotEquals(originalHash, updatedHash);
   }
 
   @Test
@@ -1567,13 +1554,16 @@ public class ParserTest extends EasyMockSupport {
 
     BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
     BuildTarget fooLib2Target = BuildTarget.builder("//foo", "lib2").build();
-    assertEquals(
-        ImmutableMap.of(
-            fooLibTarget,
-            HashCode.fromString("89ea162462da33de83d3ceed77bf3e87dc4e9a24"),
-            fooLib2Target,
-            HashCode.fromString("6ba2b4d75e848ed204579d55ad616c2776596f7d")),
-        buildTargetGraphAndGetHashCodes(parser, fooLibTarget, fooLib2Target));
+
+    ImmutableMap<BuildTarget, HashCode> hashes = buildTargetGraphAndGetHashCodes(
+        parser,
+        fooLibTarget,
+        fooLib2Target);
+
+    assertNotNull(hashes.get(fooLibTarget));
+    assertNotNull(hashes.get(fooLib2Target));
+
+    assertNotEquals(hashes.get(fooLibTarget), hashes.get(fooLib2Target));
   }
 
   @Test
@@ -1584,20 +1574,34 @@ public class ParserTest extends EasyMockSupport {
 
     File testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
-        "java_library(name = 'lib', visibility=['PUBLIC'], deps=[':lib2'])\n" +
-        "java_library(name = 'lib2', visibility=['PUBLIC'])\n",
+        "java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\n" +
+        "java_library(name = 'lib2', deps = [], visibility=['PUBLIC'])\n",
         testFooBuckFile,
         Charsets.UTF_8);
 
     BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
     BuildTarget fooLib2Target = BuildTarget.builder("//foo", "lib2").build();
-    assertEquals(
-        ImmutableMap.of(
-            fooLibTarget,
-            HashCode.fromString("0176c450c8f85c1a2a4942923488c3552e03a42f"),
-            fooLib2Target,
-            HashCode.fromString("6ba2b4d75e848ed204579d55ad616c2776596f7d")),
-        buildTargetGraphAndGetHashCodes(parser, fooLibTarget, fooLib2Target));
+    ImmutableMap<BuildTarget, HashCode> hashes = buildTargetGraphAndGetHashCodes(
+        parser,
+        fooLibTarget,
+        fooLib2Target);
+    HashCode libKey = hashes.get(fooLibTarget);
+    HashCode lib2Key = hashes.get(fooLib2Target);
+
+    parser = createParser(emptyBuildTargets());
+    Files.write(
+        "java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\n" +
+        "java_library(name = 'lib2', deps = [':lib'], visibility=['PUBLIC'])\n",
+        testFooBuckFile,
+        Charsets.UTF_8);
+
+    hashes = buildTargetGraphAndGetHashCodes(
+        parser,
+        fooLibTarget,
+        fooLib2Target);
+
+    assertEquals(libKey, hashes.get(fooLibTarget));
+    assertNotEquals(lib2Key, hashes.get(fooLib2Target));
   }
 
   private ImmutableMap<BuildTarget, HashCode> buildTargetGraphAndGetHashCodes(

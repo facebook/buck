@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 public class JsonObjectHashingTest {
@@ -132,7 +133,8 @@ public class JsonObjectHashingTest {
       assertThat(map.get("k"), nullValue());
       JsonObjectHashing.hashJsonObject(hasher, map);
     }
-    assertEquals("f3d1dd5edf7eacd4a648d5b219bf677f37fc6f48", hasher.hash().toString());
+
+    assertEquals("29e24643a6328cb4ea893738b89c63b842ce24e7", hasher.hash().toString());
   }
 
   @Test
@@ -181,11 +183,11 @@ public class JsonObjectHashingTest {
   @Test
   public void mapOrderDoesNotChangeHash() {
     Map<?, ?> map1 = ImmutableMap.of(
-        "firstKey", new Integer(24),
+        "firstKey", 24,
         "secondKey", new Float(13.5));
     Map<?, ?> map2 = ImmutableMap.of(
         "secondKey", new Float(13.5),
-        "firstKey", new Integer(24));
+        "firstKey", 24);
 
     Hasher hasher1 = Hashing.sha1().newHasher();
     Hasher hasher2 = Hashing.sha1().newHasher();
@@ -196,4 +198,34 @@ public class JsonObjectHashingTest {
     assertEquals(hasher1.hash().toString(), hasher2.hash().toString());
   }
 
+  /**
+   * This helps keep the hashes more stable. While we include the buckversion in target hashes, when
+   * making changes within Buck (such as adding or removing constructor arg fields) this means that
+   * there are fewer places where tests fail, meaning less time being spent debugging "failed"
+   * tests.
+   * <p>
+   * This means that two maps may generate the same hashcode, despite not being strictly equal. We
+   * rely on the use case that this class was designed for (namely, generating target hashes) to
+   * ensure that correct functionality is maintained.
+   */
+  @Test
+  public void nullFieldsAreIgnoredInTheHash() {
+    HashMap<?, ?> map1 = new HashMap<Object, Object>() {{
+      put("firstKey", "value");
+      put("secondKey", null);
+    }};
+
+    HashMap<?, ?> map2 = new HashMap<Object, Object>() {{
+      put("firstKey", "value");
+      put("ignoredKey", null);
+    }};
+
+    Hasher hasher1 = Hashing.sha1().newHasher();
+    Hasher hasher2 = Hashing.sha1().newHasher();
+
+    JsonObjectHashing.hashJsonObject(hasher1, map1);
+    JsonObjectHashing.hashJsonObject(hasher2, map2);
+
+    assertEquals(hasher1.hash().toString(), hasher2.hash().toString());
+  }
 }

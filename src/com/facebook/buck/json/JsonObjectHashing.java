@@ -68,8 +68,6 @@ public class JsonObjectHashing {
         Object value = entry.getValue();
         if (value != null) {
           sortedMapBuilder.put((String) key, Optional.of(value));
-        } else {
-          sortedMapBuilder.put((String) key, Optional.absent());
         }
       }
       ImmutableSortedMap<String, Optional<Object>> sortedMap = sortedMapBuilder.build();

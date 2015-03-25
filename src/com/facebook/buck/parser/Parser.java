@@ -16,6 +16,8 @@
 
 package com.facebook.buck.parser;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -28,6 +30,7 @@ import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -1215,6 +1218,7 @@ public class Parser {
       }
       List<Map<String, Object>> rules = getRawRules(buildTargetPath);
       Hasher hasher = Hashing.sha1().newHasher();
+      hasher.putString(BuckVersion.getVersion(), UTF_8);
       for (Map<String, Object> map : rules) {
         if (!buildTarget.getShortName().equals(map.get("name"))) {
           continue;
