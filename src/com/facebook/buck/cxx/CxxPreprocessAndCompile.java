@@ -57,7 +57,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule {
   private final Optional<DebugPathSanitizer> sanitizer;
 
   @VisibleForTesting
-  protected CxxPreprocessAndCompile(
+  CxxPreprocessAndCompile(
       BuildRuleParams params,
       SourcePathResolver resolver,
       Tool compiler,

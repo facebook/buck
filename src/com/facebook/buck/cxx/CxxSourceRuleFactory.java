@@ -55,7 +55,7 @@ public class CxxSourceRuleFactory {
   private final ImmutableList<String> compilerFlags;
 
   @VisibleForTesting
-  protected CxxSourceRuleFactory(
+  CxxSourceRuleFactory(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -147,12 +147,12 @@ public class CxxSourceRuleFactory {
    * @return the output path for an object file compiled from the source with the given name.
    */
   @VisibleForTesting
-  protected Path getPreprocessOutputPath(BuildTarget target, CxxSource.Type type, String name) {
+  Path getPreprocessOutputPath(BuildTarget target, CxxSource.Type type, String name) {
     return BuildTargets.getScratchPath(target, "%s").resolve(getPreprocessOutputName(type, name));
   }
 
   @VisibleForTesting
-  protected CxxPreprocessAndCompile createPreprocessBuildRule(
+  CxxPreprocessAndCompile createPreprocessBuildRule(
       String name,
       CxxSource source,
       PicType pic) {
@@ -217,7 +217,7 @@ public class CxxSourceRuleFactory {
    * @return the output path for an object file compiled from the source with the given name.
    */
   @VisibleForTesting
-  protected Path getCompileOutputPath(BuildTarget target, String name) {
+  Path getCompileOutputPath(BuildTarget target, String name) {
     return BuildTargets.getScratchPath(target, "%s").resolve(getCompileOutputName(name));
   }
 
@@ -292,7 +292,7 @@ public class CxxSourceRuleFactory {
    *    given {@link CxxSource}.
    */
   @VisibleForTesting
-  protected CxxPreprocessAndCompile createCompileBuildRule(
+  CxxPreprocessAndCompile createCompileBuildRule(
       String name,
       CxxSource source,
       PicType pic) {
@@ -341,7 +341,7 @@ public class CxxSourceRuleFactory {
    *    given {@link CxxSource}.
    */
   @VisibleForTesting
-  protected CxxPreprocessAndCompile createPreprocessAndCompileBuildRule(
+  CxxPreprocessAndCompile createPreprocessAndCompileBuildRule(
       String name,
       CxxSource source,
       PicType pic) {

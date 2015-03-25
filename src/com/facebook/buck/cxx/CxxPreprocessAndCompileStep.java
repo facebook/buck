@@ -78,7 +78,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   @VisibleForTesting
-  protected ImmutableList<String> getCommand() {
+  ImmutableList<String> getCommand() {
     ImmutableList.Builder<String> cmd = ImmutableList.builder();
     cmd.addAll(compilerPrefix);
     cmd.add(operation.getFlag());
@@ -91,7 +91,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   @VisibleForTesting
-  protected Function<String, String> createPreprocessOutputLineProcessor(final Path workingDir) {
+  Function<String, String> createPreprocessOutputLineProcessor(final Path workingDir) {
     return new Function<String, String>() {
 
       private final Pattern lineMarkers =
@@ -128,7 +128,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   @VisibleForTesting
-  protected Function<String, String> createErrorLineProcessor(final Path workingDir) {
+  Function<String, String> createErrorLineProcessor(final Path workingDir) {
     return CxxDescriptionEnhancer.createErrorMessagePathProcessor(
         new Function<String, String>() {
           @Override
