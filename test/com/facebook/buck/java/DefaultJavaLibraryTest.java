@@ -1169,11 +1169,14 @@ public class DefaultJavaLibraryTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    Path javacJarPath = Paths.get("java/src/com/libone/JavacJar.jar");
+    BuildTarget javacTarget = BuildTargetFactory.newInstance("//langtools:javac");
+    BuildRule javac = PrebuiltJarBuilder.createBuilder(javacTarget)
+        .setBinaryJar(Paths.get("java/src/com/libone/JavacJar.jar"))
+        .build(ruleResolver);
     BuildRule rule = JavaLibraryBuilder
         .createBuilder(libraryOneTarget)
         .addSrc(Paths.get("java/src/com/libone/Bar.java"))
-        .setJavacJar(javacJarPath)
+        .setCompiler(javac)
         .build(ruleResolver);
     DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule;
 
@@ -1193,7 +1196,7 @@ public class DefaultJavaLibraryTest {
     assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
     Jsr199Javac jsrJavac = ((Jsr199Javac) (((JavacStep) steps.get(2)).getJavac()));
     assertTrue(jsrJavac.getJavacJar().isPresent());
-    assertEquals(jsrJavac.getJavacJar().get(), javacJarPath);
+    assertEquals(jsrJavac.getJavacJar().get(), javac.getPathToOutputFile());
   }
 
   @Test

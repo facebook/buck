@@ -72,6 +72,7 @@ public class AndroidLibraryDescription
     }
 
     ImmutableJavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
+        resolver,
         pathResolver,
         args,
         defaultOptions);

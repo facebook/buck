@@ -31,6 +31,7 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -85,6 +86,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     }
 
     ImmutableJavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
+        resolver,
         pathResolver,
         args,
         defaultOptions);
@@ -126,6 +128,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   public static ImmutableJavacOptions.Builder getJavacOptions(
+      BuildRuleResolver ruleResolver,
       SourcePathResolver resolver,
       Arg args,
       JavacOptions defaultOptions) {
@@ -143,13 +146,30 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       builder.addAllExtraArguments(args.extraArguments.get());
     }
 
-    if (args.javac.isPresent() || args.javacJar.isPresent()) {
-      if (args.javac.isPresent() && args.javacJar.isPresent()) {
-        throw new HumanReadableException("Cannot set both javac and javacjar");
+    if (args.compiler.isPresent()) {
+      Either<BuiltInJavac, Either<BuildTarget, Path>> left = args.compiler.get();
+      // Until we have more than one value for BuiltInJavac, left has nothing to do.
+      if (left.isRight()) {
+        Either<BuildTarget, Path> right = left.getRight();
+        if (right.isLeft()) {
+          BuildRule rule = ruleResolver.getRule(right.getLeft());
+          if (rule instanceof PrebuiltJar) {
+            builder.setJavacJarPath(rule.getPathToOutputFile());
+          } else {
+            throw new HumanReadableException("Only prebuilt_jar targets can be used as a javac");
+          }
+        } else {
+          builder.setJavacPath(right.getRight());
+        }
       }
-
-      builder.setJavacPath(args.javac.transform(resolver.getPathFunction()));
-      builder.setJavacJarPath(args.javacJar.transform(resolver.getPathFunction()));
+    } else {
+      if (args.javac.isPresent() || args.javacJar.isPresent()) {
+        if (args.javac.isPresent() && args.javacJar.isPresent()) {
+          throw new HumanReadableException("Cannot set both javac and javacjar");
+        }
+        builder.setJavacPath(args.javac.transform(resolver.getPathFunction()));
+        builder.setJavacJarPath(args.javacJar.transform(resolver.getPathFunction()));
+      }
     }
 
     return builder;
@@ -239,6 +259,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<String> target;
     public Optional<SourcePath> javac;
     public Optional<SourcePath> javacJar;
+    // I am not proud of this.
+    public Optional<Either<BuiltInJavac, Either<BuildTarget, Path>>> compiler;
     public Optional<ImmutableList<String>> extraArguments;
     public Optional<Path> proguardConfig;
     public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps;

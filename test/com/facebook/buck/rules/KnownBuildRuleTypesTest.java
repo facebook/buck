@@ -120,6 +120,7 @@ public class KnownBuildRuleTypesTest {
     arg.target = Optional.absent();
     arg.javac = Optional.absent();
     arg.javacJar = Optional.absent();
+    arg.compiler = Optional.absent();
     arg.extraArguments = Optional.absent();
     arg.proguardConfig = Optional.absent();
     arg.annotationProcessorDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());

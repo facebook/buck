@@ -20,8 +20,10 @@ import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTI
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 
@@ -62,9 +64,11 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
     return this;
   }
 
-  public JavaLibraryBuilder setJavacJar(Path javacJar) {
-    arg.javacJar = Optional.<SourcePath>of(
-        new PathSourcePath(new FakeProjectFilesystem(), javacJar));
+  public JavaLibraryBuilder setCompiler(BuildRule javac) {
+    Either<BuildTarget, Path> right = Either.ofLeft(javac.getBuildTarget());
+    Either<BuiltInJavac, Either<BuildTarget, Path>> value = Either.ofRight(right);
+
+    arg.compiler = Optional.of(value);
     return this;
   }
 }

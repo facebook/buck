@@ -5,6 +5,7 @@
   "annotationProcessorParams" : [ ],
   "annotationProcessors" : [ ],
   "buck.base_path" : "test/com/facebook/buck/cli/testdata/target_command",
+  "compiler": null,
   "deps" : [ ],
   "exportedDeps": [],
   "extraArguments": [],

@@ -210,15 +210,13 @@ public class JsonObjectHashingTest {
    */
   @Test
   public void nullFieldsAreIgnoredInTheHash() {
-    HashMap<?, ?> map1 = new HashMap<Object, Object>() {{
-      put("firstKey", "value");
-      put("secondKey", null);
-    }};
+    HashMap<String, Object> map1 = new HashMap<>();
+    map1.put("firstKey", "value");
+    map1.put("secondKey", null);
 
-    HashMap<?, ?> map2 = new HashMap<Object, Object>() {{
-      put("firstKey", "value");
-      put("ignoredKey", null);
-    }};
+    HashMap<String, Object> map2 = new HashMap<>();
+    map2.put("firstKey", "value");
+    map2.put("ignoredKey", null);
 
     Hasher hasher1 = Hashing.sha1().newHasher();
     Hasher hasher2 = Hashing.sha1().newHasher();

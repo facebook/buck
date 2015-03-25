@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -35,12 +34,6 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
   public EitherTypeCoercer(TypeCoercer<Left> leftTypeCoercer, TypeCoercer<Right> rightTypeCoercer) {
     this.leftTypeCoercer = leftTypeCoercer;
     this.rightTypeCoercer = rightTypeCoercer;
-
-    // disallow either of eithers, it doesn't work well with traversals
-    Preconditions.checkState(
-        !(leftTypeCoercer instanceof EitherTypeCoercer ||
-            rightTypeCoercer instanceof EitherTypeCoercer),
-        "Either of Eithers is not allowed");
   }
 
   @SuppressWarnings("unchecked")

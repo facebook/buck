@@ -157,6 +157,7 @@ java_library(
 java_library(
   name = 'rules',
   srcs = [
+    'BuiltInJavac.java',
     'Classpaths.java',
     'DefaultJavaLibrary.java',
     'GwtModule.java',
