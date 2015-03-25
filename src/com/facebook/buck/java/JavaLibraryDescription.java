@@ -155,56 +155,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     return builder;
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg {
-    public Optional<ImmutableSortedSet<SourcePath>> srcs;
-    public Optional<ImmutableSortedSet<SourcePath>> resources;
-    public Optional<String> source;
-    public Optional<String> target;
-    public Optional<SourcePath> javac;
-    public Optional<SourcePath> javacJar;
-    public Optional<ImmutableList<String>> extraArguments;
-    public Optional<Path> proguardConfig;
-    public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps;
-    public Optional<ImmutableList<String>> annotationProcessorParams;
-    public Optional<ImmutableSet<String>> annotationProcessors;
-    public Optional<Boolean> annotationProcessorOnly;
-    public Optional<ImmutableList<String>> postprocessClassesCommands;
-    public Optional<Path> resourcesRoot;
-
-    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-
-    public AnnotationProcessingParams buildAnnotationProcessingParams(
-        BuildTarget owner,
-        ProjectFilesystem filesystem,
-        BuildRuleResolver resolver) {
-      ImmutableSet<String> annotationProcessors =
-          this.annotationProcessors.or(ImmutableSet.<String>of());
-
-      if (annotationProcessors.isEmpty()) {
-        return AnnotationProcessingParams.EMPTY;
-      }
-
-      AnnotationProcessingParams.Builder builder = new AnnotationProcessingParams.Builder();
-      builder.setOwnerTarget(owner);
-      builder.addAllProcessors(annotationProcessors);
-      builder.setProjectFilesystem(filesystem);
-      ImmutableSortedSet<BuildRule> processorDeps =
-          resolver.getAllRules(annotationProcessorDeps.or(ImmutableSortedSet.<BuildTarget>of()));
-      for (BuildRule processorDep : processorDeps) {
-        builder.addProcessorBuildTarget(processorDep);
-      }
-      for (String processorParam : annotationProcessorParams.or(ImmutableList.<String>of())) {
-        builder.addParameter(processorParam);
-      }
-      builder.setProcessOnly(annotationProcessorOnly.or(Boolean.FALSE));
-
-      return builder.build();
-    }
-  }
-
   /**
    * A {@link JavaLibrary} registers the ability to create {@link JavaLibrary#SRC_JAR}s when source
    * is present and also {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
@@ -279,5 +229,55 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         resolver,
         filesForGwtModule);
     return Optional.of(gwtModule);
+  }
+
+  @SuppressFieldNotInitialized
+  public static class Arg {
+    public Optional<ImmutableSortedSet<SourcePath>> srcs;
+    public Optional<ImmutableSortedSet<SourcePath>> resources;
+    public Optional<String> source;
+    public Optional<String> target;
+    public Optional<SourcePath> javac;
+    public Optional<SourcePath> javacJar;
+    public Optional<ImmutableList<String>> extraArguments;
+    public Optional<Path> proguardConfig;
+    public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps;
+    public Optional<ImmutableList<String>> annotationProcessorParams;
+    public Optional<ImmutableSet<String>> annotationProcessors;
+    public Optional<Boolean> annotationProcessorOnly;
+    public Optional<ImmutableList<String>> postprocessClassesCommands;
+    public Optional<Path> resourcesRoot;
+
+    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps;
+    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+
+    public AnnotationProcessingParams buildAnnotationProcessingParams(
+        BuildTarget owner,
+        ProjectFilesystem filesystem,
+        BuildRuleResolver resolver) {
+      ImmutableSet<String> annotationProcessors =
+          this.annotationProcessors.or(ImmutableSet.<String>of());
+
+      if (annotationProcessors.isEmpty()) {
+        return AnnotationProcessingParams.EMPTY;
+      }
+
+      AnnotationProcessingParams.Builder builder = new AnnotationProcessingParams.Builder();
+      builder.setOwnerTarget(owner);
+      builder.addAllProcessors(annotationProcessors);
+      builder.setProjectFilesystem(filesystem);
+      ImmutableSortedSet<BuildRule> processorDeps =
+          resolver.getAllRules(annotationProcessorDeps.or(ImmutableSortedSet.<BuildTarget>of()));
+      for (BuildRule processorDep : processorDeps) {
+        builder.addProcessorBuildTarget(processorDep);
+      }
+      for (String processorParam : annotationProcessorParams.or(ImmutableList.<String>of())) {
+        builder.addParameter(processorParam);
+      }
+      builder.setProcessOnly(annotationProcessorOnly.or(Boolean.FALSE));
+
+      return builder.build();
+    }
   }
 }
