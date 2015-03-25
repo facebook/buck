@@ -1,0 +1,13 @@
+android_resource(
+  name = 'asset_only',
+  assets = 'assets',
+  visibility = [
+    'PUBLIC',
+  ],
+  deps = [
+  ],
+)
+
+project_config(
+  src_target = ':asset_only',
+)

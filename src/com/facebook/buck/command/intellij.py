@@ -200,7 +200,7 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
                 keystore = ''
 
             if 'androidManifest' in module:
-                android_manifest = module['androidManifest']
+                android_manifest = '/' + module['androidManifest']
             else:
                 android_manifest = '/AndroidManifest.xml'
 
@@ -210,7 +210,7 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
                 'res': '/res',
                 'is_android_library_project': str(is_library_project).lower(),
                 'run_proguard': 'false',
-                'module_gen_path': module['moduleGenPath'],
+                'module_gen_path':  '/' + module['moduleGenPath'],
                 'proguard_config': '/proguard.cfg',
                 'keystore': keystore,
                 'libs_path': '/%s' % module.get('nativeLibs', 'libs'),
@@ -372,13 +372,14 @@ def add_buck_android_source_folder(xml, module):
     # buck-out/android/ then IntelliJ wants that to be included as a separate
     # source root.
     if 'moduleGenPath' in module:
-        xml += '\n    <content url="file://$MODULE_DIR$%s">' % module['moduleGenPath']
-        xml += '\n      <sourceFolder url="file://$MODULE_DIR$%s" isTestSource="false" />' % module['moduleGenPath']
+        xml += '\n    <content url="file://$MODULE_DIR$/%s">' % module['moduleGenPath']
+        xml += '\n      <sourceFolder url="file://$MODULE_DIR$/%s" isTestSource="false" />'\
+               % module['moduleGenPath']
         xml += '\n    </content>'
     if 'moduleRJavaPath' in module:
-        xml += '\n    <content url="file://$MODULE_DIR$%s">' % module['moduleRJavaPath']
+        xml += '\n    <content url="file://$MODULE_DIR$/%s">' % module['moduleRJavaPath']
         xml += '\n      <sourceFolder '
-        xml += 'url="file://$MODULE_DIR$%s" ' % module['moduleRJavaPath']
+        xml += 'url="file://$MODULE_DIR$/%s" ' % module['moduleRJavaPath']
         xml += 'isTestSource="false" />'
         xml += '\n    </content>'
     return xml
@@ -390,8 +391,9 @@ def add_annotation_generated_source_folder(xml, module):
                                       module['annotationGenIsForTest'])
         is_test_source = str(annotation_gen_is_for_test).lower()
 
-        xml += '\n    <content url="file://$MODULE_DIR$%s">' % module['annotationGenPath']
-        xml += '\n      <sourceFolder url="file://$MODULE_DIR$%s" isTestSource="%s" />' % (module['annotationGenPath'], is_test_source)
+        xml += '\n    <content url="file://$MODULE_DIR$/%s">' % module['annotationGenPath']
+        xml += '\n      <sourceFolder url="file://$MODULE_DIR$/%s" isTestSource="%s" />'\
+               % (module['annotationGenPath'], is_test_source)
         xml += '\n    </content>'
     return xml
 

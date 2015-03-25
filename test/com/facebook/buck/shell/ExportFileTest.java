@@ -223,48 +223,55 @@ public class ExportFileTest {
         .setEventBus(BuckEventBusFactory.newInstance())
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
-        .setJavaPackageFinder(new JavaPackageFinder() {
-          @Override
-          public String findJavaPackageFolderForPath(String pathRelativeToProjectRoot) {
-            return null;
-          }
+        .setJavaPackageFinder(
+            new JavaPackageFinder() {
+              @Override
+              public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
+                return null;
+              }
 
-          @Override
-          public String findJavaPackageForPath(String pathRelativeToProjectRoot) {
-            return null;
-          }
-        })
+              @Override
+              public String findJavaPackage(Path pathRelativeToProjectRoot) {
+                return null;
+              }
+
+              @Override
+              public String findJavaPackage(BuildTarget buildTarget) {
+                return null;
+              }
+            })
         .setActionGraph(new ActionGraph(new MutableDirectedGraph<BuildRule>()))
-        .setStepRunner(new StepRunner() {
-          @Override
-          public void runStep(Step step) throws StepFailedException {
-            // Do nothing.
-          }
+        .setStepRunner(
+            new StepRunner() {
+              @Override
+              public void runStep(Step step) throws StepFailedException {
+                // Do nothing.
+              }
 
-          @Override
-          public void runStepForBuildTarget(Step step, BuildTarget buildTarget)
-              throws StepFailedException {
-            // Do nothing.
-          }
+              @Override
+              public void runStepForBuildTarget(Step step, BuildTarget buildTarget)
+                  throws StepFailedException {
+                // Do nothing.
+              }
 
-          @Override
-          public <T> ListenableFuture<T> runStepsAndYieldResult(
-              List<Step> steps, Callable<T> interpretResults, BuildTarget buildTarget) {
-            return null;
-          }
+              @Override
+              public <T> ListenableFuture<T> runStepsAndYieldResult(
+                  List<Step> steps, Callable<T> interpretResults, BuildTarget buildTarget) {
+                return null;
+              }
 
-          @Override
-          public void runStepsInParallelAndWait(List<Step> steps) throws StepFailedException {
-            // Do nothing.
-          }
+              @Override
+              public void runStepsInParallelAndWait(List<Step> steps) throws StepFailedException {
+                // Do nothing.
+              }
 
-          @Override
-          public <T> ListenableFuture<Void> addCallback(
-              ListenableFuture<List<T>> allBuiltDeps, FutureCallback<List<T>> futureCallback) {
-            // Do nothing.
-            return Futures.immediateFuture(null);
-          }
-        })
+              @Override
+              public <T> ListenableFuture<Void> addCallback(
+                  ListenableFuture<List<T>> allBuiltDeps, FutureCallback<List<T>> futureCallback) {
+                // Do nothing.
+                return Futures.immediateFuture(null);
+              }
+            })
         .build();
   }
 }

@@ -96,6 +96,14 @@ public class MorePaths {
     return toMakeAbsolute.toAbsolutePath().normalize();
   }
 
+  public static Path getParentOrEmpty(Path path) {
+    Path parent = path.getParent();
+    if (parent == null) {
+      parent = EMPTY_PATH;
+    }
+    return parent;
+  }
+
   /**
    * Get the path of a file relative to a base directory.
    *
@@ -108,7 +116,7 @@ public class MorePaths {
     if (baseDir == null) {
       // This allows callers to use this method with "file.parent()" for files from the project
       // root dir.
-      baseDir = Paths.get("");
+      baseDir = EMPTY_PATH;
     }
     Preconditions.checkArgument(!path.isAbsolute(),
         "Path must be relative: %s.", path);

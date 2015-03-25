@@ -1,0 +1,14 @@
+android_resource(
+  name = 'title',
+  res = 'res',
+  package = 'com.sample2',
+  visibility = [
+    'PUBLIC',
+  ],
+  deps = [
+  ],
+)
+
+project_config(
+  src_target = ':title',
+)

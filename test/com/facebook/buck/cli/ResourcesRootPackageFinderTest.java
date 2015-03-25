@@ -35,11 +35,12 @@ public class ResourcesRootPackageFinderTest {
         resourcesRoot,
         new FakeJavaPackageFinder());
     assertEquals(
-        "com/facebook/",
-        finder.findJavaPackageFolderForPath("java/example/resources/com/facebook/bar.txt"));
+        Paths.get("com/facebook/"),
+        finder.findJavaPackageFolder(
+            Paths.get("java/example/resources/com/facebook/bar.txt")));
     assertEquals(
         "com.facebook",
-        finder.findJavaPackageForPath("java/example/resources/com/facebook/bar.txt"));
+        finder.findJavaPackage(Paths.get("java/example/resources/com/facebook/bar.txt")));
   }
 
   @Test
@@ -50,6 +51,6 @@ public class ResourcesRootPackageFinderTest {
         new FakeJavaPackageFinder());
     assertNull(
         "Should fall back to the FakeJavaPackageFinder and return null.",
-        finder.findJavaPackageFolderForPath("does/not/match.txt"));
+        finder.findJavaPackageFolder(Paths.get("does/not/match.txt")));
   }
 }

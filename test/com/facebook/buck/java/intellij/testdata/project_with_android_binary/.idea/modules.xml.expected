@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/apps/sample/module_apps_sample.iml" filepath="$PROJECT_DIR$/apps/sample/module_apps_sample.iml" group="modules"/>
+      <module fileurl="file://$PROJECT_DIR$/java/com/sample/lib/module_java_com_sample_lib.iml" filepath="$PROJECT_DIR$/java/com/sample/lib/module_java_com_sample_lib.iml" group="modules"/>
+      <module fileurl="file://$PROJECT_DIR$/res/com/sample/asset_only/module_res_com_sample_asset_only.iml" filepath="$PROJECT_DIR$/res/com/sample/asset_only/module_res_com_sample_asset_only.iml" group="modules"/>
+      <module fileurl="file://$PROJECT_DIR$/res/com/sample/base/module_res_com_sample_base.iml" filepath="$PROJECT_DIR$/res/com/sample/base/module_res_com_sample_base.iml" group="modules"/>
+      <module fileurl="file://$PROJECT_DIR$/res/com/sample/title/module_res_com_sample_title.iml" filepath="$PROJECT_DIR$/res/com/sample/title/module_res_com_sample_title.iml" group="modules"/>
+      <module fileurl="file://$PROJECT_DIR$/res/com/sample/top/module_res_com_sample_top.iml" filepath="$PROJECT_DIR$/res/com/sample/top/module_res_com_sample_top.iml" group="modules"/>
+    </modules>
+  </component>
+</project>

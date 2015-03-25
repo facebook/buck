@@ -89,7 +89,7 @@ public class JavaSourceJar extends AbstractBuildRule {
     // smarts to read the "package" line from a source file.
 
     for (Path source : getResolver().filterInputsToCompareToOutput(sources)) {
-      String packageFolder = packageFinder.findJavaPackageFolderForPath(source.toString());
+      Path packageFolder = packageFinder.findJavaPackageFolder(source);
       Path packageDir = temp.resolve(packageFolder);
       if (seenPackages.add(packageDir)) {
         steps.add(new MkdirStep(packageDir));

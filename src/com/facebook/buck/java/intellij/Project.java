@@ -228,7 +228,7 @@ public class Project {
 
   @VisibleForTesting
   static String createPathToProjectDotPropertiesFileFor(Module module) {
-    return module.getModuleDirectoryPathWithSlash() + "project.properties";
+    return module.getModuleDirectoryPath().resolve("project.properties").toString();
   }
 
   @VisibleForTesting
@@ -296,12 +296,12 @@ public class Project {
       Optional<Path> rJava) throws IOException {
     BuildRule projectRule = Preconditions.checkNotNull(projectConfig.getProjectRule());
     Preconditions.checkState(
-        projectRule instanceof JavaLibrary ||
-        projectRule instanceof JavaBinary ||
-        projectRule instanceof AndroidLibrary ||
-        projectRule instanceof AndroidResource ||
         projectRule instanceof AndroidBinary ||
-        projectRule instanceof NdkLibrary,
+            projectRule instanceof AndroidLibrary ||
+            projectRule instanceof AndroidResource ||
+            projectRule instanceof JavaBinary ||
+            projectRule instanceof JavaLibrary ||
+            projectRule instanceof NdkLibrary,
         "project_config() does not know how to process a src_target of type %s.",
         projectRule.getType().getName());
 
@@ -311,8 +311,8 @@ public class Project {
     module.name = getIntellijNameForRule(projectRule);
     module.isIntelliJPlugin = projectConfig.getIsIntelliJPlugin();
 
-    String relativePath = projectConfig.getBuildTarget().getBasePathWithSlash();
-    module.pathToImlFile = String.format("%s%s.iml", relativePath, module.name);
+    Path relativePath = projectConfig.getBuildTarget().getBasePath();
+    module.pathToImlFile = relativePath.resolve(String.format("%s.iml", module.name));
 
     // List the module source as the first dependency.
     boolean includeSourceFolder = true;
@@ -361,18 +361,15 @@ public class Project {
     // Note that isForTests is false even if projectRule is the project_config's test_target.
     walkRuleAndAdd(projectRule, false /* isForTests */, dependencies, projectConfig.getSrcRule());
 
-    String basePathWithSlash = projectConfig.getBuildTarget().getBasePathWithSlash();
+    Path basePath = projectConfig.getBuildTarget().getBasePath();
 
     // Specify another path for intellij to generate gen/ for each android module,
     // so that it will not disturb our glob() rules.
     // To specify the location of gen, Intellij requires the relative path from
     // the base path of current build target.
-    module.moduleGenPath = generateRelativeGenPath(basePathWithSlash).toString();
+    module.moduleGenPath = generateRelativeGenPath(basePath);
     if (turnOffAutoSourceGeneration && rJava.isPresent()) {
-      module.moduleRJavaPath = Paths.get(
-          "/",
-          Paths.get(basePathWithSlash).relativize(Paths.get("")).toString(),
-          rJava.get().toString()).toString();
+      module.moduleRJavaPath = basePath.relativize(Paths.get("")).resolve(rJava.get());
     }
 
     DependentModule jdkDependency;
@@ -382,8 +379,7 @@ public class Project {
         NdkLibrary ndkLibrary = (NdkLibrary) projectRule;
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
-        module.nativeLibs =
-            Paths.get(relativePath).relativize(ndkLibrary.getLibraryPath()).toString();
+        module.nativeLibs = relativePath.relativize(ndkLibrary.getLibraryPath());
       } else if (projectRule instanceof AndroidResource) {
         AndroidResource androidResource = (AndroidResource) projectRule;
         module.resFolder = createRelativePath(androidResource.getRes(), target);
@@ -400,8 +396,7 @@ public class Project {
 
         // getKeystore() returns a path relative to the project root, but an IntelliJ module
         // expects the path to the keystore to be relative to the module root.
-        module.keystorePath = Paths.get(relativePath).relativize(keystoreProperties.getKeystore())
-            .toString();
+        module.keystorePath = relativePath.relativize(keystoreProperties.getKeystore());
       } else {
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
@@ -413,7 +408,7 @@ public class Project {
       // If there is a default AndroidManifest.xml specified in .buckconfig, use it if
       // AndroidManifest.xml is not present in the root of the [Android] IntelliJ module.
       if (pathToDefaultAndroidManifest.isPresent()) {
-        Path androidManifest = Paths.get(basePathWithSlash, "AndroidManifest.xml");
+        Path androidManifest = basePath.resolve("AndroidManifest.xml");
         if (!projectFilesystem.exists(androidManifest)) {
           String manifestPath = this.pathToDefaultAndroidManifest.get();
           String rootPrefix = "//";
@@ -422,11 +417,9 @@ public class Project {
               "indicating that it is relative to the root of the repository.",
               rootPrefix);
           manifestPath = manifestPath.substring(rootPrefix.length());
-          String relativePathToManifest =
-              Paths.get(basePathWithSlash).relativize(Paths.get(manifestPath)).toString();
           // IntelliJ requires that the path start with a slash to indicate that it is relative to
           // the module.
-          module.androidManifest = "/" + relativePathToManifest;
+          module.androidManifest = basePath.relativize(Paths.get(manifestPath));
         }
       }
 
@@ -457,8 +450,7 @@ public class Project {
 
       Path annotationGenSrc = processingParams.getGeneratedSourceFolderName();
       if (annotationGenSrc != null) {
-        module.annotationGenPath =
-            "/" + Paths.get(basePathWithSlash).relativize(annotationGenSrc).toString();
+        module.annotationGenPath = basePath.relativize(annotationGenSrc);
         module.annotationGenIsForTest = !hasSourceFoldersForSrcRule;
       }
     }
@@ -506,13 +498,12 @@ public class Project {
    *
    * @return the relative path of gen from the base path of current module.
    */
-  static Path generateRelativeGenPath(String basePathOfModuleWithSlash) {
-    return Paths.get(
-        "/",
-        Paths.get(basePathOfModuleWithSlash).relativize(Paths.get("")).toString(),
-        ANDROID_GEN_DIR,
-        Paths.get("").relativize(Paths.get(basePathOfModuleWithSlash)).toString(),
-        "gen");
+  static Path generateRelativeGenPath(Path basePathOfModule) {
+    return basePathOfModule
+        .relativize(Paths.get(""))
+        .resolve(ANDROID_GEN_DIR)
+        .resolve(Paths.get("").relativize(basePathOfModule))
+        .resolve("gen");
   }
 
   private boolean addSourceFolders(Module module,
@@ -567,7 +558,7 @@ public class Project {
       // values of project_config() assume this approach to help minimize the tedium in writing all
       // of those project_config() rules.
       String url = "file://$MODULE_DIR$";
-      String packagePrefix = javaPackageFinder.findJavaPackageForPath(module.pathToImlFile);
+      String packagePrefix = javaPackageFinder.findJavaPackage(module.pathToImlFile);
       SourceFolder sourceFolder = new SourceFolder(url, isTestSource, packagePrefix);
       module.sourceFolders.add(sourceFolder);
     } else {
@@ -859,7 +850,8 @@ public class Project {
    * @param pathRelativeToProjectRoot if {@code null}, then this method returns {@code null}
    */
   @Nullable
-  private static String createRelativePath(@Nullable Path pathRelativeToProjectRoot,
+  private static String createRelativePath(
+      @Nullable Path pathRelativeToProjectRoot,
       BuildTarget target) {
     if (pathRelativeToProjectRoot == null) {
       return null;

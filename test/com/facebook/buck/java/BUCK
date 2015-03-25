@@ -44,6 +44,9 @@ java_library(
   srcs = [
     'FakeJavaPackageFinder.java',
   ],
+  deps = [
+    '//src/com/facebook/buck/model:model',
+  ],
   exported_deps = [
     '//src/com/facebook/buck/java:packagefinder',
   ],

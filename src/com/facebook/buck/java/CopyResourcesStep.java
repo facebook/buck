@@ -29,7 +29,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -89,9 +88,7 @@ public class CopyResourcesStep implements Step {
       return allSteps.build();
     }
 
-    String targetPackageDir = javaPackageFinder.findJavaPackageForPath(
-        target.getBasePathWithSlash())
-        .replace('.', File.separatorChar);
+    String targetPackageDir = javaPackageFinder.findJavaPackage(target);
 
     for (SourcePath rawResource : resources) {
       // If the path to the file defining this rule were:
@@ -115,15 +112,15 @@ public class CopyResourcesStep implements Step {
       if ((matcher = GENERATED_FILE_PATTERN.matcher(resource)).matches()) {
         resource = matcher.group(1);
       }
-      String javaPackageAsPath = javaPackageFinder.findJavaPackageFolderForPath(resource);
+      Path javaPackageAsPath = javaPackageFinder.findJavaPackageFolder(Paths.get(resource));
 
       Path relativeSymlinkPath;
-      if ("".equals(javaPackageAsPath)) {
+      if ("".equals(javaPackageAsPath.toString())) {
         // In this case, the project root is acting as the default package, so the resource path
         // works fine.
         relativeSymlinkPath = pathToResource.getFileName();
       } else {
-        int lastIndex = resource.lastIndexOf(javaPackageAsPath);
+        int lastIndex = resource.lastIndexOf(javaPackageAsPath.toString());
         if (lastIndex < 0) {
           Preconditions.checkState(
               rawResource instanceof BuildTargetSourcePath,

@@ -77,19 +77,6 @@ class DependentModule {
     this.target = target;
   }
 
-  /**
-   * Used for error reporting.
-   *
-   * @return the target that declared this module or null.
-   */
-  @Nullable
-  public String getTargetName() {
-    if (target == null) {
-      return null;
-    }
-    return target.getFullyQualifiedName();
-  }
-
   boolean isLibrary() {
     return LIBRARY_DEPENDENCY_TYPE.equals(type);
   }
@@ -101,11 +88,6 @@ class DependentModule {
   String getLibraryName() {
     Preconditions.checkState(isLibrary());
     return Preconditions.checkNotNull(name);
-  }
-
-  String getModuleName() {
-    Preconditions.checkState(isModule());
-    return Preconditions.checkNotNull(moduleName);
   }
 
   static DependentModule newLibrary(@Nullable BuildTarget owningTarget, String libraryName) {

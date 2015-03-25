@@ -163,8 +163,9 @@ public class ProjectIntegrationTest {
     assertThat(
         "`buck project` should contain warning to synchronize IntelliJ.",
         result.getStderr(),
-        containsString("  ::  Please resynchronize IntelliJ via File->Synchronize " +
-            "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
+        containsString(
+            "  ::  Please resynchronize IntelliJ via File->Synchronize " +
+                "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
   }
 
   @Test
@@ -271,8 +272,9 @@ public class ProjectIntegrationTest {
     assertThat(
         "`buck project` should contain warning to synchronize IntelliJ.",
         result.getStderr(),
-        containsString("  ::  Please resynchronize IntelliJ via File->Synchronize " +
-            "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
+        containsString(
+            "  ::  Please resynchronize IntelliJ via File->Synchronize " +
+                "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
   }
 
   @Test
@@ -338,8 +340,9 @@ public class ProjectIntegrationTest {
     assertThat(
         "`buck project` should contain warning to synchronize IntelliJ.",
         result.getStderr(),
-        containsString("  ::  Please resynchronize IntelliJ via File->Synchronize " +
-            "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
+        containsString(
+            "  ::  Please resynchronize IntelliJ via File->Synchronize " +
+                "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
   }
 
   /**
@@ -374,8 +377,9 @@ public class ProjectIntegrationTest {
     assertThat(
         "`buck project` should contain warning to synchronize IntelliJ.",
         result.getStderr(),
-        containsString("  ::  Please resynchronize IntelliJ via File->Synchronize " +
-            "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
+        containsString(
+            "  ::  Please resynchronize IntelliJ via File->Synchronize " +
+                "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
   }
 
   /**
@@ -464,6 +468,125 @@ public class ProjectIntegrationTest {
     result.assertSuccess();
 
     workspace.verify();
+  }
+
+  @Test
+  public void testBuckProjectWithAndroidBinary() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_with_android_binary", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+
+    assertEquals(
+        "`buck project` should report the files it modified.",
+        Joiner.on('\n').join(
+            "MODIFIED FILES:",
+            ".idea/compiler.xml",
+            ".idea/modules.xml",
+            ".idea/runConfigurations/Debug_Buck_test.xml",
+            "apps/sample/module_apps_sample.iml",
+            "java/com/sample/lib/module_java_com_sample_lib.iml",
+            "res/com/sample/asset_only/module_res_com_sample_asset_only.iml",
+            "res/com/sample/base/module_res_com_sample_base.iml",
+            "res/com/sample/title/module_res_com_sample_title.iml",
+            "res/com/sample/top/module_res_com_sample_top.iml"
+        ) + '\n',
+        result.getStdout());
+  }
+
+  @Test
+  public void testBuckProjectSliceWithAndroidBinary() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_with_android_binary", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "//apps/sample:app");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+
+    assertEquals(
+        "`buck project` should report the files it modified.",
+        Joiner.on('\n').join(
+            "MODIFIED FILES:",
+            ".idea/compiler.xml",
+            ".idea/modules.xml",
+            ".idea/runConfigurations/Debug_Buck_test.xml",
+            "apps/sample/module_apps_sample.iml",
+            "java/com/sample/lib/module_java_com_sample_lib.iml",
+            "res/com/sample/asset_only/module_res_com_sample_asset_only.iml",
+            "res/com/sample/base/module_res_com_sample_base.iml",
+            "res/com/sample/title/module_res_com_sample_title.iml",
+            "res/com/sample/top/module_res_com_sample_top.iml"
+        ) + '\n',
+        result.getStdout());
+  }
+
+  @Test
+  public void testBuckProjectWithAndroidBinaryWithRDotJavaAutogenerationDisabled()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_with_android_binary_autogeneration_disabled", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "--disable-r-java-idea-generator");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+
+    assertEquals(
+        "`buck project` should report the files it modified.",
+        Joiner.on('\n').join(
+            "MODIFIED FILES:",
+            ".idea/compiler.xml",
+            ".idea/modules.xml",
+            ".idea/runConfigurations/Debug_Buck_test.xml",
+            "apps/sample/module_apps_sample.iml",
+            "java/com/sample/lib/module_java_com_sample_lib.iml",
+            "res/com/sample/asset_only/module_res_com_sample_asset_only.iml",
+            "res/com/sample/base/module_res_com_sample_base.iml",
+            "res/com/sample/title/module_res_com_sample_title.iml",
+            "res/com/sample/top/module_res_com_sample_top.iml"
+        ) + '\n',
+        result.getStdout());
+  }
+
+  @Test
+  public void testBuckProjectSliceWithAndroidBinaryWithRDotJavaAutogenerationDisabled()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_with_android_binary_autogeneration_disabled", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--disable-r-java-idea-generator",
+        "//apps/sample:app");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+
+    assertEquals(
+        "`buck project` should report the files it modified.",
+        Joiner.on('\n').join(
+            "MODIFIED FILES:",
+            ".idea/compiler.xml",
+            ".idea/modules.xml",
+            ".idea/runConfigurations/Debug_Buck_test.xml",
+            "apps/sample/module_apps_sample.iml",
+            "java/com/sample/lib/module_java_com_sample_lib.iml",
+            "res/com/sample/asset_only/module_res_com_sample_asset_only.iml",
+            "res/com/sample/base/module_res_com_sample_base.iml",
+            "res/com/sample/title/module_res_com_sample_title.iml",
+            "res/com/sample/top/module_res_com_sample_top.iml"
+        ) + '\n',
+        result.getStdout());
   }
 
 }

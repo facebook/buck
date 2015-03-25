@@ -95,7 +95,7 @@ public class JavacErrorParser {
     String className = matcher.group("class");
     Path repoRoot = filesystem.getRootPath().toAbsolutePath().normalize();
     Path relativePath = repoRoot.relativize(Paths.get(fileName));
-    String packageName = javaPackageFinder.findJavaPackageForPath(relativePath.toString());
+    String packageName = javaPackageFinder.findJavaPackage(relativePath);
     return Optional.of(packageName + "." + className);
   }
 }

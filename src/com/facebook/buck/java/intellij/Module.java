@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java.intellij;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.java.intellij.Project.SourceFolder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -27,6 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.SortedSet;
@@ -63,72 +65,93 @@ final class Module {
    * Let intellij generate the gen directory to specific path.
    */
   @Nullable
-  @JsonProperty String moduleGenPath;
+  @JsonProperty
+  Path moduleGenPath;
 
   @Nullable
-  @JsonProperty String moduleRJavaPath;
+  @JsonProperty
+  Path moduleRJavaPath;
 
   @Nullable
-  @JsonProperty String name;
+  @JsonProperty
+  String name;
+
   @Nullable
-  @JsonProperty String pathToImlFile;
-  @JsonProperty List<SourceFolder> sourceFolders = Lists.newArrayList();
-  @JsonProperty Boolean isRootModule = false;
+  @JsonProperty
+  Path pathToImlFile;
+
+  @JsonProperty
+  List<SourceFolder> sourceFolders = Lists.newArrayList();
+
+  @JsonProperty
+  boolean isRootModule = false;
 
   /**
    * &lt;excludeFolder> elements must be sorted alphabetically in an .iml file.
    */
-  @JsonProperty SortedSet<SourceFolder> excludeFolders = Sets.newTreeSet(ALPHABETIZER);
+  @JsonProperty
+  SortedSet<SourceFolder> excludeFolders = Sets.newTreeSet(ALPHABETIZER);
+
   @Nullable
-  @JsonProperty List<DependentModule> dependencies;
+  @JsonProperty
+  List<DependentModule> dependencies;
 
   // ANDROID_BINARY / ANDROID_LIBRARY
   @Nullable
-  @JsonProperty Boolean hasAndroidFacet;
+  @JsonProperty
+  Boolean hasAndroidFacet;
+
   @Nullable
-  @JsonProperty Boolean isAndroidLibraryProject;
+  @JsonProperty
+  Boolean isAndroidLibraryProject;
+
   @Nullable
-  @JsonProperty String proguardConfigPath;
+  @JsonProperty
+  Path proguardConfigPath;
+
   @Nullable
-  @JsonProperty String resFolder;
+  @JsonProperty
+  String resFolder;
+
   @Nullable
-  @JsonProperty String keystorePath;
+  @JsonProperty
+  Path keystorePath;
+
   @Nullable
-  @JsonProperty String androidManifest;
+  @JsonProperty
+  Path androidManifest;
+
   @Nullable
-  @JsonProperty String nativeLibs;
+  @JsonProperty
+  Path nativeLibs;
+
   @Nullable
-  @JsonProperty Boolean isIntelliJPlugin;
+  @JsonProperty
+  Boolean isIntelliJPlugin;
 
   // Annotation processing
   @Nullable
-  @JsonProperty String annotationGenPath;
+  @JsonProperty
+  Path annotationGenPath;
+
   @Nullable
-  @JsonProperty Boolean annotationGenIsForTest;
+  @JsonProperty
+  Boolean annotationGenIsForTest;
 
   Module(BuildRule srcRule, BuildTarget target) {
     this.srcRule = srcRule;
     this.target = target;
   }
 
-  String getModuleDirectoryPathWithSlash() {
-    int lastSlashIndex = Preconditions.checkNotNull(pathToImlFile).lastIndexOf('/');
-    if (lastSlashIndex < 0) {
-      return "";
-    } else {
-      return pathToImlFile.substring(0, lastSlashIndex + 1);
-    }
+  Path getModuleDirectoryPath() {
+    return MorePaths.getParentOrEmpty(Preconditions.checkNotNull(pathToImlFile));
   }
 
   boolean isAndroidModule() {
-    return hasAndroidFacet != null && hasAndroidFacet.booleanValue();
-  }
-
-  boolean isAndroidLibrary() {
-    return isAndroidLibraryProject != null && isAndroidLibraryProject.booleanValue();
+    return hasAndroidFacet != null && hasAndroidFacet;
   }
 
   boolean isIntelliJPlugin() {
-    return isIntelliJPlugin != null && isIntelliJPlugin.booleanValue();
+    return isIntelliJPlugin != null && isIntelliJPlugin;
   }
 }

@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
@@ -47,6 +48,7 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class JavaSourceJarTest {
 
@@ -59,6 +61,7 @@ public class JavaSourceJarTest {
 
     Path output = rule.getPathToOutputFile();
 
+    assertNotNull(output);
     assertTrue(output.toString().endsWith(Javac.SRC_ZIP));
   }
 
@@ -71,8 +74,9 @@ public class JavaSourceJarTest {
         BuildTargetFactory.newInstance("//cheese:cake"));
 
     JavaPackageFinder finderStub = createNiceMock(JavaPackageFinder.class);
-    expect(finderStub.findJavaPackageFolderForPath((String) anyObject())).andStubReturn("cheese");
-    expect(finderStub.findJavaPackageForPath((String) anyObject())).andStubReturn("cheese");
+    expect(finderStub.findJavaPackageFolder((Path) anyObject()))
+        .andStubReturn(Paths.get("cheese"));
+    expect(finderStub.findJavaPackage((Path) anyObject())).andStubReturn("cheese");
 
     // No need to verify. It's a stub. I don't care about the interactions.
     EasyMock.replay(finderStub);

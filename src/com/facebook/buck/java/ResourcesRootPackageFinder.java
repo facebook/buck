@@ -16,6 +16,9 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.model.BuildTarget;
+
 import java.nio.file.Path;
 
 public class ResourcesRootPackageFinder implements JavaPackageFinder {
@@ -29,19 +32,24 @@ public class ResourcesRootPackageFinder implements JavaPackageFinder {
   }
 
   @Override
-  public String findJavaPackageFolderForPath(String pathRelativeToProjectRoot) {
-    if (pathRelativeToProjectRoot.startsWith(resourcesRoot.toString())) {
-      int lastSlashIndex = pathRelativeToProjectRoot.lastIndexOf('/');
-      return pathRelativeToProjectRoot.substring(
-          resourcesRoot.toString().length() + 1,
-          lastSlashIndex + 1);
+  public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
+    if (pathRelativeToProjectRoot.startsWith(resourcesRoot)) {
+      return MorePaths.getParentOrEmpty(
+          MorePaths.relativize(
+              resourcesRoot,
+              pathRelativeToProjectRoot));
     }
-    return fallbackFinder.findJavaPackageFolderForPath(pathRelativeToProjectRoot);
+    return fallbackFinder.findJavaPackageFolder(pathRelativeToProjectRoot);
   }
 
   @Override
-  public String findJavaPackageForPath(String pathRelativeToProjectRoot) {
-    String folder = findJavaPackageFolderForPath(pathRelativeToProjectRoot);
+  public String findJavaPackage(Path pathRelativeToProjectRoot) {
+    Path folder = findJavaPackageFolder(pathRelativeToProjectRoot);
     return DefaultJavaPackageFinder.findJavaPackageWithPackageFolder(folder);
+  }
+
+  @Override
+  public String findJavaPackage(BuildTarget buildTarget) {
+    return fallbackFinder.findJavaPackage(buildTarget);
   }
 }

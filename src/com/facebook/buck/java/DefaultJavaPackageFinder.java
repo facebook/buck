@@ -16,14 +16,17 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Deque;
 
 public class DefaultJavaPackageFinder implements JavaPackageFinder {
@@ -42,40 +45,33 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
 
   private final ImmutableSet<String> pathElements;
 
-  private DefaultJavaPackageFinder(ImmutableSortedSet<String> pathsFromRoot,
+  private DefaultJavaPackageFinder(
+      ImmutableSortedSet<String> pathsFromRoot,
       ImmutableSet<String> pathElements) {
     this.pathsFromRoot = pathsFromRoot;
     this.pathElements = pathElements;
   }
 
   @Override
-  public String findJavaPackageFolderForPath(String pathRelativeToProjectRoot) {
+  public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
     for (String pathFromRoot : pathsFromRoot) {
       if (pathRelativeToProjectRoot.startsWith(pathFromRoot)) {
-        int lastSlashIndex = pathRelativeToProjectRoot.lastIndexOf('/');
-        Preconditions.checkState(lastSlashIndex >= 0,
-            "Because pathFromRoot must end with a slash and is a prefix of " +
-            "pathRelativeToProjectRoot, pathRelativeToProjectRoot must contain a slash.");
-        return pathRelativeToProjectRoot.substring(pathFromRoot.length(), lastSlashIndex + 1);
+        return MorePaths.getParentOrEmpty(
+            MorePaths.relativize(Paths.get(pathFromRoot), pathRelativeToProjectRoot));
       }
     }
 
-    File directory;
-    if (pathRelativeToProjectRoot.endsWith("/")) {
-      directory = new File(pathRelativeToProjectRoot);
-    } else {
-      directory = new File(pathRelativeToProjectRoot).getParentFile();
-    }
+    Path directory = pathRelativeToProjectRoot.getParent();
     Deque<String> parts = Lists.newLinkedList();
-    while (directory != null && !pathElements.contains(directory.getName())) {
-      parts.addFirst(directory.getName());
-      directory = directory.getParentFile();
+    while (directory != null && !pathElements.contains(directory.getFileName().toString())) {
+      parts.addFirst(directory.getFileName().toString());
+      directory = directory.getParent();
     }
 
     if (!parts.isEmpty()) {
-      return Joiner.on('/').join(parts) + '/';
+      return Paths.get(Joiner.on(File.separatorChar).join(parts));
     } else {
-      return "";
+      return Paths.get("");
     }
   }
 
@@ -117,17 +113,17 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
   }
 
   @Override
-  public String findJavaPackageForPath(String pathRelativeToProjectRoot) {
-    String folder = findJavaPackageFolderForPath(pathRelativeToProjectRoot);
+  public String findJavaPackage(Path pathRelativeToProjectRoot) {
+    Path folder = findJavaPackageFolder(pathRelativeToProjectRoot);
     return findJavaPackageWithPackageFolder(folder);
   }
 
-  public static String findJavaPackageWithPackageFolder(String packageFolder) {
-    if (!packageFolder.isEmpty()) {
-      // Strip the trailing slash and replace the remaining slashes with dots.
-      return packageFolder.substring(0, packageFolder.length() - 1).replace('/', '.');
-    } else {
-      return "";
-    }
+  @Override
+  public String findJavaPackage(BuildTarget buildTarget) {
+    return findJavaPackage(buildTarget.getBasePath().resolve("removed"));
+  }
+
+  public static String findJavaPackageWithPackageFolder(Path packageFolder) {
+    return packageFolder.toString().replace(File.separatorChar, '.');
   }
 }

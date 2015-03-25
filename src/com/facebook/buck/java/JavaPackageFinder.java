@@ -16,6 +16,10 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.model.BuildTarget;
+
+import java.nio.file.Path;
+
 public interface JavaPackageFinder {
 
   /**
@@ -27,7 +31,9 @@ public interface JavaPackageFinder {
    * @return a path that always ends with a slash, or the empty string, indicating the root
    *     directory.
    */
-  public String findJavaPackageFolderForPath(String pathRelativeToProjectRoot);
+  Path findJavaPackageFolder(Path pathRelativeToProjectRoot);
 
-  public String findJavaPackageForPath(String pathRelativeToProjectRoot);
+  String findJavaPackage(Path pathRelativeToProjectRoot);
+
+  String findJavaPackage(BuildTarget buildTarget);
 }

@@ -315,17 +315,23 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     eventBus.register(listener);
     BuildContext buildContext = FakeBuildContext.newBuilder(new FakeProjectFilesystem())
         .setActionGraph(new ActionGraph(new MutableDirectedGraph<BuildRule>()))
-        .setJavaPackageFinder(new JavaPackageFinder() {
-          @Override
-          public String findJavaPackageFolderForPath(String pathRelativeToProjectRoot) {
-            return null;
-          }
+        .setJavaPackageFinder(
+            new JavaPackageFinder() {
+              @Override
+              public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
+                return null;
+              }
 
-          @Override
-          public String findJavaPackageForPath(String pathRelativeToProjectRoot) {
-            return null;
-          }
-        })
+              @Override
+              public String findJavaPackage(Path pathRelativeToProjectRoot) {
+                return null;
+              }
+
+              @Override
+              public String findJavaPackage(BuildTarget buildTarget) {
+                return null;
+              }
+            })
         .setArtifactCache(artifactCache)
         .setEventBus(eventBus)
         .build();

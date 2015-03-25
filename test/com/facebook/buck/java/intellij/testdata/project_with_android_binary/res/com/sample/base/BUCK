@@ -1,0 +1,15 @@
+android_resource(
+  name = 'base',
+  res = 'res',
+  assets = 'buck-assets',
+  package = 'com.sample',
+  visibility = [
+    'PUBLIC',
+  ],
+  deps = [
+  ],
+)
+
+project_config(
+  src_target = ':base',
+)

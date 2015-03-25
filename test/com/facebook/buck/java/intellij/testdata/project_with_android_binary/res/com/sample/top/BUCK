@@ -1,0 +1,15 @@
+android_resource(
+  name = 'top',
+  res = 'res',
+  package = 'com.sample',
+  visibility = [
+    'PUBLIC',
+  ],
+  deps = [
+    '//res/com/sample/base:base',
+  ],
+)
+
+project_config(
+  src_target = ':top',
+)

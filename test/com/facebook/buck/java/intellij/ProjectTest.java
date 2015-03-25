@@ -223,11 +223,11 @@ public class ProjectTest {
 
   @Test
   public void testGenerateRelativeGenPath() {
-    String basePathOfModuleWithSlash = "android_res/com/facebook/gifts/";
+    Path basePathOfModule = Paths.get("android_res/com/facebook/gifts/");
     Path expectedRelativePathToGen =
-        Paths.get("/../../../../buck-out/android/android_res/com/facebook/gifts/gen");
+        Paths.get("../../../../buck-out/android/android_res/com/facebook/gifts/gen");
     assertEquals(
-        expectedRelativePathToGen, Project.generateRelativeGenPath(basePathOfModuleWithSlash));
+        expectedRelativePathToGen, Project.generateRelativeGenPath(basePathOfModule));
   }
 
   /**
@@ -237,8 +237,12 @@ public class ProjectTest {
   @Test
   public void testProject() throws IOException {
     JavaPackageFinder javaPackageFinder = EasyMock.createMock(JavaPackageFinder.class);
-    EasyMock.expect(javaPackageFinder.findJavaPackageForPath("foo/module_foo.iml")).andReturn("");
-    EasyMock.expect(javaPackageFinder.findJavaPackageForPath("bar/module_bar.iml")).andReturn("");
+    EasyMock
+        .expect(javaPackageFinder.findJavaPackage(Paths.get("foo/module_foo.iml")))
+        .andReturn("");
+    EasyMock
+        .expect(javaPackageFinder.findJavaPackage(Paths.get("bar/module_bar.iml")))
+        .andReturn("");
     EasyMock.replay(javaPackageFinder);
 
     ProjectWithModules projectWithModules = createActionGraphForTesting(javaPackageFinder);
@@ -256,7 +260,8 @@ public class ProjectTest {
     assertSame(getRuleById("//java/src/com/facebook/exportlib:exportlib", actionGraph),
         javaLibraryModule.srcRule);
     assertEquals("module_java_src_com_facebook_exportlib", javaLibraryModule.name);
-    assertEquals("java/src/com/facebook/exportlib/module_java_src_com_facebook_exportlib.iml",
+    assertEquals(
+        Paths.get("java/src/com/facebook/exportlib/module_java_src_com_facebook_exportlib.iml"),
         javaLibraryModule.pathToImlFile);
     assertListEquals(
         ImmutableList.of(SourceFolder.SRC),
@@ -280,7 +285,8 @@ public class ProjectTest {
     assertSame(getRuleById("//java/src/com/facebook/base:base", actionGraph),
         androidLibraryModule.srcRule);
     assertEquals("module_java_src_com_facebook_base", androidLibraryModule.name);
-    assertEquals("java/src/com/facebook/base/module_java_src_com_facebook_base.iml",
+    assertEquals(
+        Paths.get("java/src/com/facebook/base/module_java_src_com_facebook_base.iml"),
         androidLibraryModule.pathToImlFile);
     assertListEquals(
         ImmutableList.of(
@@ -326,14 +332,14 @@ public class ProjectTest {
     Module androidBinaryModuleNoDx = modules.get(3);
     assertSame(getRuleById("//foo:app", actionGraph), androidBinaryModuleNoDx.srcRule);
     assertEquals("module_foo", androidBinaryModuleNoDx.name);
-    assertEquals("foo/module_foo.iml", androidBinaryModuleNoDx.pathToImlFile);
+    assertEquals(Paths.get("foo/module_foo.iml"), androidBinaryModuleNoDx.pathToImlFile);
 
     assertListEquals(ImmutableList.of(SourceFolder.GEN), androidBinaryModuleNoDx.sourceFolders);
     assertEquals(Boolean.TRUE, androidBinaryModuleNoDx.hasAndroidFacet);
     assertEquals(Boolean.FALSE, androidBinaryModuleNoDx.isAndroidLibraryProject);
     assertEquals(null, androidBinaryModuleNoDx.proguardConfigPath);
     assertEquals(null, androidBinaryModuleNoDx.resFolder);
-    assertEquals("../keystore/debug.keystore", androidBinaryModuleNoDx.keystorePath);
+    assertEquals(Paths.get("../keystore/debug.keystore"), androidBinaryModuleNoDx.keystorePath);
 
     // Check the dependencies.
     DependentModule grandchildAsProvidedDep = DependentModule.newModule(
@@ -358,14 +364,16 @@ public class ProjectTest {
     Module androidBinaryModuleEmptyNoDx = modules.get(4);
     assertSame(getRuleById("//bar:app", actionGraph), androidBinaryModuleEmptyNoDx.srcRule);
     assertEquals("module_bar", androidBinaryModuleEmptyNoDx.name);
-    assertEquals("bar/module_bar.iml", androidBinaryModuleEmptyNoDx.pathToImlFile);
+    assertEquals(Paths.get("bar/module_bar.iml"), androidBinaryModuleEmptyNoDx.pathToImlFile);
     assertListEquals(
         ImmutableList.of(SourceFolder.GEN), androidBinaryModuleEmptyNoDx.sourceFolders);
     assertEquals(Boolean.TRUE, androidBinaryModuleEmptyNoDx.hasAndroidFacet);
     assertEquals(Boolean.FALSE, androidBinaryModuleEmptyNoDx.isAndroidLibraryProject);
     assertEquals(null, androidBinaryModuleEmptyNoDx.proguardConfigPath);
     assertEquals(null, androidBinaryModuleEmptyNoDx.resFolder);
-    assertEquals("../keystore/debug.keystore", androidBinaryModuleEmptyNoDx.keystorePath);
+    assertEquals(
+        Paths.get("../keystore/debug.keystore"),
+        androidBinaryModuleEmptyNoDx.keystorePath);
 
     // Check the dependencies.
     DependentModule guavaAsCompiledDep = DependentModule.newLibrary(
@@ -590,12 +598,12 @@ public class ProjectTest {
   public void testCreatePathToProjectDotPropertiesFileForModule() {
     Module rootModule = new Module(null /* buildRule */,
         BuildTargetFactory.newInstance("//:project_config"));
-    rootModule.pathToImlFile = "fb4a.iml";
+    rootModule.pathToImlFile = Paths.get("fb4a.iml");
     assertEquals("project.properties", Project.createPathToProjectDotPropertiesFileFor(rootModule));
 
     Module someModule = new Module(null /* buildRule */,
         BuildTargetFactory.newInstance("//java/com/example/base:project_config"));
-    someModule.pathToImlFile = "java/com/example/base/base.iml";
+    someModule.pathToImlFile = Paths.get("java/com/example/base/base.iml");
     assertEquals("java/com/example/base/project.properties",
         Project.createPathToProjectDotPropertiesFileFor(someModule));
   }
@@ -647,8 +655,11 @@ public class ProjectTest {
 
     // Verify that the correct source folders are created.
     JavaPackageFinder javaPackageFinder = EasyMock.createMock(JavaPackageFinder.class);
-    EasyMock.expect(javaPackageFinder.findJavaPackageForPath(
-        "java/com/example/base/module_java_com_example_base.iml")).andReturn("com.example.base");
+    EasyMock
+        .expect(
+            javaPackageFinder.findJavaPackage(
+                Paths.get("java/com/example/base/module_java_com_example_base.iml")))
+        .andReturn("com.example.base");
     EasyMock.replay(javaPackageFinder);
     ProjectWithModules projectWithModules2 = getModulesForActionGraph(
         ruleResolver2,
@@ -804,7 +815,7 @@ public class ProjectTest {
             DependentModule.newInheritedJdk()),
         androidLibraryModule.dependencies);
     assertEquals(
-        String.format("../../../../%s", ndkLibrary.getLibraryPath()),
+        Paths.get(String.format("../../../../%s", ndkLibrary.getLibraryPath())),
         androidLibraryModule.nativeLibs);
   }
 
