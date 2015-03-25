@@ -34,9 +34,11 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -44,6 +46,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import org.immutables.value.Value;
@@ -293,12 +296,19 @@ public class CxxLibraryDescription implements
     Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
         params.getBuildTarget(),
         cxxPlatform);
+    ImmutableList.Builder<String> extraCxxLdFlagsBuilder = ImmutableList.builder();
+    extraCxxLdFlagsBuilder.addAll(
+        MoreIterables.zipAndConcat(
+            Iterables.cycle("-F"),
+            Iterables.transform(frameworkSearchPaths, Functions.toStringFunction())));
+    ImmutableList<String> extraCxxLdFlags = extraCxxLdFlagsBuilder.build();
+
     CxxLink sharedLibraryBuildRule =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             cxxPlatform,
             params,
             pathResolver,
-            /* extraCxxLdFlags */ ImmutableList.<String>of(),
+            extraCxxLdFlags,
             /* extraLdFlags */ linkerFlags,
             sharedTarget,
             Linker.LinkType.SHARED,

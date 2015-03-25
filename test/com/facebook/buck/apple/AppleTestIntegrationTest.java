@@ -107,6 +107,39 @@ public class AppleTestIntegrationTest {
     assertTrue(Files.isRegularFile(infoPlistPath));
   }
 
+  @Test
+  public void testSetsFrameworkSearchPathAndLinksCorrectly() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_framework_search_path", tmp);
+    workspace.setUp();
+
+    BuildTarget buildTarget = BuildTarget.builder("//", "foo")
+        .addFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"))
+        .build();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        buildTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+
+    BuildTarget appleTestBundleFlavoredBuildTarget = ImmutableBuildTarget.copyOf(buildTarget)
+        .withFlavors(
+            ImmutableFlavor.of("iphonesimulator-x86_64"),
+            ImmutableFlavor.of("apple-test-bundle"));
+    Path outputPath = projectRoot.resolve(
+        BuildTargets.getGenPath(
+            appleTestBundleFlavoredBuildTarget,
+            "%s"));
+    Path bundlePath = outputPath.resolve("foo.xctest");
+    Path testBinaryPath = bundlePath.resolve("foo");
+
+    assertTrue(Files.isDirectory(bundlePath));
+    assertTrue(Files.isRegularFile(testBinaryPath));
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {
