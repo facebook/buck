@@ -1,0 +1,2 @@
+int bar() {}
+int main() {}

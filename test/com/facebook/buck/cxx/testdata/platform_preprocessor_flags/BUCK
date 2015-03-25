@@ -1,0 +1,57 @@
+TARGETS = {
+  'linux': ['--unresolved-symbols=ignore-all'],
+  'macos': ['-flat_namespace', '-undefined', 'suppress'],
+}
+
+cxx_binary(
+  name = 'binary_matches_default_exactly',
+  srcs = [
+    'bin.cpp',
+  ],
+  platform_preprocessor_flags = [
+    ('nomatch', ['--bad-flag']),
+    ('default', ['-DTEST']),
+  ],
+)
+
+cxx_binary(
+  name = 'binary_matches_default',
+  srcs = [
+    'bin.cpp',
+  ],
+  platform_preprocessor_flags = [
+    ('nomatch', ['--bad-flag']),
+    ('def.*', ['-DTEST']),
+  ],
+)
+
+cxx_binary(
+  name = 'binary_no_match',
+  srcs = [
+    'bin.cpp',
+  ],
+  platform_preprocessor_flags = [
+    ('nomatch', ['--bad-flag']),
+  ],
+)
+
+cxx_binary(
+  name = 'binary_with_library_matches_default',
+  srcs = [
+    'bin.cpp',
+  ],
+  deps = [
+    ':library_matches_default',
+  ],
+)
+
+cxx_library(
+  name = 'library_matches_default',
+  srcs = [
+    'lib.cpp',
+  ],
+  exported_platform_preprocessor_flags = [
+    ('nomatch', ['--bad-flag']),
+    ('def.*', ['-DTEST']),
+  ],
+)

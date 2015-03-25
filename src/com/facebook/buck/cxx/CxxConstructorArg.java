@@ -33,15 +33,18 @@ import java.nio.file.Path;
 
 @SuppressFieldNotInitialized
 public class CxxConstructorArg implements HasTests {
+
   public Optional<Either<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>>
       srcs;
   public Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>> headers;
   public Optional<ImmutableList<SourcePath>> prefixHeaders;
   public Optional<ImmutableList<String>> compilerFlags;
+  public Optional<ImmutableList<Pair<String, ImmutableList<String>>>> platformCompilerFlags;
   public Optional<ImmutableList<String>> preprocessorFlags;
+  public Optional<ImmutableList<Pair<String, ImmutableList<String>>>> platformPreprocessorFlags;
+  public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags;
   public Optional<ImmutableList<String>> linkerFlags;
   public Optional<ImmutableList<Pair<String, ImmutableList<String>>>> platformLinkerFlags;
-  public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags;
   public Optional<ImmutableList<Path>> frameworkSearchPaths;
   public Optional<ImmutableList<SourcePath>> lexSrcs;
   public Optional<ImmutableList<SourcePath>> yaccSrcs;
@@ -53,4 +56,5 @@ public class CxxConstructorArg implements HasTests {
   public ImmutableSortedSet<BuildTarget> getTests() {
     return tests.get();
   }
+
 }

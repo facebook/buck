@@ -136,9 +136,11 @@ public class CxxPythonExtensionDescription implements
     CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
         params,
         cxxPlatform,
-        CxxPreprocessorFlags.fromArgs(
+        CxxFlags.getLanguageFlags(
             args.preprocessorFlags,
-            args.langPreprocessorFlags),
+            args.platformPreprocessorFlags,
+            args.langPreprocessorFlags,
+            cxxPlatform.getFlavor()),
         args.prefixHeaders.get(),
         ImmutableList.of(headerSymlinkTree),
         ImmutableList.<Path>of());
@@ -157,7 +159,10 @@ public class CxxPythonExtensionDescription implements
             pathResolver,
             cxxPlatform,
             cxxPreprocessorInput,
-            args.compilerFlags.or(ImmutableList.<String>of()),
+            CxxFlags.getFlags(
+                args.compilerFlags,
+                args.platformCompilerFlags,
+                cxxPlatform.getFlavor()),
             CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE,
             allSources,
             CxxSourceRuleFactory.PicType.PIC);
@@ -170,13 +175,10 @@ public class CxxPythonExtensionDescription implements
         params,
         pathResolver,
         /* extraCxxLdFlags */ ImmutableList.<String>of(),
-        /* extraLdFlags */ ImmutableList.<String>builder()
-            .addAll(args.linkerFlags.or(ImmutableList.<String>of()))
-            .addAll(
-                CxxDescriptionEnhancer.getPlatformFlags(
-                    args.platformLinkerFlags.get(),
-                    cxxPlatform.getFlavor().toString()))
-            .build(),
+        /* extraLdFlags */ CxxFlags.getFlags(
+            args.linkerFlags,
+            args.platformLinkerFlags,
+            cxxPlatform.getFlavor()),
         getExtensionTarget(params.getBuildTarget(), cxxPlatform.getFlavor()),
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
@@ -184,7 +186,6 @@ public class CxxPythonExtensionDescription implements
         picObjects,
         Linker.LinkableDepType.SHARED,
         params.getDeps());
-
   }
 
   @Override

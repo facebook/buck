@@ -696,9 +696,11 @@ public class CxxDescriptionEnhancer {
     CxxPreprocessorInput cxxPreprocessorInput = combineCxxPreprocessorInput(
         params,
         cxxPlatform,
-        CxxPreprocessorFlags.fromArgs(
+        CxxFlags.getLanguageFlags(
             args.preprocessorFlags,
-            args.langPreprocessorFlags),
+            args.platformPreprocessorFlags,
+            args.langPreprocessorFlags,
+            cxxPlatform.getFlavor()),
         args.prefixHeaders.get(),
         ImmutableList.of(headerSymlinkTree),
         args.frameworkSearchPaths.get());
@@ -719,7 +721,10 @@ public class CxxDescriptionEnhancer {
             sourcePathResolver,
             cxxPlatform,
             cxxPreprocessorInput,
-            args.compilerFlags.or(ImmutableList.<String>of()),
+            CxxFlags.getFlags(
+                args.compilerFlags,
+                args.platformCompilerFlags,
+                cxxPlatform.getFlavor()),
             compileStrategy,
             sources,
             CxxSourceRuleFactory.PicType.PDC);
@@ -732,13 +737,10 @@ public class CxxDescriptionEnhancer {
         params,
         sourcePathResolver,
         /* extraCxxLdFlags */ ImmutableList.<String>of(),
-        /* extraLdFlags */ ImmutableList.<String>builder()
-            .addAll(args.linkerFlags.or(ImmutableList.<String>of()))
-            .addAll(
-                CxxDescriptionEnhancer.getPlatformFlags(
-                    args.platformLinkerFlags.get(),
-                    cxxPlatform.getFlavor().toString()))
-            .build(),
+        /* extraLdFlags */ CxxFlags.getFlags(
+            args.linkerFlags,
+            args.platformLinkerFlags,
+            cxxPlatform.getFlavor()),
         createCxxLinkTarget(params.getBuildTarget()),
         Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),

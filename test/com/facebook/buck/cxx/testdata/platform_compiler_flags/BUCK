@@ -1,0 +1,52 @@
+cxx_binary(
+  name = 'binary_matches_default_exactly',
+  srcs = [
+    'bin.cpp',
+  ],
+  platform_compiler_flags = [
+    ('nomatch', ['--bad-flag']),
+    ('default', ['-w']),
+  ],
+)
+
+cxx_binary(
+  name = 'binary_matches_default',
+  srcs = [
+    'bin.cpp',
+  ],
+  platform_compiler_flags = [
+    ('nomatch', ['--bad-flag']),
+    ('def.*', ['-w']),
+  ],
+)
+
+cxx_binary(
+  name = 'binary_no_match',
+  srcs = [
+    'bin.cpp',
+  ],
+  platform_compiler_flags = [
+    ('nomatch', ['--bad-flag']),
+  ],
+)
+
+cxx_binary(
+  name = 'binary_with_library_matches_default',
+  srcs = [
+    'main.cpp',
+  ],
+  deps = [
+    ':library_matches_default',
+  ],
+)
+
+cxx_library(
+  name = 'library_matches_default',
+  srcs = [
+    'lib.cpp',
+  ],
+  platform_compiler_flags = [
+    ('nomatch', ['--bad-flag']),
+    ('def.*', ['-w']),
+  ],
+)

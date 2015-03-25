@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.everyItem;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.model.Pair;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -30,24 +31,29 @@ import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
 
 /**
- * Tests for {@link CxxPreprocessorFlags}.
+ * Tests for {@link CxxConstructorArg}.
  */
-public class CxxPreprocessorFlagsTest {
+public class CxxFlagsTest {
+
   @Test
-  public void fromNotPresentToMultimapIsEmpty() {
+  public void getLanguageFlagsMultimapIsEmpty() {
     assertThat(
-        CxxPreprocessorFlags.fromArgs(
+        CxxFlags.getLanguageFlags(
             Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableMap<CxxSource.Type, ImmutableList<String>>>absent()).entries(),
+            Optional.<ImmutableList<Pair<String, ImmutableList<String>>>>absent(),
+            Optional.<ImmutableMap<CxxSource.Type, ImmutableList<String>>>absent(),
+            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()).entries(),
         empty());
   }
 
   @Test
-  public void fromListToMultimapContainsAllSourceTypes() {
+  public void getLanguageFlagsMultimapContainsAllSourceTypes() {
     ImmutableMultimap<CxxSource.Type, String> flags =
-        CxxPreprocessorFlags.fromArgs(
+        CxxFlags.getLanguageFlags(
             Optional.of(ImmutableList.of("flag")),
-            Optional.<ImmutableMap<CxxSource.Type, ImmutableList<String>>>absent());
+            Optional.<ImmutableList<Pair<String, ImmutableList<String>>>>absent(),
+            Optional.<ImmutableMap<CxxSource.Type, ImmutableList<String>>>absent(),
+            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
     assertThat(
         ImmutableSet.copyOf(CxxSource.Type.values()),
         equalTo(flags.keySet()));
@@ -55,14 +61,17 @@ public class CxxPreprocessorFlagsTest {
   }
 
   @Test
-  public void fromMapToMultimapContainsSomeSourceTypes() {
+  public void getLanguageFlagsMultimapContainsSomeSourceTypes() {
     ImmutableMultimap<CxxSource.Type, String> flags =
-        CxxPreprocessorFlags.fromArgs(
+        CxxFlags.getLanguageFlags(
             Optional.<ImmutableList<String>>absent(),
-            Optional.of(ImmutableMap.of(
-                CxxSource.Type.C, ImmutableList.of("foo", "bar"),
-                CxxSource.Type.CXX, ImmutableList.of("baz", "blech"),
-                CxxSource.Type.OBJC, ImmutableList.of("quux", "xyzzy"))));
+            Optional.<ImmutableList<Pair<String, ImmutableList<String>>>>absent(),
+            Optional.of(
+                ImmutableMap.of(
+                    CxxSource.Type.C, ImmutableList.of("foo", "bar"),
+                    CxxSource.Type.CXX, ImmutableList.of("baz", "blech"),
+                    CxxSource.Type.OBJC, ImmutableList.of("quux", "xyzzy"))),
+            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
     assertThat(
         ImmutableSet.of(CxxSource.Type.C, CxxSource.Type.CXX, CxxSource.Type.OBJC),
         equalTo(flags.keySet()));
@@ -73,14 +82,17 @@ public class CxxPreprocessorFlagsTest {
   }
 
   @Test
-  public void fromBothToMultimapContainsConcatenatedFlags() {
+  public void getLanguageFlagsMultimapContainsConcatenatedFlags() {
     ImmutableMultimap<CxxSource.Type, String> flags =
-        CxxPreprocessorFlags.fromArgs(
+        CxxFlags.getLanguageFlags(
             Optional.of(ImmutableList.of("common")),
-            Optional.of(ImmutableMap.of(
-                CxxSource.Type.C, ImmutableList.of("foo", "bar"),
-                CxxSource.Type.CXX, ImmutableList.of("baz", "blech"),
-                CxxSource.Type.OBJC, ImmutableList.of("quux", "xyzzy"))));
+            Optional.<ImmutableList<Pair<String, ImmutableList<String>>>>absent(),
+            Optional.of(
+                ImmutableMap.of(
+                    CxxSource.Type.C, ImmutableList.of("foo", "bar"),
+                    CxxSource.Type.CXX, ImmutableList.of("baz", "blech"),
+                    CxxSource.Type.OBJC, ImmutableList.of("quux", "xyzzy"))),
+            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
     assertThat(
         ImmutableList.of("common", "foo", "bar"), equalTo(flags.get(CxxSource.Type.C)));
     assertThat(
@@ -90,4 +102,5 @@ public class CxxPreprocessorFlagsTest {
     assertThat(
         ImmutableList.of("common"), equalTo(flags.get(CxxSource.Type.OBJCXX)));
   }
+
 }

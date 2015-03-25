@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
@@ -29,6 +28,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -47,9 +47,9 @@ public class CxxLibrary extends AbstractCxxLibrary {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
-  private final ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags;
-  private final ImmutableList<String> linkerFlags;
-  private final ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags;
+  private final Function<CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
+      exportedPreprocessorFlags;
+  private final Function<CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final ImmutableList<Path> frameworkSearchPaths;
   private final boolean linkWhole;
   private final Optional<String> soname;
@@ -59,9 +59,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
-      ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      ImmutableList<String> linkerFlags,
-      ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags,
+      Function<CxxPlatform, ImmutableMultimap<CxxSource.Type, String>> exportedPreprocessorFlags,
+      Function<CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
       ImmutableList<Path> frameworkSearchPaths,
       boolean linkWhole,
       Optional<String> soname,
@@ -70,8 +69,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     this.params = params;
     this.ruleResolver = ruleResolver;
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
-    this.linkerFlags = linkerFlags;
-    this.platformLinkerFlags = platformLinkerFlags;
+    this.exportedLinkerFlags = exportedLinkerFlags;
     this.frameworkSearchPaths = frameworkSearchPaths;
     this.linkWhole = linkWhole;
     this.soname = soname;
@@ -91,7 +89,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     SymlinkTree symlinkTree = (SymlinkTree) rule;
     return CxxPreprocessorInput.builder()
         .addRules(symlinkTree.getBuildTarget())
-        .putAllPreprocessorFlags(exportedPreprocessorFlags)
+        .putAllPreprocessorFlags(exportedPreprocessorFlags.apply(cxxPlatform))
         .setIncludes(
             ImmutableCxxHeaders.builder()
                 .putAllNameToPathMap(symlinkTree.getLinks())
@@ -111,11 +109,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     // whole archive, wrap the library argument in the necessary "ld" flags.
     final BuildRule libraryRule;
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.addAll(linkerFlags);
-    linkerArgsBuilder.addAll(
-        CxxDescriptionEnhancer.getPlatformFlags(
-            platformLinkerFlags,
-            cxxPlatform.getFlavor().toString()));
+    linkerArgsBuilder.addAll(exportedLinkerFlags.apply(cxxPlatform));
     if (type == Linker.LinkableDepType.SHARED) {
       Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
           getBuildTarget(),

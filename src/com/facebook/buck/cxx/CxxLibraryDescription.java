@@ -36,6 +36,7 @@ import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -320,10 +321,16 @@ public class CxxLibraryDescription implements
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
             ImmutableList.<SourcePath>of()));
     arg.compilerFlags = Optional.of(ImmutableList.<String>of());
+    arg.platformCompilerFlags =
+        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     arg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
+    arg.exportedPlatformPreprocessorFlags =
+        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     arg.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     arg.preprocessorFlags = Optional.of(ImmutableList.<String>of());
+    arg.platformPreprocessorFlags =
+        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     arg.langPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     arg.linkerFlags = Optional.of(ImmutableList.<String>of());
@@ -396,18 +403,25 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
         ImmutableMultimap.<CxxSource.Type, String>builder()
             .putAll(
-                CxxPreprocessorFlags.fromArgs(
+                CxxFlags.getLanguageFlags(
                     args.preprocessorFlags,
-                    args.langPreprocessorFlags))
+                    args.platformPreprocessorFlags,
+                    args.langPreprocessorFlags,
+                    cxxPlatform.getFlavor()))
             .putAll(
-                CxxPreprocessorFlags.fromArgs(
+                CxxFlags.getLanguageFlags(
                     args.exportedPreprocessorFlags,
-                    args.exportedLangPreprocessorFlags))
+                    args.exportedPlatformPreprocessorFlags,
+                    args.exportedLangPreprocessorFlags,
+                    cxxPlatform.getFlavor()))
             .build(),
         args.prefixHeaders.get(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
         CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
-        args.compilerFlags.or(ImmutableList.<String>of()),
+        CxxFlags.getFlags(
+            args.compilerFlags,
+            args.platformCompilerFlags,
+            cxxPlatform.getFlavor()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
         args.frameworkSearchPaths.get(),
         compileStrategy);
@@ -431,26 +445,30 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
         ImmutableMultimap.<CxxSource.Type, String>builder()
             .putAll(
-                CxxPreprocessorFlags.fromArgs(
+                CxxFlags.getLanguageFlags(
                     args.preprocessorFlags,
-                    args.langPreprocessorFlags))
+                    args.platformPreprocessorFlags,
+                    args.langPreprocessorFlags,
+                    cxxPlatform.getFlavor()))
             .putAll(
-                CxxPreprocessorFlags.fromArgs(
+                CxxFlags.getLanguageFlags(
                     args.exportedPreprocessorFlags,
-                    args.exportedLangPreprocessorFlags))
+                    args.exportedPlatformPreprocessorFlags,
+                    args.exportedLangPreprocessorFlags,
+                    cxxPlatform.getFlavor()))
             .build(),
         args.prefixHeaders.get(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
         CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
-        args.compilerFlags.or(ImmutableList.<String>of()),
+        CxxFlags.getFlags(
+            args.compilerFlags,
+            args.platformCompilerFlags,
+            cxxPlatform.getFlavor()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
-        ImmutableList.<String>builder()
-            .addAll(args.linkerFlags.or(ImmutableList.<String>of()))
-            .addAll(
-                CxxDescriptionEnhancer.getPlatformFlags(
-                    args.platformLinkerFlags.get(),
-                    cxxPlatform.getFlavor().toString()))
-            .build(),
+        CxxFlags.getFlags(
+            args.linkerFlags,
+            args.platformLinkerFlags,
+            cxxPlatform.getFlavor()),
         args.frameworkSearchPaths.get(),
         args.soname,
         compileStrategy);
@@ -498,7 +516,7 @@ public class CxxLibraryDescription implements
   public <A extends Arg> BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args,
+      final A args,
       TypeAndPlatform typeAndPlatform) {
     Optional<Map.Entry<Flavor, Type>> type = typeAndPlatform.getType();
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = typeAndPlatform.getPlatform();
@@ -554,11 +572,25 @@ public class CxxLibraryDescription implements
         params,
         resolver,
         pathResolver,
-        CxxPreprocessorFlags.fromArgs(
-            args.exportedPreprocessorFlags,
-            args.exportedLangPreprocessorFlags),
-        args.linkerFlags.or(ImmutableList.<String>of()),
-        args.platformLinkerFlags.get(),
+        new Function<CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>() {
+          @Override
+          public ImmutableMultimap<CxxSource.Type, String> apply(CxxPlatform input) {
+            return CxxFlags.getLanguageFlags(
+                args.exportedPreprocessorFlags,
+                args.exportedPlatformPreprocessorFlags,
+                args.exportedLangPreprocessorFlags,
+                input.getFlavor());
+          }
+        },
+        new Function<CxxPlatform, ImmutableList<String>>() {
+          @Override
+          public ImmutableList<String> apply(CxxPlatform input) {
+            return CxxFlags.getFlags(
+                args.linkerFlags,
+                args.platformLinkerFlags,
+                input.getFlavor());
+          }
+        },
         args.frameworkSearchPaths.get(),
         args.linkWhole.or(false),
         args.soname,
@@ -588,6 +620,8 @@ public class CxxLibraryDescription implements
     public Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>>
         exportedHeaders;
     public Optional<ImmutableList<String>> exportedPreprocessorFlags;
+    public Optional<ImmutableList<Pair<String, ImmutableList<String>>>>
+        exportedPlatformPreprocessorFlags;
     public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>>
         exportedLangPreprocessorFlags;
     public Optional<String> soname;

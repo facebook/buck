@@ -515,7 +515,9 @@ public class CxxBinaryIntegrationTest {
   private void platformLinkerFlags(ProjectWorkspace workspace, String target) throws IOException {
     workspace.runBuckBuild("//:binary_matches_default_exactly_" + target).assertSuccess();
     workspace.runBuckBuild("//:binary_matches_default_" + target).assertSuccess();
-    workspace.runBuckBuild("//:binary_no_match_" + target).assertFailure("unresolved");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary_no_match_" + target);
+    result.assertFailure();
+    assertThat(result.getStderr(), Matchers.containsString("reference"));
     workspace.runBuckBuild("//:binary_with_library_matches_default_" + target).assertSuccess();
     workspace.runBuckBuild("//:binary_with_prebuilt_library_matches_default_" + target)
         .assertSuccess();
@@ -570,6 +572,37 @@ public class CxxBinaryIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:broken-bin");
     result.assertFailure();
+  }
+
+  @Test
+  public void platformPreprocessorFlags() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "platform_preprocessor_flags", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:binary_matches_default_exactly").assertSuccess();
+    workspace.runBuckBuild("//:binary_matches_default").assertSuccess();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
+    result.assertFailure();
+    assertThat(result.getStderr(), Matchers.containsString("#error"));
+    workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
+  }
+
+  @Test
+  public void platformCompilerFlags() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "platform_compiler_flags", tmp);
+    workspace.setUp();
+    workspace.writeContentsToPath("[cxx]\n  cxxflags = -Wall -Werror", ".buckconfig");
+    workspace.runBuckBuild("//:binary_matches_default_exactly").assertSuccess();
+    workspace.runBuckBuild("//:binary_matches_default").assertSuccess();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        Matchers.allOf(
+            Matchers.containsString("non-void"),
+            Matchers.containsString("function")));
+    workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
   }
 
 }

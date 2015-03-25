@@ -372,6 +372,8 @@ public class AppleDescriptions {
             headerMap));
     output.prefixHeaders = Optional.of(ImmutableList.copyOf(arg.prefixHeader.asSet()));
     output.compilerFlags = arg.compilerFlags;
+    output.platformCompilerFlags =
+        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     output.linkerFlags = Optional.of(
         FluentIterable
             .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
@@ -380,6 +382,8 @@ public class AppleDescriptions {
     output.platformLinkerFlags = Optional.of(
         ImmutableList.<Pair<String, ImmutableList<String>>>of());
     output.preprocessorFlags = arg.preprocessorFlags;
+    output.platformPreprocessorFlags =
+        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     output.langPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     if (appleSdkPaths.isPresent()) {
@@ -437,6 +441,8 @@ public class AppleDescriptions {
                 resolver,
                 arg.exportedHeaders.get())));
     output.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
+    output.exportedPlatformPreprocessorFlags =
+        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     output.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     output.soname = Optional.absent();
