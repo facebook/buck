@@ -100,7 +100,7 @@ public class AndroidBinary extends AbstractBuildRule implements
    * secondary-N.dex.jar files for secondary dexes.
    */
   static final String SMART_DEX_SECONDARY_DEX_SUBDIR =
-    "assets/smart-dex-secondary-program-dex-jars";
+      "assets/smart-dex-secondary-program-dex-jars";
   static final String SECONDARY_DEX_SUBDIR = "assets/secondary-program-dex-jars";
 
   private final Optional<Path> proguardJarOverride;
@@ -873,7 +873,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     steps.add(smartDexingCommand);
 
     if (isReorderingClasses()) {
-      IntraDexReorderStep intraDexReorderStep = new IntraDexReorderStep(
+      IntraDexReorder intraDexReorder = new IntraDexReorder(
         dexReorderToolFile.get(),
         dexReorderDataDumpFile.get(),
         getBuildTarget(),
@@ -882,7 +882,7 @@ public class AndroidBinary extends AbstractBuildRule implements
         secondaryOutputToInputs,
         SMART_DEX_SECONDARY_DEX_SUBDIR,
         SECONDARY_DEX_SUBDIR);
-      steps.add(intraDexReorderStep);
+      steps.addAll(intraDexReorder.generateReorderCommands());
     }
   }
 

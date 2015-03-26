@@ -15,36 +15,25 @@
  */
 package com.facebook.buck.android;
 
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
-
-import com.facebook.buck.util.concurrent.MoreExecutors;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.zip.ZipStep;
-import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.zip.UnzipStep;
-import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.log.CommandThreadFactory;
-import com.facebook.buck.step.DefaultStepRunner;
-import com.facebook.buck.step.StepFailedException;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.shell.DefaultShellStep;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.zip.UnzipStep;
+import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-import java.util.concurrent.ExecutorService;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
-import java.util.List;
 
 /**
  * Runs a user supplied reordering tool on all dexes.
@@ -52,7 +41,7 @@ import java.util.List;
  * dexes get unzipped to a temp directory first and re-zipped
  * to the output location after the reorder tool is run.
  */
-public class IntraDexReorderStep implements Step {
+public class IntraDexReorder {
 
   private SourcePath reorderTool;
   private SourcePath reorderDataFile;
@@ -63,7 +52,7 @@ public class IntraDexReorderStep implements Step {
   private String inputSubDir;
   private String outputSubDir;
 
-  IntraDexReorderStep(
+  IntraDexReorder(
       SourcePath reorderTool,
       SourcePath reorderDataFile,
       BuildTarget buildTarget,
@@ -82,29 +71,7 @@ public class IntraDexReorderStep implements Step {
     this.outputSubDir = outputSubDir;
   }
 
-  @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
-
-    ExecutorService service =
-        MoreExecutors.newMultiThreadExecutor(
-            new CommandThreadFactory("IntraDexReordering"), 1);
-     try {
-        DefaultStepRunner stepRunner = new DefaultStepRunner(context, listeningDecorator(service));
-        List<Step> dxSteps = generateReorderCommands();
-        stepRunner.runStepsInParallelAndWait(dxSteps);
-    } catch (StepFailedException | IOException | InterruptedException e) {
-       context.logError(e, "There was an error in intra dex reorder step.");
-       return 1;
-    } finally {
-        // Wait for however long necessary for threads to finish.  This should be fine, since we'll
-        // detect deadlocks at the top-level (since this thread won't return).
-        MoreExecutors.shutdown(service);
-    }
-    return 0;
-  }
-
-  private ImmutableList<Step> generateReorderCommands()
-   throws StepFailedException, IOException, InterruptedException {
+  public ImmutableList<Step> generateReorderCommands() {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
       reorderEntry(inputPrimaryDexPath, true, steps);
       if (secondaryDexMap.isPresent()) {
@@ -152,15 +119,5 @@ public class IntraDexReorderStep implements Step {
                   inputPrimaryDexPath.toString())));
     }
     return 0;
-  }
-
-  @Override
-  public String getShortName() {
-    return "intradex_reorder";
-  }
-
-  @Override
-  public String getDescription(ExecutionContext context) {
-    return "Reorder dex file (or jar-ed dex files)";
   }
 }
