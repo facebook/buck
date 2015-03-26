@@ -78,7 +78,11 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         // preprocessJavaClassBash is not supported in instrumentation
         Optional.<String>absent(),
         rulesToExcludeFromDex,
-        enhancementResult);
+        enhancementResult,
+        // reordering is not supported in instrumentation. TODO(user): add support
+        Optional.<Boolean>absent(),
+        Optional.<SourcePath>absent(),
+        Optional.<SourcePath>absent());
   }
 
   @Override

@@ -297,7 +297,9 @@ public class AndroidBinaryTest {
         Suppliers.<Map<String, HashCode>>ofInstance(ImmutableMap.<String, HashCode>of()),
         secondaryDexDirectories,
         commandsBuilder,
-        primaryDexPath);
+        primaryDexPath,
+        Optional.<SourcePath>absent(),
+        Optional.<SourcePath>absent());
 
     assertEquals("Expected 2 new assets paths (one for metadata.txt and the other for the " +
         "secondary zips)", 2, secondaryDexDirectories.build().size());

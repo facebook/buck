@@ -210,7 +210,10 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
             params.getProjectFilesystem()),
         args.preprocessJavaClassesBash,
         rulesToExcludeFromDex,
-        result);
+        result,
+        args.reorderClassesIntraDex,
+        args.dexReorderToolFile,
+        args.dexReorderDataDumpFile);
   }
 
   private DexSplitMode createDexSplitMode(Arg args, EnumSet<ExopackageMode> exopackageModes) {
@@ -297,6 +300,9 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
     public Optional<Set<TargetCpuType>> cpuFilters;
     public Optional<ImmutableSortedSet<BuildTarget>> preprocessJavaClassesDeps;
     public Optional<String> preprocessJavaClassesBash;
+    public Optional<Boolean> reorderClassesIntraDex;
+    public Optional<SourcePath> dexReorderToolFile;
+    public Optional<SourcePath> dexReorderDataDumpFile;
 
     /** This will never be absent after this Arg is populated. */
     public Optional<BuildConfigFields> buildConfigValues;

@@ -99,6 +99,8 @@ public class AndroidBinary extends AbstractBuildRule implements
    * This is the path from the root of the APK that should contain the metadata.txt and
    * secondary-N.dex.jar files for secondary dexes.
    */
+  static final String SMART_DEX_SECONDARY_DEX_SUBDIR =
+    "assets/smart-dex-secondary-program-dex-jars";
   static final String SECONDARY_DEX_SUBDIR = "assets/secondary-program-dex-jars";
 
   private final Optional<Path> proguardJarOverride;
@@ -180,6 +182,9 @@ public class AndroidBinary extends AbstractBuildRule implements
   private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
   private final Function<String, String> macroExpander;
   private final Optional<String> preprocessJavaClassesBash;
+  private final Optional<Boolean> reorderClassesIntraDex;
+  private final Optional<SourcePath> dexReorderToolFile;
+  private final Optional<SourcePath> dexReorderDataDumpFile;
   protected final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
   protected final AndroidGraphEnhancementResult enhancementResult;
 
@@ -204,7 +209,10 @@ public class AndroidBinary extends AbstractBuildRule implements
       Function<String, String> macroExpander,
       Optional<String> preprocessJavaClassesBash,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
-      AndroidGraphEnhancementResult enhancementResult) {
+      AndroidGraphEnhancementResult enhancementResult,
+      Optional<Boolean> reorderClassesIntraDex,
+      Optional<SourcePath> dexReorderToolFile,
+      Optional<SourcePath> dexReorderDataDumpFile) {
     super(params, resolver);
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
@@ -226,6 +234,9 @@ public class AndroidBinary extends AbstractBuildRule implements
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
     this.enhancementResult = enhancementResult;
     this.primaryDexPath = getPrimaryDexPath(params.getBuildTarget());
+    this.reorderClassesIntraDex = reorderClassesIntraDex;
+    this.dexReorderToolFile = dexReorderToolFile;
+    this.dexReorderDataDumpFile = dexReorderDataDumpFile;
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(enhancementResult.getPreDexMerge().isPresent(),
@@ -440,7 +451,6 @@ public class AndroidBinary extends AbstractBuildRule implements
     if (exopackageModes.isEmpty()) {
       return ImmutableSha1HashCode.of(getRuleKey().toString());
     }
-
     return enhancementResult.getComputeExopackageDepsAbi().get().getAndroidBinaryAbiHash();
   }
 
@@ -451,6 +461,7 @@ public class AndroidBinary extends AbstractBuildRule implements
       BuildContext context,
       BuildableContext buildableContext,
       ImmutableList.Builder<Step> steps) {
+
     AndroidPackageableCollection packageableCollection =
         enhancementResult.getPackageableCollection();
     // Execute preprocess_java_classes_binary, if appropriate.
@@ -558,7 +569,9 @@ public class AndroidBinary extends AbstractBuildRule implements
           classNamesToHashesSupplier,
           secondaryDexDirectoriesBuilder,
           steps,
-          primaryDexPath);
+          primaryDexPath,
+          dexReorderToolFile,
+          dexReorderDataDumpFile);
     } else if (!ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       secondaryDexDirectoriesBuilder.addAll(preDexMerge.get().getSecondaryDexDirectories());
     }
@@ -700,6 +713,12 @@ public class AndroidBinary extends AbstractBuildRule implements
     return ImmutableSet.copyOf(inputOutputEntries.values());
   }
 
+  /** Helper method to check whether intra-dex reordering is enabled
+   */
+  private boolean isReorderingClasses() {
+    return (reorderClassesIntraDex.isPresent() && reorderClassesIntraDex.get());
+  }
+
   /**
    * Create dex artifacts for all of the individual directories of compiled .class files (or
    * the obfuscated jar files if proguard is used).  If split dex is used, multiple dex artifacts
@@ -718,10 +737,13 @@ public class AndroidBinary extends AbstractBuildRule implements
       Supplier<Map<String, HashCode>> classNamesToHashesSupplier,
       ImmutableSet.Builder<Path> secondaryDexDirectories,
       ImmutableList.Builder<Step> steps,
-      Path primaryDexPath) {
+      Path primaryDexPath,
+      Optional<SourcePath> dexReorderToolFile,
+      Optional<SourcePath> dexReorderDataDumpFile) {
     final Supplier<Set<Path>> primaryInputsToDex;
     final Optional<Path> secondaryDexDir;
     final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
+    Path secondaryDexParentDir = getBinPath("__%s_secondary_dex__/");
 
     if (shouldSplitDex()) {
       Optional<Path> proguardFullConfigFile = Optional.absent();
@@ -776,9 +798,16 @@ public class AndroidBinary extends AbstractBuildRule implements
 
       // Add the secondary dex directory that has yet to be created, but will be by the
       // smart dexing command.  Smart dex will handle "cleaning" this directory properly.
-      Path secondaryDexParentDir = getBinPath("__%s_secondary_dex__/");
-      secondaryDexDir = Optional.of(secondaryDexParentDir.resolve(SECONDARY_DEX_SUBDIR));
-      steps.add(new MkdirStep(secondaryDexDir.get()));
+      if (isReorderingClasses()) {
+        secondaryDexDir = Optional.of(secondaryDexParentDir.resolve(
+              SMART_DEX_SECONDARY_DEX_SUBDIR));
+        Path intraDexReorderSecondaryDexDir = secondaryDexParentDir.resolve(SECONDARY_DEX_SUBDIR);
+        steps.add(new MakeCleanDirectoryStep(secondaryDexDir.get()));
+        steps.add(new MakeCleanDirectoryStep(intraDexReorderSecondaryDexDir));
+      } else {
+        secondaryDexDir = Optional.of(secondaryDexParentDir.resolve(SECONDARY_DEX_SUBDIR));
+        steps.add(new MkdirStep(secondaryDexDir.get()));
+      }
 
       if (dexSplitMode.getDexStore() == DexStore.RAW) {
         secondaryDexDirectories.add(secondaryDexDir.get());
@@ -824,8 +853,16 @@ public class AndroidBinary extends AbstractBuildRule implements
     EnumSet<DxStep.Option> dxOptions = PackageType.RELEASE.equals(packageType)
         ? EnumSet.noneOf(DxStep.Option.class)
         : EnumSet.of(DxStep.Option.NO_OPTIMIZE);
+    Path selectedPrimaryDexPath = primaryDexPath;
+    if (isReorderingClasses()) {
+      String primaryDexFileName = primaryDexPath.getFileName().toString();
+      String smartDexPrimaryDexFileName = "smart-dex-" + primaryDexFileName;
+      Path smartDexPrimaryDexPath = Paths.get(primaryDexPath.toString().replace(primaryDexFileName,
+              smartDexPrimaryDexFileName));
+      selectedPrimaryDexPath = smartDexPrimaryDexPath;
+    }
     SmartDexingStep smartDexingCommand = new SmartDexingStep(
-        primaryDexPath,
+        selectedPrimaryDexPath,
         primaryInputsToDex,
         secondaryDexDir,
         secondaryOutputToInputs,
@@ -834,6 +871,19 @@ public class AndroidBinary extends AbstractBuildRule implements
         Optional.<Integer>absent(),
         dxOptions);
     steps.add(smartDexingCommand);
+
+    if (isReorderingClasses()) {
+      IntraDexReorderStep intraDexReorderStep = new IntraDexReorderStep(
+        dexReorderToolFile.get(),
+        dexReorderDataDumpFile.get(),
+        getBuildTarget(),
+        selectedPrimaryDexPath,
+        primaryDexPath,
+        secondaryOutputToInputs,
+        SMART_DEX_SECONDARY_DEX_SUBDIR,
+        SECONDARY_DEX_SUBDIR);
+      steps.add(intraDexReorderStep);
+    }
   }
 
   @Override

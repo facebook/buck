@@ -22,6 +22,18 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_reorder_dex',
+  manifest = 'AndroidManifest.xml',
+  target = 'Google Inc.:Google APIs:19',
+  keystore = '//keystores:debug',
+  reorder_classes_intra_dex = True,
+  deps = [
+    '//java/com/sample/lib:lib',
+    '//res/com/sample/base:base',
+  ],
+)
+
+android_binary(
   name = 'app_mdpi',
   manifest = 'AndroidManifest.xml',
   target = 'Google Inc.:Google APIs:19',
