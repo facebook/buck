@@ -1,0 +1,12 @@
+export_file(
+    name = 'Test.plist',
+    visibility = ['PUBLIC'],
+)
+
+apple_test(
+    name='foo',
+    extension='xctest',
+    use_buck_header_maps = True,
+    srcs = ['Foo.m'],
+    info_plist = ':Test.plist',
+)

@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -71,6 +72,39 @@ public class AppleTestIntegrationTest {
     assertIsSymbolicLink(
         outputPath.resolve("Test/Header.h"),
         inputPath.resolve("Header.h"));
+  }
+
+  @Test
+  public void testInfoPlistFromExportRule() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_info_plist_export_file", tmp);
+    workspace.setUp();
+
+    BuildTarget buildTarget = BuildTarget.builder("//", "foo")
+        .addFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"))
+        .build();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        buildTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+
+    BuildTarget appleTestBundleFlavoredBuildTarget = ImmutableBuildTarget.copyOf(buildTarget)
+        .withFlavors(
+            ImmutableFlavor.of("iphonesimulator-x86_64"),
+            ImmutableFlavor.of("apple-test-bundle"));
+    Path outputPath = projectRoot.resolve(
+        BuildTargets.getGenPath(
+            appleTestBundleFlavoredBuildTarget,
+            "%s"));
+    Path bundlePath = outputPath.resolve("foo.xctest");
+    Path infoPlistPath = bundlePath.resolve("Info.plist");
+
+    assertTrue(Files.isDirectory(bundlePath));
+    assertTrue(Files.isRegularFile(infoPlistPath));
   }
 
   private static void assertIsSymbolicLink(

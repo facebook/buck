@@ -43,6 +43,7 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 
 public class AppleTestDescription implements Description<AppleTestDescription.Arg>, Flavored {
+
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_test");
 
   /**
@@ -118,8 +119,14 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         params.copyWithChanges(
             AppleBundleDescription.TYPE,
             BuildTarget.builder(params.getBuildTarget()).addFlavors(BUNDLE_FLAVOR).build(),
-            Suppliers.ofInstance(ImmutableSortedSet.of(library)),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            // We have to add back the original deps here, since they're likely
+            // stripped from the library link above (it doesn't actually depend on them).
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .add(library)
+                    .addAll(params.getDeclaredDeps())
+                    .build()),
+            Suppliers.ofInstance(params.getExtraDeps())),
         sourcePathResolver,
         args.extension,
         args.infoPlist,
