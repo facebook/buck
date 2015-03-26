@@ -1,0 +1,25 @@
+apple_binary(
+  name = 'TestApp',
+  srcs = [
+    'main.c',
+  ],
+  headers = {
+    'virtual/path.h': 'binary-header.h',
+  },
+  deps = [
+    ':TestLib',
+  ],
+)
+
+apple_library(
+  name = 'TestLib',
+  srcs = [
+    'lib.c',
+  ],
+  headers = {
+    'virtual/path.h': 'library-header.h',
+  },
+  exported_headers = {
+    'virtual/exported-path.h': 'library-public-header.h',
+  },
+)

@@ -98,6 +98,17 @@ public class AppleBinaryIntegrationTest {
         inputPath.resolve("Header.h"));
   }
 
+  @Test
+  public void testAppleBinaryWithHeaderMaps() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_with_header_maps", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//Apps/TestApp:TestApp").assertSuccess();
+
+    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {

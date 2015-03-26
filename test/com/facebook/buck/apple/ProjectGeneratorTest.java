@@ -203,15 +203,13 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setHeaders(
-            Optional.of(
-                ImmutableSortedSet.<SourcePath>of(
-                    new TestSourcePath("HeaderGroup1/foo.h"),
-                    new BuildTargetSourcePath(projectFilesystem, privateGeneratedTarget))))
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("HeaderGroup1/foo.h"),
+                new BuildTargetSourcePath(projectFilesystem, privateGeneratedTarget)))
         .setExportedHeaders(
-            Optional.of(
-                ImmutableSortedSet.<SourcePath>of(
-                    new TestSourcePath("HeaderGroup1/bar.h"),
-                    new BuildTargetSourcePath(projectFilesystem, publicGeneratedTarget))))
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("HeaderGroup1/bar.h"),
+                new BuildTargetSourcePath(projectFilesystem, publicGeneratedTarget)))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -239,16 +237,14 @@ public class ProjectGeneratorTest {
         .createBuilder(buildTarget)
         .setSrcs(Optional.of(ImmutableList.<SourceWithFlags>of()))
         .setHeaders(
-            Optional.of(
-                ImmutableSortedSet.<SourcePath>of(
-                    new TestSourcePath("HeaderGroup1/foo.h"),
-                    new TestSourcePath("HeaderGroup2/baz.h"),
-                    new BuildTargetSourcePath(projectFilesystem, privateGeneratedTarget))))
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("HeaderGroup1/foo.h"),
+                new TestSourcePath("HeaderGroup2/baz.h"),
+                new BuildTargetSourcePath(projectFilesystem, privateGeneratedTarget)))
         .setExportedHeaders(
-            Optional.of(
-                ImmutableSortedSet.<SourcePath>of(
-                    new TestSourcePath("HeaderGroup1/bar.h"),
-                    new BuildTargetSourcePath(projectFilesystem, publicGeneratedTarget))))
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("HeaderGroup1/bar.h"),
+                new BuildTargetSourcePath(projectFilesystem, publicGeneratedTarget)))
         .setUseBuckHeaderMaps(Optional.of(true))
         .build();
 
@@ -295,6 +291,95 @@ public class ProjectGeneratorTest {
             return input instanceof PBXHeadersBuildPhase;
           }
         }));
+
+    assertEquals(
+        ImmutableSet.of(
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                buildTarget,
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                buildTarget,
+                DefaultCxxPlatforms.FLAVOR,
+                CxxDescriptionEnhancer.HeaderVisibility.PUBLIC),
+            privateGeneratedTarget,
+            publicGeneratedTarget),
+        projectGenerator.getRequiredBuildTargets());
+  }
+
+  @Test
+  public void testLibraryHeaderGroupsWithMappedHeaders() throws IOException {
+    BuildTarget privateGeneratedTarget = BuildTarget.builder("//foo", "generated1.h").build();
+    BuildTarget publicGeneratedTarget = BuildTarget.builder("//foo", "generated2.h").build();
+
+    TargetNode<?> privateGeneratedNode =
+        ExportFileBuilder.newExportFileBuilder(privateGeneratedTarget).build();
+    TargetNode<?> publicGeneratedNode =
+        ExportFileBuilder.newExportFileBuilder(publicGeneratedTarget).build();
+
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setSrcs(Optional.of(ImmutableList.<SourceWithFlags>of()))
+        .setHeaders(
+            ImmutableMap.<String, SourcePath>of(
+                "any/name.h", new TestSourcePath("HeaderGroup1/foo.h"),
+                "different/name.h", new TestSourcePath("HeaderGroup2/baz.h"),
+                "one/more/name.h", new BuildTargetSourcePath(
+                    projectFilesystem,
+                    privateGeneratedTarget)))
+        .setExportedHeaders(
+            ImmutableMap.<String, SourcePath>of(
+                "yet/another/name.h", new TestSourcePath("HeaderGroup1/bar.h"),
+                "and/one/more.h", new BuildTargetSourcePath(
+                    projectFilesystem,
+                    publicGeneratedTarget)))
+        .setUseBuckHeaderMaps(Optional.of(true))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(node, privateGeneratedNode, publicGeneratedNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup targetGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(buildTarget.getFullyQualifiedName());
+    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
+
+    assertThat(sourcesGroup.getChildren(), hasSize(3));
+
+    PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
+    assertEquals("HeaderGroup1", group1.getName());
+    assertThat(group1.getChildren(), hasSize(2));
+    PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
+    assertEquals("bar.h", fileRefFoo.getName());
+    PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
+    assertEquals("foo.h", fileRefBar.getName());
+
+    PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
+    assertEquals("HeaderGroup2", group2.getName());
+    assertThat(group2.getChildren(), hasSize(1));
+    PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
+    assertEquals("baz.h", fileRefBaz.getName());
+
+    PBXGroup group3 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 2);
+    assertEquals("foo", group3.getName());
+    assertThat(group3.getChildren(), hasSize(2));
+    PBXFileReference fileRefGenerated1 = (PBXFileReference) Iterables.get(group3.getChildren(), 0);
+    assertEquals("generated1.h", fileRefGenerated1.getName());
+    PBXFileReference fileRefGenerated2 = (PBXFileReference) Iterables.get(group3.getChildren(), 1);
+    assertEquals("generated2.h", fileRefGenerated2.getName());
+
+    // There should be no PBXHeadersBuildPhase in the 'Buck header map mode'.
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
+    assertEquals(Optional.<PBXBuildPhase>absent(),
+        Iterables.tryFind(target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
+              @Override
+              public boolean apply(PBXBuildPhase input) {
+                return input instanceof PBXHeadersBuildPhase;
+              }
+            }));
 
     assertEquals(
         ImmutableSet.of(
@@ -517,8 +602,7 @@ public class ProjectGeneratorTest {
                 ImmutableList.<SourcePath>of(
                     new TestSourcePath("libsomething.a"))))
         .setHeaders(
-            Optional.of(
-                ImmutableSortedSet.<SourcePath>of(new TestSourcePath("foo.h"))))
+            ImmutableSortedSet.<SourcePath>of(new TestSourcePath("foo.h")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1183,9 +1267,8 @@ public class ProjectGeneratorTest {
                 ImmutableList.<SourcePath>of(
                     new TestSourcePath("libsomething.a"))))
         .setHeaders(
-            Optional.of(
-                ImmutableSortedSet.<SourcePath>of(
-                    new TestSourcePath("foo.h"))))
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("foo.h")))
         .setFrameworks(
             Optional.of(
                 ImmutableSortedSet.of(
@@ -1418,9 +1501,8 @@ public class ProjectGeneratorTest {
                         new TestSourcePath("foo.m"), ImmutableList.of("-foo")),
                     SourceWithFlags.of(new TestSourcePath("bar.m")))))
         .setHeaders(
-            Optional.of(
-                ImmutableSortedSet.<SourcePath>of(
-                    new TestSourcePath("foo.h"))))
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("foo.h")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
