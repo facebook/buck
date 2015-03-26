@@ -105,7 +105,7 @@ public class AppleTest extends AbstractBuildRule implements TestRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    return null;
+    return ImmutableList.of();
   }
 
   @Override
