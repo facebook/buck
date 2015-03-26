@@ -111,7 +111,11 @@ final class Module {
 
   @Nullable
   @JsonProperty
-  String resFolder;
+  Path resFolder;
+
+  @Nullable
+  @JsonProperty
+  Path assetFolder;
 
   @Nullable
   @JsonProperty
@@ -137,6 +141,10 @@ final class Module {
   @Nullable
   @JsonProperty
   Boolean annotationGenIsForTest;
+
+  @Nullable
+  @JsonProperty
+  Path binaryPath;
 
   Module(BuildRule srcRule, BuildTarget target) {
     this.srcRule = srcRule;

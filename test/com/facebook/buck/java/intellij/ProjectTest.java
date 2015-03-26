@@ -26,6 +26,7 @@ import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidResourceRuleBuilder;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryBuilder;
@@ -326,7 +327,7 @@ public class ProjectTest {
     Module androidResourceModule = modules.get(2);
     assertSame(getRuleById("//android_res/base:res", actionGraph), androidResourceModule.srcRule);
 
-    assertEquals("/res", androidResourceModule.resFolder);
+    assertEquals(Paths.get("res"), androidResourceModule.resFolder);
 
     // Check the values of the module that corresponds to the android_binary that uses no_dx.
     Module androidBinaryModuleNoDx = modules.get(3);
@@ -748,6 +749,7 @@ public class ProjectTest {
                 BuildTarget.TO_TARGET)),
         projectFilesystem,
         /* pathToDefaultAndroidManifest */ Optional.<String>absent(),
+        new IntellijConfig(new FakeBuckConfig()),
         /* pathToPostProcessScript */ Optional.<String>absent(),
         BuckTestConstant.PYTHON_INTERPRETER,
         new ObjectMapper(),

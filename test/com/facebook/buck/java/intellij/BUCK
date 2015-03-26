@@ -4,6 +4,7 @@ java_test(
   deps = [
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/android:rules',
+    '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java/intellij:intellij',
@@ -16,6 +17,7 @@ java_test(
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:exceptions',
     '//test/com/facebook/buck/android:testutil',
+    '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/java:fakepackagefinder',
     '//test/com/facebook/buck/java:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',

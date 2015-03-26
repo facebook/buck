@@ -1,0 +1,30 @@
+[alias]
+    app = //app:src
+    libA = //libA:src
+    libB = //libB:src
+
+[java]
+    # defines the java language level used across a project's different modules
+    language_level=JDK_1_7
+
+    # defines the JDK name used by the project in Intellij (depends on your environment)
+    jdk_name=Android API 19 Platform
+
+    # defines the type of JDK used inside the project (eg. Python SDK, JavaSDK, Python SDK...)
+    jdk_type=Android SDK
+[intellij]
+    # IntelliJ requires that every Android module have an
+    # AndroidManifest.xml file associated with it. In practice,
+    # most of this is unnecessary boilerplate, so we create one
+    # "shared" AndroidManifest.xml file that can be used as a default.
+
+    default_android_manifest = //AndroidManifest.xml
+
+    # defines each library's Manifest relative path (by default set to '/AndroidManifest.xml')
+    default_android_manifest_path = src/main/AndroidManifest.xml
+
+    # defines each library's resource folder relative path (by default set to '/res')
+    default_android_resource_path = src/main/res
+
+    # defines library's assets folder relative path (by default set to '/assets')
+    default_android_assets_path = src/main/assets

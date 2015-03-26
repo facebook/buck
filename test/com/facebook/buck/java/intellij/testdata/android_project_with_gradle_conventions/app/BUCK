@@ -1,0 +1,52 @@
+DEPENDENCIES = [ 'libA', 'libB' ]
+JAVA_DEPENDENCIES = [':res'] + ['//' + dependency + ':src' for dependency in DEPENDENCIES]
+MANIFEST_DEPENDENCIES = ['//' + dependency + ':manifest' for dependency in DEPENDENCIES]
+RESOURCE_DEPENDENCIES = ['//' + dependency + ':res' for dependency in DEPENDENCIES]
+
+BINARY_DEPENDENCIES   = [':assets', ':res', ':src']
+
+android_binary(
+    name='bin',
+    manifest=':manifest',
+    target='Google Inc.:Google APIs:19',
+    keystore=':debug_keystore',
+    deps=BINARY_DEPENDENCIES
+)
+
+android_library(
+    name='src',
+    srcs=glob(['src/main/java/**/*.java']),
+    visibility=['PUBLIC'],
+    deps=JAVA_DEPENDENCIES
+)
+
+android_manifest(
+    name='manifest',
+    skeleton='src/main/AndroidManifest.xml',
+    deps=MANIFEST_DEPENDENCIES
+)
+
+android_resource(
+    name='assets',
+    assets='src/main/assets',
+    visibility=['PUBLIC'],
+)
+
+android_resource(
+    name='res',
+    res='src/main/res',
+    package='com.example',
+    deps=RESOURCE_DEPENDENCIES,
+    visibility=['PUBLIC'],
+)
+
+keystore(
+    name='debug_keystore',
+    store='keystore/debug.keystore',
+    properties='keystore/debug.keystore.properties',
+)
+
+project_config(
+    src_target=':src',
+    src_roots=['src/main/java']
+)

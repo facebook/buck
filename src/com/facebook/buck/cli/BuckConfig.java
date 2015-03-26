@@ -946,11 +946,17 @@ public class BuckConfig {
    * @return the path for the given section and property.
    */
   public Optional<Path> getPath(String sectionName, String name) {
+    return getPath(sectionName, name, true);
+  }
+
+  public Optional<Path> getPath(String sectionName, String name, boolean isRepoRootRelative) {
     Optional<String> pathString = getValue(sectionName, name);
     return pathString.isPresent() ?
-        checkPathExists(
-            pathString.get(),
-            String.format("Overridden %s:%s path not found: ", sectionName, name)) :
+        isRepoRootRelative ?
+            checkPathExists(
+                pathString.get(),
+                String.format("Overridden %s:%s path not found: ", sectionName, name)) :
+            Optional.of(Paths.get(pathString.get())) :
         Optional.<Path>absent();
   }
 

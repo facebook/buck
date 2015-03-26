@@ -22,6 +22,7 @@ import com.facebook.buck.apple.ProjectGenerator;
 import com.facebook.buck.apple.WorkspaceAndProjectGenerator;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.java.JavaLibraryDescription;
+import com.facebook.buck.java.intellij.IntellijConfig;
 import com.facebook.buck.java.intellij.Project;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
@@ -208,6 +209,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
               new ParserConfig(options.getBuckConfig()).getBuildFileName()),
           getProjectFilesystem(),
           options.getPathToDefaultAndroidManifest(),
+          new IntellijConfig(options.getBuckConfig()),
           options.getPathToPostProcessScript(),
           new PythonBuckConfig(options.getBuckConfig()).getPythonInterpreter(),
           getObjectMapper(),

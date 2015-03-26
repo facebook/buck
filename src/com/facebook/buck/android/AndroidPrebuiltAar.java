@@ -36,6 +36,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
 
   private final AndroidResource androidResource;
   private final Path nativeLibsDirectory;
+  private final PrebuiltJar prebuiltJar;
 
   public AndroidPrebuiltAar(
       BuildRuleParams androidLibraryParams,
@@ -60,6 +61,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
         /* manifestFile */ Optional.<SourcePath>absent(),
         /* isPrebuiltAar */ true);
     this.androidResource = androidResource;
+    this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;
   }
 
@@ -96,4 +98,9 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
     super.addToCollector(collector);
     collector.addNativeLibsDirectory(getBuildTarget(), nativeLibsDirectory);
   }
+
+  public Path getBinaryJar() {
+    return prebuiltJar.getPathToOutputFile();
+  }
+
 }
