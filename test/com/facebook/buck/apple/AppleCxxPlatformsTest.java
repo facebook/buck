@@ -174,4 +174,43 @@ public class AppleCxxPlatformsTest {
         new FakeBuckConfig(),
         Functions.forPredicate(Predicates.<Path>alwaysFalse()));
   }
+
+  @Test
+  public void simulatorPlatformSetsLinkerFlags() throws Exception {
+    AppleSdkPaths appleSdkPaths =
+        ImmutableAppleSdkPaths.builder()
+            .setDeveloperPath(Paths.get("."))
+            .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
+            .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+            .build();
+
+    ImmutableMap<Path, Boolean> paths = ImmutableMap.<Path, Boolean>builder()
+        .put(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"), true)
+        .put(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"), true)
+        .put(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"), true)
+        .put(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"), true)
+        .build();
+
+    CxxPlatform appleCxxPlatform =
+        AppleCxxPlatforms.buildWithExecutableChecker(
+            ApplePlatform.IPHONESIMULATOR,
+            "iphonesimulator8.0",
+            "7.0",
+            "armv7",
+            appleSdkPaths,
+            new FakeBuckConfig(),
+            Functions.forMap(paths, false)
+        );
+
+    assertThat(
+        appleCxxPlatform.getCflags(),
+        hasItem("-mios-simulator-version-min=7.0"));
+    assertThat(
+        appleCxxPlatform.getCxxflags(),
+        hasItem("-mios-simulator-version-min=7.0"));
+    assertThat(
+        appleCxxPlatform.getCxxldflags(),
+        hasItem("-mios-simulator-version-min=7.0"));
+  }
 }

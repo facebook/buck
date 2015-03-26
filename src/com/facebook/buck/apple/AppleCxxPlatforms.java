@@ -98,7 +98,8 @@ public class AppleCxxPlatforms {
         cflagsBuilder.add("-mmacosx-version-min=" + targetVersion);
         break;
       case IPHONESIMULATOR:
-        // Fall through
+        cflagsBuilder.add("-mios-simulator-version-min=" + targetVersion);
+        break;
       case IPHONEOS:
         cflagsBuilder.add("-mios-version-min=" + targetVersion);
         break;
