@@ -623,7 +623,7 @@
     <fail if="hasFailingTests" />
   </target>
 
-  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, asset-catalogs-py-test, pathlib-py-test" />
+  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, asset-catalogs-py-test, pathlib-py-test, zip-munger-py-test" />
 
   <target name="buck-py-test" description="tests the BUCK parser">
     <exec executable="python" failonerror="true">
@@ -650,6 +650,13 @@
       <!-- Needed on Python 2.6. -->
       <env key="PYTHONPATH" path="${unittest2.dir}" />
       <arg value="test_pathlib.py" />
+    </exec>
+  </target>
+
+  <target name="zip-munger-py-test" description="tests munger.py">
+    <exec executable="python" failonerror="true">
+      <env key="PYTHONPATH" path="${basedir}" />
+      <arg value="py/buck/zip/test_munger.py" />
     </exec>
   </target>
 

@@ -157,7 +157,12 @@ java_binary(
 genrule(
   name = 'main-fixed',
   out = 'main-fixed.jar',
-  cmd = 'zip --output-file $OUT $(location :main) -d META-INF/MANIFEST.MF',
+  cmd = ' '.join([
+    '$(exe //py/buck/zip:munger)',
+    '--input=$(location :main)',
+    '--output=$OUT',
+    '--exclude=META-INF/MANIFEST.MF',
+  ]),
   srcs = [
     ':main',
   ],

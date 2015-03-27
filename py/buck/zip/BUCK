@@ -1,0 +1,22 @@
+python_binary(
+  name = 'munger',
+  main = 'munger.py',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+python_test(
+  name = 'test',
+  srcs = glob(['test_*.py']),
+  deps = [
+    ':lib',
+  ],
+)
+
+python_library(
+  name = 'lib',
+  srcs = [
+    'munger.py',
+  ],
+)
