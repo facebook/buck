@@ -22,6 +22,7 @@ import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
@@ -75,6 +76,7 @@ public class AppleSdkDiscovery {
    */
   public static ImmutableMap<AppleSdk, AppleSdkPaths> discoverAppleSdkPaths(
       Path xcodeDir,
+      Path xcodeVersionPlistPath,
       ImmutableMap<String, Path> xcodeToolchainPaths)
       throws IOException {
     Path defaultToolchainPath = xcodeToolchainPaths.get(DEFAULT_TOOLCHAIN_ID);
@@ -90,6 +92,8 @@ public class AppleSdkDiscovery {
     if (!Files.exists(platforms)) {
       return appleSdkPathsBuilder.build();
     }
+
+    String xcodeVersion = discoverXcodeVersion(xcodeVersionPlistPath);
 
     // We need to find the most recent SDK for each platform so we can
     // make the fall-back SDKs with no version number in their name
@@ -117,7 +121,8 @@ public class AppleSdkDiscovery {
               continue;
             }
 
-            ImmutableAppleSdk.Builder sdkBuilder = ImmutableAppleSdk.builder();
+            ImmutableAppleSdk.Builder sdkBuilder = ImmutableAppleSdk.builder()
+                .setXcodeVersion(xcodeVersion);
             if (buildSdkFromPath(sdkDir, sdkBuilder)) {
               ImmutableAppleSdk sdk = sdkBuilder.build();
               LOG.debug("Found SDK %s", sdk);
@@ -230,6 +235,27 @@ public class AppleSdkDiscovery {
     } catch (FileNotFoundException e) {
       LOG.error(e, "No SDKSettings.plist found under SDK path %s", sdkDir);
       return false;
+    }
+  }
+
+  private static String discoverXcodeVersion(Path versionPlistPath) throws IOException {
+    try (InputStream xcodeVersionPlist = Files.newInputStream(versionPlistPath);
+         BufferedInputStream bufferedXcodeVersionPlist =
+             new BufferedInputStream(xcodeVersionPlist)) {
+      NSDictionary versionPlist;
+      try {
+        versionPlist = (NSDictionary) PropertyListParser.parse(bufferedXcodeVersionPlist);
+      } catch (Exception e) {
+        throw new IOException(e);
+      }
+      NSObject version = versionPlist.objectForKey("ProductBuildVersion");
+      if (version == null) {
+        throw new HumanReadableException(
+            "Could not discover Xcode version, missing ProductBuildVersion in " + versionPlistPath);
+      }
+      String result = version.toString();
+      LOG.debug("Discovered Xcode version: %s", result);
+      return result;
     }
   }
 }

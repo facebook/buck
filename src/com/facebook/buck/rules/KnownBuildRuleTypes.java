@@ -266,11 +266,28 @@ public class KnownBuildRuleTypes {
       return;
     }
 
+    Path xcodeDir = appleDeveloperDirectory.getParent();
+    if (xcodeDir == null) {
+      LOG.warn(
+          "Couldn't find parent of developer directory %s (Apple platforms will be unavailable)",
+          appleDeveloperDirectory);
+      return;
+    }
+
+    Path versionPlistPath = xcodeDir.resolve("version.plist");
+    if (!Files.exists(versionPlistPath)) {
+      LOG.warn(
+          "Couldn't find version file at %s (Apple platforms will be unavailable)",
+          versionPlistPath);
+      return;
+    }
+
     ImmutableMap<String, Path> toolchainPaths = AppleToolchainDiscovery.discoverAppleToolchainPaths(
         appleDeveloperDirectory);
 
     ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths = AppleSdkDiscovery.discoverAppleSdkPaths(
         appleDeveloperDirectory,
+        versionPlistPath,
         toolchainPaths);
 
     for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {

@@ -61,7 +61,10 @@ public class AppleConfig {
     try {
       ImmutableMap<String, Path> toolchainPaths =
           AppleToolchainDiscovery.discoverAppleToolchainPaths(appleDeveloperDirectory);
-      return AppleSdkDiscovery.discoverAppleSdkPaths(appleDeveloperDirectory, toolchainPaths);
+      return AppleSdkDiscovery.discoverAppleSdkPaths(
+          appleDeveloperDirectory,
+          appleDeveloperDirectory.getParent().resolve("version.plist"),
+          toolchainPaths);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

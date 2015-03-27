@@ -39,6 +39,11 @@ public interface AppleSdk {
   String getVersion();
 
   /**
+   * The version of Xcode under which the SDK is installed. For example: {@code 6A2008a}
+   */
+  String getXcodeVersion();
+
+  /**
    * The platform of the SDK. For example, {@link ApplePlatform#IPHONESIMULATOR}.
    */
   ApplePlatform getApplePlatform();

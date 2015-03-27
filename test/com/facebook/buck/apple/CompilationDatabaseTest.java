@@ -284,6 +284,7 @@ public class CompilationDatabaseTest {
           (AppleSdk) ImmutableAppleSdk.builder()
               .setName("iphonesimulator8.0")
               .setVersion("8.0")
+              .setXcodeVersion("6A2008a")
               .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
               .addArchitectures("i386", "x86_64")
               .build(),
