@@ -50,5 +50,6 @@ public class ThriftConstructorArg {
 
   public Optional<ImmutableSet<String>> pyOptions;
   public Optional<String> pyBaseModule;
+  public Optional<String> pyTwistedBaseModule;
 
 }

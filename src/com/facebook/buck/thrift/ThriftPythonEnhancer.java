@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -43,7 +44,7 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
   private static final Flavor PYTHON_FLAVOR = ImmutableFlavor.of("py");
   private static final Flavor PYTHON_TWISTED_FLAVOR = ImmutableFlavor.of("py-twisted");
 
-  public static enum Type {
+  public enum Type {
     NORMAL,
     TWISTED,
   }
@@ -79,6 +80,17 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
     return sources.build();
   }
 
+  private Optional<String> getBaseModule(ThriftConstructorArg args) {
+    switch (type) {
+      case NORMAL:
+        return args.pyBaseModule;
+      case TWISTED:
+        return args.pyTwistedBaseModule;
+      default:
+        throw new IllegalStateException(String.format("Unexpected python thrift type: %s", type));
+    }
+  }
+
   @Override
   public PythonLibrary createBuildRule(
       BuildRuleParams params,
@@ -87,7 +99,7 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
       ImmutableMap<String, ThriftSource> sources,
       ImmutableSortedSet<BuildRule> deps) {
 
-    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.pyBaseModule);
+    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), getBaseModule(args));
 
     ImmutableMap.Builder<Path, SourcePath> modulesBuilder = ImmutableMap.builder();
 
