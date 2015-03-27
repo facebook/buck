@@ -300,6 +300,7 @@ public class KnownBuildRuleTypes {
         CxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
             sdk.getApplePlatform(),
             sdk.getName(),
+            sdk.getXcodeVersion(),
             targetSdkVersion,
             architecture,
             appleSdkPaths,

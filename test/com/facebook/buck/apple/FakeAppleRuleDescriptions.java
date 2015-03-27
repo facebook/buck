@@ -60,6 +60,7 @@ public class FakeAppleRuleDescriptions {
           ApplePlatform.IPHONEOS,
           "iphoneos",
           "8.0",
+          "8.0",
           "i386",
           DEFAULT_IPHONEOS_SDK_PATHS,
           new FakeBuckConfig(),

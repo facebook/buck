@@ -70,6 +70,7 @@ public class AppleCxxPlatformsTest {
         AppleCxxPlatforms.buildWithExecutableChecker(
             ApplePlatform.IPHONEOS,
             "iphoneos8.0",
+            "6A2008a",
             "7.0",
             "armv7",
             appleSdkPaths,
@@ -86,15 +87,15 @@ public class AppleCxxPlatformsTest {
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
         appleCxxPlatform.getCc().getCommandPrefix(resolver).get(0));
     assertThat(
-        appleCxxPlatform.getCflags(),
+        appleCxxPlatform.getCc().getCommandPrefix(resolver),
         hasConsecutiveItems(
             "-isysroot",
             Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk").toString()));
     assertThat(
-        appleCxxPlatform.getCflags(),
+        appleCxxPlatform.getCc().getCommandPrefix(resolver),
         hasConsecutiveItems("-arch", "armv7"));
     assertThat(
-        appleCxxPlatform.getCflags(),
+        appleCxxPlatform.getCc().getCommandPrefix(resolver),
         hasConsecutiveItems("-mios-version-min=7.0"));
 
     assertEquals(
@@ -127,6 +128,7 @@ public class AppleCxxPlatformsTest {
         AppleCxxPlatforms.buildWithExecutableChecker(
             ApplePlatform.IPHONEOS,
             "iphoneos8.0",
+            "6A2008a",
             "7.0",
             "armv7",
             appleSdkPaths,
@@ -168,6 +170,7 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatforms.buildWithExecutableChecker(
         ApplePlatform.IPHONEOS,
         "iphoneos8.0",
+        "6A2008a",
         "7.0",
         "armv7",
         appleSdkPaths,
@@ -196,6 +199,7 @@ public class AppleCxxPlatformsTest {
         AppleCxxPlatforms.buildWithExecutableChecker(
             ApplePlatform.IPHONESIMULATOR,
             "iphonesimulator8.0",
+            "6A2008a",
             "7.0",
             "armv7",
             appleSdkPaths,
@@ -203,14 +207,12 @@ public class AppleCxxPlatformsTest {
             Functions.forMap(paths, false)
         );
 
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     assertThat(
-        appleCxxPlatform.getCflags(),
+        appleCxxPlatform.getCc().getCommandPrefix(resolver),
         hasItem("-mios-simulator-version-min=7.0"));
     assertThat(
-        appleCxxPlatform.getCxxflags(),
-        hasItem("-mios-simulator-version-min=7.0"));
-    assertThat(
-        appleCxxPlatform.getCxxldflags(),
+        appleCxxPlatform.getCxxld().getCommandPrefix(resolver),
         hasItem("-mios-simulator-version-min=7.0"));
   }
 }

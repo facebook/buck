@@ -21,14 +21,15 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DarwinLinker;
 import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
-import com.facebook.buck.cxx.HashedFileTool;
 import com.facebook.buck.cxx.ImmutableCxxPlatform;
 import com.facebook.buck.cxx.Tool;
+import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -51,6 +52,7 @@ public class AppleCxxPlatforms {
   public static CxxPlatform build(
       ApplePlatform targetPlatform,
       String targetSdkName,
+      String xcodeVersion,
       String targetVersion,
       String targetArchitecture,
       AppleSdkPaths sdkPaths,
@@ -58,6 +60,7 @@ public class AppleCxxPlatforms {
     return buildWithExecutableChecker(
         targetPlatform,
         targetSdkName,
+        xcodeVersion,
         targetVersion,
         targetArchitecture,
         sdkPaths,
@@ -69,6 +72,7 @@ public class AppleCxxPlatforms {
   static CxxPlatform buildWithExecutableChecker(
       ApplePlatform targetPlatform,
       String targetSdkName,
+      String xcodeVersion,
       String targetVersion,
       String targetArchitecture,
       AppleSdkPaths sdkPaths,
@@ -84,11 +88,6 @@ public class AppleCxxPlatforms {
       toolSearchPathsBuilder.add(toolchainPath.resolve(USR_BIN));
     }
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
-
-    Tool clangPath = new HashedFileTool(
-        getToolPath("clang", toolSearchPaths, pathIsExecutableChecker));
-    Tool clangXxPath = new HashedFileTool(
-        getToolPath("clang++", toolSearchPaths, pathIsExecutableChecker));
 
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
@@ -107,20 +106,43 @@ public class AppleCxxPlatforms {
     // TODO(user): Add more and better cflags.
     ImmutableList<String> cflags = cflagsBuilder.build();
 
+    String xcodeAndSdkVersion = Joiner.on(':').join(
+        xcodeVersion,
+        targetSdkName);
+
+    Tool clangPath = new VersionedTool(
+        getToolPath("clang", toolSearchPaths, pathIsExecutableChecker),
+        cflags,
+        "apple-clang",
+        xcodeAndSdkVersion);
+
+    Tool clangXxPath = new VersionedTool(
+        getToolPath("clang++", toolSearchPaths, pathIsExecutableChecker),
+        cflags,
+        "apple-clang++",
+        xcodeAndSdkVersion);
+
+    Tool libtool = new VersionedTool(
+        getToolPath("libtool", toolSearchPaths, pathIsExecutableChecker),
+        ImmutableList.<String>of(),
+        "apple-libtool",
+        xcodeAndSdkVersion);
+
+    Tool ar = new VersionedTool(
+        getToolPath("ar", toolSearchPaths, pathIsExecutableChecker),
+        ImmutableList.<String>of(),
+        "apple-ar",
+        xcodeAndSdkVersion);
+
     ImmutableCxxPlatform.Builder platformBuilder = ImmutableCxxPlatform.builder()
         .setFlavor(ImmutableFlavor.of(targetSdkName + "-" + targetArchitecture))
         .setAs(clangPath)
         .setAspp(clangPath)
         .setCc(clangPath)
-        .addAllCflags(cflags)
         .setCpp(clangPath)
-        .addAllCppflags(cflags)
         .setCxx(clangXxPath)
-        .addAllCxxflags(cflags)
         .setCxxpp(clangXxPath)
-        .addAllCxxppflags(cflags)
         .setCxxld(clangXxPath)
-        .addAllCxxldflags(cflags)
         .setLex(
             getOptionalToolPath(
                 "lex",
@@ -129,15 +151,8 @@ public class AppleCxxPlatforms {
         .setYacc(
             getOptionalToolPath("yacc", toolSearchPaths, pathIsExecutableChecker))
         .setLd(
-            new DarwinLinker(
-                new HashedFileTool(
-                    getToolPath(
-                        "libtool",
-                        toolSearchPaths,
-                        pathIsExecutableChecker))))
-        .setAr(
-            new HashedFileTool(
-                getToolPath("ar", toolSearchPaths, pathIsExecutableChecker)))
+            new DarwinLinker(libtool))
+        .setAr(ar)
         .setDebugPathSanitizer(
             Optional.of(
                 new DebugPathSanitizer(
