@@ -35,28 +35,28 @@ import java.nio.file.Paths;
 public class YaccStepTest {
 
   @Test
-  public void lexStepUsesCorrectCommand() {
+  public void yaccStepUsesCorrectCommand() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setProjectFilesystem(projectFilesystem)
         .build();
 
     // Setup some dummy values for inputs to the CxxLinkStep
-    Path yacc = Paths.get("yacc");
+    ImmutableList<String> yaccPrefix = ImmutableList.of("yacc");
     ImmutableList<String> flags = ImmutableList.of("-flag");
     Path outputPrefix = Paths.get("outputPrefix");
     Path input = Paths.get("input");
 
     // Create our CxxLinkStep to test.
     YaccStep yaccStep = new YaccStep(
-        yacc,
+        yaccPrefix,
         flags,
         outputPrefix,
         input);
 
     // Verify it uses the expected command.
     ImmutableList<String> expected = ImmutableList.<String>builder()
-        .add(yacc.toString())
+        .addAll(yaccPrefix)
         .addAll(flags)
         .add("-d")
         .add("-b", outputPrefix.toString())

@@ -29,7 +29,7 @@ import java.nio.file.Paths;
 public class YaccStep extends CompositeStep {
 
   public YaccStep(
-      final Path yacc,
+      final ImmutableList<String> yaccPrefix,
       final ImmutableList<String> flags,
       final Path outputPrefix,
       final Path input) {
@@ -39,7 +39,7 @@ public class YaccStep extends CompositeStep {
           @Override
           protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
             return ImmutableList.<String>builder()
-                .add(yacc.toString())
+                .addAll(yaccPrefix)
                 .addAll(flags)
                 .add("-d")
                 .add("-b", outputPrefix.toString())

@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DarwinLinker;
 import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.HashedFileTool;
 import com.facebook.buck.cxx.ImmutableCxxPlatform;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.cxx.VersionedTool;
@@ -29,6 +30,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
@@ -143,13 +145,8 @@ public class AppleCxxPlatforms {
         .setCxx(clangXxPath)
         .setCxxpp(clangXxPath)
         .setCxxld(clangXxPath)
-        .setLex(
-            getOptionalToolPath(
-                "lex",
-                toolSearchPaths,
-                pathIsExecutableChecker))
-        .setYacc(
-            getOptionalToolPath("yacc", toolSearchPaths, pathIsExecutableChecker))
+        .setLex(getOptionalTool("lex", toolSearchPaths, pathIsExecutableChecker))
+        .setYacc(getOptionalTool("yacc", toolSearchPaths, pathIsExecutableChecker))
         .setLd(
             new DarwinLinker(libtool))
         .setAr(ar)
@@ -174,6 +171,15 @@ public class AppleCxxPlatforms {
         toolSearchPaths,
         ImmutableList.<String>of(),
         pathIsExecutableChecker);
+  }
+
+  private static Optional<Tool> getOptionalTool(
+      String tool,
+      ImmutableList<Path> toolSearchPaths,
+      Function<Path, Boolean> pathIsExecutableChecker) {
+    return getOptionalToolPath(tool, toolSearchPaths, pathIsExecutableChecker)
+        .transform(HashedFileTool.FROM_PATH)
+        .transform(Functions.<Tool>identity());
   }
 
   private static Path getToolPath(

@@ -22,10 +22,16 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ImmutableProcessExecutorParams;
+import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
@@ -33,20 +39,29 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class CxxLexYaccIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
-  private void assumeExists(Path path) {
-    assumeTrue(String.format("Cannot find %s", path), Files.exists(path));
+  private void assumeExists(Tool tool) throws InterruptedException, IOException {
+    ImmutableList<String> command = ImmutableList
+        .<String>builder()
+        .addAll(tool.getCommandPrefix(new SourcePathResolver(new BuildRuleResolver())))
+        .add("--help")
+        .build();
+    ProcessExecutor.Result result = new ProcessExecutor(new TestConsole())
+        .launchAndExecute(
+            ImmutableProcessExecutorParams
+                .builder()
+                .setCommand(command)
+                .build());
+    assumeTrue(String.format("Cannot execute %s", command), result.getExitCode() == 0);
   }
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException, IOException {
     CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(
         new FakeBuckConfig());
     assumeTrue(cxxBuckConfig.getLex().isPresent());

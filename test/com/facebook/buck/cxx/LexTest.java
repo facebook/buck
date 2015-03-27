@@ -42,7 +42,7 @@ import java.nio.file.Paths;
 
 public class LexTest {
 
-  private static final Path DEFAULT_LEX = Paths.get("lex");
+  private static final Tool DEFAULT_LEX = new HashedFileTool(Paths.get("lex"));
   private static final ImmutableList<String> DEFAULT_FLAGS = ImmutableList.of("-flag");
   private static final Path DEFAULT_OUTPUT_SOURCE = Paths.get("output.source");
   private static final Path DEFAULT_OUTPUT_HEADER = Paths.get("output.header");
@@ -91,7 +91,7 @@ public class LexTest {
         new Lex(
             params,
             pathResolver,
-            Paths.get("different"),
+            new HashedFileTool(Paths.get("different")),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_SOURCE,
             DEFAULT_OUTPUT_HEADER,

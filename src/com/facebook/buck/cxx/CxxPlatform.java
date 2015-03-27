@@ -23,7 +23,6 @@ import com.google.common.collect.Multimap;
 
 import org.immutables.value.Value;
 
-import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -63,10 +62,10 @@ public interface CxxPlatform {
   Tool getAr();
   List<String> getArflags();
 
-  Optional<Path> getLex();
+  Optional<Tool> getLex();
   List<String> getLexFlags();
 
-  Optional<Path> getYacc();
+  Optional<Tool> getYacc();
   List<String> getYaccFlags();
 
   String getSharedLibraryExtension();

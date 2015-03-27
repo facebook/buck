@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 
 public class Yacc extends AbstractBuildRule {
 
-  private final Path yacc;
+  private final Tool yacc;
   private final ImmutableList<String> flags;
   private final Path outputPrefix;
   private final SourcePath input;
@@ -43,7 +43,7 @@ public class Yacc extends AbstractBuildRule {
   public Yacc(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Path yacc,
+      Tool yacc,
       ImmutableList<String> flags,
       Path outputPrefix,
       SourcePath input) {
@@ -91,7 +91,7 @@ public class Yacc extends AbstractBuildRule {
         new RmStep(getHeaderOutputPath(outputPrefix), /* shouldForceDeletion */ true),
         new RmStep(getSourceOutputPath(outputPrefix), /* shouldForceDeletion */ true),
         new YaccStep(
-            yacc,
+            yacc.getCommandPrefix(getResolver()),
             flags,
             outputPrefix,
             getResolver().getPath(input)));

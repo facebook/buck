@@ -107,8 +107,8 @@ public class DefaultCxxPlatforms {
         .setCxxld(getTool("cxx", "cxxld", DEFAULT_CXXLD, delegate))
         .setLd(getLd(platform, delegate))
         .setAr(getTool("cxx", "ar", DEFAULT_AR, delegate))
-        .setLex(getToolPath("cxx", "lex", DEFAULT_LEX, delegate))
-        .setYacc(getToolPath("cxx", "yacc", DEFAULT_YACC, delegate))
+        .setLex(getTool("cxx", "lex", DEFAULT_LEX, delegate))
+        .setYacc(getTool("cxx", "yacc", DEFAULT_YACC, delegate))
         .setSharedLibraryExtension(getSharedLibraryExtension(platform))
         .setDebugPathSanitizer(DEBUG_PATH_SANITIZER);
     addToolFlagsFromConfig(delegate, builder);

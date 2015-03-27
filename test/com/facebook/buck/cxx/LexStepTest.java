@@ -39,7 +39,7 @@ public class LexStepTest {
         .build();
 
     // Setup some dummy values for inputs to the CxxLinkStep
-    Path lex = Paths.get("lex");
+    ImmutableList<String> lexPrefix = ImmutableList.of("lex");
     ImmutableList<String> flags = ImmutableList.of("-flag");
     Path outputSource = Paths.get("outputSource");
     Path outputHeader = Paths.get("outputHeader");
@@ -47,7 +47,7 @@ public class LexStepTest {
 
     // Create our CxxLinkStep to test.
     LexStep lexStep = new LexStep(
-        lex,
+        lexPrefix,
         flags,
         outputSource,
         outputHeader,
@@ -55,7 +55,7 @@ public class LexStepTest {
 
     // Verify it uses the expected command.
     ImmutableList<String> expected = ImmutableList.<String>builder()
-        .add(lex.toString())
+        .addAll(lexPrefix)
         .addAll(flags)
         .add("--outfile=" + outputSource.toString())
         .add("--header-file=" + outputHeader.toString())

@@ -19,11 +19,20 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
 public class HashedFileTool implements Tool {
+
+  public static final Function<Path, HashedFileTool> FROM_PATH =
+      new Function<Path, HashedFileTool>() {
+        @Override
+        public HashedFileTool apply(Path input) {
+          return new HashedFileTool(input);
+        }
+      };
 
   private final Path path;
 

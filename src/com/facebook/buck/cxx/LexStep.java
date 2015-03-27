@@ -24,20 +24,20 @@ import java.nio.file.Path;
 
 public class LexStep extends ShellStep {
 
-  private final Path lex;
+  private final ImmutableList<String> lexPrefix;
   private final ImmutableList<String> flags;
   private final Path outputSource;
   private final Path outputHeader;
   private final Path input;
 
   public LexStep(
-      Path lex,
+      ImmutableList<String> lexPrefix,
       ImmutableList<String> flags,
       Path outputSource,
       Path outputHeader,
       Path input) {
 
-    this.lex = lex;
+    this.lexPrefix = lexPrefix;
     this.flags = flags;
     this.outputSource = outputSource;
     this.outputHeader = outputHeader;
@@ -47,7 +47,7 @@ public class LexStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(lex.toString())
+        .addAll(lexPrefix)
         .addAll(flags)
         .add("--outfile=" + outputSource.toString())
         .add("--header-file=" + outputHeader.toString())
