@@ -68,7 +68,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
-import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -157,45 +156,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     verifyAll();
     resetAll();
 
-    String expectedRuleKeyHash = Hashing.sha1().newHasher()
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("name".getBytes())
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes(ruleToTest.getFullyQualifiedName().getBytes())
-        .putByte(RuleKey.Builder.SEPARATOR)
-
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("buck.type".getBytes())
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("java_library".getBytes())
-        .putByte(RuleKey.Builder.SEPARATOR)
-
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("buck.inputs".getBytes())
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("ae8c0f860a0ecad94ecede79b69460434eddbfbc".getBytes())
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putByte(RuleKey.Builder.SEPARATOR)
-
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("buck.sourcepaths".getBytes())
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("/dev/null".getBytes())
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("ae8c0f860a0ecad94ecede79b69460434eddbfbc".getBytes())
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putByte(RuleKey.Builder.SEPARATOR)
-
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("deps".getBytes())
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putBytes("19d2558a6bd3a34fb3f95412de9da27ed32fe208".getBytes())
-        .putByte(RuleKey.Builder.SEPARATOR)
-        .putByte(RuleKey.Builder.SEPARATOR)
-
-        .hash()
-        .toString();
-
     // The BuildContext that will be used by the rule's build() method.
     BuildContext context = createMock(BuildContext.class);
     expect(context.getArtifactCache()).andReturn(artifactCache).times(2);
@@ -251,8 +211,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertEquals(BuildRuleSuccess.Type.BUILT_LOCALLY, result.getType());
     buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
     verifyAll();
-
-    assertEquals(expectedRuleKeyHash, ruleKeyForRecorder.getValue().toString());
 
     // Verify the events logged to the BuckEventBus.
     List<BuckEvent> events = listener.getEvents();

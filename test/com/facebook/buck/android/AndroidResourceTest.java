@@ -100,7 +100,8 @@ public class AndroidResourceTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     String commonHash = Strings.repeat("a", 40);
-    FakeFileHashCache fakeFileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of(
+    FakeFileHashCache fakeFileHashCache = FakeFileHashCache.createFromStrings(
+        ImmutableMap.of(
             "java/src/com/facebook/base/res/drawable/A.xml", commonHash,
             "java/src/com/facebook/base/assets/drawable/B.xml", Strings.repeat("b", 40),
             "java/src/com/facebook/base/res/drawable/C.xml", commonHash,
@@ -147,7 +148,8 @@ public class AndroidResourceTest {
     RuleKey ruleKey1 = androidResource1.getRuleKeyWithoutDeps();
     RuleKey ruleKey2 = androidResource2.getRuleKeyWithoutDeps();
 
-    assertNotEquals("The two android_resource rules should have different rule keys.",
+    assertNotEquals(
+        "The two android_resource rules should have different rule keys.",
         ruleKey1,
         ruleKey2);
   }

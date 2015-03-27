@@ -18,6 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -27,20 +29,19 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.primitives.Primitives;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -145,9 +146,9 @@ public class RuleKey {
       ImmutableSortedSet<BuildRule> exportedDeps,
       FileHashCache hashCache) {
     return new Builder(resolver, deps, exportedDeps, hashCache)
-        .set("name", name.getFullyQualifiedName())
+        .setReflectively("name", name.getFullyQualifiedName())
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
-        .set("buck.type", type.getName());
+        .setReflectively("buck.type", type.getName());
   }
 
   public static class Builder {
@@ -197,274 +198,134 @@ public class RuleKey {
       return separate().feed(sectionLabel.getBytes()).separate();
     }
 
-    private Builder setVal(@Nullable String s) {
-      if (s != null) {
-        if (logElms != null) {
-          logElms.add(String.format("string(\"%s\"):", s));
-        }
-        feed(s.getBytes());
-      }
-      return separate();
-    }
-
-    private Builder setVal(boolean b) {
-      if (logElms != null) {
-        logElms.add(String.format("boolean(\"%s\"):", b ? "true" : "false"));
-      }
-      return feed((b ? "t" : "f").getBytes()).separate();
-    }
-
-    private Builder setVal(long value) {
-      if (logElms != null) {
-        logElms.add(String.format("long(\"%s\"):", value));
-      }
-      hasher.putLong(value);
-      separate();
-      return this;
-    }
-
-    private Builder setVal(@Nullable RuleKey ruleKey) {
-      if (ruleKey != null) {
-        if (logElms != null) {
-          logElms.add(String.format("ruleKey(sha1=%s):", ruleKey));
-        }
-        feed(ruleKey.toString().getBytes());
-      }
-      return separate();
-    }
-
-    private Builder set(String key, @Nullable String val) {
-      return setKey(key).setVal(val);
-    }
-
-    @VisibleForTesting
-    Builder set(String key, boolean val) {
-      return setKey(key).setVal(val);
-    }
-
-    @VisibleForTesting
-    Builder set(String key, long val) {
-      return setKey(key).setVal(val);
-    }
-
-    private Builder set(String key, @Nullable RuleKey val) {
-      return setKey(key).setVal(val);
-    }
-
-    private Builder set(String key, RuleKeyAppendable appendable) {
-      return appendable.appendToRuleKey(this, key);
-    }
-
-    private Builder set(String key, @Nullable BuildRule val) {
-      return setKey(key).setVal(val != null ? val.getRuleKey() : null);
-    }
-
-    @VisibleForTesting
-    Builder set(String key, @Nullable ImmutableList<SourceRoot> val) {
-      setKey(key);
-      if (val != null) {
-        for (SourceRoot root : val) {
-          setVal(root.getName());
-        }
-      }
-      return separate();
-    }
-
-    @VisibleForTesting
-    Builder set(String key, @Nullable List<String> val) {
-      setKey(key);
-      if (val != null) {
-        for (String s : val) {
-          setVal(s);
-        }
-      }
-      return separate();
-    }
-
-    /**
-     * @param inputs is an {@link Iterator} rather than an {@link Iterable} because {@link Path}
-     *     implements {@link Iterable} and we want to protect against passing a single {@link Path}
-     *     instead of multiple {@link Path}s.
-     */
-    private Builder setInputs(String key, Iterator<Path> inputs) {
-      setKey(key);
-      while (inputs.hasNext()) {
-        Path input = inputs.next();
-        setInputVal(input);
-      }
-      return separate();
-    }
-
-    @VisibleForTesting
-    Builder setInput(String key, @Nullable Path input) {
-      if (input != null) {
-        setKey(key);
-        setInputVal(input);
-      }
-      return separate();
-    }
-
-    private Builder setInputVal(Path input) {
-      HashCode sha1 = hashCache.get(input);
-      if (sha1 == null) {
-        throw new RuntimeException("No SHA for " + input);
-      }
-      return setVal(sha1.toString());
-    }
-
-    private Builder setInputVal(SourcePath path) {
-      Optional<BuildRule> buildRule = resolver.getRule(path);
-      if (buildRule.isPresent()) {
-        return setVal(buildRule.get().getRuleKey());
-      } else {
-        Optional<Path> relativePath = resolver.getRelativePath(path);
-        Preconditions.checkState(relativePath.isPresent());
-        return setInputVal(relativePath.get());
-      }
-    }
-
-    /**
-     * Hash the value of the given {@link SourcePath}, which is either the {@link RuleKey} in the
-     * case of a {@link BuildTargetSourcePath} or the hash of the contents in the case of a
-     * {@link PathSourcePath}.
-     */
-    private Builder setInput(String key, SourcePath input) {
-      return setKey(key).setInputVal(input).separate();
-    }
-
-    @VisibleForTesting
-    Builder setSourcePaths(String key, @Nullable ImmutableSortedSet<SourcePath> val) {
-      setKey(key);
-      if (val != null) {
-        for (SourcePath path : val) {
-          setVal(path.toString());
-          setInputVal(path);
-        }
-      }
-      return separate();
-    }
-
-    private Builder set(String key, @Nullable ImmutableSortedSet<? extends BuildRule> val) {
-      setKey(key);
-      if (val != null) {
-        for (BuildRule buildRule : val) {
-          setVal(buildRule.getRuleKey());
-        }
-      }
-      return separate();
-    }
-
-    @VisibleForTesting
-    Builder set(String key, @Nullable ImmutableSet<String> val) {
-      setKey(key);
-      if (val != null) {
-        ImmutableSortedSet<String> sortedValues = ImmutableSortedSet.copyOf(val);
-        for (String value : sortedValues) {
-          setVal(value);
-        }
-      }
-      return separate();
-    }
-
-    @SuppressWarnings("unchecked")
     public Builder setReflectively(String key, @Nullable Object val) {
-      if (val == null) {
-        // Doesn't matter what we call. Fast path out.
-        return set(key, (String) null);
-      }
 
-      if (val instanceof RuleKeyAppendable) {
-        return set(key, (RuleKeyAppendable) val);
-      }
-
-      // Let it be stated here for the record that double dispatch is an ugly way to handle this. If
-      // java did proper message passing, we could avoid this mess. Oh well.
-
-      // Handle simple types first.
-      if (val instanceof Boolean) {
-        return set(key, (boolean) val);
-      } else if (val instanceof BuildRule) {
-        return set(key, (BuildRule) val);
-      } else if (val instanceof Long) {
-        return set(key, (long) val);
-      } else if (val instanceof Path) {
-        return setInput(key, (Path) val);
-      } else if (val instanceof SourcePath) {
-        return setInput(key, (SourcePath) val);
-      } else if (val instanceof RuleKey) {
-        return set(key, (RuleKey) val);
-      }
-
-      // Optionals should be handled reflectively.
+      // Optionals get special handling. Unwrap them if necessary and recurse.
       if (val instanceof Optional) {
-        // It's actually safe to assume that this is a String, since that's the only Optional type
-        // accepted on a set method, but this seems a little more flexible.
         Object o = ((Optional<?>) val).orNull();
         return setReflectively(key, o);
       }
 
-      // Collections. The general strategy is to check the first element to determine the method to
-      // call. If the collection is empty, default to pretending we're dealing with an empty
-      // collection of strings.
-      if (val instanceof List) {
-        Object determinant = ((List<?>) val).isEmpty() ? null : ((List<?>) val).get(0);
+      setKey(key);
 
-        if (determinant instanceof SourceRoot) {
-          return set(key, ImmutableList.copyOf((List<SourceRoot>) val));
-        } else if (determinant instanceof String) {
-          return set(key, (List<String>) val);
-        } else if (determinant == null ||
-            determinant instanceof Enum ||
-            determinant instanceof Path) {
-          // Coerce the elements of the collection to strings.
-          setKey(key);
-          for (Object item : (List<?>) val) {
-            setVal(item == null ? null : String.valueOf(item));
-          }
-          return separate();
-        } else if (determinant instanceof SourcePath) {
-          return setSourcePaths(key, ImmutableSortedSet.copyOf((List<SourcePath>) val));
-        } else {
-          throw new RuntimeException(
-              String.format("Unsupported value type: List<%s>", determinant.getClass()));
-        }
-      } else if (val instanceof Set) {
-        Object determinant = ((Set<?>) val).isEmpty() ? null : ((Set<?>) val).iterator().next();
-
-        if (determinant instanceof BuildRule) {
-          return set(key, ImmutableSortedSet.copyOf((Set<BuildRule>) val));
-        } else if (determinant instanceof SourcePath) {
-          return setSourcePaths(key, ImmutableSortedSet.copyOf((Set<SourcePath>) val));
-        } else if (determinant instanceof String) {
-          return set(key, ImmutableSortedSet.copyOf((Set<String>) val));
-        } else if (determinant == null ||
-            determinant instanceof Enum) {
-          // Once again, coerce to strings.
-          setKey(key);
-          for (Object item : (Set<?>) val) {
-            setVal(item == null ? null : String.valueOf(item));
-          }
-          return separate();
-        } else {
-          throw new RuntimeException(
-              String.format("Unsupported value type: Set<%s>", determinant.getClass()));
-        }
+      // Check to see if we're dealing with a collection of some description. Note
+      // java.nio.file.Path implements "Iterable", so we don't check for that.
+      if (val instanceof Collection) {
+        val = ((Collection<?>) val).iterator();
+        // Fall through to the Iterator handling
       }
 
-      // Collection-like.
+      if (val instanceof Iterable && !(val instanceof Path)) {
+        val = ((Iterable<?>) val).iterator();
+        // Fall through to the Iterator handling
+      }
+
       if (val instanceof Iterator) {
-        // The only iterator type we accept is a Path. Easy.
-        return setInputs(key, (Iterator<Path>) val);
-      } else if (val instanceof BuildTarget) {
-        return set(key, ((BuildTarget) val).getFullyQualifiedName());
-      } else if (val instanceof Enum || val instanceof Number) {
-        return set(key, String.valueOf(val));
-      } else if (val instanceof String) {
-        return set(key, (String) val);
+        Iterator<?> iterator = (Iterator<?>) val;
+        while (iterator.hasNext()) {
+          setSingleValue(iterator.next());
+        }
+        return separate();
       }
 
-      // Fall through to setting values as strings.
-      throw new RuntimeException(String.format("Unsupported value type: %s", val.getClass()));
+      if (val instanceof RuleKeyAppendable) {
+        return ((RuleKeyAppendable) val).appendToRuleKey(this, key);
+      }
+
+      return setSingleValue(val);
+    }
+
+    private Builder setSingleValue(@Nullable Object val) {
+
+      if (val == null) { // Null value first
+        return separate();
+      } else if (val instanceof Boolean) {           // JRE types
+        if (logElms != null) {
+          logElms.add(String.format("boolean(\"%s\"):", (boolean) val ? "true" : "false"));
+        }
+        feed(((boolean) val ? "t" : "f").getBytes());
+      } else if (val instanceof Enum) {
+        feed(String.valueOf(val).getBytes());
+      } else if (val instanceof Number) {
+        if (logElms != null) {
+          logElms.add(String.format("number(%s):", val));
+        }
+        Class<?> wrapped = Primitives.wrap(val.getClass());
+        if (Double.class.equals(wrapped)) {
+          hasher.putDouble(((Double) val).doubleValue());
+        } else if (Float.class.equals(wrapped)) {
+          hasher.putFloat(((Float) val).floatValue());
+        } else if (Integer.class.equals(wrapped)) {
+          hasher.putInt(((Integer) val).intValue());
+        } else if (Long.class.equals(wrapped)) {
+          hasher.putLong(((Long) val).longValue());
+        } else if (Short.class.equals(wrapped)) {
+          hasher.putShort(((Short) val).shortValue());
+        } else {
+          throw new RuntimeException(("Unhandled number type: " + val.getClass()));
+        }
+      } else if (val instanceof Path) {
+        // Paths get added as a combination of the file name and file hash. If the path is absolute
+        // then we only include the file name (assuming that it represents a tool of some kind
+        // that's being used for compilation or some such). This does mean that if a user renames a
+        // file without changing the contents, we have a cache miss. We're going to assume that this
+        // doesn't happen that often in practice.
+        Path path = (Path) val;
+        HashCode sha1 = hashCache.get(path);
+        if (sha1 == null) {
+          throw new RuntimeException("No SHA for " + val);
+        }
+        if (logElms != null) {
+          logElms.add(String.format("path(%s:%s):", val, sha1));
+        }
+        if (path.isAbsolute()) {
+          logger.warn(
+              "Attempting to add absolute path to rule key. Only using file name: %s", path);
+          feed(path.getFileName().toString().getBytes()).separate();
+        } else {
+          feed(path.toString().getBytes()).separate();
+        }
+
+        feed(sha1.toString().getBytes());
+      } else if (val instanceof String) {
+        if (logElms != null) {
+          logElms.add(String.format("string(\"%s\"):", val));
+        }
+        feed(((String) val).getBytes());
+      } else if (val instanceof BuildRule) {         // Buck types
+        setSingleValue(((BuildRule) val).getRuleKey());
+      } else if (val instanceof RuleKey) {
+        if (logElms != null) {
+          logElms.add(String.format("ruleKey(sha1=%s):", val));
+        }
+        feed(val.toString().getBytes());
+      } else if (val instanceof BuildTarget || val instanceof UnflavoredBuildTarget) {
+        if (logElms != null) {
+          logElms.add(String.format("target(%s):", val));
+        }
+        feed(((HasBuildTarget) val).getBuildTarget().getFullyQualifiedName().getBytes());
+      } else if (val instanceof SourcePath) {
+        // And now we need to figure out what this thing is.
+        Optional<BuildRule> buildRule = resolver.getRule((SourcePath) val);
+        if (buildRule.isPresent()) {
+          feed(val.toString().getBytes()).separate();
+          return setSingleValue(buildRule.get());
+        } else {
+          Optional<Path> relativePath = resolver.getRelativePath((SourcePath) val);
+          Preconditions.checkState(relativePath.isPresent());
+          Path path = relativePath.get();
+          return setSingleValue(path);
+        }
+      } else if (val instanceof SourceRoot) {
+        if (logElms != null) {
+          logElms.add(String.format("sourceroot(%s):", val));
+        }
+        feed(((SourceRoot) val).getName().getBytes());
+      } else {
+        throw new RuntimeException("Unsupported value type: " + val.getClass());
+      }
+
+      return separate();
     }
 
     @Value.Immutable
@@ -483,24 +344,15 @@ public class RuleKey {
       RuleKey ruleKeyWithoutDeps = new RuleKey(hasher.hash());
 
       // Now introduce the deps into the RuleKey.
-      setKey("deps");
-      // Note that getDeps() returns an ImmutableSortedSet, so the order will be stable.
-      for (BuildRule buildRule : deps) {
-        setVal(buildRule.getRuleKey());
-      }
-      separate();
+      setReflectively("deps", deps);
 
       if (!exportedDeps.isEmpty()) {
-        setKey("exported_deps");
-        for (BuildRule buildRule : exportedDeps) {
-          setVal(buildRule.getRuleKey());
-        }
-        separate();
+        setReflectively("exported_deps", exportedDeps);
       }
       RuleKey totalRuleKey = new RuleKey(hasher.hash());
 
       if (logElms != null) {
-        logger.verbose("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms));
+        logger.warn("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms));
       }
 
       return ImmutableRuleKeyPair.of(totalRuleKey, ruleKeyWithoutDeps);
