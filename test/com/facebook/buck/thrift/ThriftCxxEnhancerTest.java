@@ -56,7 +56,7 @@ public class ThriftCxxEnhancerTest {
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
   private static final CxxBuckConfig CXX_BUCK_CONFIG = new CxxBuckConfig(BUCK_CONFIG);
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
-      BUCK_CONFIG);
+      new CxxBuckConfig(BUCK_CONFIG));
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       new FlavorDomain<>(
           "C/C++ Platform",

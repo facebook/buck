@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.MorePathsForTests;
@@ -53,7 +54,7 @@ public class PythonTestDescriptionTest {
   private static final Optional<Path> TEST_MAIN = Optional.of(Paths.get("main"));
   private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
-      new FakeBuckConfig());
+      new CxxBuckConfig(new FakeBuckConfig()));
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of());
 

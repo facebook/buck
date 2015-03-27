@@ -32,6 +32,12 @@ import java.util.List;
 @BuckStyleImmutable
 public interface CxxPlatform {
 
+  enum LinkerType {
+    DARWIN,
+    GNU,
+    WINDOWS,
+  }
+
   Flavor getFlavor();
 
   Tool getAs();

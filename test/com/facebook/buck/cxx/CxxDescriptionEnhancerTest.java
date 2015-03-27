@@ -22,8 +22,8 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
@@ -33,8 +33,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
@@ -72,7 +72,7 @@ public class CxxDescriptionEnhancerTest {
                 "lex", lexPath.toString(),
                 "yacc", yaccPath.toString())),
         filesystem);
-    CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(buckConfig);
+    CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     // Setup the target name and build params.
     BuildTarget target = BuildTargetFactory.newInstance("//:test");

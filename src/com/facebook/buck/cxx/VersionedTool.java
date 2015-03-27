@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -74,6 +75,15 @@ public class VersionedTool implements Tool {
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
     return builder.setReflectively(key, String.format("%s (%s)", name, version));
+  }
+
+  public static Function<Path, VersionedTool> fromPath(final String name, final String version) {
+    return new Function<Path, VersionedTool>() {
+      @Override
+      public VersionedTool apply(Path input) {
+        return new VersionedTool(input, ImmutableList.<String>of(), name, version);
+      }
+    };
   }
 
 }

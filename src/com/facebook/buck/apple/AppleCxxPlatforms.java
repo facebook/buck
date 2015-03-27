@@ -17,26 +17,22 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.DarwinLinker;
-import com.facebook.buck.cxx.DebugPathSanitizer;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
-import com.facebook.buck.cxx.HashedFileTool;
-import com.facebook.buck.cxx.ImmutableCxxPlatform;
+import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -136,30 +132,24 @@ public class AppleCxxPlatforms {
         "apple-ar",
         xcodeAndSdkVersion);
 
-    ImmutableCxxPlatform.Builder platformBuilder = ImmutableCxxPlatform.builder()
-        .setFlavor(ImmutableFlavor.of(targetSdkName + "-" + targetArchitecture))
-        .setAs(clangPath)
-        .setAspp(clangPath)
-        .setCc(clangPath)
-        .setCpp(clangPath)
-        .setCxx(clangXxPath)
-        .setCxxpp(clangXxPath)
-        .setCxxld(clangXxPath)
-        .setLex(getOptionalTool("lex", toolSearchPaths, pathIsExecutableChecker))
-        .setYacc(getOptionalTool("yacc", toolSearchPaths, pathIsExecutableChecker))
-        .setLd(
-            new DarwinLinker(libtool))
-        .setAr(ar)
-        .setDebugPathSanitizer(
-            Optional.of(
-                new DebugPathSanitizer(
-                    250,
-                    File.separatorChar,
-                    Paths.get("."),
-                    ImmutableBiMap.<Path, Path>of())))
-        .setSharedLibraryExtension("dylib");
-    DefaultCxxPlatforms.addToolFlagsFromConfig(buckConfig, platformBuilder);
-    return platformBuilder.build();
+    CxxBuckConfig config = new CxxBuckConfig(buckConfig);
+
+    return CxxPlatforms.build(
+        ImmutableFlavor.of(targetSdkName + "-" + targetArchitecture),
+        Platform.MACOS,
+        config,
+        clangPath,
+        clangPath,
+        clangPath,
+        clangXxPath,
+        clangPath,
+        clangXxPath,
+        clangXxPath,
+        Optional.of(CxxPlatform.LinkerType.DARWIN),
+        libtool,
+        ar,
+        getOptionalTool("lex", toolSearchPaths, pathIsExecutableChecker, xcodeAndSdkVersion),
+        getOptionalTool("yacc", toolSearchPaths, pathIsExecutableChecker, xcodeAndSdkVersion));
   }
 
   private static Optional<Path> getOptionalToolPath(
@@ -176,9 +166,10 @@ public class AppleCxxPlatforms {
   private static Optional<Tool> getOptionalTool(
       String tool,
       ImmutableList<Path> toolSearchPaths,
-      Function<Path, Boolean> pathIsExecutableChecker) {
+      Function<Path, Boolean> pathIsExecutableChecker,
+      String version) {
     return getOptionalToolPath(tool, toolSearchPaths, pathIsExecutableChecker)
-        .transform(HashedFileTool.FROM_PATH)
+        .transform(VersionedTool.fromPath(tool, version))
         .transform(Functions.<Tool>identity());
   }
 
@@ -186,15 +177,9 @@ public class AppleCxxPlatforms {
       String tool,
       ImmutableList<Path> toolSearchPaths,
       Function<Path, Boolean> pathIsExecutableChecker) {
-    Optional<Path> result = getOptionalToolPath(
-        tool,
-        toolSearchPaths,
-        pathIsExecutableChecker);
+    Optional<Path> result = getOptionalToolPath(tool, toolSearchPaths, pathIsExecutableChecker);
     if (!result.isPresent()) {
-      throw new HumanReadableException(
-        "Cannot find tool %s in paths %s",
-        tool,
-        toolSearchPaths);
+      throw new HumanReadableException("Cannot find tool %s in paths %s", tool, toolSearchPaths);
     }
     return result.get();
   }

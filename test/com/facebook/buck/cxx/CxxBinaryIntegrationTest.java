@@ -50,7 +50,7 @@ public class CxxBinaryIntegrationTest {
         this, "simple", tmp);
     workspace.setUp();
 
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
@@ -169,7 +169,7 @@ public class CxxBinaryIntegrationTest {
         this, "simple", tmp);
     workspace.setUp();
 
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple_with_header");
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
@@ -249,7 +249,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
 
     // Setup variables pointing to the sources and targets of the top-level binary rule.
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:binary_with_dep");
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
@@ -420,7 +420,7 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void resolveHeadersBehindSymlinkTreesInPreprocessedOutput() throws IOException {
     BuckConfig buckConfig = new FakeBuckConfig();
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(buckConfig);
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "resolved", tmp);

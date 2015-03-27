@@ -33,11 +33,12 @@ public class DefaultCxxPlatformsTest {
   @Test
   public void lexYaccFlags() {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
-        new FakeBuckConfig(
-            ImmutableMap.<String, Map<String, String>>of(
-                "cxx", ImmutableMap.of(
-                    "lexflags", "-lex -lex",
-                    "yaccflags", "-yacc -yacc"))));
+        new CxxBuckConfig(
+            new FakeBuckConfig(
+                ImmutableMap.<String, Map<String, String>>of(
+                    "cxx", ImmutableMap.of(
+                        "lexflags", "-lex -lex",
+                        "yaccflags", "-yacc -yacc")))));
     assertEquals(ImmutableList.of("-lex", "-lex"), cxxPlatform.getLexFlags());
     assertEquals(ImmutableList.of("-yacc", "-yacc"), cxxPlatform.getYaccFlags());
   }
@@ -46,13 +47,14 @@ public class DefaultCxxPlatformsTest {
   @Test
   public void compilerFlagsPropagateToPreprocessorFlags() {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
-        new FakeBuckConfig(
-            ImmutableMap.<String, Map<String, String>>of(
-                "cxx", ImmutableMap.of(
-                    "cflags", "-std=gnu11",
-                    "cppflags", "-DCFOO",
-                    "cxxflags", "-std=c++11",
-                    "cxxppflags", "-DCXXFOO"))));
+        new CxxBuckConfig(
+            new FakeBuckConfig(
+                ImmutableMap.<String, Map<String, String>>of(
+                    "cxx", ImmutableMap.of(
+                        "cflags", "-std=gnu11",
+                        "cppflags", "-DCFOO",
+                        "cxxflags", "-std=c++11",
+                        "cxxppflags", "-DCXXFOO")))));
     assertThat(
         cxxPlatform.getCflags(),
         containsInAnyOrder("-std=gnu11"));

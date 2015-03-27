@@ -360,7 +360,7 @@ public class KnownBuildRuleTypes {
     ImmutableMap.Builder<Flavor, CxxPlatform> cxxPlatformsBuilder = ImmutableMap.builder();
 
     // Add the default, config-defined C/C++ platform.
-    CxxPlatform defaultCxxPlatform = DefaultCxxPlatforms.build(platform, config);
+    CxxPlatform defaultCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
     cxxPlatformsBuilder.put(defaultCxxPlatform.getFlavor(), defaultCxxPlatform);
 
     // If an Android NDK is present, add platforms for that.  This is mostly useful for

@@ -63,7 +63,7 @@ public class CxxLexYaccIntegrationTest {
   @Before
   public void setUp() throws InterruptedException, IOException {
     CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(
-        new FakeBuckConfig());
+        new CxxBuckConfig(new FakeBuckConfig()));
     assumeTrue(cxxBuckConfig.getLex().isPresent());
     assumeTrue(cxxBuckConfig.getYacc().isPresent());
     assumeExists(cxxBuckConfig.getLex().get());
@@ -77,7 +77,7 @@ public class CxxLexYaccIntegrationTest {
     workspace.setUp();
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
-        new FakeBuckConfig());
+        new CxxBuckConfig(new FakeBuckConfig()));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:main");
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);

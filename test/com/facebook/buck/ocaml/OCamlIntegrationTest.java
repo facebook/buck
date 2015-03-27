@@ -29,6 +29,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
@@ -365,7 +366,7 @@ public class OCamlIntegrationTest {
     BuildTarget cclib = BuildTargetFactory.newInstance("//clib:cc");
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
-        new FakeBuckConfig());
+        new CxxBuckConfig(new FakeBuckConfig()));
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(cclib, cxxPlatform);
     BuildTarget cclibbin =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(cclib, cxxPlatform.getFlavor());

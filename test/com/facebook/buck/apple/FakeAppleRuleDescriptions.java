@@ -70,7 +70,7 @@ public class FakeAppleRuleDescriptions {
 
   private static final CxxPlatform DEFAULT_PLATFORM = DefaultCxxPlatforms.build(
       Platform.MACOS,
-      DEFAULT_BUCK_CONFIG);
+      new CxxBuckConfig(DEFAULT_BUCK_CONFIG));
 
   private static final FlavorDomain<CxxPlatform> DEFAULT_IPHONEOS_FLAVOR_DOMAIN =
       new FlavorDomain<>(

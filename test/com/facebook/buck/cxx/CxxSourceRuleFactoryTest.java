@@ -56,7 +56,7 @@ public class CxxSourceRuleFactoryTest {
   private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
 
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
-      new FakeBuckConfig());
+      new CxxBuckConfig(new FakeBuckConfig()));
 
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
     for (T item : items) {
@@ -131,9 +131,10 @@ public class CxxSourceRuleFactoryTest {
 
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
     CxxPlatform platform = DefaultCxxPlatforms.build(
-        new FakeBuckConfig(
-            ImmutableMap.<String, Map<String, String>>of(
-                "cxx", ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags)))));
+        new CxxBuckConfig(
+            new FakeBuckConfig(
+                ImmutableMap.<String, Map<String, String>>of(
+                    "cxx", ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags))))));
 
     CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.EMPTY;
 
@@ -206,7 +207,7 @@ public class CxxSourceRuleFactoryTest {
                 .put("cxxppflags", space.join(cxxppflags))
                 .build()),
         filesystem);
-    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
+    CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -521,9 +522,10 @@ public class CxxSourceRuleFactoryTest {
 
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
     CxxPlatform platform = DefaultCxxPlatforms.build(
-        new FakeBuckConfig(
-            ImmutableMap.<String, Map<String, String>>of(
-                "cxx", ImmutableMap.of("cxxflags", Joiner.on(" ").join(platformFlags)))));
+        new CxxBuckConfig(
+            new FakeBuckConfig(
+                ImmutableMap.<String, Map<String, String>>of(
+                    "cxx", ImmutableMap.of("cxxflags", Joiner.on(" ").join(platformFlags))))));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -598,7 +600,7 @@ public class CxxSourceRuleFactoryTest {
                 .put("cxxflags", space.join(cxxflags))
                 .build()),
         filesystem);
-    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
+    CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -811,7 +813,7 @@ public class CxxSourceRuleFactoryTest {
     ImmutableList<String> explicitCompilerFlags = ImmutableList.of("-fobjc-arc");
 
     FakeBuckConfig buckConfig = new FakeBuckConfig(filesystem);
-    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
+    CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(

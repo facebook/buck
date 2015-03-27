@@ -54,7 +54,7 @@ public class CxxLibraryTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
 
     // Setup some dummy values for the header info.
     final BuildTarget publicHeaderTarget = BuildTargetFactory.newInstance("//:header");

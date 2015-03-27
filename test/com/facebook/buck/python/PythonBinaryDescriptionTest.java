@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.MorePathsForTests;
@@ -54,7 +55,7 @@ public class PythonBinaryDescriptionTest {
   private static final Path PEX_PATH = Paths.get("pex");
   private static final Path PEX_EXECUTER_PATH = MorePathsForTests.rootRelativePath("/not/python2");
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
-      new FakeBuckConfig());
+      new CxxBuckConfig(new FakeBuckConfig()));
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of());
 

@@ -18,6 +18,11 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+
+import java.nio.file.Path;
 
 /**
  * Contains platform independent settings for C/C++ rules.
@@ -56,6 +61,31 @@ public class CxxBuckConfig {
    */
   public BuildTarget getBoostTestDep() {
     return delegate.getRequiredBuildTarget("cxx", "boost_test_dep");
+  }
+
+  public Optional<Path> getPath(String flavor, String name) {
+    return delegate
+        .getPath("cxx", flavor + "_" + name)
+        .or(delegate.getPath("cxx", name));
+  }
+
+  public <T extends Enum<T>> Optional<T> getLinkerType(String flavor, Class<T> clazz) {
+    return delegate
+        .getEnum("cxx", flavor + "_ld_type", clazz)
+        .or(delegate.getEnum("cxx", "ld_type", clazz));
+  }
+
+  public Optional<ImmutableList<String>> getFlags(
+      String field) {
+    Optional<String> value = delegate.getValue("cxx", field);
+    if (!value.isPresent()) {
+      return Optional.absent();
+    }
+    ImmutableList.Builder<String> split = ImmutableList.builder();
+    if (!value.get().trim().isEmpty()) {
+      split.addAll(Splitter.on(" ").split(value.get().trim()));
+    }
+    return Optional.of(split.build());
   }
 
 }

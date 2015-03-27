@@ -60,7 +60,7 @@ public class CxxLinkableEnhancerTest {
       new TestSourcePath("c.o"));
   private static final ImmutableSortedSet<BuildRule> EMPTY_DEPS = ImmutableSortedSet.of();
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
-      new FakeBuckConfig());
+      new CxxBuckConfig(new FakeBuckConfig()));
 
   private static class FakeNativeLinkable extends FakeBuildRule implements NativeLinkable {
 
@@ -346,7 +346,7 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new FakeBuckConfig());
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
 
     // Create a native linkable that sits at the bottom of the dep chain.
