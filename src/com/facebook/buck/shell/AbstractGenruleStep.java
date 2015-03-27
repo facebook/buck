@@ -51,7 +51,11 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ExecutionArgsAndCommand commandAndExecutionArgs =
+    ExecutionArgsAndCommand commandAndExecutionArgs = context.getPlatform() == Platform.WINDOWS ?
+        commandString.getExpandedCommandAndExecutionArgs(
+            Platform.WINDOWS,
+            getEnvironmentVariables(context),
+            target) :
         commandString.getCommandAndExecutionArgs(context.getPlatform(), target);
     return ImmutableList.<String>builder()
         .addAll(commandAndExecutionArgs.executionArgs)
@@ -147,6 +151,20 @@ public abstract class AbstractGenruleStep extends ShellStep {
         }
         return new ExecutionArgsAndCommand(ImmutableList.of("/bin/bash", "-e", "-c"), command);
       }
+    }
+
+    public ExecutionArgsAndCommand getExpandedCommandAndExecutionArgs(
+        Platform platform,
+        ImmutableMap<String, String> environmentVariablesToExpand,
+        BuildTarget target) {
+      ExecutionArgsAndCommand original = getCommandAndExecutionArgs(platform, target);
+      String expandedCommand = original.command;
+      for (Map.Entry<String, String> variable : environmentVariablesToExpand.entrySet()) {
+        expandedCommand = original.command
+            .replace("$" + variable.getKey(), variable.getValue())
+            .replace("${" + variable.getKey() + "}", variable.getValue());
+      }
+      return new ExecutionArgsAndCommand(original.executionArgs, expandedCommand);
     }
   }
 }
