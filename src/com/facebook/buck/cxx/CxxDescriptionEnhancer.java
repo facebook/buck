@@ -62,6 +62,9 @@ public class CxxDescriptionEnhancer {
   public static final Flavor HEADER_SYMLINK_TREE_FLAVOR = ImmutableFlavor.of("header-symlink-tree");
   public static final Flavor EXPORTED_HEADER_SYMLINK_TREE_FLAVOR =
       ImmutableFlavor.of("exported-header-symlink-tree");
+  public static final Flavor HEADER_MAP_FILE_FLAVOR = ImmutableFlavor.of("header-map-file");
+  public static final Flavor EXPORTED_HEADER_MAP_FILE_FLAVOR =
+      ImmutableFlavor.of("exported-header-map-file");
   public static final Flavor STATIC_FLAVOR = ImmutableFlavor.of("static");
   public static final Flavor SHARED_FLAVOR = ImmutableFlavor.of("shared");
 
@@ -167,6 +170,52 @@ public class CxxDescriptionEnhancer {
             .build());
   }
 
+  public static HeaderMapFile createHeaderMapFile(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      boolean includeLexYaccHeaders,
+      ImmutableMap<String, SourcePath> lexSources,
+      ImmutableMap<String, SourcePath> yaccSources,
+      ImmutableMap<Path, SourcePath> headers,
+      HeaderVisibility headerVisibility) {
+
+    BuildTarget headerMapFileTarget =
+        createHeaderMapFileTarget(
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor(),
+            headerVisibility);
+    Path headerMapFilePath =
+        getHeaderMapFilePath(
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor(),
+            headerVisibility);
+
+    CxxHeaderSourceSpec lexYaccSources;
+    if (includeLexYaccHeaders) {
+      lexYaccSources = requireLexYaccSources(
+          params,
+          ruleResolver,
+          pathResolver,
+          cxxPlatform,
+          lexSources,
+          yaccSources);
+    } else {
+      lexYaccSources = ImmutableCxxHeaderSourceSpec.builder().build();
+    }
+
+    return CxxPreprocessables.createHeaderMapFileBuildRule(
+        pathResolver,
+        headerMapFileTarget,
+        params,
+        headerMapFilePath,
+        ImmutableMap.<Path, SourcePath>builder()
+            .putAll(headers)
+            .putAll(lexYaccSources.getCxxHeaders())
+            .build());
+  }
+
   public static SymlinkTree requireHeaderSymlinkTree(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -242,6 +291,43 @@ public class CxxDescriptionEnhancer {
       default:
         throw new RuntimeException("Unexpected value of enum ExportMode");
     }
+  }
+
+  /**
+   * @return the {@link BuildTarget} to use for the {@link BuildRule} generating the
+   *    header map file.
+   */
+  public static BuildTarget createHeaderMapFileTarget(
+      BuildTarget target,
+      Flavor platform,
+      HeaderVisibility headerVisibility) {
+    return BuildTarget
+        .builder(target)
+        .addFlavors(platform)
+        .addFlavors(getHeaderMapFileFlavor(headerVisibility))
+        .build();
+  }
+
+  /**
+   * @return the {@link Path} to use for the header map file.
+   */
+  public static Path getHeaderMapFilePath(
+      BuildTarget target,
+      Flavor platform,
+      HeaderVisibility headerVisibility) {
+    return BuildTargets.getGenPath(
+        createHeaderMapFileTarget(target, platform, headerVisibility),
+        "%s");
+  }
+
+  public static Flavor getHeaderMapFileFlavor(HeaderVisibility headerVisibility) {
+    switch (headerVisibility) {
+      case PUBLIC:
+        return EXPORTED_HEADER_MAP_FILE_FLAVOR;
+      case PRIVATE:
+        return HEADER_MAP_FILE_FLAVOR;
+    }
+    throw new RuntimeException("Unhandled enum value.");
   }
 
   private static ImmutableMap<Path, SourcePath> getHeaderMapFromArgParameter(

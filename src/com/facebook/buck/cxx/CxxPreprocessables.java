@@ -40,6 +40,8 @@ public class CxxPreprocessables {
 
   private static final BuildRuleType HEADER_SYMLINK_TREE_TYPE =
       BuildRuleType.of("header_symlink_tree");
+  private static final BuildRuleType HEADER_MAP_TYPE =
+      BuildRuleType.of("header_map");
 
   private CxxPreprocessables() {}
 
@@ -132,6 +134,30 @@ public class CxxPreprocessables {
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         resolver,
         root,
+        links);
+  }
+
+  /**
+   * Build the {@link SymlinkTree} rule using the original build params from a target node.
+   * In particular, make sure to drop all dependencies from the original build rule params,
+   * as these are modeled via {@link CxxPreprocessAndCompile}.
+   */
+  public static HeaderMapFile createHeaderMapFileBuildRule(
+      SourcePathResolver resolver,
+      BuildTarget target,
+      BuildRuleParams params,
+      Path output,
+      ImmutableMap<Path, SourcePath> links) {
+
+    return new HeaderMapFile(
+        params.copyWithChanges(
+            HEADER_MAP_TYPE,
+            target,
+            // Header maps never need to depend on anything.
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        resolver,
+        output,
         links);
   }
 

@@ -294,11 +294,11 @@ public class ProjectGeneratorTest {
 
     assertEquals(
         ImmutableSet.of(
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 buildTarget,
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 buildTarget,
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PUBLIC),
@@ -383,11 +383,11 @@ public class ProjectGeneratorTest {
 
     assertEquals(
         ImmutableSet.of(
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 buildTarget,
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 buildTarget,
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PUBLIC),
@@ -397,7 +397,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testHeaderSymlinkTreesWithHeadersVisibleForTesting() throws IOException {
+  public void testHeaderMapsWithHeadersVisibleForTesting() throws IOException {
     BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
     BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
 
@@ -439,13 +439,13 @@ public class ProjectGeneratorTest {
         getBuildSettings(testTarget, testPBXTarget, "Default");
 
     assertEquals(
-        "test binary should use header symlink trees for both public and non-public headers " +
+        "test binary should use header maps for both public and non-public headers " +
             "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) " +
-            "../buck-out/gen/foo/test#default,header-symlink-tree " +
-            "../buck-out/gen/foo/test#default,exported-header-symlink-tree " +
-            "../buck-out/gen/foo/lib#default,exported-header-symlink-tree " +
-            "../buck-out/gen/foo/lib#default,header-symlink-tree",
+            "../buck-out/gen/foo/test#default,header-map-file " +
+            "../buck-out/gen/foo/test#default,exported-header-map-file " +
+            "../buck-out/gen/foo/lib#default,exported-header-map-file " +
+            "../buck-out/gen/foo/lib#default,header-map-file",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be used",
@@ -454,7 +454,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testHeaderSymlinkTreesWithTestsAndLibraryBundles() throws IOException {
+  public void testHeaderMapsWithTestsAndLibraryBundles() throws IOException {
     BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
     BuildTarget bundleTarget = BuildTarget.builder("//foo", "bundle").build();
     BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
@@ -503,13 +503,13 @@ public class ProjectGeneratorTest {
         getBuildSettings(testTarget, testPBXTarget, "Default");
 
     assertEquals(
-        "test binary should use header symlink trees for both public and non-public headers " +
+        "test binary should use header maps for both public and non-public headers " +
             "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) " +
-            "../buck-out/gen/foo/test#default,header-symlink-tree " +
-            "../buck-out/gen/foo/test#default,exported-header-symlink-tree " +
-            "../buck-out/gen/foo/lib#default,exported-header-symlink-tree " +
-            "../buck-out/gen/foo/lib#default,header-symlink-tree",
+            "../buck-out/gen/foo/test#default,header-map-file " +
+            "../buck-out/gen/foo/test#default,exported-header-map-file " +
+            "../buck-out/gen/foo/lib#default,exported-header-map-file " +
+            "../buck-out/gen/foo/lib#default,header-map-file",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be used",
@@ -518,7 +518,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testHeaderSymlinkTreesWithTestsAndBinaryBundles() throws IOException {
+  public void testHeaderMapsWithTestsAndBinaryBundles() throws IOException {
     BuildTarget binaryTarget = BuildTarget.builder("//foo", "bin").build();
     BuildTarget bundleTarget = BuildTarget.builder("//foo", "bundle").build();
     BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
@@ -567,13 +567,13 @@ public class ProjectGeneratorTest {
         getBuildSettings(testTarget, testPBXTarget, "Default");
 
     assertEquals(
-        "test binary should use header symlink trees for both public and non-public headers " +
+        "test binary should use header maps trees for both public and non-public headers " +
             "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) " +
-            "../buck-out/gen/foo/test#default,header-symlink-tree " +
-            "../buck-out/gen/foo/test#default,exported-header-symlink-tree " +
-            "../buck-out/gen/foo/bin#default,exported-header-symlink-tree " +
-            "../buck-out/gen/foo/bin#default,header-symlink-tree",
+            "../buck-out/gen/foo/test#default,header-map-file " +
+            "../buck-out/gen/foo/test#default,exported-header-map-file " +
+            "../buck-out/gen/foo/bin#default,exported-header-map-file " +
+            "../buck-out/gen/foo/bin#default,header-map-file",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be used",
@@ -2451,19 +2451,19 @@ public class ProjectGeneratorTest {
 
     assertEquals(
         ImmutableSet.of(
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 binaryTarget,
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 libraryTarget,
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 libraryTarget,
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PUBLIC),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 testTarget,
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PRIVATE)),

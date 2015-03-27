@@ -81,6 +81,26 @@ public class CxxBinaryDescription implements
         CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
   }
 
+  /**
+   * @return a {@link HeaderMapFile} for the headers of this C/C++ binary.
+   */
+  public static <A extends Arg> HeaderMapFile createHeaderMapFileBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      A args) {
+    return CxxDescriptionEnhancer.createHeaderMapFile(
+        params,
+        resolver,
+        new SourcePathResolver(resolver),
+        cxxPlatform,
+        /* includeLexYaccHeaders */ true,
+        CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
+        CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
+        CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
+        CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+  }
+
   @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
@@ -121,6 +141,27 @@ public class CxxBinaryDescription implements
               Suppliers.ofInstance(params.getExtraDeps()));
 
       return createHeaderSymlinkTreeBuildRule(
+          typeParams,
+          resolver,
+          cxxPlatform,
+          args);
+    } else if (flavors.contains(CxxDescriptionEnhancer.HEADER_MAP_FILE_FLAVOR)) {
+      flavors = ImmutableSet.copyOf(
+          Sets.difference(
+              flavors,
+              ImmutableSet.of(CxxDescriptionEnhancer.HEADER_MAP_FILE_FLAVOR)));
+      BuildTarget target = BuildTarget
+          .builder(params.getBuildTarget().getUnflavoredBuildTarget())
+          .addAllFlavors(flavors)
+          .build();
+      BuildRuleParams typeParams =
+          params.copyWithChanges(
+              params.getBuildRuleType(),
+              target,
+              Suppliers.ofInstance(params.getDeclaredDeps()),
+              Suppliers.ofInstance(params.getExtraDeps()));
+
+      return createHeaderMapFileBuildRule(
           typeParams,
           resolver,
           cxxPlatform,
@@ -186,9 +227,15 @@ public class CxxBinaryDescription implements
     }
     flavors = Sets.difference(flavors, platformFlavors);
 
-    flavors = Sets.difference(
+    Set<Flavor> typeFlavors = Sets.intersection(
         flavors,
-        ImmutableSet.of(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR));
+        ImmutableSet.of(
+            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
+            CxxDescriptionEnhancer.HEADER_MAP_FILE_FLAVOR));
+    if (typeFlavors.size() > 1) {
+      return false;
+    }
+    flavors = Sets.difference(flavors, typeFlavors);
 
     return flavors.isEmpty();
   }

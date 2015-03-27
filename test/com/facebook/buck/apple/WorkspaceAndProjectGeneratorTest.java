@@ -353,23 +353,23 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(
         generator.getRequiredBuildTargets(),
         hasItems(
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 BuildTarget.builder("//foo", "binbinary").build(),
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 BuildTarget.builder("//foo", "lib").build(),
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 BuildTarget.builder("//foo", "lib").build(),
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PUBLIC),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 BuildTarget.builder("//bar", "lib").build(),
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 BuildTarget.builder("//bar", "lib").build(),
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PUBLIC)));
@@ -390,23 +390,23 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(
         generator.getRequiredBuildTargets(),
         hasItems(
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 BuildTarget.builder("//foo", "binbinary").build(),
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 BuildTarget.builder("//foo", "lib").build(),
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 BuildTarget.builder("//foo", "lib").build(),
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PUBLIC),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 BuildTarget.builder("//bar", "lib").build(),
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+            CxxDescriptionEnhancer.createHeaderMapFileTarget(
                 BuildTarget.builder("//bar", "lib").build(),
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PUBLIC)));

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -28,10 +29,13 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteStreams;
 
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -136,6 +140,68 @@ public class AppleLibraryIntegrationTest {
     assertIsSymbolicLink(
         outputPath.resolve("TestLibrary/PublicHeader.h"),
         inputPath.resolve("PublicHeader.h"));
+  }
+
+  @Test
+  public void testAppleLibraryHeaderMapFile() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_header_symlink_tree", tmp);
+    workspace.setUp();
+
+    BuildTarget buildTarget = BuildTarget.builder("//Libraries/TestLibrary", "TestLibrary")
+        .addFlavors(ImmutableFlavor.of("default"))
+        .addFlavors(ImmutableFlavor.of("header-map-file"))
+        .build();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        buildTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+
+    Path inputPath = projectRoot.resolve(
+        buildTarget.getBasePath());
+    Path outputPath = projectRoot.resolve(
+        BuildTargets.getGenPath(buildTarget, "%s"));
+
+    HeaderMapUtils.assertThatHeaderMapContains(
+        ImmutableMap.of(
+            "PrivateHeader.h", inputPath.resolve("PrivateHeader.h").toString(),
+            "TestLibrary/PrivateHeader.h", inputPath.resolve("PrivateHeader.h").toString(),
+            "PublicHeader.h", inputPath.resolve("PublicHeader.h").toString()),
+        HeaderMap.deserialize(ByteStreams.toByteArray(new FileInputStream(outputPath.toFile()))));
+  }
+
+  @Test
+  public void testAppleLibraryExportedHeaderMapFile() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_header_symlink_tree", tmp);
+    workspace.setUp();
+
+    BuildTarget buildTarget = BuildTarget.builder("//Libraries/TestLibrary", "TestLibrary")
+        .addFlavors(ImmutableFlavor.of("default"))
+        .addFlavors(ImmutableFlavor.of("exported-header-map-file"))
+        .build();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        buildTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+
+    Path inputPath = projectRoot.resolve(
+        buildTarget.getBasePath());
+    Path outputPath = projectRoot.resolve(
+        BuildTargets.getGenPath(buildTarget, "%s"));
+
+    HeaderMapUtils.assertThatHeaderMapContains(
+        ImmutableMap.of(
+            "TestLibrary/PublicHeader.h", inputPath.resolve("PublicHeader.h").toString()),
+        HeaderMap.deserialize(ByteStreams.toByteArray(new FileInputStream(outputPath.toFile()))));
   }
 
   private static void assertIsSymbolicLink(
