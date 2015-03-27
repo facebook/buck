@@ -1,0 +1,13 @@
+apple_binary(
+  name='bin',
+  srcs=glob(['*.m']),
+  deps=['//lib:lib'],
+  visibility=['PUBLIC'],
+)
+
+apple_bundle(
+  name='app',
+  binary=':bin',
+  extension='app',
+  visibility=['PUBLIC'],
+)

@@ -54,7 +54,7 @@ public class WorkspaceAndProjectGenerator {
 
   private final ProjectFilesystem projectFilesystem;
   private final TargetGraph projectGraph;
-  private final TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceTargetNode;
+  private final XcodeWorkspaceConfigDescription.Arg workspaceArguments;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
   private final ImmutableSet<TargetNode<AppleTestDescription.Arg>> extraTestBundleTargetNodes;
   private final boolean combinedProject;
@@ -71,19 +71,19 @@ public class WorkspaceAndProjectGenerator {
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
       TargetGraph projectGraph,
-      TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceTargetNode,
+      XcodeWorkspaceConfigDescription.Arg workspaceArguments,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       boolean combinedProject,
       String buildFileName) {
     this.projectFilesystem = projectFilesystem;
     this.projectGraph = projectGraph;
-    this.workspaceTargetNode = workspaceTargetNode;
+    this.workspaceArguments = workspaceArguments;
     this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
     this.combinedProject = combinedProject;
     this.buildFileName = buildFileName;
     this.combinedProjectGenerator = Optional.absent();
     extraTestBundleTargetNodes = getExtraTestTargetNodes(
-        projectGraph, workspaceTargetNode.getConstructorArg().extraTests.get());
+        projectGraph, workspaceArguments.extraTests.get());
   }
 
   @VisibleForTesting
@@ -126,17 +126,17 @@ public class WorkspaceAndProjectGenerator {
   public Path generateWorkspaceAndDependentProjects(
         Map<Path, ProjectGenerator> projectGenerators)
       throws IOException {
-    LOG.debug("Generating workspace for target %s", workspaceTargetNode);
+    LOG.debug("Generating workspace for target %s", workspaceArguments.srcTarget);
 
     String workspaceName = XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(
-        workspaceTargetNode.getConstructorArg());
+        workspaceArguments);
     Path outputDirectory;
     if (combinedProject) {
       workspaceName += "-Combined";
       outputDirectory =
-          BuildTargets.getGenPath(workspaceTargetNode.getBuildTarget(), "%s").getParent();
+          BuildTargets.getGenPath(workspaceArguments.srcTarget.get(), "%s").getParent();
     } else {
-      outputDirectory = workspaceTargetNode.getBuildTarget().getBasePath();
+      outputDirectory = workspaceArguments.srcTarget.get().getBasePath();
     }
 
     WorkspaceGenerator workspaceGenerator = new WorkspaceGenerator(
@@ -145,12 +145,12 @@ public class WorkspaceAndProjectGenerator {
         outputDirectory);
 
     ImmutableSet<TargetNode<?>> orderedTargetNodes;
-    if (workspaceTargetNode.getConstructorArg().srcTarget.isPresent()) {
+    if (workspaceArguments.srcTarget.isPresent()) {
       orderedTargetNodes = AppleBuildRules.getSchemeBuildableTargetNodes(
           projectGraph,
           Preconditions.checkNotNull(
               projectGraph.get(
-                  workspaceTargetNode.getConstructorArg().srcTarget.get().getBuildTarget())));
+                  workspaceArguments.srcTarget.get().getBuildTarget())));
     } else {
       orderedTargetNodes = ImmutableSet.of();
     }
@@ -261,7 +261,7 @@ public class WorkspaceAndProjectGenerator {
             projectGraph,
             ImmutableSortedSet.<BuildTarget>of(),
             projectFilesystem,
-            BuildTargets.getGenPath(workspaceTargetNode.getBuildTarget(), "%s-CombinedTestBundles"),
+            BuildTargets.getGenPath(workspaceArguments.srcTarget.get(), "%s-CombinedTestBundles"),
             "_CombinedTestBundles",
             buildFileName,
             projectGeneratorOptions);
@@ -297,7 +297,7 @@ public class WorkspaceAndProjectGenerator {
 
     SchemeGenerator schemeGenerator = new SchemeGenerator(
         projectFilesystem,
-        workspaceTargetNode.getConstructorArg().srcTarget.transform(
+        workspaceArguments.srcTarget.transform(
             Functions.forMap(buildTargetToTarget)),
         Iterables.transform(orderedTargetNodes, targetNodeToPBXTargetTransformer),
         FluentIterable
@@ -311,7 +311,7 @@ public class WorkspaceAndProjectGenerator {
         workspaceName,
         outputDirectory.resolve(workspaceName + ".xcworkspace"),
         XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(
-            workspaceTargetNode.getConstructorArg()),
+            workspaceArguments),
         targetToProjectPathMapBuilder.build());
     schemeGenerator.writeScheme();
     this.schemeGenerator = Optional.of(schemeGenerator);

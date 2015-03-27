@@ -196,7 +196,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
         targetGraph,
-        workspaceNode,
+        workspaceNode.getConstructorArg(),
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false /* combinedProject */,
         "BUCK");
@@ -253,7 +253,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
         targetGraph,
-        workspaceNode,
+        workspaceNode.getConstructorArg(),
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         true /* combinedProject */,
         "BUCK");
@@ -295,7 +295,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
         targetGraph,
-        workspaceNode,
+        workspaceNode.getConstructorArg(),
         ImmutableSet.<ProjectGenerator.Option>of(),
         false /* combinedProject */,
         "BUCK");
@@ -343,7 +343,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
         targetGraph,
-        workspaceNode,
+        workspaceNode.getConstructorArg(),
         ImmutableSet.<ProjectGenerator.Option>of(),
         false /* combinedProject */,
         "BUCK");
@@ -380,7 +380,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
         targetGraph,
-        workspaceNode,
+        workspaceNode.getConstructorArg(),
         ImmutableSet.<ProjectGenerator.Option>of(),
         true /* combinedProject */,
         "BUCK");
@@ -462,7 +462,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
         targetGraph,
-        workspace,
+        workspace.getConstructorArg(),
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false,
         "BUCK");

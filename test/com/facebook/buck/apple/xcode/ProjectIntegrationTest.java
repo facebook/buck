@@ -19,13 +19,18 @@ package com.facebook.buck.apple.xcode;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 
 public class ProjectIntegrationTest {
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
@@ -145,4 +150,58 @@ public class ProjectIntegrationTest {
     workspace.verify();
   }
 
+  @Test
+  public void testGeneratesWorkspaceFromBundle() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_implicit_workspace_generation", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "//bin:app");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testGeneratesWorkspaceFromLibrary() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_implicit_workspace_generation", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "//lib:lib");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testAttemptingToGenerateWorkspaceFromBinaryTargetIsABuildError() throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "//bin:bin must be a xcode_workspace_config, apple_bundle, or apple_library");
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_implicit_workspace_generation", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand(
+        "project",
+        "//bin:bin");
+  }
+
+  @Test
+  public void testAttemptingToGenerateWorkspaceFromResourceTargetIsABuildError()
+      throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "//res:res must be a xcode_workspace_config, apple_bundle, or apple_library");
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "project_implicit_workspace_generation", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand(
+        "project",
+        "//res:res");
+  }
 }

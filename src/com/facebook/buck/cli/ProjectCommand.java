@@ -17,8 +17,11 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.AppleBuildRules;
+import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.ProjectGenerator;
+import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.WorkspaceAndProjectGenerator;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.java.JavaLibraryDescription;
@@ -38,6 +41,7 @@ import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -57,7 +61,9 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
@@ -335,18 +341,26 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           ? AppleBuildRules.filterGroupableTests(testTargetNodes)
           : ImmutableSet.<TargetNode<AppleTestDescription.Arg>>of();
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
-    for (BuildTarget workspaceTarget : targets) {
-      TargetNode<?> workspaceNode = Preconditions.checkNotNull(
-          targetGraphAndTargets.getTargetGraph().get(workspaceTarget));
-      if (workspaceNode.getType() != XcodeWorkspaceConfigDescription.TYPE) {
+    for (BuildTarget inputTarget : targets) {
+      TargetNode<?> inputNode = Preconditions.checkNotNull(
+          targetGraphAndTargets.getTargetGraph().get(inputTarget));
+      XcodeWorkspaceConfigDescription.Arg workspaceArgs;
+      BuildRuleType type = inputNode.getType();
+      if (type == XcodeWorkspaceConfigDescription.TYPE) {
+        TargetNode<XcodeWorkspaceConfigDescription.Arg> castedWorkspaceNode =
+          castToXcodeWorkspaceTargetNode(inputNode);
+        workspaceArgs = castedWorkspaceNode.getConstructorArg();
+      } else if (canGenerateImplicitWorkspaceForType(type)) {
+        workspaceArgs = createImplicitWorkspaceArgs(inputNode);
+      } else {
         throw new HumanReadableException(
-            "%s must be a xcode_workspace_config",
-            workspaceTarget);
+            "%s must be a xcode_workspace_config, apple_bundle, or apple_library",
+            inputNode);
       }
       WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
           getProjectFilesystem(),
           targetGraphAndTargets.getTargetGraph(),
-          castToXcodeWorkspaceTargetNode(workspaceNode),
+          workspaceArgs,
           optionsBuilder.build(),
           combinedProject,
           new ParserConfig(options.getBuckConfig()).getBuildFileName());
@@ -356,7 +370,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           generator.getRequiredBuildTargets();
       LOG.debug(
           "Required build targets for workspace %s: %s",
-          workspaceTarget,
+          inputTarget,
           requiredBuildTargetsForWorkspace);
       requiredBuildTargetsBuilder.addAll(requiredBuildTargetsForWorkspace);
     }
@@ -506,6 +520,29 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         associatedProjectPredicate,
         isWithTests,
         explicitTestTargets);
+  }
+
+  private boolean canGenerateImplicitWorkspaceForType(BuildRuleType type) {
+    // We weren't given a workspace target, but we may have been given something that could
+    // still turn into a workspace (for example, a library or an actual app rule). If that's the
+    // case we still want to generate a workspace.
+    return type == AppleBundleDescription.TYPE ||
+           type == AppleLibraryDescription.TYPE;
+  }
+
+  /**
+   * @param sourceTargetNode - The TargetNode which will act as our fake workspaces `src_target`
+   * @return Workspace Args that describe a generic Xcode workspace containing `src_target` and its
+   * tests
+   */
+  private XcodeWorkspaceConfigDescription.Arg createImplicitWorkspaceArgs(
+      TargetNode<?> sourceTargetNode) {
+    XcodeWorkspaceConfigDescription.Arg workspaceArgs = new XcodeWorkspaceConfigDescription.Arg();
+    workspaceArgs.srcTarget = Optional.of(sourceTargetNode.getBuildTarget());
+    workspaceArgs.actionConfigNames = Optional.of(ImmutableMap.<SchemeActionType, String>of());
+    workspaceArgs.extraTests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    workspaceArgs.workspaceName = Optional.absent();
+    return workspaceArgs;
   }
 
   @Override
