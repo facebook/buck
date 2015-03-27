@@ -43,6 +43,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
   private final Path pathToPex;
+  private final Path pathToPexExecuter;
   private final Path main;
   private final PythonPackageComponents components;
   private final PythonEnvironment pythonEnvironment;
@@ -51,11 +52,13 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
       BuildRuleParams params,
       SourcePathResolver resolver,
       Path pathToPex,
+      Path pathToPexExecuter,
       PythonEnvironment pythonEnvironment,
       Path main,
       PythonPackageComponents components) {
     super(params, resolver);
     this.pathToPex = pathToPex;
+    this.pathToPexExecuter = pathToPexExecuter;
     this.pythonEnvironment = pythonEnvironment;
     this.main = main;
     this.components = components;
@@ -88,6 +91,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
   @Override
   public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
     return ImmutableList.of(
+        pathToPexExecuter.toString(),
         Preconditions.checkNotNull(
             projectFilesystem.getAbsolutifier().apply(getBinPath())).toString());
   }

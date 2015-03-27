@@ -23,16 +23,22 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cli.FakeBuckEnvironment;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
@@ -203,4 +209,70 @@ public class PythonBuckConfigTest {
         pythonA.getAbsolutePath());
   }
 
+  @Test
+  public void testPathToPexExecuterDefaultsToPython() throws IOException {
+    File python2 = temporaryFolder.newFile("python2");
+    assertTrue("Should be able to set file executable", python2.setExecutable(true));
+    PythonBuckConfig config =
+        new PythonBuckConfig(
+            new FakeBuckEnvironment(
+                ImmutableMap.<String, Map<String, String>>of(),
+                ImmutableMap.<String, String>builder()
+                    .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
+                    .put("PATHEXT", "")
+                    .build()));
+    assertEquals(config.getPathToPexExecuter().toString(), config.getPythonInterpreter());
+  }
+
+  @Test
+  public void testPathToPexExecuterUsesConfigSetting() throws IOException {
+    DebuggableTemporaryFolder projectDir = new DebuggableTemporaryFolder();
+    projectDir.create();
+    Path pexExecuter = Paths.get("pex-exectuter");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
+        new FakeClock(0),
+        projectDir.getRoot(),
+        ImmutableSet.of(pexExecuter));
+    Files.createFile(projectFilesystem.resolve(pexExecuter));
+    assertTrue(
+        "Should be able to set file executable",
+        projectFilesystem.resolve(pexExecuter).toFile().setExecutable(true));
+    PythonBuckConfig config =
+        new PythonBuckConfig(
+            new FakeBuckConfig(
+                ImmutableMap.<String, Map<String, String>>builder()
+                    .put(
+                        "python",
+                        ImmutableMap.of(
+                            "path_to_pex_executer",
+                            pexExecuter.toString())).build(),
+                projectFilesystem));
+    assertEquals(config.getPathToPexExecuter(), projectFilesystem.resolve(pexExecuter));
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void testPathToPexExecuterNotExecutableThrows() throws IOException {
+    DebuggableTemporaryFolder projectDir = new DebuggableTemporaryFolder();
+    projectDir.create();
+    Path pexExecuter = Paths.get("pex-executer");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
+        new FakeClock(0),
+        projectDir.getRoot(),
+        ImmutableSet.of(pexExecuter));
+    Files.createFile(projectFilesystem.resolve(pexExecuter));
+    assumeTrue(
+        "Should be able to set file non-executable",
+        projectFilesystem.resolve(pexExecuter).toFile().setExecutable(false));
+    PythonBuckConfig config =
+        new PythonBuckConfig(
+            new FakeBuckConfig(
+                ImmutableMap.<String, Map<String, String>>builder()
+                    .put(
+                        "python",
+                        ImmutableMap.of(
+                            "path_to_pex_executer",
+                            pexExecuter.toString())).build(),
+                projectFilesystem));
+    config.getPathToPexExecuter();
+  }
 }

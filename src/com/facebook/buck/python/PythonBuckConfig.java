@@ -44,6 +44,14 @@ public class PythonBuckConfig {
   private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
       ImmutableList.of("python2", "python");
 
+  private static final Path DEFAULT_PATH_TO_PEX =
+      Paths.get(
+          System.getProperty(
+              "buck.path_to_pex",
+              "src/com/facebook/buck/python/pex.py"))
+          .toAbsolutePath();
+
+
   private final BuckConfig delegate;
 
   public PythonBuckConfig(BuckConfig config) {
@@ -121,10 +129,22 @@ public class PythonBuckConfig {
     return Optional.of(Paths.get(rawPath));
   }
 
-  public Optional<Path> getPathToPex() {
-    return delegate.getPath(SECTION, "path_to_pex");
+  public Path getPathToPex() {
+    return delegate.getPath(SECTION, "path_to_pex").or(DEFAULT_PATH_TO_PEX);
   }
 
+  public Path getPathToPexExecuter() {
+    Optional<Path> path = delegate.getPath(SECTION, "path_to_pex_executer");
+    if (!path.isPresent()) {
+      return Paths.get(getPythonInterpreter());
+    }
+    if (!isExecutableFile(path.get().toFile())) {
+      throw new HumanReadableException(
+          "%s is not executable (set in python.path_to_pex_executer in your config",
+          path.get().toString());
+    }
+    return path.get();
+  }
 
   private static PythonVersion getPythonVersion(ProcessExecutor processExecutor, Path pythonPath)
       throws InterruptedException {

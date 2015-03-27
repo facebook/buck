@@ -64,6 +64,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
   private final ProjectFilesystem projectFilesystem;
   private final Path pathToPex;
+  private final Path pathToPexExecuter;
   private final Optional<Path> pathToPythonTestMain;
   private final PythonEnvironment pythonEnvironment;
   private final CxxPlatform defaultCxxPlatform;
@@ -72,12 +73,14 @@ public class PythonTestDescription implements Description<PythonTestDescription.
   public PythonTestDescription(
       ProjectFilesystem projectFilesystem,
       Path pathToPex,
+      Path pathToPexExecuter,
       Optional<Path> pathToPythonTestMain,
       PythonEnvironment pythonEnvironment,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.projectFilesystem = projectFilesystem;
     this.pathToPex = pathToPex;
+    this.pathToPexExecuter = pathToPexExecuter;
     this.pathToPythonTestMain = pathToPythonTestMain;
     this.pythonEnvironment = pythonEnvironment;
     this.defaultCxxPlatform = defaultCxxPlatform;
@@ -264,6 +267,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         binaryParams,
         pathResolver,
         pathToPex,
+        pathToPexExecuter,
         pythonEnvironment,
         getTestMainName(),
         allComponents);

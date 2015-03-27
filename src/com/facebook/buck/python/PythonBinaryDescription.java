@@ -36,30 +36,25 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class PythonBinaryDescription implements Description<PythonBinaryDescription.Arg> {
-
-  public static final Path DEFAULT_PATH_TO_PEX =
-      Paths.get(
-          System.getProperty(
-              "buck.path_to_pex",
-              "src/com/facebook/buck/python/pex.py"))
-          .toAbsolutePath();
 
   public static final BuildRuleType TYPE = BuildRuleType.of("python_binary");
 
   private final Path pathToPex;
+  private final Path pathToPexExecuter;
   private final PythonEnvironment pythonEnvironment;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonBinaryDescription(
       Path pathToPex,
+      Path pathToPexExecuter,
       PythonEnvironment pythonEnv,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.pathToPex = pathToPex;
+    this.pathToPexExecuter = pathToPexExecuter;
     this.pythonEnvironment = pythonEnv;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
@@ -116,6 +111,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         binaryParams,
         pathResolver,
         pathToPex,
+        pathToPexExecuter,
         pythonEnvironment,
         mainModule,
         allPackageComponents);

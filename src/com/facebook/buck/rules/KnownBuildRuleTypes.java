@@ -385,8 +385,6 @@ public class KnownBuildRuleTypes {
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
     PythonBuckConfig pyConfig = new PythonBuckConfig(config);
-    // Look up the path to the PEX builder script.
-    Optional<Path> pythonPathToPex = pyConfig.getPathToPex();
 
     // Look up the path to the main module we use for python tests.
     Optional<Path> pythonPathToPythonTestMain = pyConfig.getPathToTestMain();
@@ -492,7 +490,8 @@ public class KnownBuildRuleTypes {
     builder.register(new ProjectConfigDescription());
     builder.register(
         new PythonBinaryDescription(
-            pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
+            pyConfig.getPathToPex(),
+            pyConfig.getPathToPexExecuter(),
             pythonEnv,
             defaultCxxPlatform,
             cxxPlatforms));
@@ -500,7 +499,8 @@ public class KnownBuildRuleTypes {
     builder.register(
         new PythonTestDescription(
             projectFilesystem,
-            pythonPathToPex.or(PythonBinaryDescription.DEFAULT_PATH_TO_PEX),
+            pyConfig.getPathToPex(),
+            pyConfig.getPathToPexExecuter(),
             pythonPathToPythonTestMain,
             pythonEnv,
             defaultCxxPlatform,

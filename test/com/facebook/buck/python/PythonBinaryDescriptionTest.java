@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -51,6 +52,7 @@ public class PythonBinaryDescriptionTest {
 
   private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
   private static final Path PEX_PATH = Paths.get("pex");
+  private static final Path PEX_EXECUTER_PATH = MorePathsForTests.rootRelativePath("/not/python2");
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
       new FakeBuckConfig());
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
@@ -80,6 +82,7 @@ public class PythonBinaryDescriptionTest {
             .build();
     PythonBinaryDescription desc = new PythonBinaryDescription(
         PEX_PATH,
+        PEX_EXECUTER_PATH,
         new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7")),
         CXX_PLATFORM,
         CXX_PLATFORMS);
@@ -106,6 +109,7 @@ public class PythonBinaryDescriptionTest {
         BuildTargetFactory.newInstance("//:bin"));
     PythonBinaryDescription desc = new PythonBinaryDescription(
         PEX_PATH,
+        PEX_EXECUTER_PATH,
         new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7")),
         CXX_PLATFORM,
         CXX_PLATFORMS);
@@ -128,6 +132,7 @@ public class PythonBinaryDescriptionTest {
     String mainName = "main.py";
     PythonBinaryDescription desc = new PythonBinaryDescription(
         PEX_PATH,
+        PEX_EXECUTER_PATH,
         new PythonEnvironment(Paths.get("python"), ImmutablePythonVersion.of("2.5")),
         CXX_PLATFORM,
         CXX_PLATFORMS);
