@@ -236,33 +236,44 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule {
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
         new CxxPreprocessAndCompileStep(
-            compiler.getCommandPrefix(getResolver()),
             operation,
-            ImmutableList.<String>builder()
-                .addAll(flags)
-                .addAll(
-                    MoreIterables.zipAndConcat(
-                        Iterables.cycle("-include"),
-                        FluentIterable.from(includes.getPrefixHeaders())
-                            .transform(getResolver().getPathFunction())
-                            .transform(Functions.toStringFunction())))
-                .addAll(
-                    MoreIterables.zipAndConcat(
-                        Iterables.cycle("-I"),
-                        Iterables.transform(includeRoots, Functions.toStringFunction())))
-                .addAll(
-                    MoreIterables.zipAndConcat(
-                        Iterables.cycle("-isystem"),
-                        Iterables.transform(systemIncludeRoots, Functions.toStringFunction())))
-                .addAll(
-                    MoreIterables.zipAndConcat(
-                        Iterables.cycle("-F"),
-                        Iterables.transform(frameworkRoots, Functions.toStringFunction())))
-                .build(),
             output,
             getResolver().getPath(input),
+            this.getCommand(),
             replacementPaths,
             sanitizer));
+  }
+
+  public ImmutableList<String> getCommand() {
+    ImmutableList.Builder<String> cmd = ImmutableList.builder();
+    cmd.addAll(compiler.getCommandPrefix(getResolver()));
+    cmd.add(operation.getFlag());
+    cmd.addAll(ImmutableList.<String>builder()
+        .addAll(flags)
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-include"),
+                FluentIterable.from(includes.getPrefixHeaders())
+                    .transform(getResolver().getPathFunction())
+                    .transform(Functions.toStringFunction())))
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-I"),
+                Iterables.transform(includeRoots, Functions.toStringFunction())))
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-isystem"),
+                Iterables.transform(systemIncludeRoots, Functions.toStringFunction())))
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-F"),
+                Iterables.transform(frameworkRoots, Functions.toStringFunction())))
+        .build());
+    if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE) {
+      cmd.add("-o", output.toString());
+    }
+    cmd.add(getResolver().getPath(input).toString());
+    return cmd.build();
   }
 
   @Override

@@ -49,11 +49,10 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private static final Logger LOG = Logger.get(CxxPreprocessAndCompileStep.class);
 
-  private final ImmutableList<String> compilerPrefix;
   private final Operation operation;
-  private final ImmutableList<String> flags;
   private final Path output;
   private final Path input;
+  private final ImmutableList<String> command;
   private final ImmutableMap<Path, Path> replacementPaths;
   private final Optional<DebugPathSanitizer> sanitizer;
 
@@ -65,18 +64,16 @@ public class CxxPreprocessAndCompileStep implements Step {
   );
 
   public CxxPreprocessAndCompileStep(
-      ImmutableList<String> compilerPrefix,
       Operation operation,
-      ImmutableList<String> flags,
       Path output,
       Path input,
+      ImmutableList<String> command,
       ImmutableMap<Path, Path> replacementPaths,
       Optional<DebugPathSanitizer> sanitizer) {
-    this.compilerPrefix = compilerPrefix;
     this.operation = operation;
-    this.flags = flags;
     this.output = output;
     this.input = input;
+    this.command = command;
     this.replacementPaths = replacementPaths;
     this.sanitizer = sanitizer;
   }
@@ -92,19 +89,6 @@ public class CxxPreprocessAndCompileStep implements Step {
       fileType = "unknown";
     }
     return fileType + " " + operation.toString().toLowerCase();
-  }
-
-  @VisibleForTesting
-  ImmutableList<String> getCommand() {
-    ImmutableList.Builder<String> cmd = ImmutableList.builder();
-    cmd.addAll(compilerPrefix);
-    cmd.add(operation.getFlag());
-    cmd.addAll(flags);
-    if (operation == Operation.COMPILE) {
-      cmd.add("-o", output.toString());
-    }
-    cmd.add(input.toString());
-    return cmd.build();
   }
 
   @VisibleForTesting
@@ -174,7 +158,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
 
     ProcessBuilder builder = new ProcessBuilder();
-    builder.command(getCommand());
+    builder.command(command);
     builder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
     builder.redirectError(ProcessBuilder.Redirect.PIPE);
 
@@ -274,7 +258,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return Joiner.on(' ').join(
-        FluentIterable.from(getCommand())
+        FluentIterable.from(command)
             .transform(Escaper.SHELL_ESCAPER));
   }
 

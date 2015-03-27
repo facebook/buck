@@ -59,6 +59,13 @@ public class CxxCompileStepIntegrationTest {
     Path input = filesystem.resolve(relativeInput);
     filesystem.writeContentsToPath("int main() {}", relativeInput);
 
+    ImmutableList.Builder<String> cmd = ImmutableList.builder();
+    cmd.addAll(compiler);
+    cmd.add(CxxPreprocessAndCompileStep.Operation.COMPILE.getFlag());
+    cmd.add("-g");
+    cmd.add("-o", output.toString());
+    cmd.add(relativeInput.toString());
+
     DebugPathSanitizer sanitizer = new DebugPathSanitizer(
         200,
         File.separatorChar,
@@ -67,11 +74,10 @@ public class CxxCompileStepIntegrationTest {
 
     // Build an archive step.
     CxxPreprocessAndCompileStep step = new CxxPreprocessAndCompileStep(
-        compiler,
         CxxPreprocessAndCompileStep.Operation.COMPILE,
-        ImmutableList.of("-g"),
         output,
         relativeInput,
+        cmd.build(),
         ImmutableMap.<Path, Path>of(),
         Optional.of(sanitizer));
 

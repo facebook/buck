@@ -33,69 +33,6 @@ import java.nio.file.Paths;
 public class CxxPreprocessAndCompileStepTest {
 
   @Test
-  public void usesCorrectCommandForCompile() {
-
-    // Setup some dummy values for inputs to the CxxPreprocessAndCompileStep
-    ImmutableList<String> compiler = ImmutableList.of("compiler");
-    ImmutableList<String> flags = ImmutableList.of("-ffunction-sections");
-    Path output = Paths.get("test.o");
-    Path input = Paths.get("test.ii");
-    ImmutableMap<Path, Path> replacementPaths = ImmutableMap.of();
-
-    // Create our CxxPreprocessAndCompileStep to test.
-    CxxPreprocessAndCompileStep compileStep = new CxxPreprocessAndCompileStep(
-        compiler,
-        CxxPreprocessAndCompileStep.Operation.COMPILE,
-        flags,
-        output,
-        input,
-        replacementPaths,
-        Optional.<DebugPathSanitizer>absent());
-
-    // Verify it uses the expected command.
-    ImmutableList<String> expectedCompileCommand = ImmutableList.<String>builder()
-        .addAll(compiler)
-        .add("-c")
-        .add("-ffunction-sections")
-        .add("-o", output.toString())
-        .add(input.toString())
-        .build();
-    ImmutableList<String> actualCompileCommand = compileStep.getCommand();
-    assertEquals(expectedCompileCommand, actualCompileCommand);
-  }
-
-  @Test
-  public void usesCorrectCommandForPreprocess() {
-
-    // Setup some dummy values for inputs to the CxxPreprocessAndCompileStep
-    ImmutableList<String> compiler = ImmutableList.of("compiler");
-    ImmutableList<String> flags = ImmutableList.of("-Dtest=blah");
-    Path output = Paths.get("test.ii");
-    Path input = Paths.get("test.cpp");
-    ImmutableMap<Path, Path> replacementPaths = ImmutableMap.of();
-
-    // Create our CxxPreprocessAndCompileStep to test.
-    CxxPreprocessAndCompileStep preprocessStep = new CxxPreprocessAndCompileStep(
-        compiler,
-        CxxPreprocessAndCompileStep.Operation.PREPROCESS,
-        flags,
-        output,
-        input,
-        replacementPaths,
-        Optional.<DebugPathSanitizer>absent());
-
-    // Verify it uses the expected command.
-    ImmutableList<String> expectedPreprocessCommand = ImmutableList.<String>builder()
-        .addAll(compiler)
-        .add("-E")
-        .add("-Dtest=blah")
-        .add(input.toString())
-        .build();
-    ImmutableList<String> actualPreprocessCommand = preprocessStep.getCommand();
-    assertEquals(expectedPreprocessCommand, actualPreprocessCommand);
-  }
-
-  @Test
   public void outputProcessor() {
     Path original = Paths.get("buck-out/foo#bar/world.h");
     ImmutableMap<Path, Path> replacementPaths =
@@ -108,6 +45,12 @@ public class CxxPreprocessAndCompileStepTest {
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
 
+    ImmutableList.Builder<String> cmd = ImmutableList.builder();
+    cmd.addAll(compiler);
+    cmd.add(CxxPreprocessAndCompileStep.Operation.PREPROCESS.getFlag());
+    cmd.addAll(flags);
+    cmd.add(input.toString());
+
     Path compilationDirectory = Paths.get("compDir");
     DebugPathSanitizer sanitizer = new DebugPathSanitizer(
         9,
@@ -118,11 +61,10 @@ public class CxxPreprocessAndCompileStepTest {
     // Create our CxxPreprocessAndCompileStep to test.
     CxxPreprocessAndCompileStep cxxPreprocessStep =
         new CxxPreprocessAndCompileStep(
-            compiler,
             CxxPreprocessAndCompileStep.Operation.PREPROCESS,
-            flags,
             output,
             input,
+            cmd.build(),
             replacementPaths,
             Optional.of(sanitizer));
 
@@ -151,9 +93,15 @@ public class CxxPreprocessAndCompileStepTest {
 
     // Setup some dummy values for inputs to the CxxPreprocessAndCompileStep
     ImmutableList<String> compiler = ImmutableList.of("compiler");
-    ImmutableList<String> flags = ImmutableList.of("-Dtest=blah");
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
+
+    ImmutableList.Builder<String> cmd = ImmutableList.builder();
+    cmd.addAll(compiler);
+    cmd.add(CxxPreprocessAndCompileStep.Operation.COMPILE.getFlag());
+    cmd.add("-o", output.toString());
+    cmd.add(input.toString());
+
     ImmutableMap<Path, Path> replacementPaths = ImmutableMap.of(original, replacement);
 
     Path compilationDirectory = Paths.get("compDir");
@@ -168,11 +116,10 @@ public class CxxPreprocessAndCompileStepTest {
     // Create our CxxPreprocessAndCompileStep to test.
     CxxPreprocessAndCompileStep cxxPreprocessStep =
         new CxxPreprocessAndCompileStep(
-            compiler,
             CxxPreprocessAndCompileStep.Operation.COMPILE,
-            flags,
             output,
             input,
+            cmd.build(),
             replacementPaths,
             Optional.of(sanitizer));
 

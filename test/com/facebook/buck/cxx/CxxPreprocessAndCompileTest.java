@@ -318,4 +318,75 @@ public class CxxPreprocessAndCompileTest {
     assertEquals(ruleKey1, ruleKey2);
   }
 
+  @Test
+  public void usesCorrectCommandForCompile() {
+
+    // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    ImmutableList<String> flags = ImmutableList.of("-ffunction-sections");
+    Path output = Paths.get("test.o");
+    Path input = Paths.get("test.ii");
+
+    CxxPreprocessAndCompile buildRule = new CxxPreprocessAndCompile(
+        params,
+        pathResolver,
+        DEFAULT_COMPILER,
+        CxxPreprocessAndCompileStep.Operation.COMPILE,
+        flags,
+        output,
+        new TestSourcePath(input.toString()),
+        ImmutableList.<Path>of(),
+        ImmutableList.<Path>of(),
+        DEFAULT_FRAMEWORK_ROOTS,
+        ImmutableCxxHeaders.builder().build(),
+        DEFAULT_SANITIZER);
+
+    ImmutableList<String> expectedCompileCommand = ImmutableList.<String>builder()
+        .add("compiler")
+        .add("-c")
+        .add("-ffunction-sections")
+        .add("-o", output.toString())
+        .add(input.toString())
+        .build();
+    ImmutableList<String> actualCompileCommand = buildRule.getCommand();
+    assertEquals(expectedCompileCommand, actualCompileCommand);
+  }
+
+  @Test
+  public void usesCorrectCommandForPreprocess() {
+
+    // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    ImmutableList<String> flags = ImmutableList.of("-Dtest=blah");
+    Path output = Paths.get("test.ii");
+    Path input = Paths.get("test.cpp");
+
+    CxxPreprocessAndCompile buildRule = new CxxPreprocessAndCompile(
+        params,
+        pathResolver,
+        DEFAULT_COMPILER,
+        CxxPreprocessAndCompileStep.Operation.PREPROCESS,
+        flags,
+        output,
+        new TestSourcePath(input.toString()),
+        ImmutableList.<Path>of(),
+        ImmutableList.<Path>of(),
+        DEFAULT_FRAMEWORK_ROOTS,
+        ImmutableCxxHeaders.builder().build(),
+        DEFAULT_SANITIZER);
+
+    // Verify it uses the expected command.
+    ImmutableList<String> expectedPreprocessCommand = ImmutableList.<String>builder()
+        .add("compiler")
+        .add("-E")
+        .add("-Dtest=blah")
+        .add(input.toString())
+        .build();
+    ImmutableList<String> actualPreprocessCommand = buildRule.getCommand();
+    assertEquals(expectedPreprocessCommand, actualPreprocessCommand);
+  }
 }
