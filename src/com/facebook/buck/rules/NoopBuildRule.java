@@ -14,14 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.rules;
 
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;

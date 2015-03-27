@@ -168,6 +168,7 @@ java_immutables_library(
     'LoggingArtifactCacheDecorator.java',
     'MultiArtifactCache.java',
     'NoopArtifactCache.java',
+    'NoopBuildRule.java',
     'OutputOnlyBuildRule.java',
     'ProjectConfig.java',
     'ProjectConfigDescription.java',

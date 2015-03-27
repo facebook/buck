@@ -18,7 +18,7 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cxx.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
