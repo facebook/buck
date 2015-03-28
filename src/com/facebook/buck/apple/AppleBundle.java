@@ -29,11 +29,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.FindAndReplaceStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
@@ -89,14 +91,22 @@ public class AppleBundle extends AbstractBuildRule {
       BuildableContext buildableContext) {
     Path output = BuildTargets.getGenPath(getBuildTarget(), "%s");
     Path bundleRoot = output.resolve(getBuildTarget().getShortName() + "." + extension);
+    String binaryName = getBuildTarget().getShortName();
+    ImmutableMap<String, String> plistVariables = ImmutableMap.of(
+        "EXECUTABLE_NAME", binaryName,
+        "PRODUCT_NAME", binaryName
+    );
     return ImmutableList.of(
         new MkdirStep(bundleRoot),
         CopyStep.forFile(
             binary.getPathToOutputFile(),
-            bundleRoot.resolve(getBuildTarget().getShortName())),
+            bundleRoot.resolve(binaryName)),
         new WriteFileStep("APPLWRUN", bundleRoot.resolve("PkgInfo")),
-        CopyStep.forFile(
+        new FindAndReplaceStep(
             getResolver().getPath(infoPlist.get()),
-            bundleRoot.resolve("Info.plist")));
+            bundleRoot.resolve("Info.plist"),
+            InfoPlistSubstitution.createVariableExpansionFunction(
+                plistVariables
+            )));
   }
 }

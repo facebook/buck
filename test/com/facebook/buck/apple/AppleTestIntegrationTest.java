@@ -140,6 +140,24 @@ public class AppleTestIntegrationTest {
     assertTrue(Files.isRegularFile(testBinaryPath));
   }
 
+  @Test
+  public void testInfoPlistVariableSubstitutionWorksCorrectly() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_info_plist_substitution", tmp);
+    workspace.setUp();
+
+    BuildTarget buildTarget = BuildTarget.builder("//", "foo")
+        .addFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"))
+        .build();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        buildTarget.getFullyQualifiedName());
+    result.assertSuccess();
+    workspace.verify();
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {

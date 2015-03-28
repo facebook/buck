@@ -1,0 +1,7 @@
+apple_test(
+    name='foo',
+    extension='xctest',
+    use_buck_header_maps = True,
+    srcs = ['Foo.m'],
+    info_plist = 'Test.plist',
+)
