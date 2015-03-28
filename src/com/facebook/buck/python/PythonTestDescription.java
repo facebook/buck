@@ -285,7 +285,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         pathToPex,
         pathToPexExecuter,
         pythonEnvironment,
-        getTestMainName(),
+        PythonUtil.toModuleName(params.getBuildTarget(), getTestMainName().toString()),
         allComponents);
     resolver.addToIndex(binary);
 

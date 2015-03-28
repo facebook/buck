@@ -91,7 +91,11 @@ public class PythonTestDescriptionTest {
     PythonPackageComponents components = binRule.getComponents();
     assertTrue(components.getModules().containsKey(desc.getTestModulesListName()));
     assertTrue(components.getModules().containsKey(desc.getTestMainName()));
-    assertEquals(binRule.getMain(), desc.getTestMainName());
+    assertEquals(
+        binRule.getMainModule(),
+        PythonUtil.toModuleName(
+            params.getBuildTarget(),
+            desc.getTestMainName().toString()));
   }
 
   @Test

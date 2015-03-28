@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
@@ -38,6 +39,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public class PythonBinaryDescription implements Description<PythonBinaryDescription.Arg> {
+
+  private static final Logger LOG = Logger.get(PythonBinaryDescription.class);
 
   public static final BuildRuleType TYPE = BuildRuleType.of("python_binary");
 
@@ -87,14 +90,33 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
     }
 
+    if (!(args.main.isPresent() ^ args.mainModule.isPresent())) {
+      throw new HumanReadableException(
+          "%s: must set exactly one of `main_module` and `main`",
+          params.getBuildTarget());
+    }
+
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
-    String mainName = pathResolver.getSourcePathName(params.getBuildTarget(), args.main);
-    Path mainModule = baseModule.resolve(mainName);
+
+    String mainModule;
+    ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
+
+    // If `main` is set, add it to the map of modules for this binary and also set it as the
+    // `mainModule`, otherwise, use the explicitly set main module.
+    if (args.main.isPresent()) {
+      LOG.warn("%s: parameter `main` is deprecated, please use `main_module` instead.");
+      String mainName = pathResolver.getSourcePathName(params.getBuildTarget(), args.main.get());
+      Path main = baseModule.resolve(mainName);
+      modules.put(baseModule.resolve(mainName), args.main.get());
+      mainModule = PythonUtil.toModuleName(params.getBuildTarget(), main.toString());
+    } else {
+      mainModule = args.mainModule.get();
+    }
 
     // Build up the list of all components going into the python binary.
     PythonPackageComponents binaryPackageComponents = ImmutablePythonPackageComponents.of(
-        /* modules */ ImmutableMap.of(mainModule, args.main),
+        modules.build(),
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
         /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of());
     PythonPackageComponents allPackageComponents = PythonUtil.getAllComponents(
@@ -119,7 +141,8 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public SourcePath main;
+    public Optional<SourcePath> main;
+    public Optional<String> mainModule;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<String> baseModule;
   }

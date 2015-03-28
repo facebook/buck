@@ -89,7 +89,8 @@ public class PythonBinaryDescriptionTest {
         CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.main = new TestSourcePath("blah.py");
+    arg.mainModule = Optional.absent();
+    arg.main = Optional.<SourcePath>of(new TestSourcePath("blah.py"));
     arg.baseModule = Optional.absent();
     BuildRule rule = desc.createBuildRule(params, resolver, arg);
 
@@ -116,7 +117,10 @@ public class PythonBinaryDescriptionTest {
         CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.main = new BuildTargetSourcePath(PROJECT_FILESYSTEM, genrule.getBuildTarget());
+    arg.mainModule = Optional.absent();
+    arg.main =
+        Optional.<SourcePath>of(
+            new BuildTargetSourcePath(PROJECT_FILESYSTEM, genrule.getBuildTarget()));
     arg.baseModule = Optional.absent();
     BuildRule rule = desc.createBuildRule(params, resolver, arg);
     assertEquals(
@@ -139,22 +143,46 @@ public class PythonBinaryDescriptionTest {
         CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.main = new TestSourcePath("foo/" + mainName);
+    arg.mainModule = Optional.absent();
+    arg.main = Optional.<SourcePath>of(new TestSourcePath("foo/" + mainName));
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.
     arg.baseModule = Optional.absent();
     PythonBinary normalRule = desc.createBuildRule(params, resolver, arg);
     assertEquals(
-        target.getBasePath().resolve(mainName),
-        normalRule.getMain());
+        PythonUtil.toModuleName(target, target.getBasePath().resolve(mainName).toString()),
+        normalRule.getMainModule());
 
     // Run *with* a base module set and verify it gets used to build the main module path.
     arg.baseModule = Optional.of("blah");
     PythonBinary baseModuleRule = desc.createBuildRule(params, resolver, arg);
     assertEquals(
-        Paths.get(arg.baseModule.get()).resolve(mainName),
-        baseModuleRule.getMain());
+        PythonUtil.toModuleName(
+            target,
+            Paths.get(arg.baseModule.get()).resolve(mainName).toString()),
+        baseModuleRule.getMainModule());
+  }
+
+  @Test
+  public void mainModule() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    String mainModule = "foo.main";
+    PythonBinaryDescription desc = new PythonBinaryDescription(
+        PEX_PATH,
+        PEX_EXECUTER_PATH,
+        new PythonEnvironment(Paths.get("python"), ImmutablePythonVersion.of("2.5")),
+        CXX_PLATFORM,
+        CXX_PLATFORMS);
+    PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    arg.mainModule = Optional.of(mainModule);
+    arg.main = Optional.absent();
+    arg.baseModule = Optional.absent();
+    PythonBinary rule = desc.createBuildRule(params, resolver, arg);
+    assertEquals(mainModule, rule.getMainModule());
   }
 
 }
