@@ -16,6 +16,7 @@
 
 package com.facebook.buck.thrift;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -37,12 +38,15 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -490,6 +494,9 @@ public class ThriftCxxEnhancerTest {
     BuildRule argDep = createFakeBuildRule("//:arg_dep", pathResolver);
     resolver.addToIndex(argDep);
     ThriftConstructorArg arg = new ThriftConstructorArg();
+    arg.cppHeaderNamespace = Optional.absent();
+    arg.cppExportedHeaders = Optional.absent();
+    arg.cppSrcs = Optional.absent();
     arg.cpp2Options = Optional.absent();
     arg.cpp2Deps = Optional.of(
         ImmutableSortedSet.of(argDep.getBuildTarget()));
@@ -522,6 +529,83 @@ public class ThriftCxxEnhancerTest {
         arg,
         sources,
         deps);
+  }
+
+  @Test
+  public void cppSrcsAndHeadersArePropagated() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRuleParams flavoredParams =
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(TARGET);
+
+    final String cppHeaderNamespace = "foo";
+    final ImmutableMap<String, SourcePath> cppHeaders =
+        ImmutableMap.<String, SourcePath>of(
+            "header.h", new TestSourcePath("header.h"));
+    final ImmutableMap<String, SourceWithFlags> cppSrcs =
+        ImmutableMap.of(
+            "source.cpp", SourceWithFlags.of(new TestSourcePath("source.cpp")));
+
+    ThriftConstructorArg arg = new ThriftConstructorArg();
+    arg.cppOptions = Optional.absent();
+    arg.cppDeps = Optional.absent();
+    arg.cppHeaderNamespace = Optional.of(cppHeaderNamespace);
+    arg.cppExportedHeaders =
+        Optional.of(
+            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
+                cppHeaders));
+    arg.cppSrcs =
+        Optional.of(
+            Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofRight(
+                cppSrcs));
+
+    ThriftCompiler thrift = createFakeThriftCompiler("//:thrift_source", pathResolver);
+    resolver.addToIndex(thrift);
+
+    // Setup up some thrift inputs to pass to the createBuildRule method.
+    ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
+        "test.thrift", new ThriftSource(
+            thrift,
+            ImmutableList.<String>of(),
+            Paths.get("output")));
+
+    // Run the enhancer with a modified C++ description which checks that appropriate args are
+    // propagated.
+    CxxLibraryDescription cxxLibraryDescription =
+        new CxxLibraryDescription(
+            CXX_BUCK_CONFIG,
+            CXX_PLATFORMS,
+            CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE) {
+          @Override
+          public <A extends Arg> BuildRule createBuildRule(
+              BuildRuleParams params,
+              BuildRuleResolver resolver,
+              A args) {
+            assertThat(args.headerNamespace, Matchers.equalTo(Optional.of(cppHeaderNamespace)));
+            for (Map.Entry<String, SourcePath> header : cppHeaders.entrySet()) {
+              assertThat(
+                  args.exportedHeaders.get().getRight().get(header.getKey()),
+                  Matchers.equalTo(header.getValue()));
+            }
+            for (Map.Entry<String, SourceWithFlags> source : cppSrcs.entrySet()) {
+              assertThat(
+                  args.srcs.get().getRight().get(source.getKey()),
+                  Matchers.equalTo(source.getValue()));
+            }
+            return super.createBuildRule(params, resolver, args);
+          }
+        };
+    ThriftCxxEnhancer enhancer =
+        new ThriftCxxEnhancer(
+            THRIFT_BUCK_CONFIG,
+            cxxLibraryDescription,
+          /* cpp2 */ false);
+    enhancer.createBuildRule(
+        flavoredParams,
+        resolver,
+        arg,
+        sources,
+        ImmutableSortedSet.<BuildRule>of());
   }
 
 }

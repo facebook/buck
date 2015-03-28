@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
@@ -194,6 +195,8 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
       ImmutableMap<String, ThriftSource> sources,
       ImmutableSortedSet<BuildRule> deps) {
 
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
     // Grab all the sources and headers generated from the passed in thrift sources.
     CxxHeadersAndSources spec = getThriftHeaderSourceSpec(params, args, sources);
 
@@ -212,16 +215,50 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
         Suppliers.ofInstance(allDeps),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
+    // Merge the thrift generated headers with the ones passed in via the description.
+    ImmutableMap.Builder<String, SourcePath> headersBuilder = ImmutableMap.builder();
+    headersBuilder.putAll(spec.getHeaders());
+    if (args.cppExportedHeaders.isPresent()) {
+      if (args.cppExportedHeaders.get().isRight()) {
+        headersBuilder.putAll(args.cppExportedHeaders.get().getRight());
+      } else {
+        headersBuilder.putAll(
+            pathResolver.getSourcePathNames(
+                params.getBuildTarget(),
+                "cpp_headers",
+                args.cppExportedHeaders.get().getLeft()));
+      }
+    }
+    ImmutableMap<String, SourcePath> headers = headersBuilder.build();
+
+    // Merge the thrift generated sources with the ones passed in via the description.
+    ImmutableMap.Builder<String, SourceWithFlags> srcsBuilder = ImmutableMap.builder();
+    srcsBuilder.putAll(spec.getSources());
+    if (args.cppSrcs.isPresent()) {
+      if (args.cppSrcs.get().isRight()) {
+        srcsBuilder.putAll(args.cppSrcs.get().getRight());
+      } else {
+        for (SourceWithFlags sourceWithFlags : args.cppSrcs.get().getLeft()) {
+          srcsBuilder.put(
+              pathResolver.getSourcePathName(
+                  params.getBuildTarget(),
+                  sourceWithFlags.getSourcePath()),
+              sourceWithFlags);
+        }
+      }
+    }
+    ImmutableMap<String, SourceWithFlags> srcs = srcsBuilder.build();
+
     // Construct the C/C++ library description argument to pass to the
     CxxLibraryDescription.Arg langArgs = CxxLibraryDescription.createEmptyConstructorArg();
+    langArgs.headerNamespace = args.cppHeaderNamespace;
     langArgs.srcs =
         Optional.of(
             Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofRight(
-                spec.getSources()));
+                srcs));
     langArgs.exportedHeaders =
         Optional.of(
-            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
-                spec.getHeaders()));
+            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(headers));
 
     return cxxLibraryDescription.createBuildRule(langParams, resolver, langArgs);
   }
