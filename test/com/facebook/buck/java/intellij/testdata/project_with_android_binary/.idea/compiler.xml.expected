@@ -6,24 +6,24 @@
       <directory url="file://$PROJECT_DIR$/buck-out/android" includeSubdirectories="true" />
       <directory url="file://$PROJECT_DIR$/buck-out/bin" includeSubdirectories="true" />
       <directory url="file://$PROJECT_DIR$/buck-out/gen" includeSubdirectories="true" />
-      <file url="file://$PROJECT_DIR$/res/com/sample/asset_only/BUCK" />
-      <directory url="file://$PROJECT_DIR$/res/com/sample/asset_only/gen" includeSubdirectories="true" />
-      <file url="file://$PROJECT_DIR$/res/com/sample/asset_only/project.properties" />
-      <file url="file://$PROJECT_DIR$/res/com/sample/top/BUCK" />
-      <directory url="file://$PROJECT_DIR$/res/com/sample/top/gen" includeSubdirectories="true" />
-      <file url="file://$PROJECT_DIR$/res/com/sample/top/project.properties" />
       <file url="file://$PROJECT_DIR$/apps/sample/BUCK" />
       <directory url="file://$PROJECT_DIR$/apps/sample/gen" includeSubdirectories="true" />
       <file url="file://$PROJECT_DIR$/apps/sample/project.properties" />
-      <file url="file://$PROJECT_DIR$/res/com/sample/base/BUCK" />
-      <directory url="file://$PROJECT_DIR$/res/com/sample/base/gen" includeSubdirectories="true" />
-      <file url="file://$PROJECT_DIR$/res/com/sample/base/project.properties" />
       <file url="file://$PROJECT_DIR$/java/com/sample/lib/BUCK" />
       <directory url="file://$PROJECT_DIR$/java/com/sample/lib/gen" includeSubdirectories="true" />
       <file url="file://$PROJECT_DIR$/java/com/sample/lib/project.properties" />
+      <file url="file://$PROJECT_DIR$/res/com/sample/asset_only/BUCK" />
+      <directory url="file://$PROJECT_DIR$/res/com/sample/asset_only/gen" includeSubdirectories="true" />
+      <file url="file://$PROJECT_DIR$/res/com/sample/asset_only/project.properties" />
+      <file url="file://$PROJECT_DIR$/res/com/sample/base/BUCK" />
+      <directory url="file://$PROJECT_DIR$/res/com/sample/base/gen" includeSubdirectories="true" />
+      <file url="file://$PROJECT_DIR$/res/com/sample/base/project.properties" />
       <file url="file://$PROJECT_DIR$/res/com/sample/title/BUCK" />
       <directory url="file://$PROJECT_DIR$/res/com/sample/title/gen" includeSubdirectories="true" />
       <file url="file://$PROJECT_DIR$/res/com/sample/title/project.properties" />
+      <file url="file://$PROJECT_DIR$/res/com/sample/top/BUCK" />
+      <directory url="file://$PROJECT_DIR$/res/com/sample/top/gen" includeSubdirectories="true" />
+      <file url="file://$PROJECT_DIR$/res/com/sample/top/project.properties" />
     </excludeFromCompile>
     <resourceExtensions />
     <wildcardResourcePatterns>

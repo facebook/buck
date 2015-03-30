@@ -70,6 +70,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -126,7 +127,7 @@ public class Project {
       new File("src/com/facebook/buck/command/intellij.py").getAbsolutePath());
 
   private final SourcePathResolver resolver;
-  private final ImmutableSet<ProjectConfig> rules;
+  private final ImmutableSortedSet<ProjectConfig> rules;
   private final ActionGraph actionGraph;
   private final BuildFileTree buildFileTree;
   private final ImmutableMap<Path, String> basePathToAliasMap;
@@ -144,7 +145,7 @@ public class Project {
 
   public Project(
       SourcePathResolver resolver,
-      ImmutableSet<ProjectConfig> rules,
+      ImmutableSortedSet<ProjectConfig> rules,
       ActionGraph actionGraph,
       Map<Path, String> basePathToAliasMap,
       JavaPackageFinder javaPackageFinder,

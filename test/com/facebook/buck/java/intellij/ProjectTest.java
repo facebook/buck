@@ -213,7 +213,7 @@ public class ProjectTest {
 
     return getModulesForActionGraph(
         ruleResolver,
-        ImmutableSet.of(
+        ImmutableSortedSet.of(
             projectConfigForExportLibrary,
             projectConfigForLibrary,
             projectConfigForResource,
@@ -257,7 +257,7 @@ public class ProjectTest {
         modules.size());
 
     // Check the values of the module that corresponds to the android_library.
-    Module javaLibraryModule = modules.get(0);
+    Module javaLibraryModule = modules.get(4);
     assertSame(getRuleById("//java/src/com/facebook/exportlib:exportlib", actionGraph),
         javaLibraryModule.srcRule);
     assertEquals("module_java_src_com_facebook_exportlib", javaLibraryModule.name);
@@ -282,7 +282,7 @@ public class ProjectTest {
         javaLibraryModule.dependencies);
 
     // Check the values of the module that corresponds to the android_library.
-    Module androidLibraryModule = modules.get(1);
+    Module androidLibraryModule = modules.get(3);
     assertSame(getRuleById("//java/src/com/facebook/base:base", actionGraph),
         androidLibraryModule.srcRule);
     assertEquals("module_java_src_com_facebook_base", androidLibraryModule.name);
@@ -324,13 +324,13 @@ public class ProjectTest {
         androidLibraryModule.dependencies);
 
     // Check the values of the module that corresponds to the android_binary that uses no_dx.
-    Module androidResourceModule = modules.get(2);
+    Module androidResourceModule = modules.get(0);
     assertSame(getRuleById("//android_res/base:res", actionGraph), androidResourceModule.srcRule);
 
     assertEquals(Paths.get("res"), androidResourceModule.resFolder);
 
     // Check the values of the module that corresponds to the android_binary that uses no_dx.
-    Module androidBinaryModuleNoDx = modules.get(3);
+    Module androidBinaryModuleNoDx = modules.get(2);
     assertSame(getRuleById("//foo:app", actionGraph), androidBinaryModuleNoDx.srcRule);
     assertEquals("module_foo", androidBinaryModuleNoDx.name);
     assertEquals(Paths.get("foo/module_foo.iml"), androidBinaryModuleNoDx.pathToImlFile);
@@ -362,7 +362,7 @@ public class ProjectTest {
         androidBinaryModuleNoDx.dependencies);
 
     // Check the values of the module that corresponds to the android_binary with an empty no_dx.
-    Module androidBinaryModuleEmptyNoDx = modules.get(4);
+    Module androidBinaryModuleEmptyNoDx = modules.get(1);
     assertSame(getRuleById("//bar:app", actionGraph), androidBinaryModuleEmptyNoDx.srcRule);
     assertEquals("module_bar", androidBinaryModuleEmptyNoDx.name);
     assertEquals(Paths.get("bar/module_bar.iml"), androidBinaryModuleEmptyNoDx.pathToImlFile);
@@ -463,7 +463,7 @@ public class ProjectTest {
 
     ProjectWithModules projectWithModules = getModulesForActionGraph(
         ruleResolver,
-        ImmutableSet.of(projectConfig),
+        ImmutableSortedSet.of(projectConfig),
         null /* javaPackageFinder */);
     List<Module> modules = projectWithModules.modules;
 
@@ -517,7 +517,7 @@ public class ProjectTest {
 
     ProjectWithModules projectWithModules = getModulesForActionGraph(
         ruleResolver,
-        ImmutableSet.of(projectConfig),
+        ImmutableSortedSet.of(projectConfig),
         null /* javaPackageFinder */);
     List<Module> modules = projectWithModules.modules;
     assertEquals(1, modules.size());
@@ -575,7 +575,7 @@ public class ProjectTest {
 
     ProjectWithModules projectWithModules = getModulesForActionGraph(
         ruleResolver,
-        ImmutableSet.of(projectConfig),
+        ImmutableSortedSet.of(projectConfig),
         null /* javaPackageFinder */);
     List<Module> modules = projectWithModules.modules;
     assertEquals("Should be one module for the android_library", 1, modules.size());
@@ -631,7 +631,7 @@ public class ProjectTest {
         .build(ruleResolver1);
     ProjectWithModules projectWithModules1 = getModulesForActionGraph(
         ruleResolver1,
-        ImmutableSet.of(projectConfigNullSrcRoots),
+        ImmutableSortedSet.of(projectConfigNullSrcRoots),
         null /* javaPackageFinder */);
 
     // Verify that the correct source folders are created.
@@ -664,7 +664,7 @@ public class ProjectTest {
     EasyMock.replay(javaPackageFinder);
     ProjectWithModules projectWithModules2 = getModulesForActionGraph(
         ruleResolver2,
-        ImmutableSet.of(inPackageProjectConfig),
+        ImmutableSortedSet.of(inPackageProjectConfig),
         javaPackageFinder);
     EasyMock.verify(javaPackageFinder);
     assertEquals(1, projectWithModules2.modules.size());
@@ -690,7 +690,7 @@ public class ProjectTest {
         .build(ruleResolver3);
     ProjectWithModules projectWithModules3 = getModulesForActionGraph(
         ruleResolver3,
-        ImmutableSet.of(hasSrcFolderProjectConfig),
+        ImmutableSortedSet.of(hasSrcFolderProjectConfig),
         null /* javaPackageFinder */);
 
     // Verify that the correct source folders are created.
@@ -715,7 +715,7 @@ public class ProjectTest {
 
   private ProjectWithModules getModulesForActionGraph(
       BuildRuleResolver ruleResolver,
-      ImmutableSet<ProjectConfig> projectConfigs,
+      ImmutableSortedSet<ProjectConfig> projectConfigs,
       @Nullable JavaPackageFinder javaPackageFinder) throws IOException {
     if (javaPackageFinder == null) {
       javaPackageFinder = new FakeJavaPackageFinder();
@@ -806,7 +806,7 @@ public class ProjectTest {
 
     ProjectWithModules projectWithModules = getModulesForActionGraph(
         ruleResolver,
-        ImmutableSet.of(ndkProjectConfig),
+        ImmutableSortedSet.of(ndkProjectConfig),
         null /* javaPackageFinder */);
     List<Module> modules = projectWithModules.modules;
 
