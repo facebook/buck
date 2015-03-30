@@ -29,6 +29,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
@@ -42,6 +43,8 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
 
 import javax.annotation.Nullable;
 
@@ -225,6 +228,25 @@ public class RuleKey {
         while (iterator.hasNext()) {
           setSingleValue(iterator.next());
         }
+        return separate();
+      }
+
+      if (val instanceof Map) {
+        if (!(val instanceof SortedMap | val instanceof ImmutableMap)) {
+          logger.info(
+              "Adding an unsorted map to the rule key (%s). " +
+                  "Expect unstable ordering and caches misses: %s",
+              key,
+              val);
+        }
+        feed("{".getBytes());
+        for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
+          setSingleValue(entry.getKey());
+          feed(" -> ".getBytes());
+          setSingleValue(entry.getValue());
+          separate();
+        }
+        feed("}".getBytes());
         return separate();
       }
 

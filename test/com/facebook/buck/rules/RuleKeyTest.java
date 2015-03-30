@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -28,6 +29,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FileHashCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 
@@ -251,6 +253,36 @@ public class RuleKeyTest {
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build());
+  }
+
+  @Test
+  public void canAddMapsToRuleKeys() {
+    ImmutableMap<String, ?> map = ImmutableMap.of(
+        "path",
+        Paths.get("some/path"),
+        "boolean",
+        true);
+
+    RuleKey.Builder.RuleKeyPair key =
+        createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("map", map)
+            .build();
+
+    assertNotNull(key);
+  }
+
+  @Test
+  public void keysOfMapsAddedToRuleKeysDoNotNeedToBeStrings() {
+    ImmutableMap<?, ?> map = ImmutableMap.of(
+        Paths.get("some/path"), "woohoo!",
+        42L, "life, the universe and everything");
+
+    RuleKey.Builder.RuleKeyPair key =
+        createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("map", map)
+            .build();
+
+    assertNotNull(key);
   }
 
   private RuleKey.Builder createEmptyRuleKey(SourcePathResolver resolver) {
