@@ -61,9 +61,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
       CompilationDatabase.COMPILATION_DATABASE,
       AppleDescriptions.HEADERS,
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
-      CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
-      CxxDescriptionEnhancer.HEADER_MAP_FILE_FLAVOR,
-      CxxDescriptionEnhancer.EXPORTED_HEADER_MAP_FILE_FLAVOR);
+      CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
   private final AppleLibraryDescription appleLibraryDescription;
 

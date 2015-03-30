@@ -63,8 +63,6 @@ public class CxxLibraryDescription implements
   public static enum Type {
     HEADERS,
     EXPORTED_HEADERS,
-    HEADER_MAP_FILE,
-    EXPORTED_HEADER_MAP_FILE,
     SHARED,
     STATIC,
   }
@@ -74,18 +72,11 @@ public class CxxLibraryDescription implements
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       new FlavorDomain<>(
           "C/C++ Library Type",
-          ImmutableMap.<Flavor, Type>builder()
-              .put(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR, Type.HEADERS)
-              .put(
-                  CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
-                  Type.EXPORTED_HEADERS)
-              .put(CxxDescriptionEnhancer.HEADER_MAP_FILE_FLAVOR, Type.HEADER_MAP_FILE)
-              .put(
-                  CxxDescriptionEnhancer.EXPORTED_HEADER_MAP_FILE_FLAVOR,
-                  Type.EXPORTED_HEADER_MAP_FILE)
-              .put(CxxDescriptionEnhancer.SHARED_FLAVOR, Type.SHARED)
-              .put(CxxDescriptionEnhancer.STATIC_FLAVOR, Type.STATIC)
-              .build());
+          ImmutableMap.of(
+              CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR, Type.HEADERS,
+              CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR, Type.EXPORTED_HEADERS,
+              CxxDescriptionEnhancer.SHARED_FLAVOR, Type.SHARED,
+              CxxDescriptionEnhancer.STATIC_FLAVOR, Type.STATIC));
 
   private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
@@ -405,46 +396,6 @@ public class CxxLibraryDescription implements
   }
 
   /**
-   * @return a {@link HeaderMapFile} for the headers of this C/C++ library.
-   */
-  public static <A extends Arg> HeaderMapFile createHeaderMapFileBuildRule(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CxxPlatform cxxPlatform,
-      A args) {
-    return CxxDescriptionEnhancer.createHeaderMapFile(
-        params,
-        resolver,
-        new SourcePathResolver(resolver),
-        cxxPlatform,
-        /* includeLexYaccHeaders */ true,
-        CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
-        CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
-        CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
-        CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
-  }
-
-  /**
-   * @return a {@link HeaderMapFile} for the exported headers of this C/C++ library.
-   */
-  public static <A extends Arg> HeaderMapFile createExportedHeaderMapFileBuildRule(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CxxPlatform cxxPlatform,
-      A args) {
-    return CxxDescriptionEnhancer.createHeaderMapFile(
-        params,
-        resolver,
-        new SourcePathResolver(resolver),
-        cxxPlatform,
-        /* includeLexYaccHeaders */ false,
-        ImmutableMap.<String, SourcePath>of(),
-        ImmutableMap.<String, SourcePath>of(),
-        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
-        CxxDescriptionEnhancer.HeaderVisibility.PUBLIC);
-  }
-
-  /**
    * @return a {@link Archive} rule which builds a static library version of this C/C++ library.
    */
   public static <A extends Arg> Archive createStaticLibraryBuildRule(
@@ -602,23 +553,11 @@ public class CxxLibraryDescription implements
             platform.get().getValue(),
             args);
       } else if (type.get().getValue().equals(Type.EXPORTED_HEADERS)) {
-        return createExportedHeaderSymlinkTreeBuildRule(
-            typeParams,
-            resolver,
-            platform.get().getValue(),
-            args);
-      } else if (type.get().getValue().equals(Type.HEADER_MAP_FILE)) {
-        return createHeaderMapFileBuildRule(
-            typeParams,
-            resolver,
-            platform.get().getValue(),
-            args);
-      } else if (type.get().getValue().equals(Type.EXPORTED_HEADER_MAP_FILE)) {
-        return createExportedHeaderMapFileBuildRule(
-            typeParams,
-            resolver,
-            platform.get().getValue(),
-            args);
+          return createExportedHeaderSymlinkTreeBuildRule(
+              typeParams,
+              resolver,
+              platform.get().getValue(),
+              args);
       } else if (type.get().getValue().equals(Type.SHARED)) {
         return createSharedLibraryBuildRule(
             typeParams,

@@ -680,7 +680,7 @@ public class ProjectGenerator {
             Joiner.on(' ').join(
                 Iterators.concat(
                     collectRecursiveHeaderSearchPaths(targetNode).iterator(),
-                    collectRecursiveHeaderMapFiles(targetNode).iterator())))
+                    collectRecursiveHeaderSymlinkTrees(targetNode).iterator())))
         .put(
             "LIBRARY_SEARCH_PATHS",
             Joiner.on(' ').join(
@@ -719,14 +719,14 @@ public class ProjectGenerator {
     // -- phases
     if (arg.getUseBuckHeaderMaps()) {
       requiredBuildTargetsBuilder.add(
-          CxxDescriptionEnhancer.createHeaderMapFileTarget(
+          CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
               BuildTarget.of(targetNode.getBuildTarget().getUnflavoredBuildTarget()),
               DefaultCxxPlatforms.FLAVOR,
               CxxDescriptionEnhancer.HeaderVisibility.PRIVATE));
       requireAllBuildRuleDependencies(headers);
       if (targetNode.getType() == AppleLibraryDescription.TYPE) {
         requiredBuildTargetsBuilder.add(
-            CxxDescriptionEnhancer.createHeaderMapFileTarget(
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 BuildTarget.of(targetNode.getBuildTarget().getUnflavoredBuildTarget()),
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
@@ -1164,10 +1164,10 @@ public class ProjectGenerator {
         headerPathPrefix.or("$TARGET_NAME"));
   }
 
-  private Path getHeaderMapFileRelativePath(
+  private Path getHeaderSymlinkTreeRelativePath(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
-    Path filePath = CxxDescriptionEnhancer.getHeaderMapFilePath(
+    Path filePath = CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
         BuildTarget.of(targetNode.getBuildTarget().getUnflavoredBuildTarget()),
         DefaultCxxPlatforms.FLAVOR,
         headerVisibility);
@@ -1281,17 +1281,17 @@ public class ProjectGenerator {
         .toSet();
   }
 
-  private ImmutableSet<String> collectRecursiveHeaderMapFiles(
+  private ImmutableSet<String> collectRecursiveHeaderSymlinkTrees(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
       builder.add(
-          getHeaderMapFileRelativePath(
+          getHeaderSymlinkTreeRelativePath(
               targetNode,
               CxxDescriptionEnhancer.HeaderVisibility.PRIVATE).toString());
       builder.add(
-          getHeaderMapFileRelativePath(
+          getHeaderSymlinkTreeRelativePath(
               targetNode,
               CxxDescriptionEnhancer.HeaderVisibility.PUBLIC).toString());
     }
@@ -1306,13 +1306,13 @@ public class ProjectGenerator {
           getAppleNativeNode(targetGraph, input);
       if (nativeNode.isPresent() && nativeNode.get().getConstructorArg().getUseBuckHeaderMaps()) {
         builder.add(
-            getHeaderMapFileRelativePath(
+            getHeaderSymlinkTreeRelativePath(
                 nativeNode.get(),
                 CxxDescriptionEnhancer.HeaderVisibility.PUBLIC).toString());
       }
     }
 
-    addHeaderMapFileForSourceUnderTest(
+    addHeaderSymlinkTreeForSourceUnderTest(
         targetNode,
         builder,
         CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
@@ -1320,9 +1320,9 @@ public class ProjectGenerator {
     return builder.build();
   }
 
-  private void addHeaderMapFileForSourceUnderTest(
+  private void addHeaderSymlinkTreeForSourceUnderTest(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
-      ImmutableSet.Builder<String> headerMapFileBuilder,
+      ImmutableSet.Builder<String> headerSymlinkTreesBuilder,
       CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
     ImmutableSet<TargetNode<?>> directDependencies = ImmutableSet.copyOf(
         targetGraph.getAll(targetNode.getDeps()));
@@ -1332,8 +1332,8 @@ public class ProjectGenerator {
       if (nativeNode.isPresent() &&
           isSourceUnderTest(dependency, nativeNode.get(), targetNode) &&
           nativeNode.get().getConstructorArg().getUseBuckHeaderMaps()) {
-        headerMapFileBuilder.add(
-            getHeaderMapFileRelativePath(
+        headerSymlinkTreesBuilder.add(
+            getHeaderSymlinkTreeRelativePath(
                 nativeNode.get(),
                 headerVisibility).toString());
       }
