@@ -133,25 +133,25 @@ public class NewNativeTargetProjectMutator {
   }
 
   public NewNativeTargetProjectMutator setSourcesWithFlags(
-      Set<SourceWithFlags> sourcesWithFlags) {
+      Iterable<SourceWithFlags> sourcesWithFlags) {
     this.sourcesWithFlags = ImmutableSet.copyOf(sourcesWithFlags);
     return this;
   }
 
   public NewNativeTargetProjectMutator setExtraXcodeSources(
-      Set<SourcePath> extraXcodeSources) {
+      Iterable<SourcePath> extraXcodeSources) {
     this.extraXcodeSources = ImmutableSet.copyOf(extraXcodeSources);
     return this;
   }
 
   public NewNativeTargetProjectMutator setPublicHeaders(
-      Set<SourcePath> publicHeaders) {
+      Iterable<SourcePath> publicHeaders) {
     this.publicHeaders = ImmutableSet.copyOf(publicHeaders);
     return this;
   }
 
   public NewNativeTargetProjectMutator setPrivateHeaders(
-      Set<SourcePath> privateHeaders) {
+      Iterable<SourcePath> privateHeaders) {
     this.privateHeaders = ImmutableSet.copyOf(privateHeaders);
     return this;
   }

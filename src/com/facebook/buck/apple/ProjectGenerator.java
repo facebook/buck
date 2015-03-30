@@ -554,9 +554,6 @@ public class ProjectGenerator {
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
         sourcePathResolver);
-    ImmutableSet<SourcePath> exportedHeaders =
-        ImmutableSet.copyOf(getHeaderSourcePaths(arg.exportedHeaders));
-    ImmutableSet<SourcePath> headers = ImmutableSet.copyOf(getHeaderSourcePaths(arg.headers));
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
         .setProduct(
@@ -566,10 +563,10 @@ public class ProjectGenerator {
         .setGid(targetGid)
         .setShouldGenerateCopyHeadersPhase(
             !targetNode.getConstructorArg().getUseBuckHeaderMaps())
-        .setSourcesWithFlags(ImmutableSet.copyOf(arg.srcs.get()))
-        .setExtraXcodeSources(ImmutableSet.copyOf(arg.extraXcodeSources.get()))
-        .setPublicHeaders(exportedHeaders)
-        .setPrivateHeaders(headers)
+        .setSourcesWithFlags(arg.srcs.get())
+        .setExtraXcodeSources(arg.extraXcodeSources.get())
+        .setPublicHeaders(arg.exportedHeaders.get())
+        .setPrivateHeaders(arg.headers.get())
         .setResources(resources);
 
     if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE)) {
@@ -723,14 +720,14 @@ public class ProjectGenerator {
               BuildTarget.of(targetNode.getBuildTarget().getUnflavoredBuildTarget()),
               DefaultCxxPlatforms.FLAVOR,
               CxxDescriptionEnhancer.HeaderVisibility.PRIVATE));
-      requireAllBuildRuleDependencies(headers);
+      requireAllBuildRuleDependencies(arg.headers.get());
       if (targetNode.getType() == AppleLibraryDescription.TYPE) {
         requiredBuildTargetsBuilder.add(
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 BuildTarget.of(targetNode.getBuildTarget().getUnflavoredBuildTarget()),
                 DefaultCxxPlatforms.FLAVOR,
                 CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
-        requireAllBuildRuleDependencies(exportedHeaders);
+        requireAllBuildRuleDependencies(arg.exportedHeaders.get());
       }
     }
 
@@ -765,17 +762,6 @@ public class ProjectGenerator {
     return target;
   }
 
-  private Iterable<SourcePath> getHeaderSourcePaths(
-      Optional<Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>> headers) {
-    if (!headers.isPresent()) {
-      return ImmutableList.of();
-    } else if (headers.get().isLeft()) {
-      return headers.get().getLeft();
-    } else {
-      return headers.get().getRight().values();
-    }
-  }
-
   private void requireAllBuildRuleDependencies(Iterable<SourcePath> sourcePaths) {
     requiredBuildTargetsBuilder.addAll(
         FluentIterable.from(sourcePaths)
@@ -808,7 +794,7 @@ public class ProjectGenerator {
             Paths.get(productName + "." + getExtensionString(key.getExtension())))
         .setShouldGenerateCopyHeadersPhase(false)
         .setSourcesWithFlags(
-            ImmutableSet.of(
+            ImmutableList.of(
                 SourceWithFlags.of(
                     new PathSourcePath(projectFilesystem, emptyFileWithExtension("c")))))
         .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))

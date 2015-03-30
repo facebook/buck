@@ -49,7 +49,10 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -57,6 +60,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 
 /**
  * Common logic for a {@link com.facebook.buck.rules.Description} that creates Apple target rules.
@@ -66,9 +70,6 @@ public class AppleDescriptions {
   public static final Flavor HEADERS = ImmutableFlavor.of("headers");
 
   private static final BuildRuleType HEADERS_RULE_TYPE = BuildRuleType.of("headers");
-
-  private static final Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>
-      EMPTY_HEADERS = Either.ofLeft(ImmutableSortedSet.<SourcePath>of());
 
   /** Utility class: do not instantiate. */
   private AppleDescriptions() {}
@@ -120,17 +121,10 @@ public class AppleDescriptions {
         Suppliers.ofInstance(params.getExtraDeps()));
 
     boolean useBuckHeaderMaps = args.useBuckHeaderMaps.or(Boolean.FALSE);
-
-    Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, params.getBuildTarget());
-    ImmutableMap<String, SourcePath> publicHeaders = convertAppleHeadersToPublicCxxHeaders(
-        resolver,
-        headerPathPrefix,
-        args);
-
     return createSymlinkTree(
         headerRuleParams,
         resolver,
-        publicHeaders,
+        args.exportedHeaders.get(),
         useBuckHeaderMaps);
   }
 
@@ -141,28 +135,34 @@ public class AppleDescriptions {
   private static SymlinkTree createSymlinkTree(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
-      ImmutableMap<String, SourcePath> publicHeaders,
+      SortedSet<SourcePath> publicHeaders,
       boolean useBuckHeaderMaps) {
     // Note that the set of headersToCopy may be empty. If so, the returned rule will be a no-op.
     // TODO(mbolin): Make headersToCopy an ImmutableSortedMap once we clean up the iOS codebase and
     // can guarantee that the keys are unique.
-    ImmutableMap<Path, SourcePath> headersToCopy;
+    Map<Path, SourcePath> headersToCopy;
     if (useBuckHeaderMaps) {
       // No need to copy headers because header maps are used.
-      headersToCopy = ImmutableMap.of();
+      headersToCopy = ImmutableSortedMap.of();
     } else {
-      ImmutableMap.Builder<Path, SourcePath> headersToCopyBuilder = ImmutableMap.builder();
-      for (Map.Entry<String, SourcePath> entry : publicHeaders.entrySet()) {
-        headersToCopyBuilder.put(Paths.get(entry.getKey()), entry.getValue());
+      // This is a heuristic to get the right header path prefix. Note that ProjectGenerator uses a
+      // slightly different heuristic, which is buildTarget.getShortName(), though that is only
+      // a fallback when an apple_library() does not specify a header_path_prefix when
+      // use_buck_header_maps is True.
+      Path headerPathPrefix = params.getBuildTarget().getBasePath().getFileName();
+
+      headersToCopy = Maps.newHashMap();
+      for (SourcePath sourcePath : publicHeaders) {
+        Path sourcePathName = pathResolver.getPath(sourcePath).getFileName();
+        headersToCopy.put(headerPathPrefix.resolve(sourcePathName), sourcePath);
       }
-      headersToCopy = headersToCopyBuilder.build();
     }
 
     BuildRuleParams headerParams = params.copyWithDeps(
         /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(params.getExtraDeps()));
     Path root = getPathToHeaders(params.getBuildTarget());
-    return new SymlinkTree(headerParams, pathResolver, root, headersToCopy);
+    return new SymlinkTree(headerParams, pathResolver, root, ImmutableMap.copyOf(headersToCopy));
   }
 
   /**
@@ -194,23 +194,13 @@ public class AppleDescriptions {
         /* declaredDeps */ Suppliers.ofInstance(traversal.deps.build()),
         Suppliers.ofInstance(params.getExtraDeps()));
 
-    Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, params.getBuildTarget());
-
     return new CompilationDatabase(
         compilationDatabaseParams,
         pathResolver,
         appleConfig,
         ImmutableSortedSet.copyOf(args.srcs.get()),
-        ImmutableSortedSet.copyOf(
-            convertAppleHeadersToPublicCxxHeaders(
-                pathResolver,
-                headerPathPrefix,
-                args).values()),
-        ImmutableSortedSet.copyOf(
-            convertAppleHeadersToPrivateCxxHeaders(
-                pathResolver,
-                headerPathPrefix,
-                args).values()),
+        args.exportedHeaders.get(),
+        args.headers.get(),
         args.frameworks.get(),
         traversal.includePaths.build(),
         args.prefixHeader);
@@ -332,79 +322,13 @@ public class AppleDescriptions {
           "%s" + headerMapType.getSuffix()));
   }
 
-  public static Path getHeaderPathPrefix(
+  public static String getHeaderPathPrefix(
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget) {
-    return Paths.get(arg.headerPathPrefix.or(buildTarget.getShortName()));
+    return arg.headerPathPrefix.or(buildTarget.getShortName());
   }
 
-  public static ImmutableMap<String, SourcePath> convertAppleHeadersToPublicCxxHeaders(
-      SourcePathResolver pathResolver,
-      Path headerPathPrefix,
-      AppleNativeTargetDescriptionArg arg) {
-    // The exported headers in the populated cxx constructor arg will contain exported headers from
-    // the apple constructor arg with the public include style.
-    return AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-                pathResolver,
-                headerPathPrefix,
-                arg.exportedHeaders.or(EMPTY_HEADERS));
-  }
-
-  public static ImmutableMap<String, SourcePath> convertAppleHeadersToPrivateCxxHeaders(
-      SourcePathResolver pathResolver,
-      Path headerPathPrefix,
-      AppleNativeTargetDescriptionArg arg) {
-    // The private headers will contain exported headers with the private include style and private
-    // headers with both styles.
-    return ImmutableMap.<String, SourcePath>builder()
-        .putAll(
-            AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-                pathResolver,
-                arg.headers.or(EMPTY_HEADERS)))
-        .putAll(
-            AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-                pathResolver,
-                headerPathPrefix,
-                arg.headers.or(EMPTY_HEADERS)))
-        .putAll(
-            AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-                pathResolver,
-                arg.exportedHeaders.or(EMPTY_HEADERS)))
-        .build();
-  }
-
-  @VisibleForTesting
-  static ImmutableMap<String, SourcePath> parseAppleHeadersForUseFromOtherTargets(
-      SourcePathResolver pathResolver,
-      Path headerPathPrefix,
-      Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>> headers) {
-    if (headers.isLeft()) {
-      // The user specified a set of header files. For use from other targets, prepend their names
-      // with the header path prefix.
-      return convertToFlatCxxHeaders(headerPathPrefix, pathResolver, headers.getLeft());
-    } else {
-      // The user specified a map from include paths to header files. Just use the specified map.
-      return headers.getRight();
-    }
-  }
-
-  @VisibleForTesting
-  static ImmutableMap<String, SourcePath> parseAppleHeadersForUseFromTheSameTarget(
-      SourcePathResolver pathResolver,
-      Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>> headers) {
-    if (headers.isLeft()) {
-      // The user specified a set of header files. Headers can be included from the same target
-      // using only their file name without a prefix.
-      return convertToFlatCxxHeaders(Paths.get(""), pathResolver, headers.getLeft());
-    } else {
-      // The user specified a map from include paths to header files. There is nothing we need to
-      // add on top of the exported headers.
-      return ImmutableMap.of();
-    }
-  }
-
-  @VisibleForTesting
-  static ImmutableMap<String, SourcePath> convertToFlatCxxHeaders(
+  public static ImmutableMap<String, SourcePath> convertToFlatCxxHeaders(
       Path headerPathPrefix,
       SourcePathResolver sourcePathResolver,
       Set<SourcePath> headerPaths) {
@@ -423,21 +347,21 @@ public class AppleDescriptions {
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget,
       final Optional<AppleSdkPaths> appleSdkPaths) {
-    Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(arg, buildTarget);
-    // The resulting cxx constructor arg will have no exported headers and both headers and exported
-    // headers specified in the apple arg will be available with both public and private include
-    // styles.
+    Sets.SetView<SourcePath> allHeaderPaths = Sets.union(
+        arg.exportedHeaders.get(),
+        arg.headers.get());
+    Path headerPathPrefix = Paths.get(AppleDescriptions.getHeaderPathPrefix(arg, buildTarget));
     ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>builder()
         .putAll(
-            convertAppleHeadersToPublicCxxHeaders(
+            AppleDescriptions.convertToFlatCxxHeaders(
+                Paths.get(""),
                 resolver,
-                headerPathPrefix,
-                arg))
+                allHeaderPaths))
         .putAll(
-            convertAppleHeadersToPrivateCxxHeaders(
-                resolver,
+            AppleDescriptions.convertToFlatCxxHeaders(
                 headerPathPrefix,
-                arg))
+                resolver,
+                allHeaderPaths))
         .build();
 
     output.srcs = Optional.of(
@@ -490,11 +414,21 @@ public class AppleDescriptions {
         arg,
         buildTarget,
         appleSdkPaths);
-    Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(arg, buildTarget);
-    ImmutableMap<String, SourcePath> headerMap = convertAppleHeadersToPrivateCxxHeaders(
-        resolver,
-        headerPathPrefix,
-        arg);
+    Path headerPathPrefix = Paths.get(AppleDescriptions.getHeaderPathPrefix(arg, buildTarget));
+    ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>builder()
+        .putAll(
+            AppleDescriptions.convertToFlatCxxHeaders(
+                Paths.get(""),
+                resolver,
+                Sets.union(
+                    arg.exportedHeaders.get(),
+                    arg.headers.get())))
+        .putAll(
+            AppleDescriptions.convertToFlatCxxHeaders(
+                headerPathPrefix,
+                resolver,
+                arg.headers.get()))
+        .build();
 
     output.headers = Optional.of(
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
@@ -502,10 +436,10 @@ public class AppleDescriptions {
     output.exportedPreprocessorFlags = arg.exportedPreprocessorFlags;
     output.exportedHeaders = Optional.of(
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
-            convertAppleHeadersToPublicCxxHeaders(
-                resolver,
+            AppleDescriptions.convertToFlatCxxHeaders(
                 headerPathPrefix,
-                arg)));
+                resolver,
+                arg.exportedHeaders.get())));
     output.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
     output.exportedPlatformPreprocessorFlags =
         Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());

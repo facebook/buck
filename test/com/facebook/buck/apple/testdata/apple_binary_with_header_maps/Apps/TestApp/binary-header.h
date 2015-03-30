@@ -1,1 +1,0 @@
-#define BINARY_HEADER_H

@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -38,10 +37,8 @@ public class AppleNativeTargetDescriptionArg implements HasTests {
   public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
   public Optional<ImmutableList<SourceWithFlags>> srcs;
   public Optional<ImmutableList<SourcePath>> extraXcodeSources;
-  public Optional<Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>>
-      headers;
-  public Optional<Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>>
-      exportedHeaders;
+  public Optional<ImmutableSortedSet<SourcePath>> headers;
+  public Optional<ImmutableSortedSet<SourcePath>> exportedHeaders;
   public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;
   public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;

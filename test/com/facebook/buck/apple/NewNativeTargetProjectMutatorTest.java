@@ -21,10 +21,10 @@ import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertHasSinglet
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.getSingletonPhaseByType;
-import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -70,7 +70,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Paths;
-import java.util.Set;
+import java.util.List;
 
 public class NewNativeTargetProjectMutatorTest {
   private BuildRuleResolver buildRuleResolver;
@@ -133,7 +133,7 @@ public class NewNativeTargetProjectMutatorTest {
     SourcePath bar = new TestSourcePath("Group1/bar.m");
     SourcePath baz = new TestSourcePath("Group2/baz.m");
     mutator.setSourcesWithFlags(
-        ImmutableSet.of(
+        ImmutableList.of(
             SourceWithFlags.of(foo),
             SourceWithFlags.of(bar, ImmutableList.of("-Wall")),
             SourceWithFlags.of(baz)));
@@ -164,8 +164,8 @@ public class NewNativeTargetProjectMutatorTest {
     SourcePath foo = new TestSourcePath("HeaderGroup1/foo.h");
     SourcePath bar = new TestSourcePath("HeaderGroup1/bar.h");
     SourcePath baz = new TestSourcePath("HeaderGroup2/baz.h");
-    mutator.setPublicHeaders(ImmutableSet.of(bar, baz));
-    mutator.setPrivateHeaders(ImmutableSet.of(foo));
+    mutator.setPublicHeaders(ImmutableList.of(bar, baz));
+    mutator.setPrivateHeaders(ImmutableList.of(foo));
     NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
         generatedProject);
 
@@ -216,7 +216,7 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void testSuppressCopyHeaderOption() throws NoSuchBuildTargetException {
-    Set<SourcePath> privateHeaders = ImmutableSet.<SourcePath>of(new TestSourcePath("foo"));
+    List<SourcePath> privateHeaders = ImmutableList.<SourcePath>of(new TestSourcePath("foo"));
 
     {
       NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
