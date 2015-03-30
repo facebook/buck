@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,6 +54,30 @@ public class CxxSourceRuleFactory {
   private final CxxPlatform cxxPlatform;
   private final CxxPreprocessorInput cxxPreprocessorInput;
   private final ImmutableList<String> compilerFlags;
+
+  private final Supplier<ImmutableList<BuildRule>> preprocessDeps = Suppliers.memoize(
+      new Supplier<ImmutableList<BuildRule>>() {
+        @Override
+        public ImmutableList<BuildRule> get() {
+          return ImmutableList.<BuildRule>builder()
+              // Depend on the rule that generates the sources and headers we're compiling.
+              .addAll(
+                  pathResolver.filterBuildRuleInputs(
+                      ImmutableList.<SourcePath>builder()
+                          .addAll(cxxPreprocessorInput.getIncludes().getPrefixHeaders())
+                          .addAll(cxxPreprocessorInput.getIncludes().getNameToPathMap().values())
+                          .build()))
+              // Also add in extra deps from the preprocessor input, such as the symlink tree
+              // rules.
+              .addAll(
+                  BuildRules.toBuildRulesFor(
+                      params.getBuildTarget(),
+                      resolver,
+                      cxxPreprocessorInput.getRules(),
+                      false))
+              .build();
+        }
+      });
 
   @VisibleForTesting
   CxxSourceRuleFactory(
@@ -90,26 +115,6 @@ public class CxxSourceRuleFactory {
     return ImmutableList.<String>builder()
         .addAll(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, type))
         .addAll(cxxPreprocessorInput.getPreprocessorFlags().get(type))
-        .build();
-  }
-
-  private ImmutableList<BuildRule> getPreprocessDeps() {
-    return ImmutableList.<BuildRule>builder()
-        // Depend on the rule that generates the sources and headers we're compiling.
-        .addAll(
-            pathResolver.filterBuildRuleInputs(
-                ImmutableList.<SourcePath>builder()
-                    .addAll(cxxPreprocessorInput.getIncludes().getPrefixHeaders())
-                    .addAll(cxxPreprocessorInput.getIncludes().getNameToPathMap().values())
-                    .build()))
-        // Also add in extra deps from the preprocessor input, such as the symlink tree
-        // rules.
-        .addAll(
-            BuildRules.toBuildRulesFor(
-                params.getBuildTarget(),
-                resolver,
-                cxxPreprocessorInput.getRules(),
-                false))
         .build();
   }
 
@@ -170,7 +175,7 @@ public class CxxSourceRuleFactory {
             // If a build rule generates our input source, add that as a dependency.
             .addAll(pathResolver.filterBuildRuleInputs(source.getPath()))
             // Depend on the rule that generates the sources and headers we're compiling.
-            .addAll(getPreprocessDeps())
+            .addAll(preprocessDeps.get())
             .build();
 
     // Build up the list of extra preprocessor flags for this rule.
@@ -358,7 +363,7 @@ public class CxxSourceRuleFactory {
             // If a build rule generates our input source, add that as a dependency.
             .addAll(pathResolver.filterBuildRuleInputs(source.getPath()))
             // Add in all preprocessor deps.
-            .addAll(getPreprocessDeps())
+            .addAll(preprocessDeps.get())
             .build();
 
     // Build up the list of compiler flags.
