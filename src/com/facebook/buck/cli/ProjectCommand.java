@@ -362,6 +362,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           getProjectFilesystem(),
           targetGraphAndTargets.getTargetGraph(),
           workspaceArgs,
+          inputTarget,
           optionsBuilder.build(),
           combinedProject,
           new ParserConfig(options.getBuckConfig()).getBuildFileName());

@@ -55,6 +55,7 @@ public class WorkspaceAndProjectGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final TargetGraph projectGraph;
   private final XcodeWorkspaceConfigDescription.Arg workspaceArguments;
+  private final BuildTarget workspaceBuildTarget;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
   private final ImmutableSet<TargetNode<AppleTestDescription.Arg>> extraTestBundleTargetNodes;
   private final boolean combinedProject;
@@ -72,12 +73,14 @@ public class WorkspaceAndProjectGenerator {
       ProjectFilesystem projectFilesystem,
       TargetGraph projectGraph,
       XcodeWorkspaceConfigDescription.Arg workspaceArguments,
+      BuildTarget workspaceBuildTarget,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       boolean combinedProject,
       String buildFileName) {
     this.projectFilesystem = projectFilesystem;
     this.projectGraph = projectGraph;
     this.workspaceArguments = workspaceArguments;
+    this.workspaceBuildTarget = workspaceBuildTarget;
     this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
     this.combinedProject = combinedProject;
     this.buildFileName = buildFileName;
@@ -126,7 +129,7 @@ public class WorkspaceAndProjectGenerator {
   public Path generateWorkspaceAndDependentProjects(
         Map<Path, ProjectGenerator> projectGenerators)
       throws IOException {
-    LOG.debug("Generating workspace for target %s", workspaceArguments.srcTarget);
+    LOG.debug("Generating workspace for target %s", workspaceBuildTarget);
 
     String workspaceName = XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(
         workspaceArguments);
@@ -134,9 +137,9 @@ public class WorkspaceAndProjectGenerator {
     if (combinedProject) {
       workspaceName += "-Combined";
       outputDirectory =
-          BuildTargets.getGenPath(workspaceArguments.srcTarget.get(), "%s").getParent();
+          BuildTargets.getGenPath(workspaceBuildTarget, "%s").getParent();
     } else {
-      outputDirectory = workspaceArguments.srcTarget.get().getBasePath();
+      outputDirectory = workspaceBuildTarget.getBasePath();
     }
 
     WorkspaceGenerator workspaceGenerator = new WorkspaceGenerator(
@@ -261,7 +264,7 @@ public class WorkspaceAndProjectGenerator {
             projectGraph,
             ImmutableSortedSet.<BuildTarget>of(),
             projectFilesystem,
-            BuildTargets.getGenPath(workspaceArguments.srcTarget.get(), "%s-CombinedTestBundles"),
+            BuildTargets.getGenPath(workspaceBuildTarget, "%s-CombinedTestBundles"),
             "_CombinedTestBundles",
             buildFileName,
             projectGeneratorOptions);
