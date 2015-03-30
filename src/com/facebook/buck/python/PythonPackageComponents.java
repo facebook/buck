@@ -24,7 +24,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import org.immutables.value.Value;
 
@@ -65,13 +64,6 @@ public abstract class PythonPackageComponents implements RuleKeyAppendable {
     }
 
     return builder;
-  }
-
-  public Iterable<SourcePath> getInputsToCompareToOutput() {
-    return Iterables.<SourcePath>concat(
-        ImmutableSortedSet.copyOf(getModules().values()),
-        ImmutableSortedSet.copyOf(getResources().values()),
-        ImmutableSortedSet.copyOf(getNativeLibraries().values()));
   }
 
   /**

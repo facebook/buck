@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -26,10 +27,12 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
 public class OCamlMLCompile extends AbstractBuildRule {
+  @AddToRuleKey
   private final OCamlMLCompileStep.Args args;
 
   public OCamlMLCompile(
@@ -42,12 +45,12 @@ public class OCamlMLCompile extends AbstractBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of(args.input);
+    return ImmutableSet.of();
   }
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return args.appendDetailsToRuleKey(builder);
+    return builder;
   }
 
   @Override

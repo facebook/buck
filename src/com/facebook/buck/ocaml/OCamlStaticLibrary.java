@@ -21,16 +21,13 @@ import com.facebook.buck.cxx.ImmutableNativeLinkableInput;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.Step;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -41,7 +38,7 @@ import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
-class OCamlStaticLibrary extends AbstractBuildRule implements OCamlLibrary {
+class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
   private final BuildTarget staticLibraryTarget;
   private final ImmutableList<String> linkerFlags;
   private final FluentIterable<Path> srcPaths;
@@ -117,12 +114,6 @@ class OCamlStaticLibrary extends AbstractBuildRule implements OCamlLibrary {
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder;
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    return ImmutableList.of();
   }
 
   @Nullable

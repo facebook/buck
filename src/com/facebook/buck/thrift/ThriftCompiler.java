@@ -18,6 +18,7 @@ package com.facebook.buck.thrift;
 
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -40,11 +41,17 @@ import javax.annotation.Nullable;
 
 public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
 
+  @AddToRuleKey
   private final SourcePath compiler;
+  @AddToRuleKey
   private final ImmutableList<String> flags;
+  @AddToRuleKey(stringify = true)
   private final Path outputDir;
+  @AddToRuleKey
   private final SourcePath input;
+  @AddToRuleKey
   private final String language;
+  @AddToRuleKey
   private final ImmutableSet<String> options;
   private final ImmutableList<Path> includeRoots;
   private final ImmutableMap<Path, SourcePath> includes;
@@ -73,22 +80,15 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of(getResolver().getPath(input));
+    return ImmutableSet.of();
   }
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    builder
-        .setReflectively("compiler", getResolver().getPath(compiler))
-        .setReflectively("flags", flags)
-        .setReflectively("outputDir", outputDir.toString())
-        .setReflectively("options", ImmutableSortedSet.copyOf(options))
-        .setReflectively("language", language);
-
-
     // Hash the layout of each potentially included thrift file dependency and it's contents.
     // We do this here, rather than returning them from `getInputsToCompareToOutput` so that
     // we can match the contents hash up with where it was laid out in the include search path.
+    // TODO(simons): Implement handling of maps to the reflective rule key magic
     for (Path path : ImmutableSortedSet.copyOf(includes.keySet())) {
       builder.setReflectively("include(" + path + ")", includes.get(path));
     }

@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
@@ -32,19 +33,20 @@ import java.nio.file.Path;
  */
 public class OCamlMLCompileStep extends ShellStep {
 
-  public static class Args {
+  public static class Args implements RuleKeyAppendable {
+
     public final Path ocamlCompiler;
     public final ImmutableList<String> cCompiler;
     public final ImmutableList<String> flags;
     public final Path output;
     public final Path input;
+
     public Args(
         ImmutableList<String> cCompiler,
         Path ocamlCompiler,
         Path output,
         Path input,
-        ImmutableList<String> flags
-    ) {
+        ImmutableList<String> flags) {
       this.ocamlCompiler = ocamlCompiler;
       this.cCompiler = cCompiler;
       this.flags = flags;
@@ -52,12 +54,14 @@ public class OCamlMLCompileStep extends ShellStep {
       this.input = input;
     }
 
-    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-      return builder.setReflectively("cCompiler", cCompiler.toString())
-          .setReflectively("ocamlCompiler", ocamlCompiler.toString())
-          .setReflectively("output", output.toString())
-          .setReflectively("input", input.toString())
-          .setReflectively("flags", flags);
+    @Override
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+      return builder.setReflectively(key + ".cCompiler", cCompiler)
+          .setReflectively(key + ".ocamlCompiler", ocamlCompiler)
+          .setReflectively(key + ".output", output.toString())
+          // TODO(user): I suspect this is going to mean absolute paths in rule keys
+          .setReflectively(key + ".input", input)
+          .setReflectively(key + ".flags", flags);
     }
 
     public ImmutableSet<Path> getAllOutputs() {

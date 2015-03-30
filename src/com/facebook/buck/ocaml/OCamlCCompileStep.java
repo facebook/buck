@@ -17,14 +17,13 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
@@ -34,7 +33,7 @@ import java.nio.file.Path;
  */
 public class OCamlCCompileStep extends ShellStep {
 
-  public static class Args {
+  public static class Args implements RuleKeyAppendable {
     public final Path ocamlCompiler;
     public final ImmutableList<String> cCompiler;
     public final ImmutableList<String> flags;
@@ -57,19 +56,17 @@ public class OCamlCCompileStep extends ShellStep {
       this.includes = includes;
     }
 
-    RuleKey.Builder appendDetailsToRuleKey(SourcePathResolver resolver, RuleKey.Builder builder) {
-      builder.setReflectively("cCompiler", cCompiler.toString());
-      builder.setReflectively("ocamlCompiler", ocamlCompiler.toString());
-      builder.setReflectively("output", output.toString());
-      builder.setReflectively("input", input.toString());
-      builder.setReflectively("flags", flags.toString());
-      for (Path path : ImmutableSortedSet.copyOf(includes.keySet())) {
-        SourcePath source = includes.get(path);
-        builder.setReflectively("include(" + path + ")", resolver.getPath(source));
-      }
+    @Override
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+      builder.setReflectively(key + ".cCompiler", cCompiler);
+      builder.setReflectively(key + ".ocamlCompiler", ocamlCompiler);
+      // TODO(user): Ensure that this is not an absolute path.
+      builder.setReflectively(key + ".output", output.toString());
+      builder.setReflectively(key + ".input", input);
+      builder.setReflectively(key + ".flags", flags);
+      builder.setReflectively(key + ".includes", includes);
       return builder;
     }
-
   }
 
   private final Args args;

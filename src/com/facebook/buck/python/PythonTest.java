@@ -18,12 +18,11 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
@@ -47,7 +46,7 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class PythonTest extends AbstractBuildRule implements TestRule {
+public class PythonTest extends NoopBuildRule implements TestRule {
 
   private final PythonBinary binary;
   private final ImmutableSet<Label> labels;
@@ -171,13 +170,6 @@ public class PythonTest extends AbstractBuildRule implements TestRule {
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder;
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-    return ImmutableList.of();
   }
 
   @Nullable

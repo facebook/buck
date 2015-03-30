@@ -26,6 +26,7 @@ import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -139,7 +140,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
   private static BuildRule createTestModulesSourceBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      final Path outputPath,
+      Path outputPath,
       ImmutableSet<String> testModules) {
 
     // Modify the build rule params to change the target, type, and remove all deps.
@@ -151,9 +152,25 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
-    final String contents = getTestModulesListContents(testModules);
+    String contents = getTestModulesListContents(testModules);
 
-    return new AbstractBuildRule(newParams, new SourcePathResolver(resolver)) {
+    // TODO(simons): Consider moving to file package
+    class WriteFile extends AbstractBuildRule {
+      @AddToRuleKey
+      private final String fileContents;
+      @AddToRuleKey(stringify = true)
+      private final Path output;
+
+      public WriteFile(
+          BuildRuleParams buildRuleParams,
+          SourcePathResolver resolver,
+          String fileContents,
+          Path output) {
+        super(buildRuleParams, resolver);
+
+        this.fileContents = fileContents;
+        this.output = output;
+      }
 
       @Override
       protected ImmutableCollection<Path> getInputsToCompareToOutput() {
@@ -162,26 +179,25 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
       @Override
       protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-        return builder
-            .setReflectively("contents", contents)
-            .setReflectively("output", outputPath.toString());
+        return builder;
       }
 
       @Override
       public ImmutableList<Step> getBuildSteps(
           BuildContext context, BuildableContext buildableContext) {
-        buildableContext.recordArtifact(outputPath);
+        buildableContext.recordArtifact(output);
         return ImmutableList.of(
-            new MkdirStep(outputPath.getParent()),
-            new WriteFileStep(contents, outputPath));
+            new MkdirStep(output.getParent()),
+            new WriteFileStep(fileContents, output));
       }
 
       @Override
       public Path getPathToOutputFile() {
-        return outputPath;
+        return output;
       }
 
-    };
+    }
+    return new WriteFile(newParams, new SourcePathResolver(resolver), contents, outputPath);
   }
 
   @Override

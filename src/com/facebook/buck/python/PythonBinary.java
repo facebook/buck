@@ -21,6 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -35,6 +36,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
@@ -42,10 +44,14 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
+  // TODO(user): Add path to pex to the rule key.
   private final Path pathToPex;
   private final Path pathToPexExecuter;
+  @AddToRuleKey(stringify = true)
   private final Path main;
+  @AddToRuleKey
   private final PythonPackageComponents components;
+  @AddToRuleKey
   private final PythonEnvironment pythonEnvironment;
 
   protected PythonBinary(
@@ -98,18 +104,12 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    builder
-        .setReflectively("packageType", "pex")
-        .setReflectively("pythonVersion", pythonEnvironment.getPythonVersion().toString())
-        .setReflectively("mainModule", main.toString())
-        .setReflectively("components", components);
     return builder;
   }
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.copyOf(getResolver().filterInputsToCompareToOutput(
-        components.getInputsToCompareToOutput()));
+    return ImmutableSet.of();
   }
 
   @Override

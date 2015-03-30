@@ -18,6 +18,7 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -25,8 +26,10 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
@@ -35,8 +38,11 @@ import java.nio.file.Path;
  */
 public class OCamlBuild extends AbstractBuildRule {
 
+  @AddToRuleKey
   private final OCamlBuildContext ocamlContext;
+  @AddToRuleKey
   private final Tool cCompiler;
+  @AddToRuleKey
   private final Tool cxxCompiler;
 
   public OCamlBuild(
@@ -49,18 +55,18 @@ public class OCamlBuild extends AbstractBuildRule {
     this.ocamlContext = ocamlContext;
     this.cCompiler = cCompiler;
     this.cxxCompiler = cxxCompiler;
+
+    Preconditions.checkNotNull(ocamlContext.getInput());
   }
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ocamlContext.getInput();
+    return ImmutableSet.of();
   }
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return ocamlContext.appendDetailsToRuleKey(builder)
-        .setReflectively("cCompiler", cCompiler)
-        .setReflectively("cxxCompiler", cxxCompiler);
+    return builder;
   }
 
   @Override

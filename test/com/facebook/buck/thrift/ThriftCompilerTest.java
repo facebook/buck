@@ -27,12 +27,12 @@ import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -75,16 +75,16 @@ public class ThriftCompilerTest {
   public void testThatInputChangesCauseRuleKeyChanges() {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(
+        new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.of(
-                    "thrift", Strings.repeat("a", 40),
-                    "test.thrift", Strings.repeat("b", 40),
+                    "blah/something.thrift", Strings.repeat("e", 40),
                     "different", Strings.repeat("c", 40),
                     "something.thrift", Strings.repeat("d", 40),
-                    "blah/something.thrift", Strings.repeat("e", 40))));
+                    "thrift", Strings.repeat("a", 40),
+                    "test.thrift", Strings.repeat("b", 40))));
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
     // Generate a rule key for the defaults.
     RuleKey.Builder.RuleKeyPair defaultRuleKey = generateRuleKey(

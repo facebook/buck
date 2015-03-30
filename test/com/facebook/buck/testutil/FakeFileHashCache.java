@@ -55,7 +55,7 @@ public class FakeFileHashCache implements FileHashCache {
 
   @Override
   public HashCode get(Path path) {
-    return Preconditions.checkNotNull(pathsToHashes.get(path));
+    return Preconditions.checkNotNull(pathsToHashes.get(path), path.toString());
   }
 
 }

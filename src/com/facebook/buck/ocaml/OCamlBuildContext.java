@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreIterables;
@@ -39,7 +40,7 @@ import java.nio.file.Paths;
 import javax.annotation.Nullable;
 
 
-public class OCamlBuildContext {
+public class OCamlBuildContext implements RuleKeyAppendable {
   static final String OCAML_COMPILED_BYTECODE_DIR = "bc";
   static final String OCAML_COMPILED_DIR = "opt";
   private static final String OCAML_GENERATED_SOURCE_DIR = "gen";
@@ -334,15 +335,17 @@ public class OCamlBuildContext {
     return Preconditions.checkNotNull(mlInput).asList();
   }
 
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+  @Override
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
     return builder
-        .setReflectively("ocamlDepTool", getOcamlDepTool())
-        .setReflectively("ocamlCompiler", getOcamlCompiler())
-        .setReflectively("ocamlBytecodeCompiler", getOcamlBytecodeCompiler())
-        .setReflectively("ocamlDebug", getOcamlDebug())
-        .setReflectively("yaccCompiler", getYaccCompiler())
-        .setReflectively("lexCompiler", getLexCompiler())
-        .setReflectively("flags", getFlags());
+        .setReflectively(key + ".flags", getFlags())
+        .setReflectively(key + ".input", getInput())
+        .setReflectively(key + ".lexCompiler", getLexCompiler())
+        .setReflectively(key + ".ocamlBytecodeCompiler", getOcamlBytecodeCompiler())
+        .setReflectively(key + ".ocamlCompiler", getOcamlCompiler())
+        .setReflectively(key + ".ocamlDebug", getOcamlDebug())
+        .setReflectively(key + ".ocamlDepTool", getOcamlDepTool())
+        .setReflectively(key + ".yaccCompiler", getYaccCompiler());
   }
 
   public ImmutableList<String> getBytecodeIncludes() {

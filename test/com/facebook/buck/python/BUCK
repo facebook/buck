@@ -17,6 +17,7 @@ java_test(
     '//src/com/facebook/buck/python:support',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules/keys:keys',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:constants',
