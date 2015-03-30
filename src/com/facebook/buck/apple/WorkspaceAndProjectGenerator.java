@@ -66,9 +66,6 @@ public class WorkspaceAndProjectGenerator {
   private Optional<SchemeGenerator> schemeGenerator = Optional.absent();
   private String buildFileName;
 
-  private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
-      ImmutableSet.builder();
-
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
       TargetGraph projectGraph,
@@ -106,10 +103,6 @@ public class WorkspaceAndProjectGenerator {
   @VisibleForTesting
   Optional<ProjectGenerator> getCombinedTestsProjectGenerator() {
     return combinedTestsProjectGenerator;
-  }
-
-  public ImmutableSet<BuildTarget> getRequiredBuildTargets() {
-    return requiredBuildTargetsBuilder.build();
   }
 
   /**
@@ -196,7 +189,6 @@ public class WorkspaceAndProjectGenerator {
       generator.createXcodeProjects();
 
       workspaceGenerator.addFilePath(generator.getProjectPath(), Optional.<Path>absent());
-      requiredBuildTargetsBuilder.addAll(generator.getRequiredBuildTargets());
 
       buildTargetToPbxTargetMapBuilder.putAll(generator.getBuildTargetToGeneratedTargetMap());
       for (PBXTarget target : generator.getBuildTargetToGeneratedTargetMap().values()) {
@@ -245,7 +237,6 @@ public class WorkspaceAndProjectGenerator {
               .setTestsToGenerateAsStaticLibraries(groupableTests);
 
           generator.createXcodeProjects();
-          requiredBuildTargetsBuilder.addAll(generator.getRequiredBuildTargets());
           projectGenerators.put(projectDirectory, generator);
         } else {
           LOG.debug("Already generated project for target %s, skipping", projectDirectory);
@@ -272,7 +263,6 @@ public class WorkspaceAndProjectGenerator {
             .setAdditionalCombinedTestTargets(groupedTestResults.groupedTests)
             .createXcodeProjects();
         workspaceGenerator.addFilePath(combinedTestsProjectGenerator.getProjectPath());
-        requiredBuildTargetsBuilder.addAll(combinedTestsProjectGenerator.getRequiredBuildTargets());
         for (PBXTarget target :
             combinedTestsProjectGenerator.getBuildTargetToGeneratedTargetMap().values()) {
           targetToProjectPathMapBuilder.put(target, combinedTestsProjectGenerator.getProjectPath());

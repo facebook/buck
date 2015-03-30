@@ -33,7 +33,7 @@ public class DefaultCxxPlatforms {
   // Utility class, do not instantiate.
   private DefaultCxxPlatforms() { }
 
-  public static final Flavor FLAVOR = ImmutableFlavor.of("default");
+  private static final Flavor FLAVOR = ImmutableFlavor.of("default");
 
   private static final Path DEFAULT_AS = Paths.get("/usr/bin/as");
   private static final Path DEFAULT_ASPP = Paths.get("/usr/bin/gcc");

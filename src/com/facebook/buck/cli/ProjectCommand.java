@@ -341,7 +341,6 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       options.getCombineTestBundles()
           ? AppleBuildRules.filterGroupableTests(testTargetNodes)
           : ImmutableSet.<TargetNode<AppleTestDescription.Arg>>of();
-    ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
     for (BuildTarget inputTarget : targets) {
       TargetNode<?> inputNode = Preconditions.checkNotNull(
           targetGraphAndTargets.getTargetGraph().get(inputTarget));
@@ -368,27 +367,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           new ParserConfig(options.getBuckConfig()).getBuildFileName());
       generator.setGroupableTests(groupableTests);
       generator.generateWorkspaceAndDependentProjects(projectGenerators);
-      ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =
-          generator.getRequiredBuildTargets();
-      LOG.debug(
-          "Required build targets for workspace %s: %s",
-          inputTarget,
-          requiredBuildTargetsForWorkspace);
-      requiredBuildTargetsBuilder.addAll(requiredBuildTargetsForWorkspace);
     }
 
-    int exitCode = 0;
-    ImmutableSet<BuildTarget> requiredBuildTargets = requiredBuildTargetsBuilder.build();
-    if (!requiredBuildTargets.isEmpty()) {
-      BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
-      BuildCommandOptions buildCommandOptions = new BuildCommandOptions(options.getBuckConfig());
-      buildCommandOptions.setArguments(
-          FluentIterable.from(requiredBuildTargets)
-              .transform(Functions.toStringFunction())
-              .toList());
-      exitCode = buildCommand.runCommandWithOptions(buildCommandOptions);
-    }
-    return exitCode;
+    return 0;
   }
 
   @SuppressWarnings(value = "unchecked")
