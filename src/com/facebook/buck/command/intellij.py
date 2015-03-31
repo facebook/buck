@@ -203,7 +203,7 @@ def create_additional_excludes(modules):
     return additional_excludes
 
 
-def get_value_in_map(map, key, fallback=None):
+def get_path_from_map(map, key, fallback=None):
     if key in map:
         return '/' + map[key]
 
@@ -236,9 +236,9 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
             else:
                 keystore = ''
 
-            android_manifest = get_value_in_map(module, 'androidManifest', 'AndroidManifest.xml')
-            res_folder = get_value_in_map(module, 'resFolder', 'res')
-            asset_folder = get_value_in_map(module, 'assetFolder', 'assets')
+            android_manifest = get_path_from_map(module, 'androidManifest', 'AndroidManifest.xml')
+            res_folder = get_path_from_map(module, 'resFolder', 'res')
+            asset_folder = get_path_from_map(module, 'assetFolder', 'assets')
 
             is_library_project = module['isAndroidLibraryProject']
             android_params = {
@@ -247,11 +247,11 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
                 'asset_folder': asset_folder,
                 'is_android_library_project': str(is_library_project).lower(),
                 'run_proguard': 'false',
-                'module_gen_path':  get_value_in_map(module, 'moduleGenPath'),
+                'module_gen_path':  get_path_from_map(module, 'moduleGenPath'),
                 'proguard_config': '/proguard.cfg',
                 'keystore': keystore,
                 'libs_path': '/%s' % module.get('nativeLibs', 'libs'),
-                'apk_path': get_value_in_map(module, 'binaryPath'),
+                'apk_path': get_path_from_map(module, 'binaryPath'),
             }
 
             if android_auto_generation_disabled:
@@ -460,10 +460,11 @@ def write_all_modules(modules):
 def write_misc_file(java_settings):
     """Writes a misc.xml file to define some settings specific to the project."""
     xml = MISC_XML % {
-        'java_language_level': get_value_in_map(java_settings, 'languageLevel'),
-        'project_jdk_name': get_value_in_map(java_settings, 'jdkName'),
-        'project_jdk_type': get_value_in_map(java_settings, 'jdkType'),
+        'java_language_level': java_settings.get('languageLevel', 'JDK_1_6'),
+        'project_jdk_name': java_settings.get('jdkName', 'Android API 21 Platform'),
+        'project_jdk_type': java_settings.get('jdkType', 'Android SDK'),
     }
+
     write_file_if_changed('.idea/misc.xml', xml)
 
 
