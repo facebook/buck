@@ -16,8 +16,11 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -30,30 +33,39 @@ import java.nio.file.Path;
  */
 public class OutputOnlyBuildRule extends AbstractBuildRule {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("output_only_build_rule");
-
-  private final Path pathToOutputFile;
+  // We can stringify, since this is the output of another rule.
+  @AddToRuleKey(stringify = true)
+  private final Path input;
+  private final Path output;
 
   public OutputOnlyBuildRule(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
-      Path pathToOutputFile) {
+      Path existingOutput) {
     super(buildRuleParams, resolver);
-    this.pathToOutputFile = pathToOutputFile;
+
+    this.input = existingOutput;
+    this.output = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "%s")
+        .resolve(existingOutput.getFileName());
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    buildableContext.recordArtifact(pathToOutputFile);
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+    steps.add(new MakeCleanDirectoryStep(output.getParent()));
+    steps.add(new SymlinkFileStep(input, output, false));
+
+    buildableContext.recordArtifact(output);
 
     return ImmutableList.of();
   }
 
   @Override
   public Path getPathToOutputFile() {
-    return pathToOutputFile;
+    return output;
   }
 
   @Override
@@ -63,8 +75,7 @@ public class OutputOnlyBuildRule extends AbstractBuildRule {
 
   @Override
   protected Builder appendDetailsToRuleKey(Builder builder) {
-    // Note that the path itself is part of the rule key, but not the contents of the file.
-    return builder.setReflectively("output", pathToOutputFile.toString());
+    return builder;
   }
 
 }

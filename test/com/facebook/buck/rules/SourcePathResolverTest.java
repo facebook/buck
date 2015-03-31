@@ -25,11 +25,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -54,7 +57,7 @@ public class SourcePathResolverTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path expectedPath = Paths.get("foo");
-    BuildRule rule = new OutputOnlyBuildRule(
+    BuildRule rule = new PathReferenceRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:foo")).build(),
         pathResolver,
         expectedPath);
@@ -92,7 +95,7 @@ public class SourcePathResolverTest {
     Path buildTargetSourcePathExpectedPath = Paths.get("bar");
     Path buildRuleWithOverriddenOutputPathExpectedPath = Paths.get("baz");
     SourcePath pathSourcePath = new PathSourcePath(projectFilesystem, pathSourcePathExpectedPath);
-    BuildRule rule = new OutputOnlyBuildRule(
+    BuildRule rule = new PathReferenceRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:bar")).build(),
         pathResolver,
         buildTargetSourcePathExpectedPath);
@@ -100,7 +103,7 @@ public class SourcePathResolverTest {
     SourcePath buildTargetSourcePath = new BuildTargetSourcePath(
         projectFilesystem,
         rule.getBuildTarget());
-    BuildRule ruleWithOverriddenOutputPath = new OutputOnlyBuildRule(
+    BuildRule ruleWithOverriddenOutputPath = new PathReferenceRule(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:baz")).build(),
         pathResolver,
         Paths.get("notbaz"));
@@ -304,4 +307,37 @@ public class SourcePathResolverTest {
     }
   }
 
+  private static class PathReferenceRule extends AbstractBuildRule {
+
+    private final Path source;
+
+    protected PathReferenceRule(
+        BuildRuleParams buildRuleParams,
+        SourcePathResolver resolver,
+        Path source) {
+      super(buildRuleParams, resolver);
+      this.source = source;
+    }
+
+    @Override
+    protected ImmutableCollection<Path> getInputsToCompareToOutput() {
+      return ImmutableSet.of();
+    }
+
+    @Override
+    protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+      return builder;
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context, BuildableContext buildableContext) {
+      return ImmutableList.of();
+    }
+
+    @Override
+    public Path getPathToOutputFile() {
+      return source;
+    }
+  }
 }
