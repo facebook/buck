@@ -73,7 +73,7 @@ public class MoreIterables {
    * then the last one will be kept in the ordering
    */
   public static <T> Set<T> dedupKeepLast(Iterable<T> toDedup) {
-    Set<T> dedupedSet = new LinkedHashSet();
+    Set<T> dedupedSet = new LinkedHashSet<>();
     for (T t : toDedup) {
       if (dedupedSet.contains(t)) {
         dedupedSet.remove(t);
