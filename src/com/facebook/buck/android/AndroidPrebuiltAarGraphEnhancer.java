@@ -35,7 +35,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.OutputOnlyBuildRule;
 import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -65,8 +64,6 @@ class AndroidPrebuiltAarGraphEnhancer {
   private static final BuildRuleType UNZIP_AAR_TYPE = BuildRuleType.of("unzip_aar");
 
   private static final Flavor AAR_UNZIP_FLAVOR = ImmutableFlavor.of("aar_unzip");
-  private static final Flavor AAR_CLASSES_JAR_FLAVOR = ImmutableFlavor.of("aar_classes_jar");
-  private static final Flavor AAR_MANIFEST = ImmutableFlavor.of("aar_manifest");
   private static final Flavor AAR_PREBUILT_JAR_FLAVOR = ImmutableFlavor.of("aar_prebuilt_jar");
   private static final Flavor AAR_ANDROID_RESOURCE_FLAVOR =
       ImmutableFlavor.of("aar_android_resource");
@@ -106,50 +103,40 @@ class AndroidPrebuiltAarGraphEnhancer {
     ruleResolver.addToIndex(unzipAar);
 
     // unzip_aar#aar_classes_jar
-    BuildRuleParams classesJarParams = originalBuildRuleParams.copyWithChanges(
-        OutputOnlyBuildRule.TYPE,
-        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_CLASSES_JAR_FLAVOR),
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar)),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
-    OutputOnlyBuildRule classesJar = new OutputOnlyBuildRule(
-        classesJarParams,
-        pathResolver,
-        unzipAar.getPathToClassesJar());
-    ruleResolver.addToIndex(classesJar);
+    SourcePath classesJar =
+        new BuildTargetSourcePath(
+            unzipAar.getProjectFilesystem(),
+            unzipAar.getBuildTarget(),
+            unzipAar.getPathToClassesJar());
 
     // prebuilt_jar
     BuildRuleParams prebuiltJarParams = originalBuildRuleParams.copyWithChanges(
         PrebuiltJarDescription.TYPE,
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_PREBUILT_JAR_FLAVOR),
         /* declaredDeps */
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar, classesJar)),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar)),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     PrebuiltJar prebuiltJar = new PrebuiltJar(
         /* params */ prebuiltJarParams,
         pathResolver,
-        new BuildTargetSourcePath(classesJar.getProjectFilesystem(), classesJar.getBuildTarget()),
+        classesJar,
         /* sourceJar */ Optional.<SourcePath>absent(),
         /* gwtJar */ Optional.<SourcePath>absent(),
         /* javadocUrl */ Optional.<String>absent());
     ruleResolver.addToIndex(prebuiltJar);
 
     // unzip_aar#aar_manifest
-    BuildRuleParams manifestParams = originalBuildRuleParams.copyWithChanges(
-        OutputOnlyBuildRule.TYPE,
-        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_MANIFEST),
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar)),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
-    OutputOnlyBuildRule manifest = new OutputOnlyBuildRule(
-        manifestParams,
-        pathResolver,
-        unzipAar.getAndroidManifest());
-    ruleResolver.addToIndex(manifest);
+    SourcePath manifest =
+        new BuildTargetSourcePath(
+            unzipAar.getProjectFilesystem(),
+            unzipAar.getBuildTarget(),
+            unzipAar.getAndroidManifest());
 
     // android_resource
     BuildRuleParams androidResourceParams = originalBuildRuleParams.copyWithChanges(
         AndroidResourceDescription.TYPE,
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_RESOURCE_FLAVOR),
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(manifest)),
+        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar)),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     // Because all resources and assets are generated files, we specify them as empty collections.
@@ -165,7 +152,7 @@ class AndroidPrebuiltAarGraphEnhancer {
         /* rDotJavaPackage */ null,
         /* assets */ unzipAar.getAssetsDirectory(),
         assetsSrcs,
-        new BuildTargetSourcePath(manifest.getProjectFilesystem(), manifest.getBuildTarget()),
+        manifest,
         /* hasWhitelistedStrings */ false);
     ruleResolver.addToIndex(androidResource);
 
