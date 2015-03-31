@@ -309,6 +309,7 @@ public class ThriftCxxEnhancerTest {
             "test_types.tcc",
             "Test.h",
             "Test.cpp",
+            "Test_client.cpp",
             "Test.tcc"),
         ENHANCER_CPP2.getGeneratedThriftSources(
             ImmutableSet.<String>of(),
@@ -343,6 +344,7 @@ public class ThriftCxxEnhancerTest {
             "test_layouts.cpp",
             "Test.h",
             "Test.cpp",
+            "Test_client.cpp",
             "Test.tcc"),
         ENHANCER_CPP2.getGeneratedThriftSources(
             ImmutableSet.of("frozen"),
@@ -371,6 +373,7 @@ public class ThriftCxxEnhancerTest {
             "test_types.tcc",
             "Test.h",
             "Test.cpp",
+            "Test_client.cpp",
             "Test.tcc"),
         ENHANCER_CPP2.getGeneratedThriftSources(
             ImmutableSet.of("bootstrap"),
@@ -403,6 +406,7 @@ public class ThriftCxxEnhancerTest {
             "test_types.tcc",
             "Test.h",
             "Test.cpp",
+            "Test_client.cpp",
             "Test.tcc"),
         ENHANCER_CPP2.getGeneratedThriftSources(
             ImmutableSet.of("templates"),
@@ -434,9 +438,43 @@ public class ThriftCxxEnhancerTest {
             "test_types.tcc",
             "Test.h",
             "Test.cpp",
+            "Test_client.cpp",
             "Test.tcc"),
         ENHANCER_CPP2.getGeneratedThriftSources(
             ImmutableSet.of("perfhash"),
+            "test.thrift",
+            ImmutableList.of("Test")));
+
+    // Test with "separate_processmap" option.
+    assertEquals(
+        ImmutableList.of(
+            "test_constants.h",
+            "test_constants.cpp",
+            "test_types.h",
+            "test_types.cpp",
+            "test_reflection.h",
+            "test_reflection.cpp",
+            "Test.h",
+            "Test.cpp"),
+        ENHANCER_CPP.getGeneratedThriftSources(
+            ImmutableSet.of("separate_processmap"),
+            "test.thrift",
+            ImmutableList.of("Test")));
+    assertEquals(
+        ImmutableList.of(
+            "test_constants.h",
+            "test_constants.cpp",
+            "test_types.h",
+            "test_types.cpp",
+            "test_types.tcc",
+            "Test.h",
+            "Test.cpp",
+            "Test_client.cpp",
+            "Test_processmap_binary.cpp",
+            "Test_processmap_compact.cpp",
+            "Test.tcc"),
+        ENHANCER_CPP2.getGeneratedThriftSources(
+            ImmutableSet.of("separate_processmap"),
             "test.thrift",
             ImmutableList.of("Test")));
   }

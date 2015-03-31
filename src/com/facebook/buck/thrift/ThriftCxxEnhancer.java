@@ -81,6 +81,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     final boolean layouts = options.contains("frozen");
     final boolean templates = cpp2 || options.contains("templates");
     final boolean perfhash = !cpp2 && options.contains("perfhash");
+    final boolean separate_processmap = cpp2 && options.contains("separate_processmap");
 
     ImmutableList.Builder<String> sources = ImmutableList.builder();
 
@@ -108,6 +109,15 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
       sources.add(service + ".h");
       sources.add(service + ".cpp");
+
+      if (cpp2) {
+        sources.add(service + "_client.cpp");
+      }
+
+      if (separate_processmap) {
+        sources.add(service + "_processmap_binary.cpp");
+        sources.add(service + "_processmap_compact.cpp");
+      }
 
       if (templates) {
         sources.add(service + ".tcc");
