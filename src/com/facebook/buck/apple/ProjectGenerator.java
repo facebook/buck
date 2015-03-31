@@ -523,15 +523,11 @@ public class ProjectGenerator {
 
   private void writeHeaderMap(
       HeaderMap headerMap,
-      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
-      HeaderMapType headerMapType)
+      Path headerMapFile)
       throws IOException {
     if (headerMap.getNumEntries() == 0) {
       return;
     }
-    Path headerMapFile = AppleDescriptions
-        .getPathToHeaderMap(targetNode, headerMapType)
-        .get();
     headerMaps.add(headerMapFile);
     projectFilesystem.mkdirs(headerMapFile.getParent());
     if (shouldGenerateReadOnlyFiles()) {
@@ -581,6 +577,9 @@ public class ProjectGenerator {
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
         sourcePathResolver);
+    ImmutableSet<SourcePath> exportedHeaders =
+        ImmutableSet.copyOf(getHeaderSourcePaths(arg.exportedHeaders));
+    ImmutableSet<SourcePath> headers = ImmutableSet.copyOf(getHeaderSourcePaths(arg.headers));
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
         .setProduct(
@@ -590,10 +589,10 @@ public class ProjectGenerator {
         .setGid(targetGid)
         .setShouldGenerateCopyHeadersPhase(
             !targetNode.getConstructorArg().getUseBuckHeaderMaps())
-        .setSourcesWithFlags(arg.srcs.get())
-        .setExtraXcodeSources(arg.extraXcodeSources.get())
-        .setPublicHeaders(arg.exportedHeaders.get())
-        .setPrivateHeaders(arg.headers.get())
+        .setSourcesWithFlags(ImmutableSet.copyOf(arg.srcs.get()))
+        .setExtraXcodeSources(ImmutableSet.copyOf(arg.extraXcodeSources.get()))
+        .setPublicHeaders(exportedHeaders)
+        .setPrivateHeaders(headers)
         .setResources(resources);
 
     if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE)) {
@@ -706,9 +705,6 @@ public class ProjectGenerator {
                     collectRecursiveHeaderSearchPaths(targetNode).iterator(),
                     collectRecursiveHeaderMaps(targetNode).iterator())))
         .put(
-            "USER_HEADER_SEARCH_PATHS",
-            Joiner.on(' ').join(collectUserHeaderMaps(targetNode)))
-        .put(
             "LIBRARY_SEARCH_PATHS",
             Joiner.on(' ').join(
                 collectRecursiveLibrarySearchPaths(ImmutableSet.of(targetNode))))
@@ -745,11 +741,22 @@ public class ProjectGenerator {
 
     // -- phases
     if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
-      addHeaderMapsForHeaders(
-          targetNode,
-          targetNode.getConstructorArg().headerPathPrefix,
-          arg.exportedHeaders.get(),
-          arg.headers.get());
+      Path headerPathPrefix =
+          AppleDescriptions.getHeaderPathPrefix(arg, targetNode.getBuildTarget());
+      createHeaderMap(
+          sourcePathResolver,
+          AppleDescriptions.convertAppleHeadersToPublicCxxHeaders(
+              sourcePathResolver,
+              headerPathPrefix,
+              arg),
+          AppleDescriptions.getPathToHeaderMap(targetNode, HeaderMapType.PUBLIC_HEADER_MAP).get());
+      createHeaderMap(
+          sourcePathResolver,
+          AppleDescriptions.convertAppleHeadersToPrivateCxxHeaders(
+              sourcePathResolver,
+              headerPathPrefix,
+              arg),
+          AppleDescriptions.getPathToHeaderMap(targetNode, HeaderMapType.TARGET_HEADER_MAP).get());
     }
 
     // Use Core Data models from immediate dependencies only.
@@ -783,6 +790,17 @@ public class ProjectGenerator {
     return target;
   }
 
+  private Iterable<SourcePath> getHeaderSourcePaths(
+      Optional<Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>> headers) {
+    if (!headers.isPresent()) {
+      return ImmutableList.of();
+    } else if (headers.get().isLeft()) {
+      return headers.get().getLeft();
+    } else {
+      return headers.get().getRight().values();
+    }
+  }
+
   private void generateCombinedTestTarget(
       final String productName,
       AppleTestBundleParamsKey key,
@@ -802,7 +820,7 @@ public class ProjectGenerator {
             Paths.get(productName + "." + getExtensionString(key.getExtension())))
         .setShouldGenerateCopyHeadersPhase(false)
         .setSourcesWithFlags(
-            ImmutableList.of(
+            ImmutableSet.of(
                 SourceWithFlags.of(
                     new PathSourcePath(projectFilesystem, emptyFileWithExtension("c")))))
         .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))
@@ -972,95 +990,19 @@ public class ProjectGenerator {
     }
   }
 
-  /**
-   * Create header map files and write them to disk.
-   */
-  private void addHeaderMapsForHeaders(
-      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
-      Optional<String> headerPathPrefix,
-      Iterable<SourcePath> publicHeaders,
-      Iterable<SourcePath> privateHeaders) throws IOException {
-    HeaderMap.Builder publicMapBuilder = HeaderMap.builder();
-    HeaderMap.Builder targetMapBuilder = HeaderMap.builder();
-    HeaderMap.Builder targetUserMapBuilder = HeaderMap.builder();
-    addGroupedSourcesToHeaderMaps(
-        publicMapBuilder,
-        targetMapBuilder,
-        targetUserMapBuilder,
-        Paths.get(headerPathPrefix.or(getProductName(targetNode.getBuildTarget()))),
-        publicHeaders,
-        privateHeaders);
-    writeHeaderMap(publicMapBuilder.build(), targetNode, HeaderMapType.PUBLIC_HEADER_MAP);
-    writeHeaderMap(targetMapBuilder.build(), targetNode, HeaderMapType.TARGET_HEADER_MAP);
-    writeHeaderMap(targetUserMapBuilder.build(), targetNode, HeaderMapType.TARGET_USER_HEADER_MAP);
-  }
-
-  private void addGroupedSourcesToHeaderMaps(
-      HeaderMap.Builder publicHeaderMap,
-      HeaderMap.Builder targetHeaderMap,
-      HeaderMap.Builder targetUserHeaderMap,
-      Path prefix,
-      Iterable<SourcePath> publicHeaders,
-      Iterable<SourcePath> privateHeaders) {
-    for (SourcePath headerPath : publicHeaders) {
-      addSourcePathToHeaderMaps(
-          headerPath,
-          prefix,
-          publicHeaderMap,
-          targetHeaderMap,
-          targetUserHeaderMap,
-          HeaderVisibility.PUBLIC);
-    }
-    for (SourcePath headerPath : privateHeaders) {
-      addSourcePathToHeaderMaps(
-          headerPath,
-          prefix,
-          publicHeaderMap,
-          targetHeaderMap,
-          targetUserHeaderMap,
-          HeaderVisibility.PROJECT);
-    }
-  }
-
-  private void addHeaderMapEntry(
-      HeaderMap.Builder builder,
-      String builderName,
-      String key,
-      Path value) {
-    builder.add(key, value);
+  private void createHeaderMap(
+      Function<SourcePath, Path> pathResolver,
+      Map<String, SourcePath> contents,
+      Path headerMapFile) throws IOException {
     LOG.verbose(
-        "Adding %s mapping %s -> %s",
-        builderName,
-        key,
-        value);
-  }
-
-  private void addSourcePathToHeaderMaps(
-      SourcePath headerPath,
-      Path prefix,
-      HeaderMap.Builder publicHeaderMap,
-      HeaderMap.Builder targetHeaderMap,
-      HeaderMap.Builder targetUserHeaderMap,
-      HeaderVisibility visibility) {
-    String fileName = Preconditions
-        .checkNotNull(sourcePathResolver.apply(headerPath))
-        .getFileName()
-        .toString();
-    String prefixedFileName = prefix.resolve(fileName).toString();
-    Path value =
-        projectFilesystem.getPathForRelativePath(sourcePathResolver.apply(headerPath))
-            .toAbsolutePath().normalize();
-
-    // Add an entry Prefix/File.h -> AbsolutePathTo/File.h
-    // to targetHeaderMap and possibly publicHeaderMap
-    addHeaderMapEntry(targetHeaderMap, "target", prefixedFileName, value);
-    if (visibility == HeaderVisibility.PUBLIC) {
-      addHeaderMapEntry(publicHeaderMap, "public", prefixedFileName, value);
+        "Writing header map file to %s with contents %s",
+        headerMapFile,
+        contents);
+    HeaderMap.Builder builder = HeaderMap.builder();
+    for (Map.Entry<String, SourcePath> entry : contents.entrySet()) {
+      builder.add(entry.getKey(), projectFilesystem.resolve(pathResolver.apply(entry.getValue())));
     }
-
-    // Add an entry File.h -> AbsolutePathTo/File.h
-    // to targetUserHeaderMap
-    addHeaderMapEntry(targetUserHeaderMap, "target-user", fileName, value);
+    writeHeaderMap(builder.build(), headerMapFile);
   }
 
   private void addCoreDataModelBuildPhase(
@@ -1375,6 +1317,7 @@ public class ProjectGenerator {
 
     if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
       builder.add(getHeaderMapRelativePath(targetNode, HeaderMapType.TARGET_HEADER_MAP));
+      builder.add(getHeaderMapRelativePath(targetNode, HeaderMapType.PUBLIC_HEADER_MAP));
     }
 
     for (TargetNode<?> input :
@@ -1391,22 +1334,6 @@ public class ProjectGenerator {
     }
 
     addHeaderMapsForSourceUnderTest(targetNode, builder, HeaderMapType.TARGET_HEADER_MAP);
-
-    return builder.build();
-  }
-
-  private ImmutableSet<String> collectUserHeaderMaps(
-      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-
-    if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
-      builder.add(
-          getHeaderMapRelativePath(
-              targetNode,
-              HeaderMapType.TARGET_USER_HEADER_MAP));
-    }
-
-    addHeaderMapsForSourceUnderTest(targetNode, builder, HeaderMapType.TARGET_USER_HEADER_MAP);
 
     return builder.build();
   }

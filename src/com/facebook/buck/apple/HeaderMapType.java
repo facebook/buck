@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 public enum HeaderMapType {
   PUBLIC_HEADER_MAP("-public-headers.hmap"),
   TARGET_HEADER_MAP("-target-headers.hmap"),
-  TARGET_USER_HEADER_MAP("-target-user-headers.hmap"),
   ;
 
   private final String suffix;

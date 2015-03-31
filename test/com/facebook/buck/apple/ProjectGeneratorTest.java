@@ -195,12 +195,12 @@ public class ProjectGeneratorTest {
     BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
-        .setSrcs(
-            Optional.of(
-                ImmutableList.of(
-                    SourceWithFlags.of(new TestSourcePath("HeaderGroup1/foo.h")),
-                    SourceWithFlags.of(
-                        new TestSourcePath("HeaderGroup1/bar.h"), ImmutableList.of("public")))))
+        .setHeaders(
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("HeaderGroup1/foo.h")))
+        .setExportedHeaders(
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("HeaderGroup1/bar.h")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -220,14 +220,12 @@ public class ProjectGeneratorTest {
         .createBuilder(buildTarget)
         .setSrcs(Optional.of(ImmutableList.<SourceWithFlags>of()))
         .setHeaders(
-            Optional.of(
-                ImmutableSortedSet.<SourcePath>of(
-                    new TestSourcePath("HeaderGroup1/foo.h"),
-                    new TestSourcePath("HeaderGroup2/baz.h"))))
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("HeaderGroup1/foo.h"),
+                new TestSourcePath("HeaderGroup2/baz.h")))
         .setExportedHeaders(
-            Optional.of(
-                ImmutableSortedSet.<SourcePath>of(
-                    new TestSourcePath("HeaderGroup1/bar.h"))))
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("HeaderGroup1/bar.h")))
         .setUseBuckHeaderMaps(Optional.of(true))
         .build();
 
@@ -268,33 +266,116 @@ public class ProjectGeneratorTest {
         }));
 
     List<Path> headerMaps = projectGenerator.getGeneratedHeaderMaps();
-    assertThat(headerMaps, hasSize(3));
+    assertThat(headerMaps, hasSize(2));
 
     assertEquals("buck-out/gen/foo/lib-public-headers.hmap", headerMaps.get(0).toString());
     assertThatHeaderMapFileContains(
         Paths.get("buck-out/gen/foo/lib-public-headers.hmap"),
-        ImmutableMap.of("lib/bar.h", "HeaderGroup1/bar.h")
-    );
+        ImmutableMap.of("lib/bar.h", "HeaderGroup1/bar.h"));
+
+    assertEquals("buck-out/gen/foo/lib-target-headers.hmap", headerMaps.get(1).toString());
+    assertThatHeaderMapFileContains(
+        Paths.get("buck-out/gen/foo/lib-target-headers.hmap"),
+        ImmutableMap.<String, String>builder()
+            .put("lib/foo.h", "HeaderGroup1/foo.h")
+            .put("lib/baz.h", "HeaderGroup2/baz.h")
+            .put("foo.h", "HeaderGroup1/foo.h")
+            .put("bar.h", "HeaderGroup1/bar.h")
+            .put("baz.h", "HeaderGroup2/baz.h")
+            .build());
+  }
+
+  @Test
+  public void testLibraryHeaderGroupsWithMappedHeaders() throws IOException {
+    BuildTarget privateGeneratedTarget = BuildTarget.builder("//foo", "generated1.h").build();
+    BuildTarget publicGeneratedTarget = BuildTarget.builder("//foo", "generated2.h").build();
+
+    TargetNode<?> privateGeneratedNode =
+        ExportFileBuilder.newExportFileBuilder(privateGeneratedTarget).build();
+    TargetNode<?> publicGeneratedNode =
+        ExportFileBuilder.newExportFileBuilder(publicGeneratedTarget).build();
+
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setSrcs(Optional.of(ImmutableList.<SourceWithFlags>of()))
+        .setHeaders(
+            ImmutableMap.<String, SourcePath>of(
+                "any/name.h", new TestSourcePath("HeaderGroup1/foo.h"),
+                "different/name.h", new TestSourcePath("HeaderGroup2/baz.h"),
+                "one/more/name.h", new BuildTargetSourcePath(
+                    projectFilesystem,
+                    privateGeneratedTarget)))
+        .setExportedHeaders(
+            ImmutableMap.<String, SourcePath>of(
+                "yet/another/name.h", new TestSourcePath("HeaderGroup1/bar.h"),
+                "and/one/more.h", new BuildTargetSourcePath(
+                    projectFilesystem,
+                    publicGeneratedTarget)))
+        .setUseBuckHeaderMaps(Optional.of(true))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(node, privateGeneratedNode, publicGeneratedNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup targetGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(buildTarget.getFullyQualifiedName());
+    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
+
+    assertThat(sourcesGroup.getChildren(), hasSize(3));
+
+    PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
+    assertEquals("HeaderGroup1", group1.getName());
+    assertThat(group1.getChildren(), hasSize(2));
+    PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
+    assertEquals("bar.h", fileRefFoo.getName());
+    PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
+    assertEquals("foo.h", fileRefBar.getName());
+
+    PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
+    assertEquals("HeaderGroup2", group2.getName());
+    assertThat(group2.getChildren(), hasSize(1));
+    PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
+    assertEquals("baz.h", fileRefBaz.getName());
+
+    PBXGroup group3 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 2);
+    assertEquals("foo", group3.getName());
+    assertThat(group3.getChildren(), hasSize(2));
+    PBXFileReference fileRefGenerated1 = (PBXFileReference) Iterables.get(group3.getChildren(), 0);
+    assertEquals("generated1.h", fileRefGenerated1.getName());
+    PBXFileReference fileRefGenerated2 = (PBXFileReference) Iterables.get(group3.getChildren(), 1);
+    assertEquals("generated2.h", fileRefGenerated2.getName());
+
+    // There should be no PBXHeadersBuildPhase in the 'Buck header map mode'.
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
+    assertEquals(Optional.<PBXBuildPhase>absent(),
+        Iterables.tryFind(target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
+              @Override
+              public boolean apply(PBXBuildPhase input) {
+                return input instanceof PBXHeadersBuildPhase;
+              }
+            }));
+
+    List<Path> headerMaps = projectGenerator.getGeneratedHeaderMaps();
+    assertThat(headerMaps, hasSize(2));
+
+    assertEquals("buck-out/gen/foo/lib-public-headers.hmap", headerMaps.get(0).toString());
+    assertThatHeaderMapFileContains(
+        Paths.get("buck-out/gen/foo/lib-public-headers.hmap"),
+        ImmutableMap.of(
+            "yet/another/name.h", "HeaderGroup1/bar.h",
+            "and/one/more.h", "foo/generated2.h"));
 
     assertEquals("buck-out/gen/foo/lib-target-headers.hmap", headerMaps.get(1).toString());
     assertThatHeaderMapFileContains(
         Paths.get("buck-out/gen/foo/lib-target-headers.hmap"),
         ImmutableMap.of(
-            "lib/foo.h", "HeaderGroup1/foo.h",
-            "lib/bar.h", "HeaderGroup1/bar.h",
-            "lib/baz.h", "HeaderGroup2/baz.h"
-        )
-    );
-
-    assertEquals("buck-out/gen/foo/lib-target-user-headers.hmap", headerMaps.get(2).toString());
-    assertThatHeaderMapFileContains(
-        Paths.get("buck-out/gen/foo/lib-target-user-headers.hmap"),
-        ImmutableMap.of(
-            "foo.h", "HeaderGroup1/foo.h",
-            "bar.h", "HeaderGroup1/bar.h",
-            "baz.h", "HeaderGroup2/baz.h"
-        )
-    );
+            "any/name.h", "HeaderGroup1/foo.h",
+            "different/name.h", "HeaderGroup2/baz.h",
+            "one/more/name.h", "foo/generated1.h"));
   }
 
   @Test
@@ -344,15 +425,13 @@ public class ProjectGeneratorTest {
             "library in HEADER_SEARCH_PATHS",
         "$(inherited) " +
             "../buck-out/gen/foo/test-target-headers.hmap " +
+            "../buck-out/gen/foo/test-public-headers.hmap " +
             "../buck-out/gen/foo/lib-public-headers.hmap " +
             "../buck-out/gen/foo/lib-target-headers.hmap",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        "test binary should use user headermaps of its own as well as of the tested library " +
-            "in USER_HEADER_SEARCH_PATHS",
-        "$(inherited) " +
-            "../buck-out/gen/foo/test-target-user-headers.hmap " +
-            "../buck-out/gen/foo/lib-target-user-headers.hmap",
+        "USER_HEADER_SEARCH_PATHS should not be set",
+        null,
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
@@ -410,15 +489,13 @@ public class ProjectGeneratorTest {
             "library in HEADER_SEARCH_PATHS",
         "$(inherited) " +
             "../buck-out/gen/foo/test-target-headers.hmap " +
+            "../buck-out/gen/foo/test-public-headers.hmap " +
             "../buck-out/gen/foo/lib-public-headers.hmap " +
             "../buck-out/gen/foo/lib-target-headers.hmap",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        "test binary should use user headermaps of its own as well as of the tested library " +
-            "in USER_HEADER_SEARCH_PATHS",
-        "$(inherited) " +
-            "../buck-out/gen/foo/test-target-user-headers.hmap " +
-            "../buck-out/gen/foo/lib-target-user-headers.hmap",
+        "USER_HEADER_SEARCH_PATHS should not be set",
+        null,
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
@@ -476,15 +553,13 @@ public class ProjectGeneratorTest {
             "binary in HEADER_SEARCH_PATHS",
         "$(inherited) " +
             "../buck-out/gen/foo/test-target-headers.hmap " +
+            "../buck-out/gen/foo/test-public-headers.hmap " +
             "../buck-out/gen/foo/bin-public-headers.hmap " +
             "../buck-out/gen/foo/bin-target-headers.hmap",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        "test binary should use user headermaps of its own as well as of the tested binary " +
-            "in USER_HEADER_SEARCH_PATHS",
-        "$(inherited) " +
-            "../buck-out/gen/foo/test-target-user-headers.hmap " +
-            "../buck-out/gen/foo/bin-target-user-headers.hmap",
+        "USER_HEADER_SEARCH_PATHS should not be set",
+        null,
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
@@ -522,8 +597,7 @@ public class ProjectGeneratorTest {
                 ImmutableList.<SourcePath>of(
                     new TestSourcePath("libsomething.a"))))
         .setHeaders(
-            Optional.of(
-                ImmutableSortedSet.<SourcePath>of(new TestSourcePath("foo.h"))))
+            ImmutableSortedSet.<SourcePath>of(new TestSourcePath("foo.h")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -980,7 +1054,7 @@ public class ProjectGeneratorTest {
         "$(inherited) $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        "$(inherited) ",
+        null,
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         "$(inherited) $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
@@ -1048,7 +1122,7 @@ public class ProjectGeneratorTest {
         "headers $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        "user_headers ",
+        "user_headers",
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         "libraries $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
@@ -1129,7 +1203,7 @@ public class ProjectGeneratorTest {
             "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        "$(inherited) ",
+        null,
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         "$(inherited) " +
@@ -1188,9 +1262,8 @@ public class ProjectGeneratorTest {
                 ImmutableList.<SourcePath>of(
                     new TestSourcePath("libsomething.a"))))
         .setHeaders(
-            Optional.of(
-                ImmutableSortedSet.<SourcePath>of(
-                    new TestSourcePath("foo.h"))))
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("foo.h")))
         .setFrameworks(
             Optional.of(
                 ImmutableSortedSet.of(
@@ -1423,9 +1496,8 @@ public class ProjectGeneratorTest {
                         new TestSourcePath("foo.m"), ImmutableList.of("-foo")),
                     SourceWithFlags.of(new TestSourcePath("bar.m")))))
         .setHeaders(
-            Optional.of(
-                ImmutableSortedSet.<SourcePath>of(
-                    new TestSourcePath("foo.h"))))
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("foo.h")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1863,7 +1935,7 @@ public class ProjectGeneratorTest {
         "$(inherited) ",
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        "$(inherited) ",
+        null,
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         "$(inherited) $BUILT_PRODUCTS_DIR $SDKROOT $SOURCE_ROOT",
