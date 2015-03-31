@@ -53,7 +53,7 @@ java_library(
   deps = [
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/step:step',

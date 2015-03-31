@@ -5,6 +5,7 @@ java_library(
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson',
     '//third-party/java/jsr:jsr305',
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/timing:timing',

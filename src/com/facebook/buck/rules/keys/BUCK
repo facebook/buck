@@ -1,7 +1,7 @@
 java_library(name = 'keys',
   srcs = glob(['*.java']),
   deps = [
-    '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util:util',

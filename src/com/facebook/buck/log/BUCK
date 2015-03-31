@@ -1,6 +1,17 @@
 java_library(
+  name = 'api',
+  srcs = [ 'Logger.java' ],
+  deps = [
+    # This class is used everywhere. Only depend on third-party, and then only if strictly
+    # necessary.
+    '//third-party/java/jsr:jsr305',
+  ],
+  visibility = [ 'PUBLIC' ],
+)
+
+java_library(
   name = 'log',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = [ 'Logger.java' ]),
   deps = [
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/util/concurrent:concurrent',
@@ -9,6 +20,9 @@ java_library(
     '//third-party/java/jsr:jsr305',
   ],
   visibility = [
-    'PUBLIC',
+    '//src/com/facebook/buck/android:steps',
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/event:event',
+    '//test/com/facebook/buck/log/...',
   ]
 )

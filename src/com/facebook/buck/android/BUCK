@@ -111,7 +111,7 @@ java_immutables_library(
     '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/java/abi:protocol',
     '//src/com/facebook/buck/java/classes:classes',
-    '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:rule_pattern',
     '//src/com/facebook/buck/rules:build_rule',
@@ -192,7 +192,8 @@ java_immutables_library(
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java:classhash',
     '//src/com/facebook/buck/java/classes:classes',
-    '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/log:log',  # This should not be required.
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/shell:steps',

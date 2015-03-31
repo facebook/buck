@@ -51,7 +51,7 @@ java_immutables_library(
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/io:io',
-    '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/zip:stream',
   ],
@@ -70,7 +70,7 @@ java_library(
     ':exceptions',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
-    '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/log:api',
   ],
   visibility = [ 'PUBLIC' ],
 )
@@ -85,7 +85,7 @@ java_library(
     ':exceptions',
     ':io',
     '//src/com/facebook/buck/io:io',  # While we move classes
-    '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/zip:stream',

@@ -7,7 +7,7 @@ java_immutables_library(
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java:packagefinder',
-    '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',

@@ -39,7 +39,7 @@ java_library(
     ':stream',
     ':unzip',
     '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',
