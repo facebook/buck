@@ -31,6 +31,7 @@ java_test(
     ':testutil',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/timing:timing',
+    '//src/com/facebook/buck/util:escaper',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:network',

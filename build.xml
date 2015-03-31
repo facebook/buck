@@ -314,6 +314,10 @@
         <include name="com/facebook/buck/util/concurrent/MoreFutures.java" />
         <include name="com/facebook/buck/util/concurrent/TimeSpan.java" />
 
+        <!-- //src/com/facebook/buck/util:escaper -->
+        <include name="com/facebook/buck/util/Escaper.java" />
+        <include name="com/facebook/buck/util/WindowsCreateProcessEscape.java" />
+
         <!-- //src/com/facebook/buck/util:exceptions -->
         <include name="com/facebook/buck/util/ExceptionWithHumanReadableMessage.java" />
         <include name="com/facebook/buck/util/HumanReadableException.java" />

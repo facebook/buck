@@ -32,8 +32,8 @@ package com.facebook.buck.util;
  * equivalent accepts a single string and splits the strings according to some
  * different rules.
  */
-class WindowsCommandLineEscape {
-  private WindowsCommandLineEscape() {}
+class WindowsCreateProcessEscape {
+  private WindowsCreateProcessEscape() {}
 
   /**
    * Same as {@link #quote(String)} except appends to a {@code StringBuilder}.

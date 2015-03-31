@@ -129,14 +129,14 @@ public final class Escaper {
       escaper(Quoter.SINGLE, BASH_SPECIAL_CHARS);
 
   /**
-   * cmd.EXE quoting {@link com.google.common.base.Function Function} which can be passed to
-   * {@link com.google.common.collect.Iterables#transform Iterables.transform()}
+   * CreateProcess (Windows) quoting {@link com.google.common.base.Function Function} which can be
+   * passed to {@link com.google.common.collect.Iterables#transform Iterables.transform()}.
    */
-  public static final Function<String, String> CMD_ESCAPER =
+  public static final Function<String, String> CREATE_PROCESS_ESCAPER =
       new Function<String, String>() {
         @Override
         public String apply(String input) {
-          return WindowsCommandLineEscape.quote(input);
+          return WindowsCreateProcessEscape.quote(input);
         }
       };
 
@@ -151,9 +151,10 @@ public final class Escaper {
   /**
    * Platform-aware shell quoting {@link com.google.common.base.Function Function} which can be
    * passed to {@link com.google.common.collect.Iterables#transform Iterables.transform()}
+   * TODO(sdwilsh): get proper cmd.EXE escaping implemented on Windows
    */
   public static final Function<String, String> SHELL_ESCAPER =
-      Platform.detect() == Platform.WINDOWS ? CMD_ESCAPER : BASH_ESCAPER;
+      Platform.detect() == Platform.WINDOWS ? CREATE_PROCESS_ESCAPER : BASH_ESCAPER;
 
   /**
    * Quotes a string to be passed to Bash, if necessary. Uses single quotes to prevent variable
