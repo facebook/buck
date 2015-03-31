@@ -20,7 +20,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MoreIterables {
 
@@ -62,6 +64,24 @@ public class MoreIterables {
       result.addAll(round);
       round.clear();
     }
+  }
+
+  /**
+   * Returns a deduped version of toDedup and keeps the order of elements
+   * If a key is contained more than once
+   * (that is, there are multiple elements e1, e2... en, such that ei.equals(ej))
+   * then the last one will be kept in the ordering
+   */
+  public static <T> Set<T> dedupKeepLast(Iterable<T> toDedup) {
+    Set<T> dedupedSet = new LinkedHashSet();
+    for (T t : toDedup) {
+      if (dedupedSet.contains(t)) {
+        dedupedSet.remove(t);
+      }
+      dedupedSet.add(t);
+    }
+
+    return dedupedSet;
   }
 
 }

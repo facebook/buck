@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.android.sdklib.build.ApkBuilder;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -114,7 +115,7 @@ public class AaptStep extends ShellStep {
 
     // Include all of the res/ directories.
     builder.add("--auto-add-overlay");
-    for (Path res : resDirectories) {
+    for (Path res : MoreIterables.dedupKeepLast(resDirectories)) {
       builder.add("-S", res.toString());
     }
 

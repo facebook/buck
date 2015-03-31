@@ -22,6 +22,9 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
+import java.util.List;
+import java.util.Set;
+
 public class MoreIterablesTest {
 
   // Convert an iterable to a list.
@@ -51,4 +54,37 @@ public class MoreIterablesTest {
         lstI(MoreIterables.zipAndConcat(lstV("a"), lstV("b"), lstV("c"))));
   }
 
+  @Test
+  public void testDedupKeepLast() {
+    String[] emptyInput = new String[] {};
+    Set<String> emptyDeduped = MoreIterables.dedupKeepLast(lstV(emptyInput));
+    assertArrayAndSetEqual("empty", emptyInput, emptyDeduped);
+
+    String[] noDups = new String[] {"a", "b", "c"};
+    Set<String> noDupsDeduped = MoreIterables.dedupKeepLast(lstV(noDups));
+    assertArrayAndSetEqual("noDups", noDups, noDupsDeduped);
+
+
+    List<String> singleDup = lstV("a", "b", "a", "c");
+    String[] singleDedupExpected = new String[]{"b", "a", "c"};
+    Set<String> singleDedupActual = MoreIterables.dedupKeepLast(singleDup);
+    assertArrayAndSetEqual("singleDup", singleDedupExpected, singleDedupActual);
+
+    List<String> onlyDups = lstV("a", "a", "a");
+    String[] onlyDupsDedupExpected = new String[]{"a"};
+    Set<String> onlydupsDedupActual = MoreIterables.dedupKeepLast(onlyDups);
+    assertArrayAndSetEqual("onlyDups", onlyDupsDedupExpected, onlydupsDedupActual);
+  }
+
+  private static void assertArrayAndSetEqual(String testName, String[] first, Set<String> second) {
+    assertEquals(first.length, second.size());
+    int i = 0;
+    for (String s : second) {
+      assertEquals(
+          String.format("%s failed: Elements at %d are not equal", testName, i),
+          first[i],
+          s);
+      i++;
+    }
+  }
 }
