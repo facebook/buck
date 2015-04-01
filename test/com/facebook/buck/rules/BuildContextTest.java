@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -77,8 +78,8 @@ public class BuildContextTest {
     String androidBootclasspath = MorePaths.pathWithUnixSeparators(
         androidBootclasspathSupplier.get());
     assertEquals(
-        "add-ons/addon-google_apis-google-15/libs/effects.jar:" +
-        "add-ons/addon-google_apis-google-15/libs/maps.jar:" +
+        "add-ons/addon-google_apis-google-15/libs/effects.jar" + File.pathSeparatorChar +
+        "add-ons/addon-google_apis-google-15/libs/maps.jar" + File.pathSeparatorChar +
         "add-ons/addon-google_apis-google-15/libs/usb.jar",
         androidBootclasspath);
 
