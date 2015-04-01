@@ -40,6 +40,7 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ProjectConfig;
@@ -54,6 +55,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -79,6 +81,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions> {
 
@@ -307,7 +311,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    * Run xcode specific project generation actions.
    */
   int runXcodeProjectGenerator(
-      TargetGraphAndTargets targetGraphAndTargets,
+      final TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       ProjectCommandOptions options)
       throws IOException, InterruptedException {
@@ -341,7 +345,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       options.getCombineTestBundles()
           ? AppleBuildRules.filterGroupableTests(testTargetNodes)
           : ImmutableSet.<TargetNode<AppleTestDescription.Arg>>of();
-    for (BuildTarget inputTarget : targets) {
+    ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
+    for (final BuildTarget inputTarget : targets) {
       TargetNode<?> inputNode = Preconditions.checkNotNull(
           targetGraphAndTargets.getTargetGraph().get(inputTarget));
       XcodeWorkspaceConfigDescription.Arg workspaceArgs;
@@ -364,12 +369,47 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           inputTarget,
           optionsBuilder.build(),
           combinedProject,
-          new ParserConfig(options.getBuckConfig()).getBuildFileName());
+          new ParserConfig(options.getBuckConfig()).getBuildFileName(),
+          new Function<TargetNode<?>, Path>() {
+            @Nullable
+            @Override
+            public Path apply(TargetNode<?> input) {
+              TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
+                  getBuckEventBus(),
+                  new BuildTargetNodeToBuildRuleTransformer());
+              TargetGraph subgraph = targetGraphAndTargets.getTargetGraph().getSubgraph(
+                  ImmutableSet.of(
+                      input));
+              ActionGraph actionGraph = Preconditions.checkNotNull(
+                  targetGraphToActionGraph.apply(subgraph));
+              BuildRule rule = Preconditions.checkNotNull(
+                  actionGraph.findBuildRuleByTarget(input.getBuildTarget()));
+              return rule.getPathToOutputFile();
+            }
+          });
       generator.setGroupableTests(groupableTests);
       generator.generateWorkspaceAndDependentProjects(projectGenerators);
+      ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =
+          generator.getRequiredBuildTargets();
+      LOG.debug(
+          "Required build targets for workspace %s: %s",
+          inputTarget,
+          requiredBuildTargetsForWorkspace);
+      requiredBuildTargetsBuilder.addAll(requiredBuildTargetsForWorkspace);
     }
 
-    return 0;
+    int exitCode = 0;
+    ImmutableSet<BuildTarget> requiredBuildTargets = requiredBuildTargetsBuilder.build();
+    if (!requiredBuildTargets.isEmpty()) {
+      BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
+      BuildCommandOptions buildCommandOptions = new BuildCommandOptions(options.getBuckConfig());
+      buildCommandOptions.setArguments(
+          FluentIterable.from(requiredBuildTargets)
+              .transform(Functions.toStringFunction())
+              .toList());
+      exitCode = buildCommand.runCommandWithOptions(buildCommandOptions);
+    }
+    return exitCode;
   }
 
   @SuppressWarnings(value = "unchecked")

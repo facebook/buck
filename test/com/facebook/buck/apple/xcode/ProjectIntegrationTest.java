@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode;
 
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -203,5 +204,19 @@ public class ProjectIntegrationTest {
     workspace.runBuckCommand(
         "project",
         "//res:res");
+  }
+
+  @Test
+  public void testGeneratingProjectWithTargetUsingGenruleSourceBuildsGenrule() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "target_using_genrule_source", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand(
+        "project",
+        "//lib:lib");
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//lib:gen");
   }
 }

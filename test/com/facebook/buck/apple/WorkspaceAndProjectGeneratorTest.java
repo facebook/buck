@@ -27,15 +27,27 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -54,6 +66,8 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 public class WorkspaceAndProjectGeneratorTest {
 
@@ -106,6 +120,7 @@ public class WorkspaceAndProjectGeneratorTest {
     BuildTarget barLibTarget = BuildTarget.builder("//bar", "lib").build();
     TargetNode<?> barLibNode = AppleLibraryBuilder
         .createBuilder(barLibTarget)
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
@@ -113,12 +128,14 @@ public class WorkspaceAndProjectGeneratorTest {
         .createBuilder(fooLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
         .setTests(Optional.of(ImmutableSortedSet.of(fooTestTarget)))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     BuildTarget fooBinBinaryTarget = BuildTarget.builder("//foo", "binbinary").build();
     TargetNode<?> fooBinBinaryNode = AppleBinaryBuilder
         .createBuilder(fooBinBinaryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     BuildTarget fooBinTarget = BuildTarget.builder("//foo", "bin").build();
@@ -134,30 +151,35 @@ public class WorkspaceAndProjectGeneratorTest {
         .createBuilder(bazLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
         .setTests(Optional.of(ImmutableSortedSet.of(bazTestTarget)))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     TargetNode<?> bazTestNode = AppleTestBuilder
         .createBuilder(bazTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     TargetNode<?> fooTestNode = AppleTestBuilder
         .createBuilder(fooTestTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     TargetNode<?> fooBinTestNode = AppleTestBuilder
         .createBuilder(fooBinTestTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooBinTarget)))
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     BuildTarget quxBinTarget = BuildTarget.builder("//qux", "bin").build();
     TargetNode<?> quxBinNode = AppleBinaryBuilder
         .createBuilder(quxBinTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
+        .setUseBuckHeaderMaps(Optional.of(Boolean.TRUE))
         .build();
 
     BuildTarget workspaceTarget = BuildTarget.builder("//foo", "workspace").build();
@@ -189,7 +211,8 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false /* combinedProject */,
-        "BUCK");
+        "BUCK",
+        getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -247,7 +270,8 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         true /* combinedProject */,
-        "BUCK");
+        "BUCK",
+        getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -290,7 +314,8 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.<ProjectGenerator.Option>of(),
         false /* combinedProject */,
-        "BUCK");
+        "BUCK",
+        getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -328,6 +353,90 @@ public class WorkspaceAndProjectGeneratorTest {
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
         barProjectGenerator.getGeneratedProject(),
         "//bar:lib");
+  }
+
+  @Test
+  public void requiredBuildTargets() throws IOException {
+    BuildTarget genruleTarget = BuildTarget.builder("//foo", "gen").build();
+    TargetNode<GenruleDescription.Arg> genrule  = GenruleBuilder
+        .newGenruleBuilder(genruleTarget)
+        .setOut("source.m")
+        .build();
+
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(
+                    SourceWithFlags.of(
+                        new BuildTargetSourcePath(projectFilesystem, genruleTarget)))))
+        .build();
+
+    TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
+        .createBuilder(BuildTarget.builder("//foo", "workspace").build())
+        .setSrcTarget(Optional.of(libraryTarget))
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(genrule, library);
+
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        targetGraph,
+        workspaceNode.getConstructorArg(),
+        workspaceNode.getBuildTarget(),
+        ImmutableSet.<ProjectGenerator.Option>of(),
+        false /* combinedProject */,
+        "BUCK",
+        getOutputPathOfNodeFunction(targetGraph));
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    assertEquals(
+        generator.getRequiredBuildTargets(),
+        ImmutableSet.of(genruleTarget));
+  }
+
+  @Test
+  public void requiredBuildTargetsForCombinedProject() throws IOException {
+    BuildTarget genruleTarget = BuildTarget.builder("//foo", "gen").build();
+    TargetNode<GenruleDescription.Arg> genrule  = GenruleBuilder
+        .newGenruleBuilder(genruleTarget)
+        .setOut("source.m")
+        .build();
+
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(
+                    SourceWithFlags.of(
+                        new BuildTargetSourcePath(projectFilesystem, genruleTarget)))))
+        .build();
+
+    TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
+        .createBuilder(BuildTarget.builder("//foo", "workspace").build())
+        .setSrcTarget(Optional.of(libraryTarget))
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(genrule, library);
+
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        targetGraph,
+        workspaceNode.getConstructorArg(),
+        workspaceNode.getBuildTarget(),
+        ImmutableSet.<ProjectGenerator.Option>of(),
+        true /* combinedProject */,
+        "BUCK",
+        getOutputPathOfNodeFunction(targetGraph));
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    assertEquals(
+        generator.getRequiredBuildTargets(),
+        ImmutableSet.of(genruleTarget));
   }
 
   @Test
@@ -384,7 +493,8 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false,
-        "BUCK");
+        "BUCK",
+        getOutputPathOfNodeFunction(targetGraph));
     generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
     Map<Path, ProjectGenerator> projectGenerators = Maps.newHashMap();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -485,6 +595,7 @@ public class WorkspaceAndProjectGeneratorTest {
       }
     };
   }
+
   private Matcher<XCScheme.BuildActionEntry> withNameAndBuildingFor(
       String name,
       Matcher<? super EnumSet<XCScheme.BuildActionEntry.BuildFor>> buildFor) {
@@ -500,4 +611,25 @@ public class WorkspaceAndProjectGeneratorTest {
           }
         });
   }
+
+  private Function<TargetNode<?>, Path> getOutputPathOfNodeFunction(final TargetGraph targetGraph) {
+    return new Function<TargetNode<?>, Path>() {
+      @Nullable
+      @Override
+      public Path apply(TargetNode<?> input) {
+        TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
+            BuckEventBusFactory.newInstance(),
+            new BuildTargetNodeToBuildRuleTransformer());
+        TargetGraph subgraph = targetGraph.getSubgraph(
+            ImmutableSet.of(
+                input));
+        ActionGraph actionGraph = Preconditions.checkNotNull(
+            targetGraphToActionGraph.apply(subgraph));
+        BuildRule rule = Preconditions.checkNotNull(
+            actionGraph.findBuildRuleByTarget(input.getBuildTarget()));
+        return rule.getPathToOutputFile();
+      }
+    };
+  }
+
 }

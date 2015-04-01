@@ -201,6 +201,9 @@ public class ProjectGenerator {
   private List<Path> headerMaps;
   private final ImmutableSet.Builder<PBXTarget> buildableCombinedTestTargets =
       ImmutableSet.builder();
+  private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
+      ImmutableSet.builder();
+  private final Function<TargetNode<?>, Path> outputPathOfNode;
 
   /**
    * Populated while generating project configurations, in order to collect the possible
@@ -218,7 +221,8 @@ public class ProjectGenerator {
       Path outputDirectory,
       String projectName,
       String buildFileName,
-      Set<Option> options) {
+      Set<Option> options,
+      Function<TargetNode<?>, Path> outputPathOfNode) {
     this.sourcePathResolver = new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath input) {
@@ -233,6 +237,7 @@ public class ProjectGenerator {
     this.projectName = projectName;
     this.buildFileName = buildFileName;
     this.options = ImmutableSet.copyOf(options);
+    this.outputPathOfNode = outputPathOfNode;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
     this.pathRelativizer = new PathRelativizer(
@@ -311,6 +316,11 @@ public class ProjectGenerator {
   public ImmutableSet<PBXTarget> getBuildableCombinedTestTargets() {
     Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
     return buildableCombinedTestTargets.build();
+  }
+
+  public ImmutableSet<BuildTarget> getRequiredBuildTargets() {
+    Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
+    return requiredBuildTargetsBuilder.build();
   }
 
   public void createXcodeProjects() throws IOException {
@@ -622,12 +632,12 @@ public class ProjectGenerator {
     ImmutableList.Builder<TargetNode<?>> postScriptPhases = ImmutableList.builder();
     if (bundle.isPresent() && targetNode != bundle.get()) {
       collectBuildScriptDependencies(
-          targetGraph.getAll(bundle.get().getDeps()),
+          targetGraph.getAll(bundle.get().getDeclaredDeps()),
           preScriptPhases,
           postScriptPhases);
     }
     collectBuildScriptDependencies(
-        targetGraph.getAll(targetNode.getDeps()),
+        targetGraph.getAll(targetNode.getDeclaredDeps()),
         preScriptPhases,
         postScriptPhases);
     mutator.setPreBuildRunScriptPhases(preScriptPhases.build());
@@ -1795,10 +1805,14 @@ public class ProjectGenerator {
     Optional<TargetNode<ExportFileDescription.Arg>> exportFileNode = node.castArg(
         ExportFileDescription.Arg.class);
     if (!exportFileNode.isPresent()) {
-      throw new HumanReadableException(
-          "Project generation only supports source paths that refer to paths or export_file " +
-              "targets.\n" + "'%s' is a '%s' target.",
-          node.getBuildTarget(), node.getType());
+      Path output = outputPathOfNode.apply(node);
+      if (output == null) {
+        throw new HumanReadableException(
+            "The target '%s' does not have an output.",
+            node.getBuildTarget());
+      }
+      requiredBuildTargetsBuilder.add(buildTarget);
+      return output;
     }
 
     Optional<SourcePath> src = exportFileNode.get().getConstructorArg().src;

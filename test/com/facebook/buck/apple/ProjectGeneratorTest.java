@@ -65,6 +65,7 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -92,6 +93,8 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 public class ProjectGeneratorTest {
 
@@ -2252,7 +2255,14 @@ public class ProjectGeneratorTest {
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",
-        ProjectGenerator.SEPARATED_PROJECT_OPTIONS)
+        ProjectGenerator.SEPARATED_PROJECT_OPTIONS,
+        new Function<TargetNode<?>, Path>() {
+          @Nullable
+          @Override
+          public Path apply(TargetNode<?> input) {
+            return null;
+          }
+        })
         .setTestsToGenerateAsStaticLibraries(ImmutableSet.of(xctest1, xctest2))
         .setAdditionalCombinedTestTargets(
             ImmutableMultimap.of(
@@ -2390,7 +2400,14 @@ public class ProjectGeneratorTest {
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",
-        projectGeneratorOptions);
+        projectGeneratorOptions,
+        new Function<TargetNode<?>, Path>() {
+          @Nullable
+          @Override
+          public Path apply(TargetNode<?> input) {
+            return null;
+          }
+        });
   }
 
   private ImmutableSet<TargetNode<?>> setupSimpleLibraryWithResources(

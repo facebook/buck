@@ -1,0 +1,13 @@
+apple_library(
+  name='lib',
+  srcs=[
+    'Foo.m',
+    ':gen',
+  ],
+)
+
+genrule(
+  name='gen',
+  out='source.m',
+  cmd='echo "static int answer = 42;" > $OUT',
+)
