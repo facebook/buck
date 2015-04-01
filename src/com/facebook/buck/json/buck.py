@@ -223,7 +223,7 @@ class BuildFileProcessor(object):
             lazy_functions[func.__name__] = func_with_env
         self._functions = lazy_functions
 
-    def _merge_globals(self, src, dst):
+    def _merge_globals(self, mod, dst):
         """
         Copy the global definitions from one globals dict to another.
 
@@ -235,9 +235,11 @@ class BuildFileProcessor(object):
             'include_defs',
         ])
 
-        for key, val in src.iteritems():
+        keys = getattr(mod, '__all__', mod.__dict__.keys())
+
+        for key in keys:
             if not key.startswith('_') and key not in hidden:
-                dst[key] = val
+                dst[key] = mod.__dict__[key]
 
     def _update_functions(self, build_env):
         """
@@ -290,7 +292,7 @@ class BuildFileProcessor(object):
         frame = inspect.currentframe()
         while frame.f_globals['__name__'] == __name__:
             frame = frame.f_back
-        self._merge_globals(mod.__dict__, frame.f_globals)
+        self._merge_globals(mod, frame.f_globals)
 
         # Pull in the include's accounting of its own referenced includes
         # into the current build context.
@@ -341,7 +343,7 @@ class BuildFileProcessor(object):
         for include in implicit_includes:
             include_path = self._get_include_path(include)
             inner_env, mod = self._process_include(include_path)
-            self._merge_globals(mod.__dict__, default_globals)
+            self._merge_globals(mod, default_globals)
             build_env.includes.add(include_path)
             build_env.includes.update(inner_env.includes)
 

@@ -184,3 +184,38 @@ class BuckTest(unittest.TestCase):
         build_file_processor = self.create_build_file_processor(
             implicit_inc.name)
         build_file_processor.process(build_file.path)
+
+    def test_all_list_is_respected(self):
+        """
+        Verify that the `__all__` list in included files can be used to narrow
+        what gets pulled in.
+        """
+
+        include_def = ProjectFile(
+            path='inc_def1',
+            contents=('__all__ = []', 'FOO = 1'))
+        self.write_file(include_def)
+
+        # Test we don't get non-whitelisted attributes from default includes.
+        build_file = ProjectFile(path='BUCK', contents=('FOO',))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor(
+            include_def.name)
+        self.assertRaises(
+            NameError,
+            build_file_processor.process,
+            build_file.path)
+
+        # Test we don't get non-whitelisted attributes from explicit includes.
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=(
+                'include_defs({0!r})'.format(include_def.name),
+                'FOO',
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor()
+        self.assertRaises(
+            NameError,
+            build_file_processor.process,
+            build_file.path)
