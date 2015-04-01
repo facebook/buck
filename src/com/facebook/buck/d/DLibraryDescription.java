@@ -29,13 +29,13 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
+public class DLibraryDescription implements Description<DLibraryDescription.Arg> {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("d_binary");
+  private static final BuildRuleType TYPE = BuildRuleType.of("d_library");
 
   private final DBuckConfig dBuckConfig;
 
-  public DBinaryDescription(DBuckConfig dBuckConfig) {
+  public DLibraryDescription(DBuckConfig dBuckConfig) {
     this.dBuckConfig = dBuckConfig;
   }
 
@@ -54,7 +54,7 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new DBinary(
+    return new DLibrary(
         params,
         new SourcePathResolver(resolver),
         args.srcs,

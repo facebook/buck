@@ -27,7 +27,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class DBinaryIntegrationTest {
+public class DLibraryIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
@@ -36,18 +36,19 @@ public class DBinaryIntegrationTest {
     Assumptions.assumeDCompilerAvailable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_binary", tmp);
+        this, "library", tmp);
     workspace.setUp();
 
-    workspace.runBuckBuild("//:xyzzy").assertSuccess();
+    workspace.runBuckBuild("//:greet").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//:xyzzy");
+    buildLog.assertTargetBuiltLocally("//:greet");
+    buildLog.assertTargetBuiltLocally("//:greeting");
     workspace.resetBuildLogFile();
 
     ProcessExecutor.Result result = workspace.runCommand(
-        workspace.resolve("buck-out/gen/xyzzy/xyzzy").toString());
+        workspace.resolve("buck-out/gen/greet/greet").toString());
     assertEquals(0, result.getExitCode());
-    assertEquals("Nothing happens.\n", result.getStdout().get());
+    assertEquals("Hello, world!\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());
   }
 }

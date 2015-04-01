@@ -48,7 +48,6 @@ public class DCompileStep extends ShellStep {
     return ImmutableList.<String>builder()
         .addAll(compiler)
         .addAll(flags)
-        .add("-od" + output.getParent().toString())
         .add("-of" + output.toString())
         .addAll(FluentIterable.from(inputs).transform(Functions.toStringFunction()))
         .build();

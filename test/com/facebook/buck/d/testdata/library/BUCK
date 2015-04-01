@@ -1,0 +1,16 @@
+d_binary(
+  name='greet',
+  srcs=['greet.d'],
+  deps=[':greeting'],
+)
+
+d_library(
+  name='greeting',
+  srcs=['greeting.d'],
+  deps=[':join'],
+)
+
+d_library(
+  name='join',
+  srcs=['join.d'],
+)

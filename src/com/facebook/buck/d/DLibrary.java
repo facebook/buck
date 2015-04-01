@@ -17,18 +17,15 @@
 package com.facebook.buck.d;
 
 import com.facebook.buck.cxx.Tool;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 
-public class DBinary extends DLinkable implements BinaryBuildRule {
-
-  public DBinary(
+public class DLibrary extends DLinkable {
+  public DLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
       ImmutableList<SourcePath> inputs,
@@ -37,19 +34,14 @@ public class DBinary extends DLinkable implements BinaryBuildRule {
         params,
         resolver,
         inputs,
-        /* prependFlags */ ImmutableList.<String>of(),
+        ImmutableList.of("-lib"),
         BuildTargets.getGenPath(
-            params.getBuildTarget(), "%s/" + params.getBuildTarget().getShortName()),
+            params.getBuildTarget(), "%s/lib" + params.getBuildTarget().getShortName() + ".a"),
         compiler);
   }
 
   @Override
-  public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
-    return ImmutableList.of(projectFilesystem.resolve(getPathToOutputFile()).toString());
-  }
-
-  @Override
   public BuildableProperties getProperties() {
-    return new BuildableProperties(BuildableProperties.Kind.PACKAGING);
+    return new BuildableProperties(BuildableProperties.Kind.LIBRARY);
   }
 }

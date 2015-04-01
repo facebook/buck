@@ -5,6 +5,9 @@ java_library(
     'DBinaryDescription.java',
     'DBuckConfig.java',
     'DCompileStep.java',
+    'DLibrary.java',
+    'DLibraryDescription.java',
+    'DLinkable.java',
   ],
   deps=[
     '//src/com/facebook/buck/cli:config',
