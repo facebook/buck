@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
@@ -133,8 +134,8 @@ public class SourcePathTypeCoercerTest {
 
   @Test
   public void coercingAbsolutePathThrows() throws CoerceFailedException, IOException {
-    String path = "/hello.a";
-    projectFilesystem.touch(Paths.get(path));
+    Path path = MorePathsForTests.rootRelativePath("hello.a");
+    projectFilesystem.touch(path);
 
     exception.expect(CoerceFailedException.class);
     exception.expectMessage(
@@ -144,6 +145,6 @@ public class SourcePathTypeCoercerTest {
         buildTargetParser,
         projectFilesystem,
         pathRelativeToProjectRoot,
-        path);
+        path.toString());
   }
 }
