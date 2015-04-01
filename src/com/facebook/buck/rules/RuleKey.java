@@ -374,7 +374,7 @@ public class RuleKey {
       RuleKey totalRuleKey = new RuleKey(hasher.hash());
 
       if (logElms != null) {
-        logger.warn("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms));
+        logger.verbose("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms));
       }
 
       return ImmutableRuleKeyPair.of(totalRuleKey, ruleKeyWithoutDeps);
