@@ -54,6 +54,7 @@ java_test(
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util:escaper',
     '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/android:testutil',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
@@ -71,5 +72,6 @@ java_test(
     '//third-party/java/junit:junit',
     '//third-party/java/hamcrest:hamcrest-core',
     '//third-party/java/hamcrest:hamcrest-library',
+    '//third-party/java/gson:gson',
   ],
 )

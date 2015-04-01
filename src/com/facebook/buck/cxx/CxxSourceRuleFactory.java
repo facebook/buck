@@ -40,6 +40,7 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 
 public class CxxSourceRuleFactory {
 
@@ -47,6 +48,8 @@ public class CxxSourceRuleFactory {
   private static final BuildRuleType COMPILE_TYPE = BuildRuleType.of("compile");
   private static final BuildRuleType PREPROCESS_AND_COMPILE_TYPE =
       BuildRuleType.of("preprocess_and_compile");
+  private static final String COMPILE_FLAVOR_PREFIX = "compile-";
+  private static final String PREPROCESS_FLAVOR_PREFIX = "preprocess-";
 
   private final BuildRuleParams params;
   private final BuildRuleResolver resolver;
@@ -142,10 +145,20 @@ public class CxxSourceRuleFactory {
         .addFlavors(
             ImmutableFlavor.of(
                 String.format(
-                    "preprocess-%s%s",
+                    PREPROCESS_FLAVOR_PREFIX + "%s%s",
                     pic == PicType.PIC ? "pic-" : "",
                     outputName)))
         .build();
+  }
+
+  public static boolean isPreprocessFlavoredBuildTarget(BuildTarget target) {
+    Set<Flavor> flavors = target.getFlavors();
+    for (Flavor flavor : flavors) {
+      if (flavor.getName().startsWith(PREPROCESS_FLAVOR_PREFIX)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -241,10 +254,20 @@ public class CxxSourceRuleFactory {
         .addFlavors(
             ImmutableFlavor.of(
                 String.format(
-                    "compile-%s%s",
+                    COMPILE_FLAVOR_PREFIX + "%s%s",
                     pic == PicType.PIC ? "pic-" : "",
                     outputName)))
         .build();
+  }
+
+  public static boolean isCompileFlavoredBuildTarget(BuildTarget target) {
+    Set<Flavor> flavors = target.getFlavors();
+    for (Flavor flavor : flavors) {
+      if (flavor.getName().startsWith(COMPILE_FLAVOR_PREFIX)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // Pick the compiler to use.  Basically, if we're dealing with C++ sources, use the C++

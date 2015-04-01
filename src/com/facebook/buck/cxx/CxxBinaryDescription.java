@@ -127,6 +127,21 @@ public class CxxBinaryDescription implements
           args);
     }
 
+    if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+      CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+          params,
+          resolver,
+          cxxPlatform,
+          args,
+          compileStrategy);
+
+      return CxxCompilationDatabase.createCompilationDatabase(
+          params,
+          resolver,
+          new SourcePathResolver(resolver),
+          compileStrategy);
+    }
+
     CxxLink cxxLink =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             params,
@@ -188,7 +203,9 @@ public class CxxBinaryDescription implements
 
     flavors = Sets.difference(
         flavors,
-        ImmutableSet.of(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR));
+        ImmutableSet.of(
+            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
+            CxxCompilationDatabase.COMPILATION_DATABASE));
 
     return flavors.isEmpty();
   }

@@ -604,5 +604,4 @@ public class CxxBinaryIntegrationTest {
             Matchers.containsString("function")));
     workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
   }
-
 }

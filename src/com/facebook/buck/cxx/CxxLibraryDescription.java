@@ -93,7 +93,8 @@ public class CxxLibraryDescription implements
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return cxxPlatforms.containsAnyOf(flavors);
+    return cxxPlatforms.containsAnyOf(flavors) ||
+        flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE);
   }
 
   private static ImmutableList<SourcePath> requireObjects(
@@ -312,6 +313,66 @@ public class CxxLibraryDescription implements
     return sharedLibraryBuildRule;
   }
 
+  /**
+   * Create all build rules needed to generate the compilation database.
+   *
+   * @return the {@link CxxCompilationDatabase} rule representing the actual compilation database.
+   */
+  private static CxxCompilationDatabase createCompilationDatabase(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      ImmutableMap<String, SourcePath> lexSources,
+      ImmutableMap<String, SourcePath> yaccSources,
+      ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
+      ImmutableList<SourcePath> prefixHeaders,
+      ImmutableMap<Path, SourcePath> headers,
+      ImmutableMap<Path, SourcePath> exportedHeaders,
+      ImmutableList<String> compilerFlags,
+      ImmutableMap<String, CxxSource> sources,
+      ImmutableList<Path> frameworkSearchPaths,
+      CxxSourceRuleFactory.Strategy compileStrategy) {
+
+    Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
+    flavors.remove(CxxCompilationDatabase.COMPILATION_DATABASE);
+    BuildTarget target = BuildTarget
+        .builder(params.getBuildTarget().getUnflavoredBuildTarget())
+        .addAllFlavors(flavors)
+        .build();
+
+    BuildRuleParams paramsWithoutCompilationDatabaseFlavor =
+        params.copyWithChanges(
+            params.getBuildRuleType(),
+            target,
+            Suppliers.ofInstance(params.getDeclaredDeps()),
+            Suppliers.ofInstance(params.getExtraDeps()));
+
+    // Create rules for compiling the PIC object files.
+    requireObjects(
+        paramsWithoutCompilationDatabaseFlavor,
+        ruleResolver,
+        pathResolver,
+        cxxPlatform,
+        lexSources,
+        yaccSources,
+        preprocessorFlags,
+        prefixHeaders,
+        headers,
+        exportedHeaders,
+        compilerFlags,
+        sources,
+        frameworkSearchPaths,
+        compileStrategy,
+        CxxSourceRuleFactory.PicType.PIC);
+
+    return CxxCompilationDatabase.createCompilationDatabase(
+        params,
+        ruleResolver,
+        pathResolver,
+        compileStrategy);
+  }
+
   @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
@@ -484,6 +545,49 @@ public class CxxLibraryDescription implements
         compileStrategy);
   }
 
+  /**
+   * @return a {@link CxxCompilationDatabase} rule which builds a compilation database for this
+   * C/C++ library.
+   */
+  public static <A extends Arg> CxxCompilationDatabase createCompilationDatabaseBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      A args,
+      CxxSourceRuleFactory.Strategy compileStrategy) {
+    return createCompilationDatabase(
+        params,
+        resolver,
+        new SourcePathResolver(resolver),
+        cxxPlatform,
+        CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
+        CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
+        ImmutableMultimap.<CxxSource.Type, String>builder()
+            .putAll(
+                CxxFlags.getLanguageFlags(
+                    args.preprocessorFlags,
+                    args.platformPreprocessorFlags,
+                    args.langPreprocessorFlags,
+                    cxxPlatform.getFlavor()))
+            .putAll(
+                CxxFlags.getLanguageFlags(
+                    args.exportedPreprocessorFlags,
+                    args.exportedPlatformPreprocessorFlags,
+                    args.exportedLangPreprocessorFlags,
+                    cxxPlatform.getFlavor()))
+            .build(),
+        args.prefixHeaders.get(),
+        CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
+        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
+        CxxFlags.getFlags(
+            args.compilerFlags,
+            args.platformCompilerFlags,
+            cxxPlatform.getFlavor()),
+        CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
+        args.frameworkSearchPaths.get(),
+        compileStrategy);
+  }
+
   @Value.Immutable
   @BuckStyleImmutable
   public static interface TypeAndPlatform {
@@ -528,8 +632,21 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       final A args,
       TypeAndPlatform typeAndPlatform) {
-    Optional<Map.Entry<Flavor, Type>> type = typeAndPlatform.getType();
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = typeAndPlatform.getPlatform();
+
+    if (params.getBuildTarget().getFlavors()
+        .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+
+      return createCompilationDatabaseBuildRule(
+          params,
+          resolver,
+          platform.get().getValue(),
+          args,
+          compileStrategy);
+    }
+
+
+    Optional<Map.Entry<Flavor, Type>> type = typeAndPlatform.getType();
 
     // If we *are* building a specific type of this lib, call into the type specific
     // rule builder methods.

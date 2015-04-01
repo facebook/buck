@@ -25,6 +25,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
@@ -244,11 +245,8 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule {
             sanitizer));
   }
 
-  public ImmutableList<String> getCommand() {
-    ImmutableList.Builder<String> cmd = ImmutableList.builder();
-    cmd.addAll(compiler.getCommandPrefix(getResolver()));
-    cmd.add(operation.getFlag());
-    cmd.addAll(ImmutableList.<String>builder()
+  private ImmutableList<String> getCommandSuffix() {
+    return ImmutableList.<String>builder()
         .addAll(flags)
         .addAll(
             MoreIterables.zipAndConcat(
@@ -268,11 +266,35 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule {
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-F"),
                 Iterables.transform(frameworkRoots, Functions.toStringFunction())))
-        .build());
+        .build();
+  }
+
+  public ImmutableList<String> getCommand() {
+    ImmutableList.Builder<String> cmd = ImmutableList.builder();
+    cmd.addAll(compiler.getCommandPrefix(getResolver()));
+    cmd.add(operation.getFlag());
+    cmd.addAll(getCommandSuffix());
     if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE) {
       cmd.add("-o", output.toString());
     }
     cmd.add(getResolver().getPath(input).toString());
+    return cmd.build();
+  }
+
+  public ImmutableList<String> getCompileCommandCombinedWithPreprocessBuildRule(
+      CxxPreprocessAndCompile preprocessBuildRule) {
+    if (operation != CxxPreprocessAndCompileStep.Operation.COMPILE ||
+        preprocessBuildRule.operation != CxxPreprocessAndCompileStep.Operation.PREPROCESS) {
+      throw new HumanReadableException("%s is not preprocess rule or %s is not compile rule.",
+          preprocessBuildRule, this);
+    }
+    ImmutableList.Builder<String> cmd = ImmutableList.builder();
+    cmd.addAll(compiler.getCommandPrefix(getResolver()));
+    cmd.add(operation.getFlag());
+    cmd.addAll(preprocessBuildRule.getCommandSuffix());
+    cmd.addAll(getCommandSuffix());
+    cmd.add("-o", output.toString());
+    cmd.add(getResolver().getPath(preprocessBuildRule.input).toString());
     return cmd.build();
   }
 

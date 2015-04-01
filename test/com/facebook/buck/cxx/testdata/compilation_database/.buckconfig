@@ -1,0 +1,3 @@
+[cxx]
+    cxxpp = /usr/bin/g++
+    cxx = /usr/bin/g++
