@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -36,7 +37,7 @@ public class StringifyAlterRuleKeyTest {
 
   @Test
   public void findAbsolutePathsInAbsolutePath() {
-    Path path = Paths.get("/some/thing");
+    Path path = MorePathsForTests.rootRelativePath("some/thing");
     Assert.assertEquals(
         ImmutableSet.of(path),
         ImmutableSet.copyOf(
@@ -54,7 +55,7 @@ public class StringifyAlterRuleKeyTest {
 
   @Test
   public void findAbsolutePathsInListOfPaths() {
-    Path path1 = Paths.get("/some/thing");
+    Path path1 = MorePathsForTests.rootRelativePath("some/thing");
     Path path2 = Paths.get("some/thing");
     List<Path> input = ImmutableList.of(path1, path2);
     Assert.assertEquals(
@@ -65,10 +66,10 @@ public class StringifyAlterRuleKeyTest {
 
   @Test
   public void findAbsolutePathsInMapOfPaths() {
-    Path path1 = Paths.get("/some/thing");
+    Path path1 = MorePathsForTests.rootRelativePath("some/thing");
     Path path2 = Paths.get("some/thing");
     Path path3 = Paths.get("other/thing");
-    Path path4 = Paths.get("/other/thing");
+    Path path4 = MorePathsForTests.rootRelativePath("other/thing");
     Map<Path, Path> input = ImmutableMap.of(
         path1, path2,
         path3, path4);
@@ -89,7 +90,7 @@ public class StringifyAlterRuleKeyTest {
 
   @Test
   public void findAbsolutePathsInListOfOptionals() {
-    Path path1 = Paths.get("/some/thing");
+    Path path1 = MorePathsForTests.rootRelativePath("some/thing");
     Path path2 = Paths.get("some/thing");
     List<Optional<Path>> input = ImmutableList.of(
         Optional.<Path>absent(),
@@ -105,7 +106,7 @@ public class StringifyAlterRuleKeyTest {
   @Test
   public void findAbsolutePathsInListOfPathSourcePaths() {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    Path path1 = Paths.get("/some/thing");
+    Path path1 = MorePathsForTests.rootRelativePath("some/thing");
     Path path2 = Paths.get("some/thing");
     List<SourcePath> input = ImmutableList.<SourcePath>of(
         new PathSourcePath(projectFilesystem, path2),
@@ -119,9 +120,9 @@ public class StringifyAlterRuleKeyTest {
   @Test
   public void findAbsolutePathsInRecursiveStructure() {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    Path path1 = Paths.get("/some/thing");
-    Path path2 = Paths.get("/other/thing");
-    Path path3 = Paths.get("/yet/another/thing");
+    Path path1 = MorePathsForTests.rootRelativePath("some/thing");
+    Path path2 = MorePathsForTests.rootRelativePath("other/thing");
+    Path path3 = MorePathsForTests.rootRelativePath("yet/another/thing");
     Object input = ImmutableList.of(
         ImmutableMap.of(
             Optional.absent(), path1),
