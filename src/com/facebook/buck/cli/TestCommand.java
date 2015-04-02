@@ -713,7 +713,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         return new TestResults(
             originalTestResults.getBuildTarget(),
             cachedTestResults,
-            originalTestResults.getContacts());
+            originalTestResults.getContacts(),
+            originalTestResults.getLabels());
       }
     };
   }

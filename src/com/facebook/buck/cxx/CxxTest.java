@@ -36,6 +36,8 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -171,7 +173,8 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule {
         return new TestResults(
             getBuildTarget(),
             summaries.build(),
-            contacts);
+            contacts,
+            FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
       }
     };
   }

@@ -161,7 +161,8 @@ public class TestResultFormatterTest {
     TestResults results = new TestResults(
         BuildTargetFactory.newInstance("//foo:bar"),
         ImmutableList.of(summary),
-        /* contacts */ ImmutableSet.<String>of());
+        /* contacts */ ImmutableSet.<String>of(),
+        /* labels */ ImmutableSet.<String>of());
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runComplete(builder, ImmutableList.of(results));

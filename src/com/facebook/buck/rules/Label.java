@@ -35,4 +35,11 @@ public abstract class Label implements Comparable<Label> {
     return getLabelString().compareTo(that.getLabelString());
   }
 
+  /**
+   * @return The value of the label as specified in the BUCK file. Used for serialisation.
+   */
+  @Override
+  public String toString() {
+    return getLabelString();
+  }
 }

@@ -30,6 +30,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.google.common.base.Functions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -133,7 +135,11 @@ public class AppleTest extends AbstractBuildRule implements TestRule {
       @Override
       public TestResults call() throws Exception {
         // TODO(user): Make iOS tests runnable by Buck.
-        return new TestResults(getBuildTarget(), ImmutableList.<TestCaseSummary>of(), contacts);
+        return new TestResults(
+            getBuildTarget(),
+            ImmutableList.<TestCaseSummary>of(),
+            contacts,
+            FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
       }
     };
   }

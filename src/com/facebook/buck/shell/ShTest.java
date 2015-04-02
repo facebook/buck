@@ -38,7 +38,9 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -158,7 +160,11 @@ public class ShTest extends AbstractBuildRule implements TestRule {
       return new Callable<TestResults>() {
         @Override
         public TestResults call() throws Exception {
-          return new TestResults(getBuildTarget(), ImmutableList.<TestCaseSummary>of(), contacts);
+          return new TestResults(
+              getBuildTarget(),
+              ImmutableList.<TestCaseSummary>of(),
+              contacts,
+              FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
         }
       };
     } else {
@@ -174,7 +180,11 @@ public class ShTest extends AbstractBuildRule implements TestRule {
           TestCaseSummary testCaseSummary = new TestCaseSummary(
               getBuildTarget().getFullyQualifiedName(),
               ImmutableList.of(testResultSummary));
-          return new TestResults(getBuildTarget(), ImmutableList.of(testCaseSummary), contacts);
+          return new TestResults(
+              getBuildTarget(),
+              ImmutableList.of(testCaseSummary),
+              contacts,
+              FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
         }
 
       };

@@ -38,21 +38,29 @@ public class TestResults {
   private final ImmutableList<TestCaseSummary> failures;
   private final int failureCount;
   private final ImmutableSet<String> contacts;
+  private final ImmutableSet<String> labels;
   private final boolean hasAssumptionViolations;
   private boolean dependenciesPassTheirTests = true;
 
   @VisibleForTesting
   public TestResults(List<TestCaseSummary> testCases) {
-    this(DUMMY_TARGET_FOR_TESTING, testCases, /* contacts */ ImmutableSet.<String>of());
+    this(
+        DUMMY_TARGET_FOR_TESTING,
+        testCases,
+        /* contacts */ ImmutableSet.<String>of(),
+        /* labels */ ImmutableSet.<String>of());
   }
 
   @Beta
-  public TestResults(BuildTarget source,
+  public TestResults(
+      BuildTarget source,
       List<TestCaseSummary> testCases,
-      ImmutableSet<String> contacts) {
+      ImmutableSet<String> contacts,
+      ImmutableSet<String> labels) {
     this.source = source;
     this.testCases = ImmutableList.copyOf(testCases);
-    this.contacts = ImmutableSet.copyOf(contacts);
+    this.contacts = contacts;
+    this.labels = labels;
     boolean hasAssumptionViolations = false;
 
     int failureCount = 0;
@@ -99,6 +107,10 @@ public class TestResults {
 
   public ImmutableSet<String> getContacts() {
     return contacts;
+  }
+
+  public ImmutableSet<String> getLabels() {
+    return labels;
   }
 
   public void setDependenciesPassTheirTests(boolean dependenciesPassTheirTests) {
