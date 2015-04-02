@@ -636,9 +636,9 @@ public class ConstructorArgMarshallerTest {
         .toSet();
     assertEquals(
         ImmutableSet.of(
-            "example/path/main.py",
-            "example/path/lib/__init__.py",
-            "example/path/lib/manifest.py"),
+            Paths.get("example/path/main.py").toString(),
+            Paths.get("example/path/lib/__init__.py").toString(),
+            Paths.get("example/path/lib/manifest.py").toString()),
         observedValues);
   }
 
