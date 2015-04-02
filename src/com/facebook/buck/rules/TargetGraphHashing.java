@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal.CycleException;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -149,7 +150,7 @@ public class TargetGraphHashing {
       try (final OutputStream hasherOutputStream = Funnels.asOutputStream(hasher)) {
         for (Path path : walkedPathsInSortedOrder(node.getInputs())) {
           LOG.verbose("Node %s: adding input file contents %s", node, path);
-          hashStringAndLength(hasher, path.toString());
+          hashStringAndLength(hasher, MorePaths.pathWithUnixSeparators(path));
           hasher.putLong(projectFilesystem.getFileSize(path));
           try (InputStream inputStream = projectFilesystem.newFileInputStream(path)) {
             ByteStreams.copy(inputStream, hasherOutputStream);
