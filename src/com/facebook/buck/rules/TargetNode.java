@@ -216,8 +216,8 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       if (!ancestor.isPresent() || !ancestor.get().equals(basePath)) {
         throw new InvalidSourcePathInputException(
             "'%s' in '%s' crosses a buck package boundary. Find the nearest BUCK file in the " +
-                "directory that contains this file and refer to the rule referencing the desired" +
-                "file.",
+                "directory that contains this file and refer to the rule referencing the " +
+                "desired file.",
             path,
             getBuildTarget());
       }
