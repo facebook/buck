@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -49,13 +50,13 @@ public class RepositoryFactoryTest {
   public void testRepositoryCanonicalNames() throws IOException, InterruptedException {
     String mainBuckConfigString =
         "[repositories]\n" +
-        "sub = " + subProjectFolder.getRoot() + "\n";
+        "sub = " + MorePaths.pathWithUnixSeparators(subProjectFolder.getRoot().toString()) + "\n";
     File mainBuckConfig = mainProjectFolder.newFile(".buckconfig");
     Files.write(mainBuckConfigString.getBytes(), mainBuckConfig);
 
     String subBuckConfigString =
         "[repositories]\n" +
-        "main = " + mainProjectFolder.getRoot() + "\n";
+        "main = " + MorePaths.pathWithUnixSeparators(mainProjectFolder.getRoot().toString()) + "\n";
     File subBuckConfig = subProjectFolder.newFile(".buckconfig");
     Files.write(subBuckConfigString.getBytes(), subBuckConfig);
 
