@@ -21,6 +21,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -66,7 +67,8 @@ public class CrossRepoTargetsIntegrationTest {
 
     String repositoriesSection =
         "[repositories]\n" +
-        "external = " + externalFolder.getRoot() + "\n";
+        "external = " + MorePaths.pathWithUnixSeparators(externalFolder.getRoot().toString()) +
+            "\n";
     Files.append(repositoriesSection, main.getFile(".buckconfig"), Charset.defaultCharset());
 
     RepositoryFactory repositoryFactory = new FakeRepositoryFactory(mainFolder.getRoot().toPath());
