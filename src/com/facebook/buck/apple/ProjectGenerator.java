@@ -473,7 +473,7 @@ public class ProjectGenerator {
         "%s." + getExtensionString(targetNode.getConstructorArg().getExtension()),
         infoPlistPath,
         /* includeFrameworks */ true,
-        collectRecursiveResources(ImmutableList.of(targetNode)),
+        AppleResources.collectRecursiveResources(targetGraph, ImmutableList.of(targetNode)),
         collectRecursiveAssetCatalogs(ImmutableList.of(targetNode)));
 
     // -- copy any binary and bundle targets into this bundle
@@ -834,7 +834,7 @@ public class ProjectGenerator {
                 SourceWithFlags.of(
                     new PathSourcePath(projectFilesystem, emptyFileWithExtension("c")))))
         .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))
-        .setResources(collectRecursiveResources(tests))
+        .setResources(AppleResources.collectRecursiveResources(targetGraph, tests))
         .setAssetCatalogs(
             getAndMarkAssetCatalogBuildScript(),
             collectRecursiveAssetCatalogs(tests));
@@ -1391,7 +1391,8 @@ public class ProjectGenerator {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
-            newRecursiveRuleDependencyTransformer(
+            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+                targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 ImmutableSet.of(AppleLibraryDescription.TYPE)))
         .transform(
@@ -1413,7 +1414,8 @@ public class ProjectGenerator {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
-            newRecursiveRuleDependencyTransformer(
+            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+                targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 ImmutableSet.of(AppleBundleDescription.TYPE)))
         .filter(
@@ -1442,7 +1444,8 @@ public class ProjectGenerator {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
-            newRecursiveRuleDependencyTransformer(
+            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+                targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))
         .transformAndConcat(
@@ -1468,7 +1471,8 @@ public class ProjectGenerator {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
-            newRecursiveRuleDependencyTransformer(
+            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+                targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 ImmutableSet.of(AppleLibraryDescription.TYPE)))
         .append(targetNodes)
@@ -1489,7 +1493,8 @@ public class ProjectGenerator {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
-            newRecursiveRuleDependencyTransformer(
+            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+                targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.BUILDING,
                 ImmutableSet.of(AppleLibraryDescription.TYPE)))
         .append(targetNodes)
@@ -1509,7 +1514,8 @@ public class ProjectGenerator {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
-            newRecursiveRuleDependencyTransformer(
+            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+                targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 ImmutableSet.of(AppleLibraryDescription.TYPE)))
         .append(targetNodes)
@@ -1530,7 +1536,8 @@ public class ProjectGenerator {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
-            newRecursiveRuleDependencyTransformer(
+            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+                targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))
         .filter(
@@ -1570,21 +1577,6 @@ public class ProjectGenerator {
             .filter(byType)
             .transform(toSearchPath)
             .transform(Functions.toStringFunction());
-      }
-    };
-  }
-
-  private Function<TargetNode<?>, Iterable<TargetNode<?>>> newRecursiveRuleDependencyTransformer(
-      final AppleBuildRules.RecursiveDependenciesMode mode,
-      final ImmutableSet<BuildRuleType> types) {
-    return new Function<TargetNode<?>, Iterable<TargetNode<?>>>() {
-      @Override
-      public Iterable<TargetNode<?>> apply(TargetNode<?> input) {
-        return AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-            targetGraph,
-            mode,
-            input,
-            Optional.of(types));
       }
     };
   }
@@ -1667,30 +1659,6 @@ public class ProjectGenerator {
   }
 
   /**
-   * Collect resources from recursive dependencies.
-   *
-   * @param targetNodes {@link TargetNode} at the tip of the traversal.
-   * @return The recursive resource buildables.
-   */
-  private <T> ImmutableSet<AppleResourceDescription.Arg> collectRecursiveResources(
-      Iterable<TargetNode<T>> targetNodes) {
-    return FluentIterable
-        .from(targetNodes)
-        .transformAndConcat(
-            newRecursiveRuleDependencyTransformer(
-                AppleBuildRules.RecursiveDependenciesMode.COPYING,
-                ImmutableSet.of(AppleResourceDescription.TYPE)))
-        .transform(
-            new Function<TargetNode<?>, AppleResourceDescription.Arg>() {
-              @Override
-              public AppleResourceDescription.Arg apply(TargetNode<?> input) {
-                return (AppleResourceDescription.Arg) input.getConstructorArg();
-              }
-            })
-        .toSet();
-  }
-
-  /**
    * Collect asset catalogs from recursive dependencies.
    */
   private <T> ImmutableSet<AppleAssetCatalogDescription.Arg> collectRecursiveAssetCatalogs(
@@ -1698,7 +1666,8 @@ public class ProjectGenerator {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
-            newRecursiveRuleDependencyTransformer(
+            AppleBuildRules.newRecursiveRuleDependencyTransformer(
+                targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.COPYING,
                 ImmutableSet.of(AppleAssetCatalogDescription.TYPE)))
         .transform(

@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -283,4 +284,22 @@ public final class AppleBuildRules {
     }
     return builder.build();
   }
+
+  public static Function<TargetNode<?>, Iterable<TargetNode<?>>>
+    newRecursiveRuleDependencyTransformer(
+      final TargetGraph targetGraph,
+      final RecursiveDependenciesMode mode,
+      final ImmutableSet<BuildRuleType> types) {
+    return new Function<TargetNode<?>, Iterable<TargetNode<?>>>() {
+      @Override
+      public Iterable<TargetNode<?>> apply(TargetNode<?> input) {
+        return getRecursiveTargetNodeDependenciesOfTypes(
+            targetGraph,
+            mode,
+            input,
+            Optional.of(types));
+      }
+    };
+  }
+
 }
