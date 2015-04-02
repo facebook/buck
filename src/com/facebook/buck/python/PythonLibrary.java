@@ -22,16 +22,11 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
 
 public class PythonLibrary extends NoopBuildRule implements PythonPackagable {
 
@@ -50,17 +45,6 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable {
     this.resources = resources;
   }
 
-  @Nullable
-  @Override
-  public Path getPathToOutputFile() {
-    return null;
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
-  }
-
   /**
    * Return the components to contribute to the top-level python package.
    */
@@ -70,11 +54,6 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable {
         srcs,
         resources,
         ImmutableMap.<Path, SourcePath>of());
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
   }
 
   @Override

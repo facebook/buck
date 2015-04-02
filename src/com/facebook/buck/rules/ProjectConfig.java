@@ -16,21 +16,17 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-import java.nio.file.Path;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
 
-public class ProjectConfig extends AbstractBuildRule {
+public class ProjectConfig extends NoopBuildRule {
 
   @Nullable
   private final BuildRule srcRule;
@@ -130,30 +126,4 @@ public class ProjectConfig extends AbstractBuildRule {
     return isIntelliJPlugin;
   }
 
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.of();
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    return ImmutableList.of();
-  }
-
-  @Nullable
-  @Override
-  public Path getPathToOutputFile() {
-    return null;
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .setReflectively("srcRule", srcRule)
-        .setReflectively("srcSourceRoots", srcSourceRoots)
-        .setReflectively("testRule", testRule)
-        .setReflectively("testsSourceRoots", testsSourceRoots)
-        .setReflectively("isIntelliJPlugin", isIntelliJPlugin);
-  }
 }

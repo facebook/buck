@@ -36,12 +36,12 @@ public class NoopBuildRule extends AbstractBuildRule {
   }
 
   @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
+  protected final ImmutableCollection<Path> getInputsToCompareToOutput() {
     return ImmutableList.of();
   }
 
   @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+  protected final RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder;
   }
 
@@ -54,7 +54,7 @@ public class NoopBuildRule extends AbstractBuildRule {
 
   @Nullable
   @Override
-  public Path getPathToOutputFile() {
+  public final Path getPathToOutputFile() {
     return null;
   }
 

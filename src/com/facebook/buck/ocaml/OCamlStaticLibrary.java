@@ -25,18 +25,14 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
 
 class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
   private final BuildTarget staticLibraryTarget;
@@ -104,22 +100,6 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
   @Override
   public Iterable<String> getBytecodeIncludeDirs() {
     return ocamlContext.getBytecodeIncludeDirectories();
-  }
-
-  @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
-  }
-
-  @Nullable
-  @Override
-  public Path getPathToOutputFile() {
-    return null;
   }
 
 }
