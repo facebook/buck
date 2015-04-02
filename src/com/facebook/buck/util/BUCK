@@ -92,7 +92,7 @@ java_library(
   ],
 )
 
-java_library(
+java_immutables_library(
   name = 'util',
   srcs = glob(
     includes = ['*.java'],
@@ -101,6 +101,7 @@ java_library(
     ':constants',
     ':exceptions',
     ':io',
+    '//src/com/facebook/buck/hashing:hashing',
     '//src/com/facebook/buck/io:io',  # While we move classes
     '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/timing:timing',
