@@ -38,4 +38,9 @@ public interface AndroidManifestReader {
    * @return the value of the versionCode attribute to the manifest element.
    */
   public String getVersionCode();
+
+  /**
+   * @return the value of the versionName attribute to the manifest element.
+   */
+  public String getVersionName();
 }

@@ -60,12 +60,17 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Iterator;
 
 public class AndroidBinaryGraphEnhancerTest {
+
+  private static final String FAKE_ANDROID_MANIFEST =
+      "<manifest xmlns:android='http://schemas.android.com/apk/res/android' package=" +
+          "'com.example.buck' android:versionCode='1' android:versionName='1.0' />";
 
   @Test
   public void testCreateDepsForPreDexing() {
@@ -197,7 +202,7 @@ public class AndroidBinaryGraphEnhancerTest {
   }
 
   @Test
-  public void testAllBuildablesExceptPreDexRule() {
+  public void testAllBuildablesExceptPreDexRule() throws IOException {
     // Create an android_build_config() as a dependency of the android_binary().
     BuildTarget buildConfigBuildTarget = BuildTarget.builder("//java/com/example", "cfg").build();
     BuildRuleParams buildConfigParams = new FakeBuildRuleParamsBuilder(buildConfigBuildTarget)
@@ -217,7 +222,8 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildRuleParams originalParams = new FakeBuildRuleParamsBuilder(apkTarget)
         .setDeps(ImmutableSortedSet.<BuildRule>of(buildConfigJavaLibrary))
         .build();
-
+    originalParams.getProjectFilesystem().writeContentsToPath(FAKE_ANDROID_MANIFEST,
+        Paths.get("AndroidManifest.xml"));
     // set it up.
     Keystore keystore = createStrictMock(Keystore.class);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
@@ -226,7 +232,8 @@ public class AndroidBinaryGraphEnhancerTest {
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         /* locales */ ImmutableSet.<String>of(),
-        new TestSourcePath("AndroidManifest.xml"),
+        new PathSourcePath(originalParams.getProjectFilesystem(),
+            Paths.get("AndroidManifest.xml")),
         AndroidBinary.PackageType.DEBUG,
         /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         /* shouldBuildStringSourceMap */ false,
@@ -267,10 +274,16 @@ public class AndroidBinaryGraphEnhancerTest {
     assertTrue(androidBuildConfig.isUseConstantExpressions());
     assertEquals(
         "IS_EXOPACKAGE defaults to false, but should now be true. DEBUG should still be true.",
-        BuildConfigFields.fromFields(ImmutableList.<BuildConfigFields.Field>of(
-            ImmutableBuildConfigFields.Field.of("boolean", "DEBUG", "true"),
-            ImmutableBuildConfigFields.Field.of("boolean", "IS_EXOPACKAGE", "true"),
-            ImmutableBuildConfigFields.Field.of("int", "EXOPACKAGE_FLAGS", "1"))),
+        BuildConfigFields.fromFields(
+            ImmutableList.<BuildConfigFields.Field>of(
+                ImmutableBuildConfigFields.Field.of("boolean", "DEBUG", "true"),
+                ImmutableBuildConfigFields.Field.of("boolean", "IS_EXOPACKAGE", "true"),
+                ImmutableBuildConfigFields.Field.of("int", "EXOPACKAGE_FLAGS", "1"),
+                ImmutableBuildConfigFields.Field.of(
+                    "String", "PACKAGE_NAME",
+                    "\"com.example.buck\""),
+                ImmutableBuildConfigFields.Field.of("int", "VERSION_CODE", "1"),
+                ImmutableBuildConfigFields.Field.of("String", "VERSION_NAME", "\"1.0\""))),
         androidBuildConfig.getBuildConfigFields());
 
     ImmutableSortedSet<BuildRule> finalDeps = result.getFinalDeps();

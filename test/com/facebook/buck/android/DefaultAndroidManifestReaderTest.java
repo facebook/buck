@@ -46,6 +46,15 @@ public class DefaultAndroidManifestReaderTest {
   }
 
   @Test
+  public void testReadVersionName() throws IOException {
+    AndroidManifestReader manifestReader = DefaultAndroidManifestReader.forString(
+        "<manifest xmlns:android='http://schemas.android.com/apk/res/android' " +
+            "android:versionName=\"1.0\" />");
+    String versionName = manifestReader.getVersionName();
+    assertEquals("1.0", versionName);
+  }
+
+  @Test
   public void testReadLauncherActivitiesNoneFound() throws IOException {
     AndroidManifestReader manifestReader = DefaultAndroidManifestReader.forString(
         "<manifest xmlns:android='http://schemas.android.com/apk/res/android'>" +
