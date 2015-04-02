@@ -149,7 +149,10 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
     ImmutableSet<BuildTarget> graphRoots;
     if (!passedInTargetsSet.isEmpty()) {
-      graphRoots = passedInTargetsSet;
+      // TODO(mkosiba): The generator should be able to do this without a dummy target.
+      ImmutableSet<BuildTarget> supplementalGraphRoots =
+          getRootBuildTargetsForIntelliJ(options.getIde(), projectGraph, projectPredicates);
+      graphRoots = Sets.union(passedInTargetsSet, supplementalGraphRoots).immutableCopy();
     } else {
       graphRoots = getRootsFromPredicate(
           projectGraph,
@@ -189,6 +192,29 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
         // unreachable
         throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
     }
+  }
+
+  public static ImmutableSet<BuildTarget> getRootBuildTargetsForIntelliJ(
+      ProjectCommandOptions.Ide ide,
+      TargetGraph projectGraph,
+      ProjectPredicates projectPredicates) {
+    if (ide != ProjectCommandOptions.Ide.INTELLIJ) {
+      return ImmutableSet.of();
+    }
+    return getRootsFromPredicate(
+        projectGraph,
+        Predicates.and(
+            new Predicate<TargetNode<?>>() {
+
+              @Override
+              public boolean apply(TargetNode<?> input) {
+                return input.getBuildTarget() != null &&
+                    input.getBuildTarget().getBasePathWithSlash().isEmpty();
+              }
+            },
+            projectPredicates.getProjectRootsPredicate()
+        )
+    );
   }
 
   /**
