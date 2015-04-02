@@ -1,0 +1,21 @@
+STANDARD_TEST_SRCS = [
+  '*Test.java',
+]
+
+java_test(
+  name = 'environment',
+  srcs = glob(STANDARD_TEST_SRCS),
+  source_under_test = [
+    '//src/com/facebook/buck/util/environment:environment',
+  ],
+  deps = [
+    '//src/com/facebook/buck/util/environment:environment',
+    '//src/com/facebook/buck/util/environment:platform',
+    '//src/com/facebook/buck/util:io',
+    '//test/com/facebook/buck/util:testutil',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest-core',
+    '//third-party/java/hamcrest:hamcrest-library',
+    '//third-party/java/junit:junit',
+  ],
+)

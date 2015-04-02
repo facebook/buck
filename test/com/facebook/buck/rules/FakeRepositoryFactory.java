@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
@@ -36,7 +37,8 @@ public class FakeRepositoryFactory extends RepositoryFactory {
 
   public FakeRepositoryFactory(Path root) {
     super(
-        ImmutableMap.copyOf(System.getenv()),
+        EnvironmentFilter.filteredEnvironment(
+            ImmutableMap.copyOf(System.getenv()), Platform.detect()),
         Platform.detect(),
         new TestConsole(),
         root);

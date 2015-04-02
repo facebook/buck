@@ -14,12 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.util.environment;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;

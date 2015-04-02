@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.util.environment;
 
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 

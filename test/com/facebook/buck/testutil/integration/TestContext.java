@@ -16,7 +16,7 @@
 
 package com.facebook.buck.testutil.integration;
 
-import com.facebook.buck.cli.EnvironmentFilter;
+import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.google.common.base.Charsets;
