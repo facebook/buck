@@ -776,10 +776,12 @@ int main(int argc, char *argv[], char *env[]) {
   sendText(CHUNKTYPE_ENV, NAILGUN_PATHSEPARATOR);
 #ifndef WIN32
   /* notify isatty for standard pipes */
-  char buf[] = NAILGUN_TTY_FORMAT;
-  for(i = 0; i < 3; i++) {
-    sprintf(buf, NAILGUN_TTY_FORMAT, i, isatty(i));
-    sendText(CHUNKTYPE_ENV, buf);
+  {
+      char buf[] = NAILGUN_TTY_FORMAT;
+      for(i = 0; i < 3; i++) {
+          sprintf(buf, NAILGUN_TTY_FORMAT, i, isatty(i));
+          sendText(CHUNKTYPE_ENV, buf);
+      }
   }
 #endif
   /* forward the client process environment */
