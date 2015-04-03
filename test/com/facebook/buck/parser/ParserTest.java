@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEvent;
@@ -46,6 +47,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.FakeRepositoryFactory;
@@ -382,20 +384,21 @@ public class ParserTest extends EasyMockSupport {
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
+    BuckConfig config = new FakeBuckConfig();
     parser.filterAllTargetsInProject(
         filesystem,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
     parser.filterAllTargetsInProject(
         filesystem,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         BuckEventBusFactory.newInstance(),
         false);
 
@@ -410,12 +413,13 @@ public class ParserTest extends EasyMockSupport {
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
     // Call filterAllTargetsInProject to populate the cache.
+    BuckConfig config = new FakeBuckConfig();
     parser.filterAllTargetsInProject(
         filesystem,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
 
@@ -426,10 +430,10 @@ public class ParserTest extends EasyMockSupport {
     // Call filterAllTargetsInProject to request cached rules.
     parser.filterAllTargetsInProject(
         filesystem,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
 
@@ -444,23 +448,31 @@ public class ParserTest extends EasyMockSupport {
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
+    BuckConfig config = new FakeBuckConfig();
+
     // Call filterAllTargetsInProject to populate the cache.
     parser.filterAllTargetsInProject(
         filesystem,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.of("Some Key", "Some Value"),
+        ImmutableMap.<String, String>builder()
+            .putAll(config.getEnvironment())
+            .put("Some Key", "Some Value")
+            .build(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
 
     // Call filterAllTargetsInProject to request cached rules.
     parser.filterAllTargetsInProject(
         filesystem,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.of("Some Key", "Some Other Value"),
+        ImmutableMap.<String, String>builder()
+            .putAll(config.getEnvironment())
+            .put("Some Key", "Some Other Value")
+            .build(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
 
@@ -476,13 +488,15 @@ public class ParserTest extends EasyMockSupport {
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
+    BuckConfig config = new FakeBuckConfig();
+
     // Call filterAllTargetsInProject to populate the cache.
     parser.filterAllTargetsInProject(
         filesystem,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.of("Some Key", "Some Value"),
+        config.getEnvironment(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
 
@@ -492,7 +506,7 @@ public class ParserTest extends EasyMockSupport {
         new ParserConfig(new FakeBuckConfig()),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.of("Some Key", "Some Value"),
+        config.getEnvironment(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
 
@@ -507,15 +521,16 @@ public class ParserTest extends EasyMockSupport {
       Parser parser,
       ProjectBuildFileParserFactory buildFileParserFactory)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+    BuckConfig config = new FakeBuckConfig();
     try (ProjectBuildFileParser projectBuildFileParser = buildFileParserFactory.createParser(
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         BuckEventBusFactory.newInstance())) {
       parser.parseBuildFile(
           buildFile,
-          new ParserConfig(new FakeBuckConfig()),
+          new ParserConfig(config),
           projectBuildFileParser,
-          /* environment */ ImmutableMap.<String, String>of());
+          config.getEnvironment());
     }
   }
 
@@ -1042,12 +1057,13 @@ public class ParserTest extends EasyMockSupport {
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
+    BuckConfig config = new FakeBuckConfig();
     parser.filterAllTargetsInProject(
         filesystem,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
     parser.filterAllTargetsInProject(
@@ -1058,7 +1074,7 @@ public class ParserTest extends EasyMockSupport {
                     "buildfile", ImmutableMap.of("includes", "//bar.py")))),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
 
@@ -1072,21 +1088,22 @@ public class ParserTest extends EasyMockSupport {
         new TestProjectBuildFileParserFactory(filesystem, buildRuleTypes);
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
+    BuckConfig config = new FakeBuckConfig();
     parser.filterAllTargetsInProject(
         filesystem,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
     BuildTarget foo = BuildTarget.builder("//java/com/facebook", "foo").build();
     parser.buildTargetGraphForBuildTargets(
         ImmutableList.of(foo),
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         /* enableProfiling */ false);
 
     assertEquals("Should have cached build rules.", 1, buildFileParserFactory.calls);
@@ -1100,19 +1117,20 @@ public class ParserTest extends EasyMockSupport {
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
     BuildTarget foo = BuildTarget.builder("//java/com/facebook", "foo").build();
+    BuckConfig config = new FakeBuckConfig();
     parser.buildTargetGraphForBuildTargets(
         ImmutableList.of(foo),
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         /* enableProfiling */ false);
     parser.filterAllTargetsInProject(
         filesystem,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
 
@@ -1218,12 +1236,14 @@ public class ParserTest extends EasyMockSupport {
         .build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(barTarget);
 
+    BuckConfig config = new FakeBuckConfig();
+
     parser.buildTargetGraphForBuildTargets(
         buildTargets,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         /* enableProfiling */ false);
 
     // Rewrite //bar:bar so it doesn't depend on //foo:foo any more.
@@ -1245,10 +1265,10 @@ public class ParserTest extends EasyMockSupport {
 
     parser.buildTargetGraphForBuildTargets(
         buildTargets,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         /* enableProfiling */ false);
   }
 
@@ -1274,14 +1294,15 @@ public class ParserTest extends EasyMockSupport {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckConfig config = new FakeBuckConfig();
 
     {
       TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           buildTargets,
-          new ParserConfig(new FakeBuckConfig()),
+          new ParserConfig(config),
           eventBus,
           new TestConsole(),
-          ImmutableMap.<String, String>of(),
+          config.getEnvironment(),
           /* enableProfiling */ false);
       ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
@@ -1301,10 +1322,10 @@ public class ParserTest extends EasyMockSupport {
       // until we clean the parser cache.
       TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           buildTargets,
-          new ParserConfig(new FakeBuckConfig()),
+          new ParserConfig(config),
           eventBus,
           new TestConsole(),
-          ImmutableMap.<String, String>of(),
+          config.getEnvironment(),
           /* enableProfiling */ false);
       ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
@@ -1318,10 +1339,10 @@ public class ParserTest extends EasyMockSupport {
     {
       TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           buildTargets,
-          new ParserConfig(new FakeBuckConfig()),
+          new ParserConfig(config),
           eventBus,
           new TestConsole(),
-          ImmutableMap.<String, String>of(),
+          config.getEnvironment(),
           /* enableProfiling */ false);
       ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
@@ -1355,14 +1376,15 @@ public class ParserTest extends EasyMockSupport {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckConfig config = new FakeBuckConfig();
 
     {
       TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           buildTargets,
-          new ParserConfig(new FakeBuckConfig()),
+          new ParserConfig(config),
           eventBus,
           new TestConsole(),
-          ImmutableMap.<String, String>of(),
+          config.getEnvironment(),
           /* enableProfiling */ false);
       ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
@@ -1384,10 +1406,10 @@ public class ParserTest extends EasyMockSupport {
       // until we clean the parser cache.
       TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           buildTargets,
-          new ParserConfig(new FakeBuckConfig()),
+          new ParserConfig(config),
           eventBus,
           new TestConsole(),
-          ImmutableMap.<String, String>of(),
+          config.getEnvironment(),
           /* enableProfiling */ false);
       ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
@@ -1403,10 +1425,10 @@ public class ParserTest extends EasyMockSupport {
     {
       TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           buildTargets,
-          new ParserConfig(new FakeBuckConfig()),
+          new ParserConfig(config),
           eventBus,
           new TestConsole(),
-          ImmutableMap.<String, String>of(),
+          config.getEnvironment(),
           /* enableProfiling */ false);
       ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
@@ -1614,12 +1636,13 @@ public class ParserTest extends EasyMockSupport {
     // then we'd need to pass in the BuckEventBusFactory, Console, etc.
     // to every call to get()..
     ImmutableList<BuildTarget> buildTargetsList = ImmutableList.copyOf(buildTargets);
+    BuckConfig config = new FakeBuckConfig();
     parser.buildTargetGraphForBuildTargets(
         buildTargetsList,
-        new ParserConfig(new FakeBuckConfig()),
+        new ParserConfig(config),
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        config.getEnvironment(),
         /* enableProfiling */ false);
 
     return parser.getBuildTargetHashCodeCache().getAll(buildTargetsList);
@@ -1655,7 +1678,8 @@ public class ParserTest extends EasyMockSupport {
         Console console,
         ImmutableMap<String, String> environment,
         BuckEventBus buckEventBus) {
-      return new TestProjectBuildFileParser("python" /* pythonInterpreter */);
+      PythonBuckConfig config = new PythonBuckConfig(new FakeBuckConfig(environment));
+      return new TestProjectBuildFileParser(config.getPythonInterpreter());
     }
 
     public ProjectBuildFileParser createNoopParserThatAlwaysReturnsError() {
