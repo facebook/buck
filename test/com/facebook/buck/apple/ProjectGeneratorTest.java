@@ -198,6 +198,7 @@ public class ProjectGeneratorTest {
     BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
+        .setUseBuckHeaderMaps(Optional.of(false))
         .setHeaders(
             ImmutableSortedSet.<SourcePath>of(
                 new TestSourcePath("HeaderGroup1/foo.h")))
@@ -601,6 +602,7 @@ public class ProjectGeneratorTest {
                     new TestSourcePath("libsomething.a"))))
         .setHeaders(
             ImmutableSortedSet.<SourcePath>of(new TestSourcePath("foo.h")))
+        .setUseBuckHeaderMaps(Optional.of(false))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1013,6 +1015,7 @@ public class ProjectGeneratorTest {
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setConfigs(Optional.of(configs))
+        .setUseBuckHeaderMaps(Optional.of(false))
         .setSrcs(
             Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.m")))))
         .setFrameworks(
@@ -1029,6 +1032,7 @@ public class ProjectGeneratorTest {
         .createBuilder(testTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setConfigs(Optional.of(configs))
+        .setUseBuckHeaderMaps(Optional.of(false))
         .setSrcs(
             Optional.of(
                 ImmutableList.of(SourceWithFlags.of(new TestSourcePath("fooTest.m")))))
@@ -1081,6 +1085,7 @@ public class ProjectGeneratorTest {
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setConfigs(Optional.of(configs))
+        .setUseBuckHeaderMaps(Optional.of(false))
         .setSrcs(
             Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.m")))))
         .setFrameworks(
@@ -1097,6 +1102,7 @@ public class ProjectGeneratorTest {
         .createBuilder(testTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setConfigs(Optional.of(configs))
+        .setUseBuckHeaderMaps(Optional.of(false))
         .setSrcs(
             Optional.of(
                 ImmutableList.of(SourceWithFlags.of(new TestSourcePath("fooTest.m")))))
@@ -1143,6 +1149,7 @@ public class ProjectGeneratorTest {
     BuildTarget libraryDepTarget = BuildTarget.builder("//bar", "lib").build();
     TargetNode<?> libraryDepNode = AppleLibraryBuilder
         .createBuilder(libraryDepTarget)
+        .setUseBuckHeaderMaps(Optional.of(false))
         .setConfigs(Optional.of(configs))
         .setSrcs(
             Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.m")))))
@@ -1169,6 +1176,7 @@ public class ProjectGeneratorTest {
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Library.framework"))))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryDepTarget)))
+        .setUseBuckHeaderMaps(Optional.of(false))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
@@ -1187,6 +1195,7 @@ public class ProjectGeneratorTest {
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Test.framework"))))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .setUseBuckHeaderMaps(Optional.of(false))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1225,6 +1234,7 @@ public class ProjectGeneratorTest {
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setUseBuckHeaderMaps(Optional.of(false))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1245,6 +1255,7 @@ public class ProjectGeneratorTest {
     BuildTarget depTarget = BuildTarget.builder("//dep", "dep").build();
     TargetNode<?> depNode = AppleLibraryBuilder
         .createBuilder(depTarget)
+        .setUseBuckHeaderMaps(Optional.of(false))
         .build();
 
     BuildTarget binaryTarget = BuildTarget.builder("//foo", "binary").build();
@@ -1277,7 +1288,7 @@ public class ProjectGeneratorTest {
         .setDeps(Optional.of(ImmutableSortedSet.of(depTarget)))
         .setGid(Optional.<String>absent())
         .setHeaderPathPrefix(Optional.<String>absent())
-        .setUseBuckHeaderMaps(Optional.<Boolean>absent())
+        .setUseBuckHeaderMaps(Optional.of(false))
         .setPrefixHeader(Optional.<SourcePath>absent())
         .build();
 
@@ -1898,6 +1909,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
+        .setUseBuckHeaderMaps(Optional.of(false))
         .setConfigs(
             Optional.of(
                 ImmutableSortedMap.of(

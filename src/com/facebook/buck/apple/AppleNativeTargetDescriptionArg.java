@@ -56,7 +56,7 @@ public class AppleNativeTargetDescriptionArg implements HasTests {
   public Optional<ImmutableList<String>> linkerFlags;
 
   public boolean getUseBuckHeaderMaps() {
-    return useBuckHeaderMaps.or(false);
+    return useBuckHeaderMaps.or(true);
   }
 
   @Override
