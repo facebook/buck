@@ -1,0 +1,18 @@
+java_test(
+  name = 'hashing',
+  srcs = glob(['*Test.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/hashing:hashing',
+  ],
+  deps = [
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/timing:timing',
+    '//src/com/facebook/buck/hashing:hashing',
+    '//test/com/facebook/buck/testutil:testutil',
+    '//test/com/facebook/buck/timing:testutil',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest-core',
+    '//third-party/java/hamcrest:hamcrest-library',
+    '//third-party/java/junit:junit',
+  ]
+)

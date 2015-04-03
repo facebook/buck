@@ -18,12 +18,12 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal.CycleException;
+import com.facebook.buck.hashing.StringHashing;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.io.ProjectFilesystem;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -141,8 +141,8 @@ public class TargetGraphHashing {
 
     private void hashNode(final Hasher hasher, final TargetNode<?> node) throws IOException {
       LOG.verbose("Hashing node %s", node);
-      // Hash the node's build target, rules, and input file contents.
-      hashStringAndLength(hasher, node.getBuildTarget().toString());
+      // Hash the node's build target and rules.
+      StringHashing.hashStringAndLength(hasher, node.getBuildTarget().toString());
       HashCode targetRuleHashCode = buildTargetToRuleHashCode.apply(node.getBuildTarget());
       LOG.verbose("Got rules hash %s", targetRuleHashCode);
       hasher.putBytes(targetRuleHashCode.asBytes());
@@ -150,7 +150,7 @@ public class TargetGraphHashing {
       try (final OutputStream hasherOutputStream = Funnels.asOutputStream(hasher)) {
         for (Path path : walkedPathsInSortedOrder(node.getInputs())) {
           LOG.verbose("Node %s: adding input file contents %s", node, path);
-          hashStringAndLength(hasher, MorePaths.pathWithUnixSeparators(path));
+          StringHashing.hashStringAndLength(hasher, MorePaths.pathWithUnixSeparators(path));
           hasher.putLong(projectFilesystem.getFileSize(path));
           try (InputStream inputStream = projectFilesystem.newFileInputStream(path)) {
             ByteStreams.copy(inputStream, hasherOutputStream);
@@ -164,16 +164,11 @@ public class TargetGraphHashing {
         HashCode dependencyHashCode = buildTargetHashes.get(dependency);
         Preconditions.checkState(dependencyHashCode != null);
         LOG.verbose("Node %s: adding dependency %s (%s)", node, dependency, dependencyHashCode);
-        hashStringAndLength(hasher, dependency.toString());
+        StringHashing.hashStringAndLength(hasher, dependency.toString());
         hasher.putBytes(dependencyHashCode.asBytes());
       }
     }
 
-    private static void hashStringAndLength(Hasher hasher, String string) {
-      byte[] utf8Bytes = string.getBytes(Charsets.UTF_8);
-      hasher.putInt(utf8Bytes.length);
-      hasher.putBytes(utf8Bytes);
-    }
 
     private ImmutableSortedSet<Path> walkedPathsInSortedOrder(
         Iterable<Path> pathsToWalk)
