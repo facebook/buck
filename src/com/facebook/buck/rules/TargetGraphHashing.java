@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.facebook.buck.hashing.StringHashing;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -28,20 +28,11 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.hash.Funnels;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.FileVisitResult;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -147,16 +138,8 @@ public class TargetGraphHashing {
       LOG.verbose("Got rules hash %s", targetRuleHashCode);
       hasher.putBytes(targetRuleHashCode.asBytes());
 
-      try (final OutputStream hasherOutputStream = Funnels.asOutputStream(hasher)) {
-        for (Path path : walkedPathsInSortedOrder(node.getInputs())) {
-          LOG.verbose("Node %s: adding input file contents %s", node, path);
-          StringHashing.hashStringAndLength(hasher, MorePaths.pathWithUnixSeparators(path));
-          hasher.putLong(projectFilesystem.getFileSize(path));
-          try (InputStream inputStream = projectFilesystem.newFileInputStream(path)) {
-            ByteStreams.copy(inputStream, hasherOutputStream);
-          }
-        }
-      }
+      // Hash the contents of all input files and directories.
+      PathHashing.hashPaths(hasher, projectFilesystem, node.getInputs());
 
       // We've already visited the dependencies (this is a depth-first traversal), so
       // hash each dependency's build target and that build target's own hash.
@@ -167,26 +150,6 @@ public class TargetGraphHashing {
         StringHashing.hashStringAndLength(hasher, dependency.toString());
         hasher.putBytes(dependencyHashCode.asBytes());
       }
-    }
-
-
-    private ImmutableSortedSet<Path> walkedPathsInSortedOrder(
-        Iterable<Path> pathsToWalk)
-        throws IOException {
-      final ImmutableSortedSet.Builder<Path> walkedPaths = ImmutableSortedSet.naturalOrder();
-      for (Path pathToWalk : pathsToWalk) {
-        projectFilesystem.walkRelativeFileTree(
-          pathToWalk,
-          new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
-                throws IOException {
-              walkedPaths.add(path);
-              return FileVisitResult.CONTINUE;
-            }
-          });
-      }
-      return walkedPaths.build();
     }
 
     @Override
