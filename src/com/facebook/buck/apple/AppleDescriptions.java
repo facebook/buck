@@ -119,7 +119,7 @@ public class AppleDescriptions {
         /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(params.getExtraDeps()));
 
-    boolean useBuckHeaderMaps = args.useBuckHeaderMaps.or(Boolean.FALSE);
+    boolean useBuckHeaderMaps = args.getUseBuckHeaderMaps();
 
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, params.getBuildTarget());
     ImmutableMap<String, SourcePath> publicHeaders = convertAppleHeadersToPublicCxxHeaders(
@@ -322,7 +322,7 @@ public class AppleDescriptions {
   public static Optional<Path> getPathToHeaderMap(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       HeaderMapType headerMapType) {
-    if (!targetNode.getConstructorArg().useBuckHeaderMaps.get()) {
+    if (!targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
       return Optional.absent();
     }
 
