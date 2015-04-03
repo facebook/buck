@@ -509,6 +509,10 @@ public class ProjectWorkspace {
           }
           String expectedFileContent = Files.toString(file.toFile(), Charsets.UTF_8);
           String observedFileContent = Files.toString(observedFile, Charsets.UTF_8);
+          // It is possible, on Windows, to have Git keep "\n"-style newlines, or convert them to
+          // "\r\n"-style newlines.  Support both ways by normalizing to "\n"-style newlines.
+          // See https://help.github.com/articles/dealing-with-line-endings/ for more information.
+          expectedFileContent = expectedFileContent.replace("\r\n", "\n");
           observedFileContent = observedFileContent.replace("\r\n", "\n");
           String cleanPathToObservedFile = MoreStrings.withoutSuffix(
               templatePath.relativize(file).toString(), EXPECTED_SUFFIX);
