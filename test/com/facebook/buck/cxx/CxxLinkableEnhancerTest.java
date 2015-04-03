@@ -323,8 +323,10 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable));
-    assertTrue(staticLink.getArgs().contains(staticArg));
+    assertTrue(staticLink.getArgs().contains(staticArg) ||
+        staticLink.getArgs().contains("-Wl," + staticArg));
     assertFalse(staticLink.getArgs().contains(sharedArg));
+    assertFalse(staticLink.getArgs().contains("-Wl," + sharedArg));
 
     // Construct a CxxLink object which links using shared dependencies.
     CxxLink sharedLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -341,7 +343,9 @@ public class CxxLinkableEnhancerTest {
         Linker.LinkableDepType.SHARED,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable));
     assertFalse(sharedLink.getArgs().contains(staticArg));
-    assertTrue(sharedLink.getArgs().contains(sharedArg));
+    assertFalse(sharedLink.getArgs().contains("-Wl," + staticArg));
+    assertTrue(sharedLink.getArgs().contains(sharedArg) ||
+        sharedLink.getArgs().contains("-Wl," + sharedArg));
   }
 
   @Test

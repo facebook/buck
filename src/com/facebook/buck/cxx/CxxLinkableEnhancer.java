@@ -21,13 +21,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
@@ -43,13 +41,26 @@ public class CxxLinkableEnhancer {
    *
    * e.g. ["-rpath", "hello/world"] -> ["-Xlinker", "-rpath", "-Xlinker", "hello/world"]
    *
+   * Arguments that do not contain commas can instead be passed using the shorter
+   * "-Wl,ARGUMENT" form.
+   *
+   * e.g., ["-rpath", "hello/world"] -> ["-Wl,-rpath", "-Wl,hello/world" ]
+   *
    * @param args arguments for the linker.
    * @return arguments to be passed to the compiler linker driver.
    */
   public static Iterable<String> iXlinker(Iterable<String> args) {
-    return MoreIterables.zipAndConcat(
-        Iterables.cycle("-Xlinker"),
-        args);
+    ImmutableList.Builder<String> escaped = ImmutableList.builder();
+    for (String arg : args) {
+      if (arg.contains(",")) {
+        escaped.add("-Xlinker");
+        escaped.add(arg);
+      } else {
+        escaped.add("-Wl," + arg);
+      }
+    }
+
+    return escaped.build();
   }
 
   /**
