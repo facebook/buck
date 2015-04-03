@@ -357,4 +357,27 @@ public class FakeProjectFilesystemTest {
         ImmutableSet.of(bar, baz),
         filesystem.getFilesUnderPath(Paths.get("foo")));
   }
+
+  @Test
+  public void testDirectoryContentsBasedOnInsertionOrder() throws IOException {
+    SettableFakeClock clock = new SettableFakeClock(1000, 0);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(clock);
+    filesystem.touch(Paths.get("foo/foo"));
+    filesystem.touch(Paths.get("foo/bar"));
+    filesystem.touch(Paths.get("foo/baz"));
+
+    assertThat(
+        filesystem.getDirectoryContents(Paths.get("foo")),
+        // Yes, contains() is an order-dependent matcher, despite its name.
+        contains(Paths.get("foo/foo"), Paths.get("foo/bar"), Paths.get("foo/baz")));
+
+    FakeProjectFilesystem filesystem2 = new FakeProjectFilesystem(clock);
+    filesystem2.touch(Paths.get("foo/baz"));
+    filesystem2.touch(Paths.get("foo/bar"));
+    filesystem2.touch(Paths.get("foo/foo"));
+
+    assertThat(
+        filesystem2.getDirectoryContents(Paths.get("foo")),
+        contains(Paths.get("foo/baz"), Paths.get("foo/bar"), Paths.get("foo/foo")));
+  }
 }

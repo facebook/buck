@@ -34,9 +34,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 
@@ -67,6 +65,8 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
@@ -157,16 +157,20 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   public FakeProjectFilesystem(Clock clock, File root, Set<Path> files) {
     super(root.toPath());
-    fileContents = Maps.newHashMap();
-    fileLastModifiedTimes = Maps.newHashMap();
+    // We use LinkedHashMap to preserve insertion order, so the
+    // behavior of this test is consistent across versions. (It also lets
+    // us write tests which explicitly test iterating over entries in
+    // different orders.)
+    fileContents = new LinkedHashMap<>();
+    fileLastModifiedTimes = new LinkedHashMap<>();
     FileTime modifiedTime = FileTime.fromMillis(clock.currentTimeMillis());
     for (Path file : files) {
       fileContents.put(file, new byte[0]);
       fileLastModifiedTimes.put(file, modifiedTime);
     }
-    fileAttributes = Maps.newHashMap();
-    symLinks = Maps.newHashMap();
-    directories = Sets.newHashSet();
+    fileAttributes = new LinkedHashMap<>();
+    symLinks = new LinkedHashMap<>();
+    directories = new LinkedHashSet<>();
     this.clock = Preconditions.checkNotNull(clock);
 
     // Generally, tests don't care whether files exist.
