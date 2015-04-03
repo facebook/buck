@@ -264,8 +264,8 @@ public class PrebuiltCxxLibraryDescription
         includeDirs,
         args.libDir,
         args.libName,
-        args.linkerFlags.get(),
-        args.platformLinkerFlags.get(),
+        args.exportedLinkerFlags.get(),
+        args.exportedPlatformLinkerFlags.get(),
         args.soname,
         args.headerOnly.or(false),
         args.linkWhole.or(false),
@@ -280,8 +280,8 @@ public class PrebuiltCxxLibraryDescription
     public Optional<Boolean> headerOnly;
     public Optional<Boolean> provided;
     public Optional<Boolean> linkWhole;
-    public Optional<ImmutableList<String>> linkerFlags;
-    public Optional<ImmutableList<Pair<String, ImmutableList<String>>>> platformLinkerFlags;
+    public Optional<ImmutableList<String>> exportedLinkerFlags;
+    public Optional<ImmutableList<Pair<String, ImmutableList<String>>>> exportedPlatformLinkerFlags;
     public Optional<String> soname;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }

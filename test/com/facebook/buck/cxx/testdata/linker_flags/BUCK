@@ -18,12 +18,32 @@ cxx_binary(
   ],
 )
 
+cxx_binary(
+  name = 'binary_with_exported_flags_library_dep',
+  srcs = [
+    'main.cpp',
+  ],
+  deps = [
+    ':library_with_exported_linker_flag',
+  ],
+)
+
 cxx_library(
   name = 'library_with_linker_flag',
   srcs = [
     'lib.cpp',
   ],
   linker_flags = [
+    '--bad-flag',
+  ],
+)
+
+cxx_library(
+  name = 'library_with_exported_linker_flag',
+  srcs = [
+    'lib.cpp',
+  ],
+  exported_linker_flags = [
     '--bad-flag',
   ],
 )
@@ -41,7 +61,7 @@ cxx_binary(
 prebuilt_cxx_library(
   name = 'prebuilt_library_with_linker_flag',
   header_only = True,
-  linker_flags = [
+  exported_linker_flags = [
     '--bad-flag',
   ],
 )

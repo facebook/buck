@@ -43,8 +43,8 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   private final ImmutableList<Path> includeDirs;
   private final Optional<String> libDir;
   private final Optional<String> libName;
-  private final ImmutableList<String> linkerFlags;
-  private final ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags;
+  private final ImmutableList<String> exportedLinkerFlags;
+  private final ImmutableList<Pair<String, ImmutableList<String>>> exportedPlatformLinkerFlags;
   private final Optional<String> soname;
   private final boolean headerOnly;
   private final boolean linkWhole;
@@ -57,8 +57,8 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
       ImmutableList<Path> includeDirs,
       Optional<String> libDir,
       Optional<String> libName,
-      ImmutableList<String> linkerFlags,
-      ImmutableList<Pair<String, ImmutableList<String>>> platformLinkerFlags,
+      ImmutableList<String> exportedLinkerFlags,
+      ImmutableList<Pair<String, ImmutableList<String>>> exportedPlatformLinkerFlags,
       Optional<String> soname,
       boolean headerOnly,
       boolean linkWhole,
@@ -70,8 +70,8 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     this.includeDirs = includeDirs;
     this.libDir = libDir;
     this.libName = libName;
-    this.linkerFlags = linkerFlags;
-    this.platformLinkerFlags = platformLinkerFlags;
+    this.exportedLinkerFlags = exportedLinkerFlags;
+    this.exportedPlatformLinkerFlags = exportedPlatformLinkerFlags;
     this.soname = soname;
     this.headerOnly = headerOnly;
     this.linkWhole = linkWhole;
@@ -138,10 +138,10 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     // {@link NativeLinkable} interface for linking.
     ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.addAll(linkerFlags);
+    linkerArgsBuilder.addAll(exportedLinkerFlags);
     linkerArgsBuilder.addAll(
         CxxDescriptionEnhancer.getPlatformFlags(
-            platformLinkerFlags,
+            exportedPlatformLinkerFlags,
             cxxPlatform.getFlavor().toString()));
     if (!headerOnly) {
       if (provided || type == Linker.LinkableDepType.SHARED) {

@@ -512,6 +512,10 @@ public class AppleDescriptions {
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     output.soname = Optional.absent();
     output.linkWhole = Optional.of(linkWhole);
+
+    output.exportedLinkerFlags = Optional.of(ImmutableList.<String>of());
+    output.exportedPlatformLinkerFlags =
+        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
   }
 
   @VisibleForTesting

@@ -301,7 +301,7 @@ public class CxxLibraryDescription implements
             params,
             pathResolver,
             extraCxxLdFlags,
-            /* extraLdFlags */ linkerFlags,
+            linkerFlags,
             sharedTarget,
             Linker.LinkType.SHARED,
             Optional.of(sharedLibrarySoname),
@@ -507,6 +507,20 @@ public class CxxLibraryDescription implements
       CxxPlatform cxxPlatform,
       A args,
       CxxSourceRuleFactory.Strategy compileStrategy) {
+    ImmutableList.Builder<String> linkerFlags = ImmutableList.builder();
+
+    linkerFlags.addAll(
+        CxxFlags.getFlags(
+            args.linkerFlags,
+            args.platformLinkerFlags,
+            cxxPlatform.getFlavor()));
+
+    linkerFlags.addAll(
+        CxxFlags.getFlags(
+            args.exportedLinkerFlags,
+            args.exportedPlatformLinkerFlags,
+            cxxPlatform.getFlavor()));
+
     return createSharedLibrary(
         params,
         resolver,
@@ -536,10 +550,7 @@ public class CxxLibraryDescription implements
             args.platformCompilerFlags,
             cxxPlatform.getFlavor()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
-        CxxFlags.getFlags(
-            args.linkerFlags,
-            args.platformLinkerFlags,
-            cxxPlatform.getFlavor()),
+        linkerFlags.build(),
         args.frameworkSearchPaths.get(),
         args.soname,
         compileStrategy);
@@ -713,8 +724,8 @@ public class CxxLibraryDescription implements
           @Override
           public ImmutableList<String> apply(CxxPlatform input) {
             return CxxFlags.getFlags(
-                args.linkerFlags,
-                args.platformLinkerFlags,
+                args.exportedLinkerFlags,
+                args.exportedPlatformLinkerFlags,
                 input.getFlavor());
           }
         },
@@ -751,6 +762,9 @@ public class CxxLibraryDescription implements
         exportedPlatformPreprocessorFlags;
     public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>>
         exportedLangPreprocessorFlags;
+    public Optional<ImmutableList<String>> exportedLinkerFlags;
+    public Optional<ImmutableList<Pair<String, ImmutableList<String>>>>
+        exportedPlatformLinkerFlags;
     public Optional<String> soname;
     public Optional<Boolean> linkWhole;
   }

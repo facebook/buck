@@ -494,7 +494,8 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
 
     workspace.runBuckBuild("//:binary_with_linker_flag").assertFailure("--bad-flag");
-    workspace.runBuckBuild("//:binary_with_library_dep").assertFailure("--bad-flag");
+    workspace.runBuckBuild("//:binary_with_library_dep").assertSuccess();
+    workspace.runBuckBuild("//:binary_with_exported_flags_library_dep").assertFailure("--bad-flag");
     workspace.runBuckBuild("//:binary_with_prebuilt_library_dep").assertFailure("--bad-flag");
 
     // Build binary that has unresolved symbols.  Normally this would fail, but should work

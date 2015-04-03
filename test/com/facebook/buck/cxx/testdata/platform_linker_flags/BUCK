@@ -71,7 +71,7 @@ for target, flags in TARGETS.iteritems():
   prebuilt_cxx_library(
     name = 'prebuilt_library_matches_default_' + target,
     header_only = True,
-    platform_linker_flags = [
+    exported_platform_linker_flags = [
       ('nomatch', ['--bad-flag']),
       ('def.*', flags),
     ],
