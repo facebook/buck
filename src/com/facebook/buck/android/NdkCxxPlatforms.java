@@ -278,6 +278,8 @@ public class NdkCxxPlatforms {
             "-z", "noexecstack",
             // Strip unused code
             "--gc-sections",
+            // Refuse to produce dynamic objects with undefined symbols
+            "-z", "defs",
             // Forbid dangerous copy "relocations"
             "-z", "nocopyreloc",
             // We always pass the runtime library on the command line, so setting this flag
