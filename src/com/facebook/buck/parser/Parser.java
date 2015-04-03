@@ -23,6 +23,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
@@ -1107,7 +1108,7 @@ public class Parser {
           throw new HumanReadableException("Unrecognized rule %s while parsing %s%s.",
               buildRuleType,
               UnflavoredBuildTarget.BUILD_TARGET_PREFIX,
-              unflavored.getBasePath().resolve(buildFileName));
+              MorePaths.pathWithUnixSeparators(unflavored.getBasePath().resolve(buildFileName)));
         }
 
         if (buildTarget.isFlavored()) {
@@ -1118,7 +1119,8 @@ public class Parser {
                   "Unrecognized flavor in target %s while parsing %s%s.",
                   buildTarget,
                   UnflavoredBuildTarget.BUILD_TARGET_PREFIX,
-                  buildTarget.getBasePath().resolve(buildFileName));
+                  MorePaths.pathWithUnixSeparators(
+                      buildTarget.getBasePath().resolve(buildFileName)));
             }
           } else {
             LOG.warn(
