@@ -1275,6 +1275,9 @@ public class ParserTest extends EasyMockSupport {
   @Test
   public void whenBuildFileContainsSourcesUnderSymLinkNewSourcesNotAddedUntilCacheCleaned()
       throws Exception {
+    // This test depends on creating symbolic links which we cannot do on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
     Parser parser = createParser(emptyBuildTargets());
 
     tempDir.newFolder("bar");
@@ -1356,6 +1359,9 @@ public class ParserTest extends EasyMockSupport {
   @Test
   public void whenBuildFileContainsSourcesUnderSymLinkDeletedSourcesNotRemovedUntilCacheCleaned()
       throws Exception {
+    // This test depends on creating symbolic links which we cannot do on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
     Parser parser = createParser(emptyBuildTargets());
 
     tempDir.newFolder("bar");
