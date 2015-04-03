@@ -1,3 +1,4 @@
+import __builtin__
 import os
 import unittest
 import shutil
@@ -217,5 +218,37 @@ class BuckTest(unittest.TestCase):
         build_file_processor = self.create_build_file_processor()
         self.assertRaises(
             NameError,
+            build_file_processor.process,
+            build_file.path)
+
+    def test_do_not_override_overridden_builtins(self):
+        """
+        We want to ensure that if you override something like java_binary, and then use
+        include_defs to get another file, you don't end up clobbering your override.
+        """
+
+        # Override java_library and have it automatically add a dep
+        build_defs = ProjectFile(
+            path='BUILD_DEFS',
+            contents=(
+                # While not strictly needed for this test, we want to make sure we are overriding
+                # a provided method and not just defining it ourselves.
+                'old_get_base_path = get_base_path',
+                'def get_base_path(*args, **kwargs):',
+                '  raise ValueError()',
+                'include_defs("//OTHER_DEFS")',
+            ))
+        other_defs = ProjectFile(path='OTHER_DEFS', contents=())
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=(
+                'get_base_path()',
+            ))
+        self.write_files(build_defs, other_defs, build_file)
+
+        build_file_processor = self.create_build_file_processor(build_defs.name)
+        build_file_processor.install_builtins(__builtin__.__dict__)
+        self.assertRaises(
+            ValueError,
             build_file_processor.process,
             build_file.path)

@@ -1,5 +1,6 @@
 from __future__ import with_statement
 
+import __builtin__
 import __future__
 import functools
 import imp
@@ -249,7 +250,7 @@ class BuildFileProcessor(object):
         for function in self._functions.itervalues():
             function.build_env = build_env
 
-    def _install_functions(self, namespace):
+    def install_builtins(self, namespace):
         """
         Installs the build functions, by their name, into the given namespace.
         """
@@ -332,9 +333,7 @@ class BuildFileProcessor(object):
         # The globals dict that this file will be executed under.
         default_globals = {}
 
-        # Install the implicit build functions and adding the 'include_defs'
-        # functions.
-        self._install_functions(default_globals)
+        # Install the 'include_defs' function into our global object.
         default_globals['include_defs'] = functools.partial(
             self._include_defs,
             implicit_includes=implicit_includes)
@@ -481,6 +480,8 @@ def main():
         options.build_file_name,
         options.allow_empty_globs,
         implicit_includes=options.include or [])
+
+    buildFileProcessor.install_builtins(__builtin__.__dict__)
 
     for build_file in args:
         build_file = cygwin_adjusted_path(build_file)
