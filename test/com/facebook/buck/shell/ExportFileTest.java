@@ -58,6 +58,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.easymock.EasyMock;
 import org.junit.Before;
@@ -256,18 +257,26 @@ public class ExportFileTest {
 
               @Override
               public <T> ListenableFuture<T> runStepsAndYieldResult(
-                  List<Step> steps, Callable<T> interpretResults, BuildTarget buildTarget) {
+                  List<Step> steps,
+                  Callable<T> interpretResults,
+                  BuildTarget buildTarget,
+                  ListeningExecutorService service) {
                 return null;
               }
 
               @Override
-              public void runStepsInParallelAndWait(List<Step> steps) throws StepFailedException {
+              public void runStepsInParallelAndWait(
+                  List<Step> steps,
+                  ListeningExecutorService service)
+                  throws StepFailedException {
                 // Do nothing.
               }
 
               @Override
               public <T> ListenableFuture<Void> addCallback(
-                  ListenableFuture<List<T>> allBuiltDeps, FutureCallback<List<T>> futureCallback) {
+                  ListenableFuture<List<T>> allBuiltDeps,
+                  FutureCallback<List<T>> futureCallback,
+                  ListeningExecutorService service) {
                 // Do nothing.
                 return Futures.immediateFuture(null);
               }

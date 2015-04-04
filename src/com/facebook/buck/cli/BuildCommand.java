@@ -24,6 +24,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
@@ -114,7 +115,9 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
              actionGraph,
              getProjectFilesystem(),
              getAndroidPlatformTargetSupplier(),
-             getBuildEngine(),
+             new CachingBuildEngine(
+                 pool.getExecutor(),
+                 options.getBuckConfig().getSkipLocalBuildChainDepth().or(1L)),
              artifactCache,
              console,
              getBuckEventBus(),
@@ -122,8 +125,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
              getCommandRunnerParams().getPlatform(),
              getCommandRunnerParams().getEnvironment(),
              getCommandRunnerParams().getObjectMapper(),
-             getCommandRunnerParams().getClock(),
-             pool.getExecutor())) {
+             getCommandRunnerParams().getClock())) {
       lastBuild = build;
       int exitCode = build.executeAndPrintFailuresToConsole(
           buildTargets,

@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static com.facebook.buck.rules.BuildRuleEvent.Finished;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
-import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
@@ -70,6 +69,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
@@ -181,10 +181,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Set the requisite expectations to build the rule.
     expect(context.getEventBus()).andReturn(buckEventBus).anyTimes();
-    expect(context.getStepRunner()).andReturn(createSameThreadStepRunner(buckEventBus)).anyTimes();
+    expect(context.getStepRunner()).andReturn(createStepRunner(buckEventBus)).anyTimes();
 
     expect(dep.getBuildTarget()).andStubReturn(depTarget);
-    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine();
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(MoreExecutors.newDirectExecutorService());
     // The dependent rule will be built immediately with a distinct rule key.
     cachingBuildEngine.setBuildRuleResult(
         depTarget,
@@ -227,7 +228,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   @Test
   public void testDoNotFetchFromCacheIfDepBuiltLocally()
       throws ExecutionException, InterruptedException, IOException, StepFailedException {
-    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine(1);
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(MoreExecutors.newDirectExecutorService(), 1);
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
 
     BuildTarget target1 = BuildTargetFactory.newInstance("//java/com/example:rule1");
@@ -315,7 +317,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Construct a caching build engine that will only skip fetching when a locally built dep
     // chain of at least 2 is present.
-    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine(2);
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(MoreExecutors.newDirectExecutorService(), 2);
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
 
     // Now setup a locally built dep chain of just 1.
@@ -347,7 +350,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         /* pathToOutputFile */ null,
         CacheMode.ENABLED);
 
-    StepRunner stepRunner = createSameThreadStepRunner();
+    StepRunner stepRunner = createStepRunner();
 
     // Mock out all of the disk I/O.
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
@@ -446,11 +449,12 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ false);
 
     expect(buildContext.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
-    expect(buildContext.getStepRunner()).andReturn(createSameThreadStepRunner());
+    expect(buildContext.getStepRunner()).andReturn(createStepRunner());
     expect(buildContext.getEventBus()).andReturn(buckEventBus).anyTimes();
 
     replayAll();
-    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine();
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(MoreExecutors.newDirectExecutorService());
 
     ListenableFuture<BuildRuleSuccess> result = cachingBuildEngine.build(buildContext, buildRule);
     assertTrue(
@@ -476,17 +480,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     verifyAll();
   }
 
-  private StepRunner createSameThreadStepRunner() {
-    return createSameThreadStepRunner(null);
-  }
-
-  private StepRunner createSameThreadStepRunner(@Nullable BuckEventBus eventBus) {
-    return createStepRunner(listeningDecorator(newDirectExecutorService()), eventBus);
-  }
-
-  private StepRunner createStepRunner(
-      ListeningExecutorService service,
-      @Nullable BuckEventBus eventBus) {
+  private StepRunner createStepRunner(@Nullable BuckEventBus eventBus) {
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.getVerbosity()).andReturn(Verbosity.SILENT).anyTimes();
     if (eventBus != null) {
@@ -495,7 +489,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
     executionContext.postEvent(anyObject(BuckEvent.class));
     expectLastCall().anyTimes();
-    return new DefaultStepRunner(executionContext, service);
+    return new DefaultStepRunner(executionContext);
+  }
+
+  private StepRunner createStepRunner() {
+    return createStepRunner(null);
   }
 
   @Test
@@ -541,12 +539,13 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     buildInfoRecorder.performUploadToArtifactCache(artifactCache, buckEventBus);
 
     expect(buildContext.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
-    expect(buildContext.getStepRunner()).andReturn(createSameThreadStepRunner());
+    expect(buildContext.getStepRunner()).andReturn(createStepRunner());
     expect(buildContext.getEventBus()).andReturn(buckEventBus).anyTimes();
 
     replayAll();
 
-    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine();
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(MoreExecutors.newDirectExecutorService());
     ListenableFuture<BuildRuleSuccess> result = cachingBuildEngine.build(buildContext, buildRule);
     buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
 
@@ -619,12 +618,12 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     ListeningExecutorService service = listeningDecorator(Executors.newFixedThreadPool(2));
     expect(buildContext.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
-    expect(buildContext.getStepRunner()).andReturn(createStepRunner(service, null));
+    expect(buildContext.getStepRunner()).andReturn(createStepRunner(null));
     expect(buildContext.getEventBus()).andReturn(buckEventBus).anyTimes();
 
     replayAll();
 
-    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine();
+    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine(service);
     ListenableFuture<BuildRuleSuccess> result = cachingBuildEngine.build(buildContext, buildRule);
 
     BuildRuleSuccess success = result.get();
@@ -665,7 +664,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         /* pathToOutputFile */ null,
         CacheMode.ENABLED);
 
-    StepRunner stepRunner = createSameThreadStepRunner();
+    StepRunner stepRunner = createStepRunner();
 
     // Mock out all of the disk I/O.
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
@@ -700,7 +699,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Build the rule!
     replayAll();
-    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine();
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(MoreExecutors.newDirectExecutorService());
     ListenableFuture<BuildRuleSuccess> result = cachingBuildEngine.build(buildContext, buildRule);
     buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
     verifyAll();
@@ -750,7 +750,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     ArtifactCache artifactCache = createMock(ArtifactCache.class);
     expect(artifactCache.isStoreSupported()).andReturn(false);
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-    StepRunner stepRunner = createSameThreadStepRunner(buckEventBus);
+    StepRunner stepRunner = createStepRunner(buckEventBus);
     BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
         .setStepRunner(stepRunner)
@@ -764,7 +764,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Build the rule!
     replayAll();
-    CachingBuildEngine cachingBuildEngine = new CachingBuildEngine();
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(MoreExecutors.newDirectExecutorService());
     ListenableFuture<BuildRuleSuccess> result = cachingBuildEngine.build(buildContext, buildRule);
     buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
     verifyAll();

@@ -26,7 +26,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.DefaultClock;
-import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Facilitates creating a fake {@link BuildContext} for unit tests.
@@ -58,8 +57,7 @@ public class FakeBuildContext {
         .build();
 
     return ImmutableBuildContext.builder()
-        .setStepRunner(
-            new DefaultStepRunner(executionContext, MoreExecutors.newDirectExecutorService()))
+        .setStepRunner(new DefaultStepRunner(executionContext))
         .setProjectFilesystem(projectFilesystem)
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())

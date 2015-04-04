@@ -159,11 +159,11 @@ public class SmartDexingStep implements Step {
             new CommandThreadFactory("SmartDexing"),
             numThreads.or(determineOptimalThreadCount()));
     try {
-      DefaultStepRunner stepRunner = new DefaultStepRunner(context, listeningDecorator(service));
+      DefaultStepRunner stepRunner = new DefaultStepRunner(context);
       // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
       // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
       List<Step> dxSteps = generateDxCommands(context.getProjectFilesystem(), outputToInputs);
-      stepRunner.runStepsInParallelAndWait(dxSteps);
+      stepRunner.runStepsInParallelAndWait(dxSteps, listeningDecorator(service));
     } finally {
       // Wait for however long necessary for threads to finish.  This should be fine, since we'll
       // detect deadlocks at the top-level (since this thread won't return).

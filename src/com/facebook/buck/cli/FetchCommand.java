@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
@@ -97,7 +98,9 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
              actionGraph,
              getProjectFilesystem(),
              getAndroidPlatformTargetSupplier(),
-             getBuildEngine(),
+             new CachingBuildEngine(
+                 pool.getExecutor(),
+                 options.getBuckConfig().getSkipLocalBuildChainDepth().or(1L)),
              getArtifactCache(),
              console,
              getBuckEventBus(),
@@ -105,8 +108,7 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
              getCommandRunnerParams().getPlatform(),
              getCommandRunnerParams().getEnvironment(),
              getCommandRunnerParams().getObjectMapper(),
-             getCommandRunnerParams().getClock(),
-             pool.getExecutor())) {
+             getCommandRunnerParams().getClock())) {
       exitCode = build.executeAndPrintFailuresToConsole(
           buildTargets,
           options.isKeepGoing(),

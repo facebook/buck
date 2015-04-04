@@ -20,7 +20,6 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
@@ -37,7 +36,6 @@ import com.google.common.collect.ImmutableMap;
  */
 class CommandRunnerParams {
 
-  private final BuildEngine buildEngine;
   private final ArtifactCacheFactory artifactCacheFactory;
   private final Console console;
   private final ImmutableMap<String, String> environment;
@@ -55,7 +53,6 @@ class CommandRunnerParams {
       Console console,
       Repository repository,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
-      BuildEngine buildEngine,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
       Parser parser,
@@ -67,7 +64,6 @@ class CommandRunnerParams {
       Optional<ProcessManager> processManager) {
     this.console = console;
     this.repository = repository;
-    this.buildEngine = buildEngine;
     this.artifactCacheFactory = artifactCacheFactory;
     this.eventBus = eventBus;
     this.parser = parser;
@@ -106,10 +102,6 @@ class CommandRunnerParams {
 
   public Platform getPlatform() {
     return platform;
-  }
-
-  public BuildEngine getBuildEngine() {
-    return buildEngine;
   }
 
   public ImmutableMap<String, String> getEnvironment() {

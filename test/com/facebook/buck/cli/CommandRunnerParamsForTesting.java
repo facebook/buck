@@ -25,7 +25,6 @@ import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
@@ -71,7 +70,6 @@ public class CommandRunnerParamsForTesting {
             androidDirectoryResolver,
             new FakeBuckConfig(),
             eventBus),
-        new CachingBuildEngine(),
         artifactCacheFactory,
         eventBus,
         Parser.createParser(

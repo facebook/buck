@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
@@ -48,7 +49,6 @@ import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
-import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestCaseSummary;
@@ -209,51 +209,57 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Create artifact cache to initialize Cassandra connection, if appropriate.
     ArtifactCache artifactCache = getArtifactCache();
 
-    try (CommandThreadManager pool = new CommandThreadManager("Test", options.getNumThreads());
-         Build build = options.createBuild(
-             options.getBuckConfig(),
-             graph,
-             getProjectFilesystem(),
-             getAndroidPlatformTargetSupplier(),
-             getBuildEngine(),
-             artifactCache,
-             console,
-             getBuckEventBus(),
-             options.getTargetDeviceOptional(),
-             getCommandRunnerParams().getPlatform(),
-             getCommandRunnerParams().getEnvironment(),
-             getCommandRunnerParams().getObjectMapper(),
-             getCommandRunnerParams().getClock(),
-             pool.getExecutor())) {
-      // Build all of the test rules.
-      int exitCode = build.executeAndPrintFailuresToConsole(
-          testRules,
-          options.isKeepGoing(),
+    try (CommandThreadManager pool = new CommandThreadManager("Test", options.getNumThreads())) {
+      CachingBuildEngine cachingBuildEngine =
+          new CachingBuildEngine(
+              pool.getExecutor(),
+              options.getBuckConfig().getSkipLocalBuildChainDepth().or(1L));
+      try (Build build = options.createBuild(
+          options.getBuckConfig(),
+          graph,
+          getProjectFilesystem(),
+          getAndroidPlatformTargetSupplier(),
+          cachingBuildEngine,
+          artifactCache,
           console,
-          options.getPathToBuildReport());
-      getBuckEventBus().post(BuildEvent.finished(explicitBuildTargets, exitCode));
-      if (exitCode != 0) {
-        return exitCode;
-      }
+          getBuckEventBus(),
+          options.getTargetDeviceOptional(),
+          getCommandRunnerParams().getPlatform(),
+          getCommandRunnerParams().getEnvironment(),
+          getCommandRunnerParams().getObjectMapper(),
+          getCommandRunnerParams().getClock())) {
 
-      // If the user requests that we build tests that we filter out, then we perform
-      // the filtering here, after we've done the build but before we run the tests.
-      if (options.isBuildFiltered()) {
-        testRules = filterTestRules(options, testRules);
-      }
-
-      // Once all of the rules are built, then run the tests.
-      try (CommandThreadManager testPool =
-               new CommandThreadManager("Test-Run", options.getNumTestThreads())) {
-        return runTestsAndShutdownExecutor(
+        // Build all of the test rules.
+        int exitCode = build.executeAndPrintFailuresToConsole(
             testRules,
-            Preconditions.checkNotNull(build.getBuildContext()),
-            build.getExecutionContext(),
-            options,
-            testPool.getExecutor());
-      } catch (ExecutionException e) {
-        console.printBuildFailureWithoutStacktrace(e);
-        return 1;
+            options.isKeepGoing(),
+            console,
+            options.getPathToBuildReport());
+        getBuckEventBus().post(BuildEvent.finished(explicitBuildTargets, exitCode));
+        if (exitCode != 0) {
+          return exitCode;
+        }
+
+        // If the user requests that we build tests that we filter out, then we perform
+        // the filtering here, after we've done the build but before we run the tests.
+        if (options.isBuildFiltered()) {
+          testRules = filterTestRules(options, testRules);
+        }
+
+        // Once all of the rules are built, then run the tests.
+        try (CommandThreadManager testPool =
+                 new CommandThreadManager("Test-Run", options.getNumTestThreads())) {
+          return runTests(
+              testRules,
+              Preconditions.checkNotNull(build.getBuildContext()),
+              build.getExecutionContext(),
+              options,
+              testPool.getExecutor(),
+              cachingBuildEngine);
+        } catch (ExecutionException e) {
+          console.printBuildFailureWithoutStacktrace(e);
+          return 1;
+        }
       }
     }
   }
@@ -445,26 +451,17 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     return builder.build();
   }
 
-  private int runTestsAndShutdownExecutor(
-      Iterable<TestRule> tests,
-      BuildContext buildContext,
-      ExecutionContext executionContext,
-      TestCommandOptions options,
-      ListeningExecutorService service)
-      throws IOException, ExecutionException, InterruptedException {
-
-    DefaultStepRunner stepRunner = new DefaultStepRunner(executionContext, service);
-    return runTests(tests, buildContext, executionContext, stepRunner, options);
-  }
-
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private int runTests(
       Iterable<TestRule> tests,
       BuildContext buildContext,
       ExecutionContext executionContext,
-      StepRunner stepRunner,
-      final TestCommandOptions options)
+      final TestCommandOptions options,
+      ListeningExecutorService service,
+      BuildEngine buildEngine)
       throws IOException, ExecutionException, InterruptedException {
+
+    DefaultStepRunner stepRunner = new DefaultStepRunner(executionContext);
 
     if (options.isUsingOneTimeOutputDirectories()) {
       BuckConstant.setOneTimeTestSubdirectory(UUID.randomUUID().toString());
@@ -511,13 +508,13 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(
         executionContext.getProjectFilesystem(),
-        getBuildEngine());
+        buildEngine);
     for (TestRule test : tests) {
       // Determine whether the test needs to be executed.
       boolean isTestRunRequired;
       isTestRunRequired = isTestRunRequiredForTest(
           test,
-          getBuildEngine(),
+          buildEngine,
           executionContext,
           testRuleKeyFileHelper,
           options.isResultsCacheEnabled(),
@@ -529,8 +526,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         getBuckEventBus().post(IndividualTestEvent.started(
             options.getArgumentsFormattedAsBuildTargets()));
         ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-        BuildEngine cachingBuildEngine = getBuildEngine();
-        Preconditions.checkState(cachingBuildEngine.isRuleBuilt(test.getBuildTarget()));
+        Preconditions.checkState(buildEngine.isRuleBuilt(test.getBuildTarget()));
         List<Step> testSteps = test.runTests(
             buildContext,
             executionContext,
@@ -555,7 +551,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
                   test.interpretTestResults(executionContext,
                       /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty(),
                       /*isDryRun*/ options.isDryRun())),
-              test.getBuildTarget());
+              test.getBuildTarget(),
+              service);
       results.add(
         transformTestResults(testResults, grouper, test, options, printTestResults));
     }

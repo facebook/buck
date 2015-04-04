@@ -38,13 +38,9 @@ public final class DefaultStepRunner implements StepRunner {
   private static final Logger LOG = Logger.get(DefaultStepRunner.class);
 
   private final ExecutionContext context;
-  private final ListeningExecutorService listeningExecutorService;
 
-  public DefaultStepRunner(
-      ExecutionContext executionContext,
-      ListeningExecutorService listeningExecutorService) {
+  public DefaultStepRunner(ExecutionContext executionContext) {
     this.context = executionContext;
-    this.listeningExecutorService = listeningExecutorService;
 
   }
 
@@ -86,9 +82,11 @@ public final class DefaultStepRunner implements StepRunner {
   }
 
   @Override
-  public <T> ListenableFuture<T> runStepsAndYieldResult(final List<Step> steps,
-                                                        final Callable<T> interpretResults,
-                                                        final BuildTarget buildTarget) {
+  public <T> ListenableFuture<T> runStepsAndYieldResult(
+      final List<Step> steps,
+      final Callable<T> interpretResults,
+      final BuildTarget buildTarget,
+      ListeningExecutorService listeningExecutorService) {
     Preconditions.checkState(!listeningExecutorService.isShutdown());
     Callable<T> callable = new Callable<T>() {
 
@@ -113,7 +111,9 @@ public final class DefaultStepRunner implements StepRunner {
    * @param steps List of steps to execute.
    */
   @Override
-  public void runStepsInParallelAndWait(final List<Step> steps)
+  public void runStepsInParallelAndWait(
+      final List<Step> steps,
+      ListeningExecutorService listeningExecutorService)
       throws StepFailedException, InterruptedException {
     List<Callable<Void>> callables = Lists.transform(steps,
         new Function<Step, Callable<Void>>() {
@@ -143,7 +143,8 @@ public final class DefaultStepRunner implements StepRunner {
   @Override
   public <T> ListenableFuture<Void> addCallback(
       ListenableFuture<List<T>> dependencies,
-      FutureCallback<List<T>> callback) {
+      FutureCallback<List<T>> callback,
+      ListeningExecutorService listeningExecutorService) {
     Preconditions.checkState(!listeningExecutorService.isShutdown());
     return MoreFutures.addListenableCallback(dependencies, callback, listeningExecutorService);
   }

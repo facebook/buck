@@ -38,6 +38,7 @@ import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.File;
@@ -74,16 +75,18 @@ public class CachingBuildEngine implements BuildEngine {
 
   private final ConcurrentMap<BuildTarget, RuleKey> ruleKeys = Maps.newConcurrentMap();
 
+  private final ListeningExecutorService service;
   private final long skipLocalBuildDepth;
 
-  public CachingBuildEngine(long skipLocalBuildDepth) {
+  public CachingBuildEngine(ListeningExecutorService service, long skipLocalBuildDepth) {
+    this.service = service;
     Preconditions.checkArgument(skipLocalBuildDepth >= 0L);
     this.skipLocalBuildDepth = skipLocalBuildDepth;
   }
 
   @VisibleForTesting
-  public CachingBuildEngine() {
-    this(0L);
+  public CachingBuildEngine(ListeningExecutorService service) {
+    this(service, 0L);
   }
 
   @VisibleForTesting
@@ -293,7 +296,8 @@ public class CachingBuildEngine implements BuildEngine {
                       result.getCacheResult(),
                       Optional.fromNullable(result.getSuccess())));
             }
-          });
+          },
+          service);
 
       // Record the callback future in our async jobs list, so we remember to wait for it at the
       // end.

@@ -26,7 +26,6 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
@@ -54,7 +53,6 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   private final CommandRunnerParams commandRunnerParams;
   protected final Console console;
   private final Repository repository;
-  private final BuildEngine buildEngine;
   private final ArtifactCacheFactory artifactCacheFactory;
   private final Parser parser;
   private final BuckEventBus eventBus;
@@ -74,7 +72,6 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     this.commandRunnerParams = params;
     this.console = params.getConsole();
     this.repository = params.getRepository();
-    this.buildEngine = params.getBuildEngine();
     this.artifactCacheFactory = params.getArtifactCacheFactory();
     this.parser = params.getParser();
     this.eventBus = params.getBuckEventBus();
@@ -230,10 +227,6 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
 
   public Optional<ProcessManager> getProcessManager() {
     return processManager;
-  }
-
-  protected BuildEngine getBuildEngine() {
-    return buildEngine;
   }
 
   private static class ParserAndOptions<T> {

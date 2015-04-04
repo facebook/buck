@@ -19,6 +19,7 @@ package com.facebook.buck.step;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -43,9 +44,14 @@ public interface StepRunner {
    * return a value that represents the output of the commands.
    */
   public <T> ListenableFuture<T> runStepsAndYieldResult(
-      List<Step> steps, Callable<T> interpretResults, BuildTarget buildTarget);
+      List<Step> steps,
+      Callable<T> interpretResults,
+      BuildTarget buildTarget,
+      ListeningExecutorService service);
 
-  public void runStepsInParallelAndWait(final List<Step> steps)
+  public void runStepsInParallelAndWait(
+      List<Step> steps,
+      ListeningExecutorService service)
       throws StepFailedException, InterruptedException;
 
   /**
@@ -53,5 +59,6 @@ public interface StepRunner {
    */
   public <T> ListenableFuture<Void> addCallback(
       ListenableFuture<List<T>> dependencies,
-      FutureCallback<List<T>> callback);
+      FutureCallback<List<T>> callback,
+      ListeningExecutorService service);
 }

@@ -48,8 +48,7 @@ public class DefaultStepRunnerTest {
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setEventBus(eventBus)
         .build();
-    DefaultStepRunner runner =
-        new DefaultStepRunner(context, MoreExecutors.newDirectExecutorService());
+    DefaultStepRunner runner = new DefaultStepRunner(context);
     runner.runStep(passingStep);
     try {
       runner.runStep(failingStep);
@@ -85,8 +84,8 @@ public class DefaultStepRunnerTest {
 
     ListeningExecutorService service =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
-    DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance(), service);
-    runner.runStepsInParallelAndWait(steps.build());
+    DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance());
+    runner.runStepsInParallelAndWait(steps.build(), service);
 
     // Success if the test timeout is not reached.
   }
@@ -95,8 +94,7 @@ public class DefaultStepRunnerTest {
   public void testExplodingStep() throws InterruptedException, IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    DefaultStepRunner runner =
-        new DefaultStepRunner(context, MoreExecutors.newDirectExecutorService());
+    DefaultStepRunner runner = new DefaultStepRunner(context);
     try {
       runner.runStep(new ExplosionStep());
       fail("Should have thrown a StepFailedException!");

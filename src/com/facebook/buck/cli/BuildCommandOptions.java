@@ -37,7 +37,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -159,8 +158,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
       Platform platform,
       ImmutableMap<String, String> environment,
       ObjectMapper objectMapper,
-      Clock clock,
-      ListeningExecutorService service) {
+      Clock clock) {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Creating a build with %d threads.\n", numThreads);
     }
@@ -171,7 +169,6 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         androidPlatformTargetSupplier,
         buildEngine,
         artifactCache,
-        service,
         getBuckConfig().createDefaultJavaPackageFinder(),
         console,
         buckConfig.getDefaultTestTimeoutMillis(),

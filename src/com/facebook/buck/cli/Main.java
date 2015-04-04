@@ -38,7 +38,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RepositoryFactory;
@@ -622,9 +621,6 @@ public final class Main {
       }
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootRepository.getFilesystem());
 
-      CachingBuildEngine buildEngine =
-          new CachingBuildEngine(
-              rootRepository.getBuckConfig().getSkipLocalBuildChainDepth().or(1L));
       Optional<ProcessManager> processManager;
       if (platform == Platform.WINDOWS) {
         processManager = Optional.absent();
@@ -644,7 +640,6 @@ public final class Main {
               console,
               rootRepository,
               androidPlatformTargetSupplier,
-              buildEngine,
               artifactCacheFactory,
               buildEventBus,
               parser,
