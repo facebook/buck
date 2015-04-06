@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.aapt;
 
+import com.facebook.buck.android.AaptStep;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.event.BuckEventBus;
@@ -445,7 +446,8 @@ public class MiniAapt implements Step {
       throws IOException{
     return filesystem.isHidden(path) ||
         IGNORED_FILE_EXTENSIONS.contains(
-            com.google.common.io.Files.getFileExtension(path.getFileName().toString()));
+            com.google.common.io.Files.getFileExtension(path.getFileName().toString())) ||
+        AaptStep.isSilentlyIgnored(path);
   }
 
   @VisibleForTesting

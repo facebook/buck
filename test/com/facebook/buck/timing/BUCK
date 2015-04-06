@@ -7,7 +7,7 @@ UTIL_SRCS = [
 java_library(
   name = 'testutil',
   srcs = UTIL_SRCS,
-  deps = [
+  exported_deps = [
     '//src/com/facebook/buck/timing:timing',
   ],
   visibility = [

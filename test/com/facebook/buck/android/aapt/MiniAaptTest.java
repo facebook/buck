@@ -25,7 +25,10 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.aapt.MiniAapt.ResourceParseException;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -244,10 +247,20 @@ public class MiniAaptTest {
     filesystem.touch(Paths.get("res/drawable/another_icon.png.orig"));
     filesystem.touch(Paths.get("res/drawable-ldpi/nine_patch.9.png"));
     filesystem.touch(Paths.get("res/drawable-ldpi/.DS_Store"));
+    filesystem.writeContentsToPath(
+        "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+            "<resources>" +
+            "<bool name=\"v\">false</bool>" +
+            "</resources>",
+        Paths.get("res/values/value.xml~"));
 
     MiniAapt aapt = new MiniAapt(Paths.get("res"), Paths.get("R.txt"), ImmutableSet.<Path>of());
     aapt.processFileNamesInDirectory(filesystem, Paths.get("res/drawable"));
     aapt.processFileNamesInDirectory(filesystem, Paths.get("res/drawable-ldpi"));
+    aapt.processValues(
+        filesystem,
+        new BuckEventBus(new FakeClock(0), new BuildId("")),
+        Paths.get("res/values"));
 
     assertEquals(
         ImmutableSet.<RDotTxtEntry>of(
