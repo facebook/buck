@@ -9,6 +9,7 @@ java_library(
     'EntryAccounting.java',
     'OverwritingZipOutputStream.java',
     'ZipOutputStreams.java',
+    'ZipWriteTest.java',
   ],
   deps = [
     '//third-party/java/guava:guava',
@@ -54,5 +55,13 @@ java_library(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/thrift:rules',
     '//test/com/facebook/buck/zip:zip',
+  ],
+)
+
+java_binary(
+  name = 'zip-write-test',
+  main_class = 'com.facebook.buck.zip.ZipWriteTest',
+  deps = [
+    ':stream',
   ],
 )

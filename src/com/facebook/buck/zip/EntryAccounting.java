@@ -267,6 +267,8 @@ class EntryAccounting {
 
   public long close(OutputStream out) throws IOException {
     if (!isDeflated()) {
+      // If we're not doing deflation, end the deflater to free native resources.
+      deflater.end();
       // Nothing left to do.
       return 0;
     }
