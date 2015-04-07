@@ -874,8 +874,9 @@ public class AndroidBinary extends AbstractBuildRule implements
 
     if (isReorderingClasses()) {
       IntraDexReorder intraDexReorder = new IntraDexReorder(
-        dexReorderToolFile.get(),
-        dexReorderDataDumpFile.get(),
+        dexReorderToolFile,
+        dexReorderDataDumpFile,
+        getResolver(),
         getBuildTarget(),
         selectedPrimaryDexPath,
         primaryDexPath,

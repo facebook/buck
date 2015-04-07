@@ -17,7 +17,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -25,6 +24,8 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.zip.UnzipStep;
 import com.facebook.buck.zip.ZipStep;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -43,8 +44,8 @@ import java.util.Set;
  */
 public class IntraDexReorder {
 
-  private SourcePath reorderTool;
-  private SourcePath reorderDataFile;
+  private Path reorderTool;
+  private Path reorderDataFile;
   private Path inputPrimaryDexPath;
   private Path outputPrimaryDexPath;
   private Optional<Supplier<Multimap<Path, Path>>> secondaryDexMap;
@@ -53,16 +54,17 @@ public class IntraDexReorder {
   private String outputSubDir;
 
   IntraDexReorder(
-      SourcePath reorderTool,
-      SourcePath reorderDataFile,
+      Optional<SourcePath> reorderTool,
+      Optional<SourcePath> reorderDataFile,
+      SourcePathResolver sourcePathResolver,
       BuildTarget buildTarget,
       Path inputPrimaryDexPath,
       Path outputPrimaryDexPath,
       final Optional<Supplier<Multimap<Path, Path>>> secondaryDexMap,
       String inputSubDir,
       String outputSubDir) {
-    this.reorderTool = reorderTool;
-    this.reorderDataFile = reorderDataFile;
+    this.reorderTool = reorderTool.transform(sourcePathResolver.getPathFunction()).get();
+    this.reorderDataFile = reorderDataFile.transform(sourcePathResolver.getPathFunction()).get();
     this.inputPrimaryDexPath = inputPrimaryDexPath;
     this.outputPrimaryDexPath = outputPrimaryDexPath;
     this.secondaryDexMap = secondaryDexMap;
