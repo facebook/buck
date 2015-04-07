@@ -26,6 +26,7 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.easymock.EasyMock;
@@ -49,6 +50,7 @@ public class ShTestTest extends EasyMockSupport {
             .build(),
         new SourcePathResolver(new BuildRuleResolver()),
         new TestSourcePath("run_test.sh"),
+        /* args */ ImmutableList.<String>of(),
         /* labels */ ImmutableSet.<Label>of());
 
     ProjectFilesystem filesystem = createMock(ProjectFilesystem.class);

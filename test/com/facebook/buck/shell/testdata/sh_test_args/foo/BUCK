@@ -1,0 +1,7 @@
+sh_test(
+  name = 'test',
+  test = 'test.sh',
+  args = [
+    'hello',
+  ],
+)

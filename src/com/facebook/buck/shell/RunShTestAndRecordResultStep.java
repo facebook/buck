@@ -35,10 +35,15 @@ import java.nio.file.Path;
 public class RunShTestAndRecordResultStep implements Step {
 
   private Path pathToShellScript;
+  private final ImmutableList<String> args;
   private Path pathToTestResultFile;
 
-  public RunShTestAndRecordResultStep(Path pathToShellScript, Path pathToTestResultFile) {
+  public RunShTestAndRecordResultStep(
+      Path pathToShellScript,
+      ImmutableList<String> args,
+      Path pathToTestResultFile) {
     this.pathToShellScript = pathToShellScript;
+    this.args = args;
     this.pathToTestResultFile = pathToTestResultFile;
   }
 
@@ -76,7 +81,10 @@ public class RunShTestAndRecordResultStep implements Step {
         @Override
         protected ImmutableList<String> getShellCommandInternal(
             ExecutionContext context) {
-          return ImmutableList.of(pathToShellScript.toString());
+          return ImmutableList.<String>builder()
+              .add(pathToShellScript.toString())
+              .addAll(args)
+              .build();
         }
 
         @Override

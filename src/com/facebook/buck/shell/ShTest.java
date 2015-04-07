@@ -60,15 +60,19 @@ public class ShTest extends AbstractBuildRule implements TestRule {
 
   @AddToRuleKey
   private final SourcePath test;
+  @AddToRuleKey
+  private final ImmutableList<String> args;
   private final ImmutableSet<Label> labels;
 
   protected ShTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePath test,
+      ImmutableList<String> args,
       Set<Label> labels) {
     super(params, resolver);
     this.test = test;
+    this.args = args;
     this.labels = ImmutableSet.copyOf(labels);
   }
 
@@ -130,6 +134,7 @@ public class ShTest extends AbstractBuildRule implements TestRule {
     // Return a single command that runs an .sh file with no arguments.
     Step runTest = new RunShTestAndRecordResultStep(
         getResolver().getPath(test),
+        args,
         getPathToTestOutputResult());
 
     return ImmutableList.of(mkdirClean, runTest);

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class ShTestDescription implements Description<ShTestDescription.Arg> {
@@ -47,12 +48,18 @@ public class ShTestDescription implements Description<ShTestDescription.Arg> {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new ShTest(params, new SourcePathResolver(resolver), args.test, args.labels.get());
+    return new ShTest(
+        params,
+        new SourcePathResolver(resolver),
+        args.test,
+        args.args.get(),
+        args.labels.get());
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
     public SourcePath test;
+    public Optional<ImmutableList<String>> args;
     public Optional<ImmutableSortedSet<Label>> labels;
 
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
