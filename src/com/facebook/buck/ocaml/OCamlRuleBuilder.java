@@ -56,7 +56,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 /**
@@ -443,11 +443,10 @@ public class OCamlRuleBuilder {
   private static Optional<String> executeProcessAndGetStdout(
       File baseDir,
       ImmutableList<String> cmd) throws IOException, InterruptedException {
-    PrintStream stdout = new CapturingPrintStream();
-    PrintStream stderr = new CapturingPrintStream();
+    CapturingPrintStream stdout = new CapturingPrintStream();
+    CapturingPrintStream stderr = new CapturingPrintStream();
 
     ImmutableSet.Builder<ProcessExecutor.Option> options = ImmutableSet.builder();
-    options.add(ProcessExecutor.Option.EXPECTING_STD_ERR);
     options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
     Console console = new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty());
     ProcessExecutor exe = new ProcessExecutor(console);
@@ -459,9 +458,9 @@ public class OCamlRuleBuilder {
         /* stdin */ Optional.<String>absent(),
         /* timeOutMs */ Optional.<Long>absent());
     if (result.getExitCode() != 0) {
-      return Optional.absent();
-    } else {
-      return result.getStdout();
+      throw new HumanReadableException(stderr.getContentsAsString(StandardCharsets.UTF_8));
     }
+
+    return result.getStdout();
   }
 }
