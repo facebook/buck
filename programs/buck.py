@@ -3,11 +3,13 @@ from __future__ import print_function
 import os
 import signal
 import sys
+import uuid
 import zipfile
+
 from buck_tool import BuckToolException, RestartBuck
 from buck_project import BuckProject, NoBuckConfigFoundException
 from tracing import Tracing
-import uuid
+from subprocutils import propagate_failure
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -47,7 +49,7 @@ def main(argv):
 
 if __name__ == "__main__":
     try:
-        sys.exit(main(sys.argv))
+        propagate_failure(main(sys.argv))
     except RestartBuck:
         os.execvp(os.path.join(os.path.dirname(THIS_DIR), 'bin', 'buck'), sys.argv)
     except (BuckToolException, NoBuckConfigFoundException) as e:

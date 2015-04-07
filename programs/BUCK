@@ -89,6 +89,7 @@ python_binary(
   main='buck.py',
   deps=[
     ':bucklib',
+    ':subprocutils',
   ],
 )
 
@@ -122,5 +123,6 @@ python_binary(
   main='buckd.py',
   deps=[
     ':bucklib',
+    ':subprocutils',
   ],
 )

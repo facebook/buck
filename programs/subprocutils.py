@@ -94,3 +94,17 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
                 if _access_check(name, mode):
                     return name
     return None
+
+
+def propagate_failure(status):
+    """
+    Propagate the failure mode of a subprocess to the current process.
+    """
+
+    # The subprocess died with via a signal, so re-raise it.
+    if status < 0:
+        os.kill(os.getpid(), -status)
+
+    # The subprocess died with an error code, propagate it.
+    if status > 0:
+        sys.exit(status)
