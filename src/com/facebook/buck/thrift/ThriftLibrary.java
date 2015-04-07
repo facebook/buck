@@ -16,30 +16,22 @@
 
 package com.facebook.buck.thrift;
 
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.step.Step;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
 
 /**
  * Represents a thrift library target node in the action graph, providing an interface for
  * dependents to setup dependencies and include paths correctly for the thrift files this
  * library contains.
  */
-public class ThriftLibrary extends AbstractBuildRule {
+public class ThriftLibrary extends NoopBuildRule {
 
   private final ImmutableSortedSet<ThriftLibrary> thriftDeps;
   private final SymlinkTree includeTreeRule;
@@ -55,29 +47,6 @@ public class ThriftLibrary extends AbstractBuildRule {
     this.thriftDeps = thriftDeps;
     this.includeTreeRule = includeTreeRule;
     this.includes = includes;
-  }
-
-  @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-    return ImmutableList.of();
-  }
-
-  @Nullable
-  @Override
-  public Path getPathToOutputFile() {
-    return null;
   }
 
   public ImmutableSortedSet<ThriftLibrary> getThriftDeps() {

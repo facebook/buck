@@ -32,10 +32,10 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -54,7 +54,9 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
   @AddToRuleKey
   private final ImmutableSet<String> options;
   private final ImmutableList<Path> includeRoots;
-  private final ImmutableMap<Path, SourcePath> includes;
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
+  private final ImmutableMap<String, SourcePath> includes;
 
   public ThriftCompiler(
       BuildRuleParams params,
@@ -75,7 +77,15 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
     this.language = language;
     this.options = options;
     this.includeRoots = includeRoots;
-    this.includes = includes;
+
+    // Hash the layout of each potentially included thrift file dependency and it's contents.
+    // We do this here, rather than returning them from `getInputsToCompareToOutput` so that
+    // we can match the contents hash up with where it was laid out in the include search path.
+    ImmutableMap.Builder<String, SourcePath> builder = ImmutableMap.builder();
+    for (Map.Entry<Path, SourcePath> entry : includes.entrySet()) {
+      builder.put(entry.getKey().toString(), entry.getValue());
+    }
+    this.includes = builder.build();
   }
 
   @Override
@@ -85,14 +95,6 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    // Hash the layout of each potentially included thrift file dependency and it's contents.
-    // We do this here, rather than returning them from `getInputsToCompareToOutput` so that
-    // we can match the contents hash up with where it was laid out in the include search path.
-    // TODO(simons): Implement handling of maps to the reflective rule key magic
-    for (Path path : ImmutableSortedSet.copyOf(includes.keySet())) {
-      builder.setReflectively("include(" + path + ")", includes.get(path));
-    }
-
     return builder;
   }
 
