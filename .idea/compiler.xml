@@ -27,9 +27,9 @@
         <sourceOutputDir name="build-ij/immutables" />
         <sourceTestOutputDir name="build-ij/immutables-test" />
         <outputRelativeToContentRoot value="true" />
-        <processor name="org.immutables.value.internal.processor.Processor" />
+        <processor name="org.immutables.value.internal.$processor$.$Processor" />
         <processorPath useClasspath="false">
-          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-standalone-1.1.2.jar" />
+          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-2.0.6.jar" />
         </processorPath>
       </profile>
     </annotationProcessing>

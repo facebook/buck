@@ -1,8 +1,0 @@
-prebuilt_jar(
-  name = 'auto-service',
-  binary_jar = 'auto-service-1.0-rc1.jar',
-  visibility = ['PUBLIC'],
-  deps = [
-    '//third-party/java/guava:guava',
-  ]
-)

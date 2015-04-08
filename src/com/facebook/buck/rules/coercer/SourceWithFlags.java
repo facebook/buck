@@ -20,7 +20,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 
 import org.immutables.value.Value;
@@ -49,11 +48,16 @@ public abstract class SourceWithFlags implements Comparable<SourceWithFlags> {
   }
 
   public static SourceWithFlags of(SourcePath sourcePath) {
-    return ImmutableSourceWithFlags.of(sourcePath, ImmutableList.<String>of());
+    return ImmutableSourceWithFlags.builder()
+        .setSourcePath(sourcePath)
+        .build();
   }
 
   public static SourceWithFlags of(SourcePath sourcePath, List<String> flags) {
-    return ImmutableSourceWithFlags.of(sourcePath, ImmutableList.copyOf(flags));
+    return ImmutableSourceWithFlags.builder()
+        .setSourcePath(sourcePath)
+        .addAllFlags(flags)
+        .build();
   }
 
   public static final Function<SourceWithFlags, SourcePath> TO_SOURCE_PATH =

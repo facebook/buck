@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.lang.reflect.Modifier;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -43,9 +42,6 @@ public class NewTypeTest {
     assertFalse(t.getDescription().isPresent());
   }
 
-  // TODO(user): Enable this test once we upgrade to Immutables.org 2.0
-  // and update NewBuckStyleImmutable to include the visibility flag.
-  @Ignore
   @Test
   public void generatedClassIsPublic() {
     assertEquals(Modifier.PUBLIC, NewType.class.getModifiers() & Modifier.PUBLIC);

@@ -36,14 +36,13 @@ import java.util.regex.Pattern;
  * List of fields to add to a generated {@code BuildConfig.java} file. Each field knows its Java
  * type, variable name, and value.
  */
-@Value.Nested
+@Value.Enclosing
 @Value.Immutable
 @BuckStyleImmutable
 public abstract class BuildConfigFields implements Iterable<BuildConfigFields.Field> {
 
   /** An individual field in a {@link BuildConfigFields}. */
   @Value.Immutable
-  @BuckStyleImmutable
   public abstract static class Field {
 
     @Value.Parameter

@@ -55,9 +55,8 @@ import java.lang.annotation.Target;
     typeImmutable = "*",
     typeAbstract = "Abstract*",
     get = {"is*", "get*"},
-    init = "set*"
-    // TODO(user): Enable this when we upgrade to Immutables.org 2.0.
-    /* visibility = Value.Style.ImplementationVisibility.PUBLIC */)
+    init = "set*",
+    visibility = Value.Style.ImplementationVisibility.PUBLIC)
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface NewBuckStyleImmutable {}

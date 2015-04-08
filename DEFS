@@ -24,7 +24,7 @@ def java_immutables_library(
     deps = kwargs.get('deps', [])
     needed_deps = [
       '//src/com/facebook/buck/util/immutables:immutables',
-      '//third-party/java/immutables:annotations',
+      '//third-party/java/immutables:processor',
       '//third-party/java/guava:guava',
       '//third-party/java/jsr:jsr305',
     ]
@@ -32,8 +32,8 @@ def java_immutables_library(
       if not dep in deps:
         deps.append(dep)
     annotation_processors = kwargs.get('annotation_processors', [])
-    if not 'org.immutables.value.internal.processor.Processor' in annotation_processors:
-      annotation_processors.append('org.immutables.value.internal.processor.Processor')
+    if not 'org.immutables.value.internal.$processor$.$Processor' in annotation_processors:
+      annotation_processors.append('org.immutables.value.internal.$processor$.$Processor')
     annotation_processor_deps = kwargs.get('annotation_processor_deps', [])
     if not '//third-party/java/immutables:processor' in annotation_processor_deps:
       annotation_processor_deps.append('//third-party/java/immutables:processor')

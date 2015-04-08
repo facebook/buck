@@ -25,12 +25,11 @@ import org.immutables.value.Value;
 import java.nio.file.Path;
 
 @Value.Immutable
-@Value.Nested
+@Value.Enclosing
 @BuckStyleImmutable
 public abstract class ExopackageInfo {
 
   @Value.Immutable
-  @BuckStyleImmutable
   public static interface DexInfo {
     @Value.Parameter
     Path getMetadata();
@@ -39,7 +38,6 @@ public abstract class ExopackageInfo {
   }
 
   @Value.Immutable
-  @BuckStyleImmutable
   public static interface NativeLibsInfo {
     @Value.Parameter
     Path getMetadata();

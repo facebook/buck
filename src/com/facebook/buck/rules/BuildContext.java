@@ -46,8 +46,8 @@ import java.util.Map;
 @BuckStyleImmutable
 public abstract class BuildContext {
 
-  private static Function<AndroidPlatformTarget, String> bootclasspathForAndroidPlatformTarget =
-      new Function<AndroidPlatformTarget, String>() {
+  private static final Function<AndroidPlatformTarget, String>
+      BOOTCLASSPATH_FOR_ANDROID_PLATFORM_TARGET = new Function<AndroidPlatformTarget, String>() {
     @Override
     public String apply(AndroidPlatformTarget androidPlatformTarget) {
       List<Path> bootclasspathEntries = androidPlatformTarget.getBootclasspathEntries();
@@ -148,6 +148,6 @@ public abstract class BuildContext {
   public static Supplier<String> createBootclasspathSupplier(
       Supplier<AndroidPlatformTarget> androidPlatformTarget) {
     return Suppliers.memoize(
-        Suppliers.compose(bootclasspathForAndroidPlatformTarget, androidPlatformTarget));
+        Suppliers.compose(BOOTCLASSPATH_FOR_ANDROID_PLATFORM_TARGET, androidPlatformTarget));
   }
 }

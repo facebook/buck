@@ -55,7 +55,8 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
-@Value.Nested
+@Value.Enclosing
+@BuckStyleImmutable
 public class CxxLibraryDescription implements
     Description<CxxLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<CxxLibraryDescription.Arg>,
@@ -600,7 +601,6 @@ public class CxxLibraryDescription implements
   }
 
   @Value.Immutable
-  @BuckStyleImmutable
   public static interface TypeAndPlatform {
     @Value.Parameter
     Optional<Map.Entry<Flavor, Type>> getType();

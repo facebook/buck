@@ -2,7 +2,7 @@ java_library(
   name = 'immutables',
   srcs = glob(['*.java']),
   deps = [
-    '//third-party/java/immutables:annotations',
+    '//third-party/java/immutables:processor',
   ],
   visibility = ['PUBLIC'],
 )

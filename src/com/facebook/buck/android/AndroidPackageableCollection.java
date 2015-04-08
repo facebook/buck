@@ -36,12 +36,11 @@ import java.util.Set;
  * A collection of Android content that should be included in an Android package (apk or aar).
  */
 @Value.Immutable
-@Value.Nested
+@Value.Enclosing
 @BuckStyleImmutable
 public interface AndroidPackageableCollection {
 
   @Value.Immutable
-  @BuckStyleImmutable
   public abstract static class ResourceDetails {
 
     /**
