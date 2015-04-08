@@ -60,7 +60,8 @@ public class TargetsCommandOptions extends AbstractCommandOptions {
   @Option(name = "--print0", usage = "Delimit targets using the ASCII NUL character.")
   private boolean print0;
 
-  @Option(name = "--resolvealias",
+  @Option(name = "--resolve-alias",
+      aliases = {"--resolvealias"},
       usage = "Print the fully-qualified build target for the specified alias[es]")
   private boolean isResolveAlias;
 
@@ -115,7 +116,7 @@ public class TargetsCommandOptions extends AbstractCommandOptions {
     return print0;
   }
 
-  /** @return {@code true} if {@code --resolvealias} was specified. */
+  /** @return {@code true} if {@code --resolve-alias} was specified. */
   public boolean isResolveAlias() {
     return isResolveAlias;
   }

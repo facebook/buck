@@ -346,23 +346,24 @@ public class TargetsCommandIntegrationTest {
         this, "target_validation", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("targets", "--resolvealias", "//:test-library");
+    ProcessResult result = workspace.runBuckCommand(
+        "targets", "--resolve-alias", "//:test-library");
     assertTrue(result.getStdout(), result.getStdout().contains("//:test-library"));
 
     try {
-      workspace.runBuckCommand("targets", "--resolvealias", "//:");
+      workspace.runBuckCommand("targets", "--resolve-alias", "//:");
     } catch (HumanReadableException e) {
       assertEquals("//: cannot end with a colon", e.getMessage());
     }
 
     try {
-      workspace.runBuckCommand("targets", "--resolvealias", "//:test-libarry");
+      workspace.runBuckCommand("targets", "--resolve-alias", "//:test-libarry");
     } catch (HumanReadableException e) {
       assertEquals("//:test-libarry is not a valid target.", e.getMessage());
     }
 
     try {
-      workspace.runBuckCommand("targets", "--resolvealias", "//blah/foo");
+      workspace.runBuckCommand("targets", "--resolve-alias", "//blah/foo");
     } catch (HumanReadableException e) {
       assertEquals("//blah/foo must contain exactly one colon (found 0)", e.getMessage());
     }

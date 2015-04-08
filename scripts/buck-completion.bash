@@ -186,7 +186,7 @@ function _buck_completion_try_targets() {
       --no-cache
       --num-threads
       --referenced-file
-      --resolvealias
+      --resolve-alias
       --show-output
       --show-rulekey
       --type

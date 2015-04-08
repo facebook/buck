@@ -99,7 +99,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   @Override
   int runCommandWithOptionsInternal(TargetsCommandOptions options)
       throws IOException, InterruptedException {
-    // Exit early if --resolvealias is passed in: no need to parse any build files.
+    // Exit early if --resolve-alias is passed in: no need to parse any build files.
     if (options.isResolveAlias()) {
       return doResolveAlias(options);
     }
