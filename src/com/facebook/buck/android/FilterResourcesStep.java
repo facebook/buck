@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -388,7 +390,7 @@ public class FilterResourcesStep implements Step {
   /**
    * Helper class for interpreting the resource_filter argument to android_binary().
    */
-  public static class ResourceFilter {
+  public static class ResourceFilter implements RuleKeyAppendable {
 
     static final ResourceFilter EMPTY_FILTER = new ResourceFilter(ImmutableList.<String>of());
 
@@ -427,6 +429,11 @@ public class FilterResourcesStep implements Step {
 
     public String getDescription() {
       return filter.toString();
+    }
+
+    @Override
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+      return builder.setReflectively(key + ".filter", getDescription());
     }
 
     @VisibleForTesting

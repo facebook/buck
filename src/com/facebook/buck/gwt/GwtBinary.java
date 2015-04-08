@@ -21,6 +21,7 @@ import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -66,20 +67,27 @@ public class GwtBinary extends AbstractBuildRule {
   private static final String GWT_COMPILER_CLASS = "com.google.gwt.dev.Compiler";
 
   private final Path outputFile;
+  @AddToRuleKey
   private final ImmutableSortedSet<String> modules;
+  @AddToRuleKey
   private final ImmutableList<String> vmArgs;
+  @AddToRuleKey
   private final Style style;
+  @AddToRuleKey
   private final boolean draftCompile;
+  @AddToRuleKey
   private final int optimize;
+  @AddToRuleKey
   private final int localWorkers;
+  @AddToRuleKey
   private final boolean strict;
+  @AddToRuleKey
   private final ImmutableList<String> experimentalArgs;
-  private final ImmutableSortedSet<BuildRule> moduleDeps;
+  // Deliberately not added to rule key
   private final ImmutableSortedSet<Path> gwtModuleJars;
 
   /**
    * @param modules The GWT modules to build with the GWT compiler.
-   * @param moduleDeps The rules passed to the {@code module_deps} argument in the build file.
    */
   GwtBinary(
       BuildRuleParams buildRuleParams,
@@ -92,7 +100,6 @@ public class GwtBinary extends AbstractBuildRule {
       int localWorkers,
       boolean strict,
       List<String> experimentalArgs,
-      ImmutableSortedSet<BuildRule> moduleDeps,
       ImmutableSortedSet<Path> gwtModuleJars) {
     super(buildRuleParams, resolver);
     BuildTarget buildTarget = buildRuleParams.getBuildTarget();
@@ -118,7 +125,6 @@ public class GwtBinary extends AbstractBuildRule {
 
     this.strict = strict;
     this.experimentalArgs = ImmutableList.copyOf(experimentalArgs);
-    this.moduleDeps = moduleDeps;
     this.gwtModuleJars = gwtModuleJars;
   }
 
@@ -187,16 +193,7 @@ public class GwtBinary extends AbstractBuildRule {
 
   @Override
   public Builder appendDetailsToRuleKey(Builder builder) {
-    return builder
-        .setReflectively("moduleDeps", moduleDeps)
-        .setReflectively("modules", modules)
-        .setReflectively("vmArgs", vmArgs)
-        .setReflectively("style", style.name())
-        .setReflectively("draftCompile", draftCompile)
-        .setReflectively("optimize", optimize)
-        .setReflectively("localWorkers", localWorkers)
-        .setReflectively("strict", strict)
-        .setReflectively("experimentalArgs", experimentalArgs);
+    return builder;
   }
 
   /**

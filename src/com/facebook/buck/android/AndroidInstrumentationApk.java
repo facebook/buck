@@ -17,13 +17,10 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -50,7 +47,6 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       SourcePathResolver resolver,
       Optional<Path> proGuardJarOverride,
       String proGuardMaxHeapSize,
-      SourcePath manifest,
       AndroidBinary apkUnderTest,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult) {
@@ -59,7 +55,6 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         resolver,
         proGuardJarOverride,
         proGuardMaxHeapSize,
-        manifest,
         apkUnderTest.getKeystore(),
         PackageType.INSTRUMENTED,
         // Do not split the test apk even if the tested apk is split
@@ -72,8 +67,6 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getCpuFilters(),
         apkUnderTest.getResourceFilter(),
         EnumSet.noneOf(ExopackageMode.class),
-        // preprocessJavaClassDeps is not supported in instrumentation
-        ImmutableSet.<BuildRule>of(),
         apkUnderTest.getMacroExpander(),
         // preprocessJavaClassBash is not supported in instrumentation
         Optional.<String>absent(),
@@ -83,10 +76,5 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         Optional.<Boolean>absent(),
         Optional.<SourcePath>absent(),
         Optional.<SourcePath>absent());
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return super.appendDetailsToRuleKey(builder);
   }
 }

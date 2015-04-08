@@ -86,10 +86,6 @@ public class JavaSourceJarTest {
         pathResolver,
         ImmutableSortedSet.of(fileBased, ruleBased));
 
-    assertEquals(
-        ImmutableList.of(pathResolver.getPath(fileBased)),
-        rule.getInputsToCompareToOutput());
-
     BuildContext buildContext = FakeBuildContext.newBuilder(new FakeProjectFilesystem())
         .setActionGraph(new ActionGraph(new MutableDirectedGraph<BuildRule>()))
         .setJavaPackageFinder(finderStub)

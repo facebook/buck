@@ -36,11 +36,13 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.ImmutablePythonVersion;
 import com.facebook.buck.python.PythonEnvironment;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ImmutableProcessExecutorParams;
+import com.facebook.buck.util.NullFileHashCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
@@ -194,7 +196,7 @@ public class KnownBuildRuleTypesTest {
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     final File javac = temporaryFolder.newFile();
-    javac.setExecutable(true);
+    assertTrue(javac.setExecutable(true));
 
     Map<String, Map<String, String>> sections = ImmutableMap.of(
         "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
@@ -214,7 +216,13 @@ public class KnownBuildRuleTypesTest {
         .build();
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
-    assertNotEquals(libraryRule.getRuleKey(), configuredRule.getRuleKey());
+    DefaultRuleKeyBuilderFactory factory =
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    RuleKey configuredKey = factory.newInstance(configuredRule, resolver).build().getTotalRuleKey();
+    RuleKey libraryKey = factory.newInstance(libraryRule, resolver).build().getTotalRuleKey();
+
+    assertNotEquals(libraryKey, configuredKey);
   }
 
   @Test

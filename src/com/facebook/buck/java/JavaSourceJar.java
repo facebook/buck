@@ -21,6 +21,7 @@ import static com.facebook.buck.zip.ZipStep.DEFAULT_COMPRESSION_LEVEL;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleType;
@@ -47,6 +48,7 @@ import java.util.Set;
 public class JavaSourceJar extends AbstractBuildRule {
   public static final BuildRuleType TYPE = BuildRuleType.of("source_jar");
 
+  @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> sources;
   private final Path output;
   private final Path temp;
@@ -64,7 +66,7 @@ public class JavaSourceJar extends AbstractBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(sources);
+    return ImmutableSet.of();
   }
 
   @Override
@@ -106,6 +108,10 @@ public class JavaSourceJar extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
 
     return steps.build();
+  }
+
+  public ImmutableSortedSet<SourcePath> getSources() {
+    return sources;
   }
 
   @Override

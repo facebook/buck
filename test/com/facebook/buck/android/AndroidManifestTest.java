@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
@@ -29,7 +28,6 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -41,25 +39,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-/**
- * Unit test for {@link AndroidManifest}.
- */
 public class AndroidManifestTest {
 
-  /**
-   * Tests the following methods:
-   * <ul>
-   *   <li>{@link AbstractBuildRule#getInputsToCompareToOutput()}
-   *   <li>{@link AndroidManifest#getPathToOutputFile()}
-   * </ul>
-   */
   @Test
   public void testSimpleObserverMethods() {
     AndroidManifest androidManifest = createSimpleAndroidManifestRule();
 
-    assertEquals(
-        ImmutableList.of(Paths.get("java/com/example/AndroidManifestSkeleton.xml")),
-        ImmutableList.copyOf(androidManifest.getInputsToCompareToOutput()));
     assertEquals(
         BuckConstant.GEN_PATH.resolve("java/com/example/AndroidManifest__manifest__.xml"),
         androidManifest.getPathToOutputFile());

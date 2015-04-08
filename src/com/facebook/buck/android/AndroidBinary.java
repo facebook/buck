@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -51,7 +52,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -102,9 +102,6 @@ public class AndroidBinary extends AbstractBuildRule implements
   static final String SMART_DEX_SECONDARY_DEX_SUBDIR =
       "assets/smart-dex-secondary-program-dex-jars";
   static final String SECONDARY_DEX_SUBDIR = "assets/secondary-program-dex-jars";
-
-  private final Optional<Path> proguardJarOverride;
-  private final String proguardMaxHeapSize;
 
   /**
    * This list of package types is taken from the set of targets that the default build.xml provides
@@ -166,25 +163,37 @@ public class AndroidBinary extends AbstractBuildRule implements
     }
   }
 
-  private final SourcePath manifest;
+  @AddToRuleKey
   private final Keystore keystore;
+  @AddToRuleKey
   private final PackageType packageType;
+  @AddToRuleKey
   private DexSplitMode dexSplitMode;
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
+  @AddToRuleKey
   private final ProGuardObfuscateStep.SdkProguardType sdkProguardConfig;
+  @AddToRuleKey
   private final Optional<Integer> optimizationPasses;
+  @AddToRuleKey
   private final Optional<SourcePath> proguardConfig;
+  @AddToRuleKey
+  private final Optional<Path> proguardJarOverride;
+  private final String proguardMaxHeapSize;
+  @AddToRuleKey
   private final ResourceCompressionMode resourceCompressionMode;
+  @AddToRuleKey
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final ResourceFilter resourceFilter;
   private final Path primaryDexPath;
+  @AddToRuleKey
   private final EnumSet<ExopackageMode> exopackageModes;
-  private final ImmutableSortedSet<BuildRule> preprocessJavaClassesDeps;
   private final Function<String, String> macroExpander;
+  @AddToRuleKey
   private final Optional<String> preprocessJavaClassesBash;
   private final Optional<Boolean> reorderClassesIntraDex;
   private final Optional<SourcePath> dexReorderToolFile;
   private final Optional<SourcePath> dexReorderDataDumpFile;
+  @AddToRuleKey
   protected final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
   protected final AndroidGraphEnhancementResult enhancementResult;
 
@@ -193,7 +202,6 @@ public class AndroidBinary extends AbstractBuildRule implements
       SourcePathResolver resolver,
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize,
-      SourcePath manifest,
       Keystore keystore,
       PackageType packageType,
       DexSplitMode dexSplitMode,
@@ -205,7 +213,6 @@ public class AndroidBinary extends AbstractBuildRule implements
       Set<TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
       EnumSet<ExopackageMode> exopackageModes,
-      Set<BuildRule> preprocessJavaClassesDeps,
       Function<String, String> macroExpander,
       Optional<String> preprocessJavaClassesBash,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
@@ -216,7 +223,6 @@ public class AndroidBinary extends AbstractBuildRule implements
     super(params, resolver);
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
-    this.manifest = manifest;
     this.keystore = keystore;
     this.packageType = packageType;
     this.dexSplitMode = dexSplitMode;
@@ -228,7 +234,6 @@ public class AndroidBinary extends AbstractBuildRule implements
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
     this.resourceFilter = resourceFilter;
     this.exopackageModes = exopackageModes;
-    this.preprocessJavaClassesDeps = ImmutableSortedSet.copyOf(preprocessJavaClassesDeps);
     this.macroExpander = macroExpander;
     this.preprocessJavaClassesBash = preprocessJavaClassesBash;
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
@@ -262,23 +267,7 @@ public class AndroidBinary extends AbstractBuildRule implements
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    builder
-        .setReflectively("keystore", keystore.getBuildTarget())
-        .setReflectively("packageType", packageType)
-        .setReflectively("sdkProguardConfig", sdkProguardConfig)
-        .setReflectively("optimizationPasses", optimizationPasses)
-        .setReflectively("resourceCompressionMode", resourceCompressionMode)
-        .setReflectively("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters))
-        .setReflectively("exopackageModes", exopackageModes)
-        .setReflectively("preprocessJavaClassesBash", preprocessJavaClassesBash)
-        .setReflectively("preprocessJavaClassesDeps", preprocessJavaClassesDeps)
-        .setReflectively("proguardJarOverride", proguardJarOverride);
-
-    for (JavaLibrary library : rulesToExcludeFromDex) {
-      library.appendDetailsToRuleKey(builder);
-    }
-
-    return dexSplitMode.appendToRuleKey(builder, "dexSplitMode");
+    return builder;
   }
 
   public ImmutableSortedSet<JavaLibrary> getRulesToExcludeFromDex() {
@@ -339,13 +328,7 @@ public class AndroidBinary extends AbstractBuildRule implements
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
-    sourcePaths.add(manifest);
-
-    Optionals.addIfPresent(proguardConfig, sourcePaths);
-    sourcePaths.addAll(dexSplitMode.getSourcePaths());
-
-    return getResolver().filterInputsToCompareToOutput(sourcePaths.build());
+    return ImmutableSet.of();
   }
 
   @Override

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
@@ -53,6 +54,7 @@ import java.util.List;
 public class ApkGenrule extends Genrule implements InstallableApk {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
+  @AddToRuleKey
   private final InstallableApk apk;
 
   ApkGenrule(
@@ -86,8 +88,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return super.appendDetailsToRuleKey(builder)
-        .setReflectively("apk", apk.getApkPath());
+    return builder;
   }
 
   public InstallableApk getInstallableApk() {

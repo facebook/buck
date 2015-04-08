@@ -50,7 +50,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * A buildable that hashes all of the files that go into an exopackage APK.
+ * A build rule that hashes all of the files that go into an exopackage APK.
  * This is used by AndroidBinaryRule to compute the ABI hash of its deps.
  */
 public class ComputeExopackageDepsAbi extends AbstractBuildRule

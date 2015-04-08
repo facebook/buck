@@ -21,6 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -40,6 +41,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
@@ -67,6 +69,7 @@ public class NdkLibrary extends AbstractBuildRule
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
   /** @see NativeLibraryBuildRule#isAsset() */
+  @AddToRuleKey
   private final boolean isAsset;
 
   /** The directory containing the Android.mk file to use. This value includes a trailing slash. */
@@ -76,8 +79,13 @@ public class NdkLibrary extends AbstractBuildRule
   private final Path buildArtifactsDirectory;
   private final Path genDirectory;
 
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> sources;
+  @AddToRuleKey
   private final ImmutableList<String> flags;
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
   private final Optional<String> ndkVersion;
   private final Function<String, String> macroExpander;
 
@@ -197,15 +205,12 @@ public class NdkLibrary extends AbstractBuildRule
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .setReflectively("ndk_version", ndkVersion.or("NONE"))
-        .setReflectively("flags", flags)
-        .setReflectively("is_asset", isAsset());
+    return builder;
   }
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(sources);
+    return ImmutableSet.of();
   }
 
   @Override

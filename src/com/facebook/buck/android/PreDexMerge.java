@@ -21,6 +21,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -87,6 +88,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
   private static final String SECONDARY_DEX_DIRECTORIES_KEY = "secondary_dex_directories";
 
   private final Path primaryDexPath;
+  @AddToRuleKey
   private final DexSplitMode dexSplitMode;
   private final ImmutableSet<DexProducedFromJavaLibrary> preDexDeps;
   private final AaptPackageResources aaptPackageResources;
@@ -109,7 +111,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(dexSplitMode.getSourcePaths());
+    return ImmutableSet.of();
   }
 
   @Override
@@ -301,7 +303,6 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    dexSplitMode.appendToRuleKey(builder, "dexSplitMode");
     return builder;
   }
 

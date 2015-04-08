@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AaptPackageResources.BuildOutput;
 import com.facebook.buck.android.AndroidBinary.PackageType;
-import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.AccumulateClassNamesStep;
@@ -28,6 +27,7 @@ import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -54,7 +54,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
@@ -84,16 +83,20 @@ public class AaptPackageResources extends AbstractBuildRule
       DxStep.Option.RUN_IN_PROCESS,
       DxStep.Option.NO_OPTIMIZE);
 
+  @AddToRuleKey
   private final SourcePath manifest;
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final ImmutableSet<Path> assetsDirectories;
+  @AddToRuleKey
   private final PackageType packageType;
-  private final ImmutableSet<TargetCpuType> cpuFilters;
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
   private final JavacOptions javacOptions;
+  @AddToRuleKey
   private final boolean rDotJavaNeedsDexing;
+  @AddToRuleKey
   private final boolean shouldBuildStringSourceMap;
   private final boolean shouldWarnIfMissingResource;
+  @AddToRuleKey
   private final boolean skipCrunchPngs;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -105,7 +108,6 @@ public class AaptPackageResources extends AbstractBuildRule
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
       ImmutableSet<Path> assetsDirectories,
       PackageType packageType,
-      ImmutableSet<TargetCpuType> cpuFilters,
       JavacOptions javacOptions,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap,
@@ -117,7 +119,6 @@ public class AaptPackageResources extends AbstractBuildRule
     this.resourceDeps = resourceDeps;
     this.assetsDirectories = assetsDirectories;
     this.packageType = packageType;
-    this.cpuFilters = cpuFilters;
     this.javacOptions = javacOptions;
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
@@ -128,17 +129,12 @@ public class AaptPackageResources extends AbstractBuildRule
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(Collections.singleton(manifest));
+    return ImmutableSet.of();
   }
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .setReflectively("packageType", packageType.toString())
-        .setReflectively("cpuFilters", ImmutableSortedSet.copyOf(cpuFilters).toString())
-        .setReflectively("rDotJavaNeedsDexing", rDotJavaNeedsDexing)
-        .setReflectively("shouldBuildStringSourceMap", shouldBuildStringSourceMap)
-        .setReflectively("skipCrunchPngs", skipCrunchPngs);
+    return builder;
   }
 
   @Override

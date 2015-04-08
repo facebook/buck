@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -59,6 +60,7 @@ public class DummyRDotJava extends AbstractBuildRule
     implements AbiRule, HasJavaAbi, InitializableFromDisk<DummyRDotJava.BuildOutput> {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
+  @AddToRuleKey
   private final JavacOptions javacOptions;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -142,7 +144,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return javacOptions.appendToRuleKey(builder, "javacOptions");
+    return builder;
   }
 
   public static Path getRDotJavaSrcFolder(BuildTarget buildTarget) {

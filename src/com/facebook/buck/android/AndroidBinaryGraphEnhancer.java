@@ -208,7 +208,6 @@ public class AndroidBinaryGraphEnhancer {
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         packageableCollection.getAssetsDirectories(),
         packageType,
-        cpuFilters,
         javacOptions,
         shouldPreDex,
         shouldBuildStringSourceMap,

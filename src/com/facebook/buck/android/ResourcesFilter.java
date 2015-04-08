@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -90,10 +91,15 @@ public class ResourcesFilter extends AbstractBuildRule
     }
   }
 
+  // Rule key correctness is ensured by depping on all android_resource rules in
+  // Builder.setAndroidResourceDepsFinder()
   private final ImmutableList<Path> resDirectories;
   private final ImmutableSet<Path> whitelistedStringDirs;
+  @AddToRuleKey
   private final ImmutableSet<String> locales;
+  @AddToRuleKey
   private final ResourceCompressionMode resourceCompressionMode;
+  @AddToRuleKey
   private final FilterResourcesStep.ResourceFilter resourceFilter;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -133,10 +139,7 @@ public class ResourcesFilter extends AbstractBuildRule
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .setReflectively("resourceCompressionMode", resourceCompressionMode.toString())
-        .setReflectively("resourceFilter", resourceFilter.getDescription())
-        .setReflectively("locales", locales);
+    return builder;
   }
 
   @Override

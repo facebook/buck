@@ -21,6 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.facebook.buck.io.DirectoryTraverser;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -44,7 +45,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 
 import javax.annotation.Nullable;
 
@@ -53,15 +53,18 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
+  @AddToRuleKey
   @Nullable
   private final String mainClass;
 
+  @AddToRuleKey
   @Nullable
   private final SourcePath manifestFile;
   private final boolean mergeManifests;
 
   @Nullable
   private final Path metaInfDirectory;
+  @AddToRuleKey
   private final ImmutableSet<String> blacklist;
 
   private final DirectoryTraverser directoryTraverser;
@@ -87,9 +90,7 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .setReflectively("mainClass", mainClass)
-        .setReflectively("blacklist", blacklist);
+    return builder;
   }
 
   @Override
@@ -101,11 +102,6 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
     // Build a sorted set so that metaInfDirectory contents are listed in a canonical order.
     ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
-
-    if (manifestFile != null) {
-      builder.addAll(
-          getResolver().filterInputsToCompareToOutput(Collections.singleton(manifestFile)));
-    }
 
     BuildRules.addInputsToSortedSet(metaInfDirectory, builder, directoryTraverser);
 

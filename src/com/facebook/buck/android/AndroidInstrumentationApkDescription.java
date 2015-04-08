@@ -139,7 +139,6 @@ public class AndroidInstrumentationApkDescription
         new SourcePathResolver(resolver),
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),
-        args.manifest,
         apkUnderTest,
         rulesToExcludeFromDex,
         enhancementResult);

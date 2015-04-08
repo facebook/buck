@@ -38,7 +38,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
@@ -67,8 +66,6 @@ public class GenAidlTest {
     GenAidlDescription description = new GenAidlDescription();
     assertEquals(GenAidlDescription.TYPE, description.getBuildRuleType());
     assertTrue(genAidlRule.getProperties().is(ANDROID));
-
-    assertEquals(ImmutableList.of(pathToAidl), genAidlRule.getInputsToCompareToOutput());
 
     List<Step> steps = genAidlRule.getBuildSteps(context, new FakeBuildableContext());
 

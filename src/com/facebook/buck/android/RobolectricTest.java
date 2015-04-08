@@ -38,7 +38,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -107,11 +106,6 @@ public class RobolectricTest extends JavaTest {
   @Override
   public BuildableProperties getProperties() {
     return PROPERTIES;
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return super.getInputsToCompareToOutput();
   }
 
   @Override

@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -33,6 +34,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
@@ -49,7 +51,9 @@ public class GenParcelable extends AbstractBuildRule {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(ANDROID);
 
+  @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey(stringify = true)
   private final Path outputDirectory;
 
   GenParcelable(BuildRuleParams params, SourcePathResolver resolver, Set<SourcePath> srcs) {
@@ -66,7 +70,7 @@ public class GenParcelable extends AbstractBuildRule {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(srcs);
+    return ImmutableSet.of();
   }
 
   @Override
@@ -124,6 +128,6 @@ public class GenParcelable extends AbstractBuildRule {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.setReflectively("outputDirectory", outputDirectory.toString());
+    return builder;
   }
 }

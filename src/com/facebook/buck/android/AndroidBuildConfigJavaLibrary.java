@@ -39,8 +39,7 @@ import java.nio.file.Path;
  * This is a custom subclass of {@link DefaultJavaLibrary} so that it can have special behavior
  * when being traversed by an {@link AndroidPackageableCollector}.
  */
-class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary
-    implements AndroidPackageable {
+class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements AndroidPackageable {
 
   private final AndroidBuildConfig androidBuildConfig;
 

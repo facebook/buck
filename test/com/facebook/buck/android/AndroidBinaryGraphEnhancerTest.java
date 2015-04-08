@@ -143,7 +143,6 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableList.<HasAndroidResourceDeps>of(),
         ImmutableSet.<Path>of(),
         AndroidBinary.PackageType.DEBUG,
-        ImmutableSet.<TargetCpuType>of(),
         ANDROID_JAVAC_OPTIONS,
         false,
         false,

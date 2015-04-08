@@ -22,6 +22,7 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
@@ -38,12 +39,12 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.Optionals;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -58,9 +59,14 @@ public class PrebuiltJar extends AbstractBuildRule
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
+  @AddToRuleKey
   private final SourcePath binaryJar;
+  @AddToRuleKey
   private final Optional<SourcePath> sourceJar;
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
   private final Optional<SourcePath> gwtJar;
+  @AddToRuleKey
   private final Optional<String> javadocUrl;
   private final Path abiJar;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
@@ -133,11 +139,7 @@ public class PrebuiltJar extends AbstractBuildRule
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    ImmutableList.Builder<SourcePath> inputsToCompareToOutput = ImmutableList.builder();
-    inputsToCompareToOutput.add(binaryJar);
-    Optionals.addIfPresent(sourceJar, inputsToCompareToOutput);
-    Optionals.addIfPresent(gwtJar, inputsToCompareToOutput);
-    return getResolver().filterInputsToCompareToOutput(inputsToCompareToOutput.build());
+    return ImmutableSet.of();
   }
 
   @Override
@@ -229,11 +231,7 @@ public class PrebuiltJar extends AbstractBuildRule
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .setReflectively("binaryJar", binaryJar)
-        .setReflectively("sourceJar", sourceJar)
-        .setReflectively("gwtJar", gwtJar)
-        .setReflectively("javadocUrl", javadocUrl);
+    return builder;
   }
 
 }

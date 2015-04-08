@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
@@ -61,7 +62,9 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
   public static final String FAT_JAR_MAIN_SRC_RESOURCE = "com/facebook/buck/java/FatJarMain.java";
 
   private final JavacOptions javacOptions;
+  @AddToRuleKey
   private final SourcePath innerJar;
+  @AddToRuleKey
   private final ImmutableMap<String, SourcePath> nativeLibraries;
   private final Path output;
 
@@ -81,14 +84,11 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(ImmutableList.of(innerJar));
+    return ImmutableSet.of();
   }
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    for (Map.Entry<String, SourcePath> entry : nativeLibraries.entrySet()) {
-      builder.setReflectively("nativelib:" + entry.getKey(), entry.getValue());
-    }
     return builder;
   }
 

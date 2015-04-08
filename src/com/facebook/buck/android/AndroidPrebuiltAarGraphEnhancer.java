@@ -28,6 +28,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -54,7 +55,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -178,6 +178,7 @@ class AndroidPrebuiltAarGraphEnhancer {
 
   private static class UnzipAar extends AbstractBuildRule {
 
+    @AddToRuleKey
     private final SourcePath aarFile;
     private final Path unpackDirectory;
     private final Path uberClassesJar;
@@ -282,7 +283,7 @@ class AndroidPrebuiltAarGraphEnhancer {
 
     @Override
     protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-      return getResolver().filterInputsToCompareToOutput(Collections.singleton(aarFile));
+      return ImmutableSet.of();
     }
 
     @Override

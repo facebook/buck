@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -68,6 +69,7 @@ import javax.annotation.Nullable;
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class JavaTest extends DefaultJavaLibrary implements TestRule {
 
+  @AddToRuleKey
   private final ImmutableList<String> vmArgs;
 
   @Nullable
@@ -77,10 +79,12 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
 
   private final ImmutableSet<String> contacts;
 
+  @AddToRuleKey
   private ImmutableSet<BuildRule> sourceUnderTest;
 
   private final ImmutableSet<Path> additionalClasspathEntries;
 
+  @AddToRuleKey
   private final TestType testType;
 
   private final Optional<Long> testRuleTimeoutMs;
@@ -140,11 +144,6 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    ImmutableSortedSet<? extends BuildRule> srcUnderTest = ImmutableSortedSet.copyOf(
-        sourceUnderTest);
-    super.appendDetailsToRuleKey(builder)
-        .setReflectively("vmArgs", vmArgs)
-        .setReflectively("sourceUnderTest", srcUnderTest);
     return builder;
   }
 

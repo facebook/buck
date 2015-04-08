@@ -150,7 +150,6 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
         args.localWorkers.or(DEFAULT_NUM_LOCAL_WORKERS),
         args.strict.or(DEFAULT_STRICT),
         args.experimentalArgs.get(),
-        moduleDependencies,
         gwtModuleJarsBuilder.build());
   }
 }

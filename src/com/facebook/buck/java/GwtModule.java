@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -45,6 +46,7 @@ public class GwtModule extends AbstractBuildRule {
   // To do that, we need a way to register a flavor with a Description from outside the package.
 
   private final Path outputFile;
+  @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> filesForGwtModule;
 
   GwtModule(
@@ -61,7 +63,7 @@ public class GwtModule extends AbstractBuildRule {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(filesForGwtModule);
+    return ImmutableSet.of();
   }
 
   @Override
@@ -98,7 +100,7 @@ public class GwtModule extends AbstractBuildRule {
 
   @Override
   public Builder appendDetailsToRuleKey(Builder builder) {
-    return builder.setReflectively("filesForGwtModule", filesForGwtModule);
+    return builder;
   }
 
   @Override

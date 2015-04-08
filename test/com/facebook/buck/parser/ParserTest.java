@@ -1309,8 +1309,8 @@ public class ParserTest extends EasyMockSupport {
           /* enableProfiling */ false);
       ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
-      BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
-      assertEquals(ImmutableList.of(Paths.get("foo/bar/Bar.java")), libRule.getInputs());
+      JavaLibrary libRule = (JavaLibrary) graph.findBuildRuleByTarget(libTarget);
+      assertEquals(ImmutableSet.of(Paths.get("foo/bar/Bar.java")), libRule.getJavaSrcs());
     }
 
     tempDir.newFile("bar/Baz.java");
@@ -1332,8 +1332,8 @@ public class ParserTest extends EasyMockSupport {
           /* enableProfiling */ false);
       ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
-      BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
-      assertEquals(ImmutableList.of(Paths.get("foo/bar/Bar.java")), libRule.getInputs());
+      JavaLibrary libRule = (JavaLibrary) graph.findBuildRuleByTarget(libTarget);
+      assertEquals(ImmutableSet.of(Paths.get("foo/bar/Bar.java")), libRule.getJavaSrcs());
     }
 
     // Now tell the parser to forget about build files with inputs under symlinks.
@@ -1349,10 +1349,10 @@ public class ParserTest extends EasyMockSupport {
           /* enableProfiling */ false);
       ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
-      BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
+      JavaLibrary libRule = (JavaLibrary) graph.findBuildRuleByTarget(libTarget);
       assertEquals(
-          ImmutableList.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
-          libRule.getInputs());
+          ImmutableSet.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
+          libRule.getJavaSrcs());
     }
   }
 
@@ -1394,10 +1394,11 @@ public class ParserTest extends EasyMockSupport {
           /* enableProfiling */ false);
       ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
-      BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
+      JavaLibrary libRule = (JavaLibrary) graph.findBuildRuleByTarget(libTarget);
+
       assertEquals(
-          ImmutableList.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
-          libRule.getInputs());
+          ImmutableSortedSet.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
+          libRule.getJavaSrcs());
     }
 
     bazSourceFile.delete();
@@ -1419,10 +1420,10 @@ public class ParserTest extends EasyMockSupport {
           /* enableProfiling */ false);
       ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
-      BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
+      JavaLibrary libRule = (JavaLibrary) graph.findBuildRuleByTarget(libTarget);
       assertEquals(
-          ImmutableList.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
-          libRule.getInputs());
+          ImmutableSet.of(Paths.get("foo/bar/Bar.java"), Paths.get("foo/bar/Baz.java")),
+          libRule.getJavaSrcs());
     }
 
     // Now tell the parser to forget about build files with inputs under symlinks.
@@ -1438,10 +1439,10 @@ public class ParserTest extends EasyMockSupport {
           /* enableProfiling */ false);
       ActionGraph graph = buildActionGraph(eventBus, targetGraph);
 
-      BuildRule libRule = graph.findBuildRuleByTarget(libTarget);
+      JavaLibrary libRule = (JavaLibrary) graph.findBuildRuleByTarget(libTarget);
       assertEquals(
-          ImmutableList.of(Paths.get("foo/bar/Bar.java")),
-          libRule.getInputs());
+          ImmutableSet.of(Paths.get("foo/bar/Bar.java")),
+          libRule.getJavaSrcs());
     }
   }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -32,7 +33,9 @@ import javax.annotation.Nullable;
 
 public class Keystore extends AbstractBuildRule {
 
+  @AddToRuleKey
   private final Path pathToStore;
+  @AddToRuleKey
   private final Path pathToProperties;
 
   Keystore(BuildRuleParams params, SourcePathResolver resolver, Path store, Path properties) {
@@ -49,7 +52,7 @@ public class Keystore extends AbstractBuildRule {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of(pathToStore, pathToProperties);
+    return ImmutableList.of();
   }
 
   @Override

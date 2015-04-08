@@ -20,10 +20,8 @@ import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.Optionals;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Collection;
@@ -207,31 +205,20 @@ class DexSplitMode implements RuleKeyAppendable {
     return secondaryDexTailClassesFile;
   }
 
-
-  /**
-   * @return All {@link SourcePath}s referenced by this object, for use in
-   *     {@link com.facebook.buck.rules.AbstractBuildRule#getInputsToCompareToOutput()}.
-   */
-  public Collection<SourcePath> getSourcePaths() {
-    ImmutableList.Builder<SourcePath> paths = ImmutableList.builder();
-    Optionals.addIfPresent(primaryDexClassesFile, paths);
-    Optionals.addIfPresent(primaryDexScenarioFile, paths);
-    Optionals.addIfPresent(secondaryDexHeadClassesFile, paths);
-    Optionals.addIfPresent(secondaryDexTailClassesFile, paths);
-    return paths.build();
-  }
-
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-    builder.setReflectively(key + ".shouldSplitDex", shouldSplitDex);
     builder.setReflectively(key + ".dexStore", dexStore.name());
     builder.setReflectively(key + ".dexSplitStrategy", dexSplitStrategy.name());
-    builder.setReflectively(key + ".useLinearAllocSplitDex", useLinearAllocSplitDex);
-    builder.setReflectively(key + ".primaryDexPatterns", primaryDexPatterns);
-    builder.setReflectively(key + ".linearAllocHardLimit", linearAllocHardLimit);
-    builder.setReflectively(
-        key + ".isPrimaryDexScenarioOverflowAllowed",
+    builder.setReflectively(key + ".isPrimaryDexScenarioOverflowAllowed",
         isPrimaryDexScenarioOverflowAllowed);
+    builder.setReflectively(key + ".linearAllocHardLimit", linearAllocHardLimit);
+    builder.setReflectively(key + ".primaryDexPatterns", primaryDexPatterns);
+    builder.setReflectively(key + ".primaryDexClassesFile", primaryDexClassesFile);
+    builder.setReflectively(key + ".primaryDexScenarioFile", primaryDexScenarioFile);
+    builder.setReflectively(key + ".secondaryDexHeadClassesFile", secondaryDexHeadClassesFile);
+    builder.setReflectively(key + ".secondaryDexTailClassesFile", secondaryDexTailClassesFile);
+    builder.setReflectively(key + ".shouldSplitDex", shouldSplitDex);
+    builder.setReflectively(key + ".useLinearAllocSplitDex", useLinearAllocSplitDex);
     return builder;
   }
 }

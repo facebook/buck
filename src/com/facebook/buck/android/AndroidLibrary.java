@@ -21,6 +21,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
@@ -44,6 +45,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
    * Manifest to associate with this rule. Ultimately, this will be used with the upcoming manifest
    * generation logic.
    */
+  @AddToRuleKey
   private final Optional<SourcePath> manifestFile;
 
   private final boolean isPrebuiltAar;
@@ -90,14 +92,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    if (manifestFile.isPresent()) {
-      return ImmutableList.<Path>builder()
-          .addAll(super.getInputsToCompareToOutput())
-          .addAll(getResolver().filterInputsToCompareToOutput(manifestFile.get()))
-          .build();
-    } else {
-      return super.getInputsToCompareToOutput();
-    }
+    return ImmutableSet.of();
   }
 
   /** @return whether this library was generated from an {@link AndroidPrebuiltAarDescription}. */

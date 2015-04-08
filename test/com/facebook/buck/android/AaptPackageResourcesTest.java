@@ -24,7 +24,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBinary.PackageType;
-import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -77,7 +76,6 @@ public class AaptPackageResourcesTest {
         ImmutableList.<HasAndroidResourceDeps>of(),
         ImmutableSet.<Path>of(),
         PackageType.DEBUG,
-        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false,
@@ -142,7 +140,6 @@ public class AaptPackageResourcesTest {
         ImmutableList.<HasAndroidResourceDeps>of(),
         ImmutableSet.<Path>of(),
         PackageType.DEBUG,
-        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false,
@@ -220,7 +217,6 @@ public class AaptPackageResourcesTest {
         ImmutableList.<HasAndroidResourceDeps>of(),
         ImmutableSet.<Path>of(),
         PackageType.DEBUG,
-        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false,

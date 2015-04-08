@@ -36,9 +36,9 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,47 +53,6 @@ import java.nio.file.Paths;
 
 
 public class AndroidResourceTest {
-
-  @Test
-  public void testGetInputsToCompareToOutput() {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    // Create an android_resource rule with all sorts of input files that it depends on. If any of
-    // these files is modified, then this rule should not be cached.
-    BuildTarget buildTarget = BuildTarget.builder("//java/src/com/facebook/base", "res").build();
-    AndroidResource androidResource = new AndroidResource(
-        new FakeBuildRuleParamsBuilder(buildTarget).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        Paths.get("java/src/com/facebook/base/res"),
-        ImmutableSortedSet.of(
-            Paths.get("java/src/com/facebook/base/res/drawable/E.xml"),
-            Paths.get("java/src/com/facebook/base/res/drawable/A.xml"),
-            Paths.get("java/src/com/facebook/base/res/drawable/C.xml")),
-        "com.facebook",
-        Paths.get("java/src/com/facebook/base/assets"),
-        ImmutableSortedSet.of(
-            Paths.get("java/src/com/facebook/base/assets/drawable/F.xml"),
-            Paths.get("java/src/com/facebook/base/assets/drawable/B.xml"),
-            Paths.get("java/src/com/facebook/base/assets/drawable/D.xml")),
-        new PathSourcePath(
-            projectFilesystem,
-            Paths.get("java/src/com/facebook/base/AndroidManifest.xml")),
-        /* hasWhitelisted */ false);
-
-    // Test getInputsToCompareToOutput().
-    MoreAsserts.assertIterablesEquals(
-        "getInputsToCompareToOutput() should return an alphabetically sorted list of all input " +
-        "files that contribute to this android_resource() rule.",
-        ImmutableList.of(
-            Paths.get("java/src/com/facebook/base/AndroidManifest.xml"),
-            Paths.get("java/src/com/facebook/base/assets/drawable/B.xml"),
-            Paths.get("java/src/com/facebook/base/assets/drawable/D.xml"),
-            Paths.get("java/src/com/facebook/base/assets/drawable/F.xml"),
-            Paths.get("java/src/com/facebook/base/res/drawable/A.xml"),
-            Paths.get("java/src/com/facebook/base/res/drawable/C.xml"),
-            Paths.get("java/src/com/facebook/base/res/drawable/E.xml")),
-        androidResource.getInputsToCompareToOutput());
-  }
 
   @Test
   public void testRuleKeyForDifferentInputFilenames() throws IOException {
@@ -145,8 +104,18 @@ public class AndroidResourceTest {
                 Paths.get("java/src/com/facebook/base/AndroidManifest.xml")))
         .build();
 
-    RuleKey ruleKey1 = androidResource1.getRuleKeyWithoutDeps();
-    RuleKey ruleKey2 = androidResource2.getRuleKeyWithoutDeps();
+    DefaultRuleKeyBuilderFactory factory =
+        new DefaultRuleKeyBuilderFactory(FakeFileHashCache.createFromStrings(ImmutableMap.of(
+                "java/src/com/facebook/base/AndroidManifest.xml", "bbbbbbbbbb",
+                "java/src/com/facebook/base/assets/drawable/A.xml", "cccccccccccc",
+                "java/src/com/facebook/base/assets/drawable/B.xml", "aaaaaaaaaaaa",
+                "java/src/com/facebook/base/res/drawable/A.xml", "dddddddddd",
+                "java/src/com/facebook/base/res/drawable/C.xml", "eeeeeeeeee"
+                )));
+    RuleKey ruleKey1 =
+        factory.newInstance(androidResource1, pathResolver).build().getRuleKeyWithoutDeps();
+    RuleKey ruleKey2 =
+        factory.newInstance(androidResource2, pathResolver).build().getRuleKeyWithoutDeps();
 
     assertNotEquals(
         "The two android_resource rules should have different rule keys.",

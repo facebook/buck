@@ -23,6 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -63,6 +64,7 @@ import javax.annotation.Nullable;
 public class CopyNativeLibraries extends AbstractBuildRule {
 
   private final ImmutableSet<Path> nativeLibDirectories;
+  @AddToRuleKey
   private final ImmutableSet<TargetCpuType> cpuFilters;
 
   /**
@@ -109,8 +111,6 @@ public class CopyNativeLibraries extends AbstractBuildRule {
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    builder.setReflectively("cpuFilters", cpuFilters);
-
     // Hash in the pre-filtered native libraries we're pulling in.
     ImmutableSortedMap<Pair<TargetCpuType, String>, SourcePath> sortedLibs =
         ImmutableSortedMap.<Pair<TargetCpuType, String>, SourcePath>orderedBy(

@@ -46,9 +46,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-/**
- * Unit test for {@link NdkLibrary}.
- */
 public class NdkLibraryTest {
 
   private ExecutionContext executionContext;
@@ -105,13 +102,6 @@ public class NdkLibraryTest {
     assertTrue(ndkLibrary.isAsset());
     assertEquals(Paths.get(BuckConstant.GEN_DIR, basePath, "__libbase"),
         ndkLibrary.getLibraryPath());
-
-    MoreAsserts.assertListEquals(
-        ImmutableList.of(
-            Paths.get(basePath + "/Android.mk"),
-            Paths.get(basePath + "/Application.mk"),
-            Paths.get(basePath + "/main.cpp")),
-        ImmutableList.copyOf(ndkLibrary.getInputsToCompareToOutput()));
 
     List<Step> steps = ndkLibrary.getBuildSteps(context, new FakeBuildableContext());
 

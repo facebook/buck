@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -50,7 +51,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -107,12 +107,20 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
+  @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> resources;
+  @AddToRuleKey(stringify = true)
+  private final Optional<Path> resourcesRoot;
   private final Optional<Path> outputJar;
+  @AddToRuleKey
   private final Optional<Path> proguardConfig;
+  @AddToRuleKey
   private final ImmutableList<String> postprocessClassesCommands;
+  @AddToRuleKey
   private final ImmutableSortedSet<BuildRule> exportedDeps;
+  @AddToRuleKey
   private final ImmutableSortedSet<BuildRule> providedDeps;
   // Some classes need to override this when enhancing deps (see AndroidLibrary).
   private final ImmutableSet<Path> additionalClasspathEntries;
@@ -123,10 +131,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       declaredClasspathEntriesSupplier;
   private final BuildOutputInitializer<Data> buildOutputInitializer;
-  private final Optional<Path> resourcesRoot;
+
 
   // TODO(jacko): This really should be final, but we need to refactor how we get the
   // AndroidPlatformTarget first before it can be.
+  @AddToRuleKey
   private JavacOptions javacOptions;
 
   /**
@@ -398,15 +407,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    builder
-        .setReflectively("postprocessClassesCommands", postprocessClassesCommands)
-        .setReflectively("resources", resources)
-        .setReflectively("resources_root", resourcesRoot.toString())
-        // provided_deps are already included in the rule key, but we need to explicitly call them
-        // out as "provided" because changing a dep from provided to transtitive should result in a
-        // re-build (otherwise, we'd get a rule key match).
-        .setReflectively("provided_deps", providedDeps);
-    return javacOptions.appendToRuleKey(builder, "javacOptions");
+    return builder;
   }
 
   @Override
@@ -446,11 +447,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    ImmutableList.Builder<Path> builder = ImmutableList.builder();
-    builder.addAll(getResolver().filterInputsToCompareToOutput(this.srcs));
-    builder.addAll(getResolver().filterInputsToCompareToOutput(this.resources));
-    Optionals.addIfPresent(this.proguardConfig, builder);
-    return builder.build();
+    return ImmutableSet.of();
   }
 
   @Override

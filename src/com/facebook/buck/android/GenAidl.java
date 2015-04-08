@@ -24,6 +24,7 @@ import com.facebook.buck.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -63,7 +64,11 @@ public class GenAidl extends AbstractBuildRule {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID);
 
+  // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
+  // should incorporate which version of aidl is used.
+  @AddToRuleKey
   private final Path aidlFilePath;
+  @AddToRuleKey
   private final String importPath;
   private final Path output;
   private final Path genPath;
@@ -94,15 +99,12 @@ public class GenAidl extends AbstractBuildRule {
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
-    // should incorporate which version of aidl is used.
-    return builder
-        .setReflectively("importPath", importPath);
+    return builder;
   }
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of(aidlFilePath);
+    return ImmutableList.of();
   }
 
   @Override

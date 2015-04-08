@@ -49,7 +49,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -174,37 +173,6 @@ public class DefaultJavaLibraryTest {
     assertEquals("Should compile Main.java rather than generated R.java.",
         ImmutableSet.of(src),
         javac.getSrcs());
-  }
-
-  @Test
-  public void testGetInputsToCompareToOutputWhenAResourceAsSourcePathExists() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-
-    BuildTarget genruleBuildTarget = BuildTargetFactory.newInstance("//generated:stuff");
-    BuildRule genrule = GenruleBuilder
-        .newGenruleBuilder(genruleBuildTarget)
-        .setBash("echo 'aha' > $OUT")
-        .setOut("stuff.txt")
-        .build(ruleResolver);
-
-    ProjectFilesystem filesystem = new AllExistingProjectFilesystem() {
-      @Override
-      public boolean isDirectory(Path path, LinkOption... linkOptionsk) {
-        return false;
-      }
-    };
-
-    DefaultJavaLibrary javaRule = (DefaultJavaLibrary) JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//library:code"))
-        .addResource(new BuildTargetSourcePath(filesystem, genrule.getBuildTarget()))
-        .addResource(new TestSourcePath("library/data.txt"))
-        .build(ruleResolver, filesystem);
-
-    assertEquals(
-        "Generated files should not be included in getInputsToCompareToOutput() because they " +
-            "should not be part of the RuleKey computation.",
-        ImmutableList.of(Paths.get("library/data.txt")),
-        javaRule.getInputsToCompareToOutput());
   }
 
   @Test

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -37,6 +38,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -130,9 +132,13 @@ import javax.annotation.Nullable;
  */
 public class AndroidBuildConfig extends AbstractBuildRule {
 
+  @AddToRuleKey
   private final String javaPackage;
+  @AddToRuleKey(stringify = true)
   private final BuildConfigFields defaultValues;
+  @AddToRuleKey
   private final Optional<SourcePath> valuesFile;
+  @AddToRuleKey
   private final boolean useConstantExpressions;
   private final Path pathToOutputFile;
 
@@ -154,16 +160,12 @@ public class AndroidBuildConfig extends AbstractBuildRule {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(valuesFile.asSet());
+    return ImmutableSet.of();
   }
 
   @Override
   public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .setReflectively("javaPackage", javaPackage)
-        .setReflectively("valuesFile", valuesFile.isPresent() ? valuesFile.get().toString() : null)
-        .setReflectively("useConstantExpressions", useConstantExpressions)
-        .setReflectively("defaultValues", defaultValues.toString());
+    return builder;
   }
 
   @Override

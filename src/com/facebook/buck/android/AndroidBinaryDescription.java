@@ -190,7 +190,6 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         new SourcePathResolver(resolver),
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),
-        args.manifest,
         (Keystore) keystore,
         packageType,
         dexSplitMode,
@@ -202,8 +201,6 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         args.cpuFilters.get(),
         resourceFilter,
         exopackageModes,
-        resolver.getAllRules(
-            args.preprocessJavaClassesDeps.or(ImmutableSortedSet.<BuildTarget>of())),
         MACRO_HANDLER.getExpander(
             params.getBuildTarget(),
             resolver,

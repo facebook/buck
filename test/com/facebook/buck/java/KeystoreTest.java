@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -52,11 +51,6 @@ public class KeystoreTest {
     Keystore keystore = createKeystoreRuleForTest();
     assertEquals(KeystoreDescription.TYPE, keystore.getType());
 
-    MoreAsserts.assertIterablesEquals(
-        ImmutableList.of(
-            Paths.get("keystores/debug.keystore"),
-            Paths.get("keystores/debug.keystore.properties")),
-        keystore.getInputsToCompareToOutput());
     assertEquals(Paths.get("keystores/debug.keystore"), keystore.getPathToStore());
     assertEquals(Paths.get("keystores/debug.keystore.properties"),
         keystore.getPathToPropertiesFile());

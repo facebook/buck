@@ -184,40 +184,6 @@ public class AndroidBinaryTest {
   }
 
   @Test
-  public void testGetInputsToCompareToOutputIncludesManifest() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    AndroidBinaryBuilder androidBinaryRuleBuilder = AndroidBinaryBuilder.createBuilder(
-        BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
-        .setManifest(new TestSourcePath("java/src/com/facebook/AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget());
-
-    MoreAsserts.assertIterablesEquals(
-        "getInputsToCompareToOutput() should include manifest.",
-        ImmutableList.of(Paths.get("java/src/com/facebook/AndroidManifest.xml")),
-        androidBinaryRuleBuilder.build(ruleResolver).getInputs());
-  }
-
-  @Test
-  public void testGetInputsToCompareToOutputIncludesProguardConfig() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    AndroidBinaryBuilder androidBinaryRuleBuilder = AndroidBinaryBuilder.createBuilder(
-        BuildTargetFactory.newInstance("//java/src/com/facebook:app"))
-        .setManifest(new TestSourcePath("java/src/com/facebook/AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
-        .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget());
-
-    SourcePath proguardConfig = new TestSourcePath("java/src/com/facebook/proguard.cfg");
-    androidBinaryRuleBuilder.setProguardConfig(Optional.of(proguardConfig));
-    MoreAsserts.assertIterablesEquals(
-        "getInputsToCompareToOutput() should include Proguard config, if present.",
-        ImmutableList.of(
-            Paths.get("java/src/com/facebook/AndroidManifest.xml"),
-            Paths.get("java/src/com/facebook/proguard.cfg")),
-        androidBinaryRuleBuilder.build(ruleResolver).getInputs());
-  }
-
-  @Test
   public void testGetUnsignedApkPath() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     Keystore keystore = addKeystoreRule(ruleResolver);

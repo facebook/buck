@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -33,10 +34,8 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -65,9 +64,11 @@ import java.util.Set;
  */
 public class AndroidManifest extends AbstractBuildRule {
 
+  @AddToRuleKey
   private final SourcePath skeletonFile;
 
-  /** These must be sorted so {@link #getInputsToCompareToOutput} returns a consistent value. */
+  /** These must be sorted so the rule key is stable. */
+  @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> manifestFiles;
 
   private final Path pathToOutputFile;
@@ -86,10 +87,7 @@ public class AndroidManifest extends AbstractBuildRule {
 
   @Override
   public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(
-        Iterables.concat(
-            Collections.singleton(skeletonFile),
-            manifestFiles));
+    return ImmutableSet.of();
   }
 
   @Override
