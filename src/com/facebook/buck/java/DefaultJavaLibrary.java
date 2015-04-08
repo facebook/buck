@@ -38,7 +38,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
-import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
@@ -316,7 +315,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     // Hash the ABI keys of all dependencies together with ABI key for the current rule.
     Hasher hasher = createHasherWithAbiKeyForDeps(depsForAbiKey);
     hasher.putUnencodedChars(abiKey.getHash());
-    return ImmutableSha1HashCode.of(hasher.hash().toString());
+    return Sha1HashCode.of(hasher.hash().toString());
   }
 
   private Path getPathToAbiOutputDir() {
@@ -348,7 +347,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    */
   @Override
   public Sha1HashCode getAbiKeyForDeps() {
-    return ImmutableSha1HashCode.of(
+    return Sha1HashCode.of(
         createHasherWithAbiKeyForDeps(getDepsForAbiKey()).hash().toString());
   }
 

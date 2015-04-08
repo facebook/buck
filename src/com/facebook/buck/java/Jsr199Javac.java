@@ -78,12 +78,7 @@ import javax.tools.ToolProvider;
 public class Jsr199Javac implements Javac {
 
   private static final Logger LOG = Logger.get(Jsr199Javac.class);
-  private static final JavacVersion VERSION = new JavacVersion() {
-    @Override
-    public String getVersionString() {
-      return "in memory";
-    }
-  };
+  private static final JavacVersion VERSION = JavacVersion.of("in memory");
 
   @Override
   public JavacVersion getVersion() {

@@ -40,7 +40,6 @@ import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
@@ -275,14 +274,14 @@ public class Project {
       final Optional<Path> rJava;
       if (srcRule instanceof AndroidLibrary) {
         AndroidLibrary androidLibrary = (AndroidLibrary) srcRule;
-        ImmutableBuildTarget dummyRDotJavaTarget =
+        BuildTarget dummyRDotJavaTarget =
             AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(
                 androidLibrary.getBuildTarget());
         Path src = DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJavaTarget);
         rJava = Optional.of(src);
       } else if (srcRule instanceof AndroidResource) {
         AndroidResource androidResource = (AndroidResource) srcRule;
-        ImmutableBuildTarget dummyRDotJavaTarget =
+        BuildTarget dummyRDotJavaTarget =
             AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(
                 androidResource.getBuildTarget());
         Path src = DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJavaTarget);

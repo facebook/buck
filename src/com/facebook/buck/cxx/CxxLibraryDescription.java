@@ -35,7 +35,6 @@ import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -49,14 +48,10 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
-@Value.Enclosing
-@BuckStyleImmutable
 public class CxxLibraryDescription implements
     Description<CxxLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<CxxLibraryDescription.Arg>,
@@ -600,15 +595,6 @@ public class CxxLibraryDescription implements
         compileStrategy);
   }
 
-  @Value.Immutable
-  public static interface TypeAndPlatform {
-    @Value.Parameter
-    Optional<Map.Entry<Flavor, Type>> getType();
-
-    @Value.Parameter
-    Optional<Map.Entry<Flavor, CxxPlatform>> getPlatform();
-  }
-
   public static TypeAndPlatform getTypeAndPlatform(
       BuildTarget buildTarget,
       FlavorDomain<CxxPlatform> platforms) {
@@ -624,7 +610,7 @@ public class CxxLibraryDescription implements
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", buildTarget, e.getMessage());
     }
-    return ImmutableCxxLibraryDescription.TypeAndPlatform.of(type, platform);
+    return TypeAndPlatform.of(type, platform);
   }
 
   @Override

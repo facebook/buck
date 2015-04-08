@@ -372,7 +372,7 @@ public class ParserTest extends EasyMockSupport {
         false /* enableProfiling */);
 
     ImmutableSet<BuildTarget> expectedTargets = ImmutableSet.of(
-        (BuildTarget) BuildTarget.builder("//java/com/facebook", "foo").build(),
+        BuildTarget.builder("//java/com/facebook", "foo").build(),
         BuildTarget.builder("//java/com/facebook", "bar").build(),
         BuildTarget.builder("//java/com/facebook", "baz").build());
     assertEquals("Should have returned all rules.", expectedTargets, targets);

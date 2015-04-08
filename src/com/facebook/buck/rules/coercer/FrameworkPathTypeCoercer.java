@@ -115,7 +115,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
                       })));
         }
       } else {
-        return ImmutableFrameworkPath.ofSourcePath(
+        return FrameworkPath.ofSourcePath(
             sourcePathTypeCoercer.coerce(
                 buildTargetParser,
                 filesystem,

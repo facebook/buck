@@ -1,6 +1,6 @@
 PLATFORM_SRCS = [
+  'AbstractCxxPlatform.java',
   'ByteBufferReplacer.java',
-  'CxxPlatform.java',
   'DebugPathSanitizer.java',
   'DebugSection.java',
   'DebugSectionFinder.java',

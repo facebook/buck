@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
@@ -58,7 +57,7 @@ public class CxxPythonExtension extends NoopBuildRule implements PythonPackagabl
     SourcePath output = new BuildTargetSourcePath(
         extension.getProjectFilesystem(),
         extension.getBuildTarget());
-    return ImmutablePythonPackageComponents.of(
+    return PythonPackageComponents.of(
         ImmutableMap.of(module, output),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of());

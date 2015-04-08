@@ -101,7 +101,7 @@ public class AppleSdkDiscovery {
     //
     // To do this, we store a map of (platform: [sdk1, sdk2, ...])
     // pairs where the SDKs for each platform are ordered by version.
-    TreeMultimap<ApplePlatform, ImmutableAppleSdk> orderedSdksForPlatform =
+    TreeMultimap<ApplePlatform, AppleSdk> orderedSdksForPlatform =
         TreeMultimap.create(
             Ordering.natural(),
             APPLE_SDK_VERSION_ORDERING);
@@ -121,10 +121,10 @@ public class AppleSdkDiscovery {
               continue;
             }
 
-            ImmutableAppleSdk.Builder sdkBuilder = ImmutableAppleSdk.builder()
+            AppleSdk.Builder sdkBuilder = AppleSdk.builder()
                 .setXcodeVersion(xcodeVersion);
             if (buildSdkFromPath(sdkDir, sdkBuilder)) {
-              ImmutableAppleSdk sdk = sdkBuilder.build();
+              AppleSdk sdk = sdkBuilder.build();
               LOG.debug("Found SDK %s", sdk);
 
               ImmutableSet.Builder<Path> toolchainPathsBuilder = ImmutableSet.builder();
@@ -137,7 +137,7 @@ public class AppleSdkDiscovery {
                 }
               }
               ImmutableSet<Path> toolchainPaths = toolchainPathsBuilder.build();
-              ImmutableAppleSdkPaths.Builder xcodePathsBuilder = ImmutableAppleSdkPaths.builder();
+              AppleSdkPaths.Builder xcodePathsBuilder = AppleSdkPaths.builder();
               if (toolchainPaths.isEmpty()) {
                 LOG.debug(
                     "No toolchains found for SDK %s, falling back to default %s",
@@ -147,7 +147,7 @@ public class AppleSdkDiscovery {
               } else {
                 xcodePathsBuilder.addAllToolchainPaths(toolchainPaths);
               }
-              ImmutableAppleSdkPaths xcodePaths = xcodePathsBuilder
+              AppleSdkPaths xcodePaths = xcodePathsBuilder
                   .setDeveloperPath(xcodeDir)
                   .setPlatformPath(platformDir)
                   .setSdkPath(sdkDir)
@@ -172,7 +172,7 @@ public class AppleSdkDiscovery {
     ImmutableMap<AppleSdk, AppleSdkPaths> discoveredSdkPaths = appleSdkPathsBuilder.build();
 
     for (ApplePlatform platform : orderedSdksForPlatform.keySet()) {
-      ImmutableAppleSdk mostRecentSdkForPlatform = orderedSdksForPlatform.get(platform).last();
+      AppleSdk mostRecentSdkForPlatform = orderedSdksForPlatform.get(platform).last();
       appleSdkPathsBuilder.put(
           mostRecentSdkForPlatform.withName(platform.toString()),
           discoveredSdkPaths.get(mostRecentSdkForPlatform));
@@ -184,7 +184,7 @@ public class AppleSdkDiscovery {
   }
 
   private static void addArchitecturesForPlatform(
-      ImmutableAppleSdk.Builder sdkBuilder,
+      AppleSdk.Builder sdkBuilder,
       ApplePlatform applePlatform) {
     // TODO(user): These need to be read from the SDK, not hard-coded.
     switch (applePlatform) {
@@ -201,7 +201,7 @@ public class AppleSdkDiscovery {
 
   private static boolean buildSdkFromPath(
         Path sdkDir,
-        ImmutableAppleSdk.Builder sdkBuilder) throws IOException {
+        AppleSdk.Builder sdkBuilder) throws IOException {
     try (InputStream sdkSettingsPlist = Files.newInputStream(sdkDir.resolve("SDKSettings.plist"));
          BufferedInputStream bufferedSdkSettingsPlist = new BufferedInputStream(sdkSettingsPlist)) {
       NSDictionary sdkSettings;

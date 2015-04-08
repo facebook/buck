@@ -255,7 +255,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     resolver.addToIndex(testModulesBuildRule);
 
     // Build up the list of everything going into the python test.
-    PythonPackageComponents testComponents = ImmutablePythonPackageComponents.of(
+    PythonPackageComponents testComponents = PythonPackageComponents.of(
         ImmutableMap
             .<Path, SourcePath>builder()
             .put(

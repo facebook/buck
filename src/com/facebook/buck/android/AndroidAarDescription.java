@@ -125,7 +125,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             ImmutableSet.<BuildTarget>of());
     collector.addPackageables(AndroidPackageableCollector.getPackageableRules(
             originalBuildRuleParams.getDeps()));
-    ImmutableAndroidPackageableCollection packageableCollection = collector.build();
+    AndroidPackageableCollection packageableCollection = collector.build();
 
     ImmutableSortedSet<BuildRule> androidResourceDeclaredDeps =
         AndroidResourceHelper.androidResOnly(originalBuildRuleParams.getDeclaredDeps());

@@ -24,7 +24,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -115,7 +114,7 @@ public class CxxLibraryTest {
 
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
-    NativeLinkableInput expectedStaticNativeLinkableInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput expectedStaticNativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(projectFilesystem, archive.getBuildTarget())),
         ImmutableList.of(archiveOutput.toString()));
@@ -127,7 +126,7 @@ public class CxxLibraryTest {
 
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.
-    NativeLinkableInput expectedSharedNativeLinkableInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput expectedSharedNativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(projectFilesystem, sharedLibrary.getBuildTarget())),
         ImmutableList.of(sharedLibraryOutput.toString()));
@@ -138,7 +137,7 @@ public class CxxLibraryTest {
             Linker.LinkableDepType.SHARED));
 
     // Verify that we return the expected output for python packages.
-    PythonPackageComponents expectedPythonPackageComponents = ImmutablePythonPackageComponents.of(
+    PythonPackageComponents expectedPythonPackageComponents = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(

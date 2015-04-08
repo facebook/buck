@@ -12,8 +12,8 @@ java_library(
 )
 
 PACKAGEABLE_SOURCES = [
+  'AbstractAndroidPackageableCollection.java',
   'AndroidPackageable.java',
-  'AndroidPackageableCollection.java',
   'AndroidPackageableCollector.java',
 ]
 java_immutables_library(
@@ -33,6 +33,7 @@ java_immutables_library(
 
 RULES_SRCS = [
   'AaptPackageResources.java',
+  'AbstractAndroidGraphEnhancementResult.java',
   'AndroidAar.java',
   'AndroidAarDescription.java',
   'AndroidBinaryGraphEnhancer.java',
@@ -41,7 +42,6 @@ RULES_SRCS = [
   'AndroidBuildConfig.java',
   'AndroidBuildConfigDescription.java',
   'AndroidBuildConfigJavaLibrary.java',
-  'AndroidGraphEnhancementResult.java',
   'AndroidInstrumentationApk.java',
   'AndroidInstrumentationApkDescription.java',
   'AndroidLibraryDescription.java',
@@ -222,4 +222,3 @@ java_immutables_library(
   ],
   visibility = ['PUBLIC'],
 )
-

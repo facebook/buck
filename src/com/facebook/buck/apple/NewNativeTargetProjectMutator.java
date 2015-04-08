@@ -31,8 +31,8 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -74,7 +74,7 @@ public class NewNativeTargetProjectMutator {
   private final PathRelativizer pathRelativizer;
   private final Function<SourcePath, Path> sourcePathResolver;
 
-  private PBXTarget.ProductType productType = PBXTarget.ProductType.BUNDLE;
+  private ProductType productType = ProductType.BUNDLE;
   private Path productOutputPath = Paths.get("");
   private String productName = "";
   private String targetName = "";
@@ -108,7 +108,7 @@ public class NewNativeTargetProjectMutator {
    * @param productOutputPath build output relative product path.
    */
   public NewNativeTargetProjectMutator setProduct(
-      PBXNativeTarget.ProductType productType,
+      ProductType productType,
       String productName,
       Path productOutputPath) {
     this.productName = productName;

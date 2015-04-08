@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.util.ImmutableProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
@@ -80,7 +79,7 @@ public class AppleConfig {
       @Override
       public Path get() {
         ProcessExecutorParams processExecutorParams =
-            ImmutableProcessExecutorParams.builder()
+            ProcessExecutorParams.builder()
                 .setCommand(ImmutableList.of("xcode-select", "--print-path"))
                 .build();
         // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.

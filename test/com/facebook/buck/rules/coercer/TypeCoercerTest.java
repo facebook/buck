@@ -28,7 +28,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.rules.ImmutableLabel;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
@@ -426,10 +425,10 @@ public class TypeCoercerTest {
 
     Object result = coercer.coerce(targetParser, filesystem, Paths.get(""), input);
     ImmutableSortedSet<Label> expected = ImmutableSortedSet.<Label>of(
-        ImmutableLabel.of("cake"),
-        ImmutableLabel.of("cheese"),
-        ImmutableLabel.of("good"),
-        ImmutableLabel.of("tastes"));
+        Label.of("cake"),
+        Label.of("cheese"),
+        Label.of("good"),
+        Label.of("tastes"));
 
     assertEquals(expected, result);
   }

@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -505,7 +506,7 @@ public class WorkspaceAndProjectGeneratorTest {
         "//foo:combinableTest1");
     assertEquals(
         "Test in the bundle should be built as a static library.",
-        PBXTarget.ProductType.STATIC_LIBRARY,
+        ProductType.STATIC_LIBRARY,
         combinableTestTarget1.getProductType());
 
     PBXTarget combinableTestTarget2 = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
@@ -513,7 +514,7 @@ public class WorkspaceAndProjectGeneratorTest {
         "//bar:combinableTest2");
     assertEquals(
         "Other test in the bundle should be built as a static library.",
-        PBXTarget.ProductType.STATIC_LIBRARY,
+        ProductType.STATIC_LIBRARY,
         combinableTestTarget2.getProductType());
 
     // Test not bundled with any others should retain behavior.
@@ -522,7 +523,7 @@ public class WorkspaceAndProjectGeneratorTest {
         "//foo:anotherTest");
     assertEquals(
         "Test that is not combined with other tests should also generate a test bundle.",
-        PBXTarget.ProductType.STATIC_LIBRARY,
+        ProductType.STATIC_LIBRARY,
         notCombinedTest.getProductType());
 
     // Test not bundled with any others should retain behavior.
@@ -531,7 +532,7 @@ public class WorkspaceAndProjectGeneratorTest {
         "//foo:testMarkedUncombinable");
     assertEquals(
         "Test marked uncombinable should not be combined",
-        PBXTarget.ProductType.UNIT_TEST,
+        ProductType.UNIT_TEST,
         uncombinableTest.getProductType());
 
     // Combined test project should be generated with a combined test bundle.
@@ -540,7 +541,7 @@ public class WorkspaceAndProjectGeneratorTest {
         "_BuckCombinedTest-xctest-0");
     assertEquals(
         "Combined test project target should be test bundle.",
-        PBXTarget.ProductType.UNIT_TEST,
+        ProductType.UNIT_TEST,
         combinedTestBundle.getProductType());
 
     // Scheme should contain generated test targets.

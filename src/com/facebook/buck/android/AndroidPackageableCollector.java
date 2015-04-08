@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.ImmutableAndroidPackageableCollection.ResourceDetails;
+import com.facebook.buck.android.AndroidPackageableCollection.ResourceDetails;
 import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.java.JavaNativeLinkable;
 import com.facebook.buck.model.BuildTarget;
@@ -40,8 +40,8 @@ import java.util.Set;
 
 public class AndroidPackageableCollector {
 
-  private final ImmutableAndroidPackageableCollection.Builder collectionBuilder =
-      ImmutableAndroidPackageableCollection.builder();
+  private final AndroidPackageableCollection.Builder collectionBuilder =
+      AndroidPackageableCollection.builder();
 
   private final ResourceDetails.Builder resourceDetailsBuilder = ResourceDetails.builder();
 
@@ -207,7 +207,7 @@ public class AndroidPackageableCollector {
     buildConfigs.put(javaPackage, constants);
   }
 
-  public ImmutableAndroidPackageableCollection build() {
+  public AndroidPackageableCollection build() {
     collectionBuilder.setBuildConfigs(ImmutableMap.copyOf(buildConfigs));
     final ImmutableSet<HasJavaClassHashes> javaClassProviders = javaClassHashesProviders.build();
     collectionBuilder.addAllJavaLibrariesToDex(

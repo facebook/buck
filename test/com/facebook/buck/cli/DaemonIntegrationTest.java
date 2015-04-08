@@ -45,7 +45,7 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.ImmutableProcessExecutorParams;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -95,7 +95,7 @@ public class DaemonIntegrationTest {
     // up the watch is successful.
     try {
       ProcessExecutor.Result result = new ProcessExecutor(new TestConsole()).launchAndExecute(
-          ImmutableProcessExecutorParams.builder()
+          ProcessExecutorParams.builder()
               .setCommand(ImmutableList.of("watchman", "watchzzz", tmp.getRootPath().toString()))
               .build());
       assumeTrue(result.getStdout().isPresent());

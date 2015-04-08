@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -50,7 +51,7 @@ public class PythonBinaryTest {
   @Rule
   public final TemporaryFolder tmpDir = new TemporaryFolder();
 
-  private RuleKey.Builder.RuleKeyPair getRuleKeyForModuleLayout(
+  private RuleKeyPair getRuleKeyForModuleLayout(
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       String main, Path mainSrc,
       String mod1, Path src1,
@@ -65,9 +66,9 @@ public class PythonBinaryTest {
         resolver,
         Paths.get("dummy_path_to_pex"),
         Paths.get("dummy_path_to_pex_runner"),
-        new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7")),
+        new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
         "main",
-        ImmutablePythonPackageComponents.of(
+        PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(main), new PathSourcePath(projectFilesystem, mainSrc),
                 Paths.get(mod1), new PathSourcePath(projectFilesystem, src1),
@@ -107,22 +108,22 @@ public class PythonBinaryTest {
 
     // Calculate the rule keys for the various ways we can layout the source and modules
     // across different python libraries.
-    RuleKey.Builder.RuleKeyPair pair1 = getRuleKeyForModuleLayout(
+    RuleKeyPair pair1 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
         "main.py", mainRelative,
         "module/one.py", source1Relative,
         "module/two.py", source2Relative);
-    RuleKey.Builder.RuleKeyPair pair2 = getRuleKeyForModuleLayout(
+    RuleKeyPair pair2 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
         "main.py", mainRelative,
         "module/two.py", source2Relative,
         "module/one.py", source1Relative);
-    RuleKey.Builder.RuleKeyPair pair3 = getRuleKeyForModuleLayout(
+    RuleKeyPair pair3 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
         "main.py", mainRelative,
         "module/one.py", source2Relative,
         "module/two.py", source1Relative);
-    RuleKey.Builder.RuleKeyPair pair4 = getRuleKeyForModuleLayout(
+    RuleKeyPair pair4 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
         "main.py", mainRelative,
         "module/two.py", source1Relative,

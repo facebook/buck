@@ -22,7 +22,7 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -350,9 +350,9 @@ public class RuleKey {
       return separate();
     }
 
+    @NewBuckStyleImmutable
     @Value.Immutable
-    @BuckStyleImmutable
-    public interface RuleKeyPair {
+    interface AbstractRuleKeyPair {
 
       @Value.Parameter
       public RuleKey getTotalRuleKey();
@@ -377,7 +377,7 @@ public class RuleKey {
         logger.verbose("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms));
       }
 
-      return ImmutableRuleKeyPair.of(totalRuleKey, ruleKeyWithoutDeps);
+      return RuleKeyPair.of(totalRuleKey, ruleKeyWithoutDeps);
     }
   }
 }

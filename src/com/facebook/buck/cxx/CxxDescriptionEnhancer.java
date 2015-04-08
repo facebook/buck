@@ -153,7 +153,7 @@ public class CxxDescriptionEnhancer {
           lexSources,
           yaccSources);
     } else {
-      lexYaccSources = ImmutableCxxHeaderSourceSpec.builder().build();
+      lexYaccSources = CxxHeaderSourceSpec.builder().build();
     }
 
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
@@ -462,7 +462,7 @@ public class CxxDescriptionEnhancer {
       // Record the output source and header as {@link BuildRuleSourcePath} objects.
       lexYaccCxxSourcesBuilder.put(
           name + ".cc",
-          ImmutableCxxSource.of(
+          CxxSource.of(
               CxxSource.Type.CXX,
               new BuildTargetSourcePath(
                   lex.getProjectFilesystem(),
@@ -508,7 +508,7 @@ public class CxxDescriptionEnhancer {
       // Record the output source and header as {@link BuildRuleSourcePath} objects.
       lexYaccCxxSourcesBuilder.put(
           name + ".cc",
-          ImmutableCxxSource.of(
+          CxxSource.of(
               CxxSource.Type.CXX,
               new BuildTargetSourcePath(
                   yacc.getProjectFilesystem(),
@@ -524,7 +524,7 @@ public class CxxDescriptionEnhancer {
               Yacc.getHeaderOutputPath(outputPrefix)));
     }
 
-    return ImmutableCxxHeaderSourceSpec.of(
+    return CxxHeaderSourceSpec.of(
         lexYaccHeadersBuilder.build(),
         lexYaccCxxSourcesBuilder.build());
   }
@@ -584,7 +584,7 @@ public class CxxDescriptionEnhancer {
             .addAllRules(Iterables.transform(headerSymlinkTrees, HasBuildTarget.TO_TARGET))
             .putAllPreprocessorFlags(preprocessorFlags)
             .setIncludes(
-                ImmutableCxxHeaders.builder()
+                CxxHeaders.builder()
                     .addAllPrefixHeaders(prefixHeaders)
                     .putAllNameToPathMap(allLinks.build())
                     .putAllFullNameToPathMap(allFullLinks.build())

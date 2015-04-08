@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNotNull;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ImmutableProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -59,7 +58,7 @@ public class AppleConfigTest {
     FakeBuckConfig buckConfig = new FakeBuckConfig();
     AppleConfig config = new AppleConfig(buckConfig);
     ProcessExecutorParams xcodeSelectParams =
-        ImmutableProcessExecutorParams.builder()
+        ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("xcode-select", "--print-path"))
             .build();
     FakeProcess fakeXcodeSelect = new FakeProcess(0, "/path/to/another/place", "");

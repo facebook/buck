@@ -103,7 +103,7 @@ public class CxxSourceRuleFactoryTest {
 
     String name = "foo/bar.cpp";
     SourcePath input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    CxxSource cxxSource = ImmutableCxxSource.of(
+    CxxSource cxxSource = CxxSource.of(
         CxxSource.Type.CXX,
         input,
         ImmutableList.<String>of());
@@ -148,7 +148,7 @@ public class CxxSourceRuleFactoryTest {
             ImmutableList.<String>of());
 
     String name = "source.cpp";
-    CxxSource cxxSource = ImmutableCxxSource.of(
+    CxxSource cxxSource = CxxSource.of(
         CxxSource.Type.CXX,
         new TestSourcePath(name),
         ImmutableList.<String>of());
@@ -221,7 +221,7 @@ public class CxxSourceRuleFactoryTest {
     String cSourceName = "test.c";
     List<String> perFileFlagsForTestC =
         ImmutableList.of("-per-file-flag-for-c-file", "-and-another-one");
-    CxxSource cSource = ImmutableCxxSource.of(
+    CxxSource cSource = CxxSource.of(
         CxxSource.Type.C,
         new TestSourcePath(cSourceName),
         perFileFlagsForTestC);
@@ -245,7 +245,7 @@ public class CxxSourceRuleFactoryTest {
     String cxxSourceName = "test.cpp";
     List<String> perFileFlagsForTestCpp =
         ImmutableList.of("-per-file-flag-for-cpp-file");
-    CxxSource cxxSource = ImmutableCxxSource.of(
+    CxxSource cxxSource = CxxSource.of(
         CxxSource.Type.CXX,
         new TestSourcePath(cxxSourceName),
         perFileFlagsForTestCpp);
@@ -269,7 +269,7 @@ public class CxxSourceRuleFactoryTest {
     String assemblerWithCppSourceName = "test.S";
     List<String> perFileFlagsForTestS =
         ImmutableList.of("-a-flag-for-s-file", "-another-one", "-one-more");
-    CxxSource assemblerWithCppSource = ImmutableCxxSource.of(
+    CxxSource assemblerWithCppSource = CxxSource.of(
         CxxSource.Type.ASSEMBLER_WITH_CPP,
         new TestSourcePath(assemblerWithCppSourceName),
         perFileFlagsForTestS);
@@ -307,7 +307,7 @@ public class CxxSourceRuleFactoryTest {
 
     String name = "foo/bar.cpp";
     SourcePath input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    CxxSource cxxSource = ImmutableCxxSource.of(
+    CxxSource cxxSource = CxxSource.of(
         CxxSource.Type.CXX,
         input,
         ImmutableList.<String>of());
@@ -327,7 +327,7 @@ public class CxxSourceRuleFactoryTest {
 
     name = "foo/bar.m";
     input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    cxxSource = ImmutableCxxSource.of(
+    cxxSource = CxxSource.of(
         CxxSource.Type.OBJC,
         input,
         ImmutableList.<String>of());
@@ -347,7 +347,7 @@ public class CxxSourceRuleFactoryTest {
 
     name = "foo/bar.mm";
     input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    cxxSource = ImmutableCxxSource.of(
+    cxxSource = CxxSource.of(
         CxxSource.Type.OBJCXX,
         input,
         ImmutableList.<String>of());
@@ -367,7 +367,7 @@ public class CxxSourceRuleFactoryTest {
 
     name = "foo/bar.c";
     input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    cxxSource = ImmutableCxxSource.of(
+    cxxSource = CxxSource.of(
         CxxSource.Type.C,
         input,
         ImmutableList.<String>of());
@@ -405,7 +405,7 @@ public class CxxSourceRuleFactoryTest {
             ImmutableList.<String>of());
 
     String nameCompile = "foo/bar.ii";
-    CxxSource cxxSourceCompile = ImmutableCxxSource.of(
+    CxxSource cxxSourceCompile = CxxSource.of(
         CxxSource.Type.CXX_CPP_OUTPUT,
         input,
         ImmutableList.<String>of());
@@ -417,7 +417,7 @@ public class CxxSourceRuleFactoryTest {
     assertEquals(ImmutableSortedSet.<BuildRule>of(dep), cxxCompile.getDeps());
 
     String namePreprocessAndCompile = "foo/bar.cpp";
-    CxxSource cxxSourcePreprocessAndCompile = ImmutableCxxSource.of(
+    CxxSource cxxSourcePreprocessAndCompile = CxxSource.of(
         CxxSource.Type.CXX,
         input,
         ImmutableList.<String>of());
@@ -446,7 +446,7 @@ public class CxxSourceRuleFactoryTest {
             ImmutableList.<String>of());
 
     String name = "foo/bar.ii";
-    CxxSource cxxSource = ImmutableCxxSource.of(
+    CxxSource cxxSource = CxxSource.of(
         CxxSource.Type.CXX_CPP_OUTPUT,
         new TestSourcePath(name),
         ImmutableList.<String>of());
@@ -480,7 +480,7 @@ public class CxxSourceRuleFactoryTest {
         picCompile.getBuildTarget());
 
     name = "foo/bar.cpp";
-    cxxSource = ImmutableCxxSource.of(
+    cxxSource = CxxSource.of(
         CxxSource.Type.CXX,
         new TestSourcePath(name),
         ImmutableList.<String>of());
@@ -537,7 +537,7 @@ public class CxxSourceRuleFactoryTest {
             ImmutableList.<String>of());
 
     String name = "source.ii";
-    CxxSource cxxSource = ImmutableCxxSource.of(
+    CxxSource cxxSource = CxxSource.of(
         CxxSource.Type.CXX_CPP_OUTPUT,
         new TestSourcePath(name),
         ImmutableList.<String>of());
@@ -553,7 +553,7 @@ public class CxxSourceRuleFactoryTest {
         Collections.indexOfSubList(cxxCompile.getFlags(), platformFlags));
 
     name = "source.cpp";
-    cxxSource = ImmutableCxxSource.of(
+    cxxSource = CxxSource.of(
         CxxSource.Type.CXX,
         new TestSourcePath(name),
         ImmutableList.<String>of());
@@ -613,7 +613,7 @@ public class CxxSourceRuleFactoryTest {
 
     String cSourceName = "test.i";
     List<String> cSourcePerFileFlags = ImmutableList.of("-c-source-par-file-flag");
-    CxxSource cSource = ImmutableCxxSource.of(
+    CxxSource cSource = CxxSource.of(
         CxxSource.Type.C_CPP_OUTPUT,
         new TestSourcePath(cSourceName),
         cSourcePerFileFlags);
@@ -628,7 +628,7 @@ public class CxxSourceRuleFactoryTest {
     assertContains(cCompile.getFlags(), cSourcePerFileFlags);
 
     cSourceName = "test.c";
-    cSource = ImmutableCxxSource.of(
+    cSource = CxxSource.of(
         CxxSource.Type.C,
         new TestSourcePath(cSourceName),
         cSourcePerFileFlags);
@@ -645,7 +645,7 @@ public class CxxSourceRuleFactoryTest {
     String cxxSourceName = "test.ii";
     List<String> cxxSourcePerFileFlags = ImmutableList.of("-cxx-source-par-file-flag");
     CxxSource cxxSource =
-        ImmutableCxxSource.of(
+        CxxSource.of(
             CxxSource.Type.CXX_CPP_OUTPUT,
             new TestSourcePath(cxxSourceName),
             cxxSourcePerFileFlags);
@@ -661,7 +661,7 @@ public class CxxSourceRuleFactoryTest {
 
     cxxSourceName = "test.cpp";
     cxxSource =
-        ImmutableCxxSource.of(
+        CxxSource.of(
             CxxSource.Type.CXX,
             new TestSourcePath(cxxSourceName),
             cxxSourcePerFileFlags);
@@ -678,7 +678,7 @@ public class CxxSourceRuleFactoryTest {
     String cCppOutputSourceName = "test.i";
     List<String> cCppOutputSourcePerFileFlags =
         ImmutableList.of("-c-cpp-output-source-par-file-flag");
-    CxxSource cCppOutputSource = ImmutableCxxSource.of(
+    CxxSource cCppOutputSource = CxxSource.of(
         CxxSource.Type.C_CPP_OUTPUT,
         new TestSourcePath(cCppOutputSourceName),
         cCppOutputSourcePerFileFlags);
@@ -693,7 +693,7 @@ public class CxxSourceRuleFactoryTest {
     assertContains(cCppOutputCompile.getFlags(), cCppOutputSourcePerFileFlags);
 
     cCppOutputSourceName = "test.c";
-    cCppOutputSource = ImmutableCxxSource.of(
+    cCppOutputSource = CxxSource.of(
         CxxSource.Type.C,
         new TestSourcePath(cCppOutputSourceName),
         cCppOutputSourcePerFileFlags);
@@ -709,7 +709,7 @@ public class CxxSourceRuleFactoryTest {
 
     String assemblerSourceName = "test.s";
     List<String> assemblerSourcePerFileFlags = ImmutableList.of("-assember-source-par-file-flag");
-    CxxSource assemblerSource = ImmutableCxxSource.of(
+    CxxSource assemblerSource = CxxSource.of(
         CxxSource.Type.ASSEMBLER,
         new TestSourcePath(assemblerSourceName),
         assemblerSourcePerFileFlags);
@@ -722,7 +722,7 @@ public class CxxSourceRuleFactoryTest {
     assertContains(assemblerCompile.getFlags(), assemblerSourcePerFileFlags);
 
     assemblerSourceName = "test.S";
-    assemblerSource = ImmutableCxxSource.of(
+    assemblerSource = CxxSource.of(
         CxxSource.Type.ASSEMBLER_WITH_CPP,
         new TestSourcePath(assemblerSourceName),
         assemblerSourcePerFileFlags);
@@ -825,7 +825,7 @@ public class CxxSourceRuleFactoryTest {
             explicitCompilerFlags);
 
     String objcSourceName = "test.mi";
-    CxxSource objcSource = ImmutableCxxSource.of(
+    CxxSource objcSource = CxxSource.of(
         CxxSource.Type.OBJC_CPP_OUTPUT,
         new TestSourcePath(objcSourceName),
         ImmutableList.<String>of());
@@ -837,7 +837,7 @@ public class CxxSourceRuleFactoryTest {
     assertContains(objcCompile.getFlags(), explicitCompilerFlags);
 
     objcSourceName = "test.m";
-    objcSource = ImmutableCxxSource.of(
+    objcSource = CxxSource.of(
         CxxSource.Type.OBJC,
         new TestSourcePath(objcSourceName),
         ImmutableList.<String>of());
@@ -849,7 +849,7 @@ public class CxxSourceRuleFactoryTest {
     assertContains(objcPreprocessAndCompile.getFlags(), explicitCompilerFlags);
 
     String objcxxSourceName = "test.mii";
-    CxxSource objcxxSource = ImmutableCxxSource.of(
+    CxxSource objcxxSource = CxxSource.of(
         CxxSource.Type.OBJCXX_CPP_OUTPUT,
         new TestSourcePath(objcxxSourceName),
         ImmutableList.<String>of());
@@ -861,7 +861,7 @@ public class CxxSourceRuleFactoryTest {
     assertContains(objcxxCompile.getFlags(), explicitCompilerFlags);
 
     objcxxSourceName = "test.mm";
-    objcxxSource = ImmutableCxxSource.of(
+    objcxxSource = CxxSource.of(
         CxxSource.Type.OBJCXX,
         new TestSourcePath(objcxxSourceName),
         ImmutableList.<String>of());

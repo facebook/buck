@@ -211,7 +211,7 @@ public class JavacOptionsTest {
     // We could use the "-n" syntax, but that doesn't work on all variants of echo. Play it safe.
     Files.write(tempPath, "echo \"cover-version\" 1>&2".getBytes(UTF_8));
 
-    ImmutableJavacOptions options = createStandardBuilder()
+    JavacOptions options = createStandardBuilder()
         .setJavacPath(tempPath)
         .setProcessExecutor(new ProcessExecutor(new TestConsole()))
         .build();
@@ -220,7 +220,7 @@ public class JavacOptionsTest {
     assertTrue(javac instanceof ExternalJavac);
 
     JavacVersion seen = javac.getVersion();
-    assertEquals(ImmutableJavacVersion.of("cover-version\n"), seen);
+    assertEquals(JavacVersion.of("cover-version\n"), seen);
   }
 
   private void assertOptionsContains(JavacOptions options, String param) {
@@ -248,7 +248,7 @@ public class JavacOptionsTest {
     return " " + Joiner.on(" ").join(params) + " ";
   }
 
-  private ImmutableJavacOptions.Builder createStandardBuilder() {
+  private JavacOptions.Builder createStandardBuilder() {
     return JavacOptions.builderForUseInJavaBuckConfig()
         .setSourceLevel("5")
         .setTargetLevel("5");

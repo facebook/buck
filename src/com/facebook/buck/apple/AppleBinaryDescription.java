@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.TypeAndPlatform;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
@@ -104,7 +105,7 @@ public class AppleBinaryDescription
     }
 
     CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
-    CxxLibraryDescription.TypeAndPlatform typeAndPlatform =
+    TypeAndPlatform typeAndPlatform =
         CxxLibraryDescription.getTypeAndPlatform(
             params.getBuildTarget(),
             cxxPlatformFlavorDomain);

@@ -48,7 +48,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.rules.coercer.ImmutableBuildConfigFields;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
@@ -155,7 +154,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* skipCrunchPngs */ false);
     ruleResolver.addToIndex(aaptPackageResources);
 
-    ImmutableAndroidPackageableCollection collection = new AndroidPackageableCollector(
+    AndroidPackageableCollection collection = new AndroidPackageableCollector(
             /* collectionRoot */ apkTarget,
         ImmutableSet.of(javaDep2BuildTarget),
             /* resourcesToExclude */ ImmutableSet.<BuildTarget>of())
@@ -276,14 +275,14 @@ public class AndroidBinaryGraphEnhancerTest {
         "IS_EXOPACKAGE defaults to false, but should now be true. DEBUG should still be true.",
         BuildConfigFields.fromFields(
             ImmutableList.<BuildConfigFields.Field>of(
-                ImmutableBuildConfigFields.Field.of("boolean", "DEBUG", "true"),
-                ImmutableBuildConfigFields.Field.of("boolean", "IS_EXOPACKAGE", "true"),
-                ImmutableBuildConfigFields.Field.of("int", "EXOPACKAGE_FLAGS", "1"),
-                ImmutableBuildConfigFields.Field.of(
+                BuildConfigFields.Field.of("boolean", "DEBUG", "true"),
+                BuildConfigFields.Field.of("boolean", "IS_EXOPACKAGE", "true"),
+                BuildConfigFields.Field.of("int", "EXOPACKAGE_FLAGS", "1"),
+                BuildConfigFields.Field.of(
                     "String", "PACKAGE_NAME",
                     "\"com.example.buck\""),
-                ImmutableBuildConfigFields.Field.of("int", "VERSION_CODE", "1"),
-                ImmutableBuildConfigFields.Field.of("String", "VERSION_NAME", "\"1.0\""))),
+                BuildConfigFields.Field.of("int", "VERSION_CODE", "1"),
+                BuildConfigFields.Field.of("String", "VERSION_NAME", "\"1.0\""))),
         androidBuildConfig.getBuildConfigFields());
 
     ImmutableSortedSet<BuildRule> finalDeps = result.getFinalDeps();

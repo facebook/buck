@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -51,8 +52,8 @@ public class CxxPreprocessAndCompileTest {
       ImmutableList.of("-fsanitize=address");
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
   private static final SourcePath DEFAULT_INPUT = new TestSourcePath("test.cpp");
-  private static final ImmutableCxxHeaders DEFAULT_INCLUDES =
-      ImmutableCxxHeaders.builder()
+  private static final CxxHeaders DEFAULT_INCLUDES =
+      CxxHeaders.builder()
           .putNameToPathMap(Paths.get("test.h"), new TestSourcePath("foo/test.h"))
           .build();
   private static final ImmutableList<Path> DEFAULT_INCLUDE_ROOTS = ImmutableList.of(
@@ -64,7 +65,7 @@ public class CxxPreprocessAndCompileTest {
   private static final ImmutableList<Path> DEFAULT_FRAMEWORK_ROOTS = ImmutableList.of();
   private static final Optional<DebugPathSanitizer> DEFAULT_SANITIZER = Optional.absent();
 
-  private RuleKey.Builder.RuleKeyPair generateRuleKey(
+  private RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
       SourcePathResolver pathResolver,
       AbstractBuildRule rule) {
@@ -93,7 +94,7 @@ public class CxxPreprocessAndCompileTest {
                     .build()));
 
     // Generate a rule key for the defaults.
-    RuleKey.Builder.RuleKeyPair defaultRuleKey = generateRuleKey(
+    RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxPreprocessAndCompile(
@@ -111,7 +112,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SANITIZER));
 
     // Verify that changing the compiler causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair compilerChange = generateRuleKey(
+    RuleKeyPair compilerChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxPreprocessAndCompile(
@@ -130,7 +131,7 @@ public class CxxPreprocessAndCompileTest {
     assertNotEquals(defaultRuleKey, compilerChange);
 
     // Verify that changing the operation causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair operationChange = generateRuleKey(
+    RuleKeyPair operationChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxPreprocessAndCompile(
@@ -149,7 +150,7 @@ public class CxxPreprocessAndCompileTest {
     assertNotEquals(defaultRuleKey, operationChange);
 
     // Verify that changing the flags causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair flagsChange = generateRuleKey(
+    RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxPreprocessAndCompile(
@@ -168,7 +169,7 @@ public class CxxPreprocessAndCompileTest {
     assertNotEquals(defaultRuleKey, flagsChange);
 
     // Verify that changing the input causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair inputChange = generateRuleKey(
+    RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxPreprocessAndCompile(
@@ -188,7 +189,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
-    RuleKey.Builder.RuleKeyPair includesChange = generateRuleKey(
+    RuleKeyPair includesChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxPreprocessAndCompile(
@@ -208,7 +209,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the system includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
-    RuleKey.Builder.RuleKeyPair systemIncludesChange = generateRuleKey(
+    RuleKeyPair systemIncludesChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxPreprocessAndCompile(
@@ -227,7 +228,7 @@ public class CxxPreprocessAndCompileTest {
     assertEquals(defaultRuleKey, systemIncludesChange);
 
     // Verify that changing the framework roots causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair frameworkRootsChange = generateRuleKey(
+    RuleKeyPair frameworkRootsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxPreprocessAndCompile(
@@ -279,7 +280,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Generate a rule key for the defaults.
     ImmutableList<String> flags1 = ImmutableList.of("-Isomething/foo");
-    RuleKey.Builder.RuleKeyPair ruleKey1 = generateRuleKey(
+    RuleKeyPair ruleKey1 = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxPreprocessAndCompile(
@@ -298,7 +299,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Generate a rule key for the defaults.
     ImmutableList<String> flags2 = ImmutableList.of("-Idifferent/foo");
-    RuleKey.Builder.RuleKeyPair ruleKey2 = generateRuleKey(
+    RuleKeyPair ruleKey2 = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxPreprocessAndCompile(
@@ -340,7 +341,7 @@ public class CxxPreprocessAndCompileTest {
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
         DEFAULT_FRAMEWORK_ROOTS,
-        ImmutableCxxHeaders.builder().build(),
+        CxxHeaders.builder().build(),
         DEFAULT_SANITIZER);
 
     ImmutableList<String> expectedCompileCommand = ImmutableList.<String>builder()
@@ -376,7 +377,7 @@ public class CxxPreprocessAndCompileTest {
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
         DEFAULT_FRAMEWORK_ROOTS,
-        ImmutableCxxHeaders.builder().build(),
+        CxxHeaders.builder().build(),
         DEFAULT_SANITIZER);
 
     // Verify it uses the expected command.

@@ -29,6 +29,7 @@ java_library(
 
 
 IO_SRCS = [
+  'AbstractProcessExecutorParams.java',
   'Ansi.java',
   'AnsiEnvironmentChecking.java',
   'Console.java',
@@ -38,7 +39,6 @@ IO_SRCS = [
   'PkillProcessManager.java',
   'ProcessManager.java',
   'ProcessExecutor.java',
-  'ProcessExecutorParams.java',
   'Threads.java',
   'Verbosity.java',
 ]

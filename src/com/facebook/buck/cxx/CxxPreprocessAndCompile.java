@@ -106,7 +106,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule {
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
-        ImmutableCxxHeaders.builder().build(),
+        CxxHeaders.builder().build(),
         sanitizer);
   }
 

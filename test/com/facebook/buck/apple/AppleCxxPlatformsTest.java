@@ -52,7 +52,7 @@ public class AppleCxxPlatformsTest {
   @Test
   public void appleSdkPathsBuiltFromDirectory() throws Exception {
     AppleSdkPaths appleSdkPaths =
-        ImmutableAppleSdkPaths.builder()
+        AppleSdkPaths.builder()
             .setDeveloperPath(Paths.get("."))
             .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
             .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
@@ -109,7 +109,7 @@ public class AppleCxxPlatformsTest {
   @Test
   public void cxxToolParamsReadFromBuckConfig() throws Exception {
     AppleSdkPaths appleSdkPaths =
-        ImmutableAppleSdkPaths.builder()
+        AppleSdkPaths.builder()
             .setDeveloperPath(Paths.get("."))
             .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
             .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
@@ -159,7 +159,7 @@ public class AppleCxxPlatformsTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(containsString("Cannot find tool"));
     AppleSdkPaths appleSdkPaths =
-        ImmutableAppleSdkPaths.builder()
+        AppleSdkPaths.builder()
             .setDeveloperPath(Paths.get("."))
             .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
             .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
@@ -180,7 +180,7 @@ public class AppleCxxPlatformsTest {
   @Test
   public void simulatorPlatformSetsLinkerFlags() throws Exception {
     AppleSdkPaths appleSdkPaths =
-        ImmutableAppleSdkPaths.builder()
+        AppleSdkPaths.builder()
             .setDeveloperPath(Paths.get("."))
             .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
             .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))

@@ -281,14 +281,14 @@ public class CompilationDatabaseTest {
     Optional<SourcePath> pchFile = Optional.<SourcePath>of(
         new PathSourcePath(projectFilesystem, Paths.get("foo/bar.pch")));
     ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths = ImmutableMap.of(
-          (AppleSdk) ImmutableAppleSdk.builder()
+          AppleSdk.builder()
               .setName("iphonesimulator8.0")
               .setVersion("8.0")
               .setXcodeVersion("6A2008a")
               .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
               .addArchitectures("i386", "x86_64")
               .build(),
-          (AppleSdkPaths) ImmutableAppleSdkPaths.builder()
+          AppleSdkPaths.builder()
               .setDeveloperPath(Paths.get("developerPath"))
               .addToolchainPaths(Paths.get("toolchainPath"))
               .setPlatformPath(Paths.get("platformPath"))

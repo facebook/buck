@@ -174,7 +174,7 @@ public class PythonBuckConfig {
             pythonPath,
             versionString);
       }
-      return ImmutablePythonVersion.of(matcher.group(1));
+      return PythonVersion.of(matcher.group(1));
     } else {
       throw new HumanReadableException(versionResult.getStderr().get());
     }

@@ -24,8 +24,8 @@ public class CxxPlatformUtils {
 
   private CxxPlatformUtils() {}
 
-  public static final ImmutableCxxPlatform DEFAULT_PLATFORM =
-      ImmutableCxxPlatform.builder()
+  public static final CxxPlatform DEFAULT_PLATFORM =
+      CxxPlatform.builder()
           .setFlavor(ImmutableFlavor.of("platform"))
           .setAs(new HashedFileTool(Paths.get("tool")))
           .setAspp(new HashedFileTool(Paths.get("tool")))

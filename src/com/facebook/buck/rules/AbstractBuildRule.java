@@ -44,7 +44,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final ProjectFilesystem projectFilesystem;
   /** @see #getInputsToCompareToOutput()  */
   @Nullable private ImmutableCollection<Path> inputsToCompareToOutputs;
-  @Nullable private volatile RuleKey.Builder.RuleKeyPair ruleKeyPair;
+  @Nullable private volatile RuleKeyPair ruleKeyPair;
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
     this.buildTarget = buildRuleParams.getBuildTarget();
@@ -178,7 +178,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     return getRuleKeyPair().getRuleKeyWithoutDeps();
   }
 
-  private RuleKey.Builder.RuleKeyPair getRuleKeyPair() {
+  private RuleKeyPair getRuleKeyPair() {
     // This uses the "double-checked locking using volatile" pattern:
     // http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html.
     if (ruleKeyPair == null) {

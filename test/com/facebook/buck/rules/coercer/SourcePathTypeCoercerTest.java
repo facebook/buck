@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableBuildTarget;
-import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -80,8 +80,8 @@ public class SourcePathTypeCoercerTest {
     assertEquals(
         new BuildTargetSourcePath(
             projectFilesystem,
-            ImmutableBuildTarget.of(
-                ImmutableUnflavoredBuildTarget.of(
+            BuildTarget.of(
+                UnflavoredBuildTarget.of(
                     Optional.<String>absent(),
                     "//",
                     "hello"),
@@ -100,8 +100,8 @@ public class SourcePathTypeCoercerTest {
     assertEquals(
         new BuildTargetSourcePath(
             projectFilesystem,
-            ImmutableBuildTarget.of(
-                ImmutableUnflavoredBuildTarget.of(
+            BuildTarget.of(
+                UnflavoredBuildTarget.of(
                       Optional.<String>absent(),
                       "//",
                       "hello"),
@@ -123,8 +123,8 @@ public class SourcePathTypeCoercerTest {
     assertEquals(
         new BuildTargetSourcePath(
             projectFilesystem,
-            ImmutableBuildTarget.of(
-                ImmutableUnflavoredBuildTarget.of(
+            BuildTarget.of(
+                UnflavoredBuildTarget.of(
                     Optional.of("hello"),
                     "//",
                     "hello"),

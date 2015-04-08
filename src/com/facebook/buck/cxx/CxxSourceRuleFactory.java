@@ -468,7 +468,7 @@ public class CxxSourceRuleFactory {
           if (CxxSourceTypes.isPreprocessableType(source.getType())) {
             BuildRule rule = createPreprocessBuildRule(name, source, pic);
             resolver.addToIndex(rule);
-            source = ImmutableCxxSource.copyOf(source)
+            source = CxxSource.copyOf(source)
                 .withType(CxxSourceTypes.getPreprocessorOutputType(source.getType()))
                 .withPath(
                     new BuildTargetSourcePath(

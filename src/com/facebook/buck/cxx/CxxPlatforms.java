@@ -71,7 +71,7 @@ public class CxxPlatforms {
       Optional<Tool> lex,
       Optional<Tool> yacc) {
     // TODO(user, agallagher): Generalize this so we don't need all these setters.
-    ImmutableCxxPlatform.Builder builder = ImmutableCxxPlatform.builder();
+    CxxPlatform.Builder builder = CxxPlatform.builder();
     builder
         .setFlavor(flavor)
         .setAs(getTool(flavor, "as", config).or(as))
@@ -142,7 +142,7 @@ public class CxxPlatforms {
 
   public static void addToolFlagsFromConfig(
       CxxBuckConfig config,
-      ImmutableCxxPlatform.Builder builder) {
+      CxxPlatform.Builder builder) {
     ImmutableList<String> asflags = config.getFlags("asflags").or(DEFAULT_ASFLAGS);
     ImmutableList<String> cflags = config.getFlags("cflags").or(DEFAULT_CFLAGS);
     ImmutableList<String> cxxflags = config.getFlags("cxxflags").or(DEFAULT_CXXFLAGS);

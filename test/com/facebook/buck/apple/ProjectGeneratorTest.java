@@ -32,7 +32,6 @@ import static org.junit.Assert.assertTrue;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.clang.HeaderMap;
-import com.facebook.buck.apple.xcode.xcodeproj.ImmutableProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
@@ -44,6 +43,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -56,7 +56,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.rules.coercer.ImmutableFrameworkPath;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
@@ -616,7 +616,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
     assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
@@ -673,7 +673,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -715,7 +715,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//hi:lib#shared");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.DYNAMIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductType.DYNAMIC_LIBRARY));
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -751,7 +751,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -1049,7 +1049,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
-    assertThat(target.getProductType(), equalTo(PBXTarget.ProductType.STATIC_LIBRARY));
+    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
     XCBuildConfiguration configuration = target
@@ -1088,7 +1088,7 @@ public class ProjectGeneratorTest {
         .setFrameworks(
             Optional.of(
                 ImmutableSortedSet.of(
-                    ImmutableFrameworkPath.ofSourceTreePath(
+                    FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Library.framework"))))))
@@ -1106,7 +1106,7 @@ public class ProjectGeneratorTest {
         .setFrameworks(
             Optional.of(
                 ImmutableSortedSet.of(
-                    ImmutableFrameworkPath.ofSourceTreePath(
+                    FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Test.framework"))))))
@@ -1158,7 +1158,7 @@ public class ProjectGeneratorTest {
         .setFrameworks(
             Optional.of(
                 ImmutableSortedSet.of(
-                    ImmutableFrameworkPath.ofSourceTreePath(
+                    FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Library.framework"))))))
@@ -1176,7 +1176,7 @@ public class ProjectGeneratorTest {
         .setFrameworks(
             Optional.of(
                 ImmutableSortedSet.of(
-                    ImmutableFrameworkPath.ofSourceTreePath(
+                    FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Test.framework"))))))
@@ -1223,7 +1223,7 @@ public class ProjectGeneratorTest {
         .setFrameworks(
             Optional.of(
                 ImmutableSortedSet.of(
-                    ImmutableFrameworkPath.ofSourceTreePath(
+                    FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Library.framework"))))))
@@ -1238,7 +1238,7 @@ public class ProjectGeneratorTest {
         .setFrameworks(
             Optional.of(
                 ImmutableSortedSet.of(
-                    ImmutableFrameworkPath.ofSourceTreePath(
+                    FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Library.framework"))))))
@@ -1257,7 +1257,7 @@ public class ProjectGeneratorTest {
         .setFrameworks(
             Optional.of(
                 ImmutableSortedSet.of(
-                    ImmutableFrameworkPath.ofSourceTreePath(
+                    FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Test.framework"))))))
@@ -1311,7 +1311,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(),
         "//foo:xctest");
-    assertEquals(target.getProductType(), PBXTarget.ProductType.UNIT_TEST);
+    assertEquals(target.getProductType(), ProductType.UNIT_TEST);
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     PBXFileReference productReference = target.getProductReference();
     assertEquals("xctest.xctest", productReference.getName());
@@ -1348,7 +1348,7 @@ public class ProjectGeneratorTest {
         .setFrameworks(
             Optional.of(
                 ImmutableSortedSet.of(
-                    ImmutableFrameworkPath.ofSourceTreePath(
+                    FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Foo.framework"))))))
@@ -1367,7 +1367,7 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:binary");
     assertHasConfigurations(target, "Debug");
-    assertEquals(target.getProductType(), PBXTarget.ProductType.TOOL);
+    assertEquals(target.getProductType(), ProductType.TOOL);
     assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,
@@ -1477,7 +1477,7 @@ public class ProjectGeneratorTest {
 
     PBXProject project = projectGenerator.getGeneratedProject();
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
-    assertEquals(target.getProductType(), PBXTarget.ProductType.FRAMEWORK);
+    assertEquals(target.getProductType(), ProductType.FRAMEWORK);
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     PBXFileReference productReference = target.getProductReference();
     assertEquals("bundle.framework", productReference.getName());
@@ -1521,7 +1521,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
     assertEquals(
         target.getProductType(),
-        ImmutableProductType.of("com.facebook.buck.niftyProductType"));
+        ProductType.of("com.facebook.buck.niftyProductType"));
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     PBXFileReference productReference = target.getProductReference();
     assertEquals("custombundle.framework", productReference.getName());
@@ -1663,7 +1663,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(),
         "//foo:final");
-    assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
+    assertEquals(target.getProductType(), ProductType.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
@@ -1722,7 +1722,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(),
         "//foo:final");
-    assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
+    assertEquals(target.getProductType(), ProductType.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
@@ -1791,7 +1791,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(),
         "//foo:final");
-    assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
+    assertEquals(target.getProductType(), ProductType.BUNDLE);
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
         target,
@@ -1822,7 +1822,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(),
         "//foo:final");
-    assertEquals(target.getProductType(), PBXTarget.ProductType.BUNDLE);
+    assertEquals(target.getProductType(), ProductType.BUNDLE);
     assertEquals("Should have exact number of build phases ", 0, target.getBuildPhases().size());
   }
 
@@ -1985,15 +1985,15 @@ public class ProjectGeneratorTest {
         .setFrameworks(
             Optional.of(
                 ImmutableSortedSet.of(
-                    ImmutableFrameworkPath.ofSourceTreePath(
+                    FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
                             Paths.get("libfoo.a"))),
-                    ImmutableFrameworkPath.ofSourceTreePath(
+                    FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("libfoo.a"))),
-                    ImmutableFrameworkPath.ofSourceTreePath(
+                    FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SOURCE_ROOT,
                             Paths.get("libfoo.a"))))))
@@ -2265,10 +2265,10 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(project, "//foo:libraryTestNotStatic");
     assertThat(
         libraryTestStaticTarget.getProductType(),
-        equalTo(PBXTarget.ProductType.STATIC_LIBRARY));
+        equalTo(ProductType.STATIC_LIBRARY));
     assertThat(
         libraryTestNotStaticTarget.getProductType(),
-        equalTo(PBXTarget.ProductType.UNIT_TEST));
+        equalTo(ProductType.UNIT_TEST));
   }
 
   @Test
@@ -2283,7 +2283,7 @@ public class ProjectGeneratorTest {
             .setFrameworks(
                 Optional.of(
                     ImmutableSortedSet.of(
-                        ImmutableFrameworkPath.ofSourceTreePath(
+                        FrameworkPath.ofSourceTreePath(
                             new SourceTreePath(
                                 PBXReference.SourceTree.SDKROOT,
                                 Paths.get("DeclaredInTestLibDep.framework"))))))
@@ -2295,7 +2295,7 @@ public class ProjectGeneratorTest {
             .setFrameworks(
                 Optional.of(
                     ImmutableSortedSet.of(
-                        ImmutableFrameworkPath.ofSourceTreePath(
+                        FrameworkPath.ofSourceTreePath(
                             new SourceTreePath(
                                 PBXReference.SourceTree.SDKROOT,
                                 Paths.get("DeclaredInTestLib.framework"))))))
@@ -2310,7 +2310,7 @@ public class ProjectGeneratorTest {
             .setFrameworks(
                 Optional.of(
                     ImmutableSortedSet.of(
-                        ImmutableFrameworkPath.ofSourceTreePath(
+                        FrameworkPath.ofSourceTreePath(
                             new SourceTreePath(
                                 PBXReference.SourceTree.SDKROOT,
                                 Paths.get("DeclaredInTest.framework"))))))

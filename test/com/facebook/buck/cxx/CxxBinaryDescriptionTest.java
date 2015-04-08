@@ -25,7 +25,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -116,7 +115,7 @@ public class CxxBinaryDescriptionTest {
       public NativeLinkableInput getNativeLinkableInput(
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
-        return ImmutableNativeLinkableInput.of(
+        return NativeLinkableInput.of(
             ImmutableList.<SourcePath>of(
                 new BuildTargetSourcePath(getProjectFilesystem(), archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()));
@@ -124,7 +123,7 @@ public class CxxBinaryDescriptionTest {
 
       @Override
       public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
-        return ImmutablePythonPackageComponents.of(
+        return PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of());

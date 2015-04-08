@@ -42,6 +42,7 @@ import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -88,7 +89,7 @@ public class GenruleTest {
 
   private ProjectFilesystem fakeFilesystem;
 
-  private RuleKey.Builder.RuleKeyPair generateRuleKey(
+  private RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
       SourcePathResolver resolver,
       AbstractBuildRule rule) {
@@ -477,14 +478,14 @@ public class GenruleTest {
 
     // Get a rule key for two genrules using two different output names, but are otherwise the
     // same.
-    RuleKey.Builder.RuleKeyPair key1 = generateRuleKey(
+    RuleKeyPair key1 = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         (Genrule) GenruleBuilder
             .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule1"))
             .setOut("foo")
             .build(resolver));
-    RuleKey.Builder.RuleKeyPair key2 = generateRuleKey(
+    RuleKeyPair key2 = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         (Genrule) GenruleBuilder

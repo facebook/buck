@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.rules.ImmutableLabel;
 import com.facebook.buck.rules.Label;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -44,7 +43,7 @@ public class LabelSelector {
     Iterable<String> labelStrings = splitter.split(raw);
     for (String labelString : labelStrings) {
       BuckConfig.validateLabelName(labelString);
-      labelBuilder.add(ImmutableLabel.of(labelString));
+      labelBuilder.add(Label.of(labelString));
     }
 
     return new LabelSelector(isInclusive, labelBuilder.build());

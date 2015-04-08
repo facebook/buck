@@ -180,8 +180,8 @@ public class AppleDescriptionsTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     Path appleSdkRoot = Paths.get("Root");
-    ImmutableAppleSdkPaths appleSdkPaths =
-        ImmutableAppleSdkPaths.builder()
+    AppleSdkPaths appleSdkPaths =
+        AppleSdkPaths.builder()
             .setDeveloperPath(appleSdkRoot)
             .addToolchainPaths(appleSdkRoot.resolve("Toolchain"))
             .setPlatformPath(appleSdkRoot.resolve("Platform"))

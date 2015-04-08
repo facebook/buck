@@ -17,7 +17,6 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.ImmutableNativeLinkableInput;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
@@ -84,7 +83,7 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
 
     final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
-    return ImmutableNativeLinkableInput.of(
+    return NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(
                 ocamlLibraryBuild.getProjectFilesystem(),

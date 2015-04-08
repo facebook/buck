@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.GnuLinker;
-import com.facebook.buck.cxx.ImmutableCxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.cxx.VersionedTool;
@@ -240,7 +239,7 @@ public class NdkCxxPlatforms {
 
     Host host = Preconditions.checkNotNull(BUILD_PLATFORMS.get(platform));
 
-    ImmutableCxxPlatform.Builder cxxPlatformBuilder = ImmutableCxxPlatform.builder();
+    CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder();
     cxxPlatformBuilder
         .setFlavor(flavor)
         .setAs(getTool(ndkRoot, targetConfiguration, host, "as", version))
@@ -308,7 +307,7 @@ public class NdkCxxPlatforms {
 
     CxxPlatform cxxPlatform = cxxPlatformBuilder.build();
 
-    return ImmutableNdkCxxPlatform.builder()
+    return NdkCxxPlatform.builder()
         .setCxxPlatform(cxxPlatform)
         .setObjcopy(getToolPath(ndkRoot, targetConfiguration, host, "objcopy"))
         .setCxxRuntime(cxxRuntime)

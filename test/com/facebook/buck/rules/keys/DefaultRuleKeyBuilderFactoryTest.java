@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CacheMode;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -61,7 +62,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
         new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
     RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
 
-    RuleKey.Builder.RuleKeyPair expected = builder.build();
+    RuleKeyPair expected = builder.build();
 
     class UndecoratedFields extends EmptyRule {
 
@@ -88,7 +89,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
     RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
 
     builder.setReflectively("field", "cake-walk");
-    RuleKey.Builder.RuleKeyPair expected = builder.build();
+    RuleKeyPair expected = builder.build();
 
     class DecoratedFields extends EmptyRule {
 
@@ -118,7 +119,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
     RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
 
     builder.setReflectively("field", "sausages");
-    RuleKey.Builder.RuleKeyPair expected = builder.build();
+    RuleKeyPair expected = builder.build();
 
     class Stringifiable {
       @Override
@@ -153,7 +154,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
     RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
 
     builder.setReflectively("field.cheese", "brie");
-    RuleKey.Builder.RuleKeyPair expected = builder.build();
+    RuleKeyPair expected = builder.build();
 
     class AppendingField extends EmptyRule {
 
@@ -181,7 +182,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
     RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
 
     builder.setReflectively("field", "cheddar");
-    RuleKey.Builder.RuleKeyPair expected = builder.build();
+    RuleKeyPair expected = builder.build();
 
     class AppendingField extends EmptyRule {
 
@@ -211,7 +212,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
     builder.setReflectively("alpha", "stilton");
     builder.setReflectively("beta", 1);
     builder.setReflectively("gamma", "stinking bishop");
-    RuleKey.Builder.RuleKeyPair expected = builder.build();
+    RuleKeyPair expected = builder.build();
 
     class UnsortedFields extends EmptyRule {
 
@@ -244,7 +245,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     builder.setReflectively("exoticCheese", "bavarian smoked");
     builder.setReflectively("target", topLevelTarget.getFullyQualifiedName());
-    RuleKey.Builder.RuleKeyPair expected = builder.build();
+    RuleKeyPair expected = builder.build();
 
     class Parent extends EmptyRule {
 
@@ -284,7 +285,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     builder.setReflectively("key", "child");
     builder.setReflectively("key", "parent");
-    RuleKey.Builder.RuleKeyPair expected = builder.build();
+    RuleKeyPair expected = builder.build();
 
     class Parent extends EmptyRule {
       @AddToRuleKey

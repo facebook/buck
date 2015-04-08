@@ -54,10 +54,10 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.ImmutableBuildContext;
-import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -335,7 +335,7 @@ public class DefaultJavaLibraryTest {
         new SourcePathResolver(new BuildRuleResolver())) {
       @Override
       public Sha1HashCode getAbiKey() {
-        return ImmutableSha1HashCode.of(Strings.repeat("cafebabe", 5));
+        return Sha1HashCode.of(Strings.repeat("cafebabe", 5));
       }
 
       @Override
@@ -630,7 +630,7 @@ public class DefaultJavaLibraryTest {
     hasher.putUnencodedChars(javaAbiRuleKeyHash);
 
     assertEquals(
-        ImmutableSha1HashCode.of(hasher.hash().toString()),
+        Sha1HashCode.of(hasher.hash().toString()),
         ((AbiRule) defaultJavaLibary).getAbiKeyForDeps());
   }
 
@@ -697,7 +697,7 @@ public class DefaultJavaLibraryTest {
 
     // This differs from the EMPTY_ABI_KEY in that the value of that comes from the SHA1 of an empty
     // jar file, whereas this is constructed from the empty set of values.
-    Sha1HashCode noAbiDeps = ImmutableSha1HashCode.of(Hashing.sha1().newHasher().hash().toString());
+    Sha1HashCode noAbiDeps = Sha1HashCode.of(Hashing.sha1().newHasher().hash().toString());
     assertEquals(
         "The ABI of the deps of //:consumer_no_export should be the empty ABI.",
         noAbiDeps,
@@ -947,7 +947,7 @@ public class DefaultJavaLibraryTest {
         if (partialAbiHash == null) {
           return super.getAbiKey();
         } else {
-          return createTotalAbiKey(ImmutableSha1HashCode.of(partialAbiHash));
+          return createTotalAbiKey(Sha1HashCode.of(partialAbiHash));
         }
       }
     };
@@ -1099,8 +1099,8 @@ public class DefaultJavaLibraryTest {
     RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(rule2, pathResolver2);
     rule1.appendToRuleKey(builder1);
     rule2.appendToRuleKey(builder2);
-    RuleKey.Builder.RuleKeyPair pair1 = builder1.build();
-    RuleKey.Builder.RuleKeyPair pair2 = builder2.build();
+    RuleKeyPair pair1 = builder1.build();
+    RuleKeyPair pair2 = builder2.build();
     assertEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());
     assertEquals(pair1.getRuleKeyWithoutDeps(), pair2.getRuleKeyWithoutDeps());
   }
@@ -1368,7 +1368,7 @@ public class DefaultJavaLibraryTest {
       tmp.newFile(src);
 
       AnnotationProcessingParams params = annotationProcessingParamsBuilder.build();
-      ImmutableJavacOptions.Builder options = JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
+      JavacOptions.Builder options = JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
           .setAnnotationProcessingParams(params);
 
       BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
@@ -1415,7 +1415,7 @@ public class DefaultJavaLibraryTest {
 
     @Override
     public Sha1HashCode getAbiKey() {
-      return ImmutableSha1HashCode.of(abiKeyHash);
+      return Sha1HashCode.of(abiKeyHash);
     }
   }
 }

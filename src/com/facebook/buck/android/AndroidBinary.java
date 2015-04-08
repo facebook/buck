@@ -37,8 +37,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
-import com.facebook.buck.rules.ImmutableExopackageInfo;
-import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -432,7 +430,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     // Returning our RuleKey has this effect because we will never get an ABI match after a
     // RuleKey miss.
     if (exopackageModes.isEmpty()) {
-      return ImmutableSha1HashCode.of(getRuleKey().toString());
+      return Sha1HashCode.of(getRuleKey().toString());
     }
     return enhancementResult.getComputeExopackageDepsAbi().get().getAndroidBinaryAbiHash();
   }
@@ -883,11 +881,11 @@ public class AndroidBinary extends AbstractBuildRule implements
   public Optional<ExopackageInfo> getExopackageInfo() {
     boolean shouldInstall = false;
 
-    ImmutableExopackageInfo.Builder builder = ImmutableExopackageInfo.builder();
+    ExopackageInfo.Builder builder = ExopackageInfo.builder();
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       PreDexMerge preDexMerge = enhancementResult.getPreDexMerge().get();
       builder.setDexInfo(
-          ImmutableExopackageInfo.DexInfo.of(
+          ExopackageInfo.DexInfo.of(
               preDexMerge.getMetadataTxtPath(),
               preDexMerge.getDexDirectory()));
       shouldInstall = true;
@@ -897,7 +895,7 @@ public class AndroidBinary extends AbstractBuildRule implements
         enhancementResult.getCopyNativeLibraries().isPresent()) {
       CopyNativeLibraries copyNativeLibraries = enhancementResult.getCopyNativeLibraries().get();
       builder.setNativeLibsInfo(
-          ImmutableExopackageInfo.NativeLibsInfo.of(
+          ExopackageInfo.NativeLibsInfo.of(
               copyNativeLibraries.getPathToMetadataTxt(),
               copyNativeLibraries.getPathToNativeLibsDir()));
       shouldInstall = true;

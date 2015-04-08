@@ -50,7 +50,7 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable {
    */
   @Override
   public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
-    return ImmutablePythonPackageComponents.of(
+    return PythonPackageComponents.of(
         srcs,
         resources,
         ImmutableMap.<Path, SourcePath>of());

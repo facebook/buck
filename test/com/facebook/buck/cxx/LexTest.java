@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -48,7 +49,7 @@ public class LexTest {
   private static final Path DEFAULT_OUTPUT_HEADER = Paths.get("output.header");
   private static final SourcePath DEFAULT_INPUT = new TestSourcePath("input");
 
-  private RuleKey.Builder.RuleKeyPair generateRuleKey(
+  private RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
       SourcePathResolver resolver,
       AbstractBuildRule rule) {
@@ -72,7 +73,7 @@ public class LexTest {
                     "different", Strings.repeat("c", 40))));
 
     // Generate a rule key for the defaults.
-    RuleKey.Builder.RuleKeyPair defaultRuleKey = generateRuleKey(
+    RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new Lex(
@@ -85,7 +86,7 @@ public class LexTest {
             DEFAULT_INPUT));
 
     // Verify that changing the archiver causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair lexChange = generateRuleKey(
+    RuleKeyPair lexChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new Lex(
@@ -99,7 +100,7 @@ public class LexTest {
     assertNotEquals(defaultRuleKey.getTotalRuleKey(), lexChange.getTotalRuleKey());
 
     // Verify that changing the flags causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair flagsChange = generateRuleKey(
+    RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new Lex(
@@ -113,7 +114,7 @@ public class LexTest {
     assertNotEquals(defaultRuleKey.getTotalRuleKey(), flagsChange.getTotalRuleKey());
 
     // Verify that changing the output source causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair outputSourceChange = generateRuleKey(
+    RuleKeyPair outputSourceChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new Lex(
@@ -127,7 +128,7 @@ public class LexTest {
     assertNotEquals(defaultRuleKey.getTotalRuleKey(), outputSourceChange.getTotalRuleKey());
 
     // Verify that changing the output header causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair outputHeaderChange = generateRuleKey(
+    RuleKeyPair outputHeaderChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new Lex(
@@ -141,7 +142,7 @@ public class LexTest {
     assertNotEquals(defaultRuleKey.getTotalRuleKey(), outputHeaderChange.getTotalRuleKey());
 
     // Verify that changing the inputs causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair inputChange = generateRuleKey(
+    RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new Lex(

@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -167,7 +166,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     final ImmutableList<SourcePath> libraries = librariesBuilder.build();
     final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
-    return ImmutableNativeLinkableInput.of(/* inputs */ libraries, /* args */ linkerArgs);
+    return NativeLinkableInput.of(/* inputs */ libraries, /* args */ linkerArgs);
   }
 
   @Override
@@ -185,7 +184,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     }
     ImmutableMap<Path, SourcePath> nativeLibraries = nativeLibrariesBuilder.build();
 
-    return ImmutablePythonPackageComponents.of(
+    return PythonPackageComponents.of(
         /* modules */ ImmutableMap.<Path, SourcePath>of(),
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
         nativeLibraries);

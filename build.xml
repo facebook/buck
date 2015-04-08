@@ -320,6 +320,7 @@
         <include name="com/facebook/buck/util/WatchmanWatcherException.java" />
 
         <!-- //src/com/facebook/buck/util:io -->
+        <include name="com/facebook/buck/util/AbstractProcessExecutorParams.java" />
         <include name="com/facebook/buck/util/Ansi.java" />
         <include name="com/facebook/buck/util/AnsiEnvironmentChecking.java" />
         <include name="com/facebook/buck/util/Console.java" />
@@ -328,7 +329,6 @@
         <include name="com/facebook/buck/util/DirectoryTraverser.java" />
         <include name="com/facebook/buck/util/DirectoryTraversal.java" />
         <include name="com/facebook/buck/util/DirtyPrintStreamDecorator.java" />
-        <include name="com/facebook/buck/util/ImmutableProcessExecutorParams.java" />
         <include name="com/facebook/buck/util/InputStreamConsumer.java" />
         <include name="com/facebook/buck/util/MoreFiles.java" />
         <include name="com/facebook/buck/util/MorePaths.java" />
@@ -349,6 +349,7 @@
 
         <!-- //src/com/facebook/buck/util/immutables:immutables -->
         <include name="com/facebook/buck/util/immutables/BuckStyleImmutable.java" />
+        <include name="com/facebook/buck/util/immutables/NewBuckStyleImmutable.java" />
 
         <!-- //src/com/facebook/buck/zip:stream -->
         <include name="com/facebook/buck/zip/AppendingZipOutputStream.java" />

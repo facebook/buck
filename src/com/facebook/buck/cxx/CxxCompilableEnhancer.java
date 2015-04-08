@@ -47,7 +47,7 @@ public class CxxCompilableEnhancer {
       }
       cxxSources.put(
           ent.getKey(),
-          ImmutableCxxSource.of(
+          CxxSource.of(
               type.get(),
               ent.getValue().getSourcePath(),
               ent.getValue().getFlags()));

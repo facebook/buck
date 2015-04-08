@@ -16,8 +16,8 @@ java_library(
 )
 
 SUPPORT_SRCS = [
+  'AbstractPythonVersion.java',
   'PythonEnvironment.java',
-  'PythonVersion.java',
 ]
 java_immutables_library(
   name = 'support',

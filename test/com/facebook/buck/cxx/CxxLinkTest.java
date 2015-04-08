@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -53,7 +54,7 @@ public class CxxLinkTest {
       "/lib",
       "libc.a");
 
-  private RuleKey.Builder.RuleKeyPair generateRuleKey(
+  private RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
       SourcePathResolver resolver,
       AbstractBuildRule rule) {
@@ -79,7 +80,7 @@ public class CxxLinkTest {
                     "different", Strings.repeat("d", 40))));
 
     // Generate a rule key for the defaults.
-    RuleKey.Builder.RuleKeyPair defaultRuleKey = generateRuleKey(
+    RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxLink(
@@ -91,7 +92,7 @@ public class CxxLinkTest {
             DEFAULT_ARGS));
 
     // Verify that changing the archiver causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair linkerChange = generateRuleKey(
+    RuleKeyPair linkerChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxLink(
@@ -104,7 +105,7 @@ public class CxxLinkTest {
     assertNotEquals(defaultRuleKey, linkerChange);
 
     // Verify that changing the output path causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair outputChange = generateRuleKey(
+    RuleKeyPair outputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxLink(
@@ -117,7 +118,7 @@ public class CxxLinkTest {
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the inputs causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair inputChange = generateRuleKey(
+    RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxLink(
@@ -130,7 +131,7 @@ public class CxxLinkTest {
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the flags causes a rulekey change.
-    RuleKey.Builder.RuleKeyPair flagsChange = generateRuleKey(
+    RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         pathResolver,
         new CxxLink(

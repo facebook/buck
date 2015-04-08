@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
-import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -214,7 +213,7 @@ public class AndroidResourceTest {
     if (resourceRule instanceof AndroidResource) {
       ((AndroidResource) resourceRule)
           .getBuildOutputInitializer()
-          .setBuildOutput(new BuildOutput(ImmutableSha1HashCode.of(Strings.repeat(hashChar, 40))));
+          .setBuildOutput(new BuildOutput(Sha1HashCode.of(Strings.repeat(hashChar, 40))));
     }
   }
 }

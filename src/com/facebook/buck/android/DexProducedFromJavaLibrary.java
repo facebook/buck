@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
@@ -213,6 +212,6 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
       hasher.putUnencodedChars(entry.getValue().toString());
       hasher.putByte((byte) 0);
     }
-    return ImmutableSha1HashCode.of(hasher.hash().toString());
+    return Sha1HashCode.of(hasher.hash().toString());
   }
 }

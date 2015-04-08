@@ -37,7 +37,6 @@ import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ImmutableProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -60,7 +59,7 @@ public class JavaLibraryDescriptionTest {
 
   @Before
   public void createHelpers() {
-    defaults = ImmutableJavacOptions.builder()
+    defaults = JavacOptions.builder()
         .setSourceLevel("8")
         .setTargetLevel("8")
         .build();
@@ -120,12 +119,12 @@ public class JavaLibraryDescriptionTest {
     Either<BuiltInJavac, Either<BuildTarget, Path>> either =
         Either.ofRight(Either.<BuildTarget, Path>ofRight(externalJavac));
 
-    ProcessExecutorParams version = ImmutableProcessExecutorParams.builder()
+    ProcessExecutorParams version = ProcessExecutorParams.builder()
         .setCommand(ImmutableList.of(externalJavac.toString(), "-version"))
         .build();
     FakeProcess process = new FakeProcess(0, "", "1.2.3");
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(version, process));
-    ImmutableJavacOptions newDefaults = ImmutableJavacOptions.builder(defaults)
+    JavacOptions newDefaults = JavacOptions.builder(defaults)
         .setProcessExecutor(executor)
         .build();
 
@@ -149,12 +148,12 @@ public class JavaLibraryDescriptionTest {
     Either<BuiltInJavac, Either<BuildTarget, Path>> either =
         Either.ofRight(Either.<BuildTarget, Path>ofRight(externalJavac));
 
-    ProcessExecutorParams version = ImmutableProcessExecutorParams.builder()
+    ProcessExecutorParams version = ProcessExecutorParams.builder()
         .setCommand(ImmutableList.of(externalJavac.toString(), "-version"))
         .build();
     FakeProcess process = new FakeProcess(0, "", "1.2.3");
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(version, process));
-    ImmutableJavacOptions newDefaults = ImmutableJavacOptions.builder(defaults)
+    JavacOptions newDefaults = JavacOptions.builder(defaults)
         .setProcessExecutor(executor)
         .build();
 

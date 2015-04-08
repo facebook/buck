@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
 import com.facebook.buck.java.AnnotationProcessingParams;
-import com.facebook.buck.java.ImmutableJavacOptions;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.java.JavacOptions;
@@ -67,7 +66,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
-    ImmutableJavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
+    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
         resolver,
         pathResolver,
         args,

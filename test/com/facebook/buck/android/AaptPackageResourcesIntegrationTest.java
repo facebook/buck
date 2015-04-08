@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.rules.ImmutableSha1HashCode;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -64,8 +63,8 @@ public class AaptPackageResourcesIntegrationTest {
     String secondHash = workspace.getFileContents(
         "buck-out/bin/apps/sample/.app#aapt_package/metadata/resource_package_hash");
 
-    Sha1HashCode firstHashCode = ImmutableSha1HashCode.of(firstHash);
-    Sha1HashCode secondHashCode = ImmutableSha1HashCode.of(secondHash);
+    Sha1HashCode firstHashCode = Sha1HashCode.of(firstHash);
+    Sha1HashCode secondHashCode = Sha1HashCode.of(secondHash);
     assertNotEquals(firstHashCode, secondHashCode);
   }
 

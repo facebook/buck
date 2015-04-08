@@ -34,14 +34,13 @@ import com.facebook.buck.java.Jsr199Javac;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.python.ImmutablePythonVersion;
+import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ImmutableProcessExecutorParams;
 import com.facebook.buck.util.NullFileHashCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -70,7 +69,7 @@ public class KnownBuildRuleTypesTest {
   @Rule public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   private static final PythonEnvironment DUMMY_PYTHON_ENVIRONMENT =
-      new PythonEnvironment(Paths.get("fake_python"), ImmutablePythonVersion.of("Python 2.7"));
+      new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7"));
 
   private static final String FAKE_XCODE_DEV_PATH = "/Fake/Path/To/Xcode.app/Contents/Developer";
 
@@ -238,7 +237,7 @@ public class KnownBuildRuleTypesTest {
         new FakeAndroidDirectoryResolver(),
         new PythonEnvironment(
             Paths.get("fake_python"),
-            ImmutablePythonVersion.of("Python 2.7"))).build();
+            PythonVersion.of("Python 2.7"))).build();
     AndroidLibraryDescription description =
         (AndroidLibraryDescription) buildRuleTypes.getDescription(AndroidLibraryDescription.TYPE);
 
@@ -356,7 +355,7 @@ public class KnownBuildRuleTypesTest {
     Map<ProcessExecutorParams, FakeProcess> processMap = new HashMap<>();
 
       FakeProcess process = new FakeProcess(0, "", version);
-      ProcessExecutorParams params = ImmutableProcessExecutorParams.builder()
+      ProcessExecutorParams params = ProcessExecutorParams.builder()
           .setCommand(ImmutableList.of(javac, "-version"))
           .build();
       processMap.put(params, process);
@@ -371,7 +370,7 @@ public class KnownBuildRuleTypesTest {
       String xcodeSelectPath) {
 
     FakeProcess xcodeSelectOutputProcess = new FakeProcess(0, xcodeSelectPath, "");
-    ProcessExecutorParams xcodeSelectParams = ImmutableProcessExecutorParams.builder()
+    ProcessExecutorParams xcodeSelectParams = ProcessExecutorParams.builder()
         .setCommand(ImmutableList.of("xcode-select", "--print-path"))
         .build();
     processMap.put(xcodeSelectParams, xcodeSelectOutputProcess);

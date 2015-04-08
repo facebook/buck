@@ -22,7 +22,6 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -92,7 +91,7 @@ public class AppleTestIntegrationTest {
 
     Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
 
-    BuildTarget appleTestBundleFlavoredBuildTarget = ImmutableBuildTarget.copyOf(buildTarget)
+    BuildTarget appleTestBundleFlavoredBuildTarget = BuildTarget.copyOf(buildTarget)
         .withFlavors(
             ImmutableFlavor.of("iphonesimulator-x86_64"),
             ImmutableFlavor.of("apple-test-bundle"));
@@ -125,7 +124,7 @@ public class AppleTestIntegrationTest {
 
     Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
 
-    BuildTarget appleTestBundleFlavoredBuildTarget = ImmutableBuildTarget.copyOf(buildTarget)
+    BuildTarget appleTestBundleFlavoredBuildTarget = BuildTarget.copyOf(buildTarget)
         .withFlavors(
             ImmutableFlavor.of("iphonesimulator-x86_64"),
             ImmutableFlavor.of("apple-test-bundle"));

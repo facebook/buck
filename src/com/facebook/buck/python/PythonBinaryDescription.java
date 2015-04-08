@@ -115,7 +115,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     }
 
     // Build up the list of all components going into the python binary.
-    PythonPackageComponents binaryPackageComponents = ImmutablePythonPackageComponents.of(
+    PythonPackageComponents binaryPackageComponents = PythonPackageComponents.of(
         modules.build(),
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
         /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of());

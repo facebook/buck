@@ -27,38 +27,38 @@ public class Sha1HashCodeTest {
 
   @Test
   public void testSha1HashCodeGetHash() {
-    Sha1HashCode hash = ImmutableSha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c");
+    Sha1HashCode hash = Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c");
     assertEquals("a002b39af204cdfaa5fdb67816b13867c32ac52c", hash.getHash());
     assertEquals("toString() and getHash() should match.", hash.toString(), hash.getHash());
   }
 
   @Test(expected = NullPointerException.class)
   public void testSha1HashCodeRejectsNull() {
-    ImmutableSha1HashCode.of(null);
+    Sha1HashCode.of(null);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testConstructorParamMustBe40Chars() {
-    ImmutableSha1HashCode.of(Strings.repeat("a", 39));
+    Sha1HashCode.of(Strings.repeat("a", 39));
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testConstructorParamMustMatchCharSet() {
-    ImmutableSha1HashCode.of(Strings.repeat("A", 40));
+    Sha1HashCode.of(Strings.repeat("A", 40));
   }
 
   @Test
   public void testSha1HashCodeSatisfiesEqualsContract() {
-    Sha1HashCode hash = ImmutableSha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c");
+    Sha1HashCode hash = Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c");
     assertFalse(hash.equals(null));
     assertFalse(hash.equals(new Object()));
-    assertEquals(hash, ImmutableSha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"));
+    assertEquals(hash, Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"));
   }
 
   @Test
   public void testNotEqualWhenHashesAreNotEqual() {
-    Sha1HashCode hash1 = ImmutableSha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c");
-    Sha1HashCode hash2 = ImmutableSha1HashCode.of("a550e4c6dba0dd24920cb7cbbe7f599b581c69d9");
+    Sha1HashCode hash1 = Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c");
+    Sha1HashCode hash2 = Sha1HashCode.of("a550e4c6dba0dd24920cb7cbbe7f599b581c69d9");
     assertFalse(hash1.equals(hash2));
   }
 

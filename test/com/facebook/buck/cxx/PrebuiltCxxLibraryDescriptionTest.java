@@ -23,7 +23,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -101,7 +100,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
 
     // Verify static native linkable input.
-    NativeLinkableInput expectedStaticLinkableInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()));
     assertEquals(
@@ -109,7 +108,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
-    NativeLinkableInput expectedSharedLinkableInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()));
     assertEquals(
@@ -117,7 +116,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = ImmutablePythonPackageComponents.of(
+    PythonPackageComponents expectedComponents = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(
@@ -148,7 +147,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
 
     // Verify static native linkable input.
-    NativeLinkableInput expectedStaticLinkableInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.<String>of());
     assertEquals(
@@ -156,7 +155,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
-    NativeLinkableInput expectedSharedLinkableInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.<String>of());
     assertEquals(
@@ -164,7 +163,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = ImmutablePythonPackageComponents.of(
+    PythonPackageComponents expectedComponents = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of());
@@ -193,7 +192,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
 
     // Verify static native linkable input.
-    NativeLinkableInput expectedStaticLinkableInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()));
     assertEquals(
@@ -201,7 +200,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
-    NativeLinkableInput expectedSharedLinkableInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()));
     assertEquals(
@@ -209,7 +208,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = ImmutablePythonPackageComponents.of(
+    PythonPackageComponents expectedComponents = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of());
@@ -238,7 +237,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
 
     // Verify static native linkable input.
-    NativeLinkableInput expectedStaticLinkableInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()));
     assertEquals(
@@ -246,7 +245,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
-    NativeLinkableInput expectedSharedLinkableInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()));
     assertEquals(
@@ -254,7 +253,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
 
     // Verify the python packageable components are correct.
-    PythonPackageComponents expectedComponents = ImmutablePythonPackageComponents.of(
+    PythonPackageComponents expectedComponents = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(

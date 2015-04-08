@@ -23,7 +23,6 @@ import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.facebook.buck.apple.xcode.xcodeproj.ImmutableProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
@@ -32,6 +31,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
@@ -496,7 +496,7 @@ public class ProjectGenerator {
         project,
         Optional.<TargetNode<AppleBundleDescription.Arg>>absent(),
         targetNode,
-        PBXTarget.ProductType.TOOL,
+        ProductType.TOOL,
         "%s",
         Optional.<Path>absent(),
         /* includeFrameworks */ true,
@@ -514,9 +514,9 @@ public class ProjectGenerator {
         .getBuildTarget()
         .getFlavors()
         .contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
-    PBXTarget.ProductType productType = isShared ?
-        PBXTarget.ProductType.DYNAMIC_LIBRARY :
-        PBXTarget.ProductType.STATIC_LIBRARY;
+    ProductType productType = isShared ?
+        ProductType.DYNAMIC_LIBRARY :
+        ProductType.STATIC_LIBRARY;
     PBXNativeTarget target = generateBinaryTarget(
         project,
         Optional.<TargetNode<AppleBundleDescription.Arg>>absent(),
@@ -556,7 +556,7 @@ public class ProjectGenerator {
       PBXProject project,
       Optional<? extends TargetNode<? extends HasAppleBundleFields>> bundle,
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
-      PBXTarget.ProductType productType,
+      ProductType productType,
       String productOutputFormat,
       Optional<Path> infoPlistOptional,
       boolean includeFrameworks,
@@ -1687,18 +1687,18 @@ public class ProjectGenerator {
   }
 
   @SuppressWarnings("incomplete-switch")
-  PBXTarget.ProductType bundleToTargetProductType(
+  ProductType bundleToTargetProductType(
       TargetNode<? extends HasAppleBundleFields> targetNode,
       TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode) {
     if (targetNode.getConstructorArg().getXcodeProductType().isPresent()) {
-      return ImmutableProductType.of(targetNode.getConstructorArg().getXcodeProductType().get());
+      return ProductType.of(targetNode.getConstructorArg().getXcodeProductType().get());
     } else if (targetNode.getConstructorArg().getExtension().isLeft()) {
       AppleBundleExtension extension = targetNode.getConstructorArg().getExtension().getLeft();
 
       if (binaryNode.getType().equals(AppleLibraryDescription.TYPE)) {
         if (binaryNode.getBuildTarget().getFlavors().contains(
             CxxDescriptionEnhancer.SHARED_FLAVOR)) {
-          Optional<PBXTarget.ProductType> productType =
+          Optional<ProductType> productType =
               dylibProductTypeByBundleExtension(extension);
           if (productType.isPresent()) {
             return productType.get();
@@ -1706,25 +1706,25 @@ public class ProjectGenerator {
         } else {
           switch (extension) {
             case FRAMEWORK:
-              return PBXTarget.ProductType.STATIC_FRAMEWORK;
+              return ProductType.STATIC_FRAMEWORK;
           }
         }
       } else if (binaryNode.getType().equals(AppleBinaryDescription.TYPE)) {
         switch (extension) {
           case APP:
-            return PBXTarget.ProductType.APPLICATION;
+            return ProductType.APPLICATION;
         }
       } else if (binaryNode.getType().equals(AppleTestDescription.TYPE)) {
         switch (extension) {
           case OCTEST:
-            return PBXTarget.ProductType.BUNDLE;
+            return ProductType.BUNDLE;
           case XCTEST:
-            return PBXTarget.ProductType.UNIT_TEST;
+            return ProductType.UNIT_TEST;
         }
       }
     }
 
-    return PBXTarget.ProductType.BUNDLE;
+    return ProductType.BUNDLE;
   }
 
   private boolean shouldGenerateReadOnlyFiles() {
@@ -1801,19 +1801,19 @@ public class ProjectGenerator {
   /**
    * @return product type of a bundle containing a dylib.
    */
-  private static Optional<PBXTarget.ProductType> dylibProductTypeByBundleExtension(
+  private static Optional<ProductType> dylibProductTypeByBundleExtension(
       AppleBundleExtension extension) {
     switch (extension) {
       case FRAMEWORK:
-        return Optional.of(PBXTarget.ProductType.FRAMEWORK);
+        return Optional.of(ProductType.FRAMEWORK);
       case APPEX:
-        return Optional.of(PBXTarget.ProductType.APP_EXTENSION);
+        return Optional.of(ProductType.APP_EXTENSION);
       case BUNDLE:
-        return Optional.of(PBXTarget.ProductType.BUNDLE);
+        return Optional.of(ProductType.BUNDLE);
       case OCTEST:
-        return Optional.of(PBXTarget.ProductType.BUNDLE);
+        return Optional.of(ProductType.BUNDLE);
       case XCTEST:
-        return Optional.of(PBXTarget.ProductType.UNIT_TEST);
+        return Optional.of(ProductType.UNIT_TEST);
       // $CASES-OMITTED$
       default:
         return Optional.absent();

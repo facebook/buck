@@ -35,7 +35,7 @@ public class BuildTargetFactory {
       return BuildTarget.builder(parts[0], parts[1]).build();
     }
     String[] flavors = nameAndFlavor[1].split(",");
-    ImmutableBuildTarget.Builder buildTargetBuilder =
+    BuildTarget.Builder buildTargetBuilder =
         BuildTarget.builder(parts[0], nameAndFlavor[0]);
     for (String flavor : flavors) {
       buildTargetBuilder.addFlavors(ImmutableFlavor.of(flavor));

@@ -28,7 +28,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -141,7 +140,7 @@ public class CxxLibraryDescriptionTest {
       public NativeLinkableInput getNativeLinkableInput(
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
-        return ImmutableNativeLinkableInput.of(
+        return NativeLinkableInput.of(
             ImmutableList.<SourcePath>of(
                 new BuildTargetSourcePath(getProjectFilesystem(), archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()));
@@ -149,7 +148,7 @@ public class CxxLibraryDescriptionTest {
 
       @Override
       public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
-        return ImmutablePythonPackageComponents.of(
+        return PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of());
@@ -219,7 +218,7 @@ public class CxxLibraryDescriptionTest {
                     cxxPlatform.getFlavor(),
                     CxxDescriptionEnhancer.HeaderVisibility.PUBLIC))
             .setIncludes(
-                ImmutableCxxHeaders.builder()
+                CxxHeaders.builder()
                     .putNameToPathMap(
                         Paths.get(headerName),
                         new TestSourcePath(headerName))
@@ -259,7 +258,7 @@ public class CxxLibraryDescriptionTest {
                     cxxPlatform.getFlavor(),
                     CxxDescriptionEnhancer.HeaderVisibility.PRIVATE))
             .setIncludes(
-                ImmutableCxxHeaders.builder()
+                CxxHeaders.builder()
                     .putNameToPathMap(
                         Paths.get(privateHeaderName),
                         new TestSourcePath(privateHeaderName))
@@ -509,13 +508,13 @@ public class CxxLibraryDescriptionTest {
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return type == Linker.LinkableDepType.STATIC ?
-            ImmutableNativeLinkableInput.of(
+            NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
                         getProjectFilesystem(),
                         staticLibraryDep.getBuildTarget())),
                 ImmutableList.of(staticLibraryOutput.toString())) :
-            ImmutableNativeLinkableInput.of(
+            NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
                         getProjectFilesystem(),
@@ -525,7 +524,7 @@ public class CxxLibraryDescriptionTest {
 
       @Override
       public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
-        return ImmutablePythonPackageComponents.of(
+        return PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(
@@ -599,7 +598,7 @@ public class CxxLibraryDescriptionTest {
                     cxxPlatform.getFlavor(),
                     CxxDescriptionEnhancer.HeaderVisibility.PUBLIC))
             .setIncludes(
-                ImmutableCxxHeaders.builder()
+                CxxHeaders.builder()
                     .putNameToPathMap(
                         Paths.get(genHeaderName),
                         new BuildTargetSourcePath(projectFilesystem, genHeaderTarget))
@@ -808,7 +807,7 @@ public class CxxLibraryDescriptionTest {
             .toSet());
 
     // Check the python interface returning by this C++ library.
-    PythonPackageComponents expectedPythonPackageComponents = ImmutablePythonPackageComponents.of(
+    PythonPackageComponents expectedPythonPackageComponents = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(

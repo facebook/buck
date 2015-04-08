@@ -46,6 +46,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -54,7 +55,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.coercer.ImmutableFrameworkPath;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.base.Optional;
@@ -96,7 +97,7 @@ public class NewNativeTargetProjectMutatorTest {
     mutator
         .setTargetName("TestTarget")
         .setProduct(
-            PBXTarget.ProductType.BUNDLE,
+            ProductType.BUNDLE,
             "TestTargetProduct",
             Paths.get("TestTargetProduct.bundle"))
         .buildTargetAndAddToProject(generatedProject);
@@ -114,7 +115,7 @@ public class NewNativeTargetProjectMutatorTest {
         .setTargetName("TestTarget")
         .setTargetGroupPath(ImmutableList.of("Grandparent", "Parent"))
         .setProduct(
-            PBXTarget.ProductType.BUNDLE,
+            ProductType.BUNDLE,
             "TestTargetProduct",
             Paths.get("TestTargetProduct.bundle"))
         .buildTargetAndAddToProject(generatedProject);
@@ -251,7 +252,7 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
     mutator.setFrameworks(
         ImmutableSet.of(
-            ImmutableFrameworkPath.ofSourceTreePath(
+            FrameworkPath.ofSourceTreePath(
                 new SourceTreePath(
                     PBXReference.SourceTree.SDKROOT, Paths.get("Foo.framework")))));
     mutator.setArchives(
@@ -411,7 +412,7 @@ public class NewNativeTargetProjectMutatorTest {
     mutator
         .setTargetName("TestTarget")
         .setProduct(
-            PBXTarget.ProductType.BUNDLE,
+            ProductType.BUNDLE,
             "TestTargetProduct",
             Paths.get("TestTargetProduct.bundle"));
     return mutator;

@@ -20,7 +20,6 @@ import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -61,7 +60,7 @@ public class AndroidLibraryGraphEnhancer {
     this.resourceDependencyMode = resourceDependencyMode;
   }
 
-  public static ImmutableBuildTarget getDummyRDotJavaTarget(BuildTarget buildTarget) {
+  public static BuildTarget getDummyRDotJavaTarget(BuildTarget buildTarget) {
     return BuildTarget.builder(buildTarget)
         .addFlavors(DUMMY_R_DOT_JAVA_FLAVOR)
         .build();

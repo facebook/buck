@@ -26,7 +26,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -148,10 +147,10 @@ public class CxxPythonExtensionDescriptionTest {
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return type == Linker.LinkableDepType.STATIC ?
-            ImmutableNativeLinkableInput.of(
+            NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(),
                 ImmutableList.<String>of()) :
-            ImmutableNativeLinkableInput.of(
+            NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
                         getProjectFilesystem(),
@@ -162,7 +161,7 @@ public class CxxPythonExtensionDescriptionTest {
 
       @Override
       public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
-        return ImmutablePythonPackageComponents.of(
+        return PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(
@@ -226,7 +225,7 @@ public class CxxPythonExtensionDescriptionTest {
     // Verify that we get the expected view from the python packageable interface.
     PythonPackageComponents actualComponent = extension.getPythonPackageComponents(cxxPlatform);
     BuildRule rule = resolver.getRule(desc.getExtensionTarget(target, cxxPlatform.getFlavor()));
-    PythonPackageComponents expectedComponents = ImmutablePythonPackageComponents.of(
+    PythonPackageComponents expectedComponents = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(
             target.getBasePath().resolve(desc.getExtensionName(target)),
             new BuildTargetSourcePath(projectFilesystem, rule.getBuildTarget())),

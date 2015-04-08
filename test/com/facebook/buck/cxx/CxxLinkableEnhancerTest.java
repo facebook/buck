@@ -196,7 +196,7 @@ public class CxxLinkableEnhancerTest {
 
     // Create a native linkable dep and have it list the fake build rule above as a link
     // time dependency.
-    NativeLinkableInput nativeLinkableInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput nativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(PROJECT_FILESYSTEM, fakeBuildRule.getBuildTarget())),
         ImmutableList.<String>of());
@@ -298,11 +298,11 @@ public class CxxLinkableEnhancerTest {
     // Create a native linkable dep and have it list the fake build rule above as a link
     // time dependency
     String staticArg = "static";
-    NativeLinkableInput staticInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput staticInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.of(staticArg));
     String sharedArg = "shared";
-    NativeLinkableInput sharedInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput sharedInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.of(sharedArg));
     FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep",
@@ -355,7 +355,7 @@ public class CxxLinkableEnhancerTest {
 
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinel = "bottom";
-    NativeLinkableInput bottomInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput bottomInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.of(sentinel));
     BuildRule bottom = createNativeLinkable("//:bottom", pathResolver, bottomInput, bottomInput);
@@ -365,7 +365,7 @@ public class CxxLinkableEnhancerTest {
     BuildRule middle = new FakeBuildRule("//:middle", pathResolver, bottom);
 
     // Create a native linkable that sits at the top of the dep chain.
-    NativeLinkableInput topInput = ImmutableNativeLinkableInput.of(
+    NativeLinkableInput topInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.<String>of());
     BuildRule top = createNativeLinkable("//:top", pathResolver, topInput, topInput, middle);

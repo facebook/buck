@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -91,7 +90,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
         .addRules(symlinkTree.getBuildTarget())
         .putAllPreprocessorFlags(exportedPreprocessorFlags.apply(cxxPlatform))
         .setIncludes(
-            ImmutableCxxHeaders.builder()
+            CxxHeaders.builder()
                 .putAllNameToPathMap(symlinkTree.getLinks())
                 .putAllFullNameToPathMap(symlinkTree.getFullLinks())
                 .build())
@@ -138,7 +137,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     }
     final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
-    return ImmutableNativeLinkableInput.of(
+    return NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(
                 libraryRule.getProjectFilesystem(),
@@ -155,7 +154,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
         ruleResolver,
         cxxPlatform.getFlavor(),
         CxxDescriptionEnhancer.SHARED_FLAVOR);
-    return ImmutablePythonPackageComponents.of(
+    return PythonPackageComponents.of(
         /* modules */ ImmutableMap.<Path, SourcePath>of(),
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
         /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of(

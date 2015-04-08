@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.rules.coercer.ImmutableBuildConfigFields;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -61,7 +60,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             "com.example.buck",
             BuildConfigFields.fromFields(
                 ImmutableList.<BuildConfigFields.Field>of(
-                    ImmutableBuildConfigFields.Field.of("String", "foo", "\"bar\"")))),
+                    BuildConfigFields.Field.of("String", "foo", "\"bar\"")))),
         collection.getBuildConfigs());
   }
 

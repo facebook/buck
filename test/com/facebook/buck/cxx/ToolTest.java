@@ -24,6 +24,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
@@ -54,13 +55,13 @@ public class ToolTest {
     Path same = Paths.get("same");
 
     Tool tool1 = new HashedFileTool(path);
-    RuleKey.Builder.RuleKeyPair tool1RuleKey =
+    RuleKeyPair tool1RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
             .setReflectively("tool", tool1)
             .build();
 
     Tool tool2 = new HashedFileTool(path);
-    RuleKey.Builder.RuleKeyPair tool2RuleKey =
+    RuleKeyPair tool2RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
             .setReflectively("tool", tool2)
             .build();
@@ -69,7 +70,7 @@ public class ToolTest {
     assertEquals(tool1RuleKey, tool2RuleKey);
 
     Tool tool3 = new HashedFileTool(otherPath);
-    RuleKey.Builder.RuleKeyPair tool3RuleKey =
+    RuleKeyPair tool3RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
             .setReflectively("tool", tool3)
             .build();
@@ -78,7 +79,7 @@ public class ToolTest {
     assertNotEquals(tool1RuleKey, tool3RuleKey);
 
     Tool tool4 = new HashedFileTool(same);
-    RuleKey.Builder.RuleKeyPair tool4RuleKey =
+    RuleKeyPair tool4RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
             .setReflectively("tool", tool4)
             .build();
@@ -104,7 +105,7 @@ public class ToolTest {
             ImmutableList.<String>of(),
             tool,
             version);
-    RuleKey.Builder.RuleKeyPair tool1RuleKey =
+    RuleKeyPair tool1RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
             .setReflectively("tool", tool1)
             .build();
@@ -115,7 +116,7 @@ public class ToolTest {
             ImmutableList.<String>of(),
             tool,
             version);
-    RuleKey.Builder.RuleKeyPair tool2RuleKey =
+    RuleKeyPair tool2RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
             .setReflectively("tool", tool2)
             .build();
@@ -139,12 +140,12 @@ public class ToolTest {
                     .put("/opt/bin/python2.7", Strings.repeat("a", 40))
                     .build()));
 
-    RuleKey.Builder.RuleKeyPair tool1RuleKey =
+    RuleKeyPair tool1RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
             .setReflectively("tool", tool1)
             .build();
 
-    RuleKey.Builder.RuleKeyPair tool2RuleKey =
+    RuleKeyPair tool2RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
             .setReflectively("tool", tool2)
             .build();

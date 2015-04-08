@@ -40,7 +40,7 @@ public class FakeAppleRuleDescriptions {
   private FakeAppleRuleDescriptions() { }
 
   private static final AppleSdkPaths DEFAULT_IPHONEOS_SDK_PATHS =
-      ImmutableAppleSdkPaths.builder()
+      AppleSdkPaths.builder()
           .setDeveloperPath(Paths.get("."))
           .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
           .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))

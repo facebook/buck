@@ -64,7 +64,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
     ImmutableMap<BuildTarget, HashCode> expectedTargetHashes = ImmutableMap.of(
-        (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
+        BuildTarget.builder("//foo", "lib").build(),
         HashCode.fromString("15bcb369ef1f2c6df995f0538b7d95f4798a16e7")
     );
 
@@ -74,7 +74,7 @@ public class TargetGraphHashingTest {
             targetGraph,
             Functions.forMap(
                 ImmutableMap.of(
-                    (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
+                    BuildTarget.builder("//foo", "lib").build(),
                     HashCode.fromLong(64738))),
             node.getBuildTarget()),
         equalTo(expectedTargetHashes));
@@ -91,7 +91,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
     ImmutableMap<BuildTarget, HashCode> expectedTargetHashes = ImmutableMap.of(
-        (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
+        BuildTarget.builder("//foo", "lib").build(),
         HashCode.fromString("6cb8ac509e591d722c2902a08be8738649a620b9")
     );
 
@@ -101,7 +101,7 @@ public class TargetGraphHashingTest {
             targetGraph,
             Functions.forMap(
                 ImmutableMap.of(
-                    (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
+                    BuildTarget.builder("//foo", "lib").build(),
                     HashCode.fromLong(64738))),
             node.getBuildTarget()),
         equalTo(expectedTargetHashes));
@@ -122,7 +122,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
 
     ImmutableMap<BuildTarget, HashCode> expectedTargetHashes = ImmutableMap.of(
-        (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
+        BuildTarget.builder("//foo", "lib").build(),
         HashCode.fromString("15bcb369ef1f2c6df995f0538b7d95f4798a16e7"),
         BuildTarget.builder("//bar", "lib").build(),
         HashCode.fromString("55f239830db5afd6ee64574eb974e0ec058bb8f8")
@@ -134,7 +134,7 @@ public class TargetGraphHashingTest {
             targetGraph,
             Functions.forMap(
                 ImmutableMap.of(
-                    (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
+                    BuildTarget.builder("//foo", "lib").build(),
                     HashCode.fromLong(64738),
                     BuildTarget.builder("//bar", "lib").build(),
                     HashCode.fromLong(49152))),
@@ -161,7 +161,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
 
     ImmutableMap<BuildTarget, HashCode> expectedTargetHashes = ImmutableMap.of(
-        (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
+        BuildTarget.builder("//foo", "lib").build(),
         HashCode.fromString("15bcb369ef1f2c6df995f0538b7d95f4798a16e7"),
         BuildTarget.builder("//bar", "lib").build(),
         HashCode.fromString("f5441f7d7c2ece03c68bc3c620496dc1195a5a32")
@@ -173,7 +173,7 @@ public class TargetGraphHashingTest {
             targetGraph,
             Functions.forMap(
                 ImmutableMap.of(
-                    (BuildTarget) BuildTarget.builder("//foo", "lib").build(),
+                    BuildTarget.builder("//foo", "lib").build(),
                     HashCode.fromLong(64738),
                     BuildTarget.builder("//bar", "lib").build(),
                     HashCode.fromLong(49152))),

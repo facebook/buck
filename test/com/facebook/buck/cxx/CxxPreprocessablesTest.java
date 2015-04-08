@@ -258,7 +258,7 @@ public class CxxPreprocessablesTest {
 
     CxxPreprocessorInput bottomInput = CxxPreprocessorInput.builder()
         .setIncludes(
-            ImmutableCxxHeaders.builder()
+            CxxHeaders.builder()
                 .putNameToPathMap(
                     Paths.get("prefix/file.h"),
                     new TestSourcePath("bottom/file.h"))
@@ -271,7 +271,7 @@ public class CxxPreprocessablesTest {
 
     CxxPreprocessorInput topInput = CxxPreprocessorInput.builder()
         .setIncludes(
-            ImmutableCxxHeaders.builder()
+            CxxHeaders.builder()
                 .putNameToPathMap(
                     Paths.get("prefix/file.h"),
                     new TestSourcePath("top/file.h"))
@@ -298,7 +298,7 @@ public class CxxPreprocessablesTest {
 
     CxxPreprocessorInput bottomInput = CxxPreprocessorInput.builder()
         .setIncludes(
-            ImmutableCxxHeaders.builder()
+            CxxHeaders.builder()
                 .putNameToPathMap(
                     Paths.get("prefix/file.h"),
                     new TestSourcePath("common/file.h"))
@@ -311,7 +311,7 @@ public class CxxPreprocessablesTest {
 
     CxxPreprocessorInput topInput = CxxPreprocessorInput.builder()
         .setIncludes(
-            ImmutableCxxHeaders.builder()
+            CxxHeaders.builder()
                 .putNameToPathMap(
                     Paths.get("prefix/file.h"),
                     new TestSourcePath("common/file.h"))
@@ -324,7 +324,7 @@ public class CxxPreprocessablesTest {
 
     CxxPreprocessorInput expected = CxxPreprocessorInput.builder()
         .setIncludes(
-            ImmutableCxxHeaders.builder()
+            CxxHeaders.builder()
                 .putNameToPathMap(
                     Paths.get("prefix/file.h"),
                     new TestSourcePath("common/file.h"))

@@ -81,7 +81,7 @@ public class PkillProcessManager implements ProcessManager {
 
   private ProcessExecutor.Result runProcess(ImmutableList<String> processAndArgs)
       throws InterruptedException, IOException {
-    ProcessExecutorParams params = ImmutableProcessExecutorParams.builder()
+    ProcessExecutorParams params = ProcessExecutorParams.builder()
         .setCommand(processAndArgs)
         .build();
     return processExecutor.launchAndExecute(params);

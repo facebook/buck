@@ -38,7 +38,7 @@ import java.util.Map;
 
 public class ExternalJavac implements Javac {
 
-  private static final JavacVersion DEFAULT_VERSION = ImmutableJavacVersion.of("unknown version");
+  private static final JavacVersion DEFAULT_VERSION = JavacVersion.of("unknown version");
 
   private final Path pathToJavac;
   private final Optional<JavacVersion> version;

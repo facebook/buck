@@ -86,14 +86,14 @@ public class RuleKeyTest {
 
   @Test
   public void ensureSimpleValuesCorrectRuleKeyChangesMade() {
-    RuleKey.Builder.RuleKeyPair reflective = createEmptyRuleKey(
+    RuleKeyPair reflective = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
         .setReflectively("long", 42L)
         .setReflectively("boolean", true)
         .setReflectively("path", Paths.get("location", "of", "the", "rebel", "plans"))
         .build();
 
-    RuleKey.Builder.RuleKeyPair manual = createEmptyRuleKey(
+    RuleKeyPair manual = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
         .setReflectively("long", 42L)
         .setReflectively("boolean", true)
@@ -108,13 +108,13 @@ public class RuleKeyTest {
     ImmutableList<SourceRoot> sourceroots = ImmutableList.of(new SourceRoot("cake"));
     ImmutableList<String> strings = ImmutableList.of("one", "two");
 
-    RuleKey.Builder.RuleKeyPair reflective = createEmptyRuleKey(
+    RuleKeyPair reflective = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
         .setReflectively("sourceroot", sourceroots)
         .setReflectively("strings", strings)
         .build();
 
-    RuleKey.Builder.RuleKeyPair manual = createEmptyRuleKey(
+    RuleKeyPair manual = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
         .setReflectively("sourceroot", sourceroots)
         .setReflectively("strings", strings)
@@ -125,17 +125,17 @@ public class RuleKeyTest {
 
   @Test
   public void testRuleKeyPairEqualsAndHashCodeMethods() {
-    RuleKey.Builder.RuleKeyPair keyPair1 =
+    RuleKeyPair keyPair1 =
         createEmptyRuleKey(
             new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("something", "foo")
             .build();
-    RuleKey.Builder.RuleKeyPair keyPair2 =
+    RuleKeyPair keyPair2 =
         createEmptyRuleKey(
             new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("something", "foo")
             .build();
-    RuleKey.Builder.RuleKeyPair keyPair3 =
+    RuleKeyPair keyPair3 =
         createEmptyRuleKey(
             new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("something", "bar")
@@ -263,7 +263,7 @@ public class RuleKeyTest {
         "boolean",
         true);
 
-    RuleKey.Builder.RuleKeyPair key =
+    RuleKeyPair key =
         createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("map", map)
             .build();
@@ -277,7 +277,7 @@ public class RuleKeyTest {
         Paths.get("some/path"), "woohoo!",
         42L, "life, the universe and everything");
 
-    RuleKey.Builder.RuleKeyPair key =
+    RuleKeyPair key =
         createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("map", map)
             .build();

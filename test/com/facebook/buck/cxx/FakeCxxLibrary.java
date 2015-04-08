@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.python.ImmutablePythonPackageComponents;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -105,11 +104,11 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
     return type == Linker.LinkableDepType.STATIC ?
-        ImmutableNativeLinkableInput.of(
+        NativeLinkableInput.of(
             ImmutableList.<SourcePath>of(
                 new BuildTargetSourcePath(getProjectFilesystem(), archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString())) :
-        ImmutableNativeLinkableInput.of(
+        NativeLinkableInput.of(
             ImmutableList.<SourcePath>of(
                 new BuildTargetSourcePath(
                     getProjectFilesystem(),
@@ -119,7 +118,7 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
-    return ImmutablePythonPackageComponents.of(
+    return PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(

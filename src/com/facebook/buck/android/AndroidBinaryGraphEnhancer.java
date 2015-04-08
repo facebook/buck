@@ -40,7 +40,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.rules.coercer.ImmutableBuildConfigFields;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -159,7 +158,7 @@ public class AndroidBinaryGraphEnhancer {
             buildTargetsToExcludeFromDex,
             resourcesToExclude);
     collector.addPackageables(AndroidPackageableCollector.getPackageableRules(originalDeps));
-    ImmutableAndroidPackageableCollection packageableCollection = collector.build();
+    AndroidPackageableCollection packageableCollection = collector.build();
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         packageableCollection.getResourceDetails();
 
@@ -369,7 +368,7 @@ public class AndroidBinaryGraphEnhancer {
       finalDeps = enhancedDeps.build();
     }
 
-    return ImmutableAndroidGraphEnhancementResult.builder()
+    return AndroidGraphEnhancementResult.builder()
         .setPackageableCollection(packageableCollection)
         .setAaptPackageResources(aaptPackageResources)
         .setCopyNativeLibraries(copyNativeLibraries)
@@ -433,27 +432,27 @@ public class AndroidBinaryGraphEnhancer {
 
     BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(
         ImmutableList.<BuildConfigFields.Field>of(
-            ImmutableBuildConfigFields.Field.of(
+            BuildConfigFields.Field.of(
                 "boolean",
                 BuildConfigs.DEBUG_CONSTANT,
                 String.valueOf(packageType != AndroidBinary.PackageType.RELEASE)),
-            ImmutableBuildConfigFields.Field.of(
+            BuildConfigFields.Field.of(
                 "boolean",
                 BuildConfigs.IS_EXO_CONSTANT,
                 String.valueOf(!exopackageModes.isEmpty())),
-            ImmutableBuildConfigFields.Field.of(
+            BuildConfigFields.Field.of(
                 "int",
                 BuildConfigs.EXOPACKAGE_FLAGS,
                 String.valueOf(ExopackageMode.toBitmask(exopackageModes))),
-            ImmutableBuildConfigFields.Field.of(
+            BuildConfigFields.Field.of(
                 "String",
                 BuildConfigs.PACKAGE_NAME,
                 packageName),
-            ImmutableBuildConfigFields.Field.of(
+            BuildConfigFields.Field.of(
                 "int",
                 BuildConfigs.VERSION_CODE,
                 versionCode),
-            ImmutableBuildConfigFields.Field.of(
+            BuildConfigFields.Field.of(
                 "String",
                 BuildConfigs.VERSION_NAME,
                 versionName)));

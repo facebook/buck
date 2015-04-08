@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -101,7 +102,7 @@ public class ExternalJavacTest extends EasyMockSupport {
         pathResolver,
         fileHashCache);
     builder.setReflectively("key.javac", javac);
-    RuleKey.Builder.RuleKeyPair expected = builder.build();
+    RuleKeyPair expected = builder.build();
 
     builder = RuleKey.builder(
         new NoopBuildRule(params, pathResolver),
@@ -109,7 +110,7 @@ public class ExternalJavacTest extends EasyMockSupport {
         fileHashCache);
     ExternalJavac compiler = new ExternalJavac(javac, Optional.<JavacVersion>absent());
     compiler.appendToRuleKey(builder, "key");
-    RuleKey.Builder.RuleKeyPair seen = builder.build();
+    RuleKeyPair seen = builder.build();
 
     assertEquals(expected, seen);
   }
@@ -119,7 +120,7 @@ public class ExternalJavacTest extends EasyMockSupport {
       throws IOException {
     Path javac = Files.createTempFile("fake", "javac");
     javac.toFile().deleteOnExit();
-    JavacVersion javacVersion = ImmutableJavacVersion.of("mozzarella");
+    JavacVersion javacVersion = JavacVersion.of("mozzarella");
 
     Map<Path, HashCode> hashCodes = ImmutableMap.of(javac, Hashing.sha1().hashInt(42));
     FakeFileHashCache fileHashCache = new FakeFileHashCache(hashCodes);
@@ -130,7 +131,7 @@ public class ExternalJavacTest extends EasyMockSupport {
         pathResolver,
         fileHashCache);
     builder.setReflectively("key.javac.version", javacVersion.toString());
-    RuleKey.Builder.RuleKeyPair expected = builder.build();
+    RuleKeyPair expected = builder.build();
 
     builder = RuleKey.builder(
         new NoopBuildRule(params, pathResolver),
@@ -138,7 +139,7 @@ public class ExternalJavacTest extends EasyMockSupport {
         fileHashCache);
     ExternalJavac compiler = new ExternalJavac(javac, Optional.of(javacVersion));
     compiler.appendToRuleKey(builder, "key");
-    RuleKey.Builder.RuleKeyPair seen = builder.build();
+    RuleKeyPair seen = builder.build();
 
     assertEquals(expected, seen);
   }
@@ -155,7 +156,6 @@ public class ExternalJavacTest extends EasyMockSupport {
   private ExternalJavac createTestStep() {
     Path fakeJavac = Paths.get("fakeJavac");
     return new ExternalJavac(
-        fakeJavac, Optional.of((JavacVersion) ImmutableJavacVersion.of("unknown")));
+        fakeJavac, Optional.of(JavacVersion.of("unknown")));
   }
 }
-

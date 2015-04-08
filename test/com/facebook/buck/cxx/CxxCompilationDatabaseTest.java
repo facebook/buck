@@ -90,7 +90,7 @@ public class CxxCompilationDatabaseTest {
             Paths.get("test")),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
-        ImmutableCxxHeaders.builder().build(),
+        CxxHeaders.builder().build(),
         Optional.<DebugPathSanitizer>absent());
 
     testBuildRuleResolver.addToIndex(testCompileRule);
@@ -184,7 +184,7 @@ public class CxxCompilationDatabaseTest {
             Paths.get("test")),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
-        ImmutableCxxHeaders.builder().build(),
+        CxxHeaders.builder().build(),
         Optional.<DebugPathSanitizer>absent());
 
     BuildTarget compileTarget = BuildTarget
@@ -206,7 +206,7 @@ public class CxxCompilationDatabaseTest {
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
-        ImmutableCxxHeaders.builder().build(),
+        CxxHeaders.builder().build(),
         Optional.<DebugPathSanitizer>absent());
 
     testBuildRuleResolver.addToIndex(testPreprocessRule);

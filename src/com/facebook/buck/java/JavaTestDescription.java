@@ -66,7 +66,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
-    ImmutableJavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
+    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
         resolver,
         pathResolver,
         args,
