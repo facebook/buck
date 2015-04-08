@@ -238,11 +238,18 @@ class BuckTool(object):
                 print(
                     "nailgun server did not respond after 10s. Aborting buckd.",
                     file=sys.stderr)
-                return
+                return 1
 
             self._buck_project.save_buckd_port(buckd_port)
             self._buck_project.save_buckd_version(buck_version_uid)
             self._buck_project.update_buckd_run_count(0)
+
+            returncode = process.poll()
+            # If the process hasn't exited yet, everything is working as expected
+            if returncode is None:
+                return 0
+
+            return returncode
 
     def kill_autobuild(self):
         autobuild_pid = self._buck_project.get_autobuild_pid()
