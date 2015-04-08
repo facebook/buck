@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -31,7 +31,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractGroupedSource {
   /**
    * The type of grouped source entry this object represents.

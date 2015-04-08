@@ -50,8 +50,8 @@ java_immutables_library(
 {/literal}
 
 <p>Then, declare an <code>interface</code> or <code>abstract</code> class
-containing the type and data accessors. Make sure to annotate it
-with <code>@org.immutables.value.Value.Immutable</code> and <code>@com.facebook.buck.util.immutables.BuckStyleImmutable</code>:</p>
+named <code>Abstract*</code> containing the type and data accessors. Make sure to annotate it
+with <code>@org.immutables.value.Value.Immutable</code> and <code>@com.facebook.buck.util.immutables.BuckStyleImmutable</code>.</p>
 
 {literal}<pre class="prettyprint lang-java">
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -61,29 +61,29 @@ import java.util.List;
 
 @Value.Immutable
 @BuckStyleImmutable
-public interface Type {
+interface AbstractType {
   String getName();
   List&lt;Long&gt; getPhoneNumbers();
   Optional&lt;String&gt; getDescription();
 }
 </pre>
-{/literal}
 
-<p>Note that you must use <code>List&lt;T&gt;</code> instead of <code>ImmutableList&lt;T&gt;</code> in your
-interface. (Under the hood, it will be <code>ImmutableList</code>, but the source generation currently prefers
-the general type in the interface.)</p>
+<p>Note that the <code>AbstractType</code> type is <b>package private</b>; the generated class will be named <code>Type</code>
+and will be <code>public</code>.</p>
+
+{/literal}
 
 <p>This will generate two classes:</p>
 
 <ul>
-<li><code>ImmutableType</code>: A concrete implementation of <code>Type</code> with <code>private final</code> members</li>
-<li><code>ImmutableType.Builder</code>: A <code>Builder</code> which generates instances of <code>ImmutableType</code></li>
+<li><code>Type</code>: A concrete, <code>public</code>, <code>final</code> implementation of <code>AbstractType</code> with <code>private final</code> members</li>
+<li><code>Type.Builder</code>: A <code>Builder</code> which generates instances of <code>Type</code></li>
 </ul>
 
 <p>For example, to generate an instance of and check its members in a unit test:</p>
 
 {literal}<pre class="prettyprint lang-java">
-    Type t = ImmutableType.builder()
+    Type t = Type.builder()
         .setName("Jenny")
         .addPhoneNumbers(8675309L)
         .build();

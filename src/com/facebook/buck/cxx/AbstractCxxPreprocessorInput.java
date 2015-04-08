@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -38,7 +38,7 @@ import java.util.Set;
  * The components that get contributed to a top-level run of the C++ preprocessor.
  */
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractCxxPreprocessorInput {
 
   // The build rules which produce headers found in the includes below.

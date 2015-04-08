@@ -19,7 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -36,7 +36,7 @@ import java.nio.file.Paths;
  * Frameworks can be specified as either a path to a file, or a path prefixed by a build setting.
  */
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath> {
   /**
    * The type of framework entry this object represents.

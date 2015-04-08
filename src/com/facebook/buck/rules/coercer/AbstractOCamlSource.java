@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 
 import org.immutables.value.Value;
@@ -26,7 +26,7 @@ import org.immutables.value.Value;
  * Describes a OCaml source and the various paths it uses from input to output.
  */
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractOCamlSource {
   public static final Function<OCamlSource, SourcePath> TO_SOURCE_PATH = new
       Function<OCamlSource, SourcePath>() {

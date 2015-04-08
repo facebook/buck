@@ -16,7 +16,7 @@
 
 package com.facebook.buck.model;
 
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
     fieldVisibility = JsonAutoDetect.Visibility.NONE,
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE)
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 @Value.Immutable
 abstract class AbstractBuildTarget
     implements

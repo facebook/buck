@@ -18,7 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.ExopackageInfo.DexInfo;
 import com.facebook.buck.rules.ExopackageInfo.NativeLibsInfo;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -28,7 +28,7 @@ import java.nio.file.Path;
 
 @Value.Immutable
 @Value.Enclosing
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractExopackageInfo {
 
   @Value.Immutable

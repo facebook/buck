@@ -22,7 +22,7 @@ import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Predicate;
 
 import org.immutables.value.Value;
@@ -32,7 +32,7 @@ import org.immutables.value.Value;
  * with an IDE project.
  */
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractProjectPredicates {
 
   /**

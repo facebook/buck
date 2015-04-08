@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import com.google.common.base.Optional;
 
@@ -26,7 +26,7 @@ import java.util.Map;
 import org.immutables.value.Value;
 
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 interface AbstractTypeAndPlatform {
   @Value.Parameter
   Optional<Map.Entry<Flavor, CxxLibraryDescription.Type>> getType();

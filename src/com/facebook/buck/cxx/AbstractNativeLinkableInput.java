@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
@@ -30,7 +30,7 @@ import java.util.List;
  * the final link.
  */
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractNativeLinkableInput {
 
   // Inputs used by linker.

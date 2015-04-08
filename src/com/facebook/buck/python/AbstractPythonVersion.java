@@ -16,12 +16,12 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
 
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractPythonVersion {
 
   @Value.Parameter

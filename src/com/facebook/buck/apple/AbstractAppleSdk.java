@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
 
@@ -26,7 +26,7 @@ import java.util.Set;
  * Metadata about an Apple SDK.
  */
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 interface AbstractAppleSdk {
   /**
    * The full name of the SDK. For example: {@code iphonesimulator8.0}.

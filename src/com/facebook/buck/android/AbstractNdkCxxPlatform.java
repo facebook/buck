@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
 
@@ -27,7 +27,7 @@ import java.nio.file.Path;
  * Adds Android-specific tools to {@link CxxPlatform}.
  */
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 interface AbstractNdkCxxPlatform {
 
   CxxPlatform getCxxPlatform();

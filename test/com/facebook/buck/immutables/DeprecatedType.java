@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,7 +16,7 @@
 
 package com.facebook.buck.immutables;
 
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.DeprecatedBuckStyleImmutable;
 import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
@@ -24,12 +24,13 @@ import org.immutables.value.Value;
 import java.util.List;
 
 /**
- * Interface from which a concrete immutable implementation {@link NewType}
- * will be generated, along with an {@link NewType.Builder}.
+ * Interface from which a concrete immutable implementation {@link ImmutableDeprecatedType}
+ * will be generated, along with an {@link ImmutableDeprecatedType.Builder}.
  */
 @Value.Immutable
-@NewBuckStyleImmutable
-interface AbstractNewType {
+@DeprecatedBuckStyleImmutable
+@SuppressWarnings("deprecation")
+public interface DeprecatedType {
   String getName();
   List<Long> getPhoneNumbers();
   Optional<String> getDescription();

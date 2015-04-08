@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,23 +14,21 @@
  * under the License.
  */
 
-package com.facebook.buck.immutables;
-
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
+package com.facebook.buck.util.immutables;
 
 import org.immutables.value.Value;
 
-import java.util.List;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Interface from which a concrete immutable implementation {@link ImmutableType}
- * will be generated, along with an {@link ImmutableType.Builder}.
+ * @deprecated
+ * Use {@link BuckStyleImmutable} instead.
  */
-@Value.Immutable
-@BuckStyleImmutable
-public interface Type {
-  String getName();
-  List<Long> getPhoneNumbers();
-  Optional<String> getDescription();
-}
+@Value.Style(get = {"is*", "get*"}, init = "set*")
+@Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.SOURCE)
+@Deprecated
+public @interface DeprecatedBuckStyleImmutable {}

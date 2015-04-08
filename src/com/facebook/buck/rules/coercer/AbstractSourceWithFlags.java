@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
@@ -30,7 +30,7 @@ import java.util.List;
  * Simple type representing a {@link SourcePath} and a list of file-specific flags.
  */
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractSourceWithFlags implements Comparable<AbstractSourceWithFlags> {
 
   @Value.Parameter

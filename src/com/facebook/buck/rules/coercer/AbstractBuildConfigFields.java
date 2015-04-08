@@ -19,7 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields.Field;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
  */
 @Value.Enclosing
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractBuildConfigFields implements Iterable<Field> {
 
   /** An individual field in a {@link BuildConfigFields}. */

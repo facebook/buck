@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -27,7 +27,7 @@ import org.immutables.value.Value;
 import java.nio.file.Path;
 
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 interface AbstractAndroidGraphEnhancementResult {
   AndroidPackageableCollection getPackageableCollection();
   AaptPackageResources getAaptPackageResources();

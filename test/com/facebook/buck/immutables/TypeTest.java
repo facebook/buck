@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -18,18 +18,21 @@ package com.facebook.buck.immutables;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
+
+import java.lang.reflect.Modifier;
 
 import org.junit.Test;
 
 /**
- * Unit test for generated {@link ImmutableType} class.
+ * Unit test for generated {@link Type} class.
  */
 public class TypeTest {
   @Test
   public void testBuilder() {
-    Type t = ImmutableType.builder()
+    Type t = Type.builder()
         .setName("Jenny")
         .addPhoneNumbers(8675309L)
         .build();
@@ -37,5 +40,20 @@ public class TypeTest {
     assertEquals("Jenny", t.getName());
     assertEquals(ImmutableList.of(8675309L), t.getPhoneNumbers());
     assertFalse(t.getDescription().isPresent());
+  }
+
+  @Test
+  public void generatedClassIsPublic() {
+    assertEquals(Modifier.PUBLIC, Type.class.getModifiers() & Modifier.PUBLIC);
+  }
+
+  @Test
+  public void generatedClassIsFinal() {
+    assertEquals(Modifier.FINAL, Type.class.getModifiers() & Modifier.FINAL);
+  }
+
+  @Test
+  public void generatedClassImplementsAbstractType() {
+    assertTrue(AbstractType.class.isAssignableFrom(Type.class));
   }
 }

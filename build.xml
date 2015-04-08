@@ -349,7 +349,6 @@
 
         <!-- //src/com/facebook/buck/util/immutables:immutables -->
         <include name="com/facebook/buck/util/immutables/BuckStyleImmutable.java" />
-        <include name="com/facebook/buck/util/immutables/NewBuckStyleImmutable.java" />
 
         <!-- //src/com/facebook/buck/zip:stream -->
         <include name="com/facebook/buck/zip/AppendingZipOutputStream.java" />

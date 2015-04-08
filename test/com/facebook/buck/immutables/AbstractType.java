@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,32 +14,23 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.immutables;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
+import java.util.List;
+
+/**
+ * Interface from which a concrete immutable implementation {@link Type}
+ * will be generated, along with an {@link Type.Builder}.
+ */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractLabel implements Comparable<AbstractLabel> {
-
-  @Value.Parameter
-  public abstract String getLabelString();
-
-  @Override
-  public int compareTo(AbstractLabel that) {
-    if (that == this) {
-      return 0;
-    }
-    return getLabelString().compareTo(that.getLabelString());
-  }
-
-  /**
-   * @return The value of the label as specified in the BUCK file. Used for serialisation.
-   */
-  @Override
-  public String toString() {
-    return getLabelString();
-  }
+interface AbstractType {
+  String getName();
+  List<Long> getPhoneNumbers();
+  Optional<String> getDescription();
 }

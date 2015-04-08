@@ -16,13 +16,13 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 interface AbstractAppleBundleDestination {
   public enum SubfolderSpec {
     ABSOLUTE,

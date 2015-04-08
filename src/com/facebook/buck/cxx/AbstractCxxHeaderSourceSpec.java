@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
 
@@ -25,7 +25,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 interface AbstractCxxHeaderSourceSpec {
 
   @Value.Parameter

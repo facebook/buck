@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.collect.Multimap;
 
@@ -29,7 +29,7 @@ import java.util.List;
  * Interface describing a C/C++ toolchain and platform to build for.
  */
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 interface AbstractCxxPlatform {
 
   enum LinkerType {

@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.java.JavaNativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -37,7 +37,7 @@ import java.util.Set;
  */
 @Value.Immutable
 @Value.Enclosing
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 interface AbstractAndroidPackageableCollection {
 
   @Value.Immutable

@@ -23,7 +23,24 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Value.Style(get = {"is*", "get*"}, init = "set*")
+/**
+ * <p>Style for code-generated Immutables.org immutable value types which:</p>
+ *
+ * <ol>
+ * <li>Does not add the Immutable prefix on generated classes</li>
+ * <li>Strips off the Abstract name prefix when processing the parent interface or abstract
+ * class</li>
+ * <li>Supports isFoo() / getFoo() getters in the parent interface or abstract class</li>
+ * <li>Supports setFoo() setters in the parent interface or abstract class</li>
+ * <li>Ensures the generated class is public (even if the parent interface or abstract class
+ * is package private)</li>
+ */
+@Value.Style(
+    typeImmutable = "*",
+    typeAbstract = "Abstract*",
+    get = {"is*", "get*"},
+    init = "set*",
+    visibility = Value.Style.ImplementationVisibility.PUBLIC)
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface BuckStyleImmutable {}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -18,21 +18,18 @@ package com.facebook.buck.immutables;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
-import java.lang.reflect.Modifier;
-
 /**
- * Unit test for generated {@link NewType} class.
+ * Unit test for generated {@link ImmutableDeprecatedType} class.
  */
-public class NewTypeTest {
+public class DeprecatedTypeTest {
   @Test
   public void testBuilder() {
-    NewType t = NewType.builder()
+    DeprecatedType t = ImmutableDeprecatedType.builder()
         .setName("Jenny")
         .addPhoneNumbers(8675309L)
         .build();
@@ -40,20 +37,5 @@ public class NewTypeTest {
     assertEquals("Jenny", t.getName());
     assertEquals(ImmutableList.of(8675309L), t.getPhoneNumbers());
     assertFalse(t.getDescription().isPresent());
-  }
-
-  @Test
-  public void generatedClassIsPublic() {
-    assertEquals(Modifier.PUBLIC, NewType.class.getModifiers() & Modifier.PUBLIC);
-  }
-
-  @Test
-  public void generatedClassIsFinal() {
-    assertEquals(Modifier.FINAL, NewType.class.getModifiers() & Modifier.FINAL);
-  }
-
-  @Test
-  public void generatedClassImplementsAbstractType() {
-    assertTrue(AbstractNewType.class.isAssignableFrom(NewType.class));
   }
 }

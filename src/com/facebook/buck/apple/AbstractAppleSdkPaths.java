@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 
 import org.immutables.value.Value;
@@ -31,7 +31,7 @@ import java.util.Set;
  * Paths to Apple SDK directories under an installation of Xcode.
  */
 @Value.Immutable
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractAppleSdkPaths {
   /**
    * Absolute path to the active DEVELOPER_DIR.

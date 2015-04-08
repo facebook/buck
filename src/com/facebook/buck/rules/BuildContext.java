@@ -27,7 +27,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.timing.Clock;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.DeprecatedBuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -43,7 +43,8 @@ import java.util.List;
 import java.util.Map;
 
 @Value.Immutable
-@BuckStyleImmutable
+@DeprecatedBuckStyleImmutable
+@SuppressWarnings("deprecation")
 public abstract class BuildContext {
 
   private static final Function<AndroidPlatformTarget, String>

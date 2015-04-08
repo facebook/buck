@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -31,7 +31,7 @@ import org.immutables.value.Value;
  * Tests with the same parameters should be able to be linked and bundled into a single executable.
  */
 @Value.Immutable(prehash = true)
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractAppleTestBundleParamsKey {
   public abstract Optional<SourcePath> getInfoPlist();
   public abstract Either<AppleBundleExtension, String> getExtension();

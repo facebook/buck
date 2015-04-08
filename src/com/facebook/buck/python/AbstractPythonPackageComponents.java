@@ -21,7 +21,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.immutables.NewBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Value.Immutable(builder = false)
-@NewBuckStyleImmutable
+@BuckStyleImmutable
 abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
 
   // Python modules as map of their module name to location of the source.
