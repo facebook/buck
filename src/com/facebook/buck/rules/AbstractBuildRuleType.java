@@ -23,7 +23,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @NewBuckStyleImmutable
-public abstract class AbstractBuildRuleType {
+abstract class AbstractBuildRuleType {
   // Internal rule types. Denoted by leading underscore.
   public static final BuildRuleType AAPT_PACKAGE = BuildRuleType.of("_aapt_package");
   public static final BuildRuleType COPY_NATIVE_LIBS =

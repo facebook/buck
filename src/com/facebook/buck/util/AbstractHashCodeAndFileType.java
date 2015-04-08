@@ -24,7 +24,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @NewBuckStyleImmutable
-public interface AbstractHashCodeAndFileType {
+interface AbstractHashCodeAndFileType {
   static enum Type {
       FILE,
       DIRECTORY
