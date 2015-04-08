@@ -254,7 +254,7 @@ public class TargetsCommandTest {
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
         matchingBuildRules.keySet());
 
-    // Verify that BUCK files show up as referenced_files.
+    // Verify that BUCK files show up as referenced files.
     referencedFiles = ImmutableSet.of(
         Paths.get("javasrc/BUCK"));
     matchingBuildRules =

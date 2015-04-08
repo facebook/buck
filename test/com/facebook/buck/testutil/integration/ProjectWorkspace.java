@@ -175,7 +175,7 @@ public class ProjectWorkspace {
     // TODO(jacko): This is going to overwrite the build.log. Maybe stash that and return it?
     ProjectWorkspace.ProcessResult outputFileResult = runBuckCommand(
         "targets",
-        "--show_output",
+        "--show-output",
         target.toString());
     outputFileResult.assertSuccess();
     String pathToGeneratedJarFile = outputFileResult.getStdout().split(" ")[1].trim();

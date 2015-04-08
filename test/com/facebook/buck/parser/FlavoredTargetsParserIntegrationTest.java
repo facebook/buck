@@ -83,7 +83,7 @@ public class FlavoredTargetsParserIntegrationTest {
     result.assertSuccess();
 
     // Verify that both the src zip and the jar were created.
-    result = workspace.runBuckCommand("targets", "--show_output", "//:example", "//:example#src");
+    result = workspace.runBuckCommand("targets", "--show-output", "//:example", "//:example#src");
     result.assertSuccess();
     String stdout = result.getStdout();
     List<String> paths = Splitter.on('\n').omitEmptyStrings().trimResults().splitToList(stdout);

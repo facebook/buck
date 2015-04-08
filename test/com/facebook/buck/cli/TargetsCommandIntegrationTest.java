@@ -62,7 +62,7 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "targets",
-        "--show_output",
+        "--show-output",
         "//:test");
     result.assertSuccess();
     assertEquals("//:test buck-out/gen/test-output\n", result.getStdout());
@@ -76,7 +76,7 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "targets",
-        "--show_rulekey",
+        "--show-rulekey",
         "//:test");
     result.assertSuccess();
     assertEquals("//:test 1daea9887d3ccc0ec2cdafb5f330b45e75b0e2be\n", result.getStdout());
@@ -90,8 +90,8 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "targets",
-        "--show_rulekey",
-        "--show_output",
+        "--show-rulekey",
+        "--show-output",
         "//:test");
     result.assertSuccess();
     assertEquals(
@@ -107,7 +107,7 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "targets",
-        "--show_output");
+        "--show-output");
     result.assertFailure();
     assertEquals("BUILD FAILED: Must specify at least one build target.\n", result.getStderr());
   }
@@ -120,7 +120,7 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "targets",
-        "--show_rulekey");
+        "--show-rulekey");
     result.assertFailure();
     assertEquals("BUILD FAILED: Must specify at least one build target.\n", result.getStderr());
   }
@@ -292,7 +292,7 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand(
         "targets",
-        "--referenced_file",
+        "--referenced-file",
         ABSOLUTE_PATH_TO_FILE_OUTSIDE_THE_PROJECT_THAT_EXISTS_ON_THE_FS);
     result.assertSuccess("Even though the file is outside the project, " +
         "`buck targets` should succeed.");
@@ -309,7 +309,7 @@ public class TargetsCommandIntegrationTest {
         "targets",
         "--type",
         "prebuilt_jar",
-        "--referenced_file",
+        "--referenced-file",
         ABSOLUTE_PATH_TO_FILE_OUTSIDE_THE_PROJECT_THAT_EXISTS_ON_THE_FS,
         "libs/guava.jar", // relative path in project
         tmp.getRootPath().resolve("libs/junit.jar").toString()); // absolute path in project
@@ -334,7 +334,7 @@ public class TargetsCommandIntegrationTest {
     assertFalse(workspace.getFile(pathToNonExistentFile).exists());
     ProcessResult result = workspace.runBuckCommand(
         "targets",
-        "--referenced_file",
+        "--referenced-file",
         pathToNonExistentFile);
     result.assertSuccess("Even though the file does not exist, buck targets` should succeed.");
     assertEquals("Because no targets match, stdout should be empty.", "", result.getStdout());

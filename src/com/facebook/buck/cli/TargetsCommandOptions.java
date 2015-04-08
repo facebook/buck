@@ -38,7 +38,7 @@ public class TargetsCommandOptions extends AbstractCommandOptions {
   // manually, which is likely the path to madness.
   @Option(name = "--referenced-file",
       aliases = {"--referenced_file"},
-      usage = "The referenced file list, --referenced_file file1 file2  ... fileN --other_option",
+      usage = "The referenced file list, --referenced-file file1 file2  ... fileN --other_option",
       handler = StringSetOptionHandler.class)
   @SuppressFieldNotInitialized
   private Supplier<ImmutableSet<String>> referencedFiles;
@@ -120,12 +120,12 @@ public class TargetsCommandOptions extends AbstractCommandOptions {
     return isResolveAlias;
   }
 
-  /** @return {@code true} if {@code --show_output} was specified. */
+  /** @return {@code true} if {@code --show-output} was specified. */
   public boolean isShowOutput() {
     return isShowOutput;
   }
 
-  /** @return {@code true} if {@code --show_rulekey} was specified. */
+  /** @return {@code true} if {@code --show-rulekey} was specified. */
   public boolean isShowRuleKey() {
     return isShowRuleKey;
   }
