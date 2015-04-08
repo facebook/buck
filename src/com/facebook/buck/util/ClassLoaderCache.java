@@ -16,20 +16,21 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.HashMap;
-import javax.annotation.Nullable;
+import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
+import javax.annotation.Nullable;
 
 /**
  * Maintain a cache mapping class paths to class loaders that load from these class paths.  The

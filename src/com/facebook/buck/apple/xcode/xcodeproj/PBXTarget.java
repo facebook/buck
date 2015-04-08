@@ -20,11 +20,11 @@ import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.Lists;
 
+import org.immutables.value.Value;
+
 import java.util.List;
 
 import javax.annotation.Nullable;
-
-import org.immutables.value.Value;
 
 /**
  * Information for building a specific artifact (a library, binary, or test).

@@ -18,7 +18,6 @@ package com.facebook.buck.log;
 
 import com.facebook.buck.io.PathListing;
 import com.facebook.buck.util.BuckConstant;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;

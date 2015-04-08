@@ -17,14 +17,13 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.log.Logger;
-
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * Parses a string containing one or more flavor names.

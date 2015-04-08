@@ -18,12 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal.CycleException;
-import com.facebook.buck.hashing.StringHashing;
 import com.facebook.buck.hashing.PathHashing;
+import com.facebook.buck.hashing.StringHashing;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.io.ProjectFilesystem;
-
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

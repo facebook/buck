@@ -16,9 +16,9 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.util.BuckConstant.SCRATCH_PATH;
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static com.facebook.buck.util.BuckConstant.GEN_PATH;
+import static com.facebook.buck.util.BuckConstant.SCRATCH_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasTests;
-
 import com.google.common.collect.ImmutableSortedSet;
 
 /**

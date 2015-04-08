@@ -24,10 +24,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import java.io.IOException;
 
 /**
  * A step that preprocesses, compiles, and assembles OCaml sources.

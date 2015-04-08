@@ -16,9 +16,9 @@
 
 package com.facebook.buck.testutil.integration;
 
+import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.CapturingPrintStream;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

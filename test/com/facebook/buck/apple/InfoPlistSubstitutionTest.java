@@ -16,13 +16,12 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.ImmutableMap;
-
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.isEmptyString;
-
 import static org.junit.Assert.assertThat;
+
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;
 import org.junit.Test;

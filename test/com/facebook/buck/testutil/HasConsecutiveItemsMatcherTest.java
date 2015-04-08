@@ -16,14 +16,13 @@
 
 package com.facebook.buck.testutil;
 
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.core.IsNot.not;
-
 import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecutiveItems;
-
-import org.junit.Test;
+import static org.hamcrest.core.IsNot.not;
+import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableList;
+
+import org.junit.Test;
 
 /**
  * Unit tests for {@link HasConsecutiveItemsMatcher}.

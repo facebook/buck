@@ -18,8 +18,8 @@ package com.facebook.buck.android;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 import com.facebook.buck.android.DxStep.Option;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.DefaultStepRunner;

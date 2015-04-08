@@ -18,7 +18,6 @@ package com.facebook.buck.hashing;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Funnels;
 import com.google.common.hash.Hasher;
@@ -27,9 +26,7 @@ import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
 import java.nio.file.Path;
-
 import java.util.Set;
 
 public class PathHashing {

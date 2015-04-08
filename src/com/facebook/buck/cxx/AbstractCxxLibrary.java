@@ -16,14 +16,13 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.java.JavaNativeLinkable;
 import com.facebook.buck.android.AndroidPackageable;
+import com.facebook.buck.java.JavaNativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
-
 import com.google.common.collect.ImmutableSortedSet;
 
 public abstract class AbstractCxxLibrary

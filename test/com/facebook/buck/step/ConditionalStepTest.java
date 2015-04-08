@@ -24,10 +24,9 @@ import com.google.common.base.Supplier;
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import java.io.IOException;
 
 public class ConditionalStepTest extends EasyMockSupport {
 

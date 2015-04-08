@@ -25,14 +25,14 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.IOException;
-import java.nio.file.attribute.FileTime;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 
 /**
  * Unit tests for {@link PathListing}.

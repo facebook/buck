@@ -18,7 +18,6 @@ package com.facebook.buck.model;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.emptyIterable;
-
 import static org.junit.Assert.assertThat;
 
 import org.junit.Test;

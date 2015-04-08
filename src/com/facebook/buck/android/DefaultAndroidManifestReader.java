@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.XmlDomParser;
-
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 

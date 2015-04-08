@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.util.HumanReadableException;
-
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 

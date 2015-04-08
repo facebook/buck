@@ -16,20 +16,20 @@
 
 package com.facebook.buck.util;
 
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertArrayEquals;
-
-import org.junit.Test;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import static org.junit.Assert.assertSame;
 
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+
+import org.junit.Test;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ClassLoaderCacheTest {
   private static final String DUMMYDIR = "d7b9d9fd-1a83-4c76-8981-52deb0fa4d17";

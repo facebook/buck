@@ -16,14 +16,14 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonEnvironment;
-import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
