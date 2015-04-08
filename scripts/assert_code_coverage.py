@@ -237,7 +237,10 @@ def calculate_code_coverage():
     for coverage_type in TYPES:
         numerator = total_covered_by_type[coverage_type]
         denominator = total_missed_plus_covered_type[coverage_type]
-        percentage = 100.0 * numerator / denominator
+        if denominator > 0:
+            percentage = 100.0 * numerator / denominator
+        else:
+            percentage = 100.0
         overall_percentages[coverage_type] = percentage
 
     observed_percentage = overall_percentages[SORT_TYPE]
