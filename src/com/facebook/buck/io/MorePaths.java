@@ -19,7 +19,6 @@ package com.facebook.buck.io;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -38,23 +37,10 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Collection;
 
 import javax.annotation.Nullable;
 
 public class MorePaths {
-
-  /**
-   * Returns true iff a path on the filesystem exists, is a regular file, and is executable.
-   */
-  public static final Function<Path, Boolean> DEFAULT_PATH_IS_EXECUTABLE_CHECKER =
-      new Function<Path, Boolean>() {
-        @Override
-        public Boolean apply(Path path) {
-          return Files.isRegularFile(path) &&
-              Files.isExecutable(path);
-        }
-      };
 
   /** Utility class: do not instantiate. */
   private MorePaths() {}
@@ -286,85 +272,6 @@ public class MorePaths {
     } catch (NoSuchAlgorithmException e) {
       throw Throwables.propagate(e);
     }
-  }
-
-  /**
-   * Looks for {@code executableToFind} under each entry of {@code pathsToSearch} and returns
-   * the full path ({@code pathToSearch/executableToFind)}) to the first one which
-   * exists on disk as an executable file.
-   *
-   * This is similar to the {@code which} command in Unix, but handles the various extensions
-   * that are configured by Windows (when supplied with valid {@code extensions}).
-   *
-   * {@code executableToFind} must be a relative path.
-   *
-   * If none are found, returns {@link Optional#absent()}.
-   */
-  public static Optional<Path> searchPathsForExecutable(
-      Path executableToFind,
-      Collection<Path> pathsToSearch,
-      Collection<String> extensions) {
-    return searchPathsForExecutable(
-        executableToFind,
-        pathsToSearch,
-        extensions,
-        DEFAULT_PATH_IS_EXECUTABLE_CHECKER);
-  }
-
-  /**
-   * Looks for {@code executableToFind} under each entry of {@code pathsToSearch} and returns
-   * the full path ({@code pathToSearch/executableToFind)}) to the first one for which
-   * {@code pathIsExecutableChecker(path)} returns true.
-   *
-   * This is similar to the {@code which} command in Unix, but handles the various extensions
-   * that are configured by Windows (when supplied with valid {@code extensions}).
-   *
-   * {@code executableToFind} must be a relative path.
-   *
-   * If none are found, returns {@link Optional#absent()}.
-   */
-  public static Optional<Path> searchPathsForExecutable(
-      Path executableToFind,
-      Collection<Path> pathsToSearch,
-      Collection<String> extensions,
-      Function<Path, Boolean> pathIsExecutableChecker) {
-    Preconditions.checkArgument(
-        !executableToFind.isAbsolute(),
-        "Path %s must be relative",
-        executableToFind);
-
-    for (Path pathToSearch : pathsToSearch) {
-      Optional<Path> maybeResolved = resolveExecutable(
-          pathToSearch,
-          executableToFind,
-          extensions,
-          pathIsExecutableChecker);
-      if (maybeResolved.isPresent()) {
-        return maybeResolved;
-      }
-    }
-    return Optional.absent();
-  }
-
-  private static Optional<Path> resolveExecutable(
-      Path base,
-      Path executableToFind,
-      Collection<String> extensions,
-      Function<Path, Boolean> pathIsExecutableChecker) {
-    if (extensions.isEmpty()) {
-      Path resolved = base.resolve(executableToFind);
-      if (pathIsExecutableChecker.apply(resolved)) {
-        return Optional.of(resolved);
-      }
-      return Optional.absent();
-    }
-    for (String pathExt : extensions) {
-      Path resolved = base.resolve(executableToFind + pathExt);
-      if (pathIsExecutableChecker.apply(resolved)) {
-        return Optional.of(resolved);
-      }
-    }
-    return Optional.absent();
   }
 
   public static ByteSource asByteSource(final Path path) {

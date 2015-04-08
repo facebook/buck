@@ -34,6 +34,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigerator;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaLibrary;
@@ -1685,7 +1686,9 @@ public class ParserTest extends EasyMockSupport {
         Console console,
         ImmutableMap<String, String> environment,
         BuckEventBus buckEventBus) {
-      PythonBuckConfig config = new PythonBuckConfig(new FakeBuckConfig(environment));
+      PythonBuckConfig config = new PythonBuckConfig(
+          new FakeBuckConfig(environment),
+          new ExecutableFinder());
       return new TestProjectBuildFileParser(config.getPythonInterpreter());
     }
 

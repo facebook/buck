@@ -22,16 +22,16 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.cxx.VersionedTool;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -63,7 +63,7 @@ public class AppleCxxPlatforms {
         targetArchitecture,
         sdkPaths,
         buckConfig,
-        MorePaths.DEFAULT_PATH_IS_EXECUTABLE_CHECKER);
+        new ExecutableFinder());
   }
 
   @VisibleForTesting
@@ -75,7 +75,7 @@ public class AppleCxxPlatforms {
       String targetArchitecture,
       AppleSdkPaths sdkPaths,
       BuckConfig buckConfig,
-      Function<Path, Boolean> pathIsExecutableChecker) {
+      ExecutableFinder executableFinder) {
 
     ImmutableList.Builder<Path> toolSearchPathsBuilder = ImmutableList.builder();
     // Search for tools from most specific to least specific.
@@ -109,25 +109,25 @@ public class AppleCxxPlatforms {
         targetSdkName);
 
     Tool clangPath = new VersionedTool(
-        getToolPath("clang", toolSearchPaths, pathIsExecutableChecker),
+        getToolPath("clang", toolSearchPaths, executableFinder),
         cflags,
         "apple-clang",
         xcodeAndSdkVersion);
 
     Tool clangXxPath = new VersionedTool(
-        getToolPath("clang++", toolSearchPaths, pathIsExecutableChecker),
+        getToolPath("clang++", toolSearchPaths, executableFinder),
         cflags,
         "apple-clang++",
         xcodeAndSdkVersion);
 
     Tool libtool = new VersionedTool(
-        getToolPath("libtool", toolSearchPaths, pathIsExecutableChecker),
+        getToolPath("libtool", toolSearchPaths, executableFinder),
         ImmutableList.<String>of(),
         "apple-libtool",
         xcodeAndSdkVersion);
 
     Tool ar = new VersionedTool(
-        getToolPath("ar", toolSearchPaths, pathIsExecutableChecker),
+        getToolPath("ar", toolSearchPaths, executableFinder),
         ImmutableList.<String>of(),
         "apple-ar",
         xcodeAndSdkVersion);
@@ -148,27 +148,16 @@ public class AppleCxxPlatforms {
         Optional.of(CxxPlatform.LinkerType.DARWIN),
         libtool,
         ar,
-        getOptionalTool("lex", toolSearchPaths, pathIsExecutableChecker, xcodeAndSdkVersion),
-        getOptionalTool("yacc", toolSearchPaths, pathIsExecutableChecker, xcodeAndSdkVersion));
-  }
-
-  private static Optional<Path> getOptionalToolPath(
-      String tool,
-      ImmutableList<Path> toolSearchPaths,
-      Function<Path, Boolean> pathIsExecutableChecker) {
-    return MorePaths.searchPathsForExecutable(
-        Paths.get(tool),
-        toolSearchPaths,
-        ImmutableList.<String>of(),
-        pathIsExecutableChecker);
+        getOptionalTool("lex", toolSearchPaths, executableFinder, xcodeAndSdkVersion),
+        getOptionalTool("yacc", toolSearchPaths, executableFinder, xcodeAndSdkVersion));
   }
 
   private static Optional<Tool> getOptionalTool(
       String tool,
       ImmutableList<Path> toolSearchPaths,
-      Function<Path, Boolean> pathIsExecutableChecker,
+      ExecutableFinder executableFinder,
       String version) {
-    return getOptionalToolPath(tool, toolSearchPaths, pathIsExecutableChecker)
+    return getOptionalToolPath(tool, toolSearchPaths, executableFinder)
         .transform(VersionedTool.fromPath(tool, version))
         .transform(Functions.<Tool>identity());
   }
@@ -176,12 +165,23 @@ public class AppleCxxPlatforms {
   private static Path getToolPath(
       String tool,
       ImmutableList<Path> toolSearchPaths,
-      Function<Path, Boolean> pathIsExecutableChecker) {
-    Optional<Path> result = getOptionalToolPath(tool, toolSearchPaths, pathIsExecutableChecker);
+      ExecutableFinder executableFinder) {
+    Optional<Path> result = getOptionalToolPath(tool, toolSearchPaths, executableFinder);
     if (!result.isPresent()) {
       throw new HumanReadableException("Cannot find tool %s in paths %s", tool, toolSearchPaths);
     }
     return result.get();
+  }
+
+    private static Optional<Path> getOptionalToolPath(
+      String tool,
+      ImmutableList<Path> toolSearchPaths,
+      ExecutableFinder executableFinder) {
+
+      return executableFinder.getOptionalExecutable(
+          Paths.get(tool),
+          toolSearchPaths,
+          ImmutableSet.<String>of());
   }
 
 }

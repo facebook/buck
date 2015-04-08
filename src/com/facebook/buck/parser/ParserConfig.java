@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
@@ -38,7 +39,7 @@ public class ParserConfig {
 
   public ParserConfig(BuckConfig delegate) {
     this.delegate = delegate;
-    this.pythonBuckConfig = new PythonBuckConfig(delegate);
+    this.pythonBuckConfig = new PythonBuckConfig(delegate, new ExecutableFinder());
   }
 
   public boolean getAllowEmptyGlobs() {

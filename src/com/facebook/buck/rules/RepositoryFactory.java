@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonEnvironment;
@@ -134,7 +135,7 @@ public class RepositoryFactory {
     // Look up the javac version.
     ProcessExecutor processExecutor = new ProcessExecutor(console);
 
-    PythonBuckConfig pythonConfig = new PythonBuckConfig(config);
+    PythonBuckConfig pythonConfig = new PythonBuckConfig(config, new ExecutableFinder());
     PythonEnvironment pythonEnv = pythonConfig.getPythonEnvironment(processExecutor);
 
     // NOTE:  If any other variable is used when configuring buildRuleTypes, it MUST be passed down

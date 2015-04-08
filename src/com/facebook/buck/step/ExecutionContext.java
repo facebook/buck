@@ -21,7 +21,7 @@ import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
@@ -36,13 +36,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
@@ -176,17 +175,10 @@ public abstract class ExecutionContext implements Closeable {
    * @return The {@link Path} to the executable is resolved, or {@link Optional#absent()}.
    */
   public Optional<Path> resolveExecutable(Path base, String executable) {
-    String possibleExtensions = getEnvironment().get("PATHEXT");
-    ImmutableList.Builder<String> extensions = ImmutableList.builder();
-    if (possibleExtensions != null) {
-      for (String extension : possibleExtensions.split(File.pathSeparator)) {
-        extensions.add(extension);
-      }
-    }
-    return MorePaths.searchPathsForExecutable(
+    return new ExecutableFinder().getOptionalExecutable(
         Paths.get(executable),
-        ImmutableList.of(base),
-        extensions.build());
+        ImmutableSet.of(base),
+        ImmutableSet.<String>of());
   }
 
   @Override

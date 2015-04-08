@@ -68,6 +68,7 @@ import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.HttpDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.java.JavaBuckConfig;
@@ -385,7 +386,7 @@ public class KnownBuildRuleTypes {
 
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
-    PythonBuckConfig pyConfig = new PythonBuckConfig(config);
+    PythonBuckConfig pyConfig = new PythonBuckConfig(config, new ExecutableFinder());
 
     // Look up the path to the main module we use for python tests.
     Optional<Path> pythonPathToPythonTestMain = pyConfig.getPathToTestMain();

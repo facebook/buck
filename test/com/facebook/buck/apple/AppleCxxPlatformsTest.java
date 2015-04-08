@@ -25,13 +25,13 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Functions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,11 +59,11 @@ public class AppleCxxPlatformsTest {
             .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
 
-    ImmutableMap<Path, Boolean> paths = ImmutableMap.<Path, Boolean>builder()
-        .put(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"), true)
-        .put(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"), true)
-        .put(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"), true)
-        .put(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"), true)
+    ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
+        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .build();
 
     CxxPlatform appleCxxPlatform =
@@ -75,8 +75,7 @@ public class AppleCxxPlatformsTest {
             "armv7",
             appleSdkPaths,
             new FakeBuckConfig(),
-            Functions.forMap(paths, false)
-        );
+            new FakeExecutableFinder(paths));
 
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
 
@@ -117,11 +116,11 @@ public class AppleCxxPlatformsTest {
             .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
 
-    ImmutableMap<Path, Boolean> paths = ImmutableMap.<Path, Boolean>builder()
-        .put(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"), true)
-        .put(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"), true)
-        .put(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"), true)
-        .put(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"), true)
+    ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
+        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .build();
 
     CxxPlatform appleCxxPlatform =
@@ -139,7 +138,7 @@ public class AppleCxxPlatformsTest {
                         "cppflags", "-DCTHING",
                         "cxxflags", "-std=c++11",
                         "cxxppflags", "-DCXXTHING"))),
-            Functions.forMap(paths, false));
+            new FakeExecutableFinder(paths));
 
     assertThat(
         appleCxxPlatform.getCflags(),
@@ -175,7 +174,7 @@ public class AppleCxxPlatformsTest {
         "armv7",
         appleSdkPaths,
         new FakeBuckConfig(),
-        Functions.forPredicate(Predicates.<Path>alwaysFalse()));
+        new FakeExecutableFinder(ImmutableSet.<Path>of()));
   }
 
   @Test
@@ -188,11 +187,11 @@ public class AppleCxxPlatformsTest {
             .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
 
-    ImmutableMap<Path, Boolean> paths = ImmutableMap.<Path, Boolean>builder()
-        .put(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"), true)
-        .put(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"), true)
-        .put(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"), true)
-        .put(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"), true)
+    ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
+        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .build();
 
     CxxPlatform appleCxxPlatform =
@@ -204,8 +203,7 @@ public class AppleCxxPlatformsTest {
             "armv7",
             appleSdkPaths,
             new FakeBuckConfig(),
-            Functions.forMap(paths, false)
-        );
+            new FakeExecutableFinder(paths));
 
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     assertThat(

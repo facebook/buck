@@ -119,6 +119,7 @@ java_immutables_library(
     '//src/com/facebook/buck/util/unit:unit',
     '//src/com/facebook/buck/util/concurrent:concurrent',
     '//src/com/facebook/buck/util/environment:environment',
+    '//src/com/facebook/buck/util/environment:env-filter',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/timing:timing',
     '//third-party/java/args4j:args4j',

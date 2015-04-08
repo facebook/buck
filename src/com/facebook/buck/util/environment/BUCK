@@ -10,11 +10,27 @@ java_library(
   ],
 )
 
+FILTER_SRCS = [
+  'EnvironmentFilter.java',
+]
+
+java_library(
+  name = 'env-filter',
+  srcs = FILTER_SRCS,
+  deps = [
+    ':platform',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
 
 java_library(
   name = 'environment',
-  srcs = glob(['*.java'], excludes = PLATFORM_SRCS),
+  srcs = glob(['*.java'], excludes = FILTER_SRCS + PLATFORM_SRCS),
   deps = [
+    ':env-filter',
     ':platform',
     '//third-party/java/guava:guava',
     '//src/com/facebook/buck/util:io',

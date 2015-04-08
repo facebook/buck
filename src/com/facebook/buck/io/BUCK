@@ -4,7 +4,10 @@ java_library(
   deps = [
     # This library is widely used throughout Buck. Please keep
     # the number of dependencies to an absolute minimum.
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/util:constants',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util/environment:env-filter',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/zip:stream',
     '//third-party/java/guava:guava',

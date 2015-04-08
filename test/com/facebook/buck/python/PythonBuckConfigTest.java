@@ -23,12 +23,14 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cli.FakeBuckEnvironment;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -71,7 +73,8 @@ public class PythonBuckConfigTest {
                     .put(
                         "python",
                         ImmutableMap.of("interpreter", configPythonFile.getAbsolutePath()))
-                    .build()));
+                    .build()),
+            new ExecutableFinder());
     assertEquals(
         "Should return path to temp file.",
         configPythonFile.getAbsolutePath(), config.getPythonInterpreter());
@@ -85,7 +88,8 @@ public class PythonBuckConfigTest {
             new FakeBuckConfig(
                 ImmutableMap.<String, Map<String, String>>builder()
                     .put("python", ImmutableMap.of("interpreter", invalidPath))
-                    .build()));
+                    .build()),
+            new ExecutableFinder());
     config.getPythonInterpreter();
     fail("Should throw exception as python config is invalid.");
   }
@@ -101,7 +105,8 @@ public class PythonBuckConfigTest {
                     .put(
                         "python",
                         ImmutableMap.of("interpreter", configPythonFile.getAbsolutePath()))
-                    .build()));
+                    .build()),
+            new ExecutableFinder());
     config.getPythonInterpreter();
     fail("Should throw exception as python config is invalid.");
   }
@@ -117,7 +122,8 @@ public class PythonBuckConfigTest {
                     .put(
                         "python",
                         ImmutableMap.of("interpreter", configPythonFile.getAbsolutePath()))
-                    .build()));
+                    .build()),
+            new ExecutableFinder());
     config.getPythonInterpreter();
     fail("Should throw exception as python config is invalid.");
   }
@@ -133,22 +139,26 @@ public class PythonBuckConfigTest {
                 ImmutableMap.<String, String>builder()
                     .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
                     .put("PATHEXT", "")
-                    .build()));
+                    .build()),
+            new ExecutableFinder());
     config.getPythonInterpreter();
   }
 
   @Test
   public void whenPythonPlusExtensionOnPathIsExecutableFileThenItIsUsed() throws IOException {
-    File python = temporaryFolder.newFile("python.exe");
+    File python = temporaryFolder.newFile("my-py.exe");
     assertTrue("Should be able to set file executable", python.setExecutable(true));
     PythonBuckConfig config =
         new PythonBuckConfig(
             new FakeBuckEnvironment(
-                ImmutableMap.<String, Map<String, String>>of(),
+                ImmutableMap.<String, Map<String, String>>builder()
+                    .put("python", ImmutableMap.of("interpreter", "my-py"))
+                    .build(),
                 ImmutableMap.<String, String>builder()
                     .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
                     .put("PATHEXT", ".exe")
-                    .build()));
+                    .build()),
+            new ExecutableFinder(Platform.WINDOWS));
     config.getPythonInterpreter();
   }
 
@@ -165,7 +175,8 @@ public class PythonBuckConfigTest {
                 ImmutableMap.<String, String>builder()
                     .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
                     .put("PATHEXT", "")
-                    .build()));
+                    .build()),
+            new ExecutableFinder());
     assertEquals(
         "Should return path to python2.",
         python2.getAbsolutePath(),
@@ -177,11 +188,13 @@ public class PythonBuckConfigTest {
     PythonBuckConfig config =
         new PythonBuckConfig(
             new FakeBuckEnvironment(
-                ImmutableMap.<String, Map<String, String>>of(),
+                ImmutableMap.<String, Map<String, String>>of(
+                    "python", ImmutableMap.of("interpreter", "does-not-exist")),
                 ImmutableMap.<String, String>builder()
                     .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
                     .put("PATHEXT", "")
-                    .build()));
+                    .build()),
+            new ExecutableFinder());
     config.getPythonInterpreter();
     fail("Should throw an exception when Python isn't found.");
   }
@@ -202,7 +215,8 @@ public class PythonBuckConfigTest {
                 ImmutableMap.<String, String>builder()
                     .put("PATH", path)
                     .put("PATHEXT", "")
-                    .build()));
+                    .build()),
+            new ExecutableFinder());
     assertEquals(
         "Should return the first path",
         config.getPythonInterpreter(),
@@ -220,7 +234,8 @@ public class PythonBuckConfigTest {
                 ImmutableMap.<String, String>builder()
                     .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
                     .put("PATHEXT", "")
-                    .build()));
+                    .build()),
+            new ExecutableFinder());
     assertEquals(config.getPathToPexExecuter().toString(), config.getPythonInterpreter());
   }
 
@@ -246,7 +261,8 @@ public class PythonBuckConfigTest {
                         ImmutableMap.of(
                             "path_to_pex_executer",
                             pexExecuter.toString())).build(),
-                projectFilesystem));
+                projectFilesystem),
+            new ExecutableFinder());
     assertEquals(config.getPathToPexExecuter(), projectFilesystem.resolve(pexExecuter));
   }
 
@@ -272,7 +288,8 @@ public class PythonBuckConfigTest {
                         ImmutableMap.of(
                             "path_to_pex_executer",
                             pexExecuter.toString())).build(),
-                projectFilesystem));
+                projectFilesystem),
+            new ExecutableFinder());
     config.getPathToPexExecuter();
   }
 }

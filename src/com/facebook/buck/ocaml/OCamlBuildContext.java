@@ -45,13 +45,6 @@ public class OCamlBuildContext implements RuleKeyAppendable {
   static final String OCAML_COMPILED_DIR = "opt";
   private static final String OCAML_GENERATED_SOURCE_DIR = "gen";
 
-  static final Path DEFAULT_OCAML_BYTECODE_COMPILER =
-      Paths.get("/usr/bin/ocamlc.opt");
-  static final Path DEFAULT_OCAML_YACC_COMPILER = Paths.get("/usr/bin/ocamlyacc");
-  static final Path DEFAULT_OCAML_LEX_COMPILER = Paths.get("/usr/bin/ocamllex.opt");
-  static final Path DEFAULT_OCAML_COMPILER = Paths.get("/usr/bin/ocamlopt.opt");
-  static final Path DEFAULT_OCAML_DEP_TOOL = Paths.get("/usr/bin/ocamldep.opt");
-  static final Path DEFAULT_OCAML_DEBUG = Paths.get("/usr/bin/ocamldebug");
   static final Path DEFAULT_OCAML_INTEROP_INCLUDE_DIR = Paths.get("/usr/local/lib/ocaml");
 
   @Nullable
@@ -409,14 +402,12 @@ public class OCamlBuildContext implements RuleKeyAppendable {
       this.context = context;
       this.resolver = resolver;
       context.config = config;
-      context.ocamlDepTool = config.getOCamlDepTool().or(DEFAULT_OCAML_DEP_TOOL);
-      context.ocamlCompiler = config.getOCamlCompiler().or(DEFAULT_OCAML_COMPILER);
-      context.ocamlBytecodeCompiler = config.getOCamlBytecodeCompiler()
-          .or(DEFAULT_OCAML_BYTECODE_COMPILER);
-      context.ocamlDebug = config.getOCamlDebug().or(DEFAULT_OCAML_DEBUG);
-      context.yaccCompiler = config.getYaccCompiler()
-          .or(DEFAULT_OCAML_YACC_COMPILER);
-      context.lexCompiler = config.getLexCompiler().or(DEFAULT_OCAML_LEX_COMPILER);
+      context.ocamlDepTool = config.getOCamlDepTool().get();
+      context.ocamlCompiler = config.getOCamlCompiler().get();
+      context.ocamlBytecodeCompiler = config.getOCamlBytecodeCompiler().get();
+      context.ocamlDebug = config.getOCamlDebug().get();
+      context.yaccCompiler = config.getYaccCompiler().get();
+      context.lexCompiler = config.getLexCompiler().get();
     }
 
     Builder setFlags(ImmutableList<String> flags) {

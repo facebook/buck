@@ -24,12 +24,12 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -38,14 +38,6 @@ import java.nio.file.Paths;
 public class FakeAppleRuleDescriptions {
   // Utility class, do not instantiate.
   private FakeAppleRuleDescriptions() { }
-
-  private static final ImmutableMap<Path, Boolean> DEFAULT_TOOL_EXECUTABLE_CHECKER =
-      ImmutableMap.<Path, Boolean>builder()
-        .put(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"), true)
-        .put(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"), true)
-        .put(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"), true)
-        .put(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"), true)
-        .build();
 
   private static final AppleSdkPaths DEFAULT_IPHONEOS_SDK_PATHS =
       ImmutableAppleSdkPaths.builder()
@@ -64,7 +56,11 @@ public class FakeAppleRuleDescriptions {
           "i386",
           DEFAULT_IPHONEOS_SDK_PATHS,
           new FakeBuckConfig(),
-          Functions.forMap(DEFAULT_TOOL_EXECUTABLE_CHECKER, false));
+          new FakeExecutableFinder(ImmutableSet.of(
+              Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"),
+              Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
+              Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
+              Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))));
 
   private static final BuckConfig DEFAULT_BUCK_CONFIG = new FakeBuckConfig();
 

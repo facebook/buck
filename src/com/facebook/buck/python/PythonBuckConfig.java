@@ -17,7 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
@@ -53,9 +53,11 @@ public class PythonBuckConfig {
 
 
   private final BuckConfig delegate;
+  private final ExecutableFinder exeFinder;
 
-  public PythonBuckConfig(BuckConfig config) {
+  public PythonBuckConfig(BuckConfig config, ExecutableFinder exeFinder) {
     this.delegate = config;
+    this.exeFinder = exeFinder;
   }
 
   /**
@@ -85,15 +87,10 @@ public class PythonBuckConfig {
       pythonInterpreterNames = ImmutableList.of(configPath.get());
     }
 
-    ImmutableList.Builder<Path> paths = ImmutableList.builder();
-    for (String path : delegate.getEnv("PATH", File.pathSeparator)) {
-      paths.add(Paths.get(path));
-    }
     for (String interpreterName : pythonInterpreterNames) {
-      Optional<Path> python = MorePaths.searchPathsForExecutable(
+      Optional<Path> python = exeFinder.getOptionalExecutable(
           Paths.get(interpreterName),
-          paths.build(),
-          ImmutableList.copyOf(delegate.getEnv("PATHEXT", File.pathSeparator)));
+          delegate.getEnvironment());
       if (python.isPresent()) {
         return python.get().toAbsolutePath().toString();
       }

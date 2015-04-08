@@ -16,11 +16,6 @@
 
 package com.facebook.buck.ocaml;
 
-import static com.facebook.buck.ocaml.OCamlBuildContext.DEFAULT_OCAML_BYTECODE_COMPILER;
-import static com.facebook.buck.ocaml.OCamlBuildContext.DEFAULT_OCAML_COMPILER;
-import static com.facebook.buck.ocaml.OCamlBuildContext.DEFAULT_OCAML_DEP_TOOL;
-import static com.facebook.buck.ocaml.OCamlBuildContext.DEFAULT_OCAML_LEX_COMPILER;
-import static com.facebook.buck.ocaml.OCamlBuildContext.DEFAULT_OCAML_YACC_COMPILER;
 import static com.facebook.buck.ocaml.OCamlRuleBuilder.createOCamlLinkTarget;
 import static com.facebook.buck.ocaml.OCamlRuleBuilder.createStaticLibraryBuildTarget;
 import static org.junit.Assert.assertEquals;
@@ -52,7 +47,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
 
 public class OCamlIntegrationTest {
 
@@ -75,12 +69,11 @@ public class OCamlIntegrationTest {
         Platform.detect(),
         buckConfig);
 
-    assumeTrue(Files.exists(oCamlBuckConfig.getOCamlCompiler().or(DEFAULT_OCAML_COMPILER)));
-    assumeTrue(Files.exists(oCamlBuckConfig.getOCamlBytecodeCompiler().or(
-                DEFAULT_OCAML_BYTECODE_COMPILER)));
-    assumeTrue(Files.exists(oCamlBuckConfig.getOCamlDepTool().or(DEFAULT_OCAML_DEP_TOOL)));
-    assumeTrue(Files.exists(oCamlBuckConfig.getYaccCompiler().or(DEFAULT_OCAML_YACC_COMPILER)));
-    assumeTrue(Files.exists(oCamlBuckConfig.getLexCompiler().or(DEFAULT_OCAML_LEX_COMPILER)));
+    assumeTrue(oCamlBuckConfig.getOCamlCompiler().isPresent());
+    assumeTrue(oCamlBuckConfig.getOCamlBytecodeCompiler().isPresent());
+    assumeTrue(oCamlBuckConfig.getOCamlDepTool().isPresent());
+    assumeTrue(oCamlBuckConfig.getYaccCompiler().isPresent());
+    assumeTrue(oCamlBuckConfig.getLexCompiler().isPresent());
   }
 
   @Test

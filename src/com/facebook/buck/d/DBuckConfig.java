@@ -19,13 +19,8 @@ package com.facebook.buck.d;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.HashedFileTool;
 import com.facebook.buck.cxx.Tool;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.io.ExecutableFinder;
 
-import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -40,28 +35,9 @@ public class DBuckConfig {
 
   Tool getDCompiler() {
     Path compilerPath = delegate.getPath("d", "compiler").or(DEFAULT_D_COMPILER);
-    // Look up the compiler in the PATH, unless there is a pathSeparator in the name.
-    if (!compilerPath.toString().contains(File.separator)) {
-      ImmutableList.Builder<Path> paths = ImmutableList.builder();
-      for (String path : delegate.getEnv("PATH", File.pathSeparator)) {
-        paths.add(Paths.get(path));
-      }
-      Optional<Path> compiler = MorePaths.searchPathsForExecutable(
-          compilerPath,
-          paths.build(),
-          ImmutableList.copyOf(delegate.getEnv("PATHEXT", File.pathSeparator)));
-      if (compiler.isPresent()) {
-        compilerPath = compiler.get();
-      }
-    }
 
-    if (!Files.exists(compilerPath)) {
-      throw new HumanReadableException("D compiler " + compilerPath.toString() + " not found");
-    } else if (!Files.isExecutable(compilerPath)) {
-      throw new HumanReadableException(
-          "D compiler " + compilerPath.toString() + " is not executable");
-    }
+    Path compiler = new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
 
-    return new HashedFileTool(compilerPath);
+    return new HashedFileTool(compiler);
   }
 }
