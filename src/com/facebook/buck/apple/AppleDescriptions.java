@@ -510,12 +510,15 @@ public class AppleDescriptions {
         Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     output.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
-    output.soname = Optional.absent();
-    output.linkWhole = Optional.of(linkWhole);
-
-    output.exportedLinkerFlags = Optional.of(ImmutableList.<String>of());
+    output.exportedLinkerFlags = Optional.of(
+        FluentIterable
+            .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
+            .append(arg.exportedLinkerFlags.get())
+            .toList());
     output.exportedPlatformLinkerFlags =
         Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
+    output.soname = Optional.absent();
+    output.linkWhole = Optional.of(linkWhole);
   }
 
   @VisibleForTesting

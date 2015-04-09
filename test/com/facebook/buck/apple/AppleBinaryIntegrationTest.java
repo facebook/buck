@@ -67,6 +67,33 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
+  public void testAppleBinaryWithLibraryDependencyBuildsSomething() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_with_library_dependency_builds_something", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//Apps/TestApp:TestApp#macosx-x86_64").assertSuccess();
+
+    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+  }
+
+  @Test
+  public void testAppleBinaryWithLibraryDependencyWithSystemFrameworksBuildsSomething()
+      throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_with_library_dependency_with_system_frameworks_builds_something", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//Apps/TestApp:TestApp#macosx-x86_64").assertSuccess();
+
+    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+  }
+
+  @Test
   public void testAppleBinaryHeaderSymlinkTree() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
 

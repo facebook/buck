@@ -1,0 +1,10 @@
+apple_library(
+  name = 'TestLibrary',
+  srcs = ['lib.m'],
+  exported_headers = ['lib.h'],
+  frameworks = [
+  	'$SDKROOT/System/Library/Frameworks/CoreFoundation.framework',
+  	'$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+  visibility = ['//Apps/...'],
+)
