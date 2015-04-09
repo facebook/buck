@@ -40,8 +40,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -53,7 +51,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -394,42 +391,6 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSortedSet.Builder<BuildRule> enhancedDeps,
       ImmutableList.Builder<DexProducedFromJavaLibrary> preDexRules,
       ImmutableList.Builder<Path> buildConfigJarFilesBuilder) {
-
-    // If the Android Manifest file is a valid file, retrieve packageName, versionCode and
-    // versionName from it, with default values if they are not set.
-    Path manifestPath = pathResolver.getPath(manifest);
-    AndroidManifestReader manifestReader = null;
-    if (buildRuleParams.getProjectFilesystem().exists(manifestPath)) {
-      try {
-        manifestReader = DefaultAndroidManifestReader.forPath(
-            manifestPath,
-            buildRuleParams.getProjectFilesystem());
-      } catch (IOException e) {
-        throw new HumanReadableException(
-            "In %s, unable to read Android Manifest from path: %s",
-            originalBuildTarget,
-            manifestPath);
-      }
-    }
-    String packageName = "null";
-    String versionCode = "0";
-    String versionName = "null";
-
-    if (manifestReader != null) {
-      String manifestPackageName = manifestReader.getPackage();
-      if (!manifestPackageName.isEmpty()) {
-        packageName = Escaper.escapeAsJavaString(manifestPackageName);
-      }
-      String manifestVersionCode = manifestReader.getVersionCode();
-      if (!manifestVersionCode.isEmpty()) {
-        versionCode = manifestVersionCode;
-      }
-      String manifestVersionName = manifestReader.getVersionName();
-      if (!manifestVersionName.isEmpty()) {
-        versionName =  Escaper.escapeAsJavaString(manifestVersionName);
-      }
-    }
-
     BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(
         ImmutableList.<BuildConfigFields.Field>of(
             BuildConfigFields.Field.of(
@@ -443,19 +404,7 @@ public class AndroidBinaryGraphEnhancer {
             BuildConfigFields.Field.of(
                 "int",
                 BuildConfigs.EXOPACKAGE_FLAGS,
-                String.valueOf(ExopackageMode.toBitmask(exopackageModes))),
-            BuildConfigFields.Field.of(
-                "String",
-                BuildConfigs.PACKAGE_NAME,
-                packageName),
-            BuildConfigFields.Field.of(
-                "int",
-                BuildConfigs.VERSION_CODE,
-                versionCode),
-            BuildConfigFields.Field.of(
-                "String",
-                BuildConfigs.VERSION_NAME,
-                versionName)));
+                String.valueOf(ExopackageMode.toBitmask(exopackageModes)))));
     for (Map.Entry<String, BuildConfigFields> entry :
         packageableCollection.getBuildConfigs().entrySet()) {
       // Merge the user-defined constants with the APK-specific overrides.

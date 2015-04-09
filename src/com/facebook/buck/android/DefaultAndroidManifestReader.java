@@ -60,12 +60,6 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
   private static final String XPATH_PACKAGE = "/manifest/@package";
 
   /**
-   * XPath expression to get the version name. For a manifest as
-   * {@code <manifest android:versionName="2.1" />}, this results in {@code "2.1"}
-   */
-  private static final String XPATH_VERSION_NAME = "/manifest/@android:versionName";
-
-  /**
    * XPath expression to get the version code.
    * For a manifest as {@code <manifest android:versionCode="1" />}, this results in
    * {@code 1}.
@@ -75,7 +69,6 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
 
   private final XPathExpression packageExpression;
   private final XPathExpression versionCodeExpression;
-  private final XPathExpression versionNameExpression;
   private final XPathExpression launchableActivitiesExpression;
   private final Document doc;
 
@@ -90,7 +83,6 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
       launchableActivitiesExpression = xPath.compile(XPATH_LAUNCHER_ACTIVITIES);
       packageExpression = xPath.compile(XPATH_PACKAGE);
       versionCodeExpression = xPath.compile(XPATH_VERSION_CODE);
-      versionNameExpression = xPath.compile(XPATH_VERSION_NAME);
     } catch (XPathExpressionException | SAXException e) {
       throw Throwables.propagate(e);
     }
@@ -126,15 +118,6 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
   public String getVersionCode() {
     try {
       return (String) versionCodeExpression.evaluate(doc, XPathConstants.STRING);
-    } catch (XPathExpressionException e) {
-      throw Throwables.propagate(e);
-    }
-  }
-
-  @Override
-  public String getVersionName() {
-    try {
-      return (String) versionNameExpression.evaluate(doc, XPathConstants.STRING);
     } catch (XPathExpressionException e) {
       throw Throwables.propagate(e);
     }

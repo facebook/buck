@@ -42,21 +42,6 @@ public class BuildConfigs {
    */
   public static final String EXOPACKAGE_FLAGS = "EXOPACKAGE_FLAGS";
 
-  /**
-   * Name of the String global variable for the package's name.
-   */
-  public static final String PACKAGE_NAME = "PACKAGE_NAME";
-
-  /**
-   * Name of the int global variable that indicates the package's version code.
-   */
-  public static final String VERSION_CODE =  "VERSION_CODE";
-
-  /**
-   * Name of the String global variable that indicates the package's version name.
-   */
-  public static final String VERSION_NAME = "VERSION_NAME";
-
   /** @see #getDefaultBuildConfigFields() */
   private static final BuildConfigFields DEFAULT_BUILD_CONFIG_CONSTANTS =
       BuildConfigFields.fromFields(ImmutableList.<BuildConfigFields.Field>of(
@@ -65,10 +50,7 @@ public class BuildConfigs {
               // IS_EXOPACKAGE is a value we use internally for checking whether exopackage is being
               // used.
               BuildConfigFields.Field.of("boolean", IS_EXO_CONSTANT, "false"),
-              BuildConfigFields.Field.of("int", EXOPACKAGE_FLAGS, "0"),
-              BuildConfigFields.Field.of("String", PACKAGE_NAME, "null"),
-              BuildConfigFields.Field.of("int", VERSION_CODE, "0"),
-              BuildConfigFields.Field.of("String", VERSION_NAME, "null")));
+              BuildConfigFields.Field.of("int", EXOPACKAGE_FLAGS, "0")));
 
   /** Utility class: do not instantiate. */
   private BuildConfigs() {}
