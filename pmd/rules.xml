@@ -58,4 +58,86 @@
     <exclude name="SimplifyStartsWith" />
   </rule>
 
+  <rule name="BuckStyleImmutableMustBePackagePrivate"
+        message="@BuckStyleImmutable value types must be package-private"
+        class="net.sourceforge.pmd.lang.rule.XPathRule"
+        language="java">
+    <description>Value types decorated with @BuckStyleImmutable must be package-private (i.e., not public or private).
+
+The build will automatically generate a public subclass or implementation of your value type. All clients should use that API, so the parent value type should limit its visibility as much as possible.</description>
+    <priority>1</priority>
+    <properties>
+      <property name="xpath">
+        <value>
+          <![CDATA[
+            //ClassOrInterfaceDeclaration[@PackagePrivate='false']
+              [parent::TypeDeclaration[Annotation/MarkerAnnotation/Name/@Image='Value.Immutable']]
+              [ancestor::TypeDeclaration[Annotation/MarkerAnnotation/Name/@Image='BuckStyleImmutable']]
+          ]]>
+        </value>
+      </property>
+    </properties>
+    <example>
+      <![CDATA[
+// OK
+@Value.Immutable
+@BuckStyleImmutable
+interface AbstractFoo {
+
+}
+
+// Bad: uses public visibility
+@Value.Immutable
+@BuckStyleImmutable
+public class AbstractBar {
+
+}
+
+// Bad: uses public visibility
+@Value.Immutable
+@BuckStyleImmutable
+public interface AbstractBaz {
+
+}
+
+  ]]>
+    </example>
+  </rule>
+  <rule name="BuckStyleImmutableNameMustStartWithAbstract"
+        message="Name of @BuckStyleImmutable value types must start with Abstract"
+        class="net.sourceforge.pmd.lang.rule.XPathRule"
+        language="java">
+    <description>Value types decorated with @BuckStyleImmutable must have a name starting with 'Abstract'
+
+The build will automatically generate a subclass or implementation of your value type without 'Abstract' in the name.</description>
+    <priority>1</priority>
+    <properties>
+      <property name="xpath">
+        <value>
+          <![CDATA[
+            //ClassOrInterfaceDeclaration[not(starts-with(@Image,'Abstract'))]
+              [parent::TypeDeclaration[Annotation/MarkerAnnotation/Name/@Image='Value.Immutable']]
+              [ancestor::TypeDeclaration[Annotation/MarkerAnnotation/Name/@Image='BuckStyleImmutable']]
+          ]]>
+        </value>
+      </property>
+    </properties>
+    <example>
+      <![CDATA[
+// OK
+@Value.Immutable
+@BuckStyleImmutable
+interface AbstractFoo {
+
+}
+
+// Bad: name does not start with Abstract
+@Value.Immutable
+@BuckStyleImmutable
+interface Bar {
+
+}
+      ]]>
+    </example>
+  </rule>
 </ruleset>
