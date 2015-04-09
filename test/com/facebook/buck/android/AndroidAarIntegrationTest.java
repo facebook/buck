@@ -113,4 +113,15 @@ public class AndroidAarIntegrationTest {
     zipInspector.assertFileExists("jni/armeabi-v7a/libbar.so");
     zipInspector.assertFileExists("jni/x86/libbar.so");
   }
+
+  @Test
+  public void testEmptyExceptManifest() throws IOException {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "android_project",
+        tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//apps/sample:nearly_empty_aar").assertSuccess();
+  }
 }

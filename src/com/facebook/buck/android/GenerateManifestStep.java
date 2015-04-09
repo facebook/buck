@@ -66,11 +66,6 @@ public class GenerateManifestStep implements Step {
       throw new HumanReadableException("Output Manifest filepath is missing");
     }
 
-    if (libraryManifestPaths.isEmpty()) {
-      warnUser(context, "No library manifests found. Aborting manifest merge step.");
-      return 1;
-    }
-
     ProjectFilesystem filesystem = context.getProjectFilesystem();
 
     outManifestPath = filesystem.resolve(outManifestPath);
@@ -132,10 +127,6 @@ public class GenerateManifestStep implements Step {
   @Override
   public String getShortName() {
     return "generate_manifest";
-  }
-
-  private void warnUser(ExecutionContext context, String message) {
-    context.getStdErr().println(context.getAnsi().asWarningText(message));
   }
 
   @Override

@@ -172,6 +172,11 @@ android_binary(
   ],
 )
 
+android_aar(
+  name = 'nearly_empty_aar',
+  manifest_skeleton = 'AndroidManifest.xml',
+)
+
 project_config(
   src_target = ':app',
 )
