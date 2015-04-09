@@ -149,18 +149,18 @@ public class ProjectGenerator {
 
   private static final FileAttribute<?> READ_ONLY_FILE_ATTRIBUTE =
     PosixFilePermissions.asFileAttribute(
-      ImmutableSet.of(
-          PosixFilePermission.OWNER_READ,
-          PosixFilePermission.GROUP_READ,
-          PosixFilePermission.OTHERS_READ));
+        ImmutableSet.of(
+            PosixFilePermission.OWNER_READ,
+            PosixFilePermission.GROUP_READ,
+            PosixFilePermission.OTHERS_READ));
 
   public static final Function<
       TargetNode<AppleNativeTargetDescriptionArg>,
-      Iterable<String>> GET_LINKER_FLAGS =
+      Iterable<String>> GET_EXPORTED_LINKER_FLAGS =
       new Function<TargetNode<AppleNativeTargetDescriptionArg>, Iterable<String>>() {
         @Override
         public Iterable<String> apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
-          return input.getConstructorArg().linkerFlags.get();
+          return input.getConstructorArg().exportedLinkerFlags.get();
         }
       };
 
@@ -733,7 +733,12 @@ public class ProjectGenerator {
                         collectRecursiveExportedPreprocessorFlags(ImmutableList.of(targetNode)))))
         .put(
             "OTHER_LDFLAGS",
-            Joiner.on(' ').join(collectRecursiveLinkerFlags(ImmutableList.of(targetNode))));
+            Joiner
+                .on(' ')
+                .join(
+                    Iterables.concat(
+                        targetNode.getConstructorArg().linkerFlags.get(),
+                        collectRecursiveExportedLinkerFlags(ImmutableList.of(targetNode)))));
 
     setTargetBuildConfigurations(
         new Function<String, Path>() {
@@ -1510,7 +1515,8 @@ public class ProjectGenerator {
             });
   }
 
-  private <T> Iterable<String> collectRecursiveLinkerFlags(Iterable<TargetNode<T>> targetNodes) {
+  private <T> Iterable<String> collectRecursiveExportedLinkerFlags(
+      Iterable<TargetNode<T>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
@@ -1525,7 +1531,7 @@ public class ProjectGenerator {
               public Iterable<String> apply(TargetNode<?> input) {
                 return input
                     .castArg(AppleNativeTargetDescriptionArg.class)
-                    .transform(GET_LINKER_FLAGS)
+                    .transform(GET_EXPORTED_LINKER_FLAGS)
                     .or(ImmutableSet.<String>of());
               }
             });

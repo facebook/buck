@@ -67,6 +67,11 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
+  public BUILDER setExportedLinkerFlags(Optional<ImmutableList<String>> exportedLinkerFlags) {
+    arg.exportedLinkerFlags = exportedLinkerFlags;
+    return getThis();
+  }
+
   public BUILDER setSrcs(Optional<ImmutableList<SourceWithFlags>> srcs) {
     arg.srcs = srcs;
     return getThis();

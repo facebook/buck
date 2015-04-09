@@ -261,13 +261,15 @@ public class ProjectGeneratorTest {
 
     // There should be no PBXHeadersBuildPhase in the 'Buck header map mode'.
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
-    assertEquals(Optional.<PBXBuildPhase>absent(),
-        Iterables.tryFind(target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
-          @Override
-          public boolean apply(PBXBuildPhase input) {
-            return input instanceof PBXHeadersBuildPhase;
-          }
-        }));
+    assertEquals(
+        Optional.<PBXBuildPhase>absent(),
+        Iterables.tryFind(
+            target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
+              @Override
+              public boolean apply(PBXBuildPhase input) {
+                return input instanceof PBXHeadersBuildPhase;
+              }
+            }));
 
     List<Path> headerMaps = projectGenerator.getGeneratedHeaderMaps();
     assertThat(headerMaps, hasSize(2));
@@ -923,7 +925,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryLinkerFlagsPropagate() throws IOException {
+  public void testAppleLibraryLinkerFlagsDontPropagate() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
@@ -933,6 +935,71 @@ public class ProjectGeneratorTest {
                     "Debug",
                     ImmutableMap.<String, String>of())))
         .setLinkerFlags(Optional.of(ImmutableList.of("-lhello")))
+        .build();
+
+    BuildTarget dependentBuildTarget = BuildTarget.builder("//foo", "bin").build();
+    TargetNode<?> dependentNode = AppleBinaryBuilder
+        .createBuilder(dependentBuildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setDeps(Optional.of(ImmutableSortedSet.of(buildTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node, dependentNode),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:bin");
+
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals("$(inherited) ", settings.get("OTHER_LDFLAGS"));
+  }
+
+  @Test
+  public void testAppleLibraryExportedLinkerFlags() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setExportedLinkerFlags(Optional.of(ImmutableList.of("-lhello")))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals("$(inherited) -lhello", settings.get("OTHER_LDFLAGS"));
+  }
+
+  @Test
+  public void testAppleLibraryExportedLinkerFlagsPropagate() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setExportedLinkerFlags(Optional.of(ImmutableList.of("-lhello")))
         .build();
 
     BuildTarget dependentBuildTarget = BuildTarget.builder("//foo", "bin").build();
