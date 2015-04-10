@@ -247,6 +247,7 @@ public class MiniAaptTest {
     filesystem.touch(Paths.get("res/drawable/another_icon.png.orig"));
     filesystem.touch(Paths.get("res/drawable-ldpi/nine_patch.9.png"));
     filesystem.touch(Paths.get("res/drawable-ldpi/.DS_Store"));
+    filesystem.touch(Paths.get("res/transition-v19/some_transition.xml"));
     filesystem.writeContentsToPath(
         "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
             "<resources>" +
@@ -257,6 +258,7 @@ public class MiniAaptTest {
     MiniAapt aapt = new MiniAapt(Paths.get("res"), Paths.get("R.txt"), ImmutableSet.<Path>of());
     aapt.processFileNamesInDirectory(filesystem, Paths.get("res/drawable"));
     aapt.processFileNamesInDirectory(filesystem, Paths.get("res/drawable-ldpi"));
+    aapt.processFileNamesInDirectory(filesystem, Paths.get("res/transition-v19"));
     aapt.processValues(
         filesystem,
         new BuckEventBus(new FakeClock(0), new BuildId("")),
@@ -265,7 +267,8 @@ public class MiniAaptTest {
     assertEquals(
         ImmutableSet.<RDotTxtEntry>of(
             new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "icon"),
-            new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "nine_patch")),
+            new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "nine_patch"),
+            new FakeRDotTxtEntry(IdType.INT, RType.TRANSITION, "some_transition")),
         aapt.getResourceCollector().getResources());
   }
 }

@@ -56,6 +56,7 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     STRING,
     STYLE,
     STYLEABLE,
+    TRANSITION,
     XML;
 
     @Override
