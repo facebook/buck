@@ -63,6 +63,7 @@ public class CxxDescriptionEnhancer {
   public static final Flavor EXPORTED_HEADER_SYMLINK_TREE_FLAVOR =
       ImmutableFlavor.of("exported-header-symlink-tree");
   public static final Flavor STATIC_FLAVOR = ImmutableFlavor.of("static");
+  public static final Flavor STATIC_PIC_FLAVOR = ImmutableFlavor.of("static-pic");
   public static final Flavor SHARED_FLAVOR = ImmutableFlavor.of("shared");
 
   public static final Flavor CXX_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
@@ -71,7 +72,7 @@ public class CxxDescriptionEnhancer {
   public static final BuildRuleType LEX_TYPE = BuildRuleType.of("lex");
   public static final BuildRuleType YACC_TYPE = BuildRuleType.of("yacc");
 
-  public static enum HeaderVisibility {
+  public enum HeaderVisibility {
     PUBLIC,
     PRIVATE,
   }
@@ -605,8 +606,12 @@ public class CxxDescriptionEnhancer {
 
   public static BuildTarget createStaticLibraryBuildTarget(
       BuildTarget target,
-      Flavor platform) {
-    return BuildTarget.builder(target).addFlavors(platform).addFlavors(STATIC_FLAVOR).build();
+      Flavor platform,
+      CxxSourceRuleFactory.PicType pic) {
+    return BuildTarget.builder(target)
+        .addFlavors(platform)
+        .addFlavors(pic == CxxSourceRuleFactory.PicType.PDC ? STATIC_FLAVOR : STATIC_PIC_FLAVOR)
+        .build();
   }
 
   public static BuildTarget createSharedLibraryBuildTarget(
@@ -617,9 +622,10 @@ public class CxxDescriptionEnhancer {
 
   public static Path getStaticLibraryPath(
       BuildTarget target,
-      Flavor platform) {
+      Flavor platform,
+      CxxSourceRuleFactory.PicType pic) {
     String name = String.format("lib%s.a", target.getShortName());
-    return BuildTargets.getScratchPath(createStaticLibraryBuildTarget(target, platform), "%s")
+    return BuildTargets.getScratchPath(createStaticLibraryBuildTarget(target, platform, pic), "%s")
         .resolve(name);
   }
 
@@ -753,28 +759,22 @@ public class CxxDescriptionEnhancer {
     return cxxLink;
   }
 
-  private static <T> BuildRule requireBuildRule(
+  private static <T> BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       TargetNode<T> node,
       Flavor... flavors) {
     BuildTarget target = BuildTarget.builder(params.getBuildTarget()).addFlavors(flavors).build();
-    Optional<BuildRule> rule = ruleResolver.getRuleOptional(target);
-    if (!rule.isPresent()) {
-      Description<T> description = node.getDescription();
-      T args = node.getConstructorArg();
-      rule = Optional.of(
-          description.createBuildRule(
-              params.copyWithChanges(
-                  params.getBuildRuleType(),
-                  target,
-                  Suppliers.ofInstance(params.getDeclaredDeps()),
-                  Suppliers.ofInstance(params.getExtraDeps())),
-              ruleResolver,
-              args));
-      ruleResolver.addToIndex(rule.get());
-    }
-    return rule.get();
+    Description<T> description = node.getDescription();
+    T args = node.getConstructorArg();
+    return description.createBuildRule(
+        params.copyWithChanges(
+            params.getBuildRuleType(),
+            target,
+            Suppliers.ofInstance(params.getDeclaredDeps()),
+            Suppliers.ofInstance(params.getExtraDeps())),
+        ruleResolver,
+        args);
   }
 
   /**
@@ -789,11 +789,17 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       Flavor... flavors) {
-    TargetNode<?> node = params.getTargetGraph().get(params.getBuildTarget());
-    Preconditions.checkNotNull(
-        node,
-        String.format("%s not in target graph", params.getBuildTarget()));
-    return requireBuildRule(params, ruleResolver, node, flavors);
+    BuildTarget target = BuildTarget.builder(params.getBuildTarget()).addFlavors(flavors).build();
+    Optional<BuildRule> rule = ruleResolver.getRuleOptional(target);
+    if (!rule.isPresent()) {
+      TargetNode<?> node = params.getTargetGraph().get(params.getBuildTarget());
+      Preconditions.checkNotNull(
+          node,
+          String.format("%s not in target graph", params.getBuildTarget()));
+      rule = Optional.of(createBuildRule(params, ruleResolver, node, flavors));
+      ruleResolver.addToIndex(rule.get());
+    }
+    return rule.get();
   }
 
   /**

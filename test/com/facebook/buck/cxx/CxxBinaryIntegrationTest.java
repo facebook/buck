@@ -297,7 +297,10 @@ public class CxxBinaryIntegrationTest {
             cxxPlatform.getFlavor(),
             CxxDescriptionEnhancer.HeaderVisibility.PUBLIC);
     BuildTarget depArchiveTarget =
-        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(depTarget, cxxPlatform.getFlavor());
+        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
+            depTarget,
+            cxxPlatform.getFlavor(),
+            CxxSourceRuleFactory.PicType.PDC);
 
     // Do a clean build, verify that it succeeds, and check that all expected targets built
     // successfully.

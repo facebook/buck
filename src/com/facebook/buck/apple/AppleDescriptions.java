@@ -518,6 +518,7 @@ public class AppleDescriptions {
     output.exportedPlatformLinkerFlags =
         Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     output.soname = Optional.absent();
+    output.forceStatic = Optional.of(false);
     output.linkWhole = Optional.of(linkWhole);
   }
 

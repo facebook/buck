@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -36,10 +37,14 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -152,4 +157,64 @@ public class CxxLibraryTest {
     assertNull(cxxLibrary.getPathToOutputFile());
     assertTrue(ImmutableList.copyOf(cxxLibrary.getInputs()).isEmpty());
   }
+
+  @Test
+  public void staticLinkage() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+
+    BuildTarget staticPicLibraryTarget =
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)
+            .build();
+    ruleResolver.addToIndex(
+        new FakeBuildRule(
+            BuildRuleParamsFactory.createTrivialBuildRuleParams(staticPicLibraryTarget),
+            pathResolver));
+
+    // Construct a CxxLibrary object to test.
+    CxxLibrary cxxLibrary = new CxxLibrary(
+        params,
+        ruleResolver,
+        pathResolver,
+        Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
+        Functions.constant(ImmutableList.<String>of()),
+        ImmutableList.<Path>of(),
+        CxxLibrary.Linkage.STATIC,
+        /* linkWhole */ false,
+        Optional.<String>absent(),
+        ImmutableSortedSet.<BuildTarget>of());
+
+    assertThat(
+        cxxLibrary.getSharedLibraries(cxxPlatform).entrySet(),
+        Matchers.empty());
+    assertThat(
+        cxxLibrary.getPythonPackageComponents(cxxPlatform).getNativeLibraries().entrySet(),
+        Matchers.empty());
+
+    // Verify that
+    NativeLinkableInput expectedSharedNativeLinkableInput =
+        NativeLinkableInput.of(
+            ImmutableList.<SourcePath>of(
+                new BuildTargetSourcePath(
+                    projectFilesystem,
+                    staticPicLibraryTarget)),
+            ImmutableList.of(
+                CxxDescriptionEnhancer.getStaticLibraryPath(
+                    target,
+                    cxxPlatform.getFlavor(),
+                    CxxSourceRuleFactory.PicType.PIC).toString()));
+    assertEquals(
+        expectedSharedNativeLinkableInput,
+        cxxLibrary.getNativeLinkableInput(
+            cxxPlatform,
+            Linker.LinkableDepType.SHARED));
+  }
+
 }

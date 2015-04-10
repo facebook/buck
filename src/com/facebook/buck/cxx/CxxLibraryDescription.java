@@ -56,10 +56,12 @@ public class CxxLibraryDescription implements
     Description<CxxLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<CxxLibraryDescription.Arg>,
     Flavored {
-  public static enum Type {
+
+  public enum Type {
     HEADERS,
     EXPORTED_HEADERS,
     SHARED,
+    STATIC_PIC,
     STATIC,
   }
 
@@ -72,6 +74,7 @@ public class CxxLibraryDescription implements
               CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR, Type.HEADERS,
               CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR, Type.EXPORTED_HEADERS,
               CxxDescriptionEnhancer.SHARED_FLAVOR, Type.SHARED,
+              CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, Type.STATIC_PIC,
               CxxDescriptionEnhancer.STATIC_FLAVOR, Type.STATIC));
 
   private final CxxBuckConfig cxxBuckConfig;
@@ -192,7 +195,8 @@ public class CxxLibraryDescription implements
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
       ImmutableList<Path> frameworkSearchPaths,
-      CxxSourceRuleFactory.Strategy compileStrategy) {
+      CxxSourceRuleFactory.Strategy compileStrategy,
+      CxxSourceRuleFactory.PicType pic) {
 
     // Create rules for compiling the non-PIC object files.
     ImmutableList<SourcePath> objects = requireObjects(
@@ -210,17 +214,19 @@ public class CxxLibraryDescription implements
         sources,
         frameworkSearchPaths,
         compileStrategy,
-        CxxSourceRuleFactory.PicType.PDC);
+        pic);
 
     // Write a build rule to create the archive for this C/C++ library.
     BuildTarget staticTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
             params.getBuildTarget(),
-            cxxPlatform.getFlavor());
+            cxxPlatform.getFlavor(),
+            pic);
     Path staticLibraryPath =
         CxxDescriptionEnhancer.getStaticLibraryPath(
             params.getBuildTarget(),
-            cxxPlatform.getFlavor());
+            cxxPlatform.getFlavor(),
+            pic);
     Archive staticLibraryBuildRule = Archives.createArchiveRule(
         pathResolver,
         staticTarget,
@@ -402,6 +408,7 @@ public class CxxLibraryDescription implements
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     arg.linkerFlags = Optional.of(ImmutableList.<String>of());
     arg.platformLinkerFlags = Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
+    arg.forceStatic = Optional.absent();
     arg.linkWhole = Optional.absent();
     arg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     arg.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
@@ -460,7 +467,8 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       A args,
-      CxxSourceRuleFactory.Strategy compileStrategy) {
+      CxxSourceRuleFactory.Strategy compileStrategy,
+      CxxSourceRuleFactory.PicType pic) {
     return createStaticLibrary(
         params,
         resolver,
@@ -491,7 +499,8 @@ public class CxxLibraryDescription implements
             cxxPlatform.getFlavor()),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
         args.frameworkSearchPaths.get(),
-        compileStrategy);
+        compileStrategy,
+        pic);
   }
 
   /**
@@ -679,13 +688,22 @@ public class CxxLibraryDescription implements
             platform.get().getValue(),
             args,
             compileStrategy);
+      } else if (type.get().getValue().equals(Type.STATIC)) {
+        return createStaticLibraryBuildRule(
+            typeParams,
+            resolver,
+            platform.get().getValue(),
+            args,
+            compileStrategy,
+            CxxSourceRuleFactory.PicType.PDC);
       } else {
         return createStaticLibraryBuildRule(
             typeParams,
             resolver,
             platform.get().getValue(),
             args,
-            compileStrategy);
+            compileStrategy,
+            CxxSourceRuleFactory.PicType.PIC);
       }
     }
 
@@ -716,6 +734,7 @@ public class CxxLibraryDescription implements
           }
         },
         args.frameworkSearchPaths.get(),
+        args.forceStatic.or(false) ? CxxLibrary.Linkage.STATIC : CxxLibrary.Linkage.ANY,
         args.linkWhole.or(false),
         args.soname,
         args.tests.get());
@@ -752,6 +771,7 @@ public class CxxLibraryDescription implements
     public Optional<ImmutableList<Pair<String, ImmutableList<String>>>>
         exportedPlatformLinkerFlags;
     public Optional<String> soname;
+    public Optional<Boolean> forceStatic;
     public Optional<Boolean> linkWhole;
   }
 

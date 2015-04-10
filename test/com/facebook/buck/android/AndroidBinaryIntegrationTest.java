@@ -210,4 +210,16 @@ public class AndroidBinaryIntegrationTest {
     assertTrue(Files.exists(mapping));
   }
 
+  @Test
+  public void testStaticCxxLibraryDep() throws IOException {
+    workspace.runBuckCommand("build", "//apps/sample:app_static_cxx_lib_dep").assertSuccess();
+
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/sample/app_static_cxx_lib_dep.apk"));
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo1.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_bar.so");
+  }
+
 }

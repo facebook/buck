@@ -362,7 +362,10 @@ public class OCamlIntegrationTest {
         new CxxBuckConfig(new FakeBuckConfig()));
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(cclib, cxxPlatform);
     BuildTarget cclibbin =
-        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(cclib, cxxPlatform.getFlavor());
+        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
+            cclib,
+            cxxPlatform.getFlavor(),
+            CxxSourceRuleFactory.PicType.PDC);
     String sourceName = "cc/cc.cpp";
     BuildTarget ppObj =
         cxxSourceRuleFactory.createPreprocessBuildTarget(

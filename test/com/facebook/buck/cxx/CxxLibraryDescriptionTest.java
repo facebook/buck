@@ -282,7 +282,10 @@ public class CxxLibraryDescriptionTest {
     // Verify that the archive rule has the correct deps: the object files from our sources.
     rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC);
     BuildRule archiveRule = resolver.getRule(
-        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(target, cxxPlatform.getFlavor()));
+        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
+            target,
+            cxxPlatform.getFlavor(),
+            CxxSourceRuleFactory.PicType.PDC));
     assertNotNull(archiveRule);
     assertEquals(
         ImmutableSet.of(
@@ -420,7 +423,11 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
 
     // Lookup the link whole flags.
-    Path staticLib = CxxDescriptionEnhancer.getStaticLibraryPath(target, cxxPlatform.getFlavor());
+    Path staticLib =
+        CxxDescriptionEnhancer.getStaticLibraryPath(
+            target,
+            cxxPlatform.getFlavor(),
+            CxxSourceRuleFactory.PicType.PDC);
     Linker linker = cxxPlatform.getLd();
     Set<String> linkWholeFlags = Sets.newHashSet(linker.linkWhole(staticLib.toString()));
     linkWholeFlags.remove(staticLib.toString());
@@ -620,7 +627,10 @@ public class CxxLibraryDescriptionTest {
     // Verify that the archive rule has the correct deps: the object files from our sources.
     rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC);
     BuildRule staticRule = resolver.getRule(
-        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(target, cxxPlatform.getFlavor()));
+        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
+            target,
+            cxxPlatform.getFlavor(),
+            CxxSourceRuleFactory.PicType.PDC));
     assertNotNull(staticRule);
     assertEquals(
         ImmutableSet.of(

@@ -10,3 +10,43 @@ cxx_library(
     'PUBLIC',
   ],
 )
+
+cxx_library(
+  name = 'foo1',
+  srcs = [
+    'foo.cpp',
+  ],
+  deps = [
+    ':bar',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+cxx_library(
+  name = 'foo2',
+  srcs = [
+    'foo.cpp',
+  ],
+  deps = [
+    ':bar',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+cxx_library(
+  name = 'bar',
+  force_static = True,
+  exported_headers = [
+    'bar.h',
+  ],
+  srcs = [
+    'bar.cpp',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
