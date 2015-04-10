@@ -23,7 +23,7 @@
       <entry name="*.py" />
     </wildcardResourcePatterns>
     <annotationProcessing>
-      <profile default="true" name="Default" enabled="true">
+      <profile default="true" name="Default" enabled="false">
         <sourceOutputDir name="build-ij/immutables" />
         <sourceTestOutputDir name="build-ij/immutables-test" />
         <outputRelativeToContentRoot value="true" />
