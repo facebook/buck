@@ -1296,6 +1296,135 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testAppleLibraryWithoutSources() throws IOException {
+    ImmutableSortedMap<String, ImmutableMap<String, String>> configs = ImmutableSortedMap.of(
+        "Debug",
+        ImmutableMap.of(
+            "HEADER_SEARCH_PATHS", "headers",
+            "LIBRARY_SEARCH_PATHS", "libraries"));
+
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setConfigs(Optional.of(configs))
+        .setUseBuckHeaderMaps(Optional.of(false))
+        .setFrameworks(
+            Optional.of(
+                ImmutableSortedSet.of(
+                    FrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("Library.framework"))))))
+        .build();
+
+    BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setConfigs(Optional.of(configs))
+        .setUseBuckHeaderMaps(Optional.of(false))
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(SourceWithFlags.of(new TestSourcePath("fooTest.m")))))
+        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(libraryNode, testNode),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:xctest");
+
+    ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
+    assertEquals(
+        "headers $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
+        settings.get("HEADER_SEARCH_PATHS"));
+    assertEquals(
+        "libraries ",
+        settings.get("LIBRARY_SEARCH_PATHS"));
+
+    assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
+
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+        target,
+        ImmutableMap.of("fooTest.m", Optional.<String>absent()));
+
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+        target,
+        ImmutableList.of("$SDKROOT/Library.framework"));
+  }
+
+  @Test
+  public void testAppleLibraryWithoutSourcesWithHeaders() throws IOException {
+    ImmutableSortedMap<String, ImmutableMap<String, String>> configs = ImmutableSortedMap.of(
+        "Debug",
+        ImmutableMap.of(
+            "HEADER_SEARCH_PATHS", "headers",
+            "LIBRARY_SEARCH_PATHS", "libraries"));
+
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setConfigs(Optional.of(configs))
+        .setUseBuckHeaderMaps(Optional.of(false))
+        .setExportedHeaders(
+            ImmutableSortedSet.<SourcePath>of(
+                new TestSourcePath("HeaderGroup1/bar.h")))
+        .setFrameworks(
+            Optional.of(
+                ImmutableSortedSet.of(
+                    FrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("Library.framework"))))))
+        .build();
+
+    BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setConfigs(Optional.of(configs))
+        .setUseBuckHeaderMaps(Optional.of(false))
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(SourceWithFlags.of(new TestSourcePath("fooTest.m")))))
+        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(libraryNode, testNode),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:xctest");
+
+    ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
+    assertEquals(
+        "headers $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
+        settings.get("HEADER_SEARCH_PATHS"));
+    assertEquals(
+        "libraries ",
+        settings.get("LIBRARY_SEARCH_PATHS"));
+
+    assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
+
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+        target,
+        ImmutableMap.of("fooTest.m", Optional.<String>absent()));
+
+    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+        target,
+        ImmutableList.of("$SDKROOT/Library.framework"));
+  }
+
+  @Test
   public void testAppleTestRule() throws IOException {
     BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
@@ -1322,6 +1451,7 @@ public class ProjectGeneratorTest {
     BuildTarget depTarget = BuildTarget.builder("//dep", "dep").build();
     TargetNode<?> depNode = AppleLibraryBuilder
         .createBuilder(depTarget)
+        .setSrcs(Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("e.m")))))
         .setUseBuckHeaderMaps(Optional.of(false))
         .build();
 
@@ -1449,7 +1579,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleBundleRuleForSharedLibaryFramework() throws IOException {
+  public void testAppleBundleRuleForSharedLibraryFramework() throws IOException {
     BuildTarget sharedLibraryTarget = BuildTarget
         .builder("//dep", "shared")
         .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
@@ -1633,6 +1763,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> dependentSharedLibraryNode = AppleLibraryBuilder
         .createBuilder(dependentSharedLibraryTarget)
+        .setSrcs(Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("empty.m")))))
         .setDeps(Optional.of(ImmutableSortedSet.of(dependentStaticLibraryTarget)))
         .build();
 
@@ -1684,6 +1815,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> dependentSharedLibraryNode = AppleLibraryBuilder
         .createBuilder(dependentSharedLibraryTarget)
+        .setSrcs(Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("e.m")))))
         .setDeps(Optional.of(ImmutableSortedSet.of(dependentStaticLibraryTarget)))
         .build();
 
@@ -1767,6 +1899,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
+        .setSrcs(Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("e.m")))))
         .setDeps(Optional.of(ImmutableSortedSet.of(dependentFrameworkTarget)))
         .build();
 
@@ -2288,10 +2421,12 @@ public class ProjectGeneratorTest {
                                 PBXReference.SourceTree.SDKROOT,
                                 Paths.get("DeclaredInTestLibDep.framework"))))))
             .setDeps(Optional.of(ImmutableSortedSet.of(testLibDepResource.getBuildTarget())))
+            .setSrcs(Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("e.m")))))
             .build();
     TargetNode<AppleNativeTargetDescriptionArg> dep1 =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder("//foo", "dep1").build())
             .setDeps(Optional.of(ImmutableSortedSet.of(testLibDepLib.getBuildTarget())))
+            .setSrcs(Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("e.m")))))
             .setFrameworks(
                 Optional.of(
                     ImmutableSortedSet.of(
@@ -2302,6 +2437,7 @@ public class ProjectGeneratorTest {
             .build();
     TargetNode<AppleNativeTargetDescriptionArg> dep2 =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder("//foo", "dep2").build())
+            .setSrcs(Optional.of(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("e.m")))))
             .build();
     TargetNode<AppleTestDescription.Arg> xctest1 =
         AppleTestBuilder.createBuilder(BuildTarget.builder("//foo", "xctest1").build())

@@ -1400,6 +1400,7 @@ public class ProjectGenerator {
                 targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 ImmutableSet.of(AppleLibraryDescription.TYPE)))
+        .filter(getLibraryWithSourcesToCompilePredicate())
         .transform(
             new Function<TargetNode<?>, String>() {
               @Override
@@ -1546,13 +1547,7 @@ public class ProjectGenerator {
                 targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))
-        .filter(
-            new Predicate<TargetNode<?>>() {
-              @Override
-              public boolean apply(TargetNode<?> input) {
-                return getLibraryNode(targetGraph, input).isPresent();
-              }
-            })
+        .filter(getLibraryWithSourcesToCompilePredicate())
         .transform(
             new Function<TargetNode<?>, PBXFileReference>() {
               @Override
@@ -1796,6 +1791,20 @@ public class ProjectGenerator {
     }
 
     return resolveSourcePath(src.get());
+  }
+
+  private Predicate<TargetNode<?>> getLibraryWithSourcesToCompilePredicate() {
+    return new Predicate<TargetNode<?>>() {
+      @Override
+      public boolean apply(TargetNode<?> input) {
+        Optional<TargetNode<AppleNativeTargetDescriptionArg>> library =
+            getLibraryNode(targetGraph, input);
+        if (!library.isPresent()) {
+          return false;
+        }
+        return (library.get().getConstructorArg().srcs.get().size() != 0);
+      }
+    };
   }
 
   /**
