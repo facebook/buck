@@ -61,6 +61,7 @@ public class AuditCommandRunner implements CommandRunner {
   private void setAuditCommands(CommandRunnerParams params) {
     ImmutableMap.Builder<String, AbstractCommandRunner<?>> commandBuilder = ImmutableMap.builder();
     auditCommands = commandBuilder
+        .put("alias", new AuditAliasCommand(params))
         .put("classpath", new AuditClasspathCommand(params))
         .put("dependencies", new AuditDependenciesCommand(params))
         .put("input", new AuditInputCommand(params))

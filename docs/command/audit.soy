@@ -39,10 +39,12 @@ Provide build information about build targets and outputs.
 
 <ul class="{css arglist}">
   {call buck.audit.command}
-    {param name: 'input <targets>' /}
+    {param name: 'alias --list' /}
     {param desc}
-    Lists the input source and resource files used to build the
-    given targets.
+    Lists the set of aliases declared in
+    either <tt>.buckconfig</tt> or <tt>.buckconfig.local</tt>.
+    (Currently, <tt>--list</tt> is the only flag supported
+    by <tt>buck audit alias</tt>, but we are considering others.)
    {/param}
   {/call}
 
@@ -65,6 +67,14 @@ Provide build information about build targets and outputs.
     Combined with the <code>--transitive</code> flag, this will print out all
     of the test's dependencies as well.
     {/param}
+  {/call}
+
+  {call buck.audit.command}
+    {param name: 'input <targets>' /}
+    {param desc}
+    Lists the input source and resource files used to build the
+    given targets.
+   {/param}
   {/call}
 
   {call buck.audit.command}

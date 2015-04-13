@@ -1,0 +1,6 @@
+[alias]
+  # Make sure override does not appear in list twice.
+  foo = //:bar_example
+
+  # Make sure output is union of .buckconfig and .buckconfig.local.
+  bar_ex = //:bar_example
