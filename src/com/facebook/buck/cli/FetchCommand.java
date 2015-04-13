@@ -92,7 +92,8 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
     }
 
     int exitCode;
-    try (CommandThreadManager pool = new CommandThreadManager("Fetch", options.getNumThreads());
+    try (CommandThreadManager pool =
+        new CommandThreadManager("Fetch", options.getConcurrencyLimit());
          Build build = options.createBuild(
              options.getBuckConfig(),
              actionGraph,

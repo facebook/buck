@@ -109,7 +109,9 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
       return 1;
     }
 
-    try (CommandThreadManager pool = new CommandThreadManager("Build", options.getNumThreads());
+    try (CommandThreadManager pool = new CommandThreadManager(
+            "Build",
+            options.getConcurrencyLimit());
          Build build = options.createBuild(
              options.getBuckConfig(),
              actionGraph,

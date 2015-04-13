@@ -41,6 +41,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -120,7 +121,8 @@ public class Build implements Closeable {
       Platform platform,
       ImmutableMap<String, String> environment,
       ObjectMapper objectMapper,
-      Clock clock) {
+      Clock clock,
+      ConcurrencyLimit concurrencyLimit) {
     this.actionGraph = actionGraph;
 
     this.executionContext = ExecutionContext.builder()
@@ -136,6 +138,7 @@ public class Build implements Closeable {
         .setEnvironment(environment)
         .setJavaPackageFinder(javaPackageFinder)
         .setObjectMapper(objectMapper)
+        .setConcurrencyLimit(concurrencyLimit)
         .build();
     this.artifactCache = artifactCache;
     this.buildEngine = buildEngine;

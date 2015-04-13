@@ -209,7 +209,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Create artifact cache to initialize Cassandra connection, if appropriate.
     ArtifactCache artifactCache = getArtifactCache();
 
-    try (CommandThreadManager pool = new CommandThreadManager("Test", options.getNumThreads())) {
+    try (CommandThreadManager pool =
+        new CommandThreadManager("Test", options.getConcurrencyLimit())) {
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
               pool.getExecutor(),
@@ -248,7 +249,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
         // Once all of the rules are built, then run the tests.
         try (CommandThreadManager testPool =
-                 new CommandThreadManager("Test-Run", options.getNumTestThreads())) {
+            new CommandThreadManager("Test-Run", options.getConcurrencyLimit())) {
           return runTests(
               testRules,
               Preconditions.checkNotNull(build.getBuildContext()),

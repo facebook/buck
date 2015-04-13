@@ -29,6 +29,8 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipStep;
@@ -155,9 +157,13 @@ public class SmartDexingStep implements Step {
       throws StepFailedException, IOException, InterruptedException {
 
     ExecutorService service =
-        MoreExecutors.newMultiThreadExecutor(
+        new LimitedThreadPoolExecutor(
             new CommandThreadFactory("SmartDexing"),
-            numThreads.or(determineOptimalThreadCount()));
+            new ConcurrencyLimit(
+                Math.min(
+                    numThreads.or(determineOptimalThreadCount()),
+                    context.getConcurrencyLimit().threadLimit),
+                context.getConcurrencyLimit().loadLimit));
     try {
       DefaultStepRunner stepRunner = new DefaultStepRunner(context);
       // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed

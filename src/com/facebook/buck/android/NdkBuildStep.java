@@ -21,6 +21,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -38,7 +39,6 @@ public class NdkBuildStep extends ShellStep {
   private final Path buildArtifactsDirectory;
   private final Path binDirectory;
   private final ImmutableList<String> flags;
-  private final int maxJobCount;
   private final Function<String, String> macroExpander;
 
   public NdkBuildStep(
@@ -53,7 +53,6 @@ public class NdkBuildStep extends ShellStep {
     this.buildArtifactsDirectory = buildArtifactsDirectory;
     this.binDirectory = binDirectory;
     this.flags = ImmutableList.copyOf(flags);
-    this.maxJobCount = Runtime.getRuntime().availableProcessors();
     this.macroExpander = macroExpander;
   }
 
@@ -80,14 +79,22 @@ public class NdkBuildStep extends ShellStep {
       throw new HumanReadableException("Unable to find ndk-build");
     }
 
+    ConcurrencyLimit concurrencyLimit = context.getConcurrencyLimit();
+
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.add(
         ndkBuild.get().toAbsolutePath().toString(),
         "-j",
-        Integer.toString(this.maxJobCount),
+        // TODO(user): using -j here is wrong.  It lets make run too many work when we do other
+        // work in parallel.  Instead, implement the GNU Make job server so make and Buck can
+        // coordinate job concurrency.
+        Integer.toString(concurrencyLimit.threadLimit),
         "-C",
         this.root.toString());
 
+    if (concurrencyLimit.loadLimit < Double.POSITIVE_INFINITY) {
+      builder.add("--load-average", Double.toString(concurrencyLimit.loadLimit));
+    }
 
     Iterable<String> flags = Iterables.transform(this.flags, macroExpander);
     builder.addAll(flags);

@@ -32,6 +32,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.DeprecatedBuckStyleImmutable;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -99,6 +100,9 @@ public abstract class ExecutionContext implements Closeable {
 
   @Value.Parameter
   public abstract ClassLoaderCache getClassLoaderCache();
+
+  @Value.Parameter
+  public abstract ConcurrencyLimit getConcurrencyLimit();
 
 
   @Value.Derived
@@ -208,6 +212,10 @@ public abstract class ExecutionContext implements Closeable {
     @Nullable private JavaPackageFinder javaPackageFinder = null;
     @Nullable private ObjectMapper objectMapper = null;
     private ClassLoaderCache classLoaderCache = new ClassLoaderCache();
+    private ConcurrencyLimit concurrencyLimit =
+        new ConcurrencyLimit(
+            /* threadLimit */ Runtime.getRuntime().availableProcessors(),
+            /* loadLimit */ Double.POSITIVE_INFINITY);
 
     private Builder() {}
 
@@ -226,7 +234,8 @@ public abstract class ExecutionContext implements Closeable {
           Preconditions.checkNotNull(environment),
           Preconditions.checkNotNull(javaPackageFinder),
           Preconditions.checkNotNull(objectMapper),
-          Preconditions.checkNotNull(classLoaderCache));
+          Preconditions.checkNotNull(classLoaderCache),
+          Preconditions.checkNotNull(concurrencyLimit));
     }
 
     public Builder setExecutionContext(ExecutionContext executionContext) {
@@ -242,6 +251,7 @@ public abstract class ExecutionContext implements Closeable {
       setEnvironment(executionContext.getEnvironment());
       setJavaPackageFinder(executionContext.getJavaPackageFinder());
       setObjectMapper(executionContext.getObjectMapper());
+      setConcurrencyLimit(executionContext.getConcurrencyLimit());
       return this;
     }
 
@@ -320,6 +330,11 @@ public abstract class ExecutionContext implements Closeable {
 
     public Builder setClassLoaderCache(ClassLoaderCache classLoaderCache) {
       this.classLoaderCache = classLoaderCache;
+      return this;
+    }
+
+    public Builder setConcurrencyLimit(ConcurrencyLimit concurrencyLimit) {
+      this.concurrencyLimit = concurrencyLimit;
       return this;
     }
   }

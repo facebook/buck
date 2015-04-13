@@ -25,6 +25,7 @@ java_library(
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util/concurrent:concurrent',
     '//src/com/facebook/buck/util/environment:platform',
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson-annotations',

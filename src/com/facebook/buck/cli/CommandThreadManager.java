@@ -20,6 +20,8 @@ import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator
 
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.MoreExecutors;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -54,15 +56,15 @@ public class CommandThreadManager implements AutoCloseable {
 
   public CommandThreadManager(
       String name,
-      int numThreads,
+      ConcurrencyLimit concurrencyLimit,
       long shutdownTimeout,
       TimeUnit shutdownTimeoutUnit) {
     this.threadGroup = new ThreadGroup(name);
     this.executor =
         listeningDecorator(
-            MoreExecutors.newMultiThreadExecutor(
+            new LimitedThreadPoolExecutor(
                 new ThreadFactoryBuilder()
-                    .setNameFormat(name + "-%d")
+                .setNameFormat(name + "-%d")
                     .setThreadFactory(
                         new CommandThreadFactory(
                             new ThreadFactory() {
@@ -72,13 +74,13 @@ public class CommandThreadManager implements AutoCloseable {
                               }
                             }))
                     .build(),
-                numThreads));
+                concurrencyLimit));
     this.shutdownTimeout = shutdownTimeout;
     this.shutdownTimeoutUnit = shutdownTimeoutUnit;
   }
 
-  public CommandThreadManager(String name, int numThreads) {
-    this(name, numThreads, DEFAULT_SHUTDOWN_TIMEOUT, DEFAULT_SHUTDOWN_TIMEOUT_UNIT);
+  public CommandThreadManager(String name, ConcurrencyLimit concurrencyLimit) {
+    this(name, concurrencyLimit, DEFAULT_SHUTDOWN_TIMEOUT, DEFAULT_SHUTDOWN_TIMEOUT_UNIT);
   }
 
   public ListeningExecutorService getExecutor() {

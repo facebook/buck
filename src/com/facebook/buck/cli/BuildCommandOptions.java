@@ -30,6 +30,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -68,6 +69,12 @@ public class BuildCommandOptions extends AbstractCommandOptions {
   @Nullable
   private BuildDependencies buildDependencies = null;
 
+  @Option(name = "--load-limit",
+      aliases = "-L",
+      usage = "[Float] Do not start new jobs when system load is above this level." +
+      " See uptime(1).")
+  private double loadLimit = Double.POSITIVE_INFINITY;
+
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -76,6 +83,7 @@ public class BuildCommandOptions extends AbstractCommandOptions {
     super(buckConfig);
 
     setNumThreadsFromConfig(buckConfig);
+    setLoadLimitFromConfig(buckConfig);
   }
 
   private Supplier<BuildDependencies> buildDependenciesSupplier =
@@ -99,11 +107,27 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         numThreads = Integer.parseInt(build.get("threads"));
       } catch (NumberFormatException e) {
         throw new HumanReadableException(
+            e,
             "Unable to determine number of threads to use from building from buck config file. " +
-                "Value used was '%s'", build.get("threads"));
+            "Value used was '%s'", build.get("threads"));
       }
     }
   }
+
+  private void setLoadLimitFromConfig(BuckConfig buckConfig) {
+    ImmutableMap<String, String> build = buckConfig.getEntriesForSection("build");
+    if (build.containsKey("load_limit")) {
+      try {
+        loadLimit = Double.parseDouble(build.get("load_limit"));
+      } catch (NumberFormatException e) {
+        throw new HumanReadableException(
+            e,
+            "Unable to determine load limit to use from building from buck config file. " +
+            "Value used was '%s'", build.get("load_limit"));
+      }
+    }
+  }
+
 
   public List<String> getArguments() {
     return arguments;
@@ -132,6 +156,14 @@ public class BuildCommandOptions extends AbstractCommandOptions {
 
   public boolean isKeepGoing() {
     return keepGoing;
+  }
+
+  public double getLoadLimit() {
+    return loadLimit;
+  }
+
+  public ConcurrencyLimit getConcurrencyLimit() {
+    return new ConcurrencyLimit(getNumThreads(), getLoadLimit());
   }
 
   /**
@@ -179,7 +211,8 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         platform,
         environment,
         objectMapper,
-        clock);
+        clock,
+        getConcurrencyLimit());
   }
 
 }
