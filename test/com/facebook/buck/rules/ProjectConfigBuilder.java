@@ -27,7 +27,7 @@ public class ProjectConfigBuilder extends AbstractNodeBuilder<ProjectConfigDescr
     super(new ProjectConfigDescription(), target);
   }
 
-  public static ProjectConfigBuilder newProjectConfigRuleBuilder(BuildTarget buildTarget) {
+  public static ProjectConfigBuilder createBuilder(BuildTarget buildTarget) {
     return new ProjectConfigBuilder(buildTarget);
   }
 

@@ -35,7 +35,7 @@ import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.java.PrebuiltJarBuilder;
-import com.facebook.buck.java.intellij.Project.SourceFolder;
+import com.facebook.buck.java.intellij.SerializableModule.SourceFolder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InMemoryBuildFileTree;
@@ -65,6 +65,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -112,7 +113,7 @@ public class ProjectTest {
 
     // project_config android_res/base:res
     ProjectConfig projectConfigForResource = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(
+        .createBuilder(
             BuildTargetFactory.newInstance("//android_res/base:project_config"))
         .setSrcRule(androidResRule.getBuildTarget())
         .setSrcRoots(ImmutableList.of("res"))
@@ -154,7 +155,7 @@ public class ProjectTest {
 
     // project_config //java/src/com/facebook/base:project_config
     ProjectConfig projectConfigForLibrary = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(
+        .createBuilder(
             BuildTargetFactory.newInstance(
                 "//java/src/com/facebook/base:project_config"))
         .setSrcRule(baseRule.getBuildTarget())
@@ -162,7 +163,7 @@ public class ProjectTest {
         .build(ruleResolver);
 
     ProjectConfig projectConfigForExportLibrary = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(
+        .createBuilder(
             BuildTargetFactory.newInstance("//java/src/com/facebook/exportlib:project_config"))
         .setSrcRule(exportLib.getBuildTarget())
         .setSrcRoots(ImmutableList.of("src")).build(ruleResolver);
@@ -190,7 +191,7 @@ public class ProjectTest {
 
     // project_config //foo:project_config
     ProjectConfig projectConfigUsingNoDx = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(BuildTargetFactory.newInstance("//foo:project_config"))
+        .createBuilder(BuildTargetFactory.newInstance("//foo:project_config"))
         .setSrcRule(androidBinaryRule.getBuildTarget())
         .build(ruleResolver);
 
@@ -207,7 +208,7 @@ public class ProjectTest {
 
     // project_config //bar:project_config
     ProjectConfig projectConfig = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(BuildTargetFactory.newInstance("//bar:project_config"))
+        .createBuilder(BuildTargetFactory.newInstance("//bar:project_config"))
         .setSrcRule(barAppBuildRule.getBuildTarget())
         .build(ruleResolver);
 
@@ -265,7 +266,7 @@ public class ProjectTest {
         Paths.get("java/src/com/facebook/exportlib/module_java_src_com_facebook_exportlib.iml"),
         javaLibraryModule.pathToImlFile);
     assertListEquals(
-        ImmutableList.of(SourceFolder.SRC),
+        ImmutableList.of(SerializableModule.SourceFolder.SRC),
         javaLibraryModule.sourceFolders);
 
     // Check the dependencies.
@@ -279,7 +280,7 @@ public class ProjectTest {
             DependentModule.newSourceFolder(),
             guavaAsProvidedDep,
             DependentModule.newStandardJdk()),
-        javaLibraryModule.dependencies);
+        javaLibraryModule.getDependencies());
 
     // Check the values of the module that corresponds to the android_library.
     Module androidLibraryModule = modules.get(3);
@@ -291,9 +292,9 @@ public class ProjectTest {
         androidLibraryModule.pathToImlFile);
     assertListEquals(
         ImmutableList.of(
-            SourceFolder.SRC,
+            SerializableModule.SourceFolder.SRC,
             new SourceFolder("file://$MODULE_DIR$/src-gen", false /* isTestSource */),
-            SourceFolder.GEN),
+            SerializableModule.SourceFolder.GEN),
         androidLibraryModule.sourceFolders);
     assertEquals(Boolean.TRUE, androidLibraryModule.hasAndroidFacet);
     assertEquals(Boolean.TRUE, androidLibraryModule.isAndroidLibraryProject);
@@ -321,7 +322,7 @@ public class ProjectTest {
             childAsProvidedDep,
             exportDepsAsProvidedDep,
             inheritedJdk),
-        androidLibraryModule.dependencies);
+        androidLibraryModule.getDependencies());
 
     // Check the values of the module that corresponds to the android_binary that uses no_dx.
     Module androidResourceModule = modules.get(0);
@@ -335,14 +336,16 @@ public class ProjectTest {
     assertEquals("module_foo", androidBinaryModuleNoDx.name);
     assertEquals(Paths.get("foo/module_foo.iml"), androidBinaryModuleNoDx.pathToImlFile);
 
-    assertListEquals(ImmutableList.of(SourceFolder.GEN), androidBinaryModuleNoDx.sourceFolders);
+    assertListEquals(
+        ImmutableList.of(SerializableModule.SourceFolder.GEN),
+        androidBinaryModuleNoDx.sourceFolders);
     assertEquals(Boolean.TRUE, androidBinaryModuleNoDx.hasAndroidFacet);
     assertEquals(Boolean.FALSE, androidBinaryModuleNoDx.isAndroidLibraryProject);
     assertEquals(null, androidBinaryModuleNoDx.proguardConfigPath);
     assertEquals(null, androidBinaryModuleNoDx.resFolder);
     assertEquals(Paths.get("../keystore/debug.keystore"), androidBinaryModuleNoDx.keystorePath);
 
-    // Check the dependencies.
+    // Check the moduleDependencies.
     DependentModule grandchildAsProvidedDep = DependentModule.newModule(
         BuildTargetFactory.newInstance("//java/src/com/facebook/grandchild:grandchild"),
         "module_java_src_com_facebook_grandchild");
@@ -359,7 +362,7 @@ public class ProjectTest {
             exportDepsAsProvidedDep,
             grandchildAsProvidedDep,
             inheritedJdk),
-        androidBinaryModuleNoDx.dependencies);
+        androidBinaryModuleNoDx.getDependencies());
 
     // Check the values of the module that corresponds to the android_binary with an empty no_dx.
     Module androidBinaryModuleEmptyNoDx = modules.get(1);
@@ -367,7 +370,8 @@ public class ProjectTest {
     assertEquals("module_bar", androidBinaryModuleEmptyNoDx.name);
     assertEquals(Paths.get("bar/module_bar.iml"), androidBinaryModuleEmptyNoDx.pathToImlFile);
     assertListEquals(
-        ImmutableList.of(SourceFolder.GEN), androidBinaryModuleEmptyNoDx.sourceFolders);
+        ImmutableList.of(SerializableModule.SourceFolder.GEN),
+        androidBinaryModuleEmptyNoDx.sourceFolders);
     assertEquals(Boolean.TRUE, androidBinaryModuleEmptyNoDx.hasAndroidFacet);
     assertEquals(Boolean.FALSE, androidBinaryModuleEmptyNoDx.isAndroidLibraryProject);
     assertEquals(null, androidBinaryModuleEmptyNoDx.proguardConfigPath);
@@ -376,7 +380,7 @@ public class ProjectTest {
         Paths.get("../keystore/debug.keystore"),
         androidBinaryModuleEmptyNoDx.keystorePath);
 
-    // Check the dependencies.
+    // Check the moduleDependencies.
     DependentModule guavaAsCompiledDep = DependentModule.newLibrary(
         guava.getBuildTarget(), "third_party_guava_guava_10_0_1_jar");
     assertEquals("Important that Guava is listed as a 'COMPILED' dependency here because it is " +
@@ -390,7 +394,7 @@ public class ProjectTest {
             exportDepsAsProvidedDep,
             grandchildAsProvidedDep,
             inheritedJdk),
-        androidBinaryModuleEmptyNoDx.dependencies);
+        androidBinaryModuleEmptyNoDx.getDependencies());
 
     // Check that the correct data was extracted to populate the .idea/libraries directory.
     BuildRule guava = getRuleById("//third_party/guava:guava", actionGraph);
@@ -456,7 +460,7 @@ public class ProjectTest {
         .build(ruleResolver);
 
     ProjectConfig projectConfig = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(
+        .createBuilder(
             BuildTargetFactory.newInstance("//third_party/java/easymock:project_config"))
         .setSrcRule(mockRule.getBuildTarget())
         .build(ruleResolver);
@@ -482,7 +486,7 @@ public class ProjectTest {
                 objenesis.getBuildTarget(),
                 "third_party_java_easymock_objenesis_jar"),
             DependentModule.newInheritedJdk()),
-        androidLibraryModule.dependencies);
+        androidLibraryModule.getDependencies());
   }
 
   @Test
@@ -508,7 +512,7 @@ public class ProjectTest {
         .build(ruleResolver);
 
     ProjectConfig projectConfig = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(
+        .createBuilder(
             BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
         .setSrcRule(baseBuildRule.getBuildTarget())
         .setTestRule(testBuildRule.getBuildTarget())
@@ -527,7 +531,7 @@ public class ProjectTest {
             DependentModule.newSourceFolder(),
             DependentModule.newLibrary(guava.getBuildTarget(), "third_party_java_guava_jar"),
             DependentModule.newStandardJdk()),
-        comExampleBaseModule.dependencies);
+        comExampleBaseModule.getDependencies());
   }
 
   /**
@@ -567,7 +571,7 @@ public class ProjectTest {
         .build(ruleResolver);
 
     ProjectConfig projectConfig = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(
+        .createBuilder(
             BuildTargetFactory.newInstance("//third_party/java/robolectric:project_config"))
         .setSrcRule(robolectricRule.getBuildTarget())
         .setSrcRoots(ImmutableList.of("src/main/java"))
@@ -592,7 +596,7 @@ public class ProjectTest {
             DependentModule.newModule(
                 supportV4.getBuildTarget(), "module_java_com_android_support_v4"),
             DependentModule.newStandardJdk()),
-        robolectricModule.dependencies);
+        robolectricModule.getDependencies());
   }
 
   @Test
@@ -624,7 +628,7 @@ public class ProjectTest {
             .setBuildTarget(BuildTargetFactory.newInstance("//resources/com/example:res"))
             .build());
     ProjectConfig projectConfigNullSrcRoots = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(
+        .createBuilder(
             BuildTargetFactory.newInstance("//resources/com/example:project_config"))
         .setSrcRule(resBuildRule.getBuildTarget())
         .setSrcRoots(null)
@@ -639,7 +643,7 @@ public class ProjectTest {
     Module moduleNoJavaSource = projectWithModules1.modules.get(0);
     assertListEquals(
         "Only source tmp should be gen/ when setSrcRoots(null) is specified.",
-        ImmutableList.of(SourceFolder.GEN),
+        ImmutableList.of(SerializableModule.SourceFolder.GEN),
         moduleNoJavaSource.sourceFolders);
 
     // Create a project_config() with src_roots=[].
@@ -648,7 +652,7 @@ public class ProjectTest {
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .build(ruleResolver2);
     ProjectConfig inPackageProjectConfig = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(
+        .createBuilder(
             BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
         .setSrcRule(baseBuildRule.getBuildTarget())
         .setSrcRoots(ImmutableList.<String>of())
@@ -674,7 +678,7 @@ public class ProjectTest {
             "as well as the gen/ directory.",
         ImmutableList.of(
             new SourceFolder("file://$MODULE_DIR$", false /* isTestSource */, "com.example.base"),
-            SourceFolder.GEN),
+            SerializableModule.SourceFolder.GEN),
         moduleWithPackagePrefix.sourceFolders);
 
     // Create a project_config() with src_roots=['src'].
@@ -683,7 +687,7 @@ public class ProjectTest {
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .build(ruleResolver3);
     ProjectConfig hasSrcFolderProjectConfig = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(
+        .createBuilder(
             BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
         .setSrcRule(baseBuildRule3.getBuildTarget())
         .setSrcRoots(ImmutableList.of("src"))
@@ -700,7 +704,7 @@ public class ProjectTest {
         "Both src/ and gen/ should be source folders.",
         ImmutableList.of(
             new SourceFolder("file://$MODULE_DIR$/src", false /* isTestSource */),
-            SourceFolder.GEN),
+            SerializableModule.SourceFolder.GEN),
         moduleHasSrcFolder.sourceFolders);
   }
 
@@ -739,6 +743,7 @@ public class ProjectTest {
     Project project = new Project(
         new SourcePathResolver(ruleResolver),
         projectConfigs,
+        null,
         actionGraph,
         basePathToAliasMap,
         javaPackageFinder,
@@ -753,11 +758,12 @@ public class ProjectTest {
         /* pathToPostProcessScript */ Optional.<String>absent(),
         BuckTestConstant.PYTHON_INTERPRETER,
         new ObjectMapper(),
-        true);
+        true,
+        false);
 
     // Execute Project's business logic.
     EasyMock.replay(executionContext, projectFilesystem);
-    List<Module> modules = project.createModulesForProjectConfigs();
+    List<Module> modules = new ArrayList<Module>(project.createModulesForProjectConfigs());
     EasyMock.verify(executionContext, projectFilesystem);
 
     return new ProjectWithModules(project, ImmutableList.copyOf(modules));
@@ -798,7 +804,7 @@ public class ProjectTest {
     ruleResolver.addToIndex(ndkLibrary);
 
     ProjectConfig ndkProjectConfig = (ProjectConfig) ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(
+        .createBuilder(
             BuildTargetFactory.newInstance(
                 "//third_party/java/foo/jni:project_config"))
         .setSrcRule(ndkLibrary.getBuildTarget())
@@ -815,7 +821,7 @@ public class ProjectTest {
     assertListEquals(ImmutableList.of(
             DependentModule.newSourceFolder(),
             DependentModule.newInheritedJdk()),
-        androidLibraryModule.dependencies);
+        androidLibraryModule.getDependencies());
     assertEquals(
         Paths.get(String.format("../../../../%s", ndkLibrary.getLibraryPath())),
         androidLibraryModule.nativeLibs);

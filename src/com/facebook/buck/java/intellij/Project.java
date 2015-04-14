@@ -38,6 +38,7 @@ import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.PrebuiltJar;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ActionGraph;
@@ -46,6 +47,7 @@ import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceRoot;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Ansi;
@@ -62,7 +64,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -127,6 +128,7 @@ public class Project {
 
   private final SourcePathResolver resolver;
   private final ImmutableSortedSet<ProjectConfig> rules;
+  private final TargetGraph targetGraph;
   private final ActionGraph actionGraph;
   private final BuildFileTree buildFileTree;
   private final ImmutableMap<Path, String> basePathToAliasMap;
@@ -141,10 +143,12 @@ public class Project {
   private final String pythonInterpreter;
   private final ObjectMapper objectMapper;
   private final boolean turnOffAutoSourceGeneration;
+  private final boolean experimentalProjectGeneration;
 
   public Project(
       SourcePathResolver resolver,
       ImmutableSortedSet<ProjectConfig> rules,
+      TargetGraph targetGraph,
       ActionGraph actionGraph,
       Map<Path, String> basePathToAliasMap,
       JavaPackageFinder javaPackageFinder,
@@ -156,9 +160,11 @@ public class Project {
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter,
       ObjectMapper objectMapper,
-      boolean turnOffAutoSourceGeneration) {
+      boolean turnOffAutoSourceGeneration,
+      boolean experimentalProjectGeneration) {
     this.resolver = resolver;
     this.rules = rules;
+    this.targetGraph = targetGraph;
     this.actionGraph = actionGraph;
     this.buildFileTree = buildFileTree;
     this.basePathToAliasMap = ImmutableMap.copyOf(basePathToAliasMap);
@@ -173,6 +179,7 @@ public class Project {
     this.pythonInterpreter = pythonInterpreter;
     this.objectMapper = objectMapper;
     this.turnOffAutoSourceGeneration = turnOffAutoSourceGeneration;
+    this.experimentalProjectGeneration = experimentalProjectGeneration;
   }
 
   public int createIntellijProject(
@@ -181,14 +188,26 @@ public class Project {
       boolean generateMinimalProject,
       PrintStream stdOut,
       PrintStream stdErr) throws IOException, InterruptedException {
-    List<Module> modules = createModulesForProjectConfigs();
-    writeJsonConfig(jsonTempFile, modules);
+    List<SerializableModule> modules;
+    if (experimentalProjectGeneration) {
+      IjProject ijProject = IjProject.create(targetGraph, javaPackageFinder, resolver);
+      modules = Lists.newArrayList(ijProject.getSerializedProjectDescription());
+      writeJsonConfig(
+          jsonTempFile,
+          modules,
+          ImmutableList.<SerializablePrebuiltJarRule>of(),
+          ijProject.getSerializedLibrariesDescription());
+    } else {
+      modules = Lists.<SerializableModule>newArrayList(createModulesForProjectConfigs());
+      writeJsonConfig(jsonTempFile, modules);
+    }
 
     List<String> modifiedFiles = Lists.newArrayList();
 
     // Process the JSON config to generate the .xml and .iml files for IntelliJ.
     ExitCodeAndOutput result = processJsonConfig(jsonTempFile, generateMinimalProject);
     if (result.exitCode != 0) {
+      Logger.get(Project.class).error(result.stdErr);
       return result.exitCode;
     } else {
       // intellij.py writes the list of modified files to stdout, so parse stdout and add the
@@ -341,7 +360,11 @@ public class Project {
     // test dependencies
     BuildRule testRule = projectConfig.getTestRule();
     if (testRule != null) {
-      walkRuleAndAdd(testRule, true /* isForTests */, dependencies, projectConfig.getSrcRule());
+      walkRuleAndAdd(
+          testRule,
+          true /* isForTests */,
+          dependencies,
+          projectConfig.getSrcRule());
     }
 
     // src folder
@@ -364,7 +387,7 @@ public class Project {
     boolean isAndroidRule = projectRule.getProperties().is(ANDROID);
     if (isAndroidRule) {
       boolean hasSourceFolders = !module.sourceFolders.isEmpty();
-      module.sourceFolders.add(SourceFolder.GEN);
+      module.sourceFolders.add(SerializableModule.SourceFolder.GEN);
       if (!hasSourceFolders) {
         includeSourceFolder = true;
       }
@@ -372,7 +395,11 @@ public class Project {
 
     // src dependencies
     // Note that isForTests is false even if projectRule is the project_config's test_target.
-    walkRuleAndAdd(projectRule, false /* isForTests */, dependencies, projectConfig.getSrcRule());
+    walkRuleAndAdd(
+        projectRule,
+        false /* isForTests */,
+        dependencies,
+        projectConfig.getSrcRule());
 
     Path basePath = projectConfig.getBuildTarget().getBasePath();
 
@@ -440,8 +467,8 @@ public class Project {
     }
 
     // Assign the dependencies.
-    module.dependencies = createDependenciesInOrder(
-        includeSourceFolder, dependencies, jdkDependency);
+    module.setModuleDependencies(
+        createDependenciesInOrder(includeSourceFolder, dependencies, jdkDependency));
 
     // Annotation processing generates sources for IntelliJ to consume, but does so outside
     // the module directory to avoid messing up globbing.
@@ -604,11 +631,12 @@ public class Project {
       // of those project_config() rules.
       String url = "file://$MODULE_DIR$";
       String packagePrefix = javaPackageFinder.findJavaPackage(module.pathToImlFile);
-      SourceFolder sourceFolder = new SourceFolder(url, isTestSource, packagePrefix);
+      SerializableModule.SourceFolder sourceFolder =
+          new SerializableModule.SourceFolder(url, isTestSource, packagePrefix);
       module.sourceFolders.add(sourceFolder);
     } else {
       for (SourceRoot sourceRoot : sourceRoots) {
-        SourceFolder sourceFolder = new SourceFolder(
+        SerializableModule.SourceFolder sourceFolder = new SerializableModule.SourceFolder(
             String.format("file://$MODULE_DIR$/%s", sourceRoot.getName()), isTestSource);
         module.sourceFolders.add(sourceFolder);
       }
@@ -617,7 +645,10 @@ public class Project {
     // Include <excludeFolder> elements, as appropriate.
     for (Path relativePath : this.buildFileTree.getChildPaths(buildRule.getBuildTarget())) {
       String excludeFolderUrl = "file://$MODULE_DIR$/" + relativePath;
-      SourceFolder excludeFolder = new SourceFolder(excludeFolderUrl, /* isTestSource */ false);
+      SerializableModule.SourceFolder excludeFolder =
+          new SerializableModule.SourceFolder(
+              excludeFolderUrl,
+              /* isTestSource */ false);
       module.excludeFolders.add(excludeFolder);
     }
 
@@ -652,7 +683,7 @@ public class Project {
 
   private static void addRootExclude(Module module, Path path) {
     module.excludeFolders.add(
-        new SourceFolder(
+        new SerializableModule.SourceFolder(
             String.format("file://$MODULE_DIR$/%s", path),
             /* isTestSource */ false));
   }
@@ -698,7 +729,7 @@ public class Project {
 
       // Inspect all of the library dependencies. If the corresponding JAR file is in the set of
       // noDxJars, then either change its scope to "COMPILE" or "PROVIDED", as appropriate.
-      for (DependentModule dependentModule : Preconditions.checkNotNull(module.dependencies)) {
+      for (DependentModule dependentModule : Preconditions.checkNotNull(module.getDependencies())) {
         if (!dependentModule.isLibrary()) {
           continue;
         }
@@ -722,7 +753,7 @@ public class Project {
       for (Path entry : classpathEntriesToDex) {
         String libraryName = getIntellijNameForBinaryJar(entry);
         DependentModule dependency = DependentModule.newLibrary(null, libraryName);
-        Preconditions.checkNotNull(module.dependencies).add(dependency);
+        Preconditions.checkNotNull(module.getDependencies()).add(dependency);
       }
     }
   }
@@ -921,7 +952,8 @@ public class Project {
     return directoryPath.relativize(pathRelativeToProjectRoot);
   }
 
-  private void writeJsonConfig(File jsonTempFile, List<Module> modules) throws IOException {
+  private void writeJsonConfig(File jsonTempFile, List<SerializableModule> modules
+  ) throws IOException {
     List<SerializablePrebuiltJarRule> libraries = Lists.newArrayListWithCapacity(
         libraryJars.size());
     for (BuildRule libraryJar : libraryJars) {
@@ -947,6 +979,14 @@ public class Project {
       aars.add(createSerializableAndroidAar(name, preBuiltAar));
     }
 
+    writeJsonConfig(jsonTempFile, modules, libraries, aars);
+  }
+
+  private void writeJsonConfig(
+      File jsonTempFile,
+      List<SerializableModule> modules,
+      List<SerializablePrebuiltJarRule> libraries,
+      List<SerializableAndroidAar> aars) throws IOException {
     Map<String, Object> config = ImmutableMap.of(
         "modules", modules,
         "libraries", libraries,
@@ -1024,63 +1064,6 @@ public class Project {
       this.exitCode = exitCode;
       this.stdOut = stdOut;
       this.stdErr = stdErr;
-    }
-  }
-
-  @JsonInclude(Include.NON_NULL)
-  @VisibleForTesting
-  static class SourceFolder {
-    @JsonProperty
-    private final String url;
-
-    @JsonProperty
-    private final boolean isTestSource;
-
-    @JsonProperty
-    @Nullable
-    private final String packagePrefix;
-
-    static final SourceFolder SRC = new SourceFolder("file://$MODULE_DIR$/src", false);
-    static final SourceFolder TESTS = new SourceFolder("file://$MODULE_DIR$/tests", true);
-    static final SourceFolder GEN = new SourceFolder("file://$MODULE_DIR$/gen", false);
-
-    SourceFolder(String url, boolean isTestSource) {
-      this(url, isTestSource, null /* packagePrefix */);
-    }
-
-    SourceFolder(String url, boolean isTestSource, @Nullable String packagePrefix) {
-      this.url = url;
-      this.isTestSource = isTestSource;
-      this.packagePrefix = packagePrefix;
-    }
-
-    String getUrl() {
-      return url;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof SourceFolder)) {
-        return false;
-      }
-      SourceFolder that = (SourceFolder) obj;
-      return Objects.equal(this.url, that.url) &&
-          Objects.equal(this.isTestSource, that.isTestSource) &&
-          Objects.equal(this.packagePrefix, that.packagePrefix);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(url, isTestSource, packagePrefix);
-    }
-
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(SourceFolder.class)
-          .add("url", url)
-          .add("isTestSource", isTestSource)
-          .add("packagePrefix", packagePrefix)
-          .toString();
     }
   }
 

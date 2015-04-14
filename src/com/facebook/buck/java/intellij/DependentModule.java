@@ -19,7 +19,6 @@ package com.facebook.buck.java.intellij;
 import com.facebook.buck.model.BuildTarget;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -27,7 +26,7 @@ import com.google.common.base.Preconditions;
 import javax.annotation.Nullable;
 
 @JsonInclude(Include.NON_NULL)
-class DependentModule {
+class DependentModule extends SerializableDependentModule {
 
   private static final String LIBRARY_DEPENDENCY_TYPE = "library";
   private static final String MODULE_DEPENDENCY_TYPE = "module";
@@ -39,41 +38,8 @@ class DependentModule {
   @Nullable
   private final BuildTarget target;
 
-  @JsonProperty
-  private final String type;
-
-  @JsonProperty
-  @Nullable
-  String scope;
-
-  @JsonProperty
-  @Nullable
-  private String name;
-
-  @JsonProperty
-  @Nullable
-  private String moduleName;
-
-  @JsonProperty
-  @Nullable
-  private Boolean forTests;
-
-  /**
-   * Set if {@link #type} is {@code jdk}.
-   */
-  @JsonProperty
-  @Nullable
-  private String jdkName;
-
-  /**
-   * Set if {@link #type} is {@code jdk}.
-   */
-  @JsonProperty
-  @Nullable
-  private String jdkType;
-
   private DependentModule(String type, @Nullable BuildTarget target) {
-    this.type = type;
+    super(type);
     this.target = target;
   }
 

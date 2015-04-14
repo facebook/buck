@@ -36,7 +36,7 @@ public class SerializableAndroidAar {
   private final Path assets;
   private final Path jar;
 
-  private SerializableAndroidAar(String name, @Nullable Path res, @Nullable Path assets, Path jar) {
+  public SerializableAndroidAar(String name, @Nullable Path res, @Nullable Path assets, Path jar) {
     this.name = name;
     this.res = res;
     this.assets = assets;

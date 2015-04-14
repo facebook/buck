@@ -116,19 +116,19 @@ public class ProjectCommandIntellijTest {
 
     BuildTarget fooProjectTarget = BuildTarget.builder("//foo", "foo").build();
     fooProjectNode = ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(fooProjectTarget)
+        .createBuilder(fooProjectTarget)
         .setSrcRule(fooBinTarget)
         .build();
 
     BuildTarget bazProjectTarget = BuildTarget.builder("//baz", "baz").build();
     bazProjectNode = ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(bazProjectTarget)
+        .createBuilder(bazProjectTarget)
         .setSrcRule(bazLibTarget)
         .build();
 
     BuildTarget dummyProjectTarget = BuildTarget.builder("//", "dummy").build();
     dummyProjectNode = ProjectConfigBuilder
-        .newProjectConfigRuleBuilder(dummyProjectTarget)
+        .createBuilder(dummyProjectTarget)
         .setSrcRule(dummyRootBinTarget)
         .build();
 
