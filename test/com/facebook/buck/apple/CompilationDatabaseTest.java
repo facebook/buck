@@ -60,8 +60,6 @@ import java.util.List;
 
 public class CompilationDatabaseTest {
 
-  // These will be initialized by setUpTestValues().
-  private BuildRuleResolver testBuildRuleResolver;
   private SourcePathResolver testSourcePathResolver;
   private ImmutableSortedSet<SourceWithFlags> testSourcesWithFlags;
   private ImmutableSortedSet<SourcePath> testPublicHeaders;
@@ -90,37 +88,6 @@ public class CompilationDatabaseTest {
         "getPathToOutputFile() should be a function of the build target.",
         Paths.get("buck-out/gen/foo/__baz_compilation_database.json"),
         compilationDatabase.getPathToOutputFile());
-  }
-
-  @Test
-  public void testGetInputsToCompareToOutput() {
-    setUpTestValues();
-
-    ImmutableSortedSet<SourceWithFlags> sourcesWithFlags = ImmutableSortedSet.of(
-        SourceWithFlags.of(new TestSourcePath("Foo/Hello.m")));
-    ImmutableSortedSet<SourcePath> headers = ImmutableSortedSet.<SourcePath>of(
-        new TestSourcePath("Foo/Bye.h"));
-    ImmutableSortedSet<SourcePath> exportedHeaders = ImmutableSortedSet.<SourcePath>of(
-        new TestSourcePath("Foo/Hello.h"));
-
-    CompilationDatabase compilationDatabase = new CompilationDatabase(
-        new FakeBuildRuleParamsBuilder(testBuildTarget).build(),
-        testSourcePathResolver,
-        appleConfig,
-        sourcesWithFlags,
-        exportedHeaders,
-        headers,
-        /* frameworks */ ImmutableSortedSet.<FrameworkPath>of(),
-        /* includePaths */ ImmutableSet.<Path>of(),
-        /* pchFile */ Optional.<SourcePath>absent());
-
-    MoreAsserts.assertIterablesEquals(
-        "getInputsToCompareToOutput() should contain files in targetSources.",
-        ImmutableList.of(
-            Paths.get("Foo/Hello.m"),
-            Paths.get("Foo/Hello.h"),
-            Paths.get("Foo/Bye.h")),
-        compilationDatabase.getInputsToCompareToOutput());
   }
 
   @Test
@@ -249,7 +216,7 @@ public class CompilationDatabaseTest {
   }
 
   private void setUpTestValues() {
-    testBuildRuleResolver = new BuildRuleResolver();
+    BuildRuleResolver testBuildRuleResolver = new BuildRuleResolver();
     testSourcePathResolver = new SourcePathResolver(testBuildRuleResolver);
     testSourcesWithFlags = ImmutableSortedSet.of(
         SourceWithFlags.of(new TestSourcePath("foo/Hello.m")));

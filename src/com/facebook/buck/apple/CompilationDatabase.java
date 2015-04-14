@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -76,8 +77,11 @@ public class CompilationDatabase extends AbstractBuildRule {
 
 
   private final AppleConfig appleConfig;
+  @AddToRuleKey
   private final ImmutableSortedSet<SourceWithFlags> sourcesWithFlags;
+  @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> publicHeaders;
+  @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> privateHeaders;
   private final Path outputJsonFile;
   private final ImmutableSortedSet<FrameworkPath> frameworks;
@@ -173,13 +177,7 @@ public class CompilationDatabase extends AbstractBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(
-        Iterables.concat(
-            Iterables.transform(
-                sourcesWithFlags,
-                SourceWithFlags.TO_SOURCE_PATH),
-            publicHeaders,
-            privateHeaders));
+    return ImmutableSet.of();
   }
 
   @Override

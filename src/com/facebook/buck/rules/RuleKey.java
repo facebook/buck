@@ -20,6 +20,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -29,6 +30,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -250,6 +252,11 @@ public class RuleKey {
         return separate();
       }
 
+      if (val instanceof Supplier) {
+        Object newVal = ((Supplier<?>) val).get();
+        return setReflectively(key, newVal);
+      }
+
       if (val instanceof RuleKeyAppendable) {
         return ((RuleKeyAppendable) val).appendToRuleKey(this, key);
       }
@@ -314,8 +321,12 @@ public class RuleKey {
           logElms.add(String.format("string(\"%s\"):", val));
         }
         feed(((String) val).getBytes());
-      } else if (val instanceof BuildRule) {         // Buck types
-        setSingleValue(((BuildRule) val).getRuleKey());
+      }
+
+      // Buck types below here.
+
+      else if (val instanceof BuildRule) {
+        return setSingleValue(((BuildRule) val).getRuleKey());
       } else if (val instanceof RuleKey) {
         if (logElms != null) {
           logElms.add(String.format("ruleKey(sha1=%s):", val));
@@ -343,6 +354,15 @@ public class RuleKey {
           logElms.add(String.format("sourceroot(%s):", val));
         }
         feed(((SourceRoot) val).getName().getBytes());
+      } else if (val instanceof SourceWithFlags) {
+        SourceWithFlags source = (SourceWithFlags) val;
+        setSingleValue(source.getSourcePath());
+        feed("[".getBytes());
+        for (String flag : source.getFlags()) {
+          feed(flag.getBytes());
+          feed(",".getBytes());
+        }
+        feed("]".getBytes());
       } else {
         throw new RuntimeException("Unsupported value type: " + val.getClass());
       }

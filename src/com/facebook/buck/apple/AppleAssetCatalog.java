@@ -16,24 +16,18 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
 
 /**
  * Captures information about an asset catalog.
@@ -47,10 +41,13 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class AppleAssetCatalog extends AbstractBuildRule {
+public class AppleAssetCatalog extends NoopBuildRule {
 
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
   private final Supplier<ImmutableCollection<Path>> inputPathsSupplier;
   private final ImmutableSet<Path> dirs;
+  @AddToRuleKey
   private final boolean copyToBundles;
 
   AppleAssetCatalog(
@@ -83,31 +80,5 @@ public class AppleAssetCatalog extends AbstractBuildRule {
    */
   public boolean getCopyToBundles() {
     return copyToBundles;
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return inputPathsSupplier.get();
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-    // This rule does not perform any build steps. Rather, the top-level binary target will
-    // coalesce all asset catalog rules and build them together.
-    return ImmutableList.of();
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    builder.setReflectively("copyToBundles", copyToBundles);
-    return builder;
-  }
-
-  @Nullable
-  @Override
-  public Path getPathToOutputFile() {
-    return null;
   }
 }
