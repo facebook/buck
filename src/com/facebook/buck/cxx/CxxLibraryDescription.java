@@ -407,7 +407,10 @@ public class CxxLibraryDescription implements
     arg.langPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     arg.linkerFlags = Optional.of(ImmutableList.<String>of());
+    arg.exportedLinkerFlags = Optional.of(ImmutableList.<String>of());
     arg.platformLinkerFlags = Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
+    arg.exportedPlatformLinkerFlags = Optional.of(
+        ImmutableList.<Pair<String, ImmutableList<String>>>of());
     arg.forceStatic = Optional.absent();
     arg.linkWhole = Optional.absent();
     arg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
