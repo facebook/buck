@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -35,6 +36,7 @@ import java.nio.file.Path;
  * functionality like stepping, breakpoints, etc.
  */
 public class OCamlDebugLauncher extends AbstractBuildRule {
+  @AddToRuleKey
   private final OCamlDebugLauncherStep.Args args;
 
   public OCamlDebugLauncher(
@@ -52,7 +54,7 @@ public class OCamlDebugLauncher extends AbstractBuildRule {
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return args.appendDetailsToRuleKey(builder);
+    return builder;
   }
 
   @Override

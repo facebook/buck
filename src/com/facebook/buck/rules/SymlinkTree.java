@@ -23,19 +23,18 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class SymlinkTree extends AbstractBuildRule implements AbiRule {
+public class SymlinkTree extends AbstractBuildRule implements AbiRule, RuleKeyAppendable {
 
   private final Path root;
-  private final ImmutableMap<Path, SourcePath> links;
+  private final ImmutableSortedMap<Path, SourcePath> links;
   private final ImmutableMap<Path, SourcePath> fullLinks;
 
   public SymlinkTree(
@@ -45,10 +44,11 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
       ImmutableMap<Path, SourcePath> links) {
     super(params, resolver);
     this.root = root;
-    this.links = links;
+    this.links = ImmutableSortedMap.copyOf(links);
 
     ImmutableMap.Builder<Path, SourcePath> fullLinks = ImmutableMap.builder();
-    for (ImmutableMap.Entry<Path, SourcePath> entry : links.entrySet()) {
+    // Maintain ordering
+    for (ImmutableMap.Entry<Path, SourcePath> entry : this.links.entrySet()) {
       fullLinks.put(root.resolve(entry.getKey()), entry.getValue());
     }
     this.fullLinks = fullLinks.build();
@@ -84,16 +84,28 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
 
   // Put the link map into the rule key, as if it changes at all, we need to
   // re-run it.
+
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    List<Path> keyList = Lists.newArrayList(links.keySet());
-    Collections.sort(keyList);
-    for (Path key : keyList) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+    for (Map.Entry<Path, SourcePath> entry : links.entrySet()) {
       builder.setReflectively(
-          "link(" + key.toString() + ")",
-          getResolver().getPath(links.get(key)).toString());
+          key + ".link(" + entry.getKey().toString() + ")",
+          getResolver().getPath(entry.getValue()).toString());
     }
+
     return builder;
+  }
+
+  @Override
+  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+    return builder;
+  }
+
+  // There are no files we care about which would cause us to need to re-create the
+  // symlink tree.
+  @Override
+  public ImmutableCollection<Path> getInputsToCompareToOutput() {
+    return ImmutableList.of();
   }
 
   // Since we produce a directory tree of symlinks, rather than a single file, return
@@ -102,13 +114,6 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule {
   @Nullable
   public Path getPathToOutputFile() {
     return null;
-  }
-
-  // There are no files we care about which would cause us to need to re-create the
-  // symlink tree.
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
   }
 
   // We never want to cache this step, as we're only writing symlinks, and caching can

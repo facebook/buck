@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -33,7 +34,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
@@ -41,11 +42,19 @@ import javax.annotation.Nullable;
 
 class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
 
+  @AddToRuleKey
   private final String nativeLib;
+  @AddToRuleKey
   private final String bytecodeLib;
+  @AddToRuleKey
   private final SourcePath staticNativeLibraryPath;
+  @AddToRuleKey
   private final ImmutableList<SourcePath> staticCLibraryPaths;
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
   private final SourcePath bytecodeLibraryPath;
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey(stringify = true)
   private final Path libPath;
   private final Path includeDir;
 
@@ -71,17 +80,12 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(
-        Iterables.concat(
-            staticCLibraryPaths,
-            ImmutableList.of(staticNativeLibraryPath, bytecodeLibraryPath)));
+    return ImmutableSet.of();
   }
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder.setReflectively("nativeLib", nativeLib)
-        .setReflectively("bytecodeLib", bytecodeLib)
-        .setReflectively("libPath", libPath.toString());
+    return builder;
   }
 
   @Override

@@ -24,6 +24,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
@@ -141,7 +142,7 @@ public class SymlinkTreeTest {
 
     // Calculate their rule keys and verify they're different.
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(FakeFileHashCache.createFromStrings(
+        new DefaultRuleKeyBuilderFactory(FakeFileHashCache.createFromStrings(
             ImmutableMap.<String, String>of()));
     RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(
         symlinkTreeBuildRule,

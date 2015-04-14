@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.shell.Shell;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -38,7 +39,7 @@ import java.nio.file.Paths;
  */
 public class OCamlDebugLauncherStep implements Step {
 
-  public static class Args {
+  public static class Args implements RuleKeyAppendable {
     public final Path ocamlDebug;
     public final Path bytecodeOutput;
     public final ImmutableList<OCamlLibrary> ocamlInput;
@@ -59,10 +60,12 @@ public class OCamlDebugLauncherStep implements Step {
       return Paths.get(bytecodeOutput.toString() + ".debug");
     }
 
-    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-      return builder.setReflectively("ocamlDebug", ocamlDebug.toString())
-          .setReflectively("bytecodeOutput", bytecodeOutput.toString())
-          .setReflectively("flags", bytecodeIncludeFlags);
+    @Override
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+      return builder
+          .setReflectively(key + ".ocamlDebug", ocamlDebug.toString())
+          .setReflectively(key + ".bytecodeOutput", bytecodeOutput.toString())
+          .setReflectively(key + ".flags", bytecodeIncludeFlags);
     }
   }
 
