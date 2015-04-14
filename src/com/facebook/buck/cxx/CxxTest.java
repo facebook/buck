@@ -18,13 +18,11 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -38,19 +36,16 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
-import javax.annotation.Nullable;
-
 /**
  * A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests.
  */
-public abstract class CxxTest extends AbstractBuildRule implements TestRule {
+public abstract class CxxTest extends NoopBuildRule implements TestRule {
 
   private final ImmutableSet<Label> labels;
   private final ImmutableSet<String> contacts;
@@ -66,29 +61,6 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule {
     this.labels = labels;
     this.contacts = contacts;
     this.sourceUnderTest = sourceUnderTest;
-  }
-
-  @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-    return ImmutableList.of();
-  }
-
-  @Nullable
-  @Override
-  public Path getPathToOutputFile() {
-    return null;
   }
 
   /**

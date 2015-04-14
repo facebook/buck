@@ -17,10 +17,12 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -48,11 +50,11 @@ public class XcodeWorkspaceConfigDescription
   }
 
   @Override
-  public <A extends Arg> XcodeWorkspaceConfig createBuildRule(
+  public <A extends Arg> BuildRule createBuildRule(
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) {
-    return new XcodeWorkspaceConfig(params, new SourcePathResolver(resolver));
+    return new NoopBuildRule(params, new SourcePathResolver(resolver));
   }
 
   public static String getWorkspaceNameFromArg(Arg arg) {
