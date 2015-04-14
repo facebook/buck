@@ -854,7 +854,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     steps.add(smartDexingCommand);
 
     if (isReorderingClasses()) {
-      IntraDexReorder intraDexReorder = new IntraDexReorder(
+      IntraDexReorderStep intraDexReorderStep = new IntraDexReorderStep(
         dexReorderToolFile,
         dexReorderDataDumpFile,
         getResolver(),
@@ -864,7 +864,7 @@ public class AndroidBinary extends AbstractBuildRule implements
         secondaryOutputToInputs,
         SMART_DEX_SECONDARY_DEX_SUBDIR,
         SECONDARY_DEX_SUBDIR);
-      steps.addAll(intraDexReorder.generateReorderCommands());
+      steps.add(intraDexReorderStep);
     }
   }
 

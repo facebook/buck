@@ -276,6 +276,46 @@ public class AndroidBinaryTest {
   }
 
   @Test
+  public void testDexingCommandWithIntraDexReorder() {
+    SourcePath reorderTool = new TestSourcePath("/tools:reorder_tool");
+    SourcePath reorderData = new TestSourcePath("/tools:reorder_data");
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    AndroidBinary splitDexRule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
+        BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
+        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget())
+        .setTarget("Google Inc.:Google APIs:16")
+        .setShouldSplitDex(true)
+        .setLinearAllocHardLimit(0)
+        .setPrimaryDexScenarioOverflowAllowed(true)
+        .setDexCompression(DexStore.JAR)
+        .setIntraDexReorderResources(true,
+            reorderTool,
+            reorderData)
+        .build(ruleResolver);
+
+    Set<Path> classpath = Sets.newHashSet();
+    ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
+    ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
+    Path primaryDexPath = SCRATCH_PATH.resolve(".dex/classes.dex");
+    splitDexRule.addDexingSteps(
+        classpath,
+        Suppliers.<Map<String, HashCode>>ofInstance(ImmutableMap.<String, HashCode>of()),
+        secondaryDexDirectories,
+        commandsBuilder,
+        primaryDexPath,
+        Optional.of(reorderTool),
+        Optional.of(reorderData));
+
+    assertEquals("Expected 2 new assets paths (one for metadata.txt and the other for the " +
+        "secondary zips)", 2, secondaryDexDirectories.build().size());
+
+    List<Step> steps = commandsBuilder.build();
+    assertCommandsInOrder(steps,
+        ImmutableList.<Class<?>>of(SplitZipStep.class, SmartDexingStep.class));
+  }
+
+  @Test
   public void testCreateFilterResourcesStep() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildRule keystoreRule = addKeystoreRule(resolver);
