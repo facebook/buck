@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -58,7 +59,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = Predicates.in(SUPPORTED_FLAVORS);
 
   private static final Set<Flavor> NON_LIBRARY_FLAVORS = ImmutableSet.of(
-      CompilationDatabase.COMPILATION_DATABASE,
+      CxxCompilationDatabase.COMPILATION_DATABASE,
       AppleDescriptions.HEADERS,
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);

@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxBinaryDescription;
+import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.TypeAndPlatform;
@@ -45,7 +46,7 @@ public class AppleBinaryDescription
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_binary");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
-      CompilationDatabase.COMPILATION_DATABASE,
+      CxxCompilationDatabase.COMPILATION_DATABASE,
       AppleDescriptions.HEADERS);
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
@@ -55,17 +56,14 @@ public class AppleBinaryDescription
     }
   };
 
-  private final AppleConfig appleConfig;
   private final CxxBinaryDescription delegate;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final ImmutableMap<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths;
 
   public AppleBinaryDescription(
-      AppleConfig appleConfig,
       CxxBinaryDescription delegate,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Map<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths) {
-    this.appleConfig = appleConfig;
     this.delegate = delegate;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.appleCxxPlatformsToAppleSdkPaths = ImmutableMap.copyOf(appleCxxPlatformsToAppleSdkPaths);
@@ -96,9 +94,7 @@ public class AppleBinaryDescription
     Optional<BuildRule> flavoredRule = AppleDescriptions
         .createFlavoredRule(
             params,
-            resolver,
             args,
-            appleConfig,
             pathResolver);
     if (flavoredRule.isPresent()) {
       return flavoredRule.get();

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -47,8 +48,8 @@ public class AppleLibraryDescription implements
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_library");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
-      CompilationDatabase.COMPILATION_DATABASE,
       AppleDescriptions.HEADERS,
+      CxxCompilationDatabase.COMPILATION_DATABASE,
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.STATIC_FLAVOR,
@@ -62,17 +63,14 @@ public class AppleLibraryDescription implements
     }
   };
 
-  private final AppleConfig appleConfig;
   private final CxxLibraryDescription delegate;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final ImmutableMap<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths;
 
   public AppleLibraryDescription(
-      AppleConfig appleConfig,
       CxxLibraryDescription delegate,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Map<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths) {
-    this.appleConfig = appleConfig;
     this.delegate = delegate;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.appleCxxPlatformsToAppleSdkPaths = ImmutableMap.copyOf(appleCxxPlatformsToAppleSdkPaths);
@@ -103,9 +101,7 @@ public class AppleLibraryDescription implements
     Optional<BuildRule> flavoredRule = AppleDescriptions
         .createFlavoredRule(
             params,
-            resolver,
             args,
-            appleConfig,
             pathResolver);
     if (flavoredRule.isPresent()) {
       return flavoredRule.get();

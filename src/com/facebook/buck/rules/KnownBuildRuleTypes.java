@@ -424,7 +424,6 @@ public class KnownBuildRuleTypes {
 
     AppleLibraryDescription appleLibraryDescription =
         new AppleLibraryDescription(
-            appleConfig,
             new CxxLibraryDescription(
                 cxxBuckConfig,
                 cxxPlatforms,
@@ -454,7 +453,6 @@ public class KnownBuildRuleTypes {
     builder.register(new AppleAssetCatalogDescription());
     builder.register(
         new AppleBinaryDescription(
-            appleConfig,
             new CxxBinaryDescription(
                 cxxBuckConfig,
                 defaultCxxPlatform,

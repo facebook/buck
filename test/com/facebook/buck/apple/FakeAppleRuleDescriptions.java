@@ -86,7 +86,6 @@ public class FakeAppleRuleDescriptions {
    */
   public static final AppleLibraryDescription LIBRARY_DESCRIPTION =
     new AppleLibraryDescription(
-        new AppleConfig(DEFAULT_BUCK_CONFIG),
         new CxxLibraryDescription(
             new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
@@ -99,7 +98,6 @@ public class FakeAppleRuleDescriptions {
    */
   public static final AppleBinaryDescription BINARY_DESCRIPTION =
     new AppleBinaryDescription(
-        new AppleConfig(DEFAULT_BUCK_CONFIG),
         new CxxBinaryDescription(
             new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_IPHONEOS_PLATFORM,

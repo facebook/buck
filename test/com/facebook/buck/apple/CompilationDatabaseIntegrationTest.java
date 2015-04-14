@@ -21,18 +21,22 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.apple.CompilationDatabase.JsonSerializableDatabaseEntry;
-import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,6 +61,9 @@ public class CompilationDatabaseIntegrationTest {
 
   @Before
   public void setupWorkspace() throws IOException {
+    Platform platform = Platform.detect();
+    Assume.assumeTrue(platform == Platform.MACOS);
+
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "ios-project", tmp);
     workspace.setUp();
@@ -90,10 +97,10 @@ public class CompilationDatabaseIntegrationTest {
   public void testCreateCompilationDatabaseForAppleLibraryWithNoDeps() throws IOException {
     // buck build the #compilation-database.
     File compilationDatabase = workspace.buildAndReturnOutput(
-        "//Libraries/EXExample:EXExample#compilation-database");
+        "//Libraries/EXExample:EXExample#compilation-database,iphonesimulator-x86_64");
     assertEquals(
         Paths.get("buck-out/gen/Libraries/EXExample/" +
-            "__EXExample#compilation-database_compilation_database.json"),
+            "__EXExample#compilation-database,iphonesimulator-x86_64.json"),
         tmp.getRootPath().relativize(compilationDatabase.toPath()));
 
     // Parse the compilation_database.json file.
@@ -106,52 +113,40 @@ public class CompilationDatabaseIntegrationTest {
       fileToEntry.put(entry.file, entry);
     }
 
+    Iterable<String> frameworks = ImmutableList.of(
+        Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString());
+    String pathToPrivateHeaders = "buck-out/gen/Libraries/EXExample/" +
+        "EXExample#header-symlink-tree,iphonesimulator-x86_64";
+    String pathToPublicHeaders = "buck-out/gen/Libraries/EXExample/" +
+        "EXExample#exported-header-symlink-tree,iphonesimulator-x86_64";
+    Iterable<String> includes = ImmutableList.of(pathToPrivateHeaders, pathToPublicHeaders);
+
     // Verify the entries in the compilation database.
-    String iquoteArg = tmp.getRootPath().resolve(
-        "buck-out/bin/Libraries/EXExample/__my_EXExample#compilation-database__.hmap")
-        .toRealPath()
-        .toString();
-    assertFlags(
-        "Libraries/EXExample/EXExample/EXExampleModel.h",
-        fileToEntry,
-        /* additionalFrameworks */ ImmutableList.<String>of(),
-        /* includes */ ImmutableList.<String>of(),
-        iquoteArg);
     assertFlags(
         "Libraries/EXExample/EXExample/EXExampleModel.m",
+        "buck-out/bin/Libraries/EXExample/EXExample#compile-pic-EXExample_" +
+            "EXExampleModel.m.o,iphonesimulator-x86_64/EXExample/EXExampleModel.m.o",
+        /* isLibrary */ true,
         fileToEntry,
-        /* additionalFrameworks */ ImmutableList.<String>of(),
-        /* includes */ ImmutableList.<String>of(),
-        iquoteArg);
+        frameworks,
+        includes);
     assertFlags(
         "Libraries/EXExample/EXExample/EXUser.mm",
+        "buck-out/bin/Libraries/EXExample/EXExample#compile-pic-EXExample_" +
+            "EXUser.mm.o,iphonesimulator-x86_64/EXExample/EXUser.mm.o",
+        /* isLibrary */ true,
         fileToEntry,
-        /* additionalFrameworks */ ImmutableList.<String>of(),
-        /* includes */ ImmutableList.<String>of(),
-        iquoteArg);
-    assertFlags(
-        "Libraries/EXExample/EXExample/Categories/NSString+Palindrome.h",
-        fileToEntry,
-        /* additionalFrameworks */ ImmutableList.<String>of(),
-        /* includes */ ImmutableList.<String>of(),
-        iquoteArg);
+        frameworks,
+        includes);
     assertFlags(
         "Libraries/EXExample/EXExample/Categories/NSString+Palindrome.m",
+        "buck-out/bin/Libraries/EXExample/EXExample#compile-pic-EXExample_" +
+            "Categories_NSString_Palindrome.m.o,iphonesimulator-x86_64/" +
+            "EXExample/Categories/NSString+Palindrome.m.o",
+        /* isLibrary */ true,
         fileToEntry,
-        /* additionalFrameworks */ ImmutableList.<String>of(),
-        /* includes */ ImmutableList.<String>of(),
-        iquoteArg);
-
-    // Verify the header map specified as the iquote argument.
-    HeaderMap headerMap = HeaderMap.loadFromFile(workspace.getFile(iquoteArg));
-    assertEquals(
-        tmp.getRootPath().resolve("Libraries/EXExample/EXExample/EXExampleModel.h")
-            .toRealPath(),
-        Paths.get(headerMap.lookup("EXExampleModel.h")));
-    assertEquals(
-        tmp.getRootPath().resolve("Libraries/EXExample/EXExample/Categories/NSString+Palindrome.h")
-            .toRealPath(),
-        Paths.get(headerMap.lookup("NSString+Palindrome.h")));
+        frameworks,
+        includes);
   }
 
   @Test
@@ -159,10 +154,10 @@ public class CompilationDatabaseIntegrationTest {
   public void testCreateCompilationDatabaseForAppleBinaryWithDeps() throws IOException {
     // buck build the #compilation-database.
     File compilationDatabase = workspace.buildAndReturnOutput(
-        "//Apps/Weather:Weather#compilation-database");
+        "//Apps/Weather:Weather#iphonesimulator-x86_64,compilation-database");
     assertEquals(
         Paths.get("buck-out/gen/Apps/Weather/" +
-            "__Weather#compilation-database_compilation_database.json"),
+            "__Weather#compilation-database,iphonesimulator-x86_64.json"),
         tmp.getRootPath().relativize(compilationDatabase.toPath()));
 
     // Parse the compilation_database.json file.
@@ -175,90 +170,141 @@ public class CompilationDatabaseIntegrationTest {
       fileToEntry.put(entry.file, entry);
     }
 
-    // Verify the entries in the compilation database.
-    String iquoteArg = tmp.getRootPath().resolve(
-        "buck-out/bin/Apps/Weather/__my_Weather#compilation-database__.hmap")
-        .toRealPath()
-        .toString();
-    String pathToHeaders = "buck-out/bin/Libraries/EXExample/__EXExample#headers_public_headers__";
-    assertFlags(
-        "Apps/Weather/Weather/EXViewController.h",
-        fileToEntry,
-        ImmutableList.of("/System/Library/Frameworks/UIKit.framework"),
-        ImmutableList.of(pathToHeaders),
-        iquoteArg);
+    Iterable<String> frameworks = ImmutableList.of(
+        Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString(),
+        Paths.get("/System/Library/Frameworks/UIKit.framework").getParent().toString());
+    String pathToPrivateHeaders = "buck-out/gen/Apps/Weather/" +
+        "Weather#header-symlink-tree,iphonesimulator-x86_64";
+    String pathToPublicHeaders = "buck-out/gen/Libraries/" +
+        "EXExample/EXExample#exported-header-symlink-tree,iphonesimulator-x86_64";
+    Iterable<String> includes = ImmutableList.of(pathToPrivateHeaders, pathToPublicHeaders);
+
     assertFlags(
         "Apps/Weather/Weather/EXViewController.m",
+        "buck-out/bin/Apps/Weather/Weather#compile-Weather_" +
+            "EXViewController.m.o,iphonesimulator-x86_64/Weather/EXViewController.m.o",
+        /* isLibrary */ false,
         fileToEntry,
-        ImmutableList.of("/System/Library/Frameworks/UIKit.framework"),
-        ImmutableList.of(pathToHeaders),
-        iquoteArg);
+        frameworks,
+        includes);
     assertFlags(
         "Apps/Weather/Weather/main.m",
+        "buck-out/bin/Apps/Weather/Weather#compile-Weather_" +
+            "main.m.o,iphonesimulator-x86_64/Weather/main.m.o",
+        /* isLibrary */ false,
         fileToEntry,
-        ImmutableList.of("/System/Library/Frameworks/UIKit.framework"),
-        ImmutableList.of(pathToHeaders),
-        iquoteArg);
+        frameworks,
+        includes);
   }
 
   private void assertFlags(
-      String fileName,
+      String source,
+      String output,
+      boolean isLibrary,
       Map<String, JsonSerializableDatabaseEntry> fileToEntry,
       Iterable<String> additionalFrameworks,
-      Iterable<String> includes,
-      String iquoteArg) throws IOException {
-    String key = tmp.getRootPath().resolve(fileName).toRealPath().toString();
+      Iterable<String> includes) throws IOException {
+    String key = tmp.getRootPath().resolve(source).toRealPath().toString();
     JsonSerializableDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
 
+    String clang = tmp.getRootPath()
+        .resolve(XCODE_DEVELOPER_DIR)
+        .resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang")
+        .toRealPath().toString();
     String sdkRoot = tmp.getRootPath()
         .resolve(XCODE_DEVELOPER_DIR)
         .resolve("Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk")
         .toRealPath().toString();
     String language = "objective-c";
-    String languageStandard = "-std=gnu99";
-    if ("Libraries/EXExample/EXExample/EXUser.mm".equals(fileName)) {
+    String languageStandard = "-std=gnu11";
+    if (source.endsWith(".mm")) {
       language = "objective-c++";
       languageStandard = "-std=c++11";
+      clang += "++";
     }
     List<String> commandArgs = Lists.newArrayList(
-        "clang",
-        "-x",
-        language,
-        "-arch",
-        "i386",
-        "-mios-simulator-version-min=7.0",
-        "-fmessage-length=0",
-        "-fdiagnostics-show-note-include-stack",
-        "-fmacro-backtrace-limit=0",
-        languageStandard,
-        "-fpascal-strings",
-        "-fexceptions",
-        "-fasm-blocks",
-        "-fstrict-aliasing",
-        "-fobjc-abi-version=2",
-        "-fobjc-legacy-dispatch",
-        "-O0",
-        "-g",
-        "-MMD",
-        "-fobjc-arc",
+        clang,
         "-isysroot",
         sdkRoot,
-        "-F" + sdkRoot + "/System/Library/Frameworks/Foundation.framework");
-
-    for (String framework : additionalFrameworks) {
-      commandArgs.add("-F" + sdkRoot + framework);
+        "-arch",
+        "x86_64",
+        "'-mios-simulator-version-min=8.0'",
+        "-c",
+        "-x",
+        language);
+    if (isLibrary) {
+      commandArgs.add("-fPIC");
     }
+
+    commandArgs.add("'" + languageStandard + "'");
+    commandArgs.add("-Wno-deprecated");
+    commandArgs.add("-Wno-conversion");
+
+    // TODO(user, jakubzika): It seems like a bug that this set of flags gets inserted twice.
+    // Perhaps this has something to do with how the [cxx] section in .buckconfig is processed.
+    commandArgs.add("'" + languageStandard + "'");
+    commandArgs.add("-Wno-deprecated");
+    commandArgs.add("-Wno-conversion");
 
     for (String include : includes) {
-      commandArgs.add("-I" + tmp.getRootPath().resolve(include).toRealPath());
+      commandArgs.add("-I");
+      commandArgs.add(include);
     }
 
-    commandArgs.addAll(ImmutableList.of(
-        "-iquote",
-        iquoteArg,
-        "-c",
-        entry.file));
+    for (String framework : additionalFrameworks) {
+      commandArgs.add("-F");
+      commandArgs.add(sdkRoot + framework);
+    }
+
+    commandArgs.add("-o");
+    commandArgs.add(output);
+    commandArgs.add(source);
     MoreAsserts.assertIterablesEquals(commandArgs, ImmutableList.copyOf(entry.command.split(" ")));
+  }
+
+  @VisibleForTesting
+  @SuppressFieldNotInitialized
+  static class JsonSerializableDatabaseEntry {
+
+    public String directory;
+    public String file;
+    public String command;
+
+    /** Empty constructor will be used by Jackson. */
+    public JsonSerializableDatabaseEntry() {}
+
+    public JsonSerializableDatabaseEntry(String directory, String file, String command) {
+      this.directory = directory;
+      this.file = file;
+      this.command = command;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof JsonSerializableDatabaseEntry)) {
+        return false;
+      }
+
+      JsonSerializableDatabaseEntry that = (JsonSerializableDatabaseEntry) obj;
+      return Objects.equal(this.directory, that.directory) &&
+          Objects.equal(this.file, that.file) &&
+          Objects.equal(this.command, that.command);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(directory, file, command);
+    }
+
+    // Useful if CompilationDatabaseTest fails when comparing JsonSerializableDatabaseEntry objects.
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this)
+          .add("directory", directory)
+          .add("file", file)
+          .add("command", command)
+          .toString();
+    }
   }
 }

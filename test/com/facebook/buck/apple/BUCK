@@ -42,6 +42,7 @@ java_test(
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest-core',
     '//third-party/java/hamcrest:hamcrest-library',
+    '//third-party/java/infer-annotations:infer-annotations',
     '//third-party/java/jackson:jackson',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/junit:junit',

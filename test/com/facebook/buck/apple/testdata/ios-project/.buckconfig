@@ -3,3 +3,7 @@
 
 [apple]
   xcode_developer_dir = xcode-developer-dir
+
+[cxx]
+  cflags = -std=gnu11 -Wno-deprecated -Wno-conversion
+  cxxflags = -std=c++11 -Wno-deprecated -Wno-conversion
