@@ -16,25 +16,19 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -47,9 +41,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -62,10 +55,8 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.Iterator;
 import java.util.List;
-
-import javax.annotation.Nullable;
+import java.util.Set;
 
 public class CxxCompilationDatabase extends AbstractBuildRule {
   public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");
@@ -76,28 +67,42 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
 
   public static CxxCompilationDatabase createCompilationDatabase(
       BuildRuleParams params,
-      BuildRuleResolver buildRuleResolver,
       SourcePathResolver pathResolver,
-      CxxSourceRuleFactory.Strategy compileStrategy) {
-    CompilationDatabaseTraversal traversal = new CompilationDatabaseTraversal(
-        params.getTargetGraph(),
-        buildRuleResolver
-    );
-    try {
-      traversal.traverse(
-          ImmutableList.<TargetNode<?>>of(
-              params.getTargetGraph().get(params.getBuildTarget())));
-    } catch (CycleException | IOException | InterruptedException e) {
-      throw new RuntimeException(e);
+      CxxSourceRuleFactory.Strategy compileStrategy,
+      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules) {
+    ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules = ImmutableSortedSet
+        .naturalOrder();
+    for (CxxPreprocessAndCompile compileRule : compileAndPreprocessRules) {
+      if (CxxSourceRuleFactory.isCompileFlavoredBuildTarget(compileRule.getBuildTarget())) {
+        compileRules.add(compileRule);
+        deps.addAll(compileRule.getDeps());
+      }
     }
 
     return new CxxCompilationDatabase(
         params.copyWithDeps(
-            Suppliers.ofInstance(traversal.deps.build()),
+            Suppliers.ofInstance(deps.build()),
             Suppliers.ofInstance(params.getExtraDeps())),
         pathResolver,
-        traversal.compileRules.build(),
+        compileRules.build(),
         compileStrategy);
+  }
+
+  static BuildRuleParams paramsWithoutCompilationDatabaseFlavor(BuildRuleParams params) {
+    Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
+    Preconditions.checkArgument(flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE));
+    flavors.remove(CxxCompilationDatabase.COMPILATION_DATABASE);
+    BuildTarget target = BuildTarget
+        .builder(params.getBuildTarget().getUnflavoredBuildTarget())
+        .addAllFlavors(flavors)
+        .build();
+
+    return params.copyWithChanges(
+        params.getBuildRuleType(),
+        target,
+        Suppliers.ofInstance(params.getDeclaredDeps()),
+        Suppliers.ofInstance(params.getExtraDeps()));
   }
 
   CxxCompilationDatabase(
@@ -132,76 +137,9 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
     return steps.build();
   }
 
-  @Nullable
   @Override
   public Path getPathToOutputFile() {
     return outputJsonFile;
-  }
-
-  private static FluentIterable<TargetNode<?>>
-  filterCxxNativeTargetNodes(FluentIterable<TargetNode<?>> fluentIterable) {
-    return fluentIterable
-        .filter(
-            new Predicate<TargetNode<?>>() {
-              @Override
-              public boolean apply(TargetNode<?> input) {
-                return ImmutableSet
-                    .of(CxxLibraryDescription.TYPE, CxxBinaryDescription.TYPE)
-                    .contains(input.getType());
-              }
-            });
-  }
-
-  private static class CompilationDatabaseTraversal
-      extends AbstractAcyclicDepthFirstPostOrderTraversal<TargetNode<?>> {
-
-    private static final ImmutableSet<Flavor> HEADER_SYMLINK_FLAVORS = ImmutableSet.of(
-        CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
-        CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
-    private final TargetGraph targetGraph;
-    private final ImmutableSortedSet.Builder<BuildRule> deps;
-    private final ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules;
-    private final BuildRuleResolver buildRuleResolver;
-
-    private CompilationDatabaseTraversal(
-        TargetGraph targetGraph,
-        BuildRuleResolver buildRuleResolver) {
-      this.targetGraph = targetGraph;
-      this.buildRuleResolver = buildRuleResolver;
-      this.deps = ImmutableSortedSet.naturalOrder();
-      this.compileRules = ImmutableSortedSet.naturalOrder();
-    }
-
-    @Override
-    protected Iterator<TargetNode<?>> findChildren(TargetNode<?> node) throws IOException,
-        InterruptedException {
-      return filterCxxNativeTargetNodes(
-          FluentIterable.from(node.getDeclaredDeps()).transform(targetGraph.get())).iterator();
-    }
-
-    @Override
-    protected void onNodeExplored(TargetNode<?> node) throws IOException, InterruptedException {
-      UnflavoredBuildTarget unflavoredTarget = node.getBuildTarget().getUnflavoredBuildTarget();
-      Iterator<BuildRule> allBuildRulesIterator = buildRuleResolver.getBuildRules().iterator();
-
-      while (allBuildRulesIterator.hasNext()) {
-        BuildRule buildRule = allBuildRulesIterator.next();
-        BuildTarget target = buildRule.getBuildTarget();
-        if (unflavoredTarget.equals(target.getUnflavoredBuildTarget())) {
-          if (CxxSourceRuleFactory.isCompileFlavoredBuildTarget(target)) {
-            compileRules.add((CxxPreprocessAndCompile) buildRule);
-          } else if (!Sets.intersection(HEADER_SYMLINK_FLAVORS, target.getFlavors()).isEmpty()) {
-            deps.add(buildRule);
-          }
-        }
-      }
-    }
-
-    @Override
-    protected void onTraversalComplete(Iterable<TargetNode<?>> nodesInExplorationOrder) {
-      // Nothing to do: work is done in onNodeExplored.
-    }
-
   }
 
   class GenerateCompilationCommandsJson extends AbstractExecutionStep {

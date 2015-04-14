@@ -335,25 +335,12 @@ public class CxxLibraryDescription implements
       ImmutableMap<String, CxxSource> sources,
       ImmutableList<Path> frameworkSearchPaths,
       CxxSourceRuleFactory.Strategy compileStrategy) {
-
-    Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
-    flavors.remove(CxxCompilationDatabase.COMPILATION_DATABASE);
-    BuildTarget target = BuildTarget
-        .builder(params.getBuildTarget().getUnflavoredBuildTarget())
-        .addAllFlavors(flavors)
-        .build();
-
-    BuildRuleParams paramsWithoutCompilationDatabaseFlavor =
-        params.copyWithChanges(
-            params.getBuildRuleType(),
-            target,
-            Suppliers.ofInstance(params.getDeclaredDeps()),
-            Suppliers.ofInstance(params.getExtraDeps()));
-
+    BuildRuleParams paramsWithoutCompilationDatabaseFlavor = CxxCompilationDatabase
+        .paramsWithoutCompilationDatabaseFlavor(params);
     // Invoking requireObjects has the side-effect of invoking
     // CxxSourceRuleFactory.createPreprocessAndCompileRules(), which has the side-effect of
     // creating CxxPreprocessAndCompile rules and adding them to the ruleResolver.
-    requireObjects(
+    ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
         paramsWithoutCompilationDatabaseFlavor,
         ruleResolver,
         pathResolver,
@@ -372,9 +359,9 @@ public class CxxLibraryDescription implements
 
     return CxxCompilationDatabase.createCompilationDatabase(
         params,
-        ruleResolver,
         pathResolver,
-        compileStrategy);
+        compileStrategy,
+        objects.keySet());
   }
 
   @Override

@@ -93,13 +93,11 @@ public class CxxCompilationDatabaseTest {
         CxxHeaders.builder().build(),
         Optional.<DebugPathSanitizer>absent());
 
-    testBuildRuleResolver.addToIndex(testCompileRule);
-
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(
         testBuildRuleParams,
-        testBuildRuleResolver,
         testSourcePathResolver,
-        CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE);
+        CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE,
+        ImmutableSortedSet.of(testCompileRule));
 
     assertEquals(
         "getPathToOutputFile() should be a function of the build target.",
@@ -209,14 +207,11 @@ public class CxxCompilationDatabaseTest {
         CxxHeaders.builder().build(),
         Optional.<DebugPathSanitizer>absent());
 
-    testBuildRuleResolver.addToIndex(testPreprocessRule);
-    testBuildRuleResolver.addToIndex(testCompileRule);
-
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(
         testBuildRuleParams,
-        testBuildRuleResolver,
         testSourcePathResolver,
-        CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE);
+        CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE,
+        ImmutableSortedSet.of(testPreprocessRule, testCompileRule));
 
     assertEquals(
         "getPathToOutputFile() should be a function of the build target.",

@@ -63,23 +63,20 @@ public class CxxCompilationDatabaseIntegrationTest {
         tmp.getRootPath().relativize(compilationDatabase.toPath()));
 
     String binaryHeaderSymlinkTreeFolder =
-        "buck-out/gen/binary_with_dep#compilation-database,default,header-symlink-tree";
+        "buck-out/gen/binary_with_dep#default,header-symlink-tree";
     String binaryExportedHeaderSymlinkTreeFoler =
         "buck-out/gen/library_with_header#default,exported-header-symlink-tree";
 
     assertTrue(Files.exists(tmp.getRootPath().resolve(binaryHeaderSymlinkTreeFolder)));
     assertTrue(Files.exists(tmp.getRootPath().resolve(binaryExportedHeaderSymlinkTreeFoler)));
 
-    String libraryHeaderSymlinkTreeFolder =
-        "buck-out/gen/library_with_header#default,header-symlink-tree";
-    String librayExportedHeaderSymlinkTreeFoler =
+    String libraryExportedHeaderSymlinkTreeFoler =
         "buck-out/gen/library_with_header#default,exported-header-symlink-tree";
 
     // Verify that symlink folders for headers are created and header file is linked.
-    assertTrue(Files.exists(tmp.getRootPath().resolve(libraryHeaderSymlinkTreeFolder)));
-    assertTrue(Files.exists(tmp.getRootPath().resolve(librayExportedHeaderSymlinkTreeFoler)));
+    assertTrue(Files.exists(tmp.getRootPath().resolve(libraryExportedHeaderSymlinkTreeFoler)));
     assertTrue(
-        Files.exists(tmp.getRootPath().resolve(librayExportedHeaderSymlinkTreeFoler + "/bar.h")));
+        Files.exists(tmp.getRootPath().resolve(libraryExportedHeaderSymlinkTreeFoler + "/bar.h")));
 
 
     Gson gson = new Gson();
@@ -93,7 +90,7 @@ public class CxxCompilationDatabaseIntegrationTest {
       fileToEntry.put(entry.file, entry);
     }
 
-    assertEquals(2, entries.size());
+    assertEquals(1, entries.size());
 
     assertHasEntry(
         fileToEntry,
@@ -108,26 +105,8 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-I")
             .add(binaryExportedHeaderSymlinkTreeFoler)
             .add("-o")
-            .add("buck-out/bin/binary_with_dep#compilation-database,compile-foo.cpp.o,default" +
-                    "/foo.cpp.o")
+            .add("buck-out/bin/binary_with_dep#compile-foo.cpp.o,default/foo.cpp.o")
             .add("foo.cpp")
-            .build());
-
-    assertHasEntry(
-        fileToEntry,
-        "bar.cpp",
-        new ImmutableList.Builder<String>()
-            .add(COMPILER_PATH)
-            .add("-c")
-            .add("-x")
-            .add("c++")
-            .add("-I")
-            .add(libraryHeaderSymlinkTreeFolder)
-            .add("-I")
-            .add(librayExportedHeaderSymlinkTreeFoler)
-            .add("-o")
-            .add("buck-out/bin/library_with_header#compile-bar.cpp.o,default/bar.cpp.o")
-            .add("bar.cpp")
             .build());
   }
 

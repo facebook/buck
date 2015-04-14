@@ -129,18 +129,20 @@ public class CxxBinaryDescription implements
     }
 
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
-          params,
-          resolver,
-          cxxPlatform,
-          args,
-          compileStrategy);
-
+      BuildRuleParams paramsWithoutCompilationDatabaseFlavor = CxxCompilationDatabase
+          .paramsWithoutCompilationDatabaseFlavor(params);
+      CxxLinkAndCompileRules cxxLinkAndCompileRules = CxxDescriptionEnhancer
+          .createBuildRulesForCxxBinaryDescriptionArg(
+              paramsWithoutCompilationDatabaseFlavor,
+              resolver,
+              cxxPlatform,
+              args,
+              compileStrategy);
       return CxxCompilationDatabase.createCompilationDatabase(
           params,
-          resolver,
           new SourcePathResolver(resolver),
-          compileStrategy);
+          compileStrategy,
+          cxxLinkAndCompileRules.compileRules);
     }
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules = CxxDescriptionEnhancer
