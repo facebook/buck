@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -29,12 +30,14 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
 public class AssembleDirectories extends AbstractBuildRule {
 
   private final Path destinationDirectory;
+  @AddToRuleKey
   private final ImmutableCollection<SourcePath> originalDirectories;
 
   public AssembleDirectories(
@@ -71,9 +74,7 @@ public class AssembleDirectories extends AbstractBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    ImmutableList.Builder<Path> builder = ImmutableList.builder();
-    builder.addAll(getResolver().filterInputsToCompareToOutput(originalDirectories));
-    return builder.build();
+    return ImmutableSet.of();
   }
 
   @Override

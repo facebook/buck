@@ -24,28 +24,22 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreIterables;
@@ -60,7 +54,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -271,37 +264,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     final Path makefilePath = getGeneratedMakefilePath(params.getBuildTarget());
     final String contents = Joiner.on(System.lineSeparator()).join(outputLinesBuilder.build());
 
-    return new AbstractBuildRule(makefileParams, pathResolver) {
-
-      @Override
-      protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-        return ImmutableList.of();
-      }
-
-      @Override
-      protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-        return builder
-            .setReflectively("contents", contents)
-            .setReflectively("output", makefilePath.toString());
-      }
-
-      @Override
-      public ImmutableList<Step> getBuildSteps(
-          BuildContext context,
-          BuildableContext buildableContext) {
-        buildableContext.recordArtifact(makefilePath);
-        return ImmutableList.of(
-            new MkdirStep(makefilePath.getParent()),
-            new WriteFileStep(contents, makefilePath));
-      }
-
-      @Override
-      public Path getPathToOutputFile() {
-        return makefilePath;
-      }
-
-    };
-
+    return new WriteFile(makefileParams, pathResolver, contents, makefilePath);
   }
 
   @Override

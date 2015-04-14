@@ -36,6 +36,7 @@ java_immutables_library(
   deps = [
     ':support',
     '//src/com/facebook/buck/cxx:platform',
+    '//src/com/facebook/buck/file:rules',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/log:api',

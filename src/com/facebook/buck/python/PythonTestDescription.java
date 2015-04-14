@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -25,31 +26,21 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -154,49 +145,6 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
     String contents = getTestModulesListContents(testModules);
 
-    // TODO(simons): Consider moving to file package
-    class WriteFile extends AbstractBuildRule {
-      @AddToRuleKey
-      private final String fileContents;
-      @AddToRuleKey(stringify = true)
-      private final Path output;
-
-      public WriteFile(
-          BuildRuleParams buildRuleParams,
-          SourcePathResolver resolver,
-          String fileContents,
-          Path output) {
-        super(buildRuleParams, resolver);
-
-        this.fileContents = fileContents;
-        this.output = output;
-      }
-
-      @Override
-      protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-        return ImmutableList.of();
-      }
-
-      @Override
-      protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-        return builder;
-      }
-
-      @Override
-      public ImmutableList<Step> getBuildSteps(
-          BuildContext context, BuildableContext buildableContext) {
-        buildableContext.recordArtifact(output);
-        return ImmutableList.of(
-            new MkdirStep(output.getParent()),
-            new WriteFileStep(fileContents, output));
-      }
-
-      @Override
-      public Path getPathToOutputFile() {
-        return output;
-      }
-
-    }
     return new WriteFile(newParams, new SourcePathResolver(resolver), contents, outputPath);
   }
 

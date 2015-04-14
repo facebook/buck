@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -41,10 +42,10 @@ import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.Collections;
 
 public class PrebuiltJarDescription implements Description<PrebuiltJarDescription.Arg>,
     FlavorableDescription<PrebuiltJarDescription.Arg>{
@@ -122,14 +123,25 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     } else {
       inputToCompareToOutput = arg.binaryJar;
     }
-    final ImmutableCollection<Path> inputsToCompareToOutput =
-        resolver.filterInputsToCompareToOutput(Collections.singleton(inputToCompareToOutput));
+    ImmutableCollection<SourcePath> inputsToCompareToOutput =
+        ImmutableSet.of(inputToCompareToOutput);
     final Path pathToExistingJarFile = resolver.getPath(inputToCompareToOutput);
 
-    BuildRule buildRule = new AbstractBuildRule(params, resolver) {
+    class ExistingOuputs extends AbstractBuildRule {
+      @AddToRuleKey
+      private final ImmutableCollection<SourcePath> inputs;
+
+      protected ExistingOuputs(
+          BuildRuleParams buildRuleParams,
+          SourcePathResolver resolver,
+          ImmutableCollection<SourcePath> inputs) {
+        super(buildRuleParams, resolver);
+        this.inputs = inputs;
+      }
+
       @Override
       protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-        return inputsToCompareToOutput;
+        return ImmutableSet.of();
       }
 
       @Override
@@ -150,6 +162,6 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         return pathToExistingJarFile;
       }
     };
-    return buildRule;
+    return new ExistingOuputs(params, resolver, inputsToCompareToOutput);
   }
 }

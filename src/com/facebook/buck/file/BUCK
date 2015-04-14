@@ -43,3 +43,19 @@ java_library(
     '//test/com/facebook/buck/maven:maven',
   ],
 )
+
+java_library(
+  name = 'rules',
+  srcs = [
+    'WriteFile.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = [ 'PUBLIC' ],
+)

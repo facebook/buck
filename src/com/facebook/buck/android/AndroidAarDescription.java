@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -139,7 +140,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         Suppliers.ofInstance(androidResourceExtraDeps));
     ImmutableCollection<SourcePath> assetsDirectories = getSourcePathForDirectories(
         assembleAssetsParams.getProjectFilesystem(),
-        assembleAssetsParams.getBuildTarget(),
         packageableCollection.getAssetsDirectories());
     AssembleDirectories assembleAssetsDirectories = new AssembleDirectories(
         assembleAssetsParams,
@@ -154,7 +154,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         Suppliers.ofInstance(androidResourceExtraDeps));
     ImmutableCollection<SourcePath> resDirectories = getSourcePathForDirectories(
         assembleResourceParams.getProjectFilesystem(),
-        assembleResourceParams.getBuildTarget(),
         packageableCollection.getResourceDetails().getResourceDirectories());
     AssembleDirectories assembleResourceDirectories = new AssembleDirectories(
         assembleResourceParams,
@@ -245,11 +244,10 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
 
   private ImmutableList<SourcePath> getSourcePathForDirectories(
       ProjectFilesystem projectFilesystem,
-      BuildTarget buildTarget,
       ImmutableCollection<Path> directories) {
     ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
     for (Path directory : directories) {
-      builder.add(new BuildTargetSourcePath(projectFilesystem, buildTarget, directory));
+      builder.add(new PathSourcePath(projectFilesystem, directory));
     }
     return builder.build();
   }

@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -61,7 +62,7 @@ import javax.annotation.Nullable;
  * the shared objects collected and stores this metadata in a text file, to be used later by
  * {@link com.facebook.buck.cli.ExopackageInstaller}.
  */
-public class CopyNativeLibraries extends AbstractBuildRule {
+public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyAppendable {
 
   private final ImmutableSet<Path> nativeLibDirectories;
   @AddToRuleKey
@@ -111,15 +112,21 @@ public class CopyNativeLibraries extends AbstractBuildRule {
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
+    return builder;
+  }
+
+  @Override
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
     // Hash in the pre-filtered native libraries we're pulling in.
     ImmutableSortedMap<Pair<TargetCpuType, String>, SourcePath> sortedLibs =
         ImmutableSortedMap.<Pair<TargetCpuType, String>, SourcePath>orderedBy(
-                Pair.<TargetCpuType, String>comparator())
+            Pair.<TargetCpuType, String>comparator())
             .putAll(filteredNativeLibraries)
             .build();
     for (Map.Entry<Pair<TargetCpuType, String>, SourcePath> entry : sortedLibs.entrySet()) {
+      Pair<TargetCpuType, String> entryKey = entry.getKey();
       builder.setReflectively(
-          String.format("lib(%s, %s)", entry.getKey().getFirst(), entry.getKey().getSecond()),
+          String.format(key + ".lib(%s, %s)", entryKey.getFirst(), entryKey.getSecond()),
           entry.getValue());
     }
 
