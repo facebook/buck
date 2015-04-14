@@ -152,7 +152,7 @@ public class CxxPythonExtensionDescription implements
             .build();
 
     // Generate rule to build the object files.
-    ImmutableList<SourcePath> picObjects =
+    ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =
         CxxSourceRuleFactory.createPreprocessAndCompileRules(
             params,
             ruleResolver,
@@ -183,7 +183,7 @@ public class CxxPythonExtensionDescription implements
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
         extensionPath,
-        picObjects,
+        picObjects.values(),
         Linker.LinkableDepType.SHARED,
         params.getDeps());
   }

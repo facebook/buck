@@ -663,7 +663,18 @@ public class CxxDescriptionEnhancer {
     return BuildTarget.builder(target).addFlavors(CXX_LINK_BINARY_FLAVOR).build();
   }
 
-  public static CxxLink createBuildRulesForCxxBinaryDescriptionArg(
+  static class CxxLinkAndCompileRules {
+    final CxxLink cxxLink;
+    final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
+    CxxLinkAndCompileRules(
+        CxxLink cxxLink,
+        ImmutableSortedSet<CxxPreprocessAndCompile> compileRules) {
+      this.cxxLink = cxxLink;
+      this.compileRules = compileRules;
+    }
+  }
+
+  public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -720,7 +731,7 @@ public class CxxDescriptionEnhancer {
 
     // Generate and add all the build rules to preprocess and compile the source to the
     // resolver and get the `SourcePath`s representing the generated object files.
-    ImmutableList<SourcePath> objects =
+    ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.createPreprocessAndCompileRules(
             params,
             resolver,
@@ -751,12 +762,12 @@ public class CxxDescriptionEnhancer {
         Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
         output,
-        objects,
+        objects.values(),
         Linker.LinkableDepType.STATIC,
         params.getDeps());
     resolver.addToIndex(cxxLink);
 
-    return cxxLink;
+    return new CxxLinkAndCompileRules(cxxLink, ImmutableSortedSet.copyOf(objects.keySet()));
   }
 
   private static <T> BuildRule createBuildRule(

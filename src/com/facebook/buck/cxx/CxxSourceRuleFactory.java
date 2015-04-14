@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -30,9 +31,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -424,13 +427,13 @@ public class CxxSourceRuleFactory {
         cxxPlatform.getDebugPathSanitizer());
   }
 
-  private ImmutableList<SourcePath> createPreprocessAndCompileRules(
+  private ImmutableMap<CxxPreprocessAndCompile, SourcePath> createPreprocessAndCompileRules(
       BuildRuleResolver resolver,
       Strategy strategy,
       ImmutableMap<String, CxxSource> sources,
       PicType pic) {
 
-    ImmutableList.Builder<SourcePath> objects = ImmutableList.builder();
+    ImmutableList.Builder<CxxPreprocessAndCompile> objects = ImmutableList.builder();
 
     for (Map.Entry<String, CxxSource> entry : sources.entrySet()) {
       String name = entry.getKey();
@@ -443,7 +446,7 @@ public class CxxSourceRuleFactory {
       switch (strategy) {
 
         case COMBINED_PREPROCESS_AND_COMPILE: {
-          BuildRule rule;
+          CxxPreprocessAndCompile rule;
 
           // If it's a preprocessable source, use a combine preprocess-and-compile build rule.
           // Otherwise, use a regular compile rule.
@@ -454,10 +457,7 @@ public class CxxSourceRuleFactory {
           }
 
           resolver.addToIndex(rule);
-          objects.add(
-              new BuildTargetSourcePath(
-                  params.getProjectFilesystem(),
-                  rule.getBuildTarget()));
+          objects.add(rule);
           break;
         }
 
@@ -466,7 +466,7 @@ public class CxxSourceRuleFactory {
           // If this is a preprocessable source, first create the preprocess build rule and
           // update the source and name to represent it's compilable output.
           if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-            BuildRule rule = createPreprocessBuildRule(name, source, pic);
+            CxxPreprocessAndCompile rule = createPreprocessBuildRule(name, source, pic);
             resolver.addToIndex(rule);
             source = CxxSource.copyOf(source)
                 .withType(CxxSourceTypes.getPreprocessorOutputType(source.getType()))
@@ -477,12 +477,9 @@ public class CxxSourceRuleFactory {
           }
 
           // Now build the compile build rule.
-          BuildRule rule = createCompileBuildRule(name, source, pic);
+          CxxPreprocessAndCompile rule = createCompileBuildRule(name, source, pic);
           resolver.addToIndex(rule);
-          objects.add(
-              new BuildTargetSourcePath(
-                  params.getProjectFilesystem(),
-                  rule.getBuildTarget()));
+          objects.add(rule);
 
           break;
         }
@@ -493,10 +490,18 @@ public class CxxSourceRuleFactory {
       }
     }
 
-    return objects.build();
+    final ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
+    return FluentIterable
+        .from(objects.build())
+        .toMap(new Function<CxxPreprocessAndCompile, SourcePath>() {
+          @Override
+          public SourcePath apply(CxxPreprocessAndCompile input) {
+            return new BuildTargetSourcePath(projectFilesystem, input.getBuildTarget());
+          }
+        });
   }
 
-  public static ImmutableList<SourcePath> createPreprocessAndCompileRules(
+  public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> createPreprocessAndCompileRules(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,

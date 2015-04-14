@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.CxxDescriptionEnhancer.CxxLinkAndCompileRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -142,13 +143,14 @@ public class CxxBinaryDescription implements
           compileStrategy);
     }
 
-    CxxLink cxxLink =
-        CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+    CxxLinkAndCompileRules cxxLinkAndCompileRules = CxxDescriptionEnhancer
+        .createBuildRulesForCxxBinaryDescriptionArg(
             params,
             resolver,
             cxxPlatform,
             args,
             compileStrategy);
+    CxxLink cxxLink = cxxLinkAndCompileRules.cxxLink;
 
     // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
     // rule above for a couple reasons:

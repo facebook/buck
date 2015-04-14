@@ -96,7 +96,7 @@ public class CxxLibraryDescription implements
         flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE);
   }
 
-  private static ImmutableList<SourcePath> requireObjects(
+  private static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requireObjects(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -199,7 +199,7 @@ public class CxxLibraryDescription implements
       CxxSourceRuleFactory.PicType pic) {
 
     // Create rules for compiling the non-PIC object files.
-    ImmutableList<SourcePath> objects = requireObjects(
+    ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
         params,
         ruleResolver,
         pathResolver,
@@ -233,7 +233,7 @@ public class CxxLibraryDescription implements
         params,
         cxxPlatform.getAr(),
         staticLibraryPath,
-        objects);
+        ImmutableList.copyOf(objects.values()));
 
     return staticLibraryBuildRule;
   }
@@ -262,7 +262,7 @@ public class CxxLibraryDescription implements
       CxxSourceRuleFactory.Strategy compileStrategy) {
 
     // Create rules for compiling the PIC object files.
-    ImmutableList<SourcePath> objects = requireObjects(
+    ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
         params,
         ruleResolver,
         pathResolver,
@@ -308,7 +308,7 @@ public class CxxLibraryDescription implements
             Linker.LinkType.SHARED,
             Optional.of(sharedLibrarySoname),
             sharedLibraryPath,
-            objects,
+            objects.values(),
             Linker.LinkableDepType.SHARED,
             params.getDeps());
 
@@ -350,7 +350,9 @@ public class CxxLibraryDescription implements
             Suppliers.ofInstance(params.getDeclaredDeps()),
             Suppliers.ofInstance(params.getExtraDeps()));
 
-    // Create rules for compiling the PIC object files.
+    // Invoking requireObjects has the side-effect of invoking
+    // CxxSourceRuleFactory.createPreprocessAndCompileRules(), which has the side-effect of
+    // creating CxxPreprocessAndCompile rules and adding them to the ruleResolver.
     requireObjects(
         paramsWithoutCompilationDatabaseFlavor,
         ruleResolver,

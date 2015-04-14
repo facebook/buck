@@ -92,7 +92,8 @@ public class CxxTestDescription implements
         resolver,
         cxxPlatform,
         args,
-        CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE);
+        CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE)
+        .cxxLink;
 
     // Construct the actual build params we'll use, notably with an added dependency on the
     // CxxLink rule above which builds the test binary.
