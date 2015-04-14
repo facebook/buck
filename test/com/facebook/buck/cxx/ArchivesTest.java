@@ -35,7 +35,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -86,11 +85,6 @@ public class ArchivesTest {
     assertEquals(
         ImmutableSortedSet.<BuildRule>of(genrule1, genrule2),
         archive.getDeps());
-
-    // Verify that the archive inputs are the outputs of the genrules.
-    assertEquals(
-        ImmutableSet.of(Paths.get("simple.o")),
-        ImmutableSet.copyOf(archive.getInputsToCompareToOutput()));
   }
 
   @Test

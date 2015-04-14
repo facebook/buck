@@ -41,7 +41,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -140,11 +139,6 @@ public class CxxLinkableEnhancerTest {
     assertEquals(
         ImmutableSortedSet.<BuildRule>of(genrule1, genrule2),
         cxxLink.getDeps());
-
-    // Verify that the archive inputs are the outputs of the genrules.
-    assertEquals(
-        ImmutableSet.of(Paths.get("simple.o")),
-        ImmutableSet.copyOf(cxxLink.getInputsToCompareToOutput()));
   }
 
   @Test

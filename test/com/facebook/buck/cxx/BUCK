@@ -24,7 +24,7 @@ java_library(
 )
 
 java_test(
-  name = 'cpp',
+  name = 'cxx',
   srcs = glob(['*Test.java']),
   source_under_test = [
     '//src/com/facebook/buck/cxx:rules',
@@ -44,6 +44,7 @@ java_test(
     '//src/com/facebook/buck/python:rules',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules/keys:keys',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/step:step',

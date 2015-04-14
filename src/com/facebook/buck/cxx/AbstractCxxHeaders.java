@@ -16,8 +16,11 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
@@ -27,23 +30,35 @@ import java.util.Map;
 
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractCxxHeaders {
+abstract class AbstractCxxHeaders implements RuleKeyAppendable {
 
   /**
    * List of headers that are implicitly included at the beginning of each preprocessed source file.
    */
-  List<SourcePath> getPrefixHeaders();
+  abstract List<SourcePath> getPrefixHeaders();
 
   /**
    * Maps the name of the header (e.g. the path used to include it in a C/C++ source) to the
    * real location of the header.
    */
-  Map<Path, SourcePath> getNameToPathMap();
+  abstract Map<Path, SourcePath> getNameToPathMap();
 
   /**
    * Maps the full of the header (e.g. the path to the header that appears in error messages) to
    * the real location of the header.
    */
-  Map<Path, SourcePath> getFullNameToPathMap();
+  abstract Map<Path, SourcePath> getFullNameToPathMap();
 
+  @Override
+  public RuleKey.Builder appendToRuleKey(
+      RuleKey.Builder builder, String key) {
+    builder.setReflectively(key + ".prefixHeaders", getPrefixHeaders());
+
+    for (Path path : ImmutableSortedSet.copyOf(getNameToPathMap().keySet())) {
+      SourcePath source = getNameToPathMap().get(path);
+      builder.setReflectively(key + ".include(" + path + ")", source);
+    }
+
+    return builder;
+  }
 }

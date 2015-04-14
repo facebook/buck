@@ -17,10 +17,12 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
@@ -34,9 +36,8 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -44,16 +45,22 @@ import java.util.Map;
 /**
  * A build rule which preprocesses and/or compiles a C/C++ source in a single step.
  */
-public class CxxPreprocessAndCompile extends AbstractBuildRule {
+public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKeyAppendable {
 
+  @AddToRuleKey
   private final Tool compiler;
+  @AddToRuleKey
   private final CxxPreprocessAndCompileStep.Operation operation;
   private final ImmutableList<String> flags;
+  @AddToRuleKey(stringify = true)
   private final Path output;
+  @AddToRuleKey
   private final SourcePath input;
   private final ImmutableList<Path> includeRoots;
   private final ImmutableList<Path> systemIncludeRoots;
+  @AddToRuleKey(stringify = true)
   private final ImmutableList<Path> frameworkRoots;
+  @AddToRuleKey
   private final CxxHeaders includes;
   private final Optional<DebugPathSanitizer> sanitizer;
 
@@ -171,21 +178,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule {
   }
 
   @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(
-        ImmutableList.<SourcePath>builder()
-            .addAll(includes.getPrefixHeaders())
-            .add(input)
-            .build());
-  }
-
-  @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    builder
-        .setReflectively("compiler", compiler)
-        .setReflectively("operation", operation)
-        .setReflectively("output", output.toString());
-
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
     // from contributing to the rule key.
     ImmutableList<String> flags = this.flags;
@@ -194,29 +187,26 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule {
           .transform(sanitizer.get().sanitize(Optional.<Path>absent(), /* expandPaths */ false))
           .toList();
     }
-    builder.setReflectively("flags", flags);
-
-    // Hash the layout of each potentially included C/C++ header file and it's contents.
-    // We do this here, rather than returning them from `getInputsToCompareToOutput` so
-    // that we can match the contents hash up with where it was laid out in the include
-    // search path, and therefore can accurately capture header file renames.
-    for (Path path : ImmutableSortedSet.copyOf(includes.getNameToPathMap().keySet())) {
-      SourcePath source = includes.getNameToPathMap().get(path);
-      builder.setReflectively("include(" + path + ")", source);
-    }
-
-    builder.setReflectively(
-        "frameworkRoots",
-        FluentIterable.from(frameworkRoots)
-            .transform(Functions.toStringFunction())
-            .toSortedSet(Ordering.natural()));
+    builder.setReflectively(key + ".flags", flags);
 
     // If a sanitizer is being used for compilation, we need to record the working directory in
     // the rule key, as changing this changes the generated object file.
     if (sanitizer.isPresent() && operation == CxxPreprocessAndCompileStep.Operation.COMPILE) {
-      builder.setReflectively("compilationDirectory", sanitizer.get().getCompilationDirectory());
+      builder.setReflectively(
+          key + ".compilationDirectory",
+          sanitizer.get().getCompilationDirectory());
     }
 
+    return builder;
+  }
+
+  @Override
+  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder;
   }
 

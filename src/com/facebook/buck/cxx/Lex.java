@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -28,6 +29,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
@@ -35,10 +37,15 @@ import javax.annotation.Nullable;
 
 public class Lex extends AbstractBuildRule {
 
+  @AddToRuleKey
   private final Tool lex;
+  @AddToRuleKey
   private final ImmutableList<String> flags;
+  @AddToRuleKey(stringify = true)
   private final Path outputSource;
+  @AddToRuleKey(stringify = true)
   private final Path outputHeader;
+  @AddToRuleKey(stringify = true)
   private final SourcePath input;
 
   public Lex(
@@ -61,18 +68,12 @@ public class Lex extends AbstractBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(input);
+    return ImmutableSet.of();
   }
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .setReflectively("lex", lex)
-        .setReflectively("flags", flags)
-        .setReflectively("outputSource", outputSource.toString())
-        .setReflectively("outputHeader", outputHeader.toString())
-        // The input name gets baked into line markers.
-        .setReflectively("input", input.toString());
+    return builder;
   }
 
   @Override
