@@ -16,14 +16,19 @@
 
 package com.facebook.buck.ocaml;
 
+import static com.facebook.buck.io.MorePaths.TO_PATH;
+
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 
@@ -32,7 +37,7 @@ import java.nio.file.Path;
  */
 public class OCamlLinkStep extends ShellStep {
 
-  public static class Args {
+  public static class Args implements RuleKeyAppendable {
     public final Path ocamlCompiler;
     public final ImmutableList<String> cxxCompiler;
     public final ImmutableList<String> flags;
@@ -61,15 +66,19 @@ public class OCamlLinkStep extends ShellStep {
       this.input = input;
     }
 
-    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-      return builder.setReflectively("cxxCompiler", cxxCompiler.toString())
-          .setReflectively("ocamlCompiler", ocamlCompiler.toString())
-          .setReflectively("output", output.toString())
-          .setReflectively("depInput", depInput)
-          .setReflectively("input", input)
-          .setReflectively("flags", flags)
-          .setReflectively("isLibrary", isLibrary)
-          .setReflectively("isBytecode", isBytecode);
+    @Override
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+      return builder
+          .setReflectively(key + ".cxxCompiler", cxxCompiler.toString())
+          .setReflectively(key + ".ocamlCompiler", ocamlCompiler.toString())
+          .setReflectively(key + ".output", output.toString())
+          .setReflectively(key + ".depInput", depInput)
+          .setReflectively(
+              key + ".input",
+              FluentIterable.from(input).transform(TO_PATH).toSortedSet(Ordering.natural()))
+          .setReflectively(key + ".flags", flags)
+          .setReflectively(key + ".isLibrary", isLibrary)
+          .setReflectively(key + ".isBytecode", isBytecode);
     }
 
     public ImmutableSet<Path> getAllOutputs() {

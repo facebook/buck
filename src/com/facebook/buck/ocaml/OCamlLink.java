@@ -16,8 +16,8 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -25,13 +25,14 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
 public class OCamlLink extends AbstractBuildRule {
+  @AddToRuleKey
   private final OCamlLinkStep.Args args;
 
   public OCamlLink(BuildRuleParams params, SourcePathResolver resolver, OCamlLinkStep.Args args) {
@@ -41,14 +42,12 @@ public class OCamlLink extends AbstractBuildRule {
 
   @Override
   protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return FluentIterable.from(args.input)
-        .transform(MorePaths.TO_PATH)
-        .toList();
+    return ImmutableSet.of();
   }
 
   @Override
   protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return args.appendDetailsToRuleKey(builder);
+    return builder;
   }
 
   @Override

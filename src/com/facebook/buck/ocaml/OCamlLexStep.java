@@ -16,7 +16,6 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -40,12 +39,6 @@ public class OCamlLexStep extends ShellStep {
       this.lexCompiler = lexCompiler;
       this.output = output;
       this.input = input;
-    }
-
-    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-      return builder.setReflectively("lexCompiler", lexCompiler.toString())
-          .setReflectively("output", output.toString())
-          .setReflectively("input", input.toString());
     }
   }
 
