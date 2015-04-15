@@ -604,7 +604,19 @@ public class CachingBuildEngine implements BuildEngine {
     // files should be in a valid state.
     InitializableFromDisk<?> initializable = deriveInitializable(rule);
     if (initializable != null) {
-      doInitializeFromDisk(initializable, onDiskBuildInfo);
+      try {
+        doInitializeFromDisk(initializable, onDiskBuildInfo);
+      } catch (Exception e) {
+        // Once we've successfully completed build steps, we should be able to read the build
+        // info from disk. If that fails, we want to know why, and we want to know which build
+        // rule it failed for. This code catches any Exceptions that may occur and adds a message
+        // with the rule name. The wrapped exception is a RuntimeException, because this really
+        // should never happen, so we don't want to have to declare this method as throwing an
+        // exception for this.
+        throw new RuntimeException(
+            "Failed to initialize OnDiskBuildInfo for " + rule.toString(),
+            e);
+      }
     }
 
     // Only now that the rule should be in a completely valid state, resolve the future.

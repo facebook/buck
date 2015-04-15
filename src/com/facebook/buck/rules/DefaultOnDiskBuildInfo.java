@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -59,10 +60,12 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     }
   };
 
+  private final Logger LOG;
   private final ProjectFilesystem projectFilesystem;
   private final Path metadataDirectory;
 
   public DefaultOnDiskBuildInfo(BuildTarget target, ProjectFilesystem projectFilesystem) {
+    LOG = Logger.get(DefaultOnDiskBuildInfo.class);
     this.projectFilesystem = projectFilesystem;
     this.metadataDirectory = BuildInfo.getPathToMetadataDirectory(target);
   }
@@ -83,9 +86,17 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public Optional<Sha1HashCode> getHash(String key) {
-    try {
-      return getValue(key).transform(Sha1HashCode.TO_SHA1);
-    } catch (IllegalArgumentException ignored) {
+    Optional<String> optionalValue = getValue(key);
+    if (optionalValue.isPresent()) {
+      String value = optionalValue.get();
+      try {
+        return Optional.of(Sha1HashCode.of(value));
+      } catch (IllegalArgumentException e) {
+        LOG.error("DefaultOnDiskBuildInfo.getHash: Cannot transform " + value + " to SHA1", e);
+        return Optional.absent();
+      }
+    } else {
+      LOG.warn("DefaultOnDiskBuildInfo.getHash: Hash not found");
       return Optional.absent();
     }
   }

@@ -331,13 +331,16 @@ public class AndroidResource extends AbstractBuildRule
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    Sha1HashCode sha1HashCode = onDiskBuildInfo.getHash(METADATA_KEY_FOR_ABI).get();
+    Optional<Sha1HashCode> sha1HashCode = onDiskBuildInfo.getHash(METADATA_KEY_FOR_ABI);
+    Preconditions.checkState(
+        sha1HashCode.isPresent(),
+        "OnDiskBuildInfo should have a METADATA_KEY_FOR_ABI hash");
     Optional<String> rDotJavaPackageFromAndroidManifest = onDiskBuildInfo.getValue(
         METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE);
     if (rDotJavaPackageFromAndroidManifest.isPresent()) {
       rDotJavaPackage.set(rDotJavaPackageFromAndroidManifest.get());
     }
-    return new BuildOutput(sha1HashCode);
+    return new BuildOutput(sha1HashCode.get());
   }
 
   @Override
