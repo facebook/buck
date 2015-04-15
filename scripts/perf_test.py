@@ -167,20 +167,19 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
             args.perftest_id, perftest_side)
         })
     start = datetime.now()
-    with tempfile.TemporaryFile() as tmpFile:
-        try:
-            subprocess.check_call(
-                [args.path_to_buck, 'build', target, '-v', '5'],
-                stdout=tmpFile,
-                stderr=tmpFile,
-                cwd=cwd,
-                env=env)
-        except:
-            tmpFile.seek(0)
-            log('Buck build failed: %s' % tmpFile.read())
-            raise
+    tmpFile = tempfile.TemporaryFile()
+    try:
+        subprocess.check_call(
+            [args.path_to_buck, 'build', target, '-v', '5'],
+            stdout=tmpFile,
+            stderr=tmpFile,
+            cwd=cwd,
+            env=env)
+    except:
         tmpFile.seek(0)
-        build_output = tmpFile.read()
+        log('Buck build failed: %s' % tmpFile.read())
+        raise
+    tmpFile.seek(0)
     finish = datetime.now()
 
     java_utils_log_path = os.path.join(
@@ -188,13 +187,13 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
         'buck-out', 'log', 'buck-0.log')
     if os.path.exists(java_utils_log_path):
         pattern = BUCK_LOG_RULEKEY_LINE
-        with open(java_utils_log_path) as f:
-            build_output = f.read()
+        build_output_file = open(java_utils_log_path)
     else:
         pattern = RULEKEY_LINE
+        build_output_file = tmpFile
 
     rule_debug_map = {}
-    for line in build_output.splitlines():
+    for line in build_output_file:
         match = pattern.match(line)
         if match:
             rule_debug_map[match.group('rule_key')] = match.group(
