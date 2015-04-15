@@ -8,7 +8,6 @@ BINARY_DEPENDENCIES   = [':assets', ':res', ':src']
 android_binary(
     name='bin',
     manifest=':manifest',
-    target='Google Inc.:Google APIs:19',
     keystore=':debug_keystore',
     deps=BINARY_DEPENDENCIES
 )

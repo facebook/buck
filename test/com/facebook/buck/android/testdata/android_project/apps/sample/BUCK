@@ -1,7 +1,6 @@
 android_binary(
   name = 'app',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   deps = [
     '//java/com/sample/lib:lib',
@@ -12,7 +11,6 @@ android_binary(
 android_binary(
   name = 'app_en',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   locales = ['en'],
   deps = [
@@ -24,7 +22,6 @@ android_binary(
 android_binary(
   name = 'app_reorder_dex',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   reorder_classes_intra_dex = True,
   deps = [
@@ -36,7 +33,6 @@ android_binary(
 android_binary(
   name = 'app_mdpi',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   deps = [
     '//java/com/sample/lib:lib',
@@ -48,7 +44,6 @@ android_binary(
 android_binary(
   name = 'app_hdpi_xhdpi',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   deps = [
     '//java/com/sample/lib:lib',
@@ -60,7 +55,6 @@ android_binary(
 android_binary(
   name = 'app_comp_str',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   deps = [
     '//java/com/sample/lib:lib',
@@ -72,7 +66,6 @@ android_binary(
 android_binary(
   name = 'app_comp_str_xhdpi',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   deps = [
     '//java/com/sample/lib:lib',
@@ -85,7 +78,6 @@ android_binary(
 android_binary(
   name = 'app_res_lib_dep',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   deps = [
       '//res/com/sample/base:base_with_lib_dep',
@@ -95,7 +87,6 @@ android_binary(
 android_binary(
   name = 'app_with_multiple_rdot_java_packages',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   deps = [
     '//java/com/sample/lib:lib',
@@ -107,7 +98,6 @@ android_binary(
 android_binary(
   name = 'app_deps_resource_with_orig_file',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   deps = [
     '//java/com/sample/lib:lib',
@@ -119,7 +109,6 @@ android_binary(
 android_binary(
   name = 'app_cxx_lib_dep',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:16',
   keystore = '//keystores:debug',
   cpu_filters = [
     'arm',
@@ -135,7 +124,6 @@ android_binary(
 android_binary(
   name = 'app_cxx_lib_dep_no_filters',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:16',
   keystore = '//keystores:debug',
   cpu_filters = [],
   deps = [
@@ -147,7 +135,6 @@ android_binary(
 android_binary(
   name = 'app_no_cxx_deps',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:16',
   keystore = '//keystores:debug',
   cpu_filters = [
     'arm',
@@ -164,7 +151,6 @@ android_binary(
   proguard_config = 'dontobfuscate.pro',
   package_type = 'release',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   deps = [
     '//java/com/sample/lib:lib',
@@ -180,7 +166,6 @@ android_aar(
 android_binary(
   name = 'app_static_cxx_lib_dep',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:16',
   keystore = '//keystores:debug',
   cpu_filters = [
     'x86',

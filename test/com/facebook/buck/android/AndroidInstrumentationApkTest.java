@@ -103,7 +103,6 @@ public class AndroidInstrumentationApkTest {
         javaLibrary3.getBuildTarget());
     androidBinaryBuilder
         .setManifest(new TestSourcePath("apps/AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:18")
         .setKeystore(keystore.getBuildTarget())
         .setOriginalDeps(originalDepsTargets);
     AndroidBinary androidBinary = (AndroidBinary) androidBinaryBuilder.build(ruleResolver);

@@ -52,12 +52,6 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
     return this;
   }
 
-  @SuppressWarnings("unused")
-  public AndroidBinaryBuilder setTarget(String target) {
-    // TODO(mbolin): Support for this field will be removed in an upcoming diff.
-    return this;
-  }
-
   public AndroidBinaryBuilder setOriginalDeps(ImmutableSortedSet<BuildTarget> originalDeps) {
     arg.deps = Optional.of(originalDeps);
     return this;

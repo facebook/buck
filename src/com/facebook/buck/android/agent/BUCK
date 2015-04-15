@@ -32,7 +32,6 @@ java_binary(
 android_binary(
   name = 'agent',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = ':debug_keystore',
   deps = [
     ':agent-lib',

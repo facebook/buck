@@ -121,7 +121,6 @@ public class AuditClasspathCommandTest {
     TargetNode<?> testAndroidNode = AndroidBinaryBuilder
         .createBuilder(testAndroidTarget)
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystoreTarget)
         .setOriginalDeps(ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget))
         .build();

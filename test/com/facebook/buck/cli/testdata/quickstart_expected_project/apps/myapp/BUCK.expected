@@ -1,7 +1,6 @@
 android_binary(
   name = 'app',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = ':debug_keystore',
   deps = [
     '//java/com/example/activity:activity',

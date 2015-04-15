@@ -182,7 +182,6 @@ public class ProjectTest {
             BuildTargetFactory.newInstance("//foo:app"))
             .setOriginalDeps(androidBinaryRuleDepsTarget)
             .setManifest(new TestSourcePath("foo/AndroidManifest.xml"))
-            .setTarget("Google Inc.:Google APIs:16")
             .setKeystore(keystore.getBuildTarget())
             .setBuildTargetsToExcludeFromDex(
                 ImmutableSet.of(
@@ -202,7 +201,6 @@ public class ProjectTest {
             BuildTargetFactory.newInstance("//bar:app"))
             .setOriginalDeps(barAppBuildRuleDepsTarget)
             .setManifest(new TestSourcePath("foo/AndroidManifest.xml"))
-            .setTarget("Google Inc.:Google APIs:16")
             .setKeystore(keystore.getBuildTarget())
             .build(ruleResolver);
 

@@ -1,7 +1,6 @@
 android_binary(
   name = 'app',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   preprocess_java_classes_bash = '$(location :convert) $IN_JARS_DIR $OUT_JARS_DIR',
   preprocess_java_classes_deps = [':convert'],

@@ -109,7 +109,6 @@ public class ApkGenruleTest {
 
     AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
         .setOriginalDeps(ImmutableSortedSet.of(androidLibRule.getBuildTarget()))
         .setKeystore(keystore.getBuildTarget())
         .build(ruleResolver);

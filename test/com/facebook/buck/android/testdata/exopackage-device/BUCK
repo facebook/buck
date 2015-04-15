@@ -1,7 +1,6 @@
 android_binary(
   name = 'exotest',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = ':debug_keystore',
   use_split_dex = True,
   exopackage_modes = [

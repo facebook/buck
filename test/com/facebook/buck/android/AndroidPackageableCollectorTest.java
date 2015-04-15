@@ -129,7 +129,6 @@ public class AndroidPackageableCollectorTest {
         .setBuildTargetsToExcludeFromDex(
             ImmutableSet.of(BuildTargetFactory.newInstance("//third_party/guava:guava")))
         .setManifest(new TestSourcePath("java/src/com/facebook/AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystoreTarget)
         .build(ruleResolver);
 
@@ -261,7 +260,6 @@ public class AndroidPackageableCollectorTest {
     AndroidBinary androidBinary = (AndroidBinary) AndroidBinaryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//:e"))
         .setManifest(new TestSourcePath("AndroidManfiest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystoreTarget)
         .setOriginalDeps(declaredDepsTargets)
         .build(ruleResolver);
@@ -308,7 +306,6 @@ public class AndroidPackageableCollectorTest {
     AndroidBinary androidBinary = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
         BuildTarget.builder("//apps/sample", "app").build())
         .setManifest(new TestSourcePath("apps/sample/AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
         .setOriginalDeps(originalDepsTargets)
         .setKeystore(keystoreTarget)
         .build(ruleResolver);

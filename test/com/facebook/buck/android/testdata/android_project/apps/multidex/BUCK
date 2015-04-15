@@ -1,7 +1,6 @@
 android_binary(
   name = 'app',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   use_split_dex = True,
   dex_compression = 'jar',
@@ -19,7 +18,6 @@ android_binary(
 android_binary(
   name = 'app-art',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   use_split_dex = True,
   primary_dex_patterns = [
@@ -36,7 +34,6 @@ android_binary(
 android_binary(
   name = 'app-dex-exo',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   use_split_dex = True,
   exopackage_modes = ['secondary_dex'],
@@ -55,7 +52,6 @@ android_binary(
 android_binary(
   name = 'app-native-exo',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   use_split_dex = True,
   exopackage_modes = ['native_library'],
@@ -74,7 +70,6 @@ android_binary(
 android_binary(
   name = 'app-dex-native-exo',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   use_split_dex = True,
   exopackage_modes = [
@@ -96,7 +91,6 @@ android_binary(
 android_binary(
   name = 'app-dex-native-exo-intra-reorder',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = '//keystores:debug',
   use_split_dex = True,
   reorder_classes_intra_dex = True,

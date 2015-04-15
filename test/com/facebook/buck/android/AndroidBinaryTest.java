@@ -92,7 +92,6 @@ public class AndroidBinaryTest {
             ImmutableSet.of(
                 BuildTargetFactory.newInstance("//java/src/com/facebook/base:libraryTwo")))
         .setManifest(new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
-        .setTarget("Google Inc.:Google APIs:16")
         .setKeystore(keystoreRule.getBuildTarget())
         .build(ruleResolver);
 
@@ -192,7 +191,6 @@ public class AndroidBinaryTest {
         BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setKeystore(keystore.getBuildTarget())
-        .setTarget("Google Inc.:Google APIs:16")
         .build(ruleResolver);
     assertEquals(Paths.get(GEN_DIR + "/fb4a.apk"), ruleInRootDirectory.getApkPath());
 
@@ -200,7 +198,6 @@ public class AndroidBinaryTest {
         BuildTargetFactory.newInstance("//java/com/example:fb4a"))
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setKeystore(keystore.getBuildTarget())
-        .setTarget("Google Inc.:Google APIs:16")
         .build(ruleResolver);
     assertEquals(
         Paths.get(GEN_DIR + "/java/com/example/fb4a.apk"), ruleInNonRootDirectory.getApkPath());
@@ -214,7 +211,6 @@ public class AndroidBinaryTest {
         BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget())
-        .setTarget("Google Inc.:Google APIs:16")
         .build(ruleResolver);
 
     Path proguardDir = rule.getProguardOutputFromInputClasspath(
@@ -247,7 +243,6 @@ public class AndroidBinaryTest {
         BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget())
-        .setTarget("Google Inc.:Google APIs:16")
         .setShouldSplitDex(true)
         .setLinearAllocHardLimit(0)
         .setPrimaryDexScenarioOverflowAllowed(true)
@@ -284,7 +279,6 @@ public class AndroidBinaryTest {
         BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget())
-        .setTarget("Google Inc.:Google APIs:16")
         .setShouldSplitDex(true)
         .setLinearAllocHardLimit(0)
         .setPrimaryDexScenarioOverflowAllowed(true)
@@ -323,7 +317,6 @@ public class AndroidBinaryTest {
         BuildTargetFactory.newInstance("//:target"))
         .setManifest(new TestSourcePath("AndroidManifest.xml"))
         .setKeystore(keystoreRule.getBuildTarget())
-        .setTarget("Google Inc:Google APIs:16")
         .setResourceFilter(new ResourceFilter(ImmutableList.of("mdpi")))
         .setResourceCompressionMode(ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS);
 
