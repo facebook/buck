@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -32,6 +33,7 @@ import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -48,10 +50,14 @@ import com.facebook.buck.timing.SettableFakeClock;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
@@ -575,6 +581,192 @@ public class WorkspaceAndProjectGeneratorTest {
             withNameAndBuildingFor(
                 "_BuckCombinedTest-xctest-0",
                 equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY))));
+  }
+
+  @Test
+  public void groupTests() {
+    TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
+        .createBuilder(BuildTarget.builder("//foo", "test1").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setCanGroup(Optional.of(true))
+        .build();
+    TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
+        .createBuilder(BuildTarget.builder("//bar", "test2").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setCanGroup(Optional.of(true))
+        .build();
+
+    WorkspaceAndProjectGenerator generator = createWorkspaceAndProjectGeneratorForTests(
+        ImmutableSet.of(combinableTest1, combinableTest2));
+
+    GroupedTestResults groupedTestResults = generator.groupTests(
+        ImmutableSet.of(
+            combinableTest1,
+            combinableTest2));
+
+    assertEquals(
+        ImmutableSortedSet.<TargetNode<AppleTestDescription.Arg>>of(),
+        groupedTestResults.getUngroupedTests());
+    assertEquals(
+        ImmutableSortedSet.of(
+            combinableTest1,
+            combinableTest2),
+        ImmutableSortedSet.copyOf(
+            groupedTestResults.getGroupedTests().values()));
+    ImmutableList<Map.Entry<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>>
+        groupedTests = ImmutableList.copyOf(groupedTestResults.getGroupedTests().entries());
+    assertEquals(2, groupedTests.size());
+    assertEquals(groupedTests.get(0).getKey(), groupedTests.get(1).getKey());
+  }
+
+  @Test
+  public void doNotGroupTestsWithDifferentExtensions() {
+    TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
+        .createBuilder(BuildTarget.builder("//foo", "test1").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setCanGroup(Optional.of(true))
+        .build();
+    TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
+        .createBuilder(BuildTarget.builder("//bar", "test2").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.OCTEST))
+        .setCanGroup(Optional.of(true))
+        .build();
+
+    WorkspaceAndProjectGenerator generator = createWorkspaceAndProjectGeneratorForTests(
+        ImmutableSet.of(combinableTest1, combinableTest2));
+
+    GroupedTestResults groupedTestResults = generator.groupTests(
+        ImmutableSet.of(
+            combinableTest1,
+            combinableTest2));
+
+    assertEquals(
+        ImmutableSortedSet.<TargetNode<AppleTestDescription.Arg>>of(),
+        groupedTestResults.getUngroupedTests());
+    assertEquals(
+        ImmutableSortedSet.of(
+            combinableTest1,
+            combinableTest2),
+        ImmutableSortedSet.copyOf(
+            groupedTestResults.getGroupedTests().values()));
+    ImmutableList<Map.Entry<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>>
+        groupedTests = ImmutableList.copyOf(groupedTestResults.getGroupedTests().entries());
+    assertEquals(2, groupedTests.size());
+    assertNotEquals(groupedTests.get(0).getKey(), groupedTests.get(1).getKey());
+  }
+
+  @Test
+  public void doNotGroupTestsWithDifferentConfigs() {
+    ImmutableSortedMap<String, ImmutableMap<String, String>> configs = ImmutableSortedMap.of(
+        "Debug",
+        ImmutableMap.of("KEY", "VALUE"));
+
+    TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
+        .createBuilder(BuildTarget.builder("//foo", "test1").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setCanGroup(Optional.of(true))
+        .build();
+    TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
+        .createBuilder(BuildTarget.builder("//bar", "test2").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setConfigs(Optional.of(configs))
+        .setCanGroup(Optional.of(true))
+        .build();
+
+    WorkspaceAndProjectGenerator generator = createWorkspaceAndProjectGeneratorForTests(
+        ImmutableSet.of(combinableTest1, combinableTest2));
+
+    GroupedTestResults groupedTestResults = generator.groupTests(
+        ImmutableSet.of(
+            combinableTest1,
+            combinableTest2));
+
+    assertEquals(
+        ImmutableSortedSet.<TargetNode<AppleTestDescription.Arg>>of(),
+        groupedTestResults.getUngroupedTests());
+    assertEquals(
+        ImmutableSortedSet.of(
+            combinableTest1,
+            combinableTest2),
+        ImmutableSortedSet.copyOf(
+            groupedTestResults.getGroupedTests().values()));
+    ImmutableList<Map.Entry<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>>
+        groupedTests = ImmutableList.copyOf(groupedTestResults.getGroupedTests().entries());
+    assertEquals(2, groupedTests.size());
+    assertNotEquals(groupedTests.get(0).getKey(), groupedTests.get(1).getKey());
+  }
+
+  @Test
+  public void doNotGroupTestsWithDifferentLinkerFlags() {
+    TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
+        .createBuilder(BuildTarget.builder("//foo", "test1").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setCanGroup(Optional.of(true))
+        .build();
+    TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
+        .createBuilder(BuildTarget.builder("//bar", "test2").build())
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setLinkerFlags(Optional.of(ImmutableList.of("-flag")))
+        .setExportedLinkerFlags(Optional.of(ImmutableList.of("-exported-flag")))
+        .setCanGroup(Optional.of(true))
+        .build();
+
+    WorkspaceAndProjectGenerator generator = createWorkspaceAndProjectGeneratorForTests(
+        ImmutableSet.of(combinableTest1, combinableTest2));
+
+    GroupedTestResults groupedTestResults = generator.groupTests(
+        ImmutableSet.of(
+            combinableTest1,
+            combinableTest2));
+
+    assertEquals(
+        ImmutableSortedSet.<TargetNode<AppleTestDescription.Arg>>of(),
+        groupedTestResults.getUngroupedTests());
+    assertEquals(
+        ImmutableSortedSet.of(
+            combinableTest1,
+            combinableTest2),
+        ImmutableSortedSet.copyOf(
+            groupedTestResults.getGroupedTests().values()));
+    ImmutableList<Map.Entry<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>>
+        groupedTests = ImmutableList.copyOf(groupedTestResults.getGroupedTests().entries());
+    assertEquals(2, groupedTests.size());
+    assertNotEquals(groupedTests.get(0).getKey(), groupedTests.get(1).getKey());
+  }
+
+  private WorkspaceAndProjectGenerator createWorkspaceAndProjectGeneratorForTests(
+      ImmutableSet<TargetNode<AppleTestDescription.Arg>> tests) {
+    TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
+        .createBuilder(BuildTarget.builder("//foo", "lib").build())
+        .setTests(
+            Optional.of(
+                FluentIterable.from(tests)
+                    .transform(HasBuildTarget.TO_TARGET)
+                    .toSortedSet(Ordering.natural())))
+        .build();
+    TargetNode<XcodeWorkspaceConfigDescription.Arg> workspace = XcodeWorkspaceConfigBuilder
+        .createBuilder(BuildTarget.builder("//foo", "workspace").build())
+        .setSrcTarget(Optional.of(library.getBuildTarget()))
+        .setWorkspaceName(Optional.of("workspace"))
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        ImmutableSet.<TargetNode<?>>builder()
+            .addAll(tests)
+            .add(library, workspace)
+            .build());
+
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        targetGraph,
+        workspace.getConstructorArg(),
+        workspaceNode.getBuildTarget(),
+        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
+        false,
+        "BUCK",
+        getOutputPathOfNodeFunction(targetGraph));
+    generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
+    return generator;
   }
 
   private Matcher<XCScheme.BuildActionEntry> buildActionEntryWithName(String name) {

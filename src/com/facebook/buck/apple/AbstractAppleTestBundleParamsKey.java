@@ -20,6 +20,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 
@@ -36,12 +37,16 @@ abstract class AbstractAppleTestBundleParamsKey {
   public abstract Optional<SourcePath> getInfoPlist();
   public abstract Either<AppleBundleExtension, String> getExtension();
   public abstract Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> getConfigs();
+  public abstract ImmutableList<String> getLinkerFlags();
+  public abstract ImmutableList<String> getExportedLinkerFlags();
 
   public static AppleTestBundleParamsKey fromAppleTestDescriptionArg(AppleTestDescription.Arg arg) {
     return AppleTestBundleParamsKey.builder()
         .setInfoPlist(arg.infoPlist)
         .setConfigs(arg.configs)
         .setExtension(arg.extension)
+        .setLinkerFlags(arg.linkerFlags.get())
+        .setExportedLinkerFlags(arg.exportedLinkerFlags.get())
         .build();
   }
 }

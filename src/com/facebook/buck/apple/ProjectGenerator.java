@@ -887,7 +887,11 @@ public class ProjectGenerator {
             "FRAMEWORK_SEARCH_PATHS", Joiner.on(' ').join(
                 collectRecursiveFrameworkSearchPaths(tests)),
             "LIBRARY_SEARCH_PATHS", Joiner.on(' ').join(
-                collectRecursiveLibrarySearchPaths(tests))));
+                collectRecursiveLibrarySearchPaths(tests)),
+            "OTHER_LDFLAGS", Joiner.on(' ').join(
+                Iterables.concat(
+                    key.getLinkerFlags(),
+                    collectRecursiveExportedLinkerFlags(tests)))));
     buildableCombinedTestTargets.add(result.target);
   }
 
