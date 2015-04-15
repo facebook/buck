@@ -16,13 +16,11 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -32,7 +30,6 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -40,10 +37,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 
-import javax.annotation.Nullable;
-
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class AppleTest extends AbstractBuildRule implements TestRule {
+public class AppleTest extends NoopBuildRule implements TestRule {
 
   private final BuildRule testBundle;
   private final ImmutableSet<String> contacts;
@@ -84,30 +79,6 @@ public class AppleTest extends AbstractBuildRule implements TestRule {
   @Override
   public ImmutableSet<BuildRule> getSourceUnderTest() {
     return sourceUnderTest;
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  @Nullable
-  public Path getPathToOutputFile() {
-    return null;
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
-  }
-
-  @Override
-  @Nullable
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-    return ImmutableList.of();
   }
 
   @Override
