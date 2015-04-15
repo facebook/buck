@@ -38,7 +38,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.InstallableApk;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -59,7 +58,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -263,11 +261,6 @@ public class AndroidBinary extends AbstractBuildRule implements
     return PROPERTIES;
   }
 
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
-  }
-
   public ImmutableSortedSet<JavaLibrary> getRulesToExcludeFromDex() {
     return rulesToExcludeFromDex;
   }
@@ -322,11 +315,6 @@ public class AndroidBinary extends AbstractBuildRule implements
   @Override
   public Path getPathToOutputFile() {
     return getApkPath();
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.of();
   }
 
   @Override

@@ -38,7 +38,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.NullFileHashCache;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -362,11 +361,6 @@ public class DefaultRuleKeyBuilderFactoryTest {
     @Override
     public ProjectFilesystem getProjectFilesystem() {
       return new FakeProjectFilesystem();
-    }
-
-    @Override
-    public ImmutableCollection<Path> getInputs() {
-      return ImmutableSortedSet.of();
     }
 
     @Override

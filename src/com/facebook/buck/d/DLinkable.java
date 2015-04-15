@@ -23,12 +23,10 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -68,11 +66,6 @@ abstract class DLinkable extends AbstractBuildRule {
   }
 
   @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
-  }
-
-  @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
@@ -84,11 +77,6 @@ abstract class DLinkable extends AbstractBuildRule {
             prependFlags,
             output,
             inputPaths));
-  }
-
-  @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.<Path>of();
   }
 
   @Override

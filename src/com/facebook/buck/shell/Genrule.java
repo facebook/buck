@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
@@ -46,7 +45,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -192,18 +190,8 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
   }
 
   @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.of();
-  }
-
-  @Override
   public Path getPathToOutputFile() {
     return pathToOutFile;
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
   }
 
   protected void addEnvironmentVariables(ExecutionContext context,

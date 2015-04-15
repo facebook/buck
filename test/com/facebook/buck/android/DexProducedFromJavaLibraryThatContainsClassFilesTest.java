@@ -44,7 +44,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
@@ -215,7 +214,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
             new SourcePathResolver(new BuildRuleResolver()),
             accumulateClassNames);
     assertNull(preDexWithClasses.getPathToOutputFile());
-    assertTrue(Iterables.isEmpty(preDexWithClasses.getInputsToCompareToOutput()));
     assertEquals(Paths.get("buck-out/gen/foo/bar.dex.jar"), preDexWithClasses.getPathToDex());
     assertTrue(preDexWithClasses.hasOutput());
 

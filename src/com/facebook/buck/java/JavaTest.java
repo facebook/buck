@@ -24,7 +24,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
@@ -140,11 +139,6 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
   @Override
   public ImmutableSet<String> getContacts() {
     return contacts;
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
   }
 
   /**

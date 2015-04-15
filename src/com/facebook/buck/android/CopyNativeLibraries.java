@@ -40,7 +40,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -103,16 +102,6 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
 
   private Path getBinPath() {
     return BuildTargets.getScratchPath(getBuildTarget(), "__native_libs_%s__");
-  }
-
-  @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
   }
 
   @Override

@@ -17,16 +17,15 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -35,9 +34,13 @@ import javax.annotation.Nullable;
 
 public class Yacc extends AbstractBuildRule {
 
+  @AddToRuleKey
   private final Tool yacc;
+  @AddToRuleKey
   private final ImmutableList<String> flags;
+  @AddToRuleKey(stringify = true)
   private final Path outputPrefix;
+  @AddToRuleKey
   private final SourcePath input;
 
   public Yacc(
@@ -60,21 +63,6 @@ public class Yacc extends AbstractBuildRule {
 
   public static Path getSourceOutputPath(Path outputPrefix) {
     return YaccStep.getSourceOutputPath(outputPrefix);
-  }
-
-  @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return getResolver().filterInputsToCompareToOutput(input);
-  }
-
-  @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder
-        .setReflectively("yacc", yacc)
-        .setReflectively("flags", flags)
-        .setReflectively("outputPrefix", outputPrefix.toString())
-        // The input name gets baked into line markers.
-        .setReflectively("input", input.toString());
   }
 
   @Override

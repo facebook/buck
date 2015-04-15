@@ -29,13 +29,11 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -95,16 +93,6 @@ public class GenAidl extends AbstractBuildRule {
   @Override
   public Path getPathToOutputFile() {
     return output;
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
   }
 
   @Override

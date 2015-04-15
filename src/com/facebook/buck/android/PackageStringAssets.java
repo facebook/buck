@@ -25,13 +25,11 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.zip.ZipStep;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
@@ -64,11 +62,6 @@ public class PackageStringAssets extends AbstractBuildRule
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.aaptPackageResources = aaptPackageResources;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.of();
   }
 
   @Override
@@ -134,11 +127,6 @@ public class PackageStringAssets extends AbstractBuildRule
     public BuildOutput(Sha1HashCode stringAssetsZipHash) {
       this.stringAssetsZipHash = stringAssetsZipHash;
     }
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
   }
 
   @Nullable

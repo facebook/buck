@@ -327,6 +327,11 @@ public class RuleKey {
 
       else if (val instanceof BuildRule) {
         return setSingleValue(((BuildRule) val).getRuleKey());
+      } else if (val instanceof BuildRuleType) {
+        if (logElms != null) {
+          logElms.add(String.format("ruleKeyType(%s):", val));
+        }
+        feed(val.toString().getBytes());
       } else if (val instanceof RuleKey) {
         if (logElms != null) {
           logElms.add(String.format("ruleKey(sha1=%s):", val));

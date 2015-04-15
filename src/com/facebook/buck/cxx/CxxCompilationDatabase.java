@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -43,9 +42,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -116,16 +113,6 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
     this.outputJsonFile = BuildTargets.getGenPath(
         buildRuleParams.getBuildTarget(),
         "__%s.json");
-  }
-
-  @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.<Path>of();
-  }
-
-  @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
   }
 
   @Override

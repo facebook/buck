@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
@@ -37,7 +38,6 @@ import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -49,7 +49,8 @@ import java.nio.file.Paths;
 import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
-public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, HasClasspathEntries {
+public class JavaBinary extends AbstractBuildRule
+    implements BinaryBuildRule, HasClasspathEntries, RuleKeyAppendable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
@@ -89,23 +90,17 @@ public class JavaBinary extends AbstractBuildRule implements BinaryBuildRule, Ha
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
-  }
-
-  @Override
   public BuildableProperties getProperties() {
     return OUTPUT_TYPE;
   }
 
   @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
     // Build a sorted set so that metaInfDirectory contents are listed in a canonical order.
-    ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
+    BuildRules.addInputsToSortedSet(metaInfDirectory, paths, directoryTraverser);
 
-    BuildRules.addInputsToSortedSet(metaInfDirectory, builder, directoryTraverser);
-
-    return builder.build();
+    return builder.setReflectively(key + ".metaInfDirectory", paths.build());
   }
 
   @Override

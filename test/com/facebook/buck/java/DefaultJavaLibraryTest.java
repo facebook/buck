@@ -1082,10 +1082,6 @@ public class DefaultJavaLibraryTest {
         .addResource(new TestSourcePath("becgkaifhjd.txt"))
         .build(resolver2, filesystem);
 
-    Iterable<Path> inputs1 = rule1.getInputsToCompareToOutput();
-    Iterable<Path> inputs2 = rule2.getInputsToCompareToOutput();
-    assertEquals(ImmutableList.copyOf(inputs1), ImmutableList.copyOf(inputs2));
-
     ImmutableMap.Builder<String, String> fileHashes = ImmutableMap.builder();
     for (String filename : ImmutableList.of(
         "agifhbkjdec.java", "bdeafhkgcji.java", "bdehgaifjkc.java", "cfiabkjehgd.java",
@@ -1097,8 +1093,6 @@ public class DefaultJavaLibraryTest {
 
     RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(rule1, pathResolver1);
     RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(rule2, pathResolver2);
-    rule1.appendToRuleKey(builder1);
-    rule2.appendToRuleKey(builder2);
     RuleKeyPair pair1 = builder1.build();
     RuleKeyPair pair2 = builder2.build();
     assertEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());

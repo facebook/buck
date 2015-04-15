@@ -78,7 +78,6 @@ public class PythonBinaryTest {
 
     // Calculate and return the rule key.
     RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(binary, resolver);
-    binary.appendToRuleKey(builder);
     return builder.build();
   }
 

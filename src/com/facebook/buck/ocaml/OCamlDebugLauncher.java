@@ -21,11 +21,9 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -45,16 +43,6 @@ public class OCamlDebugLauncher extends AbstractBuildRule {
       OCamlDebugLauncherStep.Args args) {
     super(params, resolver);
     this.args = args;
-  }
-
-  @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
   }
 
   @Override

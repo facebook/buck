@@ -61,7 +61,6 @@ import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -149,7 +148,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule ruleToTest = createRule(
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSet.of(dep),
-        ImmutableList.of(Paths.get("/dev/null")),
         buildSteps,
         pathToOutputFile,
         CacheMode.ENABLED);
@@ -257,7 +255,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule buildRuleToTest = createRule(
         pathResolver,
         ImmutableSet.<BuildRule>of(dep1, dep2),
-        ImmutableList.of(Paths.get("/dev/null")),
         ImmutableList.of(buildStep),
         "buck-out/gen/src/com/facebook/orca/some_file",
         CacheMode.ENABLED);
@@ -345,7 +342,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule buildRule = createRule(
         new SourcePathResolver(new BuildRuleResolver()),
         /* deps */ ImmutableSet.<BuildRule>of(dep1),
-        ImmutableList.<Path>of(),
         ImmutableList.of(step),
         /* pathToOutputFile */ null,
         CacheMode.ENABLED);
@@ -659,7 +655,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule buildRule = createRule(
         new SourcePathResolver(new BuildRuleResolver()),
         /* deps */ ImmutableSet.<BuildRule>of(),
-        ImmutableList.<Path>of(),
         ImmutableList.of(step),
         /* pathToOutputFile */ null,
         CacheMode.ENABLED);
@@ -730,7 +725,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule buildRule = createRule(
         new SourcePathResolver(new BuildRuleResolver()),
         /* deps */ ImmutableSet.<BuildRule>of(),
-        ImmutableList.<Path>of(),
         ImmutableList.of(step),
         /* pathToOutputFile */ null,
         CacheMode.DISABLED);
@@ -790,7 +784,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   private BuildRule createRule(
       SourcePathResolver resolver,
       ImmutableSet<BuildRule> deps,
-      Iterable<Path> inputs,
       List<Step> buildSteps,
       @Nullable String pathToOutputFile,
       CacheMode cacheMode) {
@@ -809,7 +802,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     return new BuildableAbstractCachingBuildRule(
         buildRuleParams,
         resolver,
-        inputs,
         pathToOutputFile,
         buildSteps,
         cacheMode);
@@ -818,7 +810,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   private static class BuildableAbstractCachingBuildRule extends AbstractBuildRule
       implements InitializableFromDisk<Object> {
 
-    private final Iterable<Path> inputs;
     private final Path pathToOutputFile;
     private final List<Step> buildSteps;
     private final BuildOutputInitializer<Object> buildOutputInitializer;
@@ -829,12 +820,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     private BuildableAbstractCachingBuildRule(
         BuildRuleParams params,
         SourcePathResolver resolver,
-        Iterable<Path> inputs,
         @Nullable String pathToOutputFile,
         List<Step> buildSteps,
         CacheMode cacheMode) {
       super(params, resolver);
-      this.inputs = inputs;
       this.pathToOutputFile = pathToOutputFile == null ? null : Paths.get(pathToOutputFile);
       this.buildSteps = buildSteps;
       this.buildOutputInitializer =
@@ -856,16 +845,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         buildableContext.recordArtifact(pathToOutputFile);
       }
       return ImmutableList.copyOf(buildSteps);
-    }
-
-    @Override
-    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-      return builder;
-    }
-
-    @Override
-    public ImmutableCollection<Path> getInputsToCompareToOutput() {
-      return ImmutableList.copyOf(inputs);
     }
 
     @Override
@@ -910,31 +889,16 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public ImmutableCollection<Path> getInputsToCompareToOutput() {
-      throw new UnsupportedOperationException("method should not be called");
-    }
-
-    @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext context,
         BuildableContext buildableContext) {
       throw new UnsupportedOperationException("method should not be called");
     }
 
-    @Override
-    public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-      return builder;
-    }
-
     @Nullable
     @Override
     public Path getPathToOutputFile() {
       return null;
-    }
-
-    @Override
-    public ImmutableCollection<Path> getInputs() {
-      return ImmutableSet.of();
     }
 
     @Override

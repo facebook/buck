@@ -22,10 +22,8 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -37,16 +35,6 @@ public class OCamlBinary extends AbstractBuildRule implements BinaryBuildRule {
   public OCamlBinary(BuildRuleParams params, SourcePathResolver resolver, Path output) {
     super(params, resolver);
     this.output = output;
-  }
-
-  @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
   }
 
   @Override

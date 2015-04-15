@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -42,9 +41,7 @@ import com.facebook.buck.step.fs.RmStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -138,11 +135,6 @@ public class PrebuiltJar extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.of();
-  }
-
-  @Override
   public Sha1HashCode getAbiKey() {
     return buildOutputInitializer.getBuildOutput().getAbiKey();
   }
@@ -227,11 +219,6 @@ public class PrebuiltJar extends AbstractBuildRule
   @Override
   public Path getPathToOutputFile() {
     return getResolver().getPath(getBinaryJar());
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
   }
 
 }

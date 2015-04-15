@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -36,7 +35,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -118,7 +116,8 @@ public class GwtBinary extends AbstractBuildRule {
     // No need for bounds-checking this int because GWT does it internally: http://bit.ly/1kFN5M7.
     this.optimize = optimize;
 
-    Preconditions.checkArgument(localWorkers > 0,
+    Preconditions.checkArgument(
+        localWorkers > 0,
         "localWorkers must be greater than zero: %d",
         localWorkers);
     this.localWorkers = localWorkers;
@@ -126,11 +125,6 @@ public class GwtBinary extends AbstractBuildRule {
     this.strict = strict;
     this.experimentalArgs = ImmutableList.copyOf(experimentalArgs);
     this.gwtModuleJars = gwtModuleJars;
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
   }
 
   @Override
@@ -189,11 +183,6 @@ public class GwtBinary extends AbstractBuildRule {
     buildableContext.recordArtifact(getPathToOutputFile());
 
     return steps.build();
-  }
-
-  @Override
-  public Builder appendDetailsToRuleKey(Builder builder) {
-    return builder;
   }
 
   /**

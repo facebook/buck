@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Sha1HashCode;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -66,11 +65,6 @@ public class RobolectricTestRuleTest {
     @Override
     public Path getAssets() {
       return null;
-    }
-
-    @Override
-    public ImmutableCollection<Path> getInputsToCompareToOutput() {
-      return ImmutableList.of();
     }
 
     @Override

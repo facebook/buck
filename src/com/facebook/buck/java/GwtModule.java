@@ -23,12 +23,10 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -62,11 +60,6 @@ public class GwtModule extends AbstractBuildRule {
   }
 
   @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.of();
-  }
-
-  @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
@@ -96,11 +89,6 @@ public class GwtModule extends AbstractBuildRule {
     buildableContext.recordArtifact(outputFile);
 
     return steps.build();
-  }
-
-  @Override
-  public Builder appendDetailsToRuleKey(Builder builder) {
-    return builder;
   }
 
   @Override

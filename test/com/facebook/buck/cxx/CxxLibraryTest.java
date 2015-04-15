@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -155,7 +154,6 @@ public class CxxLibraryTest {
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));
     assertNull(cxxLibrary.getPathToOutputFile());
-    assertTrue(ImmutableList.copyOf(cxxLibrary.getInputs()).isEmpty());
   }
 
   @Test

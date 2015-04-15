@@ -150,8 +150,6 @@ public class SymlinkTreeTest {
     RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(
         modifiedSymlinkTreeBuildRule,
         resolver);
-    symlinkTreeBuildRule.appendToRuleKey(builder1);
-    modifiedSymlinkTreeBuildRule.appendToRuleKey(builder2);
     RuleKeyPair pair1 = builder1.build();
     RuleKeyPair pair2 = builder2.build();
     assertNotEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());
@@ -173,7 +171,6 @@ public class SymlinkTreeTest {
     RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(
         symlinkTreeBuildRule,
         resolver);
-    symlinkTreeBuildRule.appendToRuleKey(builder1);
     RuleKeyPair pair1 = builder1.build();
 
     // Change the contents of the target of the link.
@@ -187,7 +184,6 @@ public class SymlinkTreeTest {
     RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(
         symlinkTreeBuildRule,
         resolver);
-    symlinkTreeBuildRule.appendToRuleKey(builder2);
     RuleKeyPair pair2 = builder2.build();
 
     // Verify that the rules keys are the same.

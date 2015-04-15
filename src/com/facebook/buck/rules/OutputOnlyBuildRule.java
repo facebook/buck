@@ -17,11 +17,9 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -66,16 +64,6 @@ public class OutputOnlyBuildRule extends AbstractBuildRule {
   @Override
   public Path getPathToOutputFile() {
     return output;
-  }
-
-  @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  protected Builder appendDetailsToRuleKey(Builder builder) {
-    return builder;
   }
 
 }

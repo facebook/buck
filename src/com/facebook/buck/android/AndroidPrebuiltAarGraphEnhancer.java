@@ -36,7 +36,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -48,7 +47,6 @@ import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -279,16 +277,6 @@ class AndroidPrebuiltAarGraphEnhancer {
     @Nullable
     public Path getPathToOutputFile() {
       return null;
-    }
-
-    @Override
-    protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-      return ImmutableSet.of();
-    }
-
-    @Override
-    protected Builder appendDetailsToRuleKey(Builder builder) {
-      return builder;
     }
 
     Path getPathToClassesJar() {

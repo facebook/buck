@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FlavorableDescription;
-import com.facebook.buck.rules.RuleKey.Builder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -137,16 +136,6 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
           ImmutableCollection<SourcePath> inputs) {
         super(buildRuleParams, resolver);
         this.inputs = inputs;
-      }
-
-      @Override
-      protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-        return ImmutableSet.of();
-      }
-
-      @Override
-      protected Builder appendDetailsToRuleKey(Builder builder) {
-        return builder;
       }
 
       @Override

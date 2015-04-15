@@ -40,7 +40,6 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -57,7 +56,6 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -405,11 +403,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
-  }
-
-  @Override
   public BuildableProperties getProperties() {
     return OUTPUT_TYPE;
   }
@@ -442,11 +435,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public AnnotationProcessingParams getAnnotationProcessingParams() {
     return javacOptions.getAnnotationProcessingParams();
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.of();
   }
 
   @Override

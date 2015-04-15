@@ -20,10 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.google.common.annotations.Beta;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -42,8 +39,6 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final BuildRuleType buildRuleType;
   private final SourcePathResolver resolver;
   private final ProjectFilesystem projectFilesystem;
-  /** @see #getInputsToCompareToOutput()  */
-  @Nullable private ImmutableCollection<Path> inputsToCompareToOutputs;
   @Nullable private volatile RuleKeyPair ruleKeyPair;
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
@@ -95,16 +90,6 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public ImmutableCollection<Path> getInputs() {
-    if (inputsToCompareToOutputs == null) {
-      inputsToCompareToOutputs = getInputsToCompareToOutput();
-    }
-    return inputsToCompareToOutputs;
-  }
-
-  protected abstract ImmutableCollection<Path> getInputsToCompareToOutput();
-
-  @Override
   public final int compareTo(HasBuildTarget that) {
     return this.getBuildTarget().compareTo(that.getBuildTarget());
   }
@@ -127,39 +112,6 @@ public abstract class AbstractBuildRule implements BuildRule {
   public final String toString() {
     return getFullyQualifiedName();
   }
-
-  /**
-   * {@link BuildRule#getRuleKey()} and {@link BuildRule#getRuleKeyWithoutDeps()} uses this when
-   * constructing {@link RuleKey}s for this class. Every subclass that extends the rule state in a
-   * way that matters to idempotency must override {@link #appendToRuleKey(RuleKey.Builder)} and
-   * append its state to the {@link RuleKey.Builder} returned by its superclass's
-   * {@link #appendToRuleKey(RuleKey.Builder)} implementation. Example:
-   * <pre>
-   * &#x40;Override
-   * protected RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
-   *   return super.appendToRuleKey(builder)
-   *       .set("srcs", srcs),
-   *       .set("resources", resources);
-   * }
-   * </pre>
-   */
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
-    // For a rule that lists its inputs via a "srcs" argument, this may seem redundant, but it is
-    // not. Here, the inputs are specified as InputRules, which means that the _contents_ of the
-    // files will be hashed. In the case of .set("srcs", srcs), the list of strings itself will be
-    // hashed. It turns out that we need both of these in order to construct a RuleKey correctly.
-    // Note: appendToRuleKey() should not set("srcs", srcs) if the inputs are order-independent.
-    ImmutableCollection<Path> inputs = getInputs();
-    builder = builder
-        .setReflectively("buck.inputs", inputs)
-        .setReflectively(
-            "buck.sourcepaths",
-            SourcePaths.toSourcePathsSortedByNaturalOrder(getProjectFilesystem(), inputs));
-    // TODO(simons): Rename this when no Buildables extend this class.
-    return appendDetailsToRuleKey(builder);
-  }
-
-  protected abstract RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder);
 
   /**
    * This method should be overridden only for unit testing.
@@ -185,7 +137,6 @@ public abstract class AbstractBuildRule implements BuildRule {
       synchronized (this) {
         if (ruleKeyPair == null) {
           RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(this, getResolver());
-          appendToRuleKey(builder);
           ruleKeyPair = builder.build();
         }
       }

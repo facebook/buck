@@ -24,13 +24,13 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +54,6 @@ public class YaccTest {
       AbstractBuildRule rule) {
 
     RuleKey.Builder builder = factory.newInstance(rule, resolver);
-    rule.appendToRuleKey(builder);
     return builder.build();
   }
 
@@ -64,7 +63,7 @@ public class YaccTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(
+        new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.of(
                     "yacc", Strings.repeat("a", 40),

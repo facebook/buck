@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -44,7 +43,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -107,11 +105,6 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     this.preDexDeps = preDexDeps;
     this.aaptPackageResources = aaptPackageResources;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.of();
   }
 
   @Override
@@ -299,11 +292,6 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
   public Path getDexDirectory() {
     Preconditions.checkState(dexSplitMode.isShouldSplitDex());
     return new SplitDexPaths().jarfilesSubdir;
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
   }
 
   @Nullable

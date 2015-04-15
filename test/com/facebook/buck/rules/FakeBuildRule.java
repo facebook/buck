@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.Step;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -69,11 +68,6 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public ImmutableCollection<Path> getInputs() {
-    return ImmutableList.of();
-  }
-
-  @Override
   public Path getPathToOutputFile() {
     return outputFile;
   }
@@ -93,21 +87,6 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
     } else {
       throw new IllegalStateException("This method should not be called");
     }
-  }
-
-  @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
-    throw new IllegalStateException("This method should not be called");
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    throw new IllegalStateException("This method should not be called");
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    throw new UnsupportedOperationException();
   }
 
   @Override

@@ -78,7 +78,7 @@ public class TargetsCommandIntegrationTest {
         "--show-rulekey",
         "//:test");
     result.assertSuccess();
-    assertEquals("//:test 1daea9887d3ccc0ec2cdafb5f330b45e75b0e2be\n", result.getStdout());
+    assertEquals("//:test 45767f513f1210b3a1c618e2351f48c8dfa30b47\n", result.getStdout());
   }
 
   @Test
@@ -94,7 +94,7 @@ public class TargetsCommandIntegrationTest {
         "//:test");
     result.assertSuccess();
     assertEquals(
-        "//:test 1daea9887d3ccc0ec2cdafb5f330b45e75b0e2be buck-out/gen/test-output\n",
+        "//:test 45767f513f1210b3a1c618e2351f48c8dfa30b47 buck-out/gen/test-output\n",
         result.getStdout());
   }
 

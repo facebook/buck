@@ -72,7 +72,6 @@ public class CxxPreprocessAndCompileTest {
       AbstractBuildRule rule) {
 
     RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
-    rule.appendToRuleKey(builder);
     return builder.build();
   }
 

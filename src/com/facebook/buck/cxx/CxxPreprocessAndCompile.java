@@ -33,10 +33,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
@@ -197,16 +195,6 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
           sanitizer.get().getCompilationDirectory());
     }
 
-    return builder;
-  }
-
-  @Override
-  protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.of();
-  }
-
-  @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
     return builder;
   }
 

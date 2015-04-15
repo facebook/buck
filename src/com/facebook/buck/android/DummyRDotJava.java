@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
@@ -41,7 +40,6 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -75,11 +73,6 @@ public class DummyRDotJava extends AbstractBuildRule
         .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
     this.javacOptions = javacOptions;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.of();
   }
 
   @Override
@@ -140,11 +133,6 @@ public class DummyRDotJava extends AbstractBuildRule
   @Override
   public Sha1HashCode getAbiKeyForDeps() {
     return HasAndroidResourceDeps.ABI_HASHER.apply(androidResourceDeps);
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
   }
 
   public static Path getRDotJavaSrcFolder(BuildTarget buildTarget) {

@@ -29,7 +29,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -88,11 +87,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
   public Optional<SourcePath> getManifestFile() {
     return manifestFile;
-  }
-
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableSet.of();
   }
 
   /** @return whether this library was generated from an {@link AndroidPrebuiltAarDescription}. */

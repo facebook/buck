@@ -173,8 +173,8 @@ public class SourcePathResolver {
   }
 
   /**
-   * Takes an {@link Iterable} of {@link SourcePath} objects and filters those that are suitable to
-   * be returned by {@link com.facebook.buck.rules.AbstractBuildRule#getInputsToCompareToOutput()}.
+   * Takes an {@link Iterable} of {@link SourcePath} objects and filters those that represent
+   * {@link Path}s.
    */
   public ImmutableCollection<Path> filterInputsToCompareToOutput(
       Iterable<? extends SourcePath> sources) {

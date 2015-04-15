@@ -25,9 +25,6 @@ import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
@@ -354,19 +351,16 @@ public class DirArtifactCacheTest {
   private static class BuildRuleForTest extends FakeBuildRule {
     private static final BuildRuleType TYPE = BuildRuleType.of("fake");
 
-    private final File file;
+    @SuppressWarnings("PMD.UnusedPrivateField")
+    @AddToRuleKey
+    private final Path file;
 
     private BuildRuleForTest(File file) {
       super(
           TYPE,
           BuildTarget.builder("//foo", file.getName()).build(),
           new SourcePathResolver(new BuildRuleResolver()));
-      this.file = Preconditions.checkNotNull(file);
-    }
-
-    @Override
-    public ImmutableCollection<Path> getInputs() {
-      return ImmutableList.of(file.toPath());
+      this.file = file.toPath();
     }
   }
 }

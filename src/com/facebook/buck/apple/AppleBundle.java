@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.Either;
@@ -33,7 +32,6 @@ import com.facebook.buck.step.fs.FindAndReplaceStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -70,19 +68,9 @@ public class AppleBundle extends AbstractBuildRule {
   }
 
   @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
-  }
-
-  @Override
   @Nullable
   public Path getPathToOutputFile() {
     return null;
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
   }
 
   @Override

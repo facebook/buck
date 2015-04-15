@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.InstallableApk;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.Genrule;
@@ -84,11 +83,6 @@ public class ApkGenrule extends Genrule implements InstallableApk {
   @Override
   public BuildableProperties getProperties() {
     return PROPERTIES;
-  }
-
-  @Override
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
   }
 
   public InstallableApk getInstallableApk() {

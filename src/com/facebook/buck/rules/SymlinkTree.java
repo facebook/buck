@@ -20,7 +20,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -94,18 +93,6 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule, RuleKeyAp
     }
 
     return builder;
-  }
-
-  @Override
-  protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-    return builder;
-  }
-
-  // There are no files we care about which would cause us to need to re-create the
-  // symlink tree.
-  @Override
-  public ImmutableCollection<Path> getInputsToCompareToOutput() {
-    return ImmutableList.of();
   }
 
   // Since we produce a directory tree of symlinks, rather than a single file, return

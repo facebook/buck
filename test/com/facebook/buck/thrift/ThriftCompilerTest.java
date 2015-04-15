@@ -68,7 +68,6 @@ public class ThriftCompilerTest {
       AbstractBuildRule rule) {
 
     RuleKey.Builder builder = factory.newInstance(rule, resolver);
-    rule.appendToRuleKey(builder);
     return builder.build();
   }
 

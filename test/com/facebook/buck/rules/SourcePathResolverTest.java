@@ -30,9 +30,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -317,16 +315,6 @@ public class SourcePathResolverTest {
         Path source) {
       super(buildRuleParams, resolver);
       this.source = source;
-    }
-
-    @Override
-    protected ImmutableCollection<Path> getInputsToCompareToOutput() {
-      return ImmutableSet.of();
-    }
-
-    @Override
-    protected RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder) {
-      return builder;
     }
 
     @Override
