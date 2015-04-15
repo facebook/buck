@@ -19,7 +19,6 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -84,8 +83,6 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
   public ImmutableSortedSet<Path> getJavaSrcs();
 
   public AnnotationProcessingParams getAnnotationProcessingParams();
-
-  public RuleKey.Builder appendDetailsToRuleKey(RuleKey.Builder builder);
 
   /**
    * Returns a SHA-1 hash that represents the ABI for the Java files returned by
