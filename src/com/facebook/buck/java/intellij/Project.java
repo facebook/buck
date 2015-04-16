@@ -31,6 +31,7 @@ import com.facebook.buck.android.AndroidPrebuiltAarCollection;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.android.NdkLibrary;
+import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.AnnotationProcessingParams;
@@ -325,6 +326,7 @@ public class Project {
             projectRule instanceof AndroidResource ||
             projectRule instanceof JavaBinary ||
             projectRule instanceof JavaLibrary ||
+            projectRule instanceof CxxLibrary ||
             projectRule instanceof NdkLibrary,
         "project_config() does not know how to process a src_target of type %s.",
         projectRule.getType().getName());
@@ -835,6 +837,7 @@ public class Project {
           String libraryName = getIntellijNameForAar(dep);
           dependentModule = DependentModule.newLibrary(dep.getBuildTarget(), libraryName);
         } else if (
+            (dep instanceof CxxLibrary) ||
             (dep instanceof NdkLibrary) ||
             (dep instanceof JavaLibrary) ||
             (dep instanceof AndroidResource)) {
