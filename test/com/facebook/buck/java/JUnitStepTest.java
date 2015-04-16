@@ -102,7 +102,7 @@ public class JUnitStepTest {
             "-classpath",
             Joiner.on(File.pathSeparator).join(
                 "@" + filesystem.resolve(junit.getClassPathFile()),
-                "build/classes/junit"),
+                Paths.get("build/classes/junit")),
             FileClassPathRunner.class.getName(),
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
             directoryForTestResults.toString(),
@@ -174,7 +174,7 @@ public class JUnitStepTest {
             "-classpath",
             Joiner.on(File.pathSeparator).join(
                 "@" + junit.getClassPathFile(),
-                "build/classes/junit"),
+                Paths.get("build/classes/junit")),
             FileClassPathRunner.class.getName(),
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
             directoryForTestResults.toString(),
