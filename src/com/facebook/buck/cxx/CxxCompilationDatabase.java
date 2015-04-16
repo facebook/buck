@@ -32,19 +32,13 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
@@ -137,13 +131,13 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
 
     @Override
     public int execute(ExecutionContext context) {
-      Iterable<JsonSerializableDatabaseEntry> entries = createEntries(context);
+      Iterable<CxxCompilationDatabaseEntry> entries = createEntries(context);
       return writeOutput(entries, context);
     }
 
     @VisibleForTesting
-    Iterable<JsonSerializableDatabaseEntry> createEntries(ExecutionContext context) {
-      List<JsonSerializableDatabaseEntry> entries = Lists.newArrayList();
+    Iterable<CxxCompilationDatabaseEntry> createEntries(ExecutionContext context) {
+      List<CxxCompilationDatabaseEntry> entries = Lists.newArrayList();
       for (CxxPreprocessAndCompile compileRule : compileRules) {
         Optional<CxxPreprocessAndCompile> preprocessRule = Optional
             .<CxxPreprocessAndCompile>absent();
@@ -164,7 +158,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
       return entries;
     }
 
-    private JsonSerializableDatabaseEntry createEntry(
+    private CxxCompilationDatabaseEntry createEntry(
         ExecutionContext context,
         Optional<CxxPreprocessAndCompile> preprocessRule,
         CxxPreprocessAndCompile compileRule) {
@@ -174,21 +168,17 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
       String fileToCompile = projectFilesystem
           .resolve(getResolver().getPath(inputSourcePath))
           .toString();
-      ImmutableList<String> commands = preprocessRule.isPresent() ?
+      ImmutableList<String> args = preprocessRule.isPresent() ?
           compileRule.getCompileCommandCombinedWithPreprocessBuildRule(preprocessRule.get()) :
           compileRule.getCommand();
-      String command = Joiner.on(' ').join(
-          Iterables.transform(
-              commands,
-              Escaper.SHELL_ESCAPER));
-      return new JsonSerializableDatabaseEntry(
+      return new CxxCompilationDatabaseEntry(
           /* directory */ projectFilesystem.resolve(getBuildTarget().getBasePath()).toString(),
           fileToCompile,
-          command);
+          args);
     }
 
     private int writeOutput(
-        Iterable<JsonSerializableDatabaseEntry> entries,
+        Iterable<CxxCompilationDatabaseEntry> entries,
         ExecutionContext context) {
       Gson gson = new Gson();
       try {
@@ -210,48 +200,6 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
           "Failed writing to %s in %s.",
           getPathToOutputFile(),
           getBuildTarget());
-    }
-  }
-
-  @VisibleForTesting
-  @SuppressFieldNotInitialized
-  static class JsonSerializableDatabaseEntry {
-
-    public String directory;
-    public String file;
-    public String command;
-
-    public JsonSerializableDatabaseEntry(String directory, String file, String command) {
-      this.directory = directory;
-      this.file = file;
-      this.command = command;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof JsonSerializableDatabaseEntry)) {
-        return false;
-      }
-
-      JsonSerializableDatabaseEntry that = (JsonSerializableDatabaseEntry) obj;
-      return Objects.equal(this.directory, that.directory) &&
-          Objects.equal(this.file, that.file) &&
-          Objects.equal(this.command, that.command);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(directory, file, command);
-    }
-
-    // Useful if CompilationDatabaseTest fails when comparing JsonSerializableDatabaseEntry objects.
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this)
-          .add("directory", directory)
-          .add("file", file)
-          .add("command", command)
-          .toString();
     }
   }
 }

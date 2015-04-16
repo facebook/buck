@@ -21,20 +21,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cxx.CxxCompilationDatabaseEntry;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.junit.Assume;
 import org.junit.Before;
@@ -46,7 +40,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -104,14 +97,8 @@ public class CompilationDatabaseIntegrationTest {
         tmp.getRootPath().relativize(compilationDatabase.toPath()));
 
     // Parse the compilation_database.json file.
-    ObjectMapper mapper = new ObjectMapper();
-    JavaType type = mapper.getTypeFactory().
-        constructCollectionType(ArrayList.class, JsonSerializableDatabaseEntry.class);
-    List<JsonSerializableDatabaseEntry> entries = mapper.readValue(compilationDatabase, type);
-    Map<String, JsonSerializableDatabaseEntry> fileToEntry = Maps.newHashMap();
-    for (JsonSerializableDatabaseEntry entry : entries) {
-      fileToEntry.put(entry.file, entry);
-    }
+    Map<String, CxxCompilationDatabaseEntry> fileToEntry =
+        CxxCompilationDatabaseEntry.parseCompilationDatabaseJsonFile(compilationDatabase);
 
     Iterable<String> frameworks = ImmutableList.of(
         Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString());
@@ -161,14 +148,8 @@ public class CompilationDatabaseIntegrationTest {
         tmp.getRootPath().relativize(compilationDatabase.toPath()));
 
     // Parse the compilation_database.json file.
-    ObjectMapper mapper = new ObjectMapper();
-    JavaType type = mapper.getTypeFactory().
-        constructCollectionType(ArrayList.class, JsonSerializableDatabaseEntry.class);
-    List<JsonSerializableDatabaseEntry> entries = mapper.readValue(compilationDatabase, type);
-    Map<String, JsonSerializableDatabaseEntry> fileToEntry = Maps.newHashMap();
-    for (JsonSerializableDatabaseEntry entry : entries) {
-      fileToEntry.put(entry.file, entry);
-    }
+    Map<String, CxxCompilationDatabaseEntry> fileToEntry =
+        CxxCompilationDatabaseEntry.parseCompilationDatabaseJsonFile(compilationDatabase);
 
     Iterable<String> frameworks = ImmutableList.of(
         Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString(),
@@ -201,11 +182,11 @@ public class CompilationDatabaseIntegrationTest {
       String source,
       String output,
       boolean isLibrary,
-      Map<String, JsonSerializableDatabaseEntry> fileToEntry,
+      Map<String, CxxCompilationDatabaseEntry> fileToEntry,
       Iterable<String> additionalFrameworks,
       Iterable<String> includes) throws IOException {
     String key = tmp.getRootPath().resolve(source).toRealPath().toString();
-    JsonSerializableDatabaseEntry entry = fileToEntry.get(key);
+    CxxCompilationDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
 
     String clang = tmp.getRootPath()
@@ -261,50 +242,5 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add(output);
     commandArgs.add(source);
     MoreAsserts.assertIterablesEquals(commandArgs, ImmutableList.copyOf(entry.command.split(" ")));
-  }
-
-  @VisibleForTesting
-  @SuppressFieldNotInitialized
-  static class JsonSerializableDatabaseEntry {
-
-    public String directory;
-    public String file;
-    public String command;
-
-    /** Empty constructor will be used by Jackson. */
-    public JsonSerializableDatabaseEntry() {}
-
-    public JsonSerializableDatabaseEntry(String directory, String file, String command) {
-      this.directory = directory;
-      this.file = file;
-      this.command = command;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof JsonSerializableDatabaseEntry)) {
-        return false;
-      }
-
-      JsonSerializableDatabaseEntry that = (JsonSerializableDatabaseEntry) obj;
-      return Objects.equal(this.directory, that.directory) &&
-          Objects.equal(this.file, that.file) &&
-          Objects.equal(this.command, that.command);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(directory, file, command);
-    }
-
-    // Useful if CompilationDatabaseTest fails when comparing JsonSerializableDatabaseEntry objects.
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this)
-          .add("directory", directory)
-          .add("file", file)
-          .add("command", command)
-          .toString();
-    }
   }
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cxx.CxxCompilationDatabase.JsonSerializableDatabaseEntry;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -40,7 +39,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -126,14 +124,14 @@ public class CxxCompilationDatabaseTest {
         .build();
     CxxCompilationDatabase.GenerateCompilationCommandsJson step =
         (CxxCompilationDatabase.GenerateCompilationCommandsJson) buildSteps.get(1);
-    Iterable<JsonSerializableDatabaseEntry> observedEntries =
+    Iterable<CxxCompilationDatabaseEntry> observedEntries =
         step.createEntries(context);
-    Iterable<JsonSerializableDatabaseEntry> expectedEntries =
+    Iterable<CxxCompilationDatabaseEntry> expectedEntries =
         ImmutableList.of(
-          new JsonSerializableDatabaseEntry(
+          new CxxCompilationDatabaseEntry(
               root + "/foo",
               root + "/test.cpp",
-              Joiner.on(' ').join(
+              ImmutableList.of(
                   "compiler",
                   "-c",
                   "-I",
@@ -240,14 +238,14 @@ public class CxxCompilationDatabaseTest {
         .build();
     CxxCompilationDatabase.GenerateCompilationCommandsJson step =
         (CxxCompilationDatabase.GenerateCompilationCommandsJson) buildSteps.get(1);
-    Iterable<JsonSerializableDatabaseEntry> observedEntries =
+    Iterable<CxxCompilationDatabaseEntry> observedEntries =
         step.createEntries(context);
-    Iterable<JsonSerializableDatabaseEntry> expectedEntries =
+    Iterable<CxxCompilationDatabaseEntry> expectedEntries =
         ImmutableList.of(
-            new JsonSerializableDatabaseEntry(
+            new CxxCompilationDatabaseEntry(
                 root + "/foo",
                 root + "/test.cpp",
-                Joiner.on(' ').join(
+                ImmutableList.of(
                     "compiler",
                     "-c",
                     "-I",

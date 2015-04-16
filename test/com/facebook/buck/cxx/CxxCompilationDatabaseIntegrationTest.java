@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cxx.CxxCompilationDatabase.JsonSerializableDatabaseEntry;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -27,15 +27,11 @@ import com.facebook.buck.util.Escaper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -78,20 +74,9 @@ public class CxxCompilationDatabaseIntegrationTest {
     assertTrue(
         Files.exists(tmp.getRootPath().resolve(libraryExportedHeaderSymlinkTreeFoler + "/bar.h")));
 
-
-    Gson gson = new Gson();
-    FileReader fileReader = new FileReader(compilationDatabase);
-    List<JsonSerializableDatabaseEntry> entries = gson
-        .fromJson(
-            fileReader, new TypeToken<List<JsonSerializableDatabaseEntry>>() {
-            }.getType());
-    Map<String, JsonSerializableDatabaseEntry> fileToEntry = Maps.newHashMap();
-    for (JsonSerializableDatabaseEntry entry : entries) {
-      fileToEntry.put(entry.file, entry);
-    }
-
-    assertEquals(1, entries.size());
-
+    Map<String, CxxCompilationDatabaseEntry> fileToEntry =
+        CxxCompilationDatabaseEntry.parseCompilationDatabaseJsonFile(compilationDatabase);
+    assertEquals(1, fileToEntry.size());
     assertHasEntry(
         fileToEntry,
         "foo.cpp",
@@ -130,19 +115,9 @@ public class CxxCompilationDatabaseIntegrationTest {
     assertTrue(Files.exists(tmp.getRootPath().resolve(headerSymlinkTreeFolder)));
     assertTrue(Files.exists(tmp.getRootPath().resolve(exportedHeaderSymlinkTreeFoler)));
 
-    Gson gson = new Gson();
-    FileReader fileReader = new FileReader(compilationDatabase);
-    List<JsonSerializableDatabaseEntry> entries = gson
-        .fromJson(
-            fileReader, new TypeToken<List<JsonSerializableDatabaseEntry>>() {
-        }.getType());
-    Map<String, JsonSerializableDatabaseEntry> fileToEntry = Maps.newHashMap();
-    for (JsonSerializableDatabaseEntry entry : entries) {
-      fileToEntry.put(entry.file, entry);
-    }
-
-    assertEquals(1, entries.size());
-
+    Map<String, CxxCompilationDatabaseEntry> fileToEntry =
+        CxxCompilationDatabaseEntry.parseCompilationDatabaseJsonFile(compilationDatabase);
+    assertEquals(1, fileToEntry.size());
     assertHasEntry(
         fileToEntry,
         "bar.cpp",
@@ -161,16 +136,16 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("buck-out/bin/library_with_header#compile-pic-bar.cpp.o,default/bar.cpp.o")
             .add("bar.cpp")
             .build());
-
   }
 
   private void assertHasEntry(
-      Map<String, JsonSerializableDatabaseEntry> fileToEntry,
+      Map<String, CxxCompilationDatabaseEntry> fileToEntry,
       String fileName,
       List<String> command) throws IOException {
     String key = tmp.getRootPath().resolve(fileName).toRealPath().toString();
-    JsonSerializableDatabaseEntry entry = fileToEntry.get(key);
+    CxxCompilationDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
+    MoreAsserts.assertIterablesEquals(command, entry.args);
     assertEquals(
         Joiner.on(' ').join(
             Iterables.transform(
