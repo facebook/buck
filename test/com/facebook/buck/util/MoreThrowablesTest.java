@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import static org.hamcrest.Matchers.is;
 
 import org.hamcrest.Description;
-import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.Rule;
@@ -88,7 +87,6 @@ public class MoreThrowablesTest {
       description.appendText(String.format("caused by %s", cause.toString()));
     }
 
-    @Factory
     public static <T> Matcher<Throwable> causedBy(Throwable throwable) {
       return new CausedBy(throwable);
     }

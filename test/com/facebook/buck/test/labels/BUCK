@@ -4,8 +4,7 @@ java_test(
   resources = glob(['testdata/**'], include_dotfiles=True),
   deps = [
     '//third-party/java/guava:guava',
-    '//third-party/java/hamcrest:hamcrest-core',
-    '//third-party/java/hamcrest:hamcrest-library',
+    '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/junit:junit',
     '//test/com/facebook/buck/testutil/integration:integration',
   ],

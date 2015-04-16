@@ -17,6 +17,8 @@
 package com.facebook.buck.parser;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.in;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -27,7 +29,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -99,11 +100,12 @@ public class ParserIntegrationTest {
     } catch (HumanReadableException e) {
       assertThat(
           e.getHumanReadableErrorMessage(),
-          Matchers.isIn(
-              ImmutableSet.of(
-                  "Cycle found: //:C -> //:E -> //:F -> //:C",
-                  "Cycle found: //:E -> //:F -> //:C -> //:E",
-                  "Cycle found: //:F -> //:C -> //:E -> //:F")));
+          is(
+              in(
+                  ImmutableSet.of(
+                      "Cycle found: //:C -> //:E -> //:F -> //:C",
+                      "Cycle found: //:E -> //:F -> //:C -> //:E",
+                      "Cycle found: //:F -> //:C -> //:E -> //:F"))));
       return;
     }
     fail("An exception should have been thrown because of a circular dependency.");

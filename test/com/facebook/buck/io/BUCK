@@ -8,8 +8,7 @@ java_test(
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/commons-compress:commons-compress',
     '//third-party/java/guava:guava',
-    '//third-party/java/hamcrest:hamcrest-core',
-    '//third-party/java/hamcrest:hamcrest-library',
+    '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/junit:junit',
   ],
 )

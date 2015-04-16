@@ -2,8 +2,8 @@
   <library name="junit">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/third-party/java/junit/junit-4.11.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/hamcrest/hamcrest-library-1.3.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/hamcrest/hamcrest-core-1.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/hamcrest/java-hamcrest-2.0.0.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/hamcrest/hamcrest-junit-2.0.0.0.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

@@ -4,8 +4,7 @@ prebuilt_jar(
   source_jar = 'junit-4.11-sources.jar',
   javadoc_url = 'http://junit-team.github.io/junit/javadoc/latest/',
   deps = [
-    '//third-party/java/hamcrest:hamcrest-core',
-    '//third-party/java/hamcrest:hamcrest-library',
+    '//third-party/java/hamcrest:hamcrest-junit',
   ],
   visibility = [
     '//src/com/facebook/buck/junit:junit',

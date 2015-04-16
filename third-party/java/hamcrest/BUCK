@@ -1,6 +1,10 @@
-prebuilt_jar(
-  name = 'hamcrest-core',
-  binary_jar = 'hamcrest-core-1.3.jar',
+java_library(
+  name = 'hamcrest',
+  deps = [],
+  exported_deps = [
+    ':java-hamcrest',
+    ':hamcrest-junit',
+  ],
   visibility = [
     '//test/...',
     '//third-party/java/junit:junit',
@@ -8,14 +12,22 @@ prebuilt_jar(
 )
 
 prebuilt_jar(
-  name = 'hamcrest-library',
-  binary_jar = 'hamcrest-library-1.3.jar',
+  name = 'java-hamcrest',
+  binary_jar = 'java-hamcrest-2.0.0.0.jar',
+  visibility = [
+    '//test/...',
+    '//third-party/java/junit:junit',
+  ],
+)
+
+prebuilt_jar(
+  name = 'hamcrest-junit',
+  binary_jar = 'hamcrest-junit-2.0.0.0.jar',
   deps = [
-    ':hamcrest-core',
+    ':java-hamcrest',
   ],
   visibility = [
     '//test/...',
     '//third-party/java/junit:junit',
   ],
 )
-

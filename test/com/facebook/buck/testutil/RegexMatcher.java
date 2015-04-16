@@ -17,7 +17,6 @@
 package com.facebook.buck.testutil;
 
 import org.hamcrest.Description;
-import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
@@ -86,7 +85,6 @@ public class RegexMatcher extends TypeSafeMatcher<CharSequence> {
    * @param pattern
    *     the pattern that the returned matcher will use to match any examined {@link CharSequence}
    */
-  @Factory
   public static Matcher<CharSequence> matchesPattern(Pattern pattern) {
     return new RegexMatcher(pattern);
   }
@@ -102,7 +100,6 @@ public class RegexMatcher extends TypeSafeMatcher<CharSequence> {
    *     the regular expression that the returned matcher will use to match any examined
    *     {@link CharSequence}
    */
-  @Factory
   public static Matcher<CharSequence> matchesRegex(String regex) {
     return matchesPattern(Pattern.compile(regex));
   }
@@ -118,7 +115,6 @@ public class RegexMatcher extends TypeSafeMatcher<CharSequence> {
    *     the pattern that the returned matcher will use to find a match in any examined
    *     {@link CharSequence}
    */
-  @Factory
   public static Matcher<CharSequence> containsPattern(Pattern pattern) {
     return new RegexFindMatcher(pattern);
   }
@@ -134,7 +130,6 @@ public class RegexMatcher extends TypeSafeMatcher<CharSequence> {
    *     the regular expression that the returned matcher will use to find a match in any examined
    *     {@link CharSequence}
    */
-  @Factory
   public static Matcher<CharSequence> containsRegex(String regex) {
     return containsPattern(Pattern.compile(regex));
   }

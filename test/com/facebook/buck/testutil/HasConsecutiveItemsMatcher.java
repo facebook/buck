@@ -19,7 +19,6 @@ package com.facebook.buck.testutil;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 import org.hamcrest.Description;
-import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 
@@ -76,20 +75,17 @@ public class HasConsecutiveItemsMatcher<T>
         .appendList("[", ", ", "]", matchers);
   }
 
-  @Factory
   public static <T> Matcher<Collection<? extends T>> hasConsecutiveItems(
       List<Matcher<? super T>> matchers) {
     return new HasConsecutiveItemsMatcher<T>(matchers);
   }
 
-  @Factory
   @SafeVarargs
   public static <T> Matcher<Collection<? extends T>> hasConsecutiveItems(
       Matcher<? super T>... matchers) {
     return hasConsecutiveItems(Arrays.asList(matchers));
   }
 
-  @Factory
   public static <T> Matcher<Collection<? extends T>> hasConsecutiveItems(
       Iterable<? extends T> items) {
     List<Matcher<? super T>> matchers = new ArrayList<>();
@@ -99,7 +95,6 @@ public class HasConsecutiveItemsMatcher<T>
     return new HasConsecutiveItemsMatcher<T>(matchers);
   }
 
-  @Factory
   @SafeVarargs
   public static <T> Matcher<Collection<? extends T>> hasConsecutiveItems(T... elements) {
     return hasConsecutiveItems(Arrays.asList(elements));
