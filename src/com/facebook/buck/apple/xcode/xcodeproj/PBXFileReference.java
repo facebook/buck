@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
 
@@ -32,8 +33,15 @@ public class PBXFileReference extends PBXReference {
   public PBXFileReference(String name, @Nullable String path, SourceTree sourceTree) {
     super(name, path, sourceTree);
 
+    // PBXVariantGroups create file references where the name doesn't contain the file
+    // extension.
+    //
+    // Try the path if it's present to check for an extension, then fall back to the name
+    // if the path isn't present.
+    String pathOrName = MoreObjects.firstNonNull(path, name);
+
     // this is necessary to prevent O(n^2) behavior in xcode project loading
-    String fileType = FileTypes.FILE_EXTENSION_TO_UTI.get(Files.getFileExtension(name));
+    String fileType = FileTypes.FILE_EXTENSION_TO_UTI.get(Files.getFileExtension(pathOrName));
     if (fileType != null && FileTypes.EXPLICIT_FILE_TYPE_BROKEN_UTIS.contains(fileType)) {
       explicitFileType = Optional.absent();
       lastKnownFileType = Optional.of(fileType);
@@ -45,6 +53,10 @@ public class PBXFileReference extends PBXReference {
 
   public Optional<String> getExplicitFileType() {
     return explicitFileType;
+  }
+
+  public Optional<String> getLastKnownFileType() {
+    return lastKnownFileType;
   }
 
   public void setExplicitFileType(Optional<String> explicitFileType) {

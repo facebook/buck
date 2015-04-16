@@ -43,6 +43,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
@@ -135,6 +136,7 @@ public class ProjectGeneratorTest {
     projectFilesystem.writeContentsToPath(
         "",
         Paths.get("bar.png"));
+    fakeProjectFilesystem.touch(Paths.get("Base.lproj", "Bar.storyboard"));
   }
 
   @Test
@@ -1617,6 +1619,61 @@ public class ProjectGeneratorTest {
     assertEquals(
         "framework",
         settings.get("WRAPPER_EXTENSION"));
+  }
+
+  @Test
+  public void testAppleResourceWithVariantGroupSetsFileTypeBasedOnPath() throws IOException {
+    BuildTarget resourceTarget = BuildTarget.builder("//foo", "resource").build();
+    TargetNode<?> resourceNode = AppleResourceBuilder
+        .createBuilder(resourceTarget)
+        .setFiles(ImmutableSet.<SourcePath>of())
+        .setDirs(ImmutableSet.<Path>of())
+        .setVariants(
+            Optional.<Map<String, Map<String, SourcePath>>>of(
+                ImmutableMap.<String, Map<String, SourcePath>>of(
+                    "Bar.storyboard",
+                    ImmutableMap.<String, SourcePath>of(
+                        "Base",
+                        new TestSourcePath("Base.lproj/Bar.storyboard")))))
+        .build();
+    BuildTarget fooLibraryTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> fooLibraryNode = AppleLibraryBuilder
+        .createBuilder(fooLibraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .build();
+    BuildTarget bundleTarget = BuildTarget.builder("//foo", "bundle").build();
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.BUNDLE))
+        .setBinary(fooLibraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(fooLibraryNode, bundleNode, resourceNode),
+        ImmutableSet.<ProjectGenerator.Option>of());
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup targetGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(bundleTarget.getFullyQualifiedName());
+    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
+    PBXVariantGroup storyboardGroup = (PBXVariantGroup) Iterables.get(
+        resourcesGroup.getChildren(),
+        0);
+    PBXFileReference baseStoryboardReference =
+        storyboardGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
+            "Base",
+            new SourceTreePath(
+                PBXReference.SourceTree.SOURCE_ROOT,
+                Paths.get("Base.lproj/Bar.storyboard")));
+
+    // Even though the name doesn't have an extension..
+    assertEquals("Base", baseStoryboardReference.getName());
+
+    // Make sure the file type is set from the path.
+    assertEquals(Optional.of("file.storyboard"), baseStoryboardReference.getLastKnownFileType());
+    assertEquals(Optional.<String>absent(), baseStoryboardReference.getExplicitFileType());
   }
 
   @Test
