@@ -568,6 +568,9 @@ public class CachingBuildEngine implements BuildEngine {
       BuildInfoRecorder buildInfoRecorder)
       throws Exception {
     LOG.debug("Building locally: %s", rule);
+    // Attempt to get an approximation of how long it takes to actually run the command.
+    @SuppressWarnings("PMD.PrematureDeclaration")
+    long start = System.nanoTime();
 
     // Get and run all of the commands.
     BuildableContext buildableContext = new DefaultBuildableContext(
@@ -592,7 +595,11 @@ public class CachingBuildEngine implements BuildEngine {
       }
     }
 
-    LOG.debug("Build completed: %s", rule);
+    long end = System.nanoTime();
+    LOG.debug("Build completed: %s %s (%dns)",
+        rule.getType(),
+        rule.getFullyQualifiedName(),
+        end - start);
   }
 
   @VisibleForTesting
