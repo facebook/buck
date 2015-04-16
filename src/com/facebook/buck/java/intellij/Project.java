@@ -834,11 +834,10 @@ public class Project {
           androidAars.add((AndroidPrebuiltAar) dep);
           String libraryName = getIntellijNameForAar(dep);
           dependentModule = DependentModule.newLibrary(dep.getBuildTarget(), libraryName);
-        } else if (dep instanceof NdkLibrary) {
-          String moduleName = getIntellijNameForRule(dep);
-          dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
-        } else if ((dep instanceof JavaLibrary) ||
-            dep instanceof AndroidResource) {
+        } else if (
+            (dep instanceof NdkLibrary) ||
+            (dep instanceof JavaLibrary) ||
+            (dep instanceof AndroidResource)) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else {
