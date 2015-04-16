@@ -22,7 +22,6 @@ import com.facebook.buck.android.AndroidBuildConfig.ReadValuesStep;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -52,17 +51,9 @@ import java.util.List;
  */
 public class AndroidBuildConfigTest {
 
-  /**
-   * Tests the following methods:
-   * <ul>
-   *   <li>{@link AbstractBuildRule#getInputsToCompareToOutput()}
-   *   <li>{@link AndroidBuildConfig#getPathToOutputFile()}
-   * </ul>
-   */
   @Test
-  public void testSimpleObserverMethods() {
+  public void testGetPathToOutputFile() {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
-
     assertEquals(
         BuckConstant.GEN_PATH.resolve("java/com/example/__build_config__/BuildConfig.java"),
         buildConfig.getPathToOutputFile());
