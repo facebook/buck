@@ -73,6 +73,7 @@ class SchemeGenerator {
   private final ImmutableSet<PBXTarget> orderedRunTestTargets;
   private final String schemeName;
   private final Path outputDirectory;
+  private final Optional<String> remoteRunnablePath;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
   private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
   private Optional<XCScheme> outputScheme = Optional.absent();
@@ -85,6 +86,7 @@ class SchemeGenerator {
       Iterable<PBXTarget> orderedRunTestTargets,
       String schemeName,
       Path outputDirectory,
+      Optional<String> remoteRunnablePath,
       Map<SchemeActionType, String> actionConfigNames,
       Map<PBXTarget, Path> targetToProjectPathMap) {
     this.projectFilesystem = projectFilesystem;
@@ -94,6 +96,7 @@ class SchemeGenerator {
     this.orderedRunTestTargets = ImmutableSet.copyOf(orderedRunTestTargets);
     this.schemeName = schemeName;
     this.outputDirectory = outputDirectory;
+    this.remoteRunnablePath = remoteRunnablePath;
     this.actionConfigNames = ImmutableMap.copyOf(actionConfigNames);
     this.targetToProjectPathMap = ImmutableMap.copyOf(targetToProjectPathMap);
 
@@ -164,7 +167,8 @@ class SchemeGenerator {
       if (primaryBuildableReference != null) {
         launchAction = Optional.of(new XCScheme.LaunchAction(
             primaryBuildableReference,
-            actionConfigNames.get(SchemeActionType.LAUNCH)));
+            actionConfigNames.get(SchemeActionType.LAUNCH),
+            remoteRunnablePath));
         profileAction = Optional.of(new XCScheme.ProfileAction(
             primaryBuildableReference,
             actionConfigNames.get(SchemeActionType.PROFILE)));
@@ -278,11 +282,24 @@ class SchemeGenerator {
   public static Element serializeLaunchAction(Document doc, XCScheme.LaunchAction launchAction) {
     Element launchActionElem = doc.createElement("LaunchAction");
 
-    Element productRunnableElem = doc.createElement("BuildableProductRunnable");
-    launchActionElem.appendChild(productRunnableElem);
+    Optional<String> remoteRunnablePath = launchAction.getRemoteRunnablePath();
+    if (remoteRunnablePath.isPresent()) {
+      Element remoteRunnableElem = doc.createElement("RemoteRunnable");
+      remoteRunnableElem.setAttribute("BundleIdentifier", "com.apple.springboard");
+      remoteRunnableElem.setAttribute("RemotePath", remoteRunnablePath.get());
+      launchActionElem.appendChild(remoteRunnableElem);
+      Element refElem = serializeBuildableReference(doc, launchAction.getBuildableReference());
+      remoteRunnableElem.appendChild(refElem);
 
-    Element refElem = serializeBuildableReference(doc, launchAction.getBuildableReference());
-    productRunnableElem.appendChild(refElem);
+      // Yes, this appears to be duplicated in Xcode as well..
+      Element refElem2 = serializeBuildableReference(doc, launchAction.getBuildableReference());
+      launchActionElem.appendChild(refElem2);
+    } else {
+      Element productRunnableElem = doc.createElement("BuildableProductRunnable");
+      launchActionElem.appendChild(productRunnableElem);
+      Element refElem = serializeBuildableReference(doc, launchAction.getBuildableReference());
+      productRunnableElem.appendChild(refElem);
+    }
 
     return launchActionElem;
   }

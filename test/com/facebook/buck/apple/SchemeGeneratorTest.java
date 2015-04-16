@@ -104,6 +104,7 @@ public class SchemeGeneratorTest {
         ImmutableSet.<PBXTarget>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        Optional.<String>absent(),
         SchemeActionType.DEFAULT_CONFIG_NAMES,
         targetToProjectPathMapBuilder.build());
 
@@ -177,6 +178,7 @@ public class SchemeGeneratorTest {
         ImmutableSet.of(testTarget),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        Optional.<String>absent(),
         SchemeActionType.DEFAULT_CONFIG_NAMES,
         targetToProjectPathMapBuilder.build());
 
@@ -255,6 +257,7 @@ public class SchemeGeneratorTest {
         ImmutableSet.of(testBundleTarget),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        Optional.<String>absent(),
         SchemeActionType.DEFAULT_CONFIG_NAMES,
         targetToProjectPathMapBuilder.build());
 
@@ -326,6 +329,7 @@ public class SchemeGeneratorTest {
         ImmutableSet.<PBXTarget>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        Optional.<String>absent(),
         SchemeActionType.DEFAULT_CONFIG_NAMES,
         targetToProjectPathMapBuilder.build());
 
@@ -377,6 +381,7 @@ public class SchemeGeneratorTest {
         ImmutableSet.<PBXTarget>of(),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        Optional.<String>absent(),
         SchemeActionType.DEFAULT_CONFIG_NAMES,
         targetToProjectPathMapBuilder.build());
 
@@ -455,6 +460,7 @@ public class SchemeGeneratorTest {
           ImmutableSet.<PBXTarget>of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+          Optional.<String>absent(),
           SchemeActionType.DEFAULT_CONFIG_NAMES,
           targetToProjectPathMapBuilder.build());
 
@@ -480,6 +486,7 @@ public class SchemeGeneratorTest {
           ImmutableSet.<PBXTarget>of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+          Optional.<String>absent(),
           SchemeActionType.DEFAULT_CONFIG_NAMES,
           ImmutableMap.of(rootTarget, pbxprojectPath));
 
@@ -508,6 +515,7 @@ public class SchemeGeneratorTest {
           ImmutableSet.<PBXTarget>of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+          Optional.<String>absent(),
           SchemeActionType.DEFAULT_CONFIG_NAMES,
           ImmutableMap.of(rootTarget, pbxprojectPath));
 
@@ -533,6 +541,7 @@ public class SchemeGeneratorTest {
           ImmutableSet.<PBXTarget>of(),
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+          Optional.<String>absent(),
           SchemeActionType.DEFAULT_CONFIG_NAMES,
           ImmutableMap.of(rootTarget, pbxprojectPath));
       Path schemePath = schemeGenerator.writeScheme();
@@ -579,6 +588,7 @@ public class SchemeGeneratorTest {
         ImmutableSet.of(testBundleTarget),
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        Optional.<String>absent(),
         SchemeActionType.DEFAULT_CONFIG_NAMES,
         targetToProjectPathMapBuilder.build());
 
@@ -654,5 +664,107 @@ public class SchemeGeneratorTest {
     String archiveActionBuildConfigurationBlueprintIdentifier =
         (String) archiveActionBuildConfigurationExpr.evaluate(scheme, XPathConstants.STRING);
     assertThat(archiveActionBuildConfigurationBlueprintIdentifier, equalTo("Release"));
+  }
+
+  @Test
+  public void launchActionShouldNotContainRemoteRunnableWhenNotProvided() throws Exception {
+    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
+
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule", ProductType.STATIC_LIBRARY);
+    rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+
+    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
+
+    SchemeGenerator schemeGenerator = new SchemeGenerator(
+        projectFilesystem,
+        Optional.of(rootTarget),
+        ImmutableSet.of(rootTarget),
+        ImmutableSet.<PBXTarget>of(),
+        ImmutableSet.<PBXTarget>of(),
+        "TestScheme",
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        Optional.<String>absent(),
+        SchemeActionType.DEFAULT_CONFIG_NAMES,
+        targetToProjectPathMapBuilder.build());
+
+    Path schemePath = schemeGenerator.writeScheme();
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+
+    XPath remoteRunnableLaunchActionXPath = xpathFactory.newXPath();
+    XPathExpression remoteRunnableLaunchActionExpr =
+        remoteRunnableLaunchActionXPath.compile("//LaunchAction/RemoteRunnable");
+    NodeList remoteRunnables = (NodeList) remoteRunnableLaunchActionExpr.evaluate(
+        scheme, XPathConstants.NODESET);
+
+    assertThat(remoteRunnables.getLength(), equalTo(0));
+  }
+
+  @Test
+  public void launchActionShouldContainRemoteRunnableWhenProvided() throws Exception {
+    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
+
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule", ProductType.STATIC_LIBRARY);
+    rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+
+    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
+
+    SchemeGenerator schemeGenerator = new SchemeGenerator(
+        projectFilesystem,
+        Optional.of(rootTarget),
+        ImmutableSet.of(rootTarget),
+        ImmutableSet.<PBXTarget>of(),
+        ImmutableSet.<PBXTarget>of(),
+        "TestScheme",
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        Optional.of("/RemoteApp"),
+        SchemeActionType.DEFAULT_CONFIG_NAMES,
+        targetToProjectPathMapBuilder.build());
+
+    Path schemePath = schemeGenerator.writeScheme();
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+
+    XPath remoteRunnableLaunchActionXPath = xpathFactory.newXPath();
+    XPathExpression remoteRunnableLaunchActionExpr =
+        remoteRunnableLaunchActionXPath.compile("//LaunchAction/RemoteRunnable");
+    NodeList remoteRunnables = (NodeList) remoteRunnableLaunchActionExpr.evaluate(
+        scheme, XPathConstants.NODESET);
+
+    assertThat(remoteRunnables.getLength(), equalTo(1));
+
+    Node remoteRunnable = remoteRunnables.item(0);
+    assertThat(
+        remoteRunnable.getAttributes().getNamedItem("BundleIdentifier").getNodeValue(),
+        equalTo("com.apple.springboard"));
+    assertThat(
+        remoteRunnable.getAttributes().getNamedItem("RemotePath").getNodeValue(),
+        equalTo("/RemoteApp"));
+
+    XPath buildXpath = xpathFactory.newXPath();
+    XPathExpression buildExpr =
+        buildXpath.compile("//LaunchAction//BuildableReference/@BlueprintIdentifier");
+    NodeList buildNodes = (NodeList) buildExpr.evaluate(scheme, XPathConstants.NODESET);
+
+    // Make sure both copies of the BuildableReference are present.
+    assertThat(buildNodes.getLength(), equalTo(2));
+    assertThat(buildNodes.item(0).getNodeValue(), equalTo("rootGID"));
+    assertThat(buildNodes.item(1).getNodeValue(), equalTo("rootGID"));
   }
 }

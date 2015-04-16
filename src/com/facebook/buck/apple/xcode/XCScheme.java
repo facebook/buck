@@ -161,10 +161,16 @@ public class XCScheme {
   public static class LaunchAction {
     BuildableReference buildableReference;
     private final String buildConfiguration;
+    private final Optional<String> remoteRunnablePath;
 
-    public LaunchAction(BuildableReference buildableReference, String buildConfiguration) {
+    public LaunchAction(
+        BuildableReference buildableReference,
+        String buildConfiguration,
+        Optional<String> remoteRunnablePath
+    ) {
       this.buildableReference = buildableReference;
       this.buildConfiguration = buildConfiguration;
+      this.remoteRunnablePath = remoteRunnablePath;
     }
 
     public BuildableReference getBuildableReference() {
@@ -173,6 +179,10 @@ public class XCScheme {
 
     public String getBuildConfiguration() {
       return buildConfiguration;
+    }
+
+    public Optional<String> getRemoteRunnablePath() {
+      return remoteRunnablePath;
     }
   }
 

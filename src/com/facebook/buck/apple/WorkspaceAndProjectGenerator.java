@@ -319,6 +319,7 @@ public class WorkspaceAndProjectGenerator {
             .append(synthesizedCombinedTestTargets),
         workspaceName,
         outputDirectory.resolve(workspaceName + ".xcworkspace"),
+        Optional.<String>absent(),
         XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(
             workspaceArguments),
         targetToProjectPathMapBuilder.build());
