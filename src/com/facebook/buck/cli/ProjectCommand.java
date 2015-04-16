@@ -66,6 +66,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -596,6 +597,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     workspaceArgs.actionConfigNames = Optional.of(ImmutableMap.<SchemeActionType, String>of());
     workspaceArgs.extraTests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     workspaceArgs.workspaceName = Optional.absent();
+    workspaceArgs.extraSchemes = Optional.of(ImmutableSortedMap.<String, BuildTarget>of());
+    workspaceArgs.isRemoteRunnable = Optional.absent();
     return workspaceArgs;
   }
 

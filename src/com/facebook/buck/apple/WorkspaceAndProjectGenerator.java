@@ -40,12 +40,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -57,13 +59,12 @@ public class WorkspaceAndProjectGenerator {
   private final XcodeWorkspaceConfigDescription.Arg workspaceArguments;
   private final BuildTarget workspaceBuildTarget;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
-  private final ImmutableSet<TargetNode<AppleTestDescription.Arg>> extraTestBundleTargetNodes;
   private final boolean combinedProject;
   private ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = ImmutableSet.of();
 
   private Optional<ProjectGenerator> combinedProjectGenerator;
   private Optional<ProjectGenerator> combinedTestsProjectGenerator = Optional.absent();
-  private Optional<SchemeGenerator> schemeGenerator = Optional.absent();
+  private Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
   private final String buildFileName;
   private final Function<TargetNode<?>, Path> outputPathOfNode;
 
@@ -88,8 +89,6 @@ public class WorkspaceAndProjectGenerator {
     this.buildFileName = buildFileName;
     this.outputPathOfNode = outputPathOfNode;
     this.combinedProjectGenerator = Optional.absent();
-    extraTestBundleTargetNodes = getExtraTestTargetNodes(
-        projectGraph, workspaceArguments.extraTests.get());
   }
 
   @VisibleForTesting
@@ -98,8 +97,8 @@ public class WorkspaceAndProjectGenerator {
   }
 
   @VisibleForTesting
-  Optional<SchemeGenerator> getSchemeGenerator() {
-    return schemeGenerator;
+  Map<String, SchemeGenerator> getSchemeGenerators() {
+    return schemeGenerators;
   }
 
   /**
@@ -150,32 +149,44 @@ public class WorkspaceAndProjectGenerator {
         workspaceName,
         outputDirectory);
 
-    ImmutableSet<TargetNode<?>> orderedTargetNodes;
-    if (workspaceArguments.srcTarget.isPresent()) {
-      orderedTargetNodes = AppleBuildRules.getSchemeBuildableTargetNodes(
-          projectGraph,
-          Preconditions.checkNotNull(
-              projectGraph.get(
-                  workspaceArguments.srcTarget.get().getBuildTarget())));
-    } else {
-      orderedTargetNodes = ImmutableSet.of();
-    }
+    ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder =
+        ImmutableMap.builder();
+    ImmutableSetMultimap.Builder<String, TargetNode<?>> orderedTargetNodesBuilder =
+        ImmutableSetMultimap.builder();
+    ImmutableSetMultimap.Builder<String, TargetNode<?>>
+        buildForTestNodesBuilder = ImmutableSetMultimap.builder();
+    ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
+        groupedTestsBuilder = ImmutableMultimap.builder();
+    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
+        ungroupedTestsBuilder = ImmutableSetMultimap.builder();
 
-    ImmutableSet<TargetNode<AppleTestDescription.Arg>> selectedTests = getOrderedTestNodes(
+    buildWorkspaceSchemes(
         projectGraph,
-        orderedTargetNodes,
-        extraTestBundleTargetNodes);
-    ImmutableList<TargetNode<?>> buildForTestNodes =
-        TopologicalSort.sort(
-            projectGraph,
-            Predicates.in(getTransitiveDepsAndInputs(selectedTests, orderedTargetNodes)));
+        projectGeneratorOptions.contains(ProjectGenerator.Option.INCLUDE_TESTS),
+        groupableTests,
+        workspaceName,
+        workspaceArguments,
+        schemeConfigsBuilder,
+        orderedTargetNodesBuilder,
+        buildForTestNodesBuilder,
+        groupedTestsBuilder,
+        ungroupedTestsBuilder);
 
-    GroupedTestResults groupedTestResults = groupTests(selectedTests);
+    ImmutableMap<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigs =
+        schemeConfigsBuilder.build();
+    ImmutableSetMultimap<String, TargetNode<?>> orderedTargetNodes =
+        orderedTargetNodesBuilder.build();
+    ImmutableSetMultimap<String, TargetNode<?>> buildForTestNodes =
+        buildForTestNodesBuilder.build();
+    ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>> groupedTests =
+        groupedTestsBuilder.build();
+    ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg>> ungroupedTests =
+        ungroupedTestsBuilder.build();
     Iterable<PBXTarget> synthesizedCombinedTestTargets = ImmutableList.of();
 
     ImmutableSet<BuildTarget> targetsInRequiredProjects = FluentIterable
-        .from(orderedTargetNodes)
-        .append(buildForTestNodes)
+        .from(orderedTargetNodes.values())
+        .append(buildForTestNodes.values())
         .transform(HasBuildTarget.TO_TARGET)
         .toSet();
     ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder =
@@ -194,7 +205,7 @@ public class WorkspaceAndProjectGenerator {
           buildFileName,
           projectGeneratorOptions,
           outputPathOfNode)
-          .setAdditionalCombinedTestTargets(groupedTestResults.getGroupedTests())
+          .setAdditionalCombinedTestTargets(groupedTests)
           .setTestsToGenerateAsStaticLibraries(groupableTests);
       combinedProjectGenerator = Optional.of(generator);
       generator.createXcodeProjects();
@@ -264,7 +275,7 @@ public class WorkspaceAndProjectGenerator {
         }
       }
 
-      if (!groupedTestResults.getGroupedTests().isEmpty()) {
+      if (!groupedTests.isEmpty()) {
         ProjectGenerator combinedTestsProjectGenerator = new ProjectGenerator(
             projectGraph,
             ImmutableSortedSet.<BuildTarget>of(),
@@ -275,7 +286,7 @@ public class WorkspaceAndProjectGenerator {
             projectGeneratorOptions,
             outputPathOfNode);
         combinedTestsProjectGenerator
-            .setAdditionalCombinedTestTargets(groupedTestResults.getGroupedTests())
+            .setAdditionalCombinedTestTargets(groupedTests)
             .createXcodeProjects();
         workspaceGenerator.addFilePath(combinedTestsProjectGenerator.getProjectPath());
         requiredBuildTargetsBuilder.addAll(combinedTestsProjectGenerator.getRequiredBuildTargets());
@@ -304,29 +315,128 @@ public class WorkspaceAndProjectGenerator {
           }
         };
 
-    SchemeGenerator schemeGenerator = new SchemeGenerator(
-        projectFilesystem,
-        workspaceArguments.srcTarget.transform(
-            Functions.forMap(buildTargetToTarget)),
-        Iterables.transform(orderedTargetNodes, targetNodeToPBXTargetTransformer),
-        FluentIterable
-            .from(buildForTestNodes)
-            .transform(targetNodeToPBXTargetTransformer)
-            .append(synthesizedCombinedTestTargets),
-        FluentIterable
-            .from(groupedTestResults.getUngroupedTests())
-            .transform(targetNodeToPBXTargetTransformer)
-            .append(synthesizedCombinedTestTargets),
+    writeWorkspaceSchemes(
         workspaceName,
-        outputDirectory.resolve(workspaceName + ".xcworkspace"),
-        Optional.<String>absent(),
-        XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(
-            workspaceArguments),
-        targetToProjectPathMapBuilder.build());
-    schemeGenerator.writeScheme();
-    this.schemeGenerator = Optional.of(schemeGenerator);
+        outputDirectory,
+        schemeConfigs,
+        orderedTargetNodes,
+        buildForTestNodes,
+        ungroupedTests,
+        targetToProjectPathMapBuilder.build(),
+        synthesizedCombinedTestTargets,
+        targetNodeToPBXTargetTransformer,
+        Functions.forMap(buildTargetToTarget));
 
     return workspacePath;
+  }
+
+  private static void buildWorkspaceSchemes(
+      TargetGraph projectGraph,
+      boolean includeProjectTests,
+      ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests,
+      String workspaceName,
+      XcodeWorkspaceConfigDescription.Arg workspaceArguments,
+      ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder,
+      ImmutableSetMultimap.Builder<String, TargetNode<?>> orderedTargetNodesBuilder,
+      ImmutableSetMultimap.Builder<String, TargetNode<?>>
+        buildForTestNodesBuilder,
+      ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
+        groupedTestsBuilder,
+      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
+        ungroupedTestsBuilder) {
+    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
+        extraTestNodesBuilder = ImmutableSetMultimap.builder();
+    addWorkspaceScheme(
+        projectGraph,
+        workspaceName,
+        workspaceArguments,
+        schemeConfigsBuilder,
+        orderedTargetNodesBuilder,
+        extraTestNodesBuilder);
+    addExtraWorkspaceSchemes(
+        projectGraph,
+        workspaceArguments.extraSchemes.get(),
+        schemeConfigsBuilder,
+        orderedTargetNodesBuilder,
+        extraTestNodesBuilder);
+    ImmutableSetMultimap<String, TargetNode<?>> orderedTargetNodes =
+        orderedTargetNodesBuilder.build();
+    ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg>>
+        extraTestNodes = extraTestNodesBuilder.build();
+
+    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
+        selectedTestsBuilder = ImmutableSetMultimap.builder();
+    buildWorkspaceSchemeTests(
+        projectGraph,
+        includeProjectTests,
+        orderedTargetNodes,
+        extraTestNodes,
+        selectedTestsBuilder,
+        buildForTestNodesBuilder);
+    ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg>> selectedTests =
+        selectedTestsBuilder.build();
+
+    groupSchemeTests(
+        groupableTests,
+        selectedTests,
+        groupedTestsBuilder,
+        ungroupedTestsBuilder);
+  }
+
+  private static void addWorkspaceScheme(
+      TargetGraph projectGraph,
+      String schemeName,
+      XcodeWorkspaceConfigDescription.Arg schemeArguments,
+      ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder,
+      ImmutableSetMultimap.Builder<String, TargetNode<?>> orderedTargetNodesBuilder,
+      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
+        extraTestNodesBuilder) {
+    LOG.debug("Adding scheme %s", schemeName);
+    schemeConfigsBuilder.put(schemeName, schemeArguments);
+    if (schemeArguments.srcTarget.isPresent()) {
+      orderedTargetNodesBuilder.putAll(
+          schemeName,
+          AppleBuildRules.getSchemeBuildableTargetNodes(
+              projectGraph,
+              Preconditions.checkNotNull(
+                  projectGraph.get(
+                      schemeArguments.srcTarget.get().getBuildTarget()))));
+    }
+
+    extraTestNodesBuilder.putAll(
+        schemeName,
+        getExtraTestTargetNodes(
+            projectGraph,
+            schemeArguments.extraTests.get()));
+  }
+
+  private static void addExtraWorkspaceSchemes(
+      TargetGraph projectGraph,
+      ImmutableSortedMap<String, BuildTarget> extraSchemes,
+      ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder,
+      ImmutableSetMultimap.Builder<String, TargetNode<?>> orderedTargetNodesBuilder,
+      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
+        extraTestNodesBuilder) {
+    for (Map.Entry<String, BuildTarget> extraSchemeEntry : extraSchemes.entrySet()) {
+      BuildTarget extraSchemeTarget = extraSchemeEntry.getValue();
+      TargetNode<?> extraSchemeNode = projectGraph.get(extraSchemeTarget);
+      if (extraSchemeNode == null ||
+          extraSchemeNode.getType() != XcodeWorkspaceConfigDescription.TYPE) {
+        throw new HumanReadableException(
+            "Extra scheme target '%s' should be of type 'xcode_workspace_config'",
+            extraSchemeTarget);
+      }
+      XcodeWorkspaceConfigDescription.Arg extraSchemeArg =
+          (XcodeWorkspaceConfigDescription.Arg) extraSchemeNode.getConstructorArg();
+      String schemeName = extraSchemeEntry.getKey();
+      addWorkspaceScheme(
+          projectGraph,
+          schemeName,
+          extraSchemeArg,
+          schemeConfigsBuilder,
+          orderedTargetNodesBuilder,
+          extraTestNodesBuilder);
+    }
   }
 
   private static ImmutableSet<BuildTarget> filterRulesForProjectDirectory(
@@ -369,19 +479,21 @@ public class WorkspaceAndProjectGenerator {
    * Find tests to run.
    *
    * @param targetGraph input target graph
+   * @param includeProjectTests whether to include tests of nodes in the project
    * @param orderedTargetNodes target nodes for which to fetch tests for
    * @param extraTestBundleTargets extra tests to include
    *
    * @return test targets that should be run.
    */
-  private ImmutableSet<TargetNode<AppleTestDescription.Arg>> getOrderedTestNodes(
+  private static ImmutableSet<TargetNode<AppleTestDescription.Arg>> getOrderedTestNodes(
       TargetGraph targetGraph,
+      boolean includeProjectTests,
       ImmutableSet<TargetNode<?>> orderedTargetNodes,
       ImmutableSet<TargetNode<AppleTestDescription.Arg>> extraTestBundleTargets) {
     LOG.debug("Getting ordered test target nodes for %s", orderedTargetNodes);
     ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg>> testsBuilder =
         ImmutableSet.builder();
-    if (projectGeneratorOptions.contains(ProjectGenerator.Option.INCLUDE_TESTS)) {
+    if (includeProjectTests) {
       for (TargetNode<?> node : orderedTargetNodes) {
         if (!(node.getConstructorArg() instanceof HasTests)) {
           continue;
@@ -417,11 +529,13 @@ public class WorkspaceAndProjectGenerator {
   /**
    * Find transitive dependencies of inputs for building.
    *
+   * @param projectGraph {@link TargetGraph} containing nodes
    * @param nodes Nodes to fetch dependencies for.
    * @param excludes Nodes to exclude from dependencies list.
    * @return targets and their dependencies that should be build.
    */
-  private ImmutableSet<TargetNode<?>> getTransitiveDepsAndInputs(
+  private static ImmutableSet<TargetNode<?>> getTransitiveDepsAndInputs(
+      final TargetGraph projectGraph,
       Iterable<? extends TargetNode<?>> nodes,
       final ImmutableSet<TargetNode<?>> excludes) {
     return FluentIterable
@@ -466,28 +580,111 @@ public class WorkspaceAndProjectGenerator {
     return builder.build();
   }
 
+  private static void buildWorkspaceSchemeTests(
+      TargetGraph projectGraph,
+      boolean includeProjectTests,
+      ImmutableSetMultimap<String, TargetNode<?>> orderedTargetNodes,
+      ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg>> extraTestNodes,
+      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
+        selectedTestsBuilder,
+      ImmutableSetMultimap.Builder<String, TargetNode<?>>
+        buildForTestNodesBuilder) {
+    for (String schemeName : orderedTargetNodes.keySet()) {
+      ImmutableSet<TargetNode<?>> targetNodes =
+          orderedTargetNodes.get(schemeName);
+      ImmutableSet<TargetNode<AppleTestDescription.Arg>> testNodes =
+          getOrderedTestNodes(
+              projectGraph,
+              includeProjectTests,
+              targetNodes,
+              extraTestNodes.get(schemeName));
+      selectedTestsBuilder.putAll(schemeName, testNodes);
+      buildForTestNodesBuilder.putAll(
+          schemeName,
+          TopologicalSort.sort(
+              projectGraph,
+              Predicates.in(getTransitiveDepsAndInputs(projectGraph, testNodes, targetNodes))));
+    }
+  }
+
   @VisibleForTesting
-  GroupedTestResults groupTests(
-      ImmutableSet<TargetNode<AppleTestDescription.Arg>> tests) {
-    // Put tests in groups.
-    ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        groupsBuilder = ImmutableMultimap.builder();
-    ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg>> ungroupedTestsBuilder =
-        ImmutableSet.builder();
-    for (TargetNode<AppleTestDescription.Arg> test : tests) {
+  static void groupSchemeTests(
+      ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests,
+      ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg>> selectedTests,
+      ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
+        groupedTestsBuilder,
+      ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
+        ungroupedTestsBuilder) {
+    for (Map.Entry<String, TargetNode<AppleTestDescription.Arg>> testEntry :
+             selectedTests.entries()) {
+      String schemeName = testEntry.getKey();
+      TargetNode<AppleTestDescription.Arg> test = testEntry.getValue();
       if (groupableTests.contains(test)) {
         Preconditions.checkState(
             test.getConstructorArg().canGroup(),
             "Groupable test should actually be groupable.");
-        groupsBuilder.put(
+        groupedTestsBuilder.put(
             AppleTestBundleParamsKey.fromAppleTestDescriptionArg(test.getConstructorArg()),
             test);
       } else {
-        ungroupedTestsBuilder.add(test);
+        ungroupedTestsBuilder.put(schemeName, test);
       }
     }
-    return GroupedTestResults.of(
-        groupsBuilder.build(),
-        ungroupedTestsBuilder.build());
+  }
+
+  private void writeWorkspaceSchemes(
+      String workspaceName,
+      Path outputDirectory,
+      ImmutableMap<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigs,
+      ImmutableSetMultimap<String, TargetNode<?>> orderedTargetNodes,
+      ImmutableSetMultimap<String, TargetNode<?>> buildForTestNodes,
+      ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg>> ungroupedTests,
+      ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
+      Iterable<PBXTarget> synthesizedCombinedTestTargets,
+      Function<TargetNode<?>, PBXTarget> targetNodeToPBXTargetTransformer,
+      Function<BuildTarget, PBXTarget> buildTargetToPBXTargetTransformer) throws IOException {
+    for (Map.Entry<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigEntry :
+             schemeConfigs.entrySet()) {
+      String schemeName = schemeConfigEntry.getKey();
+      boolean isMainScheme = schemeName.equals(workspaceName);
+      XcodeWorkspaceConfigDescription.Arg schemeConfigArg = schemeConfigEntry.getValue();
+      Iterable<PBXTarget> orderedBuildTargets = FluentIterable
+          .from(orderedTargetNodes.get(schemeName))
+          .transform(targetNodeToPBXTargetTransformer)
+          .toSet();
+      FluentIterable<PBXTarget> orderedBuildTestTargets = FluentIterable
+          .from(buildForTestNodes.get(schemeName))
+          .transform(targetNodeToPBXTargetTransformer);
+      if (isMainScheme) {
+        orderedBuildTestTargets = orderedBuildTestTargets.append(synthesizedCombinedTestTargets);
+      }
+      FluentIterable<PBXTarget> orderedRunTestTargets = FluentIterable
+          .from(ungroupedTests.get(schemeName))
+          .transform(targetNodeToPBXTargetTransformer);
+      if (isMainScheme) {
+        orderedRunTestTargets = orderedRunTestTargets.append(synthesizedCombinedTestTargets);
+      }
+      Optional<String> remoteRunnablePath;
+      if (schemeConfigArg.isRemoteRunnable.or(false)) {
+        // XXX TODO(user): Figure out the actual name of the binary to launch
+        remoteRunnablePath = Optional.of("/" + workspaceName);
+      } else {
+        remoteRunnablePath = Optional.absent();
+      }
+      SchemeGenerator schemeGenerator = new SchemeGenerator(
+          projectFilesystem,
+          schemeConfigArg.srcTarget.transform(buildTargetToPBXTargetTransformer),
+          orderedBuildTargets,
+          orderedBuildTestTargets,
+          orderedRunTestTargets,
+          schemeName,
+          outputDirectory.resolve(workspaceName + ".xcworkspace"),
+          remoteRunnablePath,
+          XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(
+              workspaceArguments),
+          targetToProjectPathMap);
+      schemeGenerator.writeScheme();
+      schemeGenerators.put(schemeName, schemeGenerator);
+    }
   }
 }

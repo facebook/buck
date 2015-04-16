@@ -29,6 +29,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.HashMap;
@@ -84,5 +85,7 @@ public class XcodeWorkspaceConfigDescription
     public Optional<ImmutableSortedSet<BuildTarget>> extraTests;
     public Optional<String> workspaceName;
     public Optional<ImmutableMap<SchemeActionType, String>> actionConfigNames;
+    public Optional<ImmutableSortedMap<String, BuildTarget>> extraSchemes;
+    public Optional<Boolean> isRemoteRunnable;
   }
 }
