@@ -1,0 +1,16 @@
+EMPTY_CONFIGS = {
+  'Debug': {},
+  'Release': {},
+}
+
+apple_test(
+  name = 'TestAppTests',
+  extension = 'octest',
+  configs = EMPTY_CONFIGS,
+)
+
+xcode_workspace_config(
+  name = 'workspace',
+  workspace_name = 'TestAppBinary',
+  extra_tests = [':TestAppTests'],
+)

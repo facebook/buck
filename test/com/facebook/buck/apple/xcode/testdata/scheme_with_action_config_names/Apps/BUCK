@@ -1,0 +1,17 @@
+EMPTY_CONFIGS = {
+  'Debug': {},
+  'Release': {},
+}
+
+apple_binary(
+  name = 'TestAppBinary',
+  configs = EMPTY_CONFIGS,
+)
+
+xcode_workspace_config(
+  name = 'workspace',
+  src_target = '//Apps:TestAppBinary',
+  action_config_names = {
+    'profile': 'Profile',
+  },
+)

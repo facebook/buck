@@ -50,4 +50,13 @@ public class Optionals {
     return f.apply(optional.get());
   }
 
+  public static <T> Function<T, Optional<T>> toOptional() {
+    return new Function<T, Optional<T>>() {
+      @Override
+      public Optional<T> apply(T input) {
+        return Optional.of(input);
+      }
+    };
+  }
+
 }

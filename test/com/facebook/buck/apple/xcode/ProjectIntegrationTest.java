@@ -117,6 +117,48 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void schemeWithActionConfigNames() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "scheme_with_action_config_names",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void schemeWithExtraTests() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "scheme_with_extra_tests",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void schemeWithExtraTestsWithoutSrcTarget() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "scheme_with_extra_tests_without_src_target",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
   public void generatingCombinedProject() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
