@@ -1,0 +1,4 @@
+apple_binary(
+  name = 'TestApp',
+  srcs = ['main.c'],
+)

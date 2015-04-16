@@ -136,6 +136,36 @@ public class AppleBinaryIntegrationTest {
     assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
   }
 
+  @Test
+  public void testAppleXcodeError() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    String expectedError =
+        "Apps/TestApp/main.c:2:3: error: use of undeclared identifier 'SomeType'\n" +
+        "  SomeType a;\n" +
+        "  ^\n";
+    String expectedWarning =
+        "Apps/TestApp/main.c:3:10: warning: implicit conversion from 'double' to 'int' changes " +
+        "value from 0.42 to 0 [-Wliteral-conversion]\n" +
+        "  return 0.42;\n" +
+        "  ~~~~~~ ^~~~\n";
+    String expectedSummary = "1 warning and 1 error generated.\n";
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_xcode_error", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult buildResult =
+        workspace.runBuckCommand("build", "//Apps/TestApp:TestApp");
+    buildResult.assertFailure();
+    String stderr = buildResult.getStderr();
+
+    assertTrue(
+        stderr.contains(expectedError) &&
+        stderr.contains(expectedWarning) &&
+        stderr.contains(expectedSummary));
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {
