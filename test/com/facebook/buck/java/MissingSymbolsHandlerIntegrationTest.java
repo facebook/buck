@@ -44,6 +44,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class MissingSymbolsHandlerIntegrationTest {
 
@@ -104,10 +105,11 @@ public class MissingSymbolsHandlerIntegrationTest {
     ProjectWorkspace.ProcessResult processResult = workspace.runBuckBuild("//java/com/example/b:b");
     processResult.assertFailure("Build with missing dependencies should fail.");
 
-    String expectedDependencyOutput =
-        "java/com/example/b/BUCK (:b) is missing deps:\n" +
+    String expectedDependencyOutput = String.format(
+        "%s (:b) is missing deps:\n" +
         "    ':moreb',\n" +
-        "    '//java/com/example/a:a',\n";
+        "    '//java/com/example/a:a',\n",
+        Paths.get("java/com/example/b/BUCK"));
 
     assertThat(
         "Output should describe the missing dependency.",
@@ -126,10 +128,11 @@ public class MissingSymbolsHandlerIntegrationTest {
         "//java/com/example/b:test");
     processResult.assertFailure("Test with missing dependencies should fail.");
 
-    String expectedDependencyOutput =
-        "java/com/example/b/BUCK (:test) is missing deps:\n" +
+    String expectedDependencyOutput = String.format(
+        "%s (:test) is missing deps:\n" +
         "    ':moreb',\n" +
-        "    '//java/com/example/a:a',\n";
+        "    '//java/com/example/a:a',\n",
+        Paths.get("java/com/example/b/BUCK"));
 
     assertThat(
         "Output should describe the missing dependency.",

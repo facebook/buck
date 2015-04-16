@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -166,7 +167,8 @@ public class JavaSymbolFinder {
               List<String> srcs = (List<String>) Preconditions.checkNotNull(ruleMap.get("srcs"));
               if (isSourceFilePathInSrcsList(sourceFile, srcs, buckFile.getParent())) {
                 Path buckFileDir = buckFile.getParent();
-                String baseName = "//" + (buckFileDir != null ? buckFileDir : "");
+                String baseName = "//" + (buckFileDir != null ?
+                    MorePaths.pathWithUnixSeparators(buckFileDir) : "");
                 String shortName = (String) ruleMap.get("name");
                 sourceFileTargetsMultimap.put(
                     sourceFile,
