@@ -113,12 +113,6 @@ public class Project {
   public static final String ANDROID_APK_DIR = BuckConstant.BUCK_OUTPUT_DIRECTORY + "/gen";
 
   /**
-   * Prefix for build targets whose output will be in {@link #ANDROID_GEN_DIR}.
-   */
-  private static final String ANDROID_GEN_BUILD_TARGET_PREFIX =
-      String.format("//%s/", ANDROID_GEN_DIR);
-
-  /**
    * Path to the intellij.py script that is used to transform the JSON written by this file.
    */
   private static final String PATH_TO_INTELLIJ_PY = System.getProperty(
@@ -843,8 +837,6 @@ public class Project {
         } else if (dep instanceof NdkLibrary) {
           String moduleName = getIntellijNameForRule(dep);
           dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
-        } else if (dep.getFullyQualifiedName().startsWith(ANDROID_GEN_BUILD_TARGET_PREFIX)) {
-          return depsToVisit;
         } else if ((dep instanceof JavaLibrary) ||
             dep instanceof AndroidResource) {
           String moduleName = getIntellijNameForRule(dep);

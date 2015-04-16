@@ -90,12 +90,6 @@ public class ProjectTest {
       @Nullable JavaPackageFinder javaPackageFinder) throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
-    // java_library //buck-out/android/com/facebook:R
-    BuildRule rRule = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//buck-out/android/com/facebook:R"))
-        .addSrc(Paths.get("buck-out/android/com/facebook/R.java"))
-        .build(ruleResolver);
-
     // prebuilt_jar //third_party/guava:guava
     guava = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/guava:guava"))
@@ -147,7 +141,6 @@ public class ProjectTest {
     BuildRule baseRule = AndroidLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
         .addSrc(Paths.get("Base.java"))
-        .addDep(rRule.getBuildTarget())
         .addDep(exportLib.getBuildTarget())
         .addDep(childRule.getBuildTarget())
         .addDep(androidResRule.getBuildTarget())
