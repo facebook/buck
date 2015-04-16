@@ -403,6 +403,14 @@ public class WorkspaceAndProjectGenerator {
                       schemeArguments.srcTarget.get().getBuildTarget()))));
     }
 
+    for (BuildTarget extraTarget : schemeArguments.extraTargets.get()) {
+      orderedTargetNodesBuilder.putAll(
+          schemeName,
+          AppleBuildRules.getSchemeBuildableTargetNodes(
+              projectGraph,
+              Preconditions.checkNotNull(projectGraph.get(extraTarget))));
+    }
+
     extraTestNodesBuilder.putAll(
         schemeName,
         getExtraTestTargetNodes(

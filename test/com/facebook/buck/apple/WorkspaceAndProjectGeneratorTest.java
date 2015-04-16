@@ -1012,6 +1012,99 @@ public class WorkspaceAndProjectGeneratorTest {
             equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
   }
 
+  @Test
+  public void targetsForWorkspaceWithExtraTargets() throws IOException {
+    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "FooLib").build();
+    TargetNode<AppleNativeTargetDescriptionArg> fooLib = AppleLibraryBuilder
+        .createBuilder(fooLibTarget)
+        .build();
+
+    BuildTarget barLibTarget = BuildTarget.builder("//bar", "BarLib").build();
+    TargetNode<AppleNativeTargetDescriptionArg> barLib = AppleLibraryBuilder
+        .createBuilder(barLibTarget)
+        .build();
+
+    BuildTarget bazLibTarget = BuildTarget.builder("//baz", "BazLib").build();
+    TargetNode<AppleNativeTargetDescriptionArg> bazLib = AppleLibraryBuilder
+        .createBuilder(bazLibTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
+        .build();
+
+    TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
+        .createBuilder(BuildTarget.builder("//foo", "workspace").build())
+        .setWorkspaceName(Optional.of("workspace"))
+        .setSrcTarget(Optional.of(fooLibTarget))
+        .setExtraTargets(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        fooLib, barLib, bazLib, workspaceNode);
+
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        targetGraph,
+        workspaceNode.getConstructorArg(),
+        workspaceNode.getBuildTarget(),
+        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
+        false /* combinedProject */,
+        "BUCK",
+        getOutputPathOfNodeFunction(targetGraph));
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    ProjectGenerator fooProjectGenerator =
+        projectGenerators.get(Paths.get("foo"));
+    ProjectGenerator barProjectGenerator =
+        projectGenerators.get(Paths.get("bar"));
+    ProjectGenerator bazProjectGenerator =
+        projectGenerators.get(Paths.get("baz"));
+
+    assertNotNull(
+        "The Foo project should have been generated",
+        fooProjectGenerator);
+
+    assertNotNull(
+        "The Bar project should have been generated",
+        barProjectGenerator);
+
+    assertNotNull(
+        "The Baz project should have been generated",
+        bazProjectGenerator);
+
+    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
+        fooProjectGenerator.getGeneratedProject(),
+        "//foo:FooLib");
+    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
+        barProjectGenerator.getGeneratedProject(),
+        "//bar:BarLib");
+    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
+        bazProjectGenerator.getGeneratedProject(),
+        "//baz:BazLib");
+
+    XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
+    XCScheme.BuildAction mainSchemeBuildAction = mainScheme.getBuildAction().get();
+    // I wish we could use Hamcrest contains() here, but we hit
+    // https://code.google.com/p/hamcrest/issues/detail?id=190 if we do that.
+    assertThat(
+        mainSchemeBuildAction.getBuildActionEntries(),
+        hasSize(3));
+    assertThat(
+        mainSchemeBuildAction.getBuildActionEntries().get(0),
+        withNameAndBuildingFor(
+            "FooLib",
+            equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+    assertThat(
+        mainSchemeBuildAction.getBuildActionEntries().get(1),
+        withNameAndBuildingFor(
+            "BarLib",
+            equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+    assertThat(
+        mainSchemeBuildAction.getBuildActionEntries().get(2),
+        withNameAndBuildingFor(
+            "BazLib",
+            equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+  }
+
   private Matcher<XCScheme.BuildActionEntry> buildActionEntryWithName(String name) {
     return new FeatureMatcher<XCScheme.BuildActionEntry, String>(
         equalTo(name), "BuildActionEntry named", "name") {

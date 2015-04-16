@@ -83,6 +83,7 @@ public class XcodeWorkspaceConfigDescription
   public static class Arg {
     public Optional<BuildTarget> srcTarget;
     public Optional<ImmutableSortedSet<BuildTarget>> extraTests;
+    public Optional<ImmutableSortedSet<BuildTarget>> extraTargets;
     public Optional<String> workspaceName;
     public Optional<ImmutableMap<SchemeActionType, String>> actionConfigNames;
     public Optional<ImmutableSortedMap<String, BuildTarget>> extraSchemes;

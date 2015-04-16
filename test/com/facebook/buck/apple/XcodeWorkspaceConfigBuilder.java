@@ -45,6 +45,12 @@ public class XcodeWorkspaceConfigBuilder
     return this;
   }
 
+  public XcodeWorkspaceConfigBuilder setExtraTargets(
+      Optional<ImmutableSortedSet<BuildTarget>> extraTargets) {
+    arg.extraTargets = extraTargets;
+    return this;
+  }
+
   public XcodeWorkspaceConfigBuilder setWorkspaceName(Optional<String> workspaceName) {
     arg.workspaceName = workspaceName;
     return this;

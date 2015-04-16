@@ -596,6 +596,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     workspaceArgs.srcTarget = Optional.of(sourceTargetNode.getBuildTarget());
     workspaceArgs.actionConfigNames = Optional.of(ImmutableMap.<SchemeActionType, String>of());
     workspaceArgs.extraTests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    workspaceArgs.extraTargets = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     workspaceArgs.workspaceName = Optional.absent();
     workspaceArgs.extraSchemes = Optional.of(ImmutableSortedMap.<String, BuildTarget>of());
     workspaceArgs.isRemoteRunnable = Optional.absent();
