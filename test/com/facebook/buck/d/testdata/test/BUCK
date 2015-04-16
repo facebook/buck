@@ -1,0 +1,26 @@
+d_test(
+  name='failing_test',
+  srcs=[
+    'failing_test.d',
+  ],
+  deps=[
+    ':lib',
+  ],
+)
+
+d_test(
+  name='passing_test',
+  srcs=[
+    'passing_test.d',
+  ],
+  deps=[
+    ':lib',
+  ],
+)
+
+d_library(
+  name='lib',
+  srcs=[
+    'lib.d',
+  ],
+)

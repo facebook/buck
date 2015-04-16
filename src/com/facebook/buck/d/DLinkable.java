@@ -44,7 +44,7 @@ abstract class DLinkable extends AbstractBuildRule {
   DLinkable(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableList<SourcePath> srcs,
+      ImmutableSet<SourcePath> srcs,
       ImmutableList<String> prependFlags,
       Path output,
       Tool compiler) {

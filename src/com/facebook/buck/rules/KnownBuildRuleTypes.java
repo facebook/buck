@@ -62,6 +62,7 @@ import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.d.DBinaryDescription;
 import com.facebook.buck.d.DBuckConfig;
 import com.facebook.buck.d.DLibraryDescription;
+import com.facebook.buck.d.DTestDescription;
 import com.facebook.buck.extension.BuckExtensionDescription;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.ExplodingDownloader;
@@ -471,6 +472,7 @@ public class KnownBuildRuleTypes {
     builder.register(new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms));
     builder.register(new DBinaryDescription(dBuckConfig));
     builder.register(new DLibraryDescription(dBuckConfig));
+    builder.register(new DTestDescription(dBuckConfig));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());

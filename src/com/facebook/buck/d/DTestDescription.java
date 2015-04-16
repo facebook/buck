@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -29,13 +30,13 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class DLibraryDescription implements Description<DLibraryDescription.Arg> {
+public class DTestDescription implements Description<DTestDescription.Arg> {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("d_library");
+  private static final BuildRuleType TYPE = BuildRuleType.of("d_test");
 
   private final DBuckConfig dBuckConfig;
 
-  public DLibraryDescription(DBuckConfig dBuckConfig) {
+  public DTestDescription(DBuckConfig dBuckConfig) {
     this.dBuckConfig = dBuckConfig;
   }
 
@@ -54,16 +55,22 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new DLibrary(
+    return new DTest(
         params,
         new SourcePathResolver(resolver),
         args.srcs,
+        args.contacts.get(),
+        args.labels.get(),
+        resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),
         dBuckConfig.getDCompiler());
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
     public ImmutableSet<SourcePath> srcs;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<String>> contacts;
+    public Optional<ImmutableSortedSet<Label>> labels;
+    public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
+    public ImmutableSortedSet<BuildTarget> deps;
   }
 }
