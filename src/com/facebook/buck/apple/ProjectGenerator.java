@@ -56,6 +56,7 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -736,9 +737,11 @@ public class ProjectGenerator {
             Joiner
                 .on(' ')
                 .join(
-                    Iterables.concat(
-                        targetNode.getConstructorArg().linkerFlags.get(),
-                        collectRecursiveExportedLinkerFlags(ImmutableList.of(targetNode)))));
+                    MoreIterables.zipAndConcat(
+                        Iterables.cycle("-Xlinker"),
+                        Iterables.concat(
+                            targetNode.getConstructorArg().linkerFlags.get(),
+                            collectRecursiveExportedLinkerFlags(ImmutableList.of(targetNode))))));
 
     setTargetBuildConfigurations(
         new Function<String, Path>() {
@@ -884,14 +887,17 @@ public class ProjectGenerator {
             "PRODUCT_NAME", productName,
             "WRAPPER_EXTENSION", getExtensionString(key.getExtension())),
         ImmutableMap.of(
-            "FRAMEWORK_SEARCH_PATHS", Joiner.on(' ').join(
-                collectRecursiveFrameworkSearchPaths(tests)),
-            "LIBRARY_SEARCH_PATHS", Joiner.on(' ').join(
-                collectRecursiveLibrarySearchPaths(tests)),
-            "OTHER_LDFLAGS", Joiner.on(' ').join(
-                Iterables.concat(
-                    key.getLinkerFlags(),
-                    collectRecursiveExportedLinkerFlags(tests)))));
+            "FRAMEWORK_SEARCH_PATHS",
+            Joiner.on(' ').join(collectRecursiveFrameworkSearchPaths(tests)),
+            "LIBRARY_SEARCH_PATHS",
+            Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(tests)),
+            "OTHER_LDFLAGS",
+            Joiner.on(' ').join(
+                MoreIterables.zipAndConcat(
+                    Iterables.cycle("-Xlinker"),
+                    Iterables.concat(
+                        key.getLinkerFlags(),
+                        collectRecursiveExportedLinkerFlags(tests))))));
     buildableCombinedTestTargets.add(result.target);
   }
 

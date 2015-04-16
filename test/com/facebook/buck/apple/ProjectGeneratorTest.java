@@ -921,7 +921,7 @@ public class ProjectGeneratorTest {
         "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -986,7 +986,7 @@ public class ProjectGeneratorTest {
         "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -1024,7 +1024,7 @@ public class ProjectGeneratorTest {
         "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
