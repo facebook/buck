@@ -751,6 +751,9 @@ public class SchemeGeneratorTest {
 
     Node remoteRunnable = remoteRunnables.item(0);
     assertThat(
+        remoteRunnable.getAttributes().getNamedItem("runnableDebuggingMode").getNodeValue(),
+        equalTo("2"));
+    assertThat(
         remoteRunnable.getAttributes().getNamedItem("BundleIdentifier").getNodeValue(),
         equalTo("com.apple.springboard"));
     assertThat(

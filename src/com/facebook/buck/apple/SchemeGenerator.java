@@ -285,6 +285,7 @@ class SchemeGenerator {
     Optional<String> remoteRunnablePath = launchAction.getRemoteRunnablePath();
     if (remoteRunnablePath.isPresent()) {
       Element remoteRunnableElem = doc.createElement("RemoteRunnable");
+      remoteRunnableElem.setAttribute("runnableDebuggingMode", "2");
       remoteRunnableElem.setAttribute("BundleIdentifier", "com.apple.springboard");
       remoteRunnableElem.setAttribute("RemotePath", remoteRunnablePath.get());
       launchActionElem.appendChild(remoteRunnableElem);
