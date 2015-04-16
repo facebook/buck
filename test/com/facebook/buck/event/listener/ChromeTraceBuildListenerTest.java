@@ -22,6 +22,7 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -302,7 +303,7 @@ public class ChromeTraceBuildListenerTest {
         TimeZone.getTimeZone("America/Los_Angeles"),
         /* tracesToKeep */ 3);
     try {
-      tmpDir.getRoot().setReadOnly();
+      assumeTrue("Can make the root directory read-only", tmpDir.getRoot().setReadOnly());
       listener.outputTrace(new BuildId("BUILD_ID"));
       fail("Expected an exception.");
     } catch (HumanReadableException e) {
