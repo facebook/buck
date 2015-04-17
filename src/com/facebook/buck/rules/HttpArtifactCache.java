@@ -16,8 +16,11 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.HashingInputStream;
@@ -40,6 +43,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Set;
 
 import okio.BufferedSink;
 
@@ -58,7 +62,10 @@ public class HttpArtifactCache implements ArtifactCache {
   private final URL url;
   private final boolean doStore;
   private final ProjectFilesystem projectFilesystem;
+  private final BuckEventBus buckEventBus;
   private final HashFunction hashFunction;
+
+  private final Set<String> seenErrors = Sets.newConcurrentHashSet();
 
   public HttpArtifactCache(
       OkHttpClient fetchClient,
@@ -66,12 +73,14 @@ public class HttpArtifactCache implements ArtifactCache {
       URL url,
       boolean doStore,
       ProjectFilesystem projectFilesystem,
+      BuckEventBus buckEventBus,
       HashFunction hashFunction) {
     this.fetchClient = fetchClient;
     this.storeClient = storeClient;
     this.url = url;
     this.doStore = doStore;
     this.projectFilesystem = projectFilesystem;
+    this.buckEventBus = buckEventBus;
     this.hashFunction = hashFunction;
   }
 
@@ -92,12 +101,12 @@ public class HttpArtifactCache implements ArtifactCache {
     Response response = fetchCall(request);
 
     if (response.code() == HttpURLConnection.HTTP_NOT_FOUND) {
-      LOGGER.info("fetch(%s): cache miss", ruleKey);
+      LOGGER.info("fetch(%s, %s): cache miss", url, ruleKey);
       return CacheResult.MISS;
     }
 
     if (response.code() != HttpURLConnection.HTTP_OK) {
-      LOGGER.warn("fetch(%s): unexpected response: %d", ruleKey, response.code());
+      reportFailure("fetch(%s, %s): unexpected response: %d", url, ruleKey, response.code());
       return CacheResult.MISS;
     }
 
@@ -138,7 +147,7 @@ public class HttpArtifactCache implements ArtifactCache {
       // require that we exhaust the input stream before the connection can be reusable.
       try (OutputStream output = ByteStreams.nullOutputStream()) {
         if (ByteStreams.copy(input, output) != 0) {
-          LOGGER.warn("fetch(%s): unexpected end of input", ruleKey);
+          reportFailure("fetch(%s, %s): unexpected end of input", url, ruleKey);
           return CacheResult.MISS;
         }
       }
@@ -147,7 +156,7 @@ public class HttpArtifactCache implements ArtifactCache {
     // Now form the checksum on the file we got and compare it to the checksum form the
     // the HTTP header.  If it's incorrect, log this and return a miss.
     if (!expectedHashCode.equals(actualHashCode)) {
-      LOGGER.warn("fetch(%s): artifact had invalid checksum", ruleKey);
+      reportFailure("fetch(%s, %s): artifact had invalid checksum", url, ruleKey);
       projectFilesystem.deleteFileAtPath(temp);
       return CacheResult.MISS;
     }
@@ -155,7 +164,7 @@ public class HttpArtifactCache implements ArtifactCache {
     // Finally, move the temp file into it's final place.
     projectFilesystem.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
 
-    LOGGER.info("fetch(%s): cache hit", ruleKey);
+    LOGGER.info("fetch(%s, %s): cache hit", url, ruleKey);
     return CacheResult.HTTP_HIT;
   }
 
@@ -164,7 +173,13 @@ public class HttpArtifactCache implements ArtifactCache {
     try {
       return fetchImpl(ruleKey, output);
     } catch (IOException e) {
-      LOGGER.warn(e, "fetch(%s): IOException: %s", ruleKey, e.getMessage());
+      reportFailure(
+          e,
+          "fetch(%s, %s): %s: %s",
+          url,
+          ruleKey,
+          e.getClass().getName(),
+          e.getMessage());
       return CacheResult.MISS;
     }
   }
@@ -206,7 +221,7 @@ public class HttpArtifactCache implements ArtifactCache {
     Response response = storeCall(request);
 
     if (response.code() != HttpURLConnection.HTTP_ACCEPTED) {
-      LOGGER.warn("store(%s): unexpected response: %d", ruleKey, response.code());
+      reportFailure("store(%s, %s): unexpected response: %d", url, ruleKey, response.code());
     }
   }
 
@@ -218,7 +233,29 @@ public class HttpArtifactCache implements ArtifactCache {
     try {
       storeImpl(ruleKey, output);
     } catch (IOException e) {
-      LOGGER.warn(e, "store(%s): IOException: %s", ruleKey, e.getMessage());
+      reportFailure(
+          e,
+          "store(%s, %s): %s: %s",
+          url,
+          ruleKey,
+          e.getClass().getName(),
+          e.getMessage());
+    }
+  }
+
+  private void reportFailure(Exception exception, String format, Object... args) {
+    LOGGER.warn(exception, format, args);
+    reportFailureToEvenBus(format, args);
+  }
+
+  private void reportFailure(String format, Object... args) {
+    LOGGER.warn(format, args);
+    reportFailureToEvenBus(format, args);
+  }
+
+  private void reportFailureToEvenBus(String format, Object... args) {
+    if (seenErrors.add(format)) {
+      buckEventBus.post(ConsoleEvent.warning(format, args));
     }
   }
 

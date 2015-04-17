@@ -20,7 +20,10 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
@@ -46,6 +49,8 @@ import okio.Buffer;
 
 public class HttpArtifactCacheTest {
 
+  private static final BuckEventBus BUCK_EVENT_BUS =
+      new BuckEventBus(new IncrementingFakeClock(), new BuildId());
   private static final HashFunction HASH_FUNCTION = Hashing.crc32();
 
   private byte[] createArtifact(long length, HashCode code, String contents) throws IOException {
@@ -102,6 +107,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             new FakeProjectFilesystem(),
+            BUCK_EVENT_BUS,
             HASH_FUNCTION) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
@@ -133,6 +139,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
+            BUCK_EVENT_BUS,
             HASH_FUNCTION) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
@@ -161,6 +168,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             new FakeProjectFilesystem(),
+            BUCK_EVENT_BUS,
             HASH_FUNCTION) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
@@ -187,6 +195,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
+            BUCK_EVENT_BUS,
             HASH_FUNCTION) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
@@ -215,6 +224,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
+            BUCK_EVENT_BUS,
             HASH_FUNCTION) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
@@ -243,6 +253,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
+            BUCK_EVENT_BUS,
             HASH_FUNCTION) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
@@ -270,6 +281,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
+            BUCK_EVENT_BUS,
             HASH_FUNCTION) {
           @Override
           protected Response storeCall(Request request) throws IOException {
@@ -301,6 +313,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
+            BUCK_EVENT_BUS,
             HASH_FUNCTION) {
           @Override
           protected Response storeCall(Request request) throws IOException {

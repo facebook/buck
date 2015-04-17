@@ -651,7 +651,7 @@ public class BuckConfig {
           }
           break;
         case http:
-          ArtifactCache httpArtifactCache = createHttpArtifactCache();
+          ArtifactCache httpArtifactCache = createHttpArtifactCache(buckEventBus);
           builder.add(httpArtifactCache);
           break;
         }
@@ -772,7 +772,7 @@ public class BuckConfig {
     }
   }
 
-  private ArtifactCache createHttpArtifactCache() {
+  private ArtifactCache createHttpArtifactCache(BuckEventBus buckEventBus) {
     URL url;
     try {
       url = new URL(getValue("cache", "http_url").or(DEFAULT_HTTP_URL));
@@ -821,6 +821,7 @@ public class BuckConfig {
         url,
         doStore,
         projectFilesystem,
+        buckEventBus,
         Hashing.crc32());
   }
 
