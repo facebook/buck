@@ -352,6 +352,205 @@ public class MirrorTest {
   }
 
   @Test
+  public void preservesAnnotationsWithPrimitiveValues() throws IOException {
+    Path annotations = buildAnnotationJar();
+    Path jar = compileToJar(
+        ImmutableSortedSet.of(annotations),
+        "A.java",
+        Joiner.on("\n").join(
+            "package com.example.buck;",
+            "@Foo(primitiveValue=1)",
+            "public @interface A {}"));
+
+    new StubJar(jar).writeTo(filesystem, stubJar);
+
+    // Examine the jar to see if the "A" class is deprecated.
+    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    List<AnnotationNode> classAnnotations = classNode.visibleAnnotations;
+    assertEquals(1, classAnnotations.size());
+
+    AnnotationNode annotation = classAnnotations.get(0);
+    assertNotNull(annotation.values);
+    assertEquals(2, annotation.values.size());
+    assertEquals("primitiveValue", annotation.values.get(0));
+    assertEquals(1, annotation.values.get(1));
+  }
+
+  @Test
+  public void preservesAnnotationsWithStringArrayValues() throws IOException {
+    Path annotations = buildAnnotationJar();
+    Path jar = compileToJar(
+        ImmutableSortedSet.of(annotations),
+        "A.java",
+        Joiner.on("\n").join(
+            "package com.example.buck;",
+            "@Foo(stringArrayValue={\"1\", \"2\"})",
+            "public @interface A {}"));
+
+    new StubJar(jar).writeTo(filesystem, stubJar);
+
+    // Examine the jar to see if the "A" class is deprecated.
+    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    List<AnnotationNode> classAnnotations = classNode.visibleAnnotations;
+    assertEquals(1, classAnnotations.size());
+
+    AnnotationNode annotation = classAnnotations.get(0);
+    assertNotNull(annotation.values);
+    assertEquals(2, annotation.values.size());
+    assertEquals("stringArrayValue", annotation.values.get(0));
+    assertEquals(ImmutableList.of("1", "2"), annotation.values.get(1));
+  }
+
+  @Test
+  public void preservesAnnotationsWithEnumValues() throws IOException {
+    Path jar = compileToJar(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            "package com.example.buck;",
+            "import java.lang.annotation.*;",
+            "@Retention(RetentionPolicy.RUNTIME)",
+            "public @interface A {}"));
+
+    new StubJar(jar).writeTo(filesystem, stubJar);
+
+    // Examine the jar to see if the "A" class is deprecated.
+    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    List<AnnotationNode> classAnnotations = classNode.visibleAnnotations;
+    assertEquals(1, classAnnotations.size());
+
+    AnnotationNode annotation = classAnnotations.get(0);
+    assertNotNull(annotation.values);
+    assertEquals(2, annotation.values.size());
+    assertEquals("value", annotation.values.get(0));
+
+    assertEnumAnnotationValue(
+        annotation.values,
+        1,
+        "Ljava/lang/annotation/RetentionPolicy;",
+        "RUNTIME");
+  }
+
+  @Test
+  public void preservesAnnotationsWithEnumArrayValues() throws IOException {
+    Path jar = compileToJar(
+        EMPTY_CLASSPATH,
+        "A.java",
+        Joiner.on("\n").join(
+            "package com.example.buck;",
+            "import java.lang.annotation.*;",
+            "@Target({ElementType.CONSTRUCTOR, ElementType.FIELD})",
+            "public @interface A {}"));
+
+    new StubJar(jar).writeTo(filesystem, stubJar);
+
+    // Examine the jar to see if the "A" class is deprecated.
+    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    List<AnnotationNode> classAnnotations = classNode.visibleAnnotations;
+    assertEquals(1, classAnnotations.size());
+
+    AnnotationNode annotation = classAnnotations.get(0);
+    assertNotNull(annotation.values);
+    assertEquals(2, annotation.values.size());
+    assertEquals("value", annotation.values.get(0));
+
+    @SuppressWarnings("unchecked")
+    List<Object> enumArray = (List<Object>) annotation.values.get(1);
+    assertEquals(2, enumArray.size());
+
+    assertEnumAnnotationValue(enumArray, 0, "Ljava/lang/annotation/ElementType;", "CONSTRUCTOR");
+    assertEnumAnnotationValue(enumArray, 1, "Ljava/lang/annotation/ElementType;", "FIELD");
+  }
+
+  @Test
+  public void preservesAnnotationsWithAnnotationValues() throws IOException {
+    Path annotations = buildAnnotationJar();
+    Path jar = compileToJar(
+        ImmutableSortedSet.of(annotations),
+        "A.java",
+        Joiner.on("\n").join(
+            "package com.example.buck;",
+            "import java.lang.annotation.*;",
+            "@Foo(annotationValue=@Retention(RetentionPolicy.RUNTIME))",
+            "public @interface A {}"));
+
+    new StubJar(jar).writeTo(filesystem, stubJar);
+
+    // Examine the jar to see if the "A" class is deprecated.
+    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    List<AnnotationNode> classAnnotations = classNode.visibleAnnotations;
+    assertEquals(1, classAnnotations.size());
+
+    AnnotationNode annotation = classAnnotations.get(0);
+    assertNotNull(annotation.values);
+    assertEquals(2, annotation.values.size());
+    assertEquals("annotationValue", annotation.values.get(0));
+
+    AnnotationNode nestedAnnotation = (AnnotationNode) annotation.values.get(1);
+    assertEquals("Ljava/lang/annotation/Retention;", nestedAnnotation.desc);
+    assertNotNull(nestedAnnotation.values);
+    assertEquals(2, nestedAnnotation.values.size());
+    assertEquals("value", nestedAnnotation.values.get(0));
+
+    assertEnumAnnotationValue(
+        nestedAnnotation.values,
+        1,
+        "Ljava/lang/annotation/RetentionPolicy;",
+        "RUNTIME");
+  }
+
+  @Test
+  public void preservesAnnotationsWithAnnotationArrayValues() throws IOException {
+    Path annotations = buildAnnotationJar();
+    Path jar = compileToJar(
+        ImmutableSortedSet.of(annotations),
+        "A.java",
+        Joiner.on("\n").join(
+            "package com.example.buck;",
+            "import java.lang.annotation.*;",
+            "@Foo(annotationArrayValue=@Retention(RetentionPolicy.RUNTIME))",
+            "public @interface A {}"));
+
+    new StubJar(jar).writeTo(filesystem, stubJar);
+
+    // Examine the jar to see if the "A" class is deprecated.
+    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    List<AnnotationNode> classAnnotations = classNode.visibleAnnotations;
+    assertEquals(1, classAnnotations.size());
+
+    AnnotationNode annotation = classAnnotations.get(0);
+    assertNotNull(annotation.values);
+    assertEquals(2, annotation.values.size());
+    assertEquals("annotationArrayValue", annotation.values.get(0));
+
+    @SuppressWarnings("unchecked")
+    List<Object> annotationArray = (List<Object>) annotation.values.get(1);
+    assertEquals(1, annotationArray.size());
+
+    AnnotationNode nestedAnnotation = (AnnotationNode) annotationArray.get(0);
+    assertEquals("Ljava/lang/annotation/Retention;", nestedAnnotation.desc);
+    assertNotNull(nestedAnnotation.values);
+    assertEquals(2, nestedAnnotation.values.size());
+    assertEquals("value", nestedAnnotation.values.get(0));
+
+    assertEnumAnnotationValue(
+        nestedAnnotation.values,
+        1,
+        "Ljava/lang/annotation/RetentionPolicy;",
+        "RUNTIME");
+  }
+
+  private void assertEnumAnnotationValue(
+      List<Object> annotationValueList,
+      int index,
+      String enumType,
+      String enumValue) {
+    String[] enumArray = (String[]) annotationValueList.get(index);
+    assertEquals(enumType, enumArray[0]);
+    assertEquals(enumValue, enumArray[1]);
+  }
+
+  @Test
   public void stubsInnerClasses() throws IOException {
     Path jar = compileToJar(
         EMPTY_CLASSPATH,
@@ -635,7 +834,12 @@ public class MirrorTest {
             "import static java.lang.annotation.ElementType.*;",
             "@Retention(RetentionPolicy.RUNTIME)",
             "@Target(value={CONSTRUCTOR, FIELD, METHOD, PARAMETER, TYPE})",
-            "public @interface Foo {}"
+            "public @interface Foo {",
+            "  int primitiveValue() default 0;",
+            "  String[] stringArrayValue() default {};",
+            "  Retention annotationValue() default @Retention(RetentionPolicy.SOURCE);",
+            "  Retention[] annotationArrayValue() default {};",
+            "}"
             )));
   }
 
