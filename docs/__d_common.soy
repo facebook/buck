@@ -1,0 +1,25 @@
+{namespace d_common}
+
+/***/
+{template .deps_arg}
+{call buck.arg}
+  {param name : 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of dependencies of this rule.
+  Each element should be a string specifying a d_library rule defined elsewhere
+  (e.g. <code>':foo'</code> or '//foo:bar').
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .srcs_arg}
+{call buck.arg}
+  {param name : 'srcs' /}
+  {param desc}
+  The set of D source files to be compiled by this rule.
+  Each element should be a string specifying a source file (e.g. <code>'foo/bar.d'</code>).
+  {/param}
+{/call}
+{/template}

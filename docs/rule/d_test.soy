@@ -1,0 +1,77 @@
+{namespace d_test}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'd_test()' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to define a set of python files that contian tests
+      to run via D's unit testing support.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>d_test()</code> rule is used to define a set of D source
+files that contain tests to run via D's unittest support. The source code of the test
+must provide a main() function.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call d_common.srcs_arg /}
+
+{call buck.arg}
+  {param name: 'labels' /}
+  {param default: '[]' /}
+  {param desc}
+  A list of labels to be applied to these tests. These labels are
+  arbitrary text strings and have no meaning within buck itself. They
+  can, however, have meaning for you as a test author
+  (e.g., <code>smoke</code> or <code>fast</code>). A label can be
+  used to filter or include a specific <code>d_test()</code> rule
+  when executing <a href="{ROOT}command/test.html"><code>buck
+  test</code></a>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'source_under_test' /}
+  {param default : '[]' /}
+  {param desc}
+  <code>d_library()</code> rules that the <code>d_test()</code> is
+  testing. These must be among the transitive dependencies of the
+  {sp}<code>d_test()</code>.
+  {/param}
+{/call}
+
+{call d_common.deps_arg /}
+
+{/param} // close args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+# A rule that builds and runs D test with a single source file.
+d_test(
+  name = 'test',
+  srcs = [
+    'test.d',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

@@ -1,0 +1,72 @@
+{namespace d_binary}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'd_binary()' /}
+    {param prettify: true /}
+    {param description}
+      A d_binary() rule builds a native D executable.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A d_binary() rule builds a native executable from the supplied set of D source
+files and dependencies.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call d_common.srcs_arg /}
+
+{call d_common.deps_arg /}
+
+{/param} // close args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+# A rule that builds a D native executable from a single .d file
+# and a library dependency.
+d_binary(
+  name='greet',
+  srcs=[
+    'greet.d',
+  ],
+  deps=[
+    ':greeting',
+  ],
+)
+
+d_library(
+  name='greeting',
+  srcs=[
+    'greeting.d',
+  ],
+  deps=[
+    ':join',
+  ],
+)
+
+d_library(
+  name='join',
+  srcs=[
+    'join.d',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
