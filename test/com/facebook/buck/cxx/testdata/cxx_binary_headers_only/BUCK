@@ -1,0 +1,39 @@
+cxx_library(
+  name = 'just-headers',
+  srcs = [],  # Look, ma! No sources,
+  exported_headers = [
+    'echo.h',
+  ],
+)
+
+cxx_binary(
+  name = 'binary',
+  srcs = [
+    'echo.cpp',
+  ],
+  deps = [
+    ':just-headers',
+  ],
+)
+
+cxx_library(
+  name = 'header',
+  exported_headers = [
+    'echo.h',
+  ],
+  deps = [
+    ':has-srcs',
+  ],
+)
+
+cxx_library(
+  name = 'has-srcs',
+  srcs = [ 'echo.cpp' ],
+)
+
+cxx_binary(
+  name = 'transitive',
+  deps = [
+    ':header',
+  ],
+)

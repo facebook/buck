@@ -393,8 +393,9 @@ public class CxxLibraryDescriptionTest {
 
     // Generate the C++ library rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    CxxLibraryBuilder ruleBuilder = new CxxLibraryBuilder(target)
-        .setSoname(soname);
+    AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> ruleBuilder = new CxxLibraryBuilder(target)
+        .setSoname(soname)
+        .setSrcs(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.cpp"))));
     CxxLibrary rule = (CxxLibrary) ruleBuilder.build(
         resolver,
         filesystem,
@@ -451,8 +452,11 @@ public class CxxLibraryDescriptionTest {
         linkWholeFlags);
 
     // Create a cxx library using link whole.
-    CxxLibraryBuilder linkWholeBuilder = new CxxLibraryBuilder(target)
-        .setLinkWhole(true);
+    AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> linkWholeBuilder =
+        new CxxLibraryBuilder(target)
+            .setLinkWhole(true)
+            .setSrcs(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.cpp"))));
+
     CxxLibrary linkWhole = (CxxLibrary) linkWholeBuilder.build(
         new BuildRuleResolver(),
         filesystem,

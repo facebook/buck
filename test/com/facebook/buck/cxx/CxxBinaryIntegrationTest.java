@@ -608,4 +608,28 @@ public class CxxBinaryIntegrationTest {
             Matchers.containsString("function")));
     workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
   }
+
+  @Test
+  public void buildABinaryIfACxxLibraryDepOnlyDeclaresHeaders() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "cxx_binary_headers_only", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary");
+
+    result.assertSuccess();
+  }
+
+  @Test
+  public void buildABinaryIfACxxBinaryTransitivelyDepOnlyDeclaresHeaders() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "cxx_binary_headers_only", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:transitive");
+    System.out.println(result.getStdout());
+    System.err.println(result.getStderr());
+
+    result.assertSuccess();
+  }
 }

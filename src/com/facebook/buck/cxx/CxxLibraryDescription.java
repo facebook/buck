@@ -181,7 +181,7 @@ public class CxxLibraryDescription implements
    *
    * @return the {@link Archive} rule representing the actual static library.
    */
-  private static Archive createStaticLibrary(
+  private static BuildRule createStaticLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -227,15 +227,13 @@ public class CxxLibraryDescription implements
             params.getBuildTarget(),
             cxxPlatform.getFlavor(),
             pic);
-    Archive staticLibraryBuildRule = Archives.createArchiveRule(
+    return Archives.createArchiveRule(
         pathResolver,
         staticTarget,
         params,
         cxxPlatform.getAr(),
         staticLibraryPath,
         ImmutableList.copyOf(objects.values()));
-
-    return staticLibraryBuildRule;
   }
 
   /**
@@ -243,7 +241,7 @@ public class CxxLibraryDescription implements
    *
    * @return the {@link CxxLink} rule representing the actual shared library.
    */
-  private static CxxLink createSharedLibrary(
+  private static BuildRule createSharedLibrary(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -297,22 +295,19 @@ public class CxxLibraryDescription implements
             Iterables.transform(frameworkSearchPaths, Functions.toStringFunction())));
     ImmutableList<String> extraCxxLdFlags = extraCxxLdFlagsBuilder.build();
 
-    CxxLink sharedLibraryBuildRule =
-        CxxLinkableEnhancer.createCxxLinkableBuildRule(
-            cxxPlatform,
-            params,
-            pathResolver,
-            extraCxxLdFlags,
-            linkerFlags,
-            sharedTarget,
-            Linker.LinkType.SHARED,
-            Optional.of(sharedLibrarySoname),
-            sharedLibraryPath,
-            objects.values(),
-            Linker.LinkableDepType.SHARED,
-            params.getDeps());
-
-    return sharedLibraryBuildRule;
+    return CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        cxxPlatform,
+        params,
+        pathResolver,
+        extraCxxLdFlags,
+        linkerFlags,
+        sharedTarget,
+        Linker.LinkType.SHARED,
+        Optional.of(sharedLibrarySoname),
+        sharedLibraryPath,
+        objects.values(),
+        Linker.LinkableDepType.SHARED,
+        params.getDeps());
   }
 
   /**
@@ -454,7 +449,7 @@ public class CxxLibraryDescription implements
   /**
    * @return a {@link Archive} rule which builds a static library version of this C/C++ library.
    */
-  public static <A extends Arg> Archive createStaticLibraryBuildRule(
+  public static <A extends Arg> BuildRule createStaticLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -498,7 +493,7 @@ public class CxxLibraryDescription implements
   /**
    * @return a {@link CxxLink} rule which builds a shared library version of this C/C++ library.
    */
-  public static <A extends Arg> CxxLink createSharedLibraryBuildRule(
+  public static <A extends Arg> BuildRule createSharedLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -699,6 +694,21 @@ public class CxxLibraryDescription implements
       }
     }
 
+    // I'm not proud of this.
+    boolean hasObjects = false;
+    if (args.srcs.isPresent()) {
+      Either<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>> either =
+          args.srcs.get();
+      if (either.isLeft()) {
+        hasObjects = !either.getLeft().isEmpty();
+      } else {
+        hasObjects = !either.getRight().isEmpty();
+      }
+    }
+    hasObjects |=
+          !args.lexSrcs.get().isEmpty() ||
+          !args.yaccSrcs.get().isEmpty();
+
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -706,6 +716,7 @@ public class CxxLibraryDescription implements
         params,
         resolver,
         pathResolver,
+        hasObjects,
         new Function<CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>() {
           @Override
           public ImmutableMultimap<CxxSource.Type, String> apply(CxxPlatform input) {
