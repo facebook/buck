@@ -23,7 +23,7 @@ public class NoopArtifactCache implements ArtifactCache {
   @Override
   public CacheResult fetch(RuleKey ruleKey, File output) {
     // Do nothing.
-    return CacheResult.MISS;
+    return CacheResult.miss();
   }
 
   @Override

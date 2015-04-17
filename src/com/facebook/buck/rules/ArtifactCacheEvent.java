@@ -124,7 +124,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
     }
 
     public boolean isSuccess() {
-      return !cacheResult.isPresent() || cacheResult.get().isSuccess();
+      return !cacheResult.isPresent() || cacheResult.get().getType().isSuccess();
     }
 
     @Override

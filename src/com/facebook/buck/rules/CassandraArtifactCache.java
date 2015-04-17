@@ -125,6 +125,7 @@ public class CassandraArtifactCache implements ArtifactCache {
   private final int timeoutSeconds;
   private final Future<KeyspaceAndTtl> keyspaceAndTtlFuture;
   private final AtomicInteger numConnectionExceptionReports;
+  private final String name;
   private final boolean doStore;
   private final BuckEventBus buckEventBus;
   private final FileHashCache fileHashCache;
@@ -134,6 +135,7 @@ public class CassandraArtifactCache implements ArtifactCache {
   private final AtomicBoolean isKilled;
 
   public CassandraArtifactCache(
+      String name,
       String hosts,
       int port,
       int timeoutSeconds,
@@ -141,30 +143,36 @@ public class CassandraArtifactCache implements ArtifactCache {
       BuckEventBus buckEventBus,
       FileHashCache fileHashCache)
       throws ConnectionException {
-    this(timeoutSeconds, doStore, buckEventBus, fileHashCache, new AstyanaxContext.Builder()
+    this(
+        name,
+        timeoutSeconds,
+        doStore,
+        buckEventBus,
+        fileHashCache,
+        new AstyanaxContext.Builder()
             .forCluster(CLUSTER_NAME)
             .forKeyspace(KEYSPACE_NAME)
             .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
                     .setCqlVersion("3.0.0")
                     .setTargetCassandraVersion("1.2")
-                    .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
-            )
+                    .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE))
             .withConnectionPoolConfiguration(new ConnectionPoolConfigurationImpl(POOL_NAME)
                     .setSeeds(hosts)
                     .setPort(port)
-                    .setMaxConnsPerHost(1)
-            )
+                    .setMaxConnsPerHost(1))
             .withConnectionPoolMonitor(new CountingConnectionPoolMonitor())
             .buildKeyspace(ThriftFamilyFactory.getInstance()));
   }
 
   @VisibleForTesting
   CassandraArtifactCache(
+      String name,
       int timeoutSeconds,
       boolean doStore,
       BuckEventBus buckEventBus,
       FileHashCache fileHashCache,
       final AstyanaxContext<Keyspace> context) {
+    this.name = name;
     this.doStore = doStore;
     this.buckEventBus = buckEventBus;
     this.fileHashCache = fileHashCache;
@@ -262,7 +270,7 @@ public class CassandraArtifactCache implements ArtifactCache {
     Optional<KeyspaceAndTtl> keyspaceAndTtl = getKeyspaceAndTtl();
     if (!keyspaceAndTtl.isPresent()) {
       // Connecting to Cassandra failed, return false
-      return CacheResult.MISS;
+      return CacheResult.miss();
     }
 
     // Execute the query to Cassandra.
@@ -277,10 +285,10 @@ public class CassandraArtifactCache implements ArtifactCache {
           .execute();
     } catch (ConnectionException e) {
       reportConnectionFailure("Attempting to fetch " + ruleKey + ".", e);
-      return CacheResult.MISS;
+      return CacheResult.miss();
     }
 
-    CacheResult success = CacheResult.MISS;
+    CacheResult success = CacheResult.miss();
     try {
       Column<String> column = result.getResult().getColumnByName(ARTIFACT_COLUMN_NAME);
       if (column != null) {
@@ -300,7 +308,7 @@ public class CassandraArtifactCache implements ArtifactCache {
                     "Could not deserialize artifact checksum from %s:%s.",
                     ruleKey,
                     output.getPath()));
-            return CacheResult.MISS;
+            return CacheResult.miss();
           }
 
           // Write the contents to a temp file that sits next to the real destination.
@@ -315,7 +323,7 @@ public class CassandraArtifactCache implements ArtifactCache {
           if (!expectedHashCode.equals(actualHashCode)) {
             buckEventBus.post(new CassandraChecksumMismatchEvent(expectedHashCode, actualHashCode));
             Files.delete(temp);
-            return CacheResult.MISS;
+            return CacheResult.miss();
           }
 
           // Finally, move the temp file into it's final place.
@@ -329,7 +337,7 @@ public class CassandraArtifactCache implements ArtifactCache {
           // to reset the TTL.
           store(ruleKey, output);
         }
-        success = CacheResult.CASSANDRA_HIT;
+        success = CacheResult.hit(name);
       }
     } catch (IOException e) {
       buckEventBus.post(ThrowableConsoleEvent.create(e,
@@ -341,7 +349,7 @@ public class CassandraArtifactCache implements ArtifactCache {
     buckEventBus.post(ConsoleEvent.fine("Artifact fetch(%s, %s) cache %s",
         ruleKey,
         output.getPath(),
-        (success.isSuccess() ? "hit" : "miss")));
+        (success.getType().isSuccess() ? "hit" : "miss")));
     return success;
   }
 

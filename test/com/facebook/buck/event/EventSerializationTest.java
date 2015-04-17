@@ -133,12 +133,13 @@ public class EventSerializationTest {
   public void testBuildRuleEventFinished() throws IOException {
     BuildRuleEvent.Finished event = BuildRuleEvent.finished(generateFakeBuildRule(),
         BuildRuleStatus.SUCCESS,
-        CacheResult.MISS,
+        CacheResult.miss(),
         Optional.<BuildRuleSuccess.Type>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"status\":\"SUCCESS\",\"cacheResult\":\"MISS\",\"buildRule\":{\"type\":" +
+        "\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\",\"cacheSource\":{\"present\":" +
+        "false},\"cacheError\":{\"present\":false}},\"buildRule\":{\"type\":" +
         "{\"name\":\"java_library\",\"testRule\":false},\"name\":\"//fake:rule\"}," +
         "\"ruleKeySafe\":\"aaaa\",\"type\":\"BuildRuleFinished\"}", message);
   }

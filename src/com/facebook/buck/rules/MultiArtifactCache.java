@@ -53,7 +53,7 @@ public class MultiArtifactCache implements ArtifactCache {
       throws InterruptedException {
     for (ArtifactCache artifactCache : artifactCaches) {
       CacheResult cacheResult = artifactCache.fetch(ruleKey, output);
-      if (cacheResult.isSuccess()) {
+      if (cacheResult.getType().isSuccess()) {
         // Success; terminate search for a cached artifact, and propagate artifact to caches
         // earlier in the search order so that subsequent searches terminate earlier.
         for (ArtifactCache priorArtifactCache : artifactCaches) {
@@ -65,7 +65,7 @@ public class MultiArtifactCache implements ArtifactCache {
         return cacheResult;
       }
     }
-    return CacheResult.MISS;
+    return CacheResult.miss();
   }
 
   /**

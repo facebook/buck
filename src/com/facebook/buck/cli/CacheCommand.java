@@ -67,7 +67,7 @@ public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
       CacheResult success = cache.fetch(ruleKey, artifact);
 
       // Display the result.
-      if (success.isSuccess()) {
+      if (success.getType().isSuccess()) {
         console.printSuccess(String.format(
             "Successfully downloaded artifact with id %s at %s.",
             ruleKey,

@@ -355,8 +355,9 @@ public class CachingBuildEngine implements BuildEngine {
 
     // If the RuleKeys match, then there is nothing to build.
     if (ruleKey.equals(cachedRuleKey.orNull())) {
-      return new BuildResult(BuildRuleSuccess.Type.MATCHING_RULE_KEY,
-          CacheResult.LOCAL_KEY_UNCHANGED_HIT);
+      return new BuildResult(
+          BuildRuleSuccess.Type.MATCHING_RULE_KEY,
+          CacheResult.localKeyUnchangedHit());
     }
 
     // Deciding whether we need to rebuild is tricky business. We want to rebuild as little as
@@ -389,8 +390,9 @@ public class CachingBuildEngine implements BuildEngine {
         Optional<Sha1HashCode> cachedAbiKeyForDeps = onDiskBuildInfo.getHash(
             ABI_KEY_FOR_DEPS_ON_DISK_METADATA);
         if (abiKeyForDeps.equals(cachedAbiKeyForDeps.orNull())) {
-          return new BuildResult(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
-              CacheResult.LOCAL_KEY_UNCHANGED_HIT);
+          return new BuildResult(
+              BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
+              CacheResult.localKeyUnchangedHit());
         }
       }
     }
@@ -410,11 +412,11 @@ public class CachingBuildEngine implements BuildEngine {
         return new BuildResult(e);
       }
     } else {
-      cacheResult = CacheResult.SKIP;
+      cacheResult = CacheResult.skip();
     }
 
     // Run the steps to build this rule since it was not found in the cache.
-    if (cacheResult.isSuccess()) {
+    if (cacheResult.getType().isSuccess()) {
       return new BuildResult(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, cacheResult);
     }
 
@@ -511,7 +513,7 @@ public class CachingBuildEngine implements BuildEngine {
     // Then we could download directly from Cassandra into the on-disk cache and unzip it from
     // there.
     CacheResult cacheResult = buildInfoRecorder.fetchArtifactForBuildable(zipFile, artifactCache);
-    if (!cacheResult.isSuccess()) {
+    if (!cacheResult.getType().isSuccess()) {
       zipFile.delete();
       return cacheResult;
     }
@@ -549,7 +551,7 @@ public class CachingBuildEngine implements BuildEngine {
                   rule.getBuildTarget(),
               zipFile.getAbsolutePath(),
               Throwables.getStackTraceAsString(e)));
-      return CacheResult.MISS;
+      return CacheResult.miss();
     } finally {
       buildContext.getEventBus().post(
           ArtifactCacheEvent.finished(

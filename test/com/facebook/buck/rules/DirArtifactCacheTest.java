@@ -58,6 +58,7 @@ public class DirArtifactCacheTest {
     File cacheDir = tmpDir.newFolder();
 
     dirArtifactCache = new DirArtifactCache(
+        "dir",
         cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
@@ -69,6 +70,7 @@ public class DirArtifactCacheTest {
     File fileX = tmpDir.newFile("x");
 
     dirArtifactCache = new DirArtifactCache(
+        "dir",
         cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
@@ -82,7 +84,7 @@ public class DirArtifactCacheTest {
         resolver,
         fileHashCache).build().getTotalRuleKey();
 
-    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
+    assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
   }
 
   @Test
@@ -91,6 +93,7 @@ public class DirArtifactCacheTest {
     File fileX = tmpDir.newFile("x");
 
     dirArtifactCache = new DirArtifactCache(
+        "dir",
         cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.<Long>absent());
@@ -107,12 +110,12 @@ public class DirArtifactCacheTest {
     dirArtifactCache.store(ruleKeyX, fileX);
 
     // Test that artifact overwrite works.
-    assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyX, fileX));
+    assertEquals(CacheResult.Type.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
 
     // Test that artifact creation works.
     assertTrue(fileX.delete());
-    assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyX, fileX));
+    assertEquals(CacheResult.Type.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
   }
 
@@ -122,6 +125,7 @@ public class DirArtifactCacheTest {
     File fileX = tmpDir.newFile("x");
 
     dirArtifactCache = new DirArtifactCache(
+        "dir",
         cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
@@ -138,7 +142,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache.store(ruleKeyX, fileX);
     dirArtifactCache.store(ruleKeyX, fileX); // Overwrite.
 
-    assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyX, fileX));
+    assertEquals(CacheResult.Type.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
   }
 
@@ -150,6 +154,7 @@ public class DirArtifactCacheTest {
     File fileZ = tmpDir.newFile("z");
 
     dirArtifactCache = new DirArtifactCache(
+        "dir",
         cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
@@ -182,9 +187,9 @@ public class DirArtifactCacheTest {
         resolver,
         fileHashCache).build().getTotalRuleKey();
 
-    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
-    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyY, fileY));
-    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ));
+    assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
+    assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
+    assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ).getType());
 
     dirArtifactCache.store(ruleKeyX, fileX);
     dirArtifactCache.store(ruleKeyY, fileY);
@@ -194,9 +199,9 @@ public class DirArtifactCacheTest {
     assertTrue(fileY.delete());
     assertTrue(fileZ.delete());
 
-    assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyX, fileX));
-    assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyY, fileY));
-    assertEquals(CacheResult.DIR_HIT, dirArtifactCache.fetch(ruleKeyZ, fileZ));
+    assertEquals(CacheResult.Type.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
+    assertEquals(CacheResult.Type.HIT, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
+    assertEquals(CacheResult.Type.HIT, dirArtifactCache.fetch(ruleKeyZ, fileZ).getType());
 
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
     assertEquals(inputRuleY, new BuildRuleForTest(fileY));
@@ -217,6 +222,7 @@ public class DirArtifactCacheTest {
     File fileZ = tmpDir.newFile("z");
 
     dirArtifactCache = new DirArtifactCache(
+        "dir",
         cacheDir,
         /* doStore */ false,
         /* maxCacheSizeBytes */ Optional.of(0L));
@@ -249,9 +255,9 @@ public class DirArtifactCacheTest {
         resolver,
         fileHashCache).build().getTotalRuleKey();
 
-    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
-    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyY, fileY));
-    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ));
+    assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
+    assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
+    assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ).getType());
 
     dirArtifactCache.store(ruleKeyX, fileX);
     dirArtifactCache.store(ruleKeyY, fileY);
@@ -261,9 +267,9 @@ public class DirArtifactCacheTest {
     assertTrue(fileY.delete());
     assertTrue(fileZ.delete());
 
-    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyX, fileX));
-    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyY, fileY));
-    assertEquals(CacheResult.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ));
+    assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
+    assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
+    assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ).getType());
 
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
     assertEquals(inputRuleY, new BuildRuleForTest(fileY));
@@ -280,6 +286,7 @@ public class DirArtifactCacheTest {
     File fileZ = new File(cacheDir, "z");
 
     dirArtifactCache = new DirArtifactCache(
+        "dir",
         tmpDir.getRoot(),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(1024L));
@@ -303,6 +310,7 @@ public class DirArtifactCacheTest {
     File fileZ = new File(cacheDir, "z");
 
     dirArtifactCache = new DirArtifactCache(
+        "dir",
         tmpDir.getRoot(),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.<Long>absent());
@@ -327,6 +335,7 @@ public class DirArtifactCacheTest {
     File fileZ = new File(cacheDir, "z");
 
     dirArtifactCache = new DirArtifactCache(
+        "dir",
         cacheDir,
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(2L));

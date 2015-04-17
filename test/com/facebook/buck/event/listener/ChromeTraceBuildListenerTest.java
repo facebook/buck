@@ -170,7 +170,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.FETCH, ruleKey));
     eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.FETCH,
         ruleKey,
-        CacheResult.CASSANDRA_HIT));
+        CacheResult.hit("cassandra")));
     eventBus.post(BuildRuleEvent.started(rule));
     eventBus.post(StepEvent.started(step, "I'm a Fake Step!"));
 
@@ -178,7 +178,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(BuildRuleEvent.finished(
         rule,
         BuildRuleStatus.SUCCESS,
-        CacheResult.MISS,
+        CacheResult.miss(),
         Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)));
 
     try (TraceEventLogger ignored = TraceEventLogger.start(

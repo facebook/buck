@@ -41,7 +41,7 @@ public class MultiArtifactCacheTest {
 
     @Override
     public CacheResult fetch(RuleKey ruleKey, File output) {
-      return ruleKey.equals(storeKey) ? CacheResult.LOCAL_KEY_UNCHANGED_HIT : CacheResult.MISS;
+      return ruleKey.equals(storeKey) ? CacheResult.localKeyUnchangedHit() : CacheResult.miss();
     }
 
     @Override
@@ -69,20 +69,20 @@ public class MultiArtifactCacheTest {
         dummyArtifactCache2));
 
     assertEquals("Fetch should fail",
-        CacheResult.MISS,
-        multiArtifactCache.fetch(dummyRuleKey, dummyFile));
+        CacheResult.Type.MISS,
+        multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
 
     dummyArtifactCache1.store(dummyRuleKey, dummyFile);
     assertEquals("Fetch should succeed after store",
-        CacheResult.LOCAL_KEY_UNCHANGED_HIT,
-        multiArtifactCache.fetch(dummyRuleKey, dummyFile));
+        CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT,
+        multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
 
     dummyArtifactCache1.reset();
     dummyArtifactCache2.reset();
     dummyArtifactCache2.store(dummyRuleKey, dummyFile);
     assertEquals("Fetch should succeed after store",
-        CacheResult.LOCAL_KEY_UNCHANGED_HIT,
-        multiArtifactCache.fetch(dummyRuleKey, dummyFile));
+        CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT,
+        multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
 
     multiArtifactCache.close();
   }

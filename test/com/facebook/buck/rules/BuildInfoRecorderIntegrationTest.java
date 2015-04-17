@@ -60,6 +60,7 @@ public class BuildInfoRecorderIntegrationTest {
     DebuggableTemporaryFolder cacheDir = new DebuggableTemporaryFolder();
     cacheDir.create();
     ArtifactCache artifactCache = new DirArtifactCache(
+        "dir",
         cacheDir.getRoot(),
         true,
         Optional.<Long>absent());

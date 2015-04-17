@@ -60,12 +60,12 @@ public class PrebuiltJarIntegrationTest {
     result.assertSuccess();
 
     BuildRuleEvent.Finished finished = getRuleFinished(result.getCapturedEvents());
-    assertEquals(CacheResult.MISS, finished.getCacheResult());
+    assertEquals(CacheResult.Type.MISS, finished.getCacheResult().getType());
 
     result = workspace.runBuckBuild("//:jar");
     result.assertSuccess();
     finished = getRuleFinished(result.getCapturedEvents());
-    assertEquals(CacheResult.LOCAL_KEY_UNCHANGED_HIT, finished.getCacheResult());
+    assertEquals(CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT, finished.getCacheResult().getType());
 
     // We expect the binary jar to have a different hash to the stub jar.
     File binaryJar = workspace.getFile("junit.jar");

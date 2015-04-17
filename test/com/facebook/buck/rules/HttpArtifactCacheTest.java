@@ -102,6 +102,7 @@ public class HttpArtifactCacheTest {
   public void testFetchNotFound() throws Exception {
     HttpArtifactCache cache =
         new HttpArtifactCache(
+            "http",
             null,
             null,
             new URL("http://localhost:8080"),
@@ -122,7 +123,7 @@ public class HttpArtifactCacheTest {
         cache.fetch(
             new RuleKey("00000000000000000000000000000000"),
             new File("output/file"));
-    assertEquals(result, CacheResult.MISS);
+    assertEquals(result.getType(), CacheResult.Type.MISS);
     cache.close();
   }
 
@@ -134,6 +135,7 @@ public class HttpArtifactCacheTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     HttpArtifactCache cache =
         new HttpArtifactCache(
+            "http",
             null,
             null,
             new URL("http://localhost:8080"),
@@ -152,7 +154,7 @@ public class HttpArtifactCacheTest {
           }
         };
     CacheResult result = cache.fetch(ruleKey, output);
-    assertEquals(CacheResult.HTTP_HIT, result);
+    assertEquals(CacheResult.Type.HIT, result.getType());
     assertEquals(Optional.of(data), filesystem.readFileIfItExists(output.toPath()));
     cache.close();
   }
@@ -163,6 +165,7 @@ public class HttpArtifactCacheTest {
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     HttpArtifactCache cache =
         new HttpArtifactCache(
+            "http",
             null,
             null,
             new URL("http://localhost:8080"),
@@ -190,6 +193,7 @@ public class HttpArtifactCacheTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     HttpArtifactCache cache =
         new HttpArtifactCache(
+            "http",
             null,
             null,
             new URL("http://localhost:8080"),
@@ -209,7 +213,7 @@ public class HttpArtifactCacheTest {
         };
     File output = new File("output/file");
     CacheResult result = cache.fetch(new RuleKey("00000000000000000000000000000000"), output);
-    assertEquals(CacheResult.MISS, result);
+    assertEquals(CacheResult.Type.ERROR, result.getType());
     assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output.toPath()));
     cache.close();
   }
@@ -219,6 +223,7 @@ public class HttpArtifactCacheTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     HttpArtifactCache cache =
         new HttpArtifactCache(
+            "http",
             null,
             null,
             new URL("http://localhost:8080"),
@@ -238,7 +243,7 @@ public class HttpArtifactCacheTest {
         };
     File output = new File("output/file");
     CacheResult result = cache.fetch(new RuleKey("00000000000000000000000000000000"), output);
-    assertEquals(CacheResult.MISS, result);
+    assertEquals(CacheResult.Type.ERROR, result.getType());
     assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output.toPath()));
     cache.close();
   }
@@ -248,6 +253,7 @@ public class HttpArtifactCacheTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     HttpArtifactCache cache =
         new HttpArtifactCache(
+            "http",
             null,
             null,
             new URL("http://localhost:8080"),
@@ -262,7 +268,7 @@ public class HttpArtifactCacheTest {
         };
     File output = new File("output/file");
     CacheResult result = cache.fetch(new RuleKey("00000000000000000000000000000000"), output);
-    assertEquals(CacheResult.MISS, result);
+    assertEquals(CacheResult.Type.ERROR, result.getType());
     assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output.toPath()));
     cache.close();
   }
@@ -276,6 +282,7 @@ public class HttpArtifactCacheTest {
     final AtomicBoolean hasCalled = new AtomicBoolean(false);
     HttpArtifactCache cache =
         new HttpArtifactCache(
+            "http",
             null,
             null,
             new URL("http://localhost:8080"),
@@ -308,6 +315,7 @@ public class HttpArtifactCacheTest {
     filesystem.writeContentsToPath("data", output.toPath());
     HttpArtifactCache cache =
         new HttpArtifactCache(
+            "http",
             null,
             null,
             new URL("http://localhost:8080"),

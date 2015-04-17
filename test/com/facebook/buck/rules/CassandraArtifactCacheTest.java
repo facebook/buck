@@ -41,6 +41,7 @@ public class CassandraArtifactCacheTest {
     mockContext.shutdown();
     replay(mockContext);
     CassandraArtifactCache cache = new CassandraArtifactCache(
+        "cassandra",
         10 /* timeoutSeconds */,
         true /* doStore */,
         mockEventBus,

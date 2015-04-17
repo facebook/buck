@@ -40,7 +40,7 @@ public class BuildResult {
 
   BuildResult(Throwable failure) {
     this.status = BuildRuleStatus.FAIL;
-    this.cacheResult = CacheResult.MISS;
+    this.cacheResult = CacheResult.miss();
     this.success = null;
     this.failure = failure;
   }

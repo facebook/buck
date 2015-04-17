@@ -26,7 +26,8 @@ public interface ArtifactCache extends Closeable {
    *
    * @param ruleKey cache fetch key
    * @param output path to store artifact to
-   * @return whether it was a {@link CacheResult#MISS} (indicating a failure) or some type of hit.
+   * @return whether it was a {@link AbstractCacheResult.Type#MISS} (indicating a failure) or some
+   *     type of hit.
    */
   public CacheResult fetch(RuleKey ruleKey, File output) throws InterruptedException;
 

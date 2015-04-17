@@ -36,12 +36,18 @@ public class DirArtifactCache implements ArtifactCache {
 
   private static final Logger LOG = Logger.get(DirArtifactCache.class);
 
+  private final String name;
   private final File cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
   private final boolean doStore;
 
-  public DirArtifactCache(File cacheDir, boolean doStore, Optional<Long> maxCacheSizeBytes)
+  public DirArtifactCache(
+      String name,
+      File cacheDir,
+      boolean doStore,
+      Optional<Long> maxCacheSizeBytes)
       throws IOException {
+    this.name = name;
     this.cacheDir = cacheDir;
     this.maxCacheSizeBytes = maxCacheSizeBytes;
     this.doStore = doStore;
@@ -50,13 +56,13 @@ public class DirArtifactCache implements ArtifactCache {
 
   @Override
   public CacheResult fetch(RuleKey ruleKey, File output) {
-    CacheResult success = CacheResult.MISS;
+    CacheResult success = CacheResult.miss();
     File cacheEntry = new File(cacheDir, ruleKey.toString());
     if (cacheEntry.exists()) {
       try {
         Files.createDirectories(output.toPath().getParent());
         Files.copy(cacheEntry.toPath(), output.toPath(), REPLACE_EXISTING);
-        success = CacheResult.DIR_HIT;
+        success = CacheResult.hit(name);
       } catch (IOException e) {
         LOG.warn(
             e,
@@ -69,7 +75,7 @@ public class DirArtifactCache implements ArtifactCache {
         "Artifact fetch(%s, %s) cache %s",
         ruleKey,
         output.getPath(),
-        (success.isSuccess() ? "hit" : "miss"));
+        (success.getType().isSuccess() ? "hit" : "miss"));
     return success;
   }
 

@@ -181,7 +181,7 @@ public class SuperConsoleEventBusListenerTest {
         BuildRuleEvent.finished(
           fakeRule,
           BuildRuleStatus.SUCCESS,
-          CacheResult.MISS,
+          CacheResult.miss(),
           Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
         1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
@@ -202,7 +202,7 @@ public class SuperConsoleEventBusListenerTest {
         BuildRuleEvent.finished(
           cachedRule,
           BuildRuleStatus.SUCCESS,
-          CacheResult.MISS,
+          CacheResult.miss(),
           Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
         1120L, TimeUnit.MILLISECONDS, /* threadId */ 2L));
 

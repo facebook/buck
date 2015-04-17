@@ -715,7 +715,7 @@ public class BuckConfig {
     File dir = cacheDir.toFile();
     boolean doStore = readCacheMode("dir_mode", DEFAULT_DIR_CACHE_MODE);
     try {
-      return new DirArtifactCache(dir, doStore, getCacheDirMaxSizeBytes());
+      return new DirArtifactCache("dir", dir, doStore, getCacheDirMaxSizeBytes());
     } catch (IOException e) {
       throw new HumanReadableException("Failure initializing artifact cache directory: %s", dir);
     }
@@ -752,6 +752,7 @@ public class BuckConfig {
 
     try {
       return new CassandraArtifactCache(
+          "cassandra",
           cacheHosts,
           port,
           timeoutSeconds,
@@ -816,6 +817,7 @@ public class BuckConfig {
     fetchClient.setReadTimeout(timeoutSeconds, TimeUnit.SECONDS);
 
     return new HttpArtifactCache(
+        "http",
         fetchClient,
         client,
         url,

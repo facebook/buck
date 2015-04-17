@@ -100,7 +100,7 @@ public class SimpleConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(BuildRuleEvent.finished(
         fakeRule,
         BuildRuleStatus.SUCCESS,
-        CacheResult.MISS,
+        CacheResult.miss(),
         Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
         1000L, TimeUnit.MILLISECONDS, threadId));
     rawEventBus.post(configureTestEventAtTime(

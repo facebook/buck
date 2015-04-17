@@ -175,7 +175,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     expect(buildInfoRecorder.fetchArtifactForBuildable(
             anyObject(File.class),
             eq(artifactCache)))
-        .andReturn(CacheResult.MISS);
+        .andReturn(CacheResult.miss());
 
     // Set the requisite expectations to build the rule.
     expect(context.getEventBus()).andReturn(buckEventBus).anyTimes();
@@ -217,7 +217,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         events.get(0));
     assertEquals(configureTestEvent(BuildRuleEvent.finished(ruleToTest,
             BuildRuleStatus.SUCCESS,
-            CacheResult.MISS,
+            CacheResult.miss(),
             Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
             buckEventBus),
         events.get(events.size() - 2));
@@ -305,7 +305,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
       }
     }
     assertNotNull("BuildRule did not fire a BuildRuleEvent.Finished event.", finishedEvent);
-    assertEquals(CacheResult.SKIP, finishedEvent.getCacheResult());
+    assertEquals(CacheResult.skip(), finishedEvent.getCacheResult());
   }
 
   @Test
@@ -469,7 +469,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertEquals(events.get(1),
         configureTestEvent(BuildRuleEvent.finished(buildRule,
             BuildRuleStatus.SUCCESS,
-            CacheResult.LOCAL_KEY_UNCHANGED_HIT,
+            CacheResult.localKeyUnchangedHit(),
             Optional.of(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS)),
             buckEventBus));
 
@@ -520,7 +520,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         .andReturn(buildInfoRecorder);
 
     expect(buildInfoRecorder.fetchArtifactForBuildable(anyObject(File.class), eq(artifactCache)))
-        .andReturn(CacheResult.MISS);
+        .andReturn(CacheResult.miss());
 
     // Populate the metadata that should be read from disk.
     OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
@@ -554,7 +554,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertEquals(events.get(1),
         configureTestEvent(BuildRuleEvent.finished(buildRule,
             BuildRuleStatus.SUCCESS,
-            CacheResult.MISS,
+            CacheResult.miss(),
             Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
             buckEventBus));
 
@@ -589,7 +589,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         .andReturn(buildInfoRecorder);
 
     expect(buildInfoRecorder.fetchArtifactForBuildable(anyObject(File.class), eq(artifactCache)))
-        .andReturn(CacheResult.MISS);
+        .andReturn(CacheResult.miss());
 
     // Populate the metadata that should be read from disk.
     OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
@@ -635,7 +635,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(
             BuildRuleEvent.finished(buildRule,
                 BuildRuleStatus.SUCCESS,
-                CacheResult.MISS,
+                CacheResult.miss(),
                 Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
             buckEventBus).getEventName(),
         events.get(1).getEventName());
@@ -973,7 +973,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
-      return CacheResult.DIR_HIT;
+      return CacheResult.hit("dir");
     }
 
     private void writeEntries(File file) throws IOException {
