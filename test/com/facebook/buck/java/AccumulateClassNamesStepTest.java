@@ -112,9 +112,9 @@ public class AccumulateClassNamesStepTest {
     assertEquals(
         "Verify that the contents are sorted alphabetically and ignore non-.class files.",
         Joiner.on('\n').join(
-            "com/example/Bar" + separator + SHA1_FOR_EMPTY_STRING,
-            "com/example/Foo" + separator + SHA1_FOR_EMPTY_STRING,
-            "com/example/subpackage/Baz" + separator + SHA1_FOR_EMPTY_STRING) + '\n',
+            Paths.get("com/example/Bar") + separator + SHA1_FOR_EMPTY_STRING,
+            Paths.get("com/example/Foo") + separator + SHA1_FOR_EMPTY_STRING,
+            Paths.get("com/example/subpackage/Baz") + separator + SHA1_FOR_EMPTY_STRING) + '\n',
         contents);
   }
 }
