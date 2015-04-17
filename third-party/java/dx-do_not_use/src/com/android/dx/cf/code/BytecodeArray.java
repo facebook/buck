@@ -36,9 +36,6 @@ import java.util.ArrayList;
  * Bytecode array, which is part of a standard {@code Code} attribute.
  */
 public final class BytecodeArray {
-    /** convenient no-op implementation of {@link Visitor} */
-    public static final Visitor EMPTY_VISITOR = new BaseVisitor();
-
     /** {@code non-null;} underlying bytes */
     private final ByteArray bytes;
 
@@ -216,7 +213,7 @@ public final class BytecodeArray {
      */
     public int parseInstruction(int offset, Visitor visitor) {
         if (visitor == null) {
-            visitor = EMPTY_VISITOR;
+            visitor = new BaseVisitor();
         }
 
         try {
