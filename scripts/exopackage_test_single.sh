@@ -17,6 +17,7 @@ cp -r test/com/facebook/buck/android/testdata/exopackage-device/* $TMP_DIR
 cp buck-out/gen/src/com/facebook/buck/android/support/buck-android-support.jar $TMP_DIR
 cd $TMP_DIR
 touch .buckconfig
+export NO_BUCKD=1
 
 # Clear out the phone.
 adb uninstall com.facebook.buck.android.agent
@@ -26,7 +27,7 @@ adb shell rm -r /data/local/tmp/exopackage/buck.exotest
 # Build and do a clean install of the app.  Launch it and capture logs.
 echo '1a' > value.txt
 
-env NO_BUCKD=1 buck install //:exotest | cat
+buck install //:exotest | cat
 adb logcat -c
 adb shell am start -n buck.exotest/exotest.LogActivity
 sleep 1
@@ -40,7 +41,7 @@ grep 'NATIVE_TWO=two_1a' out1.txt
 
 # Change java code and do an incremental install of the app.  Launch it and capture logs.
 echo '2b' > value.txt
-env NO_BUCKD=1 buck install //:exotest | cat
+buck install //:exotest | cat
 adb logcat -c
 adb shell am start -n buck.exotest/exotest.LogActivity
 sleep 1
@@ -52,7 +53,7 @@ grep 'VALUE=2b' out2.txt
 
 # Change one of the native libraries, do an incremental install and capture logs.
 sed s/one_1a/one_3c/ -i jni/one/one.c
-env NO_BUCKD=1 buck install //:exotest | cat
+buck install //:exotest | cat
 adb logcat -c
 adb shell am start -n buck.exotest/exotest.LogActivity
 sleep 1
@@ -66,7 +67,7 @@ grep 'NATIVE_TWO=two_1a' out3.txt
 # Change both native and java code and do an incremental build.
 echo '4d' > value.txt
 sed s/two_1a/two_4d/ -i jni/two/two.c
-env NO_BUCKD=1 buck install //:exotest | cat
+buck install //:exotest | cat
 adb logcat -c
 adb shell am start -n buck.exotest/exotest.LogActivity
 sleep 1

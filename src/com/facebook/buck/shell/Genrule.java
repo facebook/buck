@@ -224,7 +224,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
       environmentVariablesBuilder.put("ZIPALIGN", android.getZipalignExecutable().toString());
     }
 
-    // TODO(user): This shouldn't be necessary. Speculatively disabling.
+    // TODO(t5302074): This shouldn't be necessary. Speculatively disabling.
     environmentVariablesBuilder.put("NO_BUCKD", "1");
   }
 
@@ -238,7 +238,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
 
     Path output = rule.getPathToOutputFile();
     if (output != null) {
-      // TODO(user): This is a giant hack and we should do away with $DEPS altogether.
+      // TODO(t6405518): This is a giant hack and we should do away with $DEPS altogether.
       // There can be a lot of paths here and the filesystem location can be arbitrarily long.
       // We can easily hit the shell command character limit. What this does is find
       // BuckConstant.GEN_DIR (which should be the same for every path) and replaces
@@ -331,6 +331,12 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
         } else {
           localPath = canonicalPath.getFileName().toString();
         }
+      // MOE:begin_strip
+      } else {
+        // In fbandroid, we have genrules that break the invariant about not referring to something
+        // out of the current BUCK package. Handle that case in an inelegant but effective way.
+        localPath = new File(localPath).getName();
+      // MOE:end_strip
       }
 
       Path destination = pathToSrcDirectory.resolve(localPath);
