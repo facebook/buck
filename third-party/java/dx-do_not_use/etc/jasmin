@@ -34,6 +34,6 @@ progdir=`pwd`
 prog="${progdir}"/`basename "${prog}"`
 cd "${oldwd}"
 
-libdir=`dirname $progdir`/framework
+libdir=`dirname $progdir`/etc
 
 exec java -jar $libdir/jasmin.jar "$@"
