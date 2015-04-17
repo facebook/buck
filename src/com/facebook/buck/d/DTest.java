@@ -66,7 +66,7 @@ public class DTest extends DLinkable implements TestRule {
         params,
         resolver,
         inputs,
-        ImmutableList.of("-unittest", "-main"),
+        ImmutableList.of("-unittest"),
         BuildTargets.getGenPath(
             params.getBuildTarget(), "%s/" + params.getBuildTarget().getShortName()),
         compiler);
