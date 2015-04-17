@@ -35,7 +35,7 @@ prog="${progdir}"/`basename "${prog}"`
 cd "${oldwd}"
 
 jarfile=dx.jar
-libdir="$progdir"
+libdir="${progdir}/../../../../build/"
 
 if [ ! -r "$libdir/$jarfile" ]; then
     # set dx.jar location for the SDK case
