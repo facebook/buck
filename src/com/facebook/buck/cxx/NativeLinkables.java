@@ -16,15 +16,22 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.graph.DirectedAcyclicGraph;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
+import java.util.List;
+import java.util.Map;
 
 public class NativeLinkables {
 
@@ -45,6 +52,36 @@ public class NativeLinkables {
     };
   }
 
+  private static NativeLinkableNode processBuildRule(
+      CxxPlatform cxxPlatform,
+      Map<BuildTarget, Linker.LinkableDepType> wanted,
+      BuildRule rule,
+      Linker.LinkableDepType type,
+      NativeLinkableNode.Pass pass) {
+
+    if (!(rule instanceof NativeLinkable)) {
+      return NativeLinkableNode.of(rule, pass);
+    }
+
+    NativeLinkable linkable = (NativeLinkable) rule;
+    Linker.LinkableDepType depType = linkable.getPreferredLinkage(cxxPlatform).or(type);
+
+    // We want to get linkable info for this dep if we're linking statically, or if
+    // this dep is linked dynamically.  More to the point: we want to avoid pulling
+    // in linkable info for a library which is statically linked into a shared dep.
+    if (pass == AbstractNativeLinkableNode.Pass.ANY || depType == Linker.LinkableDepType.SHARED) {
+      Linker.LinkableDepType oldType = wanted.put(rule.getBuildTarget(), depType);
+      Preconditions.checkState(oldType == null || oldType == depType);
+    }
+
+    // If we're linking in a shared dep, then switch
+    if (depType == Linker.LinkableDepType.SHARED) {
+      pass = AbstractNativeLinkableNode.Pass.SHARED_ONLY;
+    }
+
+    return NativeLinkableNode.of(rule, pass);
+  }
+
   /**
    * Collect up and merge all {@link com.facebook.buck.cxx.NativeLinkableInput} objects from
    * transitively traversing all unbroken dependency chains of
@@ -58,21 +95,74 @@ public class NativeLinkables {
       final Predicate<Object> traverse,
       boolean reverse) {
 
-    final DirectedAcyclicGraph<BuildRule> graph =
-        BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
-            inputs,
-            Predicates.instanceOf(NativeLinkable.class),
-            traverse);
+    // Keep track of the rules for which we want to grab linkable information from, and the
+    // style with which to link them.
+    final Map<BuildTarget, Linker.LinkableDepType> wanted = Maps.newHashMap();
+
+    List<NativeLinkableNode> initial = Lists.newArrayList();
+    for (BuildRule rule : inputs) {
+      initial.add(
+          processBuildRule(
+              cxxPlatform,
+              wanted,
+              rule,
+              depType,
+              AbstractNativeLinkableNode.Pass.ANY));
+    }
+
+    final MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<>();
+    final MutableDirectedGraph<NativeLinkableNode> linkGraph = new MutableDirectedGraph<>();
+    AbstractBreadthFirstTraversal<NativeLinkableNode> visitor =
+        new AbstractBreadthFirstTraversal<NativeLinkableNode>(initial) {
+          @Override
+          public ImmutableSet<NativeLinkableNode> visit(NativeLinkableNode node) {
+
+            linkGraph.addNode(node);
+            graph.addNode(node.getBuildRule());
+
+            if (!traverse.apply(node.getBuildRule())) {
+              return ImmutableSet.of();
+            }
+
+            ImmutableSet.Builder<NativeLinkableNode> deps = ImmutableSet.builder();
+            for (BuildRule dep : node.getBuildRule().getDeps()) {
+              if (traverse.apply(dep)) {
+                NativeLinkableNode nodeDep =
+                    processBuildRule(
+                        cxxPlatform,
+                        wanted,
+                        dep,
+                        depType,
+                        node.getPass());
+                linkGraph.addEdge(node, nodeDep);
+                graph.addEdge(node.getBuildRule(), dep);
+                deps.add(nodeDep);
+              }
+            }
+
+            return deps.build();
+          }
+        };
+    visitor.start();
 
     // Collect and topologically sort our deps that contribute to the link.
-    final ImmutableList<BuildRule> sorted = TopologicalSort.sort(
+    ImmutableList<BuildRule> sorted = TopologicalSort.sort(
         graph,
         Predicates.<BuildRule>alwaysTrue());
-    return NativeLinkableInput.concat(
-        FluentIterable
-            .from(reverse ? sorted.reverse() : sorted)
-            .filter(NativeLinkable.class)
-            .transform(getNativeLinkableInput(cxxPlatform, depType)));
+
+    List<NativeLinkableInput> nativeLinkableInputs = Lists.newArrayList();
+
+    for (BuildRule buildRule : reverse ? sorted.reverse() : sorted) {
+      if (buildRule instanceof NativeLinkable) {
+        Linker.LinkableDepType type = wanted.get(buildRule.getBuildTarget());
+        if (type != null) {
+          NativeLinkable linkable = (NativeLinkable) buildRule;
+          nativeLinkableInputs.add(linkable.getNativeLinkableInput(cxxPlatform, type));
+        }
+      }
+    }
+
+    return NativeLinkableInput.concat(nativeLinkableInputs);
   }
 
   public static NativeLinkableInput getTransitiveNativeLinkableInput(

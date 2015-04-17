@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -119,6 +120,11 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
     return NativeLinkableInput.of(
         /* inputs */ libraries,
         /* args */ linkerArgs);
+  }
+
+  @Override
+  public Optional<Linker.LinkableDepType> getPreferredLinkage(CxxPlatform cxxPlatform) {
+    return Optional.absent();
   }
 
   @Override

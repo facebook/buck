@@ -27,6 +27,7 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -89,6 +90,11 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
                 ocamlLibraryBuild.getProjectFilesystem(),
                 ocamlLibraryBuild.getBuildTarget())),
         linkerArgs);
+  }
+
+  @Override
+  public Optional<Linker.LinkableDepType> getPreferredLinkage(CxxPlatform cxxPlatform) {
+    return Optional.absent();
   }
 
   @Override

@@ -156,6 +156,14 @@ public class CxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
+  public Optional<Linker.LinkableDepType> getPreferredLinkage(CxxPlatform cxxPlatform) {
+    if (linkage == Linkage.STATIC) {
+      return Optional.of(Linker.LinkableDepType.STATIC);
+    }
+    return Optional.absent();
+  }
+
+  @Override
   public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
     ImmutableMap.Builder<Path, SourcePath> libs = ImmutableMap.builder();
     if (linkage != Linkage.STATIC) {

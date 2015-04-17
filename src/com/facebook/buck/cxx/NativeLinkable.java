@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRuleType;
+import com.google.common.base.Optional;
 
 /**
  * Interface for {@link com.facebook.buck.rules.BuildRule} objects (e.g. C++ libraries) which can
@@ -24,8 +25,13 @@ import com.facebook.buck.rules.BuildRuleType;
  */
 public interface NativeLinkable {
 
-  final BuildRuleType NATIVE_LINKABLE_TYPE = BuildRuleType.of("link");
+  BuildRuleType NATIVE_LINKABLE_TYPE = BuildRuleType.of("link");
 
-  NativeLinkableInput getNativeLinkableInput(CxxPlatform cxxPlatform, Linker.LinkableDepType type);
+  NativeLinkableInput getNativeLinkableInput(
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type);
+
+  Optional<Linker.LinkableDepType> getPreferredLinkage(
+      CxxPlatform cxxPlatform);
 
 }

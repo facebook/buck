@@ -160,6 +160,11 @@ public class CxxPythonExtensionDescriptionTest {
       }
 
       @Override
+      public Optional<Linker.LinkableDepType> getPreferredLinkage(CxxPlatform cxxPlatform) {
+        return Optional.absent();
+      }
+
+      @Override
       public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
         return PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),

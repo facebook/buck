@@ -170,6 +170,11 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
+  public Optional<Linker.LinkableDepType> getPreferredLinkage(CxxPlatform cxxPlatform) {
+    return Optional.absent();
+  }
+
+  @Override
   public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
     String resolvedSoname =
         PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname, libName);

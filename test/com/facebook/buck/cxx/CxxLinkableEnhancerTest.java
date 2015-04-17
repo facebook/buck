@@ -83,6 +83,10 @@ public class CxxLinkableEnhancerTest {
       return type == Linker.LinkableDepType.STATIC ? staticInput : sharedInput;
     }
 
+    @Override
+    public Optional<Linker.LinkableDepType> getPreferredLinkage(CxxPlatform cxxPlatform) {
+      return Optional.absent();
+    }
   }
 
   private static FakeNativeLinkable createNativeLinkable(
