@@ -1,7 +1,6 @@
-ndk_library(
+cxx_library(
   name = 'one',
-  flags = [
-    'NDK_APPLICATION_MK=$(env PWD)/jni/one/Application.mk',
-  ],
+  soname = 'libone.so',
+  srcs = glob(['*.c']),
   visibility = ['PUBLIC']
 )
