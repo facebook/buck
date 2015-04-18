@@ -88,3 +88,10 @@ python_binary(
     'PUBLIC',
   ],
 )
+
+export_file(
+  name = '__test_main__.py',
+  visibility = [
+    'PUBLIC',
+  ],
+)
