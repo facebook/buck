@@ -86,7 +86,6 @@ import com.facebook.buck.ocaml.OCamlBinaryDescription;
 import com.facebook.buck.ocaml.OCamlBuckConfig;
 import com.facebook.buck.ocaml.OCamlLibraryDescription;
 import com.facebook.buck.ocaml.PrebuiltOCamlLibraryDescription;
-import com.facebook.buck.parcelable.GenParcelableDescription;
 import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonEnvironment;
@@ -476,7 +475,6 @@ public class KnownBuildRuleTypes {
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
-    builder.register(new GenParcelableDescription());
     builder.register(new GwtBinaryDescription());
     builder.register(new IosPostprocessResourcesDescription());
     builder.register(new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform));
