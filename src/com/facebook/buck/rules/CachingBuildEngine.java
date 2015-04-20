@@ -234,15 +234,17 @@ public class CachingBuildEngine implements BuildEngine {
                   boolean clearExistingMetadata = success.shouldClearAndOverwriteMetadataOnDisk();
                   buildInfoRecorder.get().writeMetadataToDisk(clearExistingMetadata);
                 } catch (IOException e) {
-                  eventBus.post(ThrowableConsoleEvent.create(
+                  eventBus.post(
+                      ThrowableConsoleEvent.create(
                           e,
                           "Failed to write metadata to disk for %s.",
                           rule));
                   onFailure(e);
+                  return;
                 }
               }
 
-              doHydrationAfterBuildStepsFinish(rule, result, onDiskBuildInfo);
+              doHydrationAfterBuildStepsFinish(rule, onDiskBuildInfo);
 
               // Only now that the rule should be in a completely valid state, resolve the future.
               BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(rule, result.getSuccess());
@@ -605,7 +607,6 @@ public class CachingBuildEngine implements BuildEngine {
   @VisibleForTesting
   public void doHydrationAfterBuildStepsFinish(
       BuildRule rule,
-      BuildResult result,
       OnDiskBuildInfo onDiskBuildInfo) {
     // Give the rule a chance to populate its internal data structures now that all of the
     // files should be in a valid state.
@@ -625,10 +626,6 @@ public class CachingBuildEngine implements BuildEngine {
             e);
       }
     }
-
-    // Only now that the rule should be in a completely valid state, resolve the future.
-    BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(rule, result.getSuccess());
-    results.get(rule.getBuildTarget()).set(buildRuleSuccess);
   }
 
   /**
