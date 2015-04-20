@@ -15,6 +15,9 @@ function sedInPlace() {
     Linux)
       sed $1 -i $2
       ;;
+    *)
+      echo "Unsupported OS name '$(uname -s)' for running sed."
+      exit 1
   esac
 }
 
