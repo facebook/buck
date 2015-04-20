@@ -156,7 +156,8 @@ public class DefaultJavaLibraryTest {
         .build(ruleResolver);
     DefaultJavaLibrary javaLibrary = (DefaultJavaLibrary) libraryRule;
 
-    String bootclasspath = "effects.jar:maps.jar:usb.jar:";
+    String bootclasspath = "effects.jar" + File.pathSeparator + "maps.jar" +
+        File.pathSeparator + "usb.jar" + File.pathSeparator;
     BuildContext context = createBuildContext(libraryRule, bootclasspath, projectFilesystem);
 
     List<Step> steps = javaLibrary.getBuildSteps(context, new FakeBuildableContext());
