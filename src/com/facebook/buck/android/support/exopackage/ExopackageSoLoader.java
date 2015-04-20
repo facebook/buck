@@ -63,6 +63,7 @@ public class ExopackageSoLoader {
       preparePrivateDirectory(context);
       parseMetadata();
     }
+    initialized = true;
   }
 
   private static void verifyMetadataFile() {
@@ -122,6 +123,12 @@ public class ExopackageSoLoader {
   }
 
   public static void loadLibrary(String shortName) throws UnsatisfiedLinkError {
+    if (!initialized) {
+      Log.d(TAG, "ExopackageSoLoader not initialized, falling back to System.loadLibrary()");
+      System.loadLibrary(shortName);
+      return;
+    }
+
     String libname = shortName.startsWith("lib") ? shortName : "lib" + shortName;
 
     File libraryFile;

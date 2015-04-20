@@ -90,6 +90,21 @@ grep 'NATIVE_ONE=one_3c' out4.txt
 grep 'NATIVE_TWO=two_4d' out4.txt
 
 
+# Change both native and java code and do a no-exopackage incremental build.
+echo '5e' > value.txt
+sedInPlace s/two_4d/two_5e/ jni/two/two.c
+buck install //:exotest-noexo | cat
+adb logcat -c
+adb shell am start -n buck.exotest/exotest.LogActivity
+sleep 1
+adb logcat -d adb logcat '*:S' EXOPACKAGE_TEST:V > out5.txt
+
+# Check for the new values in the logs.
+grep 'VALUE=5e' out5.txt
+grep 'NATIVE_ONE=one_3c' out5.txt
+grep 'NATIVE_TWO=two_5e' out5.txt
+
+
 # Clean up after ourselves.
 buck uninstall //:exotest
 adb uninstall com.facebook.buck.android.agent

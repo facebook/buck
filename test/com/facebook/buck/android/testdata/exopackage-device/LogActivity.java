@@ -16,13 +16,13 @@
 
 package exotest;
 
-import com.facebook.buck.android.support.exopackage.ExopackageSoLoader;
-
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
+
+import com.facebook.buck.android.support.exopackage.ExopackageSoLoader;
 
 public class LogActivity extends Activity {
 

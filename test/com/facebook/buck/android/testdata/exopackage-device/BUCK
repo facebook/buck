@@ -1,3 +1,9 @@
+android_build_config(
+  name = 'build_config',
+  package = 'exotest',
+  values = [],
+)
+
 android_binary(
   name = 'exotest',
   manifest = 'AndroidManifest.xml',
@@ -9,8 +15,19 @@ android_binary(
   ],
   primary_dex_patterns = [
     '^exotest/AppShell^',
+    '^exotest/BuildConfig^',
     '^com/facebook/buck/android/support/exopackage/'
   ],
+  deps = [
+    ':main-lib',
+    ':app-lib',
+  ],
+)
+
+android_binary(
+  name = 'exotest-noexo',
+  manifest = 'AndroidManifest.xml',
+  keystore = ':debug_keystore',
   deps = [
     ':main-lib',
     ':app-lib',
@@ -22,6 +39,7 @@ android_library(
   srcs = ['AppShell.java'],
   deps = [
     ':buck-android-support',
+    ':build_config',
   ],
 )
 
