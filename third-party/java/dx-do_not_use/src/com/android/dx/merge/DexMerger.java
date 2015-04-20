@@ -87,11 +87,6 @@ public final class DexMerger {
     /** minimum number of wasted bytes before it's worthwhile to compact the result */
     private int compactWasteThreshold = 1024 * 1024; // 1MiB
 
-    public DexMerger(Dex dexA, Dex dexB, CollisionPolicy collisionPolicy)
-            throws IOException {
-        this(ImmutableList.of(dexA, dexB), collisionPolicy);
-    }
-
     public DexMerger(List<Dex> dexs, CollisionPolicy collisionPolicy)
             throws IOException {
         this(dexs, collisionPolicy, new WriterSizes(dexs));
@@ -1122,11 +1117,11 @@ public final class DexMerger {
             return;
         }
 
-        Dex merged = new Dex(new File(args[1]));
+        ImmutableList.Builder<Dex> toMerge = ImmutableList.builder();
         for (int i = 2; i < args.length; i++) {
-            Dex toMerge = new Dex(new File(args[i]));
-            merged = new DexMerger(merged, toMerge, CollisionPolicy.KEEP_FIRST).merge();
+            toMerge.add(new Dex(new File(args[i])));
         }
+        Dex merged = new DexMerger(toMerge.build(), CollisionPolicy.KEEP_FIRST).merge();
         merged.writeTo(new File(args[0]));
     }
 
