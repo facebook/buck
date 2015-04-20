@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
+import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.CoverageReportFormat;
@@ -40,9 +41,10 @@ public class GenerateCodeCoverageReportStepTest {
 
   @Test
   public void testGetShellCommandInternal() {
-    String outputDirectory = "buck-out/gen/output";
+    String outputDirectory = Paths.get("buck-out/gen/output").toString();
     Set<String> sourceDirectories = ImmutableSet.of(
-        "/absolute/path/to/parentDirectory1/src", "/absolute/path/to/parentDirectory2/src");
+        MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory1/src").toString(),
+        MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory2/src").toString());
     Set<Path> classesDirectories = ImmutableSet.of(
         Paths.get("parentDirectory1/classes"), Paths.get("root/parentDirectory/classes"));
 
@@ -66,7 +68,9 @@ public class GenerateCodeCoverageReportStepTest {
 
     ImmutableList.Builder<String> shellCommandBuilder = ImmutableList.builder();
 
-    System.setProperty("buck.report_generator_jar", "/absolute/path/to/report/generator/jar");
+    System.setProperty(
+        "buck.report_generator_jar",
+        MorePathsForTests.rootRelativePath("/absolute/path/to/report/generator/jar").toString());
 
     shellCommandBuilder.add(
         "java",
@@ -74,16 +78,21 @@ public class GenerateCodeCoverageReportStepTest {
         String.format("-Djacoco.exec.data.file=%s", JUnitStep.JACOCO_EXEC_COVERAGE_FILE),
         "-Djacoco.format=html",
         String.format("-Dclasses.dir=%s",
-            String.format("%s/%s:%s/%s",
+            String.format("%s%c%s:%s%c%s",
                 new File(".").getAbsoluteFile().toPath().normalize(),
-                "parentDirectory1/classes",
+                File.separatorChar,
+                Paths.get("parentDirectory1/classes"),
                 new File(".").getAbsoluteFile().toPath().normalize(),
-                "root/parentDirectory/classes")),
+                File.separatorChar,
+                Paths.get("root/parentDirectory/classes"))),
         String.format("-Dsrc.dir=%s",
             String.format("%s:%s",
-                "/absolute/path/to/parentDirectory1/src",
-                "/absolute/path/to/parentDirectory2/src")),
-        "-jar", "/absolute/path/to/report/generator/jar");
+                MorePathsForTests.rootRelativePath(
+                    "/absolute/path/to/parentDirectory1/src").toString(),
+                MorePathsForTests.rootRelativePath(
+                    "/absolute/path/to/parentDirectory2/src").toString())),
+        "-jar",
+        MorePathsForTests.rootRelativePath("/absolute/path/to/report/generator/jar").toString());
 
     List<String> expectedShellCommand = shellCommandBuilder.build();
 
