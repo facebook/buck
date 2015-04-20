@@ -16,13 +16,17 @@
 
 package com.facebook.buck.java;
 
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Platform;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -33,6 +37,11 @@ public class JavaBinaryIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
+  @Before
+  public void checkPlatform() {
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
+  }
 
   @Test
   public void fatJarLoadingNativeLibraries() throws IOException {
