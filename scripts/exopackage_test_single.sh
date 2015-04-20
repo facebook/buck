@@ -7,6 +7,17 @@ set -x
 set -e
 set -o pipefail
 
+function sedInPlace() {
+  case "$(uname -s)" in
+    Darwin)
+      sed -i '' -e $1 $2
+      ;;
+    Linux)
+      sed $1 -i $2
+      ;;
+  esac
+}
+
 cd `dirname $0`
 cd `git rev-parse --show-cdup`
 
@@ -52,7 +63,7 @@ grep 'VALUE=2b' out2.txt
 
 
 # Change one of the native libraries, do an incremental install and capture logs.
-sed s/one_1a/one_3c/ -i jni/one/one.c
+sedInPlace s/one_1a/one_3c/ jni/one/one.c
 buck install //:exotest | cat
 adb logcat -c
 adb shell am start -n buck.exotest/exotest.LogActivity
@@ -66,7 +77,7 @@ grep 'NATIVE_TWO=two_1a' out3.txt
 
 # Change both native and java code and do an incremental build.
 echo '4d' > value.txt
-sed s/two_1a/two_4d/ -i jni/two/two.c
+sedInPlace s/two_1a/two_4d/ jni/two/two.c
 buck install //:exotest | cat
 adb logcat -c
 adb shell am start -n buck.exotest/exotest.LogActivity
