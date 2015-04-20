@@ -112,10 +112,8 @@ public class TestSelectorsIntegrationTest {
   public void shouldNotMatchMethodsUsingPrefixAlone() throws IOException {
     String[] command = {"test", "--all", "--test-selectors", "#test"};
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(command);
-    assertThat(
-        "No tests should have run",
-        result.getStderr(),
-        containsString("TESTING SELECTED TESTS\nTESTS PASSED"));
+    assertNoTestsRan(result);
+    assertTestsPassed(result);
   }
 
   @Test
@@ -159,6 +157,13 @@ public class TestSelectorsIntegrationTest {
     assertThat(result.getStderr(), not(containsString("com.example.clown.FlowerTest")));
   }
 
+  @Test
+  public void assertNoSummariesForASingleTest() throws IOException {
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "//test/com/example/clown:clown");
+    assertNoTestSummaryShown(result);
+  }
+
   private void assertOutputWithSelectors(ProjectWorkspace.ProcessResult result) {
     String stderr = result.getStderr();
     assertThat(stderr, containsRegex(
@@ -189,6 +194,7 @@ public class TestSelectorsIntegrationTest {
     assertThat(stderr, containsRegex(
         createBuckTestOutputLineRegex(
             "PASS", 2, 0, 0, "com.example.clown.ShoesTest")));
+    assertTestSummaryShown(result);
   }
 
   private void assertCached(ProjectWorkspace.ProcessResult result) {
@@ -203,7 +209,24 @@ public class TestSelectorsIntegrationTest {
     assertThat(result.getStderr(), containsString(testName));
   }
 
+  private void assertNoTestsRan(ProjectWorkspace.ProcessResult result) {
+    assertThat(result.getStderr(), not(containsString("com.example.clown.CarTest")));
+    assertThat(result.getStderr(), not(containsString("com.example.clown.FlowerTest")));
+    assertThat(
+        result.getStderr(),
+        not(containsString("com.example.clown.PrimeMinisterialDecreeTest")));
+    assertThat(result.getStderr(), not(containsString("com.example.clown.ShoesTest")));
+  }
+
   private void assertTestsPassed(ProjectWorkspace.ProcessResult result) {
     assertThat(result.getStderr(), containsString("TESTS PASSED"));
+  }
+
+  private void assertTestSummaryShown(ProjectWorkspace.ProcessResult result) {
+    assertThat(result.getStderr(), containsString("Results for //test/com/example/clown:clown"));
+  }
+
+  private void assertNoTestSummaryShown(ProjectWorkspace.ProcessResult result) {
+    assertThat(result.getStderr(), not(containsString("Results for ")));
   }
 }

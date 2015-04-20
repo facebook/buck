@@ -61,6 +61,14 @@ public class TestResultFormatter {
 
   /** Writes a detailed summary that ends with a trailing newline. */
   public void reportResult(ImmutableList.Builder<String> addTo, TestResults results) {
+    if (results.getTotalNumberOfTests() > 1) {
+      addTo.add("");
+      addTo.add(String.format(
+              "Results for %s (%d/%d)",
+              results.getBuildTarget().getFullyQualifiedName(),
+              results.getSequenceNumber(),
+              results.getTotalNumberOfTests()));
+    }
     for (TestCaseSummary testCase : results.getTestCases()) {
       addTo.add(testCase.getOneLineSummary(results.getDependenciesPassTheirTests(), ansi));
 

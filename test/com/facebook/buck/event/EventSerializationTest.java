@@ -166,8 +166,8 @@ public class EventSerializationTest {
         "\"stacktrace\":null,\"stdOut\":null," +
         "\"stdErr\":null}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
-        "\"dependenciesPassTheirTests\":true,\"success\":false}]," +
-        "\"type\":\"RunComplete\"}", message);
+        "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
+        "\"success\":false}],\"type\":\"RunComplete\"}", message);
   }
 
   @Test
@@ -191,8 +191,8 @@ public class EventSerializationTest {
         "\"stacktrace\":null,\"stdOut\":null," +
         "\"stdErr\":null}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
-        "\"dependenciesPassTheirTests\":true,\"success\":false}," +
-        "\"type\":\"ResultsAvailable\"}", message);
+        "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
+        "\"success\":false},\"type\":\"ResultsAvailable\"}", message);
   }
 
   private BuildRule generateFakeBuildRule() {

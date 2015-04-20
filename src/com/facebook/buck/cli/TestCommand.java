@@ -98,6 +98,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
@@ -113,6 +114,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
   public static final int TEST_FAILURES_EXIT_CODE = 42;
   private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
+  private final AtomicInteger lastReportedTestSequenceNumber = new AtomicInteger();
+  private int totalNumberOfTests;
 
   public TestCommand(CommandRunnerParams params) {
     super(params);
@@ -485,6 +488,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       rulesUnderTest = ImmutableSet.of();
     }
 
+    totalNumberOfTests = Iterables.size(tests);
+
     getBuckEventBus().post(TestRunEvent.started(
         options.isRunAllTests(),
         options.getTestSelectorList(),
@@ -638,6 +643,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     FutureCallback<TestResults> callback = new FutureCallback<TestResults>() {
 
       private void postTestResults(TestResults testResults) {
+        testResults.setSequenceNumber(lastReportedTestSequenceNumber.incrementAndGet());
+        testResults.setTotalNumberOfTests(totalNumberOfTests);
         getBuckEventBus().post(
             IndividualTestEvent.finished(
                 options.getArgumentsFormattedAsBuildTargets(),
