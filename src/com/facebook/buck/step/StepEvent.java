@@ -19,6 +19,7 @@ package com.facebook.buck.step;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Objects;
 
 /**
@@ -26,6 +27,7 @@ import com.google.common.base.Objects;
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
+  @JsonIgnore
   private final Step step;
   private final String description;
 

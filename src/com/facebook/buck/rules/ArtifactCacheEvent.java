@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -37,6 +38,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   }
 
   private final Operation operation;
+  @JsonIgnore
   private final RuleKey ruleKey;
 
   protected ArtifactCacheEvent(Operation operation, RuleKey ruleKey) {
