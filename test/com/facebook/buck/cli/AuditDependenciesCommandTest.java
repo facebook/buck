@@ -144,49 +144,9 @@ public class AuditDependenciesCommandTest {
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(javaNode, libraryNode, secondLibraryNode);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
-    ImmutableSet<BuildTarget> testInput = ImmutableSet.of(libraryTarget);
     ImmutableSet<BuildTarget> immediateDependencies =
-        auditDependenciesCommand.getImmediateDependencies(testInput, targetGraph);
+        auditDependenciesCommand.getImmediateDependencies(libraryTarget, targetGraph);
     assertEquals(ImmutableSet.of(secondLibraryTarget), immediateDependencies);
-  }
-
-  @Test
-  public void testGetImmediateDependenciesWithMultipleInputsReturnsAllDependencies()
-      throws IOException {
-    BuildTarget secondJavaTarget = BuildTargetFactory.newInstance("//:test-java-library-two");
-    TargetNode<?> secondJavaNode = JavaLibraryBuilder
-        .createBuilder(secondJavaTarget)
-        .addSrc(Paths.get("src/com/facebook/TestJavaLibraryTwo.java"))
-        .build();
-
-    BuildTarget javaTarget = BuildTargetFactory.newInstance("//:test-java-library");
-    TargetNode<?> javaNode = JavaLibraryBuilder
-        .createBuilder(javaTarget)
-        .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
-        .addDep(secondJavaTarget)
-        .build();
-
-    BuildTarget secondLibraryTarget = BuildTargetFactory.newInstance("//:test-android-library-two");
-    TargetNode<?> secondLibraryNode = JavaLibraryBuilder
-        .createBuilder(secondLibraryTarget)
-        .addSrc(Paths.get("src/com/facebook/TestAndroidLibraryTwo.java"))
-        .build();
-
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:test-android-library");
-    TargetNode<?> libraryNode = JavaLibraryBuilder
-        .createBuilder(libraryTarget)
-        .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
-        .addDep(secondLibraryTarget)
-        .build();
-
-    ImmutableSet<TargetNode<?>> nodes =
-        ImmutableSet.of(javaNode, secondJavaNode, libraryNode, secondLibraryNode);
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-
-    ImmutableSet<BuildTarget> testInput = ImmutableSet.of(libraryTarget, javaTarget);
-    ImmutableSet<BuildTarget> immediateDependencies =
-        auditDependenciesCommand.getImmediateDependencies(testInput, targetGraph);
-    assertEquals(ImmutableSet.of(secondLibraryTarget, secondJavaTarget), immediateDependencies);
   }
 
   @Test
@@ -263,9 +223,8 @@ public class AuditDependenciesCommandTest {
         ImmutableSet.of(javaNode, secondJavaNode, thirdJavaNode);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
-    ImmutableSet<BuildTarget> testInput = ImmutableSet.of(javaTarget);
     ImmutableSet<BuildTarget> transitiveDependencies =
-        auditDependenciesCommand.getImmediateDependencies(testInput, targetGraph);
+        auditDependenciesCommand.getImmediateDependencies(javaTarget, targetGraph);
     ImmutableSet<BuildTarget> expectedOutput =
         ImmutableSet.of(secondJavaTarget, thirdJavaTarget);
     assertEquals(expectedOutput, transitiveDependencies);

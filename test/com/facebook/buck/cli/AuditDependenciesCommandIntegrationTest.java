@@ -151,4 +151,44 @@ public class AuditDependenciesCommandIntegrationTest {
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-lib1-transitive-tests"), result.getStdout());
   }
+
+  @Test
+  public void testThatJSONOutputWithMultipleInputsIsGroupedByInput()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "audit_dependencies", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result = workspace.runBuckCommand(
+        "audit",
+        "dependencies",
+        "--json",
+        "//example:two",
+        "//example:three");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-two-three.json"), result.getStdout());
+  }
+
+  @Test
+  public void testThatTransitiveJSONOutputWithMultipleInputsIsGroupedByInput()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "audit_dependencies", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result = workspace.runBuckCommand(
+        "audit",
+        "dependencies",
+        "--transitive",
+        "--json",
+        "//example:one",
+        "//example:two",
+        "//example:three");
+    result.assertSuccess();
+    assertEquals(
+        workspace.getFileContents("stdout-one-two-three-transitive.json"),
+        result.getStdout());
+  }
 }

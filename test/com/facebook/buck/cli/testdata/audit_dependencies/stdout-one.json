@@ -1,1 +1,1 @@
-["//example:three","//example:two"]
+{"//example:one":["//example:three","//example:two"]}

@@ -100,9 +100,7 @@ Provide build information about build targets and outputs.
 {call buck.param}
   {param name: 'json' /}
   {param desc}
-  Outputs the results as JSON. The format of the JSON depends on the command
-  used. For example, <code>buck audit dependencies</code> returns an array of
-  results, while <code>buck audit input</code> will return an object
+  Outputs the results as JSON.
   {/param}
 {/call}
 
@@ -204,12 +202,21 @@ library transitively depends on.
 <pre>buck audit dependencies --transitive --json /&#x2F;examples:two</pre>
 <pre class="prettyprint lang-js">
 {literal}
-[
-  "//examples:five",
-  "//examples:four",
-  "//examples:three",
-  "//examples:two",
-]
+{
+  "//examples:two": ["//examples:five","//examples:four"]
+}
+{/literal}
+</pre>
+
+Outputs a JSON representation of the direct dependencies of the{sp}
+<code>two</code> and <code>three</code> libraries.
+<pre>buck audit dependencies --json /&#x2F;examples:two /&#x2F;examples:three</pre>
+<pre class="prettyprint lang-js">
+{literal}
+{
+  "//examples:three": ["//examples:five","//examples:four"],
+  "//examples:two": ["//examples:four"]
+}
 {/literal}
 </pre>
 
