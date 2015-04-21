@@ -196,6 +196,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
         reorderedTestClasses,
         amendVmArgs(vmArgs, executionContext.getTargetDeviceOptional()),
         pathToTestOutput,
+        getBuildTarget().getBasePath(),
         tmpDirectory,
         executionContext.isCodeCoverageEnabled(),
         executionContext.isDebugEnabled(),
