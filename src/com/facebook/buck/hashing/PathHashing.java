@@ -18,6 +18,7 @@ package com.facebook.buck.hashing;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Funnels;
 import com.google.common.hash.Hasher;
@@ -27,11 +28,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 
 public class PathHashing {
   // Utility class, do not instantiate.
   private PathHashing() { }
+
+  private static final Path EMPTY_PATH = Paths.get("");
 
   /**
    * Iterates recursively over all files under {@code paths}, sorts
@@ -42,6 +46,11 @@ public class PathHashing {
       Hasher hasher,
       ProjectFilesystem projectFilesystem,
       Set<Path> paths) throws IOException {
+    Preconditions.checkArgument(
+        !paths.contains(EMPTY_PATH),
+        "Paths to hash (%s) must not contain empty path",
+        paths
+    );
     try (final OutputStream hasherOutputStream = Funnels.asOutputStream(hasher)) {
       for (Path path : walkedPathsInSortedOrder(projectFilesystem, paths)) {
         StringHashing.hashStringAndLength(hasher, MorePaths.pathWithUnixSeparators(path));
