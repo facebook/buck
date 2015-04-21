@@ -59,10 +59,14 @@ public class JUnitStep extends ShellStep {
   @VisibleForTesting
   public static final String BUILD_ID_PROPERTY = "com.facebook.buck.buildId";
 
+  @VisibleForTesting
+  public static final String MODULE_PATH_PROPERTY = "com.facebook.buck.modulePath";
+
   private final ImmutableSet<Path> classpathEntries;
   private final Iterable<String> testClassNames;
   private final List<String> vmArgs;
   private final Path directoryForTestResults;
+  private final Path modulePath;
   private final Path tmpDirectory;
   private final Path testRunnerClasspath;
   private final boolean isCodeCoverageEnabled;
@@ -102,6 +106,7 @@ public class JUnitStep extends ShellStep {
       Iterable<String> testClassNames,
       List<String> vmArgs,
       Path directoryForTestResults,
+      Path modulePath,
       Path tmpDirectory,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
@@ -114,6 +119,7 @@ public class JUnitStep extends ShellStep {
         testClassNames,
         vmArgs,
         directoryForTestResults,
+        modulePath,
         tmpDirectory,
         isCodeCoverageEnabled,
         isDebugEnabled,
@@ -131,6 +137,7 @@ public class JUnitStep extends ShellStep {
       Iterable<String> testClassNames,
       List<String> vmArgs,
       Path directoryForTestResults,
+      Path modulePath,
       Path tmpDirectory,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
@@ -145,6 +152,7 @@ public class JUnitStep extends ShellStep {
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.directoryForTestResults = directoryForTestResults;
     this.tmpDirectory = tmpDirectory;
+    this.modulePath = modulePath;
     this.isCodeCoverageEnabled = isCodeCoverageEnabled;
     this.isDebugEnabled = isDebugEnabled;
     this.buildId = buildId;
@@ -185,6 +193,9 @@ public class JUnitStep extends ShellStep {
 
     // Include the buildId
     args.add(String.format("-D%s=%s", BUILD_ID_PROPERTY, buildId));
+
+    // Include the baseDir
+    args.add(String.format("-D%s=%s", MODULE_PATH_PROPERTY, modulePath));
 
     if (isDebugEnabled) {
       // This is the default config used by IntelliJ. By doing this, all a user
