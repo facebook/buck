@@ -16,15 +16,30 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.rules.coercer.AppleBundleDestination;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+
+import java.nio.file.Path;
+
+import java.util.Set;
 
 public class AppleResources {
   // Utility class, do not instantiate.
   private AppleResources() { }
+
+  private static final Function<Object, AppleBundleDestination> APPLE_BUNDLE_DESTINATION_RESOURCE =
+      Functions.constant(
+          AppleBundleDestination.of(
+              AppleBundleDestination.SubfolderSpec.RESOURCES,
+              Optional.<String>absent()));
 
   /**
    * Collect resources from recursive dependencies.
@@ -51,5 +66,39 @@ public class AppleResources {
               }
             })
         .toSet();
+  }
+
+  public static void addResourceDirsToBuilder(
+      ImmutableMap.Builder<Path, AppleBundleDestination> resourceDirsBuilder,
+      Iterable<AppleResourceDescription.Arg> resourceDescriptions) {
+    resourceDirsBuilder.putAll(
+        FluentIterable
+            .from(resourceDescriptions)
+            .transformAndConcat(
+                new Function<AppleResourceDescription.Arg, Set<Path>>() {
+                  @Override
+                  public Set<Path> apply(AppleResourceDescription.Arg arg) {
+                    return arg.dirs;
+                  }
+                })
+            .toMap(APPLE_BUNDLE_DESTINATION_RESOURCE)
+    );
+  }
+
+  public static void addResourceFilesToBuilder(
+      ImmutableMap.Builder<SourcePath, AppleBundleDestination> resourceFilesBuilder,
+      Iterable<AppleResourceDescription.Arg> resourceDescriptions) {
+    resourceFilesBuilder.putAll(
+        FluentIterable
+            .from(resourceDescriptions)
+            .transformAndConcat(
+                new Function<AppleResourceDescription.Arg, Set<SourcePath>>() {
+                  @Override
+                  public Set<SourcePath> apply(AppleResourceDescription.Arg arg) {
+                    return arg.files;
+                  }
+                })
+            .toMap(APPLE_BUNDLE_DESTINATION_RESOURCE)
+    );
   }
 }

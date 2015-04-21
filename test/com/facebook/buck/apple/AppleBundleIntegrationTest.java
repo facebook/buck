@@ -55,4 +55,24 @@ public class AppleBundleIntegrationTest {
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve("DemoApp/DemoApp.app/DemoApp")));
   }
+
+  @Test
+  public void appBundleWithDirsAndFiles() throws IOException{
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "app_bundle_with_dirs_and_files",
+        tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:DemoApp").assertSuccess();
+
+    workspace.verify();
+
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve("DemoApp/DemoApp.app/DemoApp")));
+  }
 }

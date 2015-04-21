@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.AppleBundleDestination;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -37,15 +39,20 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+
+import java.nio.file.Path;
 
 import java.util.Set;
 
 public class AppleTestDescription implements Description<AppleTestDescription.Arg>, Flavored {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_test");
+
+  private static final Logger LOG = Logger.get(AppleTestDescription.class);
 
   /**
    * Flavors for the additional generated build rules.
@@ -114,6 +121,23 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
       return library;
     }
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    ImmutableSet<AppleResourceDescription.Arg> resourceDescriptions =
+        AppleResources.collectRecursiveResources(
+            params.getTargetGraph(),
+            ImmutableSet.of(params.getTargetGraph().get(params.getBuildTarget())));
+    LOG.debug("Got resource nodes %s", resourceDescriptions);
+    ImmutableMap.Builder<Path, AppleBundleDestination> resourceDirsBuilder =
+        ImmutableMap.builder();
+    resourceDirsBuilder.putAll(args.dirs.get());
+    AppleResources.addResourceDirsToBuilder(resourceDirsBuilder, resourceDescriptions);
+    ImmutableMap<Path, AppleBundleDestination> resourceDirs = resourceDirsBuilder.build();
+
+    ImmutableMap.Builder<SourcePath, AppleBundleDestination> resourceFilesBuilder =
+        ImmutableMap.builder();
+    resourceFilesBuilder.putAll(args.files.get());
+    AppleResources.addResourceFilesToBuilder(resourceFilesBuilder, resourceDescriptions);
+    ImmutableMap<SourcePath, AppleBundleDestination> resourceFiles = resourceFilesBuilder.build();
+
     AppleBundle bundle = new AppleBundle(
         params.copyWithChanges(
             AppleBundleDescription.TYPE,
@@ -129,7 +153,12 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         sourcePathResolver,
         args.extension,
         args.infoPlist,
-        library);
+        Optional.of(library),
+        // TODO(user): Use flavors to switch between iOS and OSX layout
+        AppleBundleDescription.IOS_APP_SUBFOLDER_SPEC_MAP,
+        resourceDirs,
+        resourceFiles);
+
     return new AppleTest(
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)),
@@ -151,6 +180,9 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     public Either<AppleBundleExtension, String> extension;
     public Optional<SourcePath> infoPlist;
     public Optional<String> xcodeProductType;
+    public Optional<String> resourcePrefixDir;
+    public Optional<ImmutableMap<Path, AppleBundleDestination>> dirs;
+    public Optional<ImmutableMap<SourcePath, AppleBundleDestination>> files;
 
     @Override
     public Either<AppleBundleExtension, String> getExtension() {
@@ -169,6 +201,16 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
 
     public boolean canGroup() {
       return canGroup.or(false);
+    }
+
+    @Override
+    public ImmutableMap<Path, AppleBundleDestination> getDirs() {
+      return dirs.get();
+    }
+
+    @Override
+    public ImmutableMap<SourcePath, AppleBundleDestination> getFiles() {
+      return files.get();
     }
   }
 }

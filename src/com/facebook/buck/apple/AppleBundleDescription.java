@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -31,9 +32,31 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
+
+import java.nio.file.Path;
 
 public class AppleBundleDescription implements Description<AppleBundleDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_bundle");
+
+  public static final ImmutableMap<AppleBundleDestination.SubfolderSpec, String>
+      IOS_APP_SUBFOLDER_SPEC_MAP = Maps.immutableEnumMap(
+          ImmutableMap.<AppleBundleDestination.SubfolderSpec, String>builder()
+              .put(AppleBundleDestination.SubfolderSpec.ABSOLUTE, "")
+              .put(AppleBundleDestination.SubfolderSpec.WRAPPER, "")
+              .put(AppleBundleDestination.SubfolderSpec.EXECUTABLES, "")
+              .put(AppleBundleDestination.SubfolderSpec.RESOURCES, "")
+              .put(AppleBundleDestination.SubfolderSpec.FRAMEWORKS, "Frameworks")
+              .put(
+                  AppleBundleDestination.SubfolderSpec.SHARED_FRAMEWORKS,
+                  "SharedFrameworks")
+              .put(AppleBundleDestination.SubfolderSpec.SHARED_SUPPORT, "")
+              .put(AppleBundleDestination.SubfolderSpec.PLUGINS, "PlugIns")
+              .put(AppleBundleDestination.SubfolderSpec.JAVA_RESOURCES, "")
+              .put(AppleBundleDestination.SubfolderSpec.PRODUCTS, "")
+              .build());
+
+  // TODO(user): Add OSX_APP_SUBFOLDER_SPEC_MAP etc.
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -50,12 +73,20 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+
+    // TODO(user): Sort through the changes needed to make project generation work with
+    // binary being optional.
+    Optional<BuildRule> binaryRule = Optional.of(resolver.getRule(args.binary));
     return new AppleBundle(
         params,
         new SourcePathResolver(resolver),
         args.extension,
         args.infoPlist,
-        resolver.getRule(args.binary));
+        binaryRule,
+        // TODO(user): Check the flavor and decide whether to lay out with iOS or OS X style.
+        IOS_APP_SUBFOLDER_SPEC_MAP,
+        args.dirs.get(),
+        args.files.get());
   }
 
   @SuppressFieldNotInitialized
@@ -64,7 +95,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public BuildTarget binary;
     public Optional<SourcePath> infoPlist;
     public Optional<ImmutableMap<String, SourcePath>> headers;
-    public Optional<ImmutableMap<AppleBundleDestination, SourcePath>> files;
+    public Optional<ImmutableMap<Path, AppleBundleDestination>> dirs;
+    public Optional<ImmutableMap<SourcePath, AppleBundleDestination>> files;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
     public Optional<String> xcodeProductType;
@@ -87,6 +119,16 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     @Override
     public Optional<String> getXcodeProductType() {
       return xcodeProductType;
+    }
+
+    @Override
+    public ImmutableMap<Path, AppleBundleDestination> getDirs() {
+      return dirs.get();
+    }
+
+    @Override
+    public ImmutableMap<SourcePath, AppleBundleDestination> getFiles() {
+      return files.get();
     }
   }
 }

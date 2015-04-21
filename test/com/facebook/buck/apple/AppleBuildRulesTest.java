@@ -31,6 +31,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -61,8 +62,12 @@ public class AppleBuildRulesTest {
         .setContacts(Optional.of(ImmutableSortedSet.<String>of()))
         .setLabels(Optional.of(ImmutableSortedSet.<Label>of()))
         .setDeps(Optional.of(ImmutableSortedSet.<BuildTarget>of()));
-    BuildRule testRule = appleTestBuilder.build(resolver);
 
+    TargetNode<?> appleTestNode = appleTestBuilder.build();
+    BuildRule testRule = appleTestBuilder.build(
+        resolver,
+        new FakeProjectFilesystem(),
+        TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of(appleTestNode)));
     assertTrue(AppleBuildRules.isXcodeTargetTestBuildRule(testRule));
   }
 

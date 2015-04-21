@@ -1,0 +1,14 @@
+apple_resource(
+    name = 'foo-resources',
+    files = glob(['*.png']),
+    dirs = ['path/to/dir1', 'dir2'],
+)
+
+apple_test(
+    name='foo',
+    extension='xctest',
+    use_buck_header_maps = True,
+    srcs = ['Foo.m'],
+    info_plist = 'Test.plist',
+    deps = [':foo-resources'],
+)
