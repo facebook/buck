@@ -1,4 +1,5 @@
 import os
+import json
 import stat
 import tempfile
 
@@ -13,8 +14,13 @@ BOOTSTRAPPER = Resource("bootstrapper_classes")
 
 class BuckPackage(BuckTool):
 
+    def __init__(self, buck_project):
+        super(BuckPackage, self).__init__(buck_project)
+        self._package_info = json.loads(
+            pkg_resources.resource_string(__name__, 'buck_package_info'))
+
     def _get_buck_version_uid(self):
-        return pkg_resources.resource_string(__name__, 'buck_package_version')
+        return self._package_info['version']
 
     def _get_resource_dir(self):
         if self._use_buckd():
@@ -43,6 +49,13 @@ class BuckPackage(BuckTool):
                 os.rename(outf.name, resource_path)
                 outf.delete = False
         return resource_path
+
+    def _get_extra_java_args(self):
+        return [
+            "-Dbuck.git_commit={0}".format(self._package_info['version']),
+            "-Dbuck.git_commit_timestamp={0}".format(self._package_info['timestamp']),
+            "-Dbuck.git_dirty=0",
+        ]
 
     def _get_bootstrap_classpath(self):
         return self._get_resource(BOOTSTRAPPER)

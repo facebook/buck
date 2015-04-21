@@ -16,8 +16,8 @@ python_library(
 )
 
 python_binary(
-  name = 'gen_buck_version',
-  main = 'gen_buck_version.py',
+  name = 'gen_buck_info',
+  main = 'gen_buck_info.py',
   deps = [
     ':buck_version',
   ],
@@ -31,15 +31,15 @@ python_binary(
 # in-repo Buck we're using to build this already implicitly adds the
 # same Buck version UID to it's rule key.  But still... gross.
 genrule(
-  name = 'gen_buck_package_version',
-  cmd = '$(exe :gen_buck_version) > $OUT',
-  out = 'buckversion',
+  name = 'gen_buck_package_info',
+  cmd = '$(exe :gen_buck_info) > $OUT',
+  out = 'buck_package_info.json',
 )
 
 BUCK_CORE_RESOURCES = {
     'android_agent_path': '//assets/android:agent.apk',
     'bootstrapper_classes': '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
-    'buck_package_version': ':gen_buck_package_version',
+    'buck_package_info': ':gen_buck_package_info',
     'buck_server': '//src/com/facebook/buck/cli:main-fixed',
     'dx': '//third-party/java/dx-from-kitkat:etc_dx',
     'jacoco_agent_jar': '//third-party/java/jacoco:agent',

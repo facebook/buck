@@ -54,6 +54,12 @@ def get_git_revision(dirpath):
     return output.splitlines()[0].strip()
 
 
+def get_git_revision_timestamp(dirpath):
+    return check_output(
+        ['git', 'log', '--pretty=format:%ct', '-1', 'HEAD', '--'],
+        cwd=dirpath).strip()
+
+
 def get_clean_buck_version(dirpath, allow_dirty=False):
     if not is_git(dirpath):
         return 'N/A'

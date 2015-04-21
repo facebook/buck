@@ -10,7 +10,7 @@ from timing import monotonic_time_nanos
 from tracing import Tracing
 from buck_tool import BuckTool, which, check_output
 from buck_tool import BuckToolException, RestartBuck
-from buck_version import get_clean_buck_version, get_dirty_buck_version
+import buck_version
 
 
 JAVA_CLASSPATHS = [
@@ -193,19 +193,12 @@ class BuckRepo(BuckTool):
     def _get_git_revision(self):
         if not self._is_git:
             return 'N/A'
-
-        output = check_output(
-            ['git', 'rev-parse', 'HEAD', '--'],
-            cwd=self._buck_dir)
-        return output.splitlines()[0].strip()
+        return buck_version.get_git_revision(self._buck_dir)
 
     def _get_git_commit_timestamp(self):
         if self._is_buck_repo_dirty_override or not self._is_git:
             return -1
-
-        return check_output(
-            ['git', 'log', '--pretty=format:%ct', '-1', 'HEAD', '--'],
-            cwd=self._buck_dir).strip()
+        return buck_version.get_git_revision_timestamp(self._buck_dir)
 
     def _revision_exists(self, revision):
         returncode = subprocess.call(
@@ -277,7 +270,7 @@ class BuckRepo(BuckTool):
 
             # First try to get the "clean" buck version.  If it succeeds,
             # return it.
-            clean_version = get_clean_buck_version(
+            clean_version = buck_version.get_clean_buck_version(
                 self._buck_dir,
                 allow_dirty=self._is_buck_repo_dirty_override == "1")
             if clean_version is not None:
@@ -287,7 +280,7 @@ class BuckRepo(BuckTool):
             # a .buckversion file, fall back to a "dirty" version.
             if (self._buck_project.has_no_buck_check or
                     not self._buck_project.buck_version):
-                return get_dirty_buck_version(self._buck_dir)
+                return buck_version.get_dirty_buck_version(self._buck_dir)
 
             if self._has_local_changes():
                 print(textwrap.dedent("""\
@@ -315,7 +308,7 @@ class BuckRepo(BuckTool):
                             cwd=self._buck_dir)
                         raise RestartBuck()
 
-            return get_dirty_buck_version(self._buck_dir)
+            return buck_version.get_dirty_buck_version(self._buck_dir)
 
     def _get_extra_java_args(self):
         return [
