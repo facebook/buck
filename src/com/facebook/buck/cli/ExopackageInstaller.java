@@ -315,11 +315,6 @@ public class ExopackageInstaller {
       Map<String, Path> filesToInstallByHash =
           Maps.filterKeys(libraries, Predicates.not(Predicates.in(presentHashes)));
 
-      if (useNativeAgent) {
-        // "ln -s" only works on pre-L Android devices.
-        createSymlinks(abi, libraries);
-      }
-
       String metadataContents = Joiner.on('\n').join(
           FluentIterable.from(libraries.entrySet()).transform(
               new Function<Map.Entry<String, Path>, String>() {
@@ -339,37 +334,6 @@ public class ExopackageInstaller {
           metadataContents,
           "native-%s.so",
           NATIVE_LIBS_DIR.resolve(abi));
-    }
-
-    /**
-     * Create symlinks of the form "lib<name>.so" to the native libraries. We want to do this while
-     * minimizing the number of adb shell commands, hence creating chunks of source/target pairs.
-     */
-    private void createSymlinks(String abi, ImmutableMap<String, Path> libraries) throws Exception {
-      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "create_symlinks_native")) {
-        int maxSize = MAX_ADB_COMMAND_SIZE - AdbHelper.ECHO_COMMAND_SUFFIX.length();
-        Path abiDir = dataRoot.resolve(NATIVE_LIBS_DIR).resolve(abi);
-        String commandPrefix = String.format("cd %s", abiDir.toString());
-
-        String command = commandPrefix;
-        for (Map.Entry<String, Path> entry : libraries.entrySet()) {
-          String target = entry.getValue().getFileName().toString();
-          String source = String.format("native-%s.so", entry.getKey());
-          String nextToken = String.format(" && ln -s %s %s", source, target);
-
-          if (command.length() + nextToken.length() > maxSize) {
-            LOG.debug("Executing symlink command: " + command);
-            AdbHelper.executeCommandWithErrorChecking(device, command);
-            command = commandPrefix + nextToken;
-          } else {
-            command += nextToken;
-          }
-        }
-
-        if (!command.equals(commandPrefix)) {
-          AdbHelper.executeCommandWithErrorChecking(device, command);
-        }
-      }
     }
 
     /**

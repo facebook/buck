@@ -59,10 +59,8 @@ public class ExopackageSoLoader {
     nativeLibsDir = "/data/local/tmp/exopackage/" + context.getPackageName() + "/native-libs/";
     verifyMetadataFile();
 
-    if (isCopyToPrivateStorage()) {
-      preparePrivateDirectory(context);
-      parseMetadata();
-    }
+    preparePrivateDirectory(context);
+    parseMetadata();
     initialized = true;
   }
 
@@ -131,19 +129,7 @@ public class ExopackageSoLoader {
 
     String libname = shortName.startsWith("lib") ? shortName : "lib" + shortName;
 
-    File libraryFile;
-
-    if (isCopyToPrivateStorage()) {
-      libraryFile = copySoFileIfRequired(libname);
-    } else {
-      libraryFile = new File(nativeLibsDir + Build.CPU_ABI + "/" + libname + ".so");
-      if (!libraryFile.exists()) {
-        libraryFile = new File(nativeLibsDir + Build.CPU_ABI2 + "/" + libname + ".so");
-        if (!libraryFile.exists()) {
-          libraryFile = null;
-        }
-      }
-    }
+    File libraryFile = copySoFileIfRequired(libname);
 
     if (libraryFile == null) {
       throw new UnsatisfiedLinkError("Could not find library file for either ABIs.");
@@ -201,10 +187,6 @@ public class ExopackageSoLoader {
     }
 
     return libraryFile;
-  }
-
-  private static boolean isCopyToPrivateStorage() {
-    return Build.VERSION.SDK_INT >= 21;
   }
 
   private static File getAbi1Metadata() {
