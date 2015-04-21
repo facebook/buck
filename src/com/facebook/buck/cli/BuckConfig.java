@@ -633,6 +633,7 @@ public class BuckConfig {
       return new NoopArtifactCache();
     }
     ImmutableList.Builder<ArtifactCache> builder = ImmutableList.builder();
+    boolean useDistributedCache = isWifiUsableForDistributedCache(currentWifiSsid);
     try {
       for (String mode : modes) {
         switch (ArtifactCacheNames.valueOf(mode)) {
@@ -642,17 +643,20 @@ public class BuckConfig {
           builder.add(dirArtifactCache);
           break;
         case cassandra:
-          ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(
-              currentWifiSsid,
-              buckEventBus,
-              fileHashCache);
-          if (cassandraArtifactCache != null) {
-            builder.add(cassandraArtifactCache);
+          if (useDistributedCache) {
+            ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(
+                buckEventBus,
+                fileHashCache);
+            if (cassandraArtifactCache != null) {
+              builder.add(cassandraArtifactCache);
+            }
           }
           break;
         case http:
-          ArtifactCache httpArtifactCache = createHttpArtifactCache(buckEventBus);
-          builder.add(httpArtifactCache);
+          if (useDistributedCache) {
+            ArtifactCache httpArtifactCache = createHttpArtifactCache(buckEventBus);
+            builder.add(httpArtifactCache);
+          }
           break;
         }
       }
@@ -728,18 +732,8 @@ public class BuckConfig {
    */
   @Nullable
   CassandraArtifactCache createCassandraArtifactCache(
-      Optional<String> currentWifiSsid,
       BuckEventBus buckEventBus,
       FileHashCache fileHashCache) {
-    // cache.blacklisted_wifi_ssids
-    ImmutableSet<String> blacklistedWifi = ImmutableSet.copyOf(
-        asListWithoutComments(getValue("cache", "blacklisted_wifi_ssids")));
-    if (currentWifiSsid.isPresent() && blacklistedWifi.contains(currentWifiSsid.get())) {
-      // We're connected to a wifi hotspot that has been explicitly blacklisted from connecting to
-      // Cassandra.
-      return null;
-    }
-
     // cache.cassandra_mode
     final boolean doStore = readCacheMode("cassandra_mode", DEFAULT_CASSANDRA_MODE);
     // cache.hosts
@@ -763,6 +757,19 @@ public class BuckConfig {
       buckEventBus.post(ThrowableConsoleEvent.create(e, "Cassandra cache connection failure."));
       return null;
     }
+  }
+
+  @VisibleForTesting
+  boolean isWifiUsableForDistributedCache(Optional<String> currentWifiSsid) {
+    // cache.blacklisted_wifi_ssids
+    ImmutableSet<String> blacklistedWifi = ImmutableSet.copyOf(
+        asListWithoutComments(getValue("cache", "blacklisted_wifi_ssids")));
+    if (currentWifiSsid.isPresent() && blacklistedWifi.contains(currentWifiSsid.get())) {
+      // We're connected to a wifi hotspot that has been explicitly blacklisted from connecting to
+      // a distributed cache.
+      return false;
+    }
+    return true;
   }
 
   private String getLocalhost() {

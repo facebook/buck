@@ -391,6 +391,22 @@ public class BuckConfigTest {
   }
 
   @Test
+  public void testWifiBlacklist() throws IOException {
+    BuckConfig config = createFromText(
+        "[cache]",
+        "dir = cassandra,http",
+        "blacklisted_wifi_ssids = yolocoaster");
+    assertFalse(config.isWifiUsableForDistributedCache(Optional.of("yolocoaster")));
+    assertTrue(config.isWifiUsableForDistributedCache(Optional.of("swagtastic")));
+
+    config = createFromText(
+        "[cache]",
+        "dir = cassandra,http");
+
+    assertTrue(config.isWifiUsableForDistributedCache(Optional.of("yolocoaster")));
+  }
+
+  @Test
   public void testExpandUserHomeCacheDir() throws IOException {
     BuckConfig config = createFromText(
         "[cache]",
