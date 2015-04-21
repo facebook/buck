@@ -22,9 +22,11 @@ import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.cxx.VersionedTool;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
@@ -234,6 +236,23 @@ public class NdkCxxPlatforms {
       Path ndkRoot,
       TargetConfiguration targetConfiguration,
       CxxRuntime cxxRuntime) {
+    return build(
+        flavor,
+        platform,
+        ndkRoot,
+        targetConfiguration,
+        cxxRuntime,
+        new ExecutableFinder());
+  }
+
+  @VisibleForTesting
+  static NdkCxxPlatform build(
+      Flavor flavor,
+      Platform platform,
+      Path ndkRoot,
+      TargetConfiguration targetConfiguration,
+      CxxRuntime cxxRuntime,
+      ExecutableFinder executableFinder) {
 
     String version = readVersion(ndkRoot);
 
@@ -242,17 +261,17 @@ public class NdkCxxPlatforms {
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder();
     cxxPlatformBuilder
         .setFlavor(flavor)
-        .setAs(getTool(ndkRoot, targetConfiguration, host, "as", version))
+        .setAs(getTool(ndkRoot, targetConfiguration, host, "as", version, executableFinder))
         // Default assembler flags added by the NDK to enforce the NX (no execute) security feature.
         .addAsflags("--noexecstack")
-        .setAspp(getTool(ndkRoot, targetConfiguration, host, "gcc", version))
-        .setCc(getTool(ndkRoot, targetConfiguration, host, "gcc", version))
+        .setAspp(getTool(ndkRoot, targetConfiguration, host, "gcc", version, executableFinder))
+        .setCc(getTool(ndkRoot, targetConfiguration, host, "gcc", version, executableFinder))
         .addAllCflags(getCflagsInternal(targetConfiguration))
-        .setCpp(getCppTool(ndkRoot, targetConfiguration, host, "gcc", version))
+        .setCpp(getCppTool(ndkRoot, targetConfiguration, host, "gcc", version, executableFinder))
         .addAllCppflags(getCppflags(ndkRoot, targetConfiguration))
-        .setCxx(getTool(ndkRoot, targetConfiguration, host, "g++", version))
+        .setCxx(getTool(ndkRoot, targetConfiguration, host, "g++", version, executableFinder))
         .addAllCxxflags(getCxxflagsInternal(targetConfiguration))
-        .setCxxpp(getCppTool(ndkRoot, targetConfiguration, host, "g++", version))
+        .setCxxpp(getCppTool(ndkRoot, targetConfiguration, host, "g++", version, executableFinder))
         .addAllCxxppflags(getCxxppflags(ndkRoot, targetConfiguration))
         .setCxxld(
             getCcLinkTool(
@@ -261,7 +280,8 @@ public class NdkCxxPlatforms {
                 host,
                 cxxRuntime,
                 "g++",
-                version))
+                version,
+                executableFinder))
         .addAllCxxldflags(targetConfiguration.linkerFlags)
         .setLd(
             new GnuLinker(
@@ -270,7 +290,8 @@ public class NdkCxxPlatforms {
                     targetConfiguration,
                     host,
                     "ld.gold",
-                    version)))
+                    version,
+                    executableFinder)))
         // Default linker flags added by the NDK
         .addLdflags(
             //  Enforce the NX (no execute) security feature
@@ -284,7 +305,7 @@ public class NdkCxxPlatforms {
             // We always pass the runtime library on the command line, so setting this flag
             // means the resulting link will only use it if it was actually needed it.
             "--as-needed")
-        .setAr(getTool(ndkRoot, targetConfiguration, host, "ar", version))
+        .setAr(getTool(ndkRoot, targetConfiguration, host, "ar", version, executableFinder))
         .setDebugPathSanitizer(
             Optional.of(
                 new DebugPathSanitizer(
@@ -309,7 +330,7 @@ public class NdkCxxPlatforms {
 
     return NdkCxxPlatform.builder()
         .setCxxPlatform(cxxPlatform)
-        .setObjcopy(getToolPath(ndkRoot, targetConfiguration, host, "objcopy"))
+        .setObjcopy(getToolPath(ndkRoot, targetConfiguration, host, "objcopy", executableFinder))
         .setCxxRuntime(cxxRuntime)
         .setCxxSharedRuntimePath(
             getCxxRuntimeDirectory(ndkRoot, targetConfiguration)
@@ -347,11 +368,16 @@ public class NdkCxxPlatforms {
       Path ndkRoot,
       TargetConfiguration targetConfiguration,
       Host host,
-      String tool) {
-      return getNdkToolRoot(ndkRoot, targetConfiguration, host)
-          .resolve(targetConfiguration.toolchainPrefix.toString())
-          .resolve("bin")
-          .resolve(tool);
+      String tool,
+      ExecutableFinder executableFinder) {
+      Optional<Path> path = executableFinder.getOptionalExecutable(
+          getNdkToolRoot(ndkRoot, targetConfiguration, host)
+              .resolve(targetConfiguration.toolchainPrefix.toString())
+              .resolve("bin")
+              .resolve(tool),
+          ImmutableMap.<String, String>of());
+    Preconditions.checkState(path.isPresent());
+    return path.get();
   }
 
   private static Tool getTool(
@@ -359,9 +385,10 @@ public class NdkCxxPlatforms {
       TargetConfiguration targetConfiguration,
       Host host,
       String tool,
-      String version) {
+      String version,
+      ExecutableFinder executableFinder) {
     return new VersionedTool(
-        getToolPath(ndkRoot, targetConfiguration, host, tool),
+        getToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder),
         ImmutableList.<String>of(),
         tool,
         targetConfiguration.toolchain.toString() + " " + version);
@@ -372,9 +399,10 @@ public class NdkCxxPlatforms {
       TargetConfiguration targetConfiguration,
       Host host,
       String tool,
-      String version) {
+      String version,
+      ExecutableFinder executableFinder) {
     return new VersionedTool(
-        getToolPath(ndkRoot, targetConfiguration, host, tool),
+        getToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder),
         ImmutableList.of(
             "-isystem", ndkRoot
                 .resolve("toolchains")
@@ -416,9 +444,10 @@ public class NdkCxxPlatforms {
       Host host,
       CxxRuntime cxxRuntime,
       String tool,
-      String version) {
+      String version,
+      ExecutableFinder executableFinder) {
     return new VersionedTool(
-        getToolPath(ndkRoot, targetConfiguration, host, tool),
+        getToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder),
         ImmutableList.of(
             "-B" + ndkRoot
                 .resolve("platforms")

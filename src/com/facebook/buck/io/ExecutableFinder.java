@@ -47,7 +47,6 @@ public class ExecutableFinder {
   private static final Logger LOG = Logger.get(ExecutableFinder.class);
   private static final ImmutableSet<String> DEFAULT_WINDOWS_EXTENSIONS =
       ImmutableSet.of(
-          "",
           ".bat",
           ".cmd",
           ".com",
