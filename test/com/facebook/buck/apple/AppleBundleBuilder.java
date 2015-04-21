@@ -30,7 +30,11 @@ public class AppleBundleBuilder
     extends AbstractNodeBuilder<AppleBundleDescription.Arg> {
 
   protected AppleBundleBuilder(BuildTarget target) {
-    super(new AppleBundleDescription(), target);
+    super(
+        new AppleBundleDescription(
+            FakeAppleRuleDescriptions.BINARY_DESCRIPTION,
+            FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION),
+        target);
   }
 
   public static AppleBundleBuilder createBuilder(BuildTarget target) {

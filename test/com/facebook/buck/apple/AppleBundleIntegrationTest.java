@@ -45,7 +45,7 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp").assertSuccess();
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
 
     workspace.verify();
 
@@ -53,7 +53,7 @@ public class AppleBundleIntegrationTest {
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp/DemoApp.app/DemoApp")));
+                .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
   }
 
   @Test
@@ -65,7 +65,7 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp").assertSuccess();
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
 
     workspace.verify();
 
@@ -73,6 +73,6 @@ public class AppleBundleIntegrationTest {
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp/DemoApp.app/DemoApp")));
+                .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
   }
 }

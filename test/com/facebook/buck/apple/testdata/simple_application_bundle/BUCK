@@ -1,6 +1,6 @@
 apple_bundle(
   name = 'DemoApp',
-  binary = ':DemoAppBinary#iphonesimulator-x86_64',
+  binary = ':DemoAppBinary',
   extension = 'app',
   info_plist = 'Info.plist',
 )

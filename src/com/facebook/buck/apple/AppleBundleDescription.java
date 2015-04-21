@@ -16,9 +16,13 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -26,17 +30,24 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.AppleBundleDestination;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 
-public class AppleBundleDescription implements Description<AppleBundleDescription.Arg> {
+public class AppleBundleDescription implements Description<AppleBundleDescription.Arg>, Flavored {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_bundle");
 
   public static final ImmutableMap<AppleBundleDestination.SubfolderSpec, String>
@@ -58,6 +69,16 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
 
   // TODO(user): Add OSX_APP_SUBFOLDER_SPEC_MAP etc.
 
+  private final AppleBinaryDescription appleBinaryDescription;
+  private final AppleLibraryDescription appleLibraryDescription;
+
+  public AppleBundleDescription(
+      AppleBinaryDescription appleBinaryDescription,
+      AppleLibraryDescription appleLibraryDescription) {
+    this.appleBinaryDescription = appleBinaryDescription;
+    this.appleLibraryDescription = appleLibraryDescription;
+  }
+
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
@@ -69,6 +90,12 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   }
 
   @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return appleLibraryDescription.hasFlavors(flavors) ||
+        appleBinaryDescription.hasFlavors(flavors);
+  }
+
+  @Override
   public <A extends Arg> AppleBundle createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -76,17 +103,72 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
 
     // TODO(user): Sort through the changes needed to make project generation work with
     // binary being optional.
-    Optional<BuildRule> binaryRule = Optional.of(resolver.getRule(args.binary));
-    return new AppleBundle(
+    BuildRule flavoredBinaryRule = getFlavoredBinaryRule(params, resolver, args);
+    BuildRuleParams bundleParamsWithFlavoredBinaryDep = getBundleParamsWithFlavoredBinaryDep(
         params,
+        args.binary,
+        flavoredBinaryRule);
+
+    return new AppleBundle(
+        bundleParamsWithFlavoredBinaryDep,
         new SourcePathResolver(resolver),
         args.extension,
         args.infoPlist,
-        binaryRule,
+        Optional.of(flavoredBinaryRule),
         // TODO(user): Check the flavor and decide whether to lay out with iOS or OS X style.
         IOS_APP_SUBFOLDER_SPEC_MAP,
         args.dirs.get(),
         args.files.get());
+  }
+
+  private static <A extends Arg> BuildRule getFlavoredBinaryRule(
+      final BuildRuleParams params,
+      final BuildRuleResolver resolver,
+      final A args) {
+    final TargetNode<?> binaryTargetNode = params.getTargetGraph().get(args.binary);
+    BuildRuleParams binaryRuleParams = new BuildRuleParams(
+        args.binary,
+        Suppliers.ofInstance(
+            BuildRules.toBuildRulesFor(
+                params.getBuildTarget(),
+                resolver,
+                binaryTargetNode.getDeclaredDeps(),
+                false /* allowNonExistentRule */)),
+        Suppliers.ofInstance(
+            BuildRules.toBuildRulesFor(
+                params.getBuildTarget(),
+                resolver,
+                binaryTargetNode.getExtraDeps(),
+                false /* allowNonExistentRule */)),
+        params.getProjectFilesystem(),
+        params.getRuleKeyBuilderFactory(),
+        binaryTargetNode.getType(),
+        params.getTargetGraph());
+    return CxxDescriptionEnhancer.requireBuildRule(
+        binaryRuleParams,
+        resolver,
+        params.getBuildTarget().getFlavors().toArray(new Flavor[0]));
+  }
+
+  private static BuildRuleParams getBundleParamsWithFlavoredBinaryDep(
+      final BuildRuleParams params,
+      final BuildTarget originalBinaryTarget,
+      final BuildRule flavoredBinaryRule) {
+    // Remove the unflavored binary rule and add the flavored one instead.
+    final Predicate<BuildRule> notOriginalBinaryRule = Predicates.not(
+        BuildRules.isBuildRuleWithTarget(originalBinaryTarget));
+    return params.copyWithDeps(
+        Suppliers.ofInstance(
+            FluentIterable
+                .from(params.getDeclaredDeps())
+                .filter(notOriginalBinaryRule)
+                .append(flavoredBinaryRule)
+                .toSortedSet(Ordering.natural())),
+        Suppliers.ofInstance(
+            FluentIterable
+                .from(params.getExtraDeps())
+                .filter(notOriginalBinaryRule)
+                .toSortedSet(Ordering.natural())));
   }
 
   @SuppressFieldNotInitialized

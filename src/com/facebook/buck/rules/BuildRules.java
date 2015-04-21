@@ -21,6 +21,7 @@ import com.facebook.buck.io.DirectoryTraversers;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
@@ -74,5 +75,14 @@ public class BuildRules {
     }
 
     inputsToConsiderForCachingPurposes.addAll(files);
+  }
+
+  public static Predicate<BuildRule> isBuildRuleWithTarget(final BuildTarget target) {
+    return new Predicate<BuildRule>() {
+      @Override
+      public boolean apply(BuildRule input) {
+        return input.getBuildTarget().equals(target);
+      }
+    };
   }
 }

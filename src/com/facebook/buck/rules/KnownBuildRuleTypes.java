@@ -432,6 +432,16 @@ public class KnownBuildRuleTypes {
             appleCxxPlatformsToAppleSdkPaths);
     builder.register(appleLibraryDescription);
 
+    AppleBinaryDescription appleBinaryDescription = new AppleBinaryDescription(
+        new CxxBinaryDescription(
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            cxxPlatforms,
+            CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE),
+        cxxPlatforms,
+        appleCxxPlatformsToAppleSdkPaths);
+    builder.register(appleBinaryDescription);
+
     builder.register(new AndroidAarDescription(
             new AndroidManifestDescription(),
             new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform)));
@@ -451,16 +461,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
-    builder.register(
-        new AppleBinaryDescription(
-            new CxxBinaryDescription(
-                cxxBuckConfig,
-                defaultCxxPlatform,
-                cxxPlatforms,
-                CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE),
-            cxxPlatforms,
-            appleCxxPlatformsToAppleSdkPaths));
-    builder.register(new AppleBundleDescription());
+    builder.register(new AppleBundleDescription(appleBinaryDescription, appleLibraryDescription));
     builder.register(new AppleResourceDescription());
     builder.register(new AppleTestDescription(appleLibraryDescription));
     builder.register(new BuckExtensionDescription(defaultJavacOptions));
