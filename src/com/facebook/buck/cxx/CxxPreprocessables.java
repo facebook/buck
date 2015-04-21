@@ -90,7 +90,7 @@ public class CxxPreprocessables {
                   rule.getBuildTarget(),
                   dep.getCxxPreprocessorInput(
                       cxxPlatform,
-                      CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
+                      HeaderVisibility.PUBLIC));
             }
             return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
           }

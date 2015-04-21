@@ -16,37 +16,46 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Ascii;
 
 /**
- * The visibility of a header file.
+ * Utility class with methods working with {@link HeaderVisibility} in the context of Apple rules.
  */
-public enum HeaderVisibility {
-    /** Visible to all dependencies. */
-    PUBLIC,
-    /** Visible to other dependencies inside the project. */
-    PROJECT;
+public class AppleHeaderVisibilities {
+
+  private AppleHeaderVisibilities() {
+    // This class is not meant to be instantiated.
+  }
 
   public static HeaderVisibility fromString(String s) {
     switch (Ascii.toLowerCase(s)) {
       case "public":
         return HeaderVisibility.PUBLIC;
       case "project":
-        return HeaderVisibility.PROJECT;
-      default:
-        throw new HumanReadableException("Invalid header visibility value %s.", s);
+        return HeaderVisibility.PRIVATE;
     }
+    throw new HumanReadableException("Invalid header visibility value %s.", s);
   }
 
-  public String toXcodeAttribute() {
-    switch (this) {
+  public static String toXcodeAttribute(HeaderVisibility headerVisibility) {
+    switch (headerVisibility) {
       case PUBLIC:
         return "Public";
-      case PROJECT:
+      case PRIVATE:
         return "Project";
-      default:
-        throw new IllegalStateException("Invalid header visibility value: " + this.toString());
     }
+    throw new IllegalStateException("Invalid header visibility value: " + headerVisibility);
+  }
+
+  public static String getHeaderMapFileSuffix(HeaderVisibility headerVisibility) {
+    switch (headerVisibility) {
+      case PUBLIC:
+        return "-public-headers.hmap";
+      case PRIVATE:
+        return "-target-headers.hmap";
+    }
+    throw new IllegalStateException("Invalid header visibility value: " + headerVisibility);
   }
 }

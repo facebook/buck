@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,20 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.cxx;
 
-public enum HeaderMapType {
-  PUBLIC_HEADER_MAP("-public-headers.hmap"),
-  TARGET_HEADER_MAP("-target-headers.hmap"),
-  ;
-
-  private final String suffix;
-
-  private HeaderMapType(String suffix) {
-    this.suffix = suffix;
-  }
-
-  public String getSuffix() {
-    return suffix;
-  }
+public enum HeaderVisibility {
+  PUBLIC,
+  PRIVATE,
 }

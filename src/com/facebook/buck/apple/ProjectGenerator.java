@@ -36,6 +36,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -767,14 +768,14 @@ public class ProjectGenerator {
               sourcePathResolver,
               headerPathPrefix,
               arg),
-          AppleDescriptions.getPathToHeaderMap(targetNode, HeaderMapType.PUBLIC_HEADER_MAP).get());
+          AppleDescriptions.getPathToHeaderMap(targetNode, HeaderVisibility.PUBLIC).get());
       createHeaderMap(
           sourcePathResolver,
           AppleDescriptions.convertAppleHeadersToPrivateCxxHeaders(
               sourcePathResolver,
               headerPathPrefix,
               arg),
-          AppleDescriptions.getPathToHeaderMap(targetNode, HeaderMapType.TARGET_HEADER_MAP).get());
+          AppleDescriptions.getPathToHeaderMap(targetNode, HeaderVisibility.PRIVATE).get());
     }
 
     // Use Core Data models from immediate dependencies only.
@@ -1221,10 +1222,10 @@ public class ProjectGenerator {
    */
   private String getHeaderMapRelativePath(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
-      HeaderMapType headerMapType) {
+      HeaderVisibility headerVisibility) {
     Optional<Path> filePath = AppleDescriptions.getPathToHeaderMap(
         targetNode,
-        headerMapType);
+        headerVisibility);
     Preconditions.checkState(filePath.isPresent(), "%s does not have a header map.", targetNode);
     return pathRelativizer.outputDirToRootRelative(filePath.get()).toString();
   }
@@ -1341,8 +1342,8 @@ public class ProjectGenerator {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
-      builder.add(getHeaderMapRelativePath(targetNode, HeaderMapType.TARGET_HEADER_MAP));
-      builder.add(getHeaderMapRelativePath(targetNode, HeaderMapType.PUBLIC_HEADER_MAP));
+      builder.add(getHeaderMapRelativePath(targetNode, HeaderVisibility.PRIVATE));
+      builder.add(getHeaderMapRelativePath(targetNode, HeaderVisibility.PUBLIC));
     }
 
     for (TargetNode<?> input :
@@ -1354,11 +1355,11 @@ public class ProjectGenerator {
       Optional<TargetNode<AppleNativeTargetDescriptionArg>> nativeNode =
           getAppleNativeNode(targetGraph, input);
       if (nativeNode.isPresent() && nativeNode.get().getConstructorArg().getUseBuckHeaderMaps()) {
-        builder.add(getHeaderMapRelativePath(nativeNode.get(), HeaderMapType.PUBLIC_HEADER_MAP));
+        builder.add(getHeaderMapRelativePath(nativeNode.get(), HeaderVisibility.PUBLIC));
       }
     }
 
-    addHeaderMapsForSourceUnderTest(targetNode, builder, HeaderMapType.TARGET_HEADER_MAP);
+    addHeaderMapsForSourceUnderTest(targetNode, builder, HeaderVisibility.PRIVATE);
 
     return builder.build();
   }
@@ -1366,7 +1367,7 @@ public class ProjectGenerator {
   private void addHeaderMapsForSourceUnderTest(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       ImmutableSet.Builder<String> headerMapsBuilder,
-      HeaderMapType headerMapType) {
+      HeaderVisibility headerVisibility) {
     ImmutableSet<TargetNode<?>> directDependencies = ImmutableSet.copyOf(
         targetGraph.getAll(targetNode.getDeps()));
     for (TargetNode<?> dependency : directDependencies) {
@@ -1378,7 +1379,7 @@ public class ProjectGenerator {
         headerMapsBuilder.add(
             getHeaderMapRelativePath(
                 nativeNode.get(),
-                headerMapType));
+                headerVisibility));
       }
     }
   }

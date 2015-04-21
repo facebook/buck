@@ -86,7 +86,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
-      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
+      HeaderVisibility headerVisibility) {
     BuildRule rule = CxxDescriptionEnhancer.requireBuildRule(
         params,
         ruleResolver,

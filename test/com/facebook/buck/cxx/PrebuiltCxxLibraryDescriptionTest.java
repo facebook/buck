@@ -97,7 +97,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         expectedCxxPreprocessorInput,
         lib.getCxxPreprocessorInput(
             CXX_PLATFORM,
-            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
+            HeaderVisibility.PUBLIC));
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
@@ -144,7 +144,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         expectedCxxPreprocessorInput,
         lib.getCxxPreprocessorInput(
             CXX_PLATFORM,
-            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
+            HeaderVisibility.PUBLIC));
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
@@ -189,7 +189,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         expectedCxxPreprocessorInput,
         lib.getCxxPreprocessorInput(
             CXX_PLATFORM,
-            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
+            HeaderVisibility.PUBLIC));
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
@@ -234,7 +234,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         expectedCxxPreprocessorInput,
         lib.getCxxPreprocessorInput(
             CXX_PLATFORM,
-            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
+            HeaderVisibility.PUBLIC));
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(

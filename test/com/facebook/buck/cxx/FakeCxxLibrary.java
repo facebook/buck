@@ -84,7 +84,7 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
-      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
+      HeaderVisibility headerVisibility) {
       switch (headerVisibility) {
         case PUBLIC:
           return CxxPreprocessorInput.builder()

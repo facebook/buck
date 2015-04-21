@@ -24,5 +24,5 @@ package com.facebook.buck.cxx;
 public interface CxxPreprocessorDep {
   CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
-      CxxDescriptionEnhancer.HeaderVisibility headerVisibility);
+      HeaderVisibility headerVisibility);
 }

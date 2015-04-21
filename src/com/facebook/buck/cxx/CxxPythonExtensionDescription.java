@@ -132,7 +132,7 @@ public class CxxPythonExtensionDescription implements
         lexSrcs,
         yaccSrcs,
         headers,
-        CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+        HeaderVisibility.PRIVATE);
     CxxPreprocessorInput cxxPreprocessorInput = CxxDescriptionEnhancer.combineCxxPreprocessorInput(
         params,
         cxxPlatform,

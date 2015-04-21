@@ -104,7 +104,7 @@ public class CxxLibraryTest {
         expectedPublicCxxPreprocessorInput,
         cxxLibrary.getCxxPreprocessorInput(
             cxxPlatform,
-            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC));
+            HeaderVisibility.PUBLIC));
 
     CxxPreprocessorInput expectedPrivateCxxPreprocessorInput = CxxPreprocessorInput.builder()
         .addRules(privateHeaderTarget, privateHeaderSymlinkTreeTarget)
@@ -114,7 +114,7 @@ public class CxxLibraryTest {
         expectedPrivateCxxPreprocessorInput,
         cxxLibrary.getCxxPreprocessorInput(
             cxxPlatform,
-            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE));
+            HeaderVisibility.PRIVATE));
 
     // Verify that we get the static archive and it's build target via the NativeLinkable
     // interface.

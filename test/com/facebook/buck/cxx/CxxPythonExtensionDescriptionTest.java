@@ -138,7 +138,7 @@ public class CxxPythonExtensionDescriptionTest {
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(
           CxxPlatform cxxPlatform,
-          CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
+          HeaderVisibility headerVisibility) {
         return CxxPreprocessorInput.EMPTY;
       }
 

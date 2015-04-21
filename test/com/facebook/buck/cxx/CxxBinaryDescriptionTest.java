@@ -103,7 +103,7 @@ public class CxxBinaryDescriptionTest {
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(
           CxxPlatform cxxPlatform,
-          CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
+          HeaderVisibility headerVisibility) {
         return CxxPreprocessorInput.builder()
             .addRules(
                 header.getBuildTarget(),
@@ -208,7 +208,7 @@ public class CxxBinaryDescriptionTest {
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
                 cxxPlatform.getFlavor(),
-                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE)),
+                HeaderVisibility.PRIVATE)),
         FluentIterable.from(preprocessRule1.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
@@ -243,7 +243,7 @@ public class CxxBinaryDescriptionTest {
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
                 cxxPlatform.getFlavor(),
-                CxxDescriptionEnhancer.HeaderVisibility.PRIVATE)),
+                HeaderVisibility.PRIVATE)),
         FluentIterable.from(preprocessRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());

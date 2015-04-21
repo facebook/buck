@@ -72,11 +72,6 @@ public class CxxDescriptionEnhancer {
   public static final BuildRuleType LEX_TYPE = BuildRuleType.of("lex");
   public static final BuildRuleType YACC_TYPE = BuildRuleType.of("yacc");
 
-  public enum HeaderVisibility {
-    PUBLIC,
-    PRIVATE,
-  }
-
   private CxxDescriptionEnhancer() {}
 
   private static BuildTarget createLexYaccSourcesBuildTarget(BuildTarget target) {
@@ -131,7 +126,7 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMap<Path, SourcePath> headers,
-      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
+      HeaderVisibility headerVisibility) {
 
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
@@ -177,7 +172,7 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<String, SourcePath> lexSources,
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMap<Path, SourcePath> headers,
-      CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
+      HeaderVisibility headerVisibility) {
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             params.getBuildTarget(),

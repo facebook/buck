@@ -132,7 +132,7 @@ public class CxxLibraryDescription implements
             lexSources,
             yaccSources,
             headers,
-            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE);
 
     SymlinkTree exportedHeaderSymlinkTree =
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
@@ -144,7 +144,7 @@ public class CxxLibraryDescription implements
             ImmutableMap.<String, SourcePath>of(),
             ImmutableMap.<String, SourcePath>of(),
             exportedHeaders,
-            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC);
+            HeaderVisibility.PUBLIC);
 
     CxxPreprocessorInput cxxPreprocessorInputFromDependencies =
         CxxDescriptionEnhancer.combineCxxPreprocessorInput(
@@ -423,7 +423,7 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
         CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
-        CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+        HeaderVisibility.PRIVATE);
   }
 
   /**
@@ -443,7 +443,7 @@ public class CxxLibraryDescription implements
         ImmutableMap.<String, SourcePath>of(),
         ImmutableMap.<String, SourcePath>of(),
         CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
-        CxxDescriptionEnhancer.HeaderVisibility.PUBLIC);
+        HeaderVisibility.PUBLIC);
   }
 
   /**

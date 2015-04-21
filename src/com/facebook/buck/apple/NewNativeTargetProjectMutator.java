@@ -34,6 +34,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
@@ -296,7 +297,7 @@ public class NewNativeTargetProjectMutator {
             privateHeader,
             sourcesGroup,
             headersBuildPhase,
-            HeaderVisibility.PROJECT);
+            HeaderVisibility.PRIVATE);
       }
 
       @Override
@@ -356,11 +357,11 @@ public class NewNativeTargetProjectMutator {
             PBXReference.SourceTree.SOURCE_ROOT,
             pathRelativizer.outputPathToSourcePath(headerPath)));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-    if (visibility != HeaderVisibility.PROJECT) {
+    if (visibility != HeaderVisibility.PRIVATE) {
       NSDictionary settings = new NSDictionary();
       settings.put(
           "ATTRIBUTES",
-          new NSArray(new NSString(visibility.toXcodeAttribute())));
+          new NSArray(new NSString(AppleHeaderVisibilities.toXcodeAttribute(visibility))));
       buildFile.setSettings(Optional.of(settings));
     } else {
       buildFile.setSettings(Optional.<NSDictionary>absent());

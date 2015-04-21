@@ -69,7 +69,7 @@ public class CxxBinaryIntegrationTest {
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             target,
             cxxPlatform.getFlavor(),
-            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE);
 
     // Do a clean build, verify that it succeeds, and check that all expected targets built
     // successfully.
@@ -189,7 +189,7 @@ public class CxxBinaryIntegrationTest {
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             target,
             cxxPlatform.getFlavor(),
-            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE);
 
     // Do a clean build, verify that it succeeds, and check that all expected targets built
     // successfully.
@@ -267,7 +267,7 @@ public class CxxBinaryIntegrationTest {
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             target,
             cxxPlatform.getFlavor(),
-            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE);
 
     // Setup variables pointing to the sources and targets of the library dep.
     BuildTarget depTarget = BuildTargetFactory.newInstance("//foo:library_with_header");
@@ -290,12 +290,12 @@ public class CxxBinaryIntegrationTest {
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             depTarget,
             cxxPlatform.getFlavor(),
-            CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+            HeaderVisibility.PRIVATE);
     BuildTarget depHeaderExportedSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             depTarget,
             cxxPlatform.getFlavor(),
-            CxxDescriptionEnhancer.HeaderVisibility.PUBLIC);
+            HeaderVisibility.PUBLIC);
     BuildTarget depArchiveTarget =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
             depTarget,

@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -148,15 +149,15 @@ public class AppleDescriptions {
 
   public static Optional<Path> getPathToHeaderMap(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
-      HeaderMapType headerMapType) {
+      HeaderVisibility headerVisibility) {
     if (!targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
       return Optional.absent();
     }
 
     return Optional.of(
         BuildTargets.getGenPath(
-          targetNode.getBuildTarget().getUnflavoredBuildTarget(),
-          "%s" + headerMapType.getSuffix()));
+            targetNode.getBuildTarget().getUnflavoredBuildTarget(),
+            "%s" + AppleHeaderVisibilities.getHeaderMapFileSuffix(headerVisibility)));
   }
 
   public static Path getHeaderPathPrefix(

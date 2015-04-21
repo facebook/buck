@@ -79,7 +79,7 @@ public class CxxBinaryDescription implements
         CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
         CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
-        CxxDescriptionEnhancer.HeaderVisibility.PRIVATE);
+        HeaderVisibility.PRIVATE);
   }
 
   @Override

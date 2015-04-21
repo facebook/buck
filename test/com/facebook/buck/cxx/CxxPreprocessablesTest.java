@@ -69,7 +69,7 @@ public class CxxPreprocessablesTest {
     @Override
     public CxxPreprocessorInput getCxxPreprocessorInput(
         CxxPlatform cxxPlatform,
-        CxxDescriptionEnhancer.HeaderVisibility headerVisibility) {
+        HeaderVisibility headerVisibility) {
       return input;
     }
 
