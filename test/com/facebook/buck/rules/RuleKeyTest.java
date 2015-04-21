@@ -104,6 +104,96 @@ public class RuleKeyTest {
   }
 
   @Test
+  public void ensureTwoListsOfSameRuleKeyAppendablesHaveSameRuleKey() {
+    ImmutableList<TestRuleKeyAppendable> ruleKeyAppendableList =
+        ImmutableList.of(
+            new TestRuleKeyAppendable("foo"),
+            new TestRuleKeyAppendable("bar"));
+
+    RuleKeyPair ruleKeyPairA = createEmptyRuleKey(
+        new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("ruleKeyAppendableList", ruleKeyAppendableList)
+            .build();
+
+    RuleKeyPair ruleKeyPairB = createEmptyRuleKey(
+        new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("ruleKeyAppendableList", ruleKeyAppendableList)
+            .build();
+
+    assertEquals(ruleKeyPairA.getTotalRuleKey(), ruleKeyPairB.getTotalRuleKey());
+  }
+
+  @Test
+  public void ensureTwoListsOfDifferentRuleKeyAppendablesHaveDifferentRuleKeys() {
+    ImmutableList<TestRuleKeyAppendable> ruleKeyAppendableListA =
+        ImmutableList.of(
+            new TestRuleKeyAppendable("foo"),
+            new TestRuleKeyAppendable("bar"));
+
+    ImmutableList<TestRuleKeyAppendable> ruleKeyAppendableListB =
+        ImmutableList.of(
+            new TestRuleKeyAppendable("bar"),
+            new TestRuleKeyAppendable("foo"));
+
+    RuleKeyPair ruleKeyPairA = createEmptyRuleKey(
+        new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("ruleKeyAppendableList", ruleKeyAppendableListA)
+            .build();
+
+    RuleKeyPair ruleKeyPairB = createEmptyRuleKey(
+        new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("ruleKeyAppendableList", ruleKeyAppendableListB)
+            .build();
+
+    assertNotEquals(ruleKeyPairA.getTotalRuleKey(), ruleKeyPairB.getTotalRuleKey());
+  }
+
+  @Test
+  public void ensureTwoMapsOfSameRuleKeyAppendablesHaveSameRuleKey() {
+    ImmutableMap<String, TestRuleKeyAppendable> ruleKeyAppendableMap =
+        ImmutableMap.of(
+            "foo", new TestRuleKeyAppendable("foo"),
+            "bar", new TestRuleKeyAppendable("bar"));
+
+    RuleKeyPair ruleKeyPairA = createEmptyRuleKey(
+        new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMap)
+            .build();
+
+    RuleKeyPair ruleKeyPairB = createEmptyRuleKey(
+        new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMap)
+            .build();
+
+    assertEquals(ruleKeyPairA.getTotalRuleKey(), ruleKeyPairB.getTotalRuleKey());
+  }
+
+  @Test
+  public void ensureTwoMapsOfDifferentRuleKeyAppendablesHaveDifferentRuleKeys() {
+    ImmutableMap<String, TestRuleKeyAppendable> ruleKeyAppendableMapA =
+        ImmutableMap.of(
+            "foo", new TestRuleKeyAppendable("foo"),
+            "bar", new TestRuleKeyAppendable("bar"));
+
+    ImmutableMap<String, TestRuleKeyAppendable> ruleKeyAppendableMapB =
+        ImmutableMap.of(
+            "bar", new TestRuleKeyAppendable("bar"),
+            "foo", new TestRuleKeyAppendable("foo"));
+
+    RuleKeyPair ruleKeyPairA = createEmptyRuleKey(
+        new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMapA)
+            .build();
+
+    RuleKeyPair ruleKeyPairB = createEmptyRuleKey(
+        new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMapB)
+            .build();
+
+    assertNotEquals(ruleKeyPairA.getTotalRuleKey(), ruleKeyPairB.getTotalRuleKey());
+  }
+
+  @Test
   public void ensureListsAreHandledProperly() {
     ImmutableList<SourceRoot> sourceroots = ImmutableList.of(new SourceRoot("cake"));
     ImmutableList<String> strings = ImmutableList.of("one", "two");
@@ -283,6 +373,55 @@ public class RuleKeyTest {
             .build();
 
     assertNotNull(key);
+  }
+
+  @Test
+  public void canAddRuleKeyAppendable() {
+    RuleKeyPair key =
+        createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("rule_key_appendable", new TestRuleKeyAppendable("foo"))
+            .build();
+    assertNotNull(key);
+  }
+
+  @Test
+  public void canAddListOfRuleKeyAppendable() {
+    ImmutableList<TestRuleKeyAppendable> list = ImmutableList.of(
+        new TestRuleKeyAppendable("foo"),
+        new TestRuleKeyAppendable("bar"));
+    RuleKeyPair key =
+        createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("list", list)
+            .build();
+    assertNotNull(key);
+  }
+
+  @Test
+  public void canAddMapOfRuleKeyAppendable() {
+    ImmutableMap<String, TestRuleKeyAppendable> map = ImmutableMap.of(
+        "foo", new TestRuleKeyAppendable("foo"),
+        "bar", new TestRuleKeyAppendable("bar"));
+    RuleKeyPair key =
+        createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
+            .setReflectively("map", map)
+            .build();
+    assertNotNull(key);
+  }
+
+  private static class TestRuleKeyAppendable implements RuleKeyAppendable {
+    private final String value;
+
+    public TestRuleKeyAppendable(String value) {
+      this.value = value;
+    }
+
+    @Override
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+      return builder
+          .setReflectively(key + ".value", value)
+          .setReflectively(key + ".foo", "foo")
+          .setReflectively(key + ".bar", "bar");
+    }
   }
 
   private RuleKey.Builder createEmptyRuleKey(SourcePathResolver resolver) {

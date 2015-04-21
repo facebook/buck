@@ -228,7 +228,7 @@ public class RuleKey {
       if (val instanceof Iterator) {
         Iterator<?> iterator = (Iterator<?>) val;
         while (iterator.hasNext()) {
-          setSingleValue(iterator.next());
+          setReflectively(key, iterator.next());
         }
         return separate();
       }
@@ -243,9 +243,9 @@ public class RuleKey {
         }
         feed("{".getBytes());
         for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
-          setSingleValue(entry.getKey());
+          setReflectively(key, entry.getKey());
           feed(" -> ".getBytes());
-          setSingleValue(entry.getValue());
+          setReflectively(key, entry.getValue());
           separate();
         }
         feed("}".getBytes());
