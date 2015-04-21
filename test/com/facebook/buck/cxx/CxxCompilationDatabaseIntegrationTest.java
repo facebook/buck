@@ -90,7 +90,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-I")
             .add(binaryExportedHeaderSymlinkTreeFoler)
             .add("-o")
-            .add("buck-out/bin/binary_with_dep#compile-foo.cpp.o,default/foo.cpp.o")
+            .add("buck-out/gen/binary_with_dep#compile-foo.cpp.o,default/foo.cpp.o")
             .add("foo.cpp")
             .build());
   }
@@ -133,7 +133,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(exportedHeaderSymlinkTreeFoler)
             .add("-fPIC")
             .add("-o")
-            .add("buck-out/bin/library_with_header#compile-pic-bar.cpp.o,default/bar.cpp.o")
+            .add("buck-out/gen/library_with_header#compile-pic-bar.cpp.o,default/bar.cpp.o")
             .add("bar.cpp")
             .build());
   }

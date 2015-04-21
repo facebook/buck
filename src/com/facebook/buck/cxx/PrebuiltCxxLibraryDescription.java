@@ -195,7 +195,7 @@ public class PrebuiltCxxLibraryDescription
         .build();
 
     // If not, setup a single link rule to link it from the static lib.
-    Path builtSharedLibraryPath = BuildTargets.getScratchPath(sharedTarget, "%s").resolve(soname);
+    Path builtSharedLibraryPath = BuildTargets.getGenPath(sharedTarget, "%s").resolve(soname);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,

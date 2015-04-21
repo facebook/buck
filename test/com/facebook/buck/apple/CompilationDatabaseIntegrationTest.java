@@ -111,7 +111,7 @@ public class CompilationDatabaseIntegrationTest {
     // Verify the entries in the compilation database.
     assertFlags(
         "Libraries/EXExample/EXExample/EXExampleModel.m",
-        "buck-out/bin/Libraries/EXExample/EXExample#compile-pic-EXExample_" +
+        "buck-out/gen/Libraries/EXExample/EXExample#compile-pic-EXExample_" +
             "EXExampleModel.m.o,iphonesimulator-x86_64/EXExample/EXExampleModel.m.o",
         /* isLibrary */ true,
         fileToEntry,
@@ -119,7 +119,7 @@ public class CompilationDatabaseIntegrationTest {
         includes);
     assertFlags(
         "Libraries/EXExample/EXExample/EXUser.mm",
-        "buck-out/bin/Libraries/EXExample/EXExample#compile-pic-EXExample_" +
+        "buck-out/gen/Libraries/EXExample/EXExample#compile-pic-EXExample_" +
             "EXUser.mm.o,iphonesimulator-x86_64/EXExample/EXUser.mm.o",
         /* isLibrary */ true,
         fileToEntry,
@@ -127,7 +127,7 @@ public class CompilationDatabaseIntegrationTest {
         includes);
     assertFlags(
         "Libraries/EXExample/EXExample/Categories/NSString+Palindrome.m",
-        "buck-out/bin/Libraries/EXExample/EXExample#compile-pic-EXExample_" +
+        "buck-out/gen/Libraries/EXExample/EXExample#compile-pic-EXExample_" +
             "Categories_NSString_Palindrome.m.o,iphonesimulator-x86_64/" +
             "EXExample/Categories/NSString+Palindrome.m.o",
         /* isLibrary */ true,
@@ -162,7 +162,7 @@ public class CompilationDatabaseIntegrationTest {
 
     assertFlags(
         "Apps/Weather/Weather/EXViewController.m",
-        "buck-out/bin/Apps/Weather/Weather#compile-Weather_" +
+        "buck-out/gen/Apps/Weather/Weather#compile-Weather_" +
             "EXViewController.m.o,iphonesimulator-x86_64/Weather/EXViewController.m.o",
         /* isLibrary */ false,
         fileToEntry,
@@ -170,7 +170,7 @@ public class CompilationDatabaseIntegrationTest {
         includes);
     assertFlags(
         "Apps/Weather/Weather/main.m",
-        "buck-out/bin/Apps/Weather/Weather#compile-Weather_" +
+        "buck-out/gen/Apps/Weather/Weather#compile-Weather_" +
             "main.m.o,iphonesimulator-x86_64/Weather/main.m.o",
         /* isLibrary */ false,
         fileToEntry,

@@ -87,7 +87,7 @@ public class CxxPythonExtensionDescription implements
 
   @VisibleForTesting
   protected Path getExtensionPath(BuildTarget target, Flavor platform) {
-    return BuildTargets.getScratchPath(getExtensionTarget(target, platform), "%s")
+    return BuildTargets.getGenPath(getExtensionTarget(target, platform), "%s")
         .resolve(getExtensionName(target));
   }
 
