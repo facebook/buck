@@ -296,7 +296,7 @@ public class PythonBuckConfigTest {
   public void testGetPyrunVersion() throws Exception {
     PythonVersion version =
         PythonBuckConfig.extractPythonVersion(
-            Paths.get("usr", "bin", "python"),
+            Paths.get("non", "important", "path"),
             new ProcessExecutor.Result(0, "", "pyrun 2.7.6 (release 2.0.0)\n"));
     assertEquals("pyrun 2.7", version.toString());
   }
