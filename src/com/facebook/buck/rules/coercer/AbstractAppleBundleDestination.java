@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 
@@ -23,7 +25,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractAppleBundleDestination {
+abstract class AbstractAppleBundleDestination implements RuleKeyAppendable {
   public enum SubfolderSpec {
     ABSOLUTE,
     WRAPPER,
@@ -38,9 +40,15 @@ interface AbstractAppleBundleDestination {
   }
 
   @Value.Parameter
-  SubfolderSpec getSubfolderSpec();
+  public abstract SubfolderSpec getSubfolderSpec();
 
   @Value.Parameter
-  Optional<String> getSubpath();
+  public abstract Optional<String> getSubpath();
 
+  @Override
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+    return builder
+        .setReflectively(key + ".subfolder_spec", getSubfolderSpec())
+        .setReflectively(key + ".subpath", getSubpath());
+  }
 }
