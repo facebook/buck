@@ -62,6 +62,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -678,6 +679,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         // If the test command steps themselves fail, report this as special test result.
         TestResults testResults =
             new TestResults(
+                testRule.getBuildTarget(),
                 ImmutableList.of(
                     new TestCaseSummary(
                         testRule.getBuildTarget().toString(),
@@ -690,7 +692,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
                                 throwable.getMessage(),
                                 getStackTrace(throwable),
                                 "",
-                                "")))));
+                                "")))),
+                testRule.getContacts(),
+                FluentIterable.from(
+                    testRule.getLabels()).transform(Functions.toStringFunction()).toSet());
         if (printTestResults) {
           postTestResults(testResults);
         }
