@@ -109,6 +109,18 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.binary,
         flavoredBinaryRule);
 
+    ImmutableMap.Builder<Path, AppleBundleDestination> bundleDirsBuilder =
+        ImmutableMap.builder();
+    ImmutableMap.Builder<SourcePath, AppleBundleDestination> bundleFilesBuilder =
+        ImmutableMap.builder();
+    collectBundleDirsAndFiles(
+        params,
+        args,
+        bundleDirsBuilder,
+        bundleFilesBuilder);
+    ImmutableMap<Path, AppleBundleDestination> bundleDirs = bundleDirsBuilder.build();
+    ImmutableMap<SourcePath, AppleBundleDestination> bundleFiles = bundleFilesBuilder.build();
+
     return new AppleBundle(
         bundleParamsWithFlavoredBinaryDep,
         new SourcePathResolver(resolver),
@@ -117,8 +129,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         Optional.of(flavoredBinaryRule),
         // TODO(user): Check the flavor and decide whether to lay out with iOS or OS X style.
         IOS_APP_SUBFOLDER_SPEC_MAP,
-        args.dirs.get(),
-        args.files.get());
+        bundleDirs,
+        bundleFiles);
   }
 
   private static <A extends Arg> BuildRule getFlavoredBinaryRule(
@@ -169,6 +181,22 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
                 .from(params.getExtraDeps())
                 .filter(notOriginalBinaryRule)
                 .toSortedSet(Ordering.natural())));
+  }
+
+  private static <A extends Arg> void collectBundleDirsAndFiles(
+      BuildRuleParams params,
+      A args,
+      ImmutableMap.Builder<Path, AppleBundleDestination> bundleDirsBuilder,
+      ImmutableMap.Builder<SourcePath, AppleBundleDestination> bundleFilesBuilder) {
+    bundleDirsBuilder.putAll(args.dirs.get());
+    bundleFilesBuilder.putAll(args.files.get());
+
+    ImmutableSet<AppleResourceDescription.Arg> resourceDescriptions =
+        AppleResources.collectRecursiveResources(
+            params.getTargetGraph(),
+            ImmutableSet.of(params.getTargetGraph().get(params.getBuildTarget())));
+    AppleResources.addResourceDirsToBuilder(bundleDirsBuilder, resourceDescriptions);
+    AppleResources.addResourceFilesToBuilder(bundleFilesBuilder, resourceDescriptions);
   }
 
   @SuppressFieldNotInitialized

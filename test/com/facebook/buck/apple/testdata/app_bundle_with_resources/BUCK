@@ -1,0 +1,29 @@
+apple_resource(
+  name = 'DemoAppResources',
+  files = glob(['*.png']),
+  dirs = ['Images'],
+)
+
+apple_bundle(
+  name = 'DemoApp',
+  binary = ':DemoAppBinary',
+  extension = 'app',
+  info_plist = 'Info.plist',
+)
+
+apple_binary(
+  name = 'DemoAppBinary',
+  deps = [':DemoAppResources'],
+  preprocessor_flags = ['-fobjc-arc'],
+  headers = glob([
+    '*.h',
+  ]),
+  srcs = glob([
+    '*.m',
+  ]),
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    '$SDKROOT/usr/lib/libobjc.dylib',
+  ],
+)
