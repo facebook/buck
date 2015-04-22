@@ -79,8 +79,8 @@ public class SymlinkFileStep implements Step {
     Path desiredLinkPath = getDesiredLinkPath(context);
     try {
       context.getProjectFilesystem().createSymLink(
-          existingFilePath,
           desiredLinkPath,
+          existingFilePath,
           /* force */ true);
       return 0;
     } catch (IOException e) {

@@ -720,24 +720,24 @@ public class ProjectFilesystem {
     copy(source, target, CopySourceMode.FILE);
   }
 
-  public void createSymLink(Path sourcePath, Path targetPath, boolean force)
+  public void createSymLink(Path symLink, Path realFile, boolean force)
       throws IOException {
     if (force) {
-      Files.deleteIfExists(targetPath);
+      Files.deleteIfExists(symLink);
     }
     if (Platform.detect() == Platform.WINDOWS) {
-      if (isDirectory(sourcePath)) {
+      if (isDirectory(realFile)) {
         // Creating symlinks to directories on Windows requires escalated privileges. We're just
         // going to have to copy things recursively.
-        MoreFiles.copyRecursively(sourcePath, targetPath);
+        MoreFiles.copyRecursively(realFile, symLink);
       } else {
         // When sourcePath is relative, resolve it from the targetPath. We're creating a hard link
         // anyway.
-        sourcePath = targetPath.getParent().resolve(sourcePath).normalize();
-        Files.createLink(targetPath, sourcePath);
+        realFile = symLink.getParent().resolve(realFile).normalize();
+        Files.createLink(symLink, realFile);
       }
     } else {
-      Files.createSymbolicLink(targetPath, sourcePath);
+      Files.createSymbolicLink(symLink, realFile);
     }
   }
 

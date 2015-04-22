@@ -525,16 +525,16 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public void createSymLink(Path source, Path target, boolean force) throws IOException {
+  public void createSymLink(Path symLink, Path realFile, boolean force) throws IOException {
     if (!force) {
-      if (fileContents.containsKey(source) || directories.contains(source)) {
-        throw new FileAlreadyExistsException(source.toString());
+      if (fileContents.containsKey(symLink) || directories.contains(symLink)) {
+        throw new FileAlreadyExistsException(symLink.toString());
       }
     } else {
-      rmFile(source);
-      rmdir(source);
+      rmFile(symLink);
+      rmdir(symLink);
     }
-    symLinks.put(source, target);
+    symLinks.put(symLink, realFile);
   }
 
   @Override

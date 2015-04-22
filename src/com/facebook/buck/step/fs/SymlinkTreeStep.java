@@ -51,7 +51,7 @@ public class SymlinkTreeStep implements Step {
       Path link = context.getProjectFilesystem().resolve(root.resolve(ent.getKey()));
       try {
         context.getProjectFilesystem().mkdirs(link.getParent());
-        context.getProjectFilesystem().createSymLink(target, link, true /* force */);
+        context.getProjectFilesystem().createSymLink(link, target, true /* force */);
       } catch (IOException e) {
         String msg = String.format("failed creating linking \"%s\" -> \"%s\"", link, target);
         context.logError(e, msg);

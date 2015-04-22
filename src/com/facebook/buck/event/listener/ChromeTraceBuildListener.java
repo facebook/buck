@@ -156,8 +156,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       String symlinkPath = String.format("%s/build.trace",
           BuckConstant.BUCK_TRACE_DIR);
       File symlinkFile = projectFilesystem.getFileForRelativePath(symlinkPath);
-      projectFilesystem.createSymLink(Paths.get(traceOutput.toURI()),
+      projectFilesystem.createSymLink(
           Paths.get(symlinkFile.toURI()),
+          Paths.get(traceOutput.toURI()),
           true);
 
       deleteOldTraces();
