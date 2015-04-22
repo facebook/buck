@@ -20,6 +20,9 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
@@ -46,23 +49,32 @@ public class AppleToolchainDiscovery {
    * toolchains and builds a map of (identifier: path) pairs of the
    * toolchains inside.
    */
-  public static ImmutableMap<String, Path> discoverAppleToolchainPaths(Path xcodeDir)
-      throws IOException {
+  public static ImmutableMap<String, Path> discoverAppleToolchainPaths(
+      Path xcodeDir,
+      ImmutableList<Path> extraDirs) throws IOException {
     LOG.debug("Searching for Xcode toolchains under %s", xcodeDir);
 
     ImmutableMap.Builder<String, Path> toolchainIdentifiersToPathsBuilder = ImmutableMap.builder();
-    Path toolchains = xcodeDir.resolve("Toolchains");
+    Path toolchainsDir = xcodeDir.resolve("Toolchains");
 
-    if (!Files.exists(toolchains)) {
-      return toolchainIdentifiersToPathsBuilder.build();
-    }
+    Iterable<Path> toolchainPaths = Iterables.concat(
+        ImmutableSet.of(toolchainsDir), extraDirs);
 
-    try (DirectoryStream<Path> toolchainStream = Files.newDirectoryStream(
-             toolchains,
-             "*.xctoolchain")) {
-      for (Path toolchainDir : toolchainStream) {
-        LOG.debug("Getting identifier for for Xcode toolchain under %s", toolchainDir);
-        addIdentiferForToolchain(toolchainDir, toolchainIdentifiersToPathsBuilder);
+    for (Path toolchains : toolchainPaths) {
+      if (!Files.exists(toolchains)) {
+        LOG.debug("Skipping toolchain search path %s that does not exist", toolchains);
+        continue;
+      }
+
+      LOG.debug("Searching for Xcode toolchains in %s", toolchains);
+
+      try (DirectoryStream<Path> toolchainStream = Files.newDirectoryStream(
+               toolchains,
+               "*.xctoolchain")) {
+        for (Path toolchainPath : toolchainStream) {
+          LOG.debug("Getting identifier for for Xcode toolchain under %s", toolchainPath);
+          addIdentiferForToolchain(toolchainPath, toolchainIdentifiersToPathsBuilder);
+        }
       }
     }
 

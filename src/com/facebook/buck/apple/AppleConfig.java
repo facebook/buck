@@ -24,6 +24,8 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -55,13 +57,41 @@ public class AppleConfig {
     }
   }
 
+  public ImmutableList<Path> getExtraToolchainPaths() {
+    Optional<String> extraPathsConfig = delegate.getValue("apple", "extra_toolchain_paths");
+    ImmutableList<String> extraPathsStrings = delegate.asListWithoutComments(extraPathsConfig);
+    return ImmutableList.copyOf(Lists.transform(
+        extraPathsStrings,
+        new Function<String, Path>() {
+            @Override
+            public Path apply(String string) {
+                return Paths.get(string);
+            }
+        }));
+  }
+
+  public ImmutableList<Path> getExtraPlatformPaths() {
+    Optional<String> extraPathsConfig = delegate.getValue("apple", "extra_platform_paths");
+    ImmutableList<String> extraPathsStrings = delegate.asListWithoutComments(extraPathsConfig);
+    return ImmutableList.copyOf(Lists.transform(
+        extraPathsStrings,
+        new Function<String, Path>() {
+            @Override
+            public Path apply(String string) {
+                return Paths.get(string);
+            }
+        }));
+  }
+
   public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(ProcessExecutor processExecutor) {
     Path appleDeveloperDirectory = getAppleDeveloperDirectorySupplier(processExecutor).get();
     try {
       ImmutableMap<String, Path> toolchainPaths =
-          AppleToolchainDiscovery.discoverAppleToolchainPaths(appleDeveloperDirectory);
+          AppleToolchainDiscovery.discoverAppleToolchainPaths(
+              appleDeveloperDirectory, getExtraToolchainPaths());
       return AppleSdkDiscovery.discoverAppleSdkPaths(
           appleDeveloperDirectory,
+          getExtraPlatformPaths(),
           appleDeveloperDirectory.getParent().resolve("version.plist"),
           toolchainPaths);
     } catch (IOException e) {

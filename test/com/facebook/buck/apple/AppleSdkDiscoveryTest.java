@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 
 public class AppleSdkDiscoveryTest {
@@ -73,18 +74,121 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void shouldReturnAnEmptyMapIfNoPlatformsFound() throws IOException {
-    Path path = temp.newFolder().toPath().toAbsolutePath();
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-discovery-empty",
+        temp);
+    workspace.setUp();
+    Path path = workspace.getPath("");
 
     ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
         "com.apple.dt.toolchain.XcodeDefault",
-        path.resolve("Toolchains/XcodeDefault")
+        path.resolve("Toolchains/XcodeDefault.xctoolchain")
     );
     ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
         path,
+        ImmutableList.<Path>of(),
         path.resolve("version.plist"),
         toolchainPaths);
 
     assertEquals(0, sdks.size());
+  }
+
+  @Test
+  public void shouldFindPlatformsInExtraPlatformDirectories() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-discovery-minimal",
+        temp);
+    workspace.setUp();
+    Path root = workspace.getPath("");
+
+    ProjectWorkspace emptyWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-discovery-empty",
+        temp);
+    emptyWorkspace.setUp();
+    Path path = emptyWorkspace.getPath("");
+
+    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
+        "com.apple.dt.toolchain.XcodeDefault",
+        path.resolve("Toolchains/XcodeDefault.xctoolchain"));
+
+    AppleSdk macosx109Sdk =
+        AppleSdk.builder()
+            .setName("macosx10.9")
+            .setVersion("10.9")
+            .setXcodeVersion("6A2008a")
+            .setApplePlatform(ApplePlatform.MACOSX)
+            .addArchitectures("i386", "x86_64")
+            .build();
+    AppleSdkPaths macosx109Paths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(path)
+            .addToolchainPaths(path.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
+            .build();
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> expected =
+        ImmutableMap.<AppleSdk, AppleSdkPaths>builder()
+            .put(macosx109Sdk, macosx109Paths)
+            .put(macosx109Sdk.withName("macosx"), macosx109Paths)
+            .build();
+
+    assertThat(
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            path,
+            ImmutableList.of(root),
+            path.resolve("version.plist"),
+            toolchainPaths),
+        equalTo(expected));
+  }
+
+  @Test
+  public void ignoresInvalidExtraPlatformDirectories() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-discovery-minimal",
+        temp);
+    workspace.setUp();
+    Path root = workspace.getPath("");
+
+    Path path = Paths.get("invalid");
+
+    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
+        "com.apple.dt.toolchain.XcodeDefault",
+        root.resolve("Toolchains/XcodeDefault.xctoolchain"));
+
+    AppleSdk macosx109Sdk =
+        AppleSdk.builder()
+            .setName("macosx10.9")
+            .setVersion("10.9")
+            .setXcodeVersion("6A2008a")
+            .setApplePlatform(ApplePlatform.MACOSX)
+            .addArchitectures("i386", "x86_64")
+            .build();
+    AppleSdkPaths macosx109Paths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(root)
+            .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
+            .build();
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> expected =
+        ImmutableMap.<AppleSdk, AppleSdkPaths>builder()
+            .put(macosx109Sdk, macosx109Paths)
+            .put(macosx109Sdk.withName("macosx"), macosx109Paths)
+            .build();
+
+    assertThat(
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            root,
+            ImmutableList.of(path),
+            root.resolve("version.plist"),
+            toolchainPaths),
+        equalTo(expected));
   }
 
   @Test
@@ -103,6 +207,7 @@ public class AppleSdkDiscoveryTest {
     );
     ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
         root,
+        ImmutableList.<Path>of(),
         versionPlistPath,
         toolchainPaths);
 
@@ -130,6 +235,7 @@ public class AppleSdkDiscoveryTest {
     );
     AppleSdkDiscovery.discoverAppleSdkPaths(
         root,
+        ImmutableList.<Path>of(),
         versionPlistPath,
         toolchainPaths);
   }
@@ -157,6 +263,7 @@ public class AppleSdkDiscoveryTest {
     );
     ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
         root,
+        ImmutableList.<Path>of(),
         versionPlist,
         toolchainPaths);
 
@@ -241,7 +348,9 @@ public class AppleSdkDiscoveryTest {
             .build();
 
     assertThat(
-        AppleSdkDiscovery.discoverAppleSdkPaths(root, versionPlistPath, toolchainPaths),
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            root,
+            ImmutableList.<Path>of(), versionPlistPath, toolchainPaths),
         equalTo(expected));
   }
 
@@ -258,7 +367,9 @@ public class AppleSdkDiscoveryTest {
     ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of();
 
     assertThat(
-        AppleSdkDiscovery.discoverAppleSdkPaths(root, versionPlistPath, toolchainPaths).entrySet(),
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            root,
+            ImmutableList.<Path>of(), versionPlistPath, toolchainPaths).entrySet(),
         empty());
   }
 
@@ -379,7 +490,9 @@ public class AppleSdkDiscoveryTest {
         root.resolve("Toolchains/XcodeDefault.xctoolchain"));
 
     assertThat(
-        AppleSdkDiscovery.discoverAppleSdkPaths(root, versionPlistPath, toolchainPaths),
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            root,
+            ImmutableList.<Path>of(), versionPlistPath, toolchainPaths),
         equalTo(expected));
   }
 

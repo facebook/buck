@@ -252,6 +252,8 @@ public class KnownBuildRuleTypes {
 
   private static void buildAppleCxxPlatforms(
       Supplier<Path> appleDeveloperDirectorySupplier,
+      ImmutableList<Path> extraToolchainPaths,
+      ImmutableList<Path> extraPlatformPaths,
       Platform buildPlatform,
       BuckConfig buckConfig,
       AppleConfig appleConfig,
@@ -285,10 +287,12 @@ public class KnownBuildRuleTypes {
     }
 
     ImmutableMap<String, Path> toolchainPaths = AppleToolchainDiscovery.discoverAppleToolchainPaths(
-        appleDeveloperDirectory);
+        appleDeveloperDirectory,
+        extraToolchainPaths);
 
     ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths = AppleSdkDiscovery.discoverAppleSdkPaths(
         appleDeveloperDirectory,
+        extraPlatformPaths,
         versionPlistPath,
         toolchainPaths);
 
@@ -334,6 +338,8 @@ public class KnownBuildRuleTypes {
         ImmutableMap.builder();
     buildAppleCxxPlatforms(
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
+        appleConfig.getExtraToolchainPaths(),
+        appleConfig.getExtraPlatformPaths(),
         platform,
         config,
         appleConfig,
