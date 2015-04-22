@@ -341,12 +341,6 @@ public class KnownBuildRuleTypes {
     ImmutableMap<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths =
         appleCxxPlatformsToAppleSdkPathsBuilder.build();
 
-    // Construct the thrift config wrapping the buck config.
-    ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
-
-    // Construct the OCaml config wrapping the buck config.
-    OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
-
     // Setup the NDK C/C++ platforms.
     ImmutableMap.Builder<AndroidBinary.TargetCpuType, NdkCxxPlatform> ndkCxxPlatformsBuilder =
         ImmutableMap.builder();
@@ -361,10 +355,6 @@ public class KnownBuildRuleTypes {
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
     ImmutableMap.Builder<Flavor, CxxPlatform> cxxPlatformsBuilder = ImmutableMap.builder();
 
-    // Add the default, config-defined C/C++ platform.
-    CxxPlatform defaultCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
-    cxxPlatformsBuilder.put(defaultCxxPlatform.getFlavor(), defaultCxxPlatform);
-
     // If an Android NDK is present, add platforms for that.  This is mostly useful for
     // testing our Android NDK support for right now.
     for (NdkCxxPlatform ndkCxxPlatform : ndkCxxPlatforms.values()) {
@@ -377,10 +367,30 @@ public class KnownBuildRuleTypes {
       cxxPlatformsBuilder.put(appleCxxPlatform.getFlavor(), appleCxxPlatform);
     }
 
+    Optional<String> defaultPlatform = cxxBuckConfig.getDefaultPlatform();
+
+    CxxPlatform defaultCxxPlatform;
+    ImmutableMap<Flavor, CxxPlatform> cxxPlatformsMap;
+    if (defaultPlatform.isPresent()) {
+      // Get the map of flavors defined so far.
+      cxxPlatformsMap = cxxPlatformsBuilder.build();
+      defaultCxxPlatform = cxxPlatformsMap.get(
+          ImmutableFlavor.of(defaultPlatform.get())
+      );
+      if (defaultCxxPlatform == null) {
+        throw new HumanReadableException("Cannot find default platform %s", defaultPlatform.get());
+      }
+    } else {
+      // Add the default, config-defined C/C++ platform.
+      defaultCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
+      cxxPlatformsBuilder.put(defaultCxxPlatform.getFlavor(), defaultCxxPlatform);
+      cxxPlatformsMap = cxxPlatformsBuilder.build();
+    }
+
     // Build up the final list of C/C++ platforms.
     FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
         "C/C++ platform",
-        cxxPlatformsBuilder.build());
+        cxxPlatformsMap);
 
     DBuckConfig dBuckConfig = new DBuckConfig(config);
 
@@ -483,6 +493,7 @@ public class KnownBuildRuleTypes {
     builder.register(new JavaTestDescription(defaultJavacOptions, testRuleTimeoutMs));
     builder.register(new KeystoreDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
+    OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
     builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
     builder.register(new OCamlLibraryDescription(ocamlBuckConfig));
     builder.register(new PrebuiltCxxLibraryDescription(cxxPlatforms));
@@ -513,6 +524,7 @@ public class KnownBuildRuleTypes {
             testRuleTimeoutMs));
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription());
+    ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
     builder.register(
         new ThriftLibraryDescription(
             thriftBuckConfig,

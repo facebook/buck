@@ -95,4 +95,23 @@ public class AppleBundleIntegrationTest {
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
   }
+
+  @Test
+  public void defaultPlatformInBuckConfig() throws IOException{
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "default_platform_in_buckconfig_app_bundle",
+        tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build", "//:DemoApp").assertSuccess();
+
+    workspace.verify();
+
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve("DemoApp/DemoApp.app/DemoApp")));
+  }
 }

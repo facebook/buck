@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.hamcrest.Matchers.containsString;
 
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryDescription;
@@ -41,6 +42,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.NullFileHashCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -54,6 +56,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -67,6 +70,8 @@ public class KnownBuildRuleTypesTest {
 
   @ClassRule public static TemporaryFolder folder = new TemporaryFolder();
   @Rule public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   private static final PythonEnvironment DUMMY_PYTHON_ENVIRONMENT =
       new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7"));
@@ -343,6 +348,25 @@ public class KnownBuildRuleTypesTest {
         DUMMY_PYTHON_ENVIRONMENT);
 
     assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);
+  }
+
+  @Test
+  public void whenUnknownDefaultPlatformSetInConfigBuilderThrows() throws IOException,
+        InterruptedException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    Map<String, Map<String, String>> sections = ImmutableMap.of(
+        "cxx", (Map<String, String>) ImmutableMap.of("default_platform", "borland_cxx_452"));
+    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(containsString("borland_cxx_452"));
+
+    KnownBuildRuleTypes.createBuilder(
+        buckConfig,
+        projectFilesystem,
+        createExecutor(),
+        new FakeAndroidDirectoryResolver(),
+        DUMMY_PYTHON_ENVIRONMENT).build();
   }
 
   private ProcessExecutor createExecutor() throws IOException {

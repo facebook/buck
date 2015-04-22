@@ -69,6 +69,10 @@ public class CxxBuckConfig {
         .or(delegate.getPath("cxx", name));
   }
 
+  public Optional<String> getDefaultPlatform() {
+    return delegate.getValue("cxx", "default_platform");
+  }
+
   public <T extends Enum<T>> Optional<T> getLinkerType(String flavor, Class<T> clazz) {
     return delegate
         .getEnum("cxx", flavor + "_ld_type", clazz)
