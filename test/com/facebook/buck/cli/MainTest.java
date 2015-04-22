@@ -112,6 +112,7 @@ public class MainTest {
         "  project     generates project configuration files for an IDE",
         "  quickstart  generates a default project directory",
         "  run         runs a target as a command",
+        "  server      query and control the http server",
         "  targets     prints the list of buildable targets",
         "  test        builds and runs the tests for the specified target",
         "  uninstall   uninstalls an APK",

@@ -63,6 +63,10 @@ public enum Command {
       "runs a target as a command",
       RunCommand.class,
       false),
+  SERVER(
+      "query and control the http server",
+      ServerCommandRunner.class,
+      true),
   TARGETS(
       "prints the list of buildable targets",
       TargetsCommand.class,

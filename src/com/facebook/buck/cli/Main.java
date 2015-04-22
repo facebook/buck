@@ -648,7 +648,8 @@ public final class Main {
               rootRepository.getBuckConfig().createDefaultJavaPackageFinder(),
               objectMapper,
               clock,
-              processManager));
+              processManager,
+              webServer));
       parser.cleanCache();
       buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
     } catch (Throwable t) {

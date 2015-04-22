@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.intellij.Project;
@@ -127,7 +128,8 @@ public class CleanCommandTest extends EasyMockSupport {
         new FakeJavaPackageFinder(),
         new ObjectMapper(),
         new DefaultClock(),
-        Optional.<ProcessManager>absent());
+        Optional.<ProcessManager>absent(),
+        Optional.<WebServer>absent());
     return new CleanCommand(params);
   }
 

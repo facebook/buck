@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
@@ -61,7 +62,8 @@ public class CommandRunnerParamsForTesting {
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
-      ObjectMapper objectMapper)
+      ObjectMapper objectMapper,
+      Optional<WebServer> webServer)
       throws IOException, InterruptedException {
     return new CommandRunnerParams(
         console,
@@ -86,7 +88,8 @@ public class CommandRunnerParamsForTesting {
         javaPackageFinder,
         objectMapper,
         new DefaultClock(),
-        Optional.<ProcessManager>absent());
+        Optional.<ProcessManager>absent(),
+        webServer);
   }
 
   public static Builder builder() {
@@ -105,6 +108,7 @@ public class CommandRunnerParamsForTesting {
     private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
     private JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
     private ObjectMapper objectMapper = new ObjectMapper();
+    private Optional<WebServer> webServer = Optional.absent();
 
     public CommandRunnerParams build()
         throws IOException, InterruptedException{
@@ -119,11 +123,17 @@ public class CommandRunnerParamsForTesting {
           platform,
           environment,
           javaPackageFinder,
-          objectMapper);
+          objectMapper,
+          webServer);
     }
 
     public Builder setConsole(Console console) {
       this.console = console;
+      return this;
+    }
+
+    public Builder setWebserver(Optional<WebServer> webServer) {
+      this.webServer = webServer;
       return this;
     }
 

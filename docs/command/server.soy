@@ -1,0 +1,59 @@
+{namespace buck.server}
+
+/**
+ * Used to format the description of a server command.
+ *
+ * Very similar to `buck.param`, but without the forced '--' prefix and
+ * the optional alias parameter
+ *
+ * @param name Name of the command.
+ * @param desc Prose description of the command.
+ */
+{template .command}
+  <li class={css arg}>
+    <code>{$name}</code>
+    {sp}
+    {$desc|noAutoescape}
+  </li>
+{/template}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck server' /}
+    {param description}
+      A command to find information about the http server run by Buck.
+    {/param}
+    {param content}
+
+    {call buck.command}
+      {param overview}
+        Find information about the http server run by Buck.
+        <p>
+
+        <pre>buck server status --http-port</pre>
+
+        <h2>Commands</h2>
+        <ul class="{css arglist}">
+          {call buck.server.command}
+            {param name: 'status --http-port' /}
+            {param desc}
+              If the buck daemon is running an http server, returns the port
+              that the server is running on. Else, returns <tt>-1</tt>.
+           {/param}
+          {/call}
+        </ul>
+      {/param}
+
+      {param params}
+        {call buck.param}
+          {param name: 'json' /}
+          {param desc}
+            Outputs the results as JSON.
+          {/param}
+        {/call}
+      {/param}
+    {/call}
+    {/param}
+  {/call}
+{/template}
