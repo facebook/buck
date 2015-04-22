@@ -106,7 +106,7 @@ public class SimpleConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(
         BuildEvent.finished(buildTargets, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 
-    final String buildingLine = "[-] BUILDING...FINISHED 0.8s\n";
+    final String buildingLine = "BUILT //banana:stand\n[-] BUILDING...FINISHED 0.8s\n";
 
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals(parsingLine + buildingLine,

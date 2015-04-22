@@ -46,7 +46,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Console that provides rich, updating ansi output about the current build.
@@ -67,7 +66,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final Optional<WebServer> webServer;
   private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent>> threadsToRunningEvent;
   private final ConcurrentMap<Long, Optional<? extends LeafEvent>> threadsToRunningStep;
-  private final AtomicInteger numRulesCompleted = new AtomicInteger();
 
   private final ConcurrentLinkedQueue<ConsoleEvent> logEvents;
 
@@ -315,7 +313,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     threadsToRunningEvent.put(finished.getThreadId(), Optional.<BuildRuleEvent>absent());
-    numRulesCompleted.getAndIncrement();
   }
 
   @Subscribe

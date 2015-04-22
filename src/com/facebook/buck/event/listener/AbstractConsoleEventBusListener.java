@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.ActionGraphEvent;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -35,6 +36,7 @@ import com.google.common.eventbus.Subscribe;
 import java.io.Closeable;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 import javax.annotation.Nullable;
@@ -76,6 +78,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected volatile InstallEvent.Finished installFinished;
 
   protected volatile Optional<Integer> ruleCount = Optional.absent();
+
+  protected final AtomicInteger numRulesCompleted = new AtomicInteger();
 
   public AbstractConsoleEventBusListener(Console console, Clock clock) {
     this.console = console;
@@ -205,6 +209,12 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
     ruleCount = Optional.of(calculated.getNumRules());
+  }
+
+  @Subscribe
+  public void incrementNumRulesCompleted(
+      @SuppressWarnings("unused") BuildRuleEvent.Finished finished) {
+    numRulesCompleted.getAndIncrement();
   }
 
   @Subscribe
