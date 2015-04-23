@@ -32,6 +32,19 @@ import javax.annotation.Nullable;
  */
 public class BuckPyFunction {
 
+  /**
+   * Properties from the JSON produced by {@code buck.py} that start with this prefix do not
+   * correspond to build rule arguments specified by the user. Instead, they contain internal-only
+   * metadata, so they should not be printed when the build rule is reproduced.
+   */
+  public static final String INTERNAL_PROPERTY_NAME_PREFIX = "buck.";
+
+  /**
+   * The name of the property in the JSON produced by {@code buck.py} that identifies the type of
+   * the build rule being defined.
+   */
+  public static final String TYPE_PROPERTY_NAME = INTERNAL_PROPERTY_NAME_PREFIX + "type";
+
   private final ConstructorArgMarshaller argMarshaller;
 
   public BuckPyFunction(ConstructorArgMarshaller argMarshaller) {
@@ -74,7 +87,7 @@ public class BuckPyFunction {
 
         // Define the rule.
         .append("  add_rule({\n")
-        .append("    'type' : '").append(type.getName()).append("',\n");
+        .append("    '" + TYPE_PROPERTY_NAME + "' : '").append(type.getName()).append("',\n");
 
 
     if (defaultName != null) {

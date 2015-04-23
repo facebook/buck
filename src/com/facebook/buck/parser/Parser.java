@@ -42,6 +42,7 @@ import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
@@ -653,7 +654,7 @@ public class Parser {
    * @return the type of rule defined by the map.
    */
   private BuildRuleType parseBuildRuleTypeFromRawRule(Map<String, Object> map) {
-    String type = (String) map.get("type");
+    String type = (String) map.get(BuckPyFunction.TYPE_PROPERTY_NAME);
     return repository.getBuildRuleType(type);
   }
 

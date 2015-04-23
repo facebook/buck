@@ -5,6 +5,7 @@
   "annotationProcessorParams" : [ ],
   "annotationProcessors" : [ ],
   "buck.base_path" : "test/com/facebook/buck/cli/testdata/target_command",
+  "buck.type" : "java_library",
   "compiler": null,
   "deps" : [ ],
   "exportedDeps": [],
@@ -20,7 +21,6 @@
   "source" : "6",
   "srcs" : [ ],
   "target" : "6",
-  "type" : "java_library",
   "visibility" : [ "PUBLIC" ]
 }
 ]

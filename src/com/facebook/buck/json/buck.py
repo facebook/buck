@@ -97,7 +97,7 @@ def provide_for_build(func):
 def add_rule(rule, build_env):
     assert build_env.type == BuildContextType.BUILD_FILE, (
         "Cannot use `{}()` at the top-level of an included file."
-        .format(rule['type']))
+        .format(rule['buck.type']))
 
     # Include the base path of the BUILD file so the reader consuming this
     # JSON will know which BUILD file the rule came from.

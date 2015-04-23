@@ -27,6 +27,7 @@ import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.util.Console;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
@@ -161,7 +162,7 @@ public class JavaSymbolFinder {
           }
 
           for (Map<String, Object> ruleMap : rules) {
-            String type = (String) ruleMap.get("type");
+            String type = (String) ruleMap.get(BuckPyFunction.TYPE_PROPERTY_NAME);
             if (javaRuleTypes.contains(type)) {
               @SuppressWarnings("unchecked")
               List<String> srcs = (List<String>) Preconditions.checkNotNull(ruleMap.get("srcs"));

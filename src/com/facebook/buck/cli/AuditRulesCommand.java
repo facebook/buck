@@ -22,6 +22,7 @@ import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
@@ -50,22 +51,6 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
 
   /** Indent to use in generated build file. */
   private static final String INDENT = "  ";
-
-  /**
-   * Properties from the JSON produced by {@code buck.py} that start with this prefix do not
-   * correspond to build rule arguments specified by the user. Instead, they contain internal-only
-   * metadata, so they should not be printed when the build rule is reproduced.
-   */
-  private static final String INTERNAL_PROPERTY_NAME_PREFIX = "buck.";
-
-  /**
-   * The name of the property in the JSON produced by {@code buck.py} that identifies the type of
-   * the build rule being defined.
-   * <p>
-   * TODO(mbolin): Change this property name to "buck.type" so that all internal properties start
-   * with "buck.".
-   */
-  private static final String TYPE_PROPERTY_NAME = "type";
 
   /** Properties that should be listed last in the declaration of a build rule. */
   private static final ImmutableSet<String> LAST_PROPERTIES = ImmutableSet.of("deps", "visibility");
@@ -141,7 +126,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
     PrintStream out = console.getStdOut();
 
     for (Map<String, Object> rawRule : rawRules) {
-      String type = (String) rawRule.get(TYPE_PROPERTY_NAME);
+      String type = (String) rawRule.get(BuckPyFunction.TYPE_PROPERTY_NAME);
       if (!includeType.apply(type)) {
         continue;
       }
@@ -158,8 +143,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
       SortedSet<String> customProperties = Sets.newTreeSet();
       for (String key : rawRule.keySet()) {
         // Ignore keys that start with "buck.".
-        if (!(key.equals(TYPE_PROPERTY_NAME) ||
-            key.startsWith(INTERNAL_PROPERTY_NAME_PREFIX) ||
+        if (!(key.startsWith(BuckPyFunction.INTERNAL_PROPERTY_NAME_PREFIX) ||
             LAST_PROPERTIES.contains(key))) {
           customProperties.add(key);
         }
