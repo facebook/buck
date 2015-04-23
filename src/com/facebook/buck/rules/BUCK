@@ -92,6 +92,7 @@ java_immutables_library(
     'Description.java',
     'FlavorableDescription.java',
     'ExportDependencies.java',
+    'HasPostBuildSteps.java',
     'Hint.java',
     'ImplicitDepsInferringDescription.java',
     'OnDiskBuildInfo.java',

@@ -23,6 +23,7 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.zip.Unzip;
@@ -348,7 +349,9 @@ public class CachingBuildEngine implements BuildEngine {
         final BuildContext context,
         OnDiskBuildInfo onDiskBuildInfo,
         BuildInfoRecorder buildInfoRecorder,
-        boolean shouldTryToFetchFromCache) {
+        boolean shouldTryToFetchFromCache)
+        throws InterruptedException {
+
     // Compute the current RuleKey and compare it to the one stored on disk.
     RuleKey ruleKey = rule.getRuleKey();
     Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey();
@@ -415,20 +418,38 @@ public class CachingBuildEngine implements BuildEngine {
       cacheResult = CacheResult.skip();
     }
 
+    // Get and run all of the commands.
+    BuildableContext buildableContext = new DefaultBuildableContext(
+        buildInfoRecorder);
+
     // Run the steps to build this rule since it was not found in the cache.
-    if (cacheResult.getType().isSuccess()) {
-      return new BuildResult(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, cacheResult);
+    if (!cacheResult.getType().isSuccess()) {
+      try {
+        executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext);
+      } catch (StepFailedException e) {
+        // If the build fails, delete all of the on disk metadata.
+        return new BuildResult(e);
+      }
     }
 
-    // The only remaining option is to build locally.
-    try {
-      executeCommandsNowThatDepsAreBuilt(rule, context, buildInfoRecorder);
-    } catch (Exception e) {
-      // If the build fails, delete all of the on disk metadata.
-      return new BuildResult(e);
+    // Run the post-build steps, even if we hit in the cache.
+    if (rule instanceof HasPostBuildSteps) {
+      try {
+        executePostBuildSteps(
+            rule,
+            ((HasPostBuildSteps) rule).getPostBuildSteps(context, buildableContext),
+            context);
+      } catch (StepFailedException e) {
+        // If the build fails, delete all of the on disk metadata.
+        return new BuildResult(e);
+      }
     }
 
-    return new BuildResult(BuildRuleSuccess.Type.BUILT_LOCALLY, cacheResult);
+    return new BuildResult(
+        cacheResult.getType().isSuccess() ?
+            BuildRuleSuccess.Type.FETCHED_FROM_CACHE :
+            BuildRuleSuccess.Type.BUILT_LOCALLY,
+        cacheResult);
   }
 
   /**
@@ -569,16 +590,15 @@ public class CachingBuildEngine implements BuildEngine {
   private void executeCommandsNowThatDepsAreBuilt(
       BuildRule rule,
       BuildContext context,
-      BuildInfoRecorder buildInfoRecorder)
-      throws Exception {
+      BuildableContext buildableContext)
+      throws InterruptedException, StepFailedException {
+
     LOG.debug("Building locally: %s", rule);
     // Attempt to get an approximation of how long it takes to actually run the command.
     @SuppressWarnings("PMD.PrematureDeclaration")
     long start = System.nanoTime();
 
     // Get and run all of the commands.
-    BuildableContext buildableContext = new DefaultBuildableContext(
-        buildInfoRecorder);
     List<Step> steps = rule.getBuildSteps(context, buildableContext);
 
     AbiRule abiRule = checkIfRuleOrBuildableIsAbiRule(rule);
@@ -604,6 +624,28 @@ public class CachingBuildEngine implements BuildEngine {
         rule.getType(),
         rule.getFullyQualifiedName(),
         end - start);
+  }
+
+  private void executePostBuildSteps(
+      BuildRule rule,
+      Iterable<Step> postBuildSteps,
+      BuildContext context)
+      throws InterruptedException, StepFailedException {
+
+    LOG.debug("Running post-build steps for %s", rule);
+
+    StepRunner stepRunner = context.getStepRunner();
+    for (Step step : postBuildSteps) {
+      stepRunner.runStepForBuildTarget(step, rule.getBuildTarget());
+
+      // Check for interruptions that may have been ignored by step.
+      if (Thread.interrupted()) {
+        Thread.currentThread().interrupt();
+        throw new InterruptedException();
+      }
+    }
+
+    LOG.debug("Finished running post-build steps for %s", rule);
   }
 
   @VisibleForTesting
