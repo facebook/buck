@@ -8,6 +8,7 @@ java_library(
     'FakeBuildContext.java',
     'FakeBuildRule.java',
     'FakeBuildRuleParamsBuilder.java',
+    'FakeExportDependenciesRule.java',
     'FakeOnDiskBuildInfo.java',
     'FakeRepositoryFactory.java',
     'FakeRuleKeyBuilderFactory.java',

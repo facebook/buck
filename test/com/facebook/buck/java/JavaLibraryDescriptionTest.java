@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import static com.facebook.buck.java.BuiltInJavac.DEFAULT;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -25,10 +26,13 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeExportDependenciesRule;
 import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -44,6 +48,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -217,6 +222,25 @@ public class JavaLibraryDescriptionTest {
     assertEquals(Optional.of(expected), options.getJavacJarPath());
     assertEquals(Optional.<Path>absent(), options.getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
+  }
+
+  @Test
+  public void rulesExportedFromDepsBecomeFirstOrderDeps() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    FakeBuildRule exportedRule =
+        resolver.addToIndex(new FakeBuildRule("//:exported_rule", pathResolver));
+    FakeExportDependenciesRule exportingRule =
+        resolver.addToIndex(
+            new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRule javaLibrary = new JavaLibraryBuilder(target)
+        .addDep(exportingRule.getBuildTarget())
+        .build(resolver);
+
+    assertThat(javaLibrary.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
   }
 
   private void populateWithDefaultValues(Object arg) {

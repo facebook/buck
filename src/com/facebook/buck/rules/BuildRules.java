@@ -23,6 +23,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -85,4 +86,18 @@ public class BuildRules {
       }
     };
   }
+
+  /**
+   * @return the set of {@code BuildRule}s exported by {@code ExportDependencies} from the given
+   *     rules.
+   */
+  public static ImmutableSortedSet<BuildRule> getExportedRules(
+      Iterable<? extends BuildRule> rules) {
+    ImmutableSortedSet.Builder<BuildRule> exportedRules = ImmutableSortedSet.naturalOrder();
+    for (ExportDependencies exporter : Iterables.filter(rules, ExportDependencies.class)) {
+      exportedRules.addAll(exporter.getExportedDeps());
+    }
+    return exportedRules.build();
+  }
+
 }
