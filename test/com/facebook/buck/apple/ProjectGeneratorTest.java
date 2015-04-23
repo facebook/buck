@@ -31,7 +31,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
-import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
@@ -77,7 +76,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.io.ByteStreams;
 
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
@@ -196,7 +194,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void shouldNotCreateHeaderMapsWhenHeaderMapsAreDisabled() throws IOException {
+  public void shouldNotCreateHeaderSymlinkTreesWhenTheyAreDisabled() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
@@ -215,12 +213,12 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     // No header map should be generated
-    List<Path> headerMaps = projectGenerator.getGeneratedHeaderMaps();
-    assertThat(headerMaps, hasSize(0));
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(0));
   }
 
   @Test
-  public void testLibraryHeaderGroupsWithHeaderMaps() throws IOException {
+  public void testLibraryHeaderGroupsWithHeaderSymlinkTrees() throws IOException {
     BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
@@ -273,17 +271,21 @@ public class ProjectGeneratorTest {
               }
             }));
 
-    List<Path> headerMaps = projectGenerator.getGeneratedHeaderMaps();
-    assertThat(headerMaps, hasSize(2));
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
 
-    assertEquals("buck-out/gen/foo/lib-public-headers.hmap", headerMaps.get(0).toString());
-    assertThatHeaderMapFileContains(
-        Paths.get("buck-out/gen/foo/lib-public-headers.hmap"),
+    assertEquals(
+        "buck-out/gen/foo/lib-public-header-symlink-tree",
+        headerSymlinkTrees.get(0).toString());
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-public-header-symlink-tree"),
         ImmutableMap.of("lib/bar.h", "HeaderGroup1/bar.h"));
 
-    assertEquals("buck-out/gen/foo/lib-target-headers.hmap", headerMaps.get(1).toString());
-    assertThatHeaderMapFileContains(
-        Paths.get("buck-out/gen/foo/lib-target-headers.hmap"),
+    assertEquals(
+        "buck-out/gen/foo/lib-private-header-symlink-tree",
+        headerSymlinkTrees.get(1).toString());
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-private-header-symlink-tree"),
         ImmutableMap.<String, String>builder()
             .put("lib/foo.h", "HeaderGroup1/foo.h")
             .put("lib/baz.h", "HeaderGroup2/baz.h")
@@ -359,27 +361,33 @@ public class ProjectGeneratorTest {
 
     // There should be no PBXHeadersBuildPhase in the 'Buck header map mode'.
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
-    assertEquals(Optional.<PBXBuildPhase>absent(),
-        Iterables.tryFind(target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
+    assertEquals(
+        Optional.<PBXBuildPhase>absent(),
+        Iterables.tryFind(
+            target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
               @Override
               public boolean apply(PBXBuildPhase input) {
                 return input instanceof PBXHeadersBuildPhase;
               }
             }));
 
-    List<Path> headerMaps = projectGenerator.getGeneratedHeaderMaps();
-    assertThat(headerMaps, hasSize(2));
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
 
-    assertEquals("buck-out/gen/foo/lib-public-headers.hmap", headerMaps.get(0).toString());
-    assertThatHeaderMapFileContains(
-        Paths.get("buck-out/gen/foo/lib-public-headers.hmap"),
+    assertEquals(
+        "buck-out/gen/foo/lib-public-header-symlink-tree",
+        headerSymlinkTrees.get(0).toString());
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-public-header-symlink-tree"),
         ImmutableMap.of(
             "yet/another/name.h", "HeaderGroup1/bar.h",
             "and/one/more.h", "foo/generated2.h"));
 
-    assertEquals("buck-out/gen/foo/lib-target-headers.hmap", headerMaps.get(1).toString());
-    assertThatHeaderMapFileContains(
-        Paths.get("buck-out/gen/foo/lib-target-headers.hmap"),
+    assertEquals(
+        "buck-out/gen/foo/lib-private-header-symlink-tree",
+        headerSymlinkTrees.get(1).toString());
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-private-header-symlink-tree"),
         ImmutableMap.of(
             "any/name.h", "HeaderGroup1/foo.h",
             "different/name.h", "HeaderGroup2/baz.h",
@@ -387,7 +395,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testHeaderMapsWithHeadersVisibleForTesting() throws IOException {
+  public void testHeaderSymlinkTreesWithHeadersVisibleForTesting() throws IOException {
     BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
     BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
 
@@ -429,13 +437,13 @@ public class ProjectGeneratorTest {
         getBuildSettings(testTarget, testPBXTarget, "Default");
 
     assertEquals(
-        "test binary should use headermaps for both public and non-public headers of the tested " +
-            "library in HEADER_SEARCH_PATHS",
+        "test binary should use header symlink trees for both public and non-public headers " +
+            "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) " +
-            "../buck-out/gen/foo/test-target-headers.hmap " +
-            "../buck-out/gen/foo/test-public-headers.hmap " +
-            "../buck-out/gen/foo/lib-public-headers.hmap " +
-            "../buck-out/gen/foo/lib-target-headers.hmap",
+            "../buck-out/gen/foo/test-private-header-symlink-tree " +
+            "../buck-out/gen/foo/test-public-header-symlink-tree " +
+            "../buck-out/gen/foo/lib-public-header-symlink-tree " +
+            "../buck-out/gen/foo/lib-private-header-symlink-tree",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be set",
@@ -444,7 +452,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testHeaderMapsWithTestsAndLibraryBundles() throws IOException {
+  public void testHeaderSymlinkTreesWithTestsAndLibraryBundles() throws IOException {
     BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
     BuildTarget bundleTarget = BuildTarget.builder("//foo", "bundle").build();
     BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
@@ -493,13 +501,13 @@ public class ProjectGeneratorTest {
         getBuildSettings(testTarget, testPBXTarget, "Default");
 
     assertEquals(
-        "test binary should use headermaps for both public and non-public headers of the tested " +
-            "library in HEADER_SEARCH_PATHS",
+        "test binary should use header symlink trees for both public and non-public headers " +
+            "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) " +
-            "../buck-out/gen/foo/test-target-headers.hmap " +
-            "../buck-out/gen/foo/test-public-headers.hmap " +
-            "../buck-out/gen/foo/lib-public-headers.hmap " +
-            "../buck-out/gen/foo/lib-target-headers.hmap",
+            "../buck-out/gen/foo/test-private-header-symlink-tree " +
+            "../buck-out/gen/foo/test-public-header-symlink-tree " +
+            "../buck-out/gen/foo/lib-public-header-symlink-tree " +
+            "../buck-out/gen/foo/lib-private-header-symlink-tree",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be set",
@@ -508,7 +516,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testHeaderMapsWithTestsAndBinaryBundles() throws IOException {
+  public void testHeaderSymlinkTreesWithTestsAndBinaryBundles() throws IOException {
     BuildTarget binaryTarget = BuildTarget.builder("//foo", "bin").build();
     BuildTarget bundleTarget = BuildTarget.builder("//foo", "bundle").build();
     BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
@@ -557,13 +565,13 @@ public class ProjectGeneratorTest {
         getBuildSettings(testTarget, testPBXTarget, "Default");
 
     assertEquals(
-        "test binary should use headermaps for both public and non-public headers of the tested " +
-            "binary in HEADER_SEARCH_PATHS",
+        "test binary should use header symlink trees for both public and non-public headers " +
+            "of the tested binary in HEADER_SEARCH_PATHS",
         "$(inherited) " +
-            "../buck-out/gen/foo/test-target-headers.hmap " +
-            "../buck-out/gen/foo/test-public-headers.hmap " +
-            "../buck-out/gen/foo/bin-public-headers.hmap " +
-            "../buck-out/gen/foo/bin-target-headers.hmap",
+            "../buck-out/gen/foo/test-private-header-symlink-tree " +
+            "../buck-out/gen/foo/test-public-header-symlink-tree " +
+            "../buck-out/gen/foo/bin-public-header-symlink-tree " +
+            "../buck-out/gen/foo/bin-private-header-symlink-tree",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be set",
@@ -571,17 +579,16 @@ public class ProjectGeneratorTest {
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
-  private void assertThatHeaderMapFileContains(Path file, ImmutableMap<String, String> content)
+  private void assertThatHeaderSymlinkTreeContains(Path root, ImmutableMap<String, String> content)
       throws IOException {
-    byte[] headerMapBytes = ByteStreams.toByteArray(projectFilesystem.newFileInputStream(file));
-    HeaderMap map = HeaderMap.deserialize(headerMapBytes);
-    assertEquals(content.size(), map.getNumEntries());
-    for (String key : content.keySet()) {
+    for (Map.Entry<String, String> entry : content.entrySet()) {
+      Path link = root.resolve(Paths.get(entry.getKey()));
+      Path target = Paths.get(entry.getValue()).toAbsolutePath();
+      assertTrue(projectFilesystem.isSymLink(link));
       assertEquals(
-          Paths.get(content.get(key)).toAbsolutePath().toString(),
-          map.lookup(key));
+          target,
+          projectFilesystem.readSymLink(link));
     }
-
   }
 
   @Test

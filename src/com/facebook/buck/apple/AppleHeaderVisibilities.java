@@ -49,12 +49,12 @@ public class AppleHeaderVisibilities {
     throw new IllegalStateException("Invalid header visibility value: " + headerVisibility);
   }
 
-  public static String getHeaderMapFileSuffix(HeaderVisibility headerVisibility) {
+  public static String getHeaderSymlinkTreeSuffix(HeaderVisibility headerVisibility) {
     switch (headerVisibility) {
       case PUBLIC:
-        return "-public-headers.hmap";
+        return "-public-header-symlink-tree";
       case PRIVATE:
-        return "-target-headers.hmap";
+        return "-private-header-symlink-tree";
     }
     throw new IllegalStateException("Invalid header visibility value: " + headerVisibility);
   }

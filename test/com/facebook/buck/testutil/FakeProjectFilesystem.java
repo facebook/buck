@@ -55,6 +55,7 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.NotLinkException;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
@@ -540,6 +541,15 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   @Override
   public boolean isSymLink(Path path) throws IOException {
     return symLinks.containsKey(path);
+  }
+
+  @Override
+  public Path readSymLink(Path path) throws IOException {
+    Path target = symLinks.get(path);
+    if (target == null) {
+      throw new NotLinkException(path.toString());
+    }
+    return target;
   }
 
   @Override

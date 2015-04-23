@@ -147,7 +147,7 @@ public class AppleDescriptions {
     return new SymlinkTree(headerParams, pathResolver, root, headersToCopy);
   }
 
-  public static Optional<Path> getPathToHeaderMap(
+  public static Optional<Path> getPathToHeaderSymlinkTree(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       HeaderVisibility headerVisibility) {
     if (!targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
@@ -157,7 +157,7 @@ public class AppleDescriptions {
     return Optional.of(
         BuildTargets.getGenPath(
             targetNode.getBuildTarget().getUnflavoredBuildTarget(),
-            "%s" + AppleHeaderVisibilities.getHeaderMapFileSuffix(headerVisibility)));
+            "%s" + AppleHeaderVisibilities.getHeaderSymlinkTreeSuffix(headerVisibility)));
   }
 
   public static Path getHeaderPathPrefix(
