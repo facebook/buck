@@ -16,13 +16,16 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -30,6 +33,7 @@ import java.nio.file.Paths;
 
 public class CxxPlatforms {
 
+  private static final Logger LOG = Logger.get(CxxPlatforms.class);
   private static final ImmutableList<String> DEFAULT_ASFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_ASPPFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CFLAGS = ImmutableList.of();
@@ -161,6 +165,30 @@ public class CxxPlatforms {
         .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS))
         .addAllLexFlags(config.getFlags("lexflags").or(DEFAULT_LEX_FLAGS))
         .addAllYaccFlags(config.getFlags("yaccflags").or(DEFAULT_YACC_FLAGS));
+  }
+
+  public static CxxPlatform getConfigDefaultCxxPlatform(
+      CxxBuckConfig cxxBuckConfig,
+      ImmutableMap<Flavor, CxxPlatform> cxxPlatformsMap,
+      CxxPlatform systemDefaultCxxPlatform) {
+    CxxPlatform defaultCxxPlatform;
+    Optional<String> defaultPlatform = cxxBuckConfig.getDefaultPlatform();
+    if (defaultPlatform.isPresent()) {
+      defaultCxxPlatform = cxxPlatformsMap.get(
+          ImmutableFlavor.of(defaultPlatform.get()));
+      if (defaultCxxPlatform == null) {
+        LOG.warn(
+            "Couldn't find default platform %s, falling back to system default",
+            defaultPlatform.get());
+      } else {
+        LOG.debug("Using config default C++ platform %s", defaultCxxPlatform);
+        return defaultCxxPlatform;
+      }
+    } else {
+      LOG.debug("Using system default C++ platform %s", systemDefaultCxxPlatform);
+    }
+
+    return systemDefaultCxxPlatform;
   }
 
   private static Optional<Tool> getTool(Flavor flavor, String name, CxxBuckConfig config) {

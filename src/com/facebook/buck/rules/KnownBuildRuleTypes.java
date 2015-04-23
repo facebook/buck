@@ -54,6 +54,7 @@ import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPythonExtensionDescription;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxTestDescription;
@@ -373,23 +374,16 @@ public class KnownBuildRuleTypes {
       cxxPlatformsBuilder.put(appleCxxPlatform.getFlavor(), appleCxxPlatform);
     }
 
-      // Add the default, config-defined C/C++ platform.
+    // Add the default, config-defined C/C++ platform.
     CxxPlatform systemDefaultCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
     cxxPlatformsBuilder.put(systemDefaultCxxPlatform.getFlavor(), systemDefaultCxxPlatform);
-
     ImmutableMap<Flavor, CxxPlatform> cxxPlatformsMap = cxxPlatformsBuilder.build();
 
-    CxxPlatform defaultCxxPlatform;
-    Optional<String> defaultPlatform = cxxBuckConfig.getDefaultPlatform();
-    if (defaultPlatform.isPresent()) {
-      defaultCxxPlatform = cxxPlatformsMap.get(
-          ImmutableFlavor.of(defaultPlatform.get()));
-      if (defaultCxxPlatform == null) {
-        throw new HumanReadableException("Cannot find default platform %s", defaultPlatform.get());
-      }
-    } else {
-      defaultCxxPlatform = systemDefaultCxxPlatform;
-    }
+    // Get the default platform from config.
+    CxxPlatform defaultCxxPlatform = CxxPlatforms.getConfigDefaultCxxPlatform(
+        cxxBuckConfig,
+        cxxPlatformsMap,
+        systemDefaultCxxPlatform);
 
     // Build up the final list of C/C++ platforms.
     FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
