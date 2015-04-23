@@ -1,22 +1,5 @@
 {namespace buck.server}
 
-/**
- * Used to format the description of a server command.
- *
- * Very similar to `buck.param`, but without the forced '--' prefix and
- * the optional alias parameter
- *
- * @param name Name of the command.
- * @param desc Prose description of the command.
- */
-{template .command}
-  <li class={css arg}>
-    <code>{$name}</code>
-    {sp}
-    {$desc|noAutoescape}
-  </li>
-{/template}
-
 /***/
 {template .soyweb}
   {call buck.page}
@@ -35,8 +18,9 @@
 
         <h2>Commands</h2>
         <ul class="{css arglist}">
-          {call buck.server.command}
+          {call buck.param}
             {param name: 'status --http-port' /}
+            {param nodash: true /}
             {param desc}
               If the buck daemon is running an http server, returns the port
               that the server is running on. Else, returns <tt>-1</tt>.

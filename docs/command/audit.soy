@@ -1,22 +1,5 @@
 {namespace buck.audit}
 
-/**
- * Used to format the description of an audit command.
- *
- * Very similar to `buck.param`, but without the forced '--' prefix and
- * the optional alias parameter
- *
- * @param name Name of the command.
- * @param desc Prose description of the command.
- */
-{template .command}
-  <li class={css arg}>
-    <code>{$name}</code>
-    {sp}
-    {$desc|noAutoescape}
-  </li>
-{/template}
-
 /***/
 {template .soyweb}
   {call buck.page}
@@ -38,8 +21,9 @@ Provide build information about build targets and outputs.
 <h2>Commands</h2>
 
 <ul class="{css arglist}">
-  {call buck.audit.command}
+  {call buck.param}
     {param name: 'alias --list' /}
+    {param nodash: true /}
     {param desc}
     Lists the set of aliases declared in
     either <tt>.buckconfig</tt> or <tt>.buckconfig.local</tt>.
@@ -48,16 +32,18 @@ Provide build information about build targets and outputs.
    {/param}
   {/call}
 
-  {call buck.audit.command}
+  {call buck.param}
     {param name: 'classpath <targets>' /}
+    {param nodash: true /}
     {param desc}
     Lists the classpath used to build the given targets. This does
     not work for all build rule types.
     {/param}
   {/call}
 
-  {call buck.audit.command}
+  {call buck.param}
     {param name: 'dependencies <targets>' /}
+    {param nodash: true /}
     {param desc}
     Lists the dependencies used to build the given targets. Results are listed
     in alphabetical order. By default, only direct dependencies are listed.
@@ -69,16 +55,18 @@ Provide build information about build targets and outputs.
     {/param}
   {/call}
 
-  {call buck.audit.command}
+  {call buck.param}
     {param name: 'input <targets>' /}
+    {param nodash: true /}
     {param desc}
     Lists the input source and resource files used to build the
     given targets.
    {/param}
   {/call}
 
-  {call buck.audit.command}
+  {call buck.param}
     {param name: 'tests <targets>' /}
+    {param nodash: true /}
     {param desc}
     Lists the tests for the given targets. Results are listed in alphabetical
     order. Only tests for the given targets are printed, though multiple

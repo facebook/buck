@@ -367,11 +367,12 @@ ga('send', 'pageview');
  * Used to format a parameter of a command.
  *
  * @param name Name of the parameter.
+ * @param? nodash If set, do not add "--" prefix to $name.
  * @param? alias The alias for this parameter.
  * @param desc Prose description of the parameter.
  */
 {template .param}
-  <li class="{css arg}"><code>--{$name}</code>
+  <li class="{css arg}"><code>{if not $nodash}--{/if}{$name}</code>
   {sp}
   {if $alias}
     <code>(-{$alias})</code>
