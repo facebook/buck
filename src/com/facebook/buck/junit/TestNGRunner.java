@@ -44,9 +44,7 @@ import java.util.List;
 public final class TestNGRunner extends BaseRunner {
   @Override
   public void run() throws Throwable {
-    System.out.println("TestNGRunner started!");
     for (String className : testClassNames) {
-      System.out.println("TestNGRunner handling " + className);
       final Class<?> testClass = Class.forName(className);
 
       List<TestResult> results;
@@ -54,82 +52,19 @@ public final class TestNGRunner extends BaseRunner {
         results = Collections.emptyList();
       } else {
         results = new ArrayList<>();
-        TestNGWrapper tester = new TestNGWrapper();
-        tester.setAnnoTransformer(new FilteringAnnotationTransformer());
-        tester.setXmlSuites(Collections.singletonList(createXmlSuite(testClass)));
+        TestNG testng = new TestNG();
+        testng.setTestClasses(new Class<?>[]{testClass});
         TestListener listener = new TestListener(results);
-        tester.addListener(new TestListener(results));
-        try {
-          System.out.println("TestNGRunner running " + className);
-          tester.initializeSuitesAndJarFile();
-          tester.runSuitesLocally();
-        } catch (Throwable e) {
-          // There are failures that the TestNG framework fails to
-          // handle (for example, if a test requires a Guice module and
-          // the module throws an exception).
-          // Furthermore, there are bugs in TestNG itself. For example,
-          // when printing the results of a parameterized test, it tries
-          // to call toString() on all the test params and does not catch
-          // resulting exceptions.
-          listener.onFinish(null);
-          System.out.println("TestNGRunner caught an exception");
-          e.printStackTrace();
-          results.add(new TestResult(className,
-              "<TestNG failure>", 0,
-              ResultType.FAILURE, e,
-              "", ""));
-        }
-        System.out.println("TestNGRunner tested " + className + ", got " + results.size());
-      }
+        testng.addListener(new TestListener(results));
+        testng.run();
+     }
 
       writeResult(className, results);
     }
-    System.out.println("TestNGRunner done!");
-  }
-
-  private XmlSuite createXmlSuite(Class<?> c) {
-    XmlSuite xmlSuite = new XmlSuite();
-    xmlSuite.setName("TmpSuite");
-    xmlSuite.setTimeOut("1000");
-    XmlTest xmlTest = new XmlTest(xmlSuite);
-    xmlTest.setName("TmpTest");
-    xmlTest.setXmlClasses(Collections.singletonList(new XmlClass(c)));
-    return xmlSuite;
   }
 
   private boolean isTestClass(Class<?> klass) {
     return klass.getConstructors().length <= 1;
-  }
-
-  public final class TestNGWrapper extends TestNG {
-    /**
-     * The built-in setAnnotationTransformer unfortunately does not work with runSuitesLocally()
-     *
-     * The alternative would be to use the (much heavier) run() method.
-     */
-    public void setAnnoTransformer(IAnnotationTransformer anno) {
-      getConfiguration().setAnnotationFinder(new JDK15AnnotationFinder(anno));
-    }
-  }
-
-  public class FilteringAnnotationTransformer implements IAnnotationTransformer {
-    @Override
-    @SuppressWarnings("rawtypes")
-    public void transform(ITestAnnotation annotation, Class testClass,
-        Constructor testConstructor, Method testMethod) {
-      if (!annotation.getEnabled()) {
-        return;
-      }
-      if (testMethod == null) {
-        return;
-      }
-      String className = testMethod.getDeclaringClass().getName();
-      String methodName = testMethod.getName();
-      TestDescription testDescription = new TestDescription(className, methodName);
-      boolean isIncluded = testSelectorList.isIncluded(testDescription);
-      seenDescriptions.add(testDescription);
-      annotation.setEnabled(isIncluded && !isDryRun);
-    }
   }
 
   private static class TestListener implements ITestListener {
