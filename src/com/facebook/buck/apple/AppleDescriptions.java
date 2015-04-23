@@ -303,6 +303,7 @@ public class AppleDescriptions {
     // the header map itself.
     output.headerNamespace = Optional.of("");
     output.tests = arg.tests;
+    output.cxxRuntimeType = Optional.absent();
   }
 
   public static void populateCxxLibraryDescriptionArg(

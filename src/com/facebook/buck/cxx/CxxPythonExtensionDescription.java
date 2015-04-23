@@ -185,7 +185,8 @@ public class CxxPythonExtensionDescription implements
         extensionPath,
         picObjects.values(),
         Linker.LinkableDepType.SHARED,
-        params.getDeps());
+        params.getDeps(),
+        args.cxxRuntimeType);
   }
 
   @Override

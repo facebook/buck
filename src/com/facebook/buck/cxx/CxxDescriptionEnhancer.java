@@ -759,7 +759,8 @@ public class CxxDescriptionEnhancer {
         output,
         objects.values(),
         Linker.LinkableDepType.STATIC,
-        params.getDeps());
+        params.getDeps(),
+        args.cxxRuntimeType);
     resolver.addToIndex(cxxLink);
 
     return new CxxLinkAndCompileRules(cxxLink, ImmutableSortedSet.copyOf(objects.keySet()));

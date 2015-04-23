@@ -209,7 +209,8 @@ public class PrebuiltCxxLibraryDescription
         ImmutableList.<SourcePath>of(
             new PathSourcePath(params.getProjectFilesystem(), staticLibraryPath)),
         Linker.LinkableDepType.SHARED,
-        params.getDeps());
+        params.getDeps(),
+        Optional.<Linker.CxxRuntimeType>absent());
   }
 
   @Override

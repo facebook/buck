@@ -116,7 +116,7 @@ public class CxxLibraryTest {
             cxxPlatform,
             HeaderVisibility.PRIVATE));
 
-    // Verify that we get the static archive and it's build target via the NativeLinkable
+    // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.
     NativeLinkableInput expectedStaticNativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(
@@ -128,7 +128,7 @@ public class CxxLibraryTest {
             cxxPlatform,
             Linker.LinkableDepType.STATIC));
 
-    // Verify that we get the static archive and it's build target via the NativeLinkable
+    // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.
     NativeLinkableInput expectedSharedNativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(

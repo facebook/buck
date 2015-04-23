@@ -79,7 +79,8 @@ public class CxxLinkableEnhancer {
       Path output,
       Iterable<SourcePath> inputs,
       Linker.LinkableDepType depType,
-      Iterable<? extends BuildRule> nativeLinkableDeps) {
+      Iterable<? extends BuildRule> nativeLinkableDeps,
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType) {
 
     // Soname should only ever be set when linking a "shared" library.
     Preconditions.checkState(!soname.isPresent() || linkType.equals(Linker.LinkType.SHARED));
@@ -137,7 +138,11 @@ public class CxxLinkableEnhancer {
     argsBuilder.addAll(iXlinker(linkableInput.getArgs()));
 
     // Add all arguments needed to link in the C/C++ platform runtime.
-    argsBuilder.addAll(iXlinker(cxxPlatform.getRuntimeLdflags().get(depType)));
+    Linker.LinkableDepType runtimeDepType = depType;
+    if (cxxRuntimeType.or(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
+      runtimeDepType = Linker.LinkableDepType.STATIC;
+    }
+    argsBuilder.addAll(iXlinker(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
 
     ImmutableList<String> args = argsBuilder.build();
 

@@ -257,7 +257,8 @@ public class CxxLibraryDescription implements
       ImmutableList<String> linkerFlags,
       ImmutableList<Path> frameworkSearchPaths,
       Optional<String> soname,
-      CxxSourceRuleFactory.Strategy compileStrategy) {
+      CxxSourceRuleFactory.Strategy compileStrategy,
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType) {
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
@@ -296,18 +297,19 @@ public class CxxLibraryDescription implements
     ImmutableList<String> extraCxxLdFlags = extraCxxLdFlagsBuilder.build();
 
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        cxxPlatform,
-        params,
-        pathResolver,
-        extraCxxLdFlags,
-        linkerFlags,
-        sharedTarget,
-        Linker.LinkType.SHARED,
-        Optional.of(sharedLibrarySoname),
-        sharedLibraryPath,
-        objects.values(),
-        Linker.LinkableDepType.SHARED,
-        params.getDeps());
+            cxxPlatform,
+            params,
+            pathResolver,
+            extraCxxLdFlags,
+            linkerFlags,
+            sharedTarget,
+            Linker.LinkType.SHARED,
+            Optional.of(sharedLibrarySoname),
+            sharedLibraryPath,
+            objects.values(),
+            Linker.LinkableDepType.SHARED,
+            params.getDeps(),
+            cxxRuntimeType);
   }
 
   /**
@@ -395,6 +397,7 @@ public class CxxLibraryDescription implements
     arg.platformLinkerFlags = Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     arg.exportedPlatformLinkerFlags = Optional.of(
         ImmutableList.<Pair<String, ImmutableList<String>>>of());
+    arg.cxxRuntimeType = Optional.absent();
     arg.forceStatic = Optional.absent();
     arg.linkWhole = Optional.absent();
     arg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
@@ -545,7 +548,8 @@ public class CxxLibraryDescription implements
         linkerFlags.build(),
         args.frameworkSearchPaths.get(),
         args.soname,
-        compileStrategy);
+        compileStrategy,
+        args.cxxRuntimeType);
   }
 
   /**

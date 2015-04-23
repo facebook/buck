@@ -136,7 +136,8 @@ public class CxxLinkableEnhancerTest {
             new BuildTargetSourcePath(PROJECT_FILESYSTEM, genrule1.getBuildTarget()),
             new BuildTargetSourcePath(PROJECT_FILESYSTEM, genrule2.getBuildTarget())),
         Linker.LinkableDepType.STATIC,
-        EMPTY_DEPS);
+        EMPTY_DEPS,
+        Optional.<Linker.CxxRuntimeType>absent());
 
     // Verify that the archive dependencies include the genrules providing the
     // SourcePath inputs.
@@ -173,7 +174,8 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
-        EMPTY_DEPS);
+        EMPTY_DEPS,
+        Optional.<Linker.CxxRuntimeType>absent());
 
     // Verify that the archive rules dependencies are empty.
     assertEquals(cxxLink.getDeps(), ImmutableSortedSet.<BuildRule>of());
@@ -217,7 +219,8 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
-        ImmutableSortedSet.<BuildRule>of(nativeLinkable));
+        ImmutableSortedSet.<BuildRule>of(nativeLinkable),
+        Optional.<Linker.CxxRuntimeType>absent());
 
     // Verify that the fake build rule made it in as a dep.
     assertTrue(cxxLink.getDeps().contains(fakeBuildRule));
@@ -248,7 +251,8 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.<BuildRule>of(),
+        Optional.<Linker.CxxRuntimeType>absent());
     assertFalse(executable.getArgs().contains("-shared"));
     assertEquals(Collections.indexOfSubList(executable.getArgs(), sonameArgs), -1);
 
@@ -265,7 +269,8 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.<BuildRule>of(),
+        Optional.<Linker.CxxRuntimeType>absent());
     assertTrue(shared.getArgs().contains("-shared"));
     assertEquals(Collections.indexOfSubList(shared.getArgs(), sonameArgs), -1);
 
@@ -282,7 +287,8 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.<BuildRule>of(),
+        Optional.<Linker.CxxRuntimeType>absent());
     assertTrue(sharedWithSoname.getArgs().contains("-shared"));
     assertNotEquals(Collections.indexOfSubList(sharedWithSoname.getArgs(), sonameArgs), -1);
   }
@@ -320,7 +326,8 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
-        ImmutableSortedSet.<BuildRule>of(nativeLinkable));
+        ImmutableSortedSet.<BuildRule>of(nativeLinkable),
+        Optional.<Linker.CxxRuntimeType>absent());
     assertTrue(staticLink.getArgs().contains(staticArg) ||
         staticLink.getArgs().contains("-Wl," + staticArg));
     assertFalse(staticLink.getArgs().contains(sharedArg));
@@ -339,11 +346,57 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
         Linker.LinkableDepType.SHARED,
-        ImmutableSortedSet.<BuildRule>of(nativeLinkable));
+        ImmutableSortedSet.<BuildRule>of(nativeLinkable),
+        Optional.<Linker.CxxRuntimeType>absent());
     assertFalse(sharedLink.getArgs().contains(staticArg));
     assertFalse(sharedLink.getArgs().contains("-Wl," + staticArg));
     assertTrue(sharedLink.getArgs().contains(sharedArg) ||
         sharedLink.getArgs().contains("-Wl," + sharedArg));
+  }
+
+  @Test
+  public void platformLdFlags() {
+    CxxPlatform cxxPlatform = CxxPlatform.builder()
+        .from(CXX_PLATFORM)
+        .putRuntimeLdflags(Linker.LinkableDepType.SHARED, "-ldummy-shared-libc")
+        .putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-ldummy-static-libc")
+        .build();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+
+    ImmutableList<Optional<Linker.CxxRuntimeType>> runtimeTypes =
+        ImmutableList.of(
+            Optional.<Linker.CxxRuntimeType>absent(),
+            Optional.of(Linker.CxxRuntimeType.DYNAMIC),
+            Optional.of(Linker.CxxRuntimeType.STATIC));
+
+    String expectedLibc[] = new String[] {
+      "-Wl,-ldummy-shared-libc",
+      "-Wl,-ldummy-shared-libc",
+      "-Wl,-ldummy-static-libc",
+    };
+
+    for (int i = 0; i < expectedLibc.length; ++i) {
+      CxxLink lib = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+          cxxPlatform,
+          params,
+          pathResolver,
+          /* extraCxxLdFlags */ ImmutableList.<String>of(),
+          /* extraLdFlags */ ImmutableList.<String>of(),
+          target,
+          Linker.LinkType.SHARED,
+          Optional.<String>absent(),
+          DEFAULT_OUTPUT,
+          DEFAULT_INPUTS,
+          Linker.LinkableDepType.SHARED,
+          ImmutableSortedSet.<BuildRule>of(),
+          runtimeTypes.get(i));
+
+      assertTrue(
+          "\"" + lib.getArgs().toString() + "\" contains " + expectedLibc[i],
+          lib.getArgs().contains(expectedLibc[i]));
+    }
   }
 
   @Test
