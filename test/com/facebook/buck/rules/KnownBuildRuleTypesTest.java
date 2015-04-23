@@ -369,6 +369,23 @@ public class KnownBuildRuleTypesTest {
         DUMMY_PYTHON_ENVIRONMENT).build();
   }
 
+  @Test
+  public void canSetDefaultPlatformToDefault() throws IOException,
+        InterruptedException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    Map<String, Map<String, String>> sections = ImmutableMap.of(
+        "cxx", (Map<String, String>) ImmutableMap.of("default_platform", "default"));
+    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+
+    // This would throw if "default" weren't available as a platform.
+    KnownBuildRuleTypes.createBuilder(
+        buckConfig,
+        projectFilesystem,
+        createExecutor(),
+        new FakeAndroidDirectoryResolver(),
+        DUMMY_PYTHON_ENVIRONMENT).build();
+  }
+
   private ProcessExecutor createExecutor() throws IOException {
     File javac = temporaryFolder.newFile();
     javac.setExecutable(true);

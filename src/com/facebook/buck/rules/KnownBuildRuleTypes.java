@@ -373,24 +373,22 @@ public class KnownBuildRuleTypes {
       cxxPlatformsBuilder.put(appleCxxPlatform.getFlavor(), appleCxxPlatform);
     }
 
-    Optional<String> defaultPlatform = cxxBuckConfig.getDefaultPlatform();
+      // Add the default, config-defined C/C++ platform.
+    CxxPlatform systemDefaultCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
+    cxxPlatformsBuilder.put(systemDefaultCxxPlatform.getFlavor(), systemDefaultCxxPlatform);
+
+    ImmutableMap<Flavor, CxxPlatform> cxxPlatformsMap = cxxPlatformsBuilder.build();
 
     CxxPlatform defaultCxxPlatform;
-    ImmutableMap<Flavor, CxxPlatform> cxxPlatformsMap;
+    Optional<String> defaultPlatform = cxxBuckConfig.getDefaultPlatform();
     if (defaultPlatform.isPresent()) {
-      // Get the map of flavors defined so far.
-      cxxPlatformsMap = cxxPlatformsBuilder.build();
       defaultCxxPlatform = cxxPlatformsMap.get(
-          ImmutableFlavor.of(defaultPlatform.get())
-      );
+          ImmutableFlavor.of(defaultPlatform.get()));
       if (defaultCxxPlatform == null) {
         throw new HumanReadableException("Cannot find default platform %s", defaultPlatform.get());
       }
     } else {
-      // Add the default, config-defined C/C++ platform.
-      defaultCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
-      cxxPlatformsBuilder.put(defaultCxxPlatform.getFlavor(), defaultCxxPlatform);
-      cxxPlatformsMap = cxxPlatformsBuilder.build();
+      defaultCxxPlatform = systemDefaultCxxPlatform;
     }
 
     // Build up the final list of C/C++ platforms.
