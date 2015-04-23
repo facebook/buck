@@ -222,4 +222,13 @@ public class AndroidBinaryIntegrationTest {
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_bar.so");
   }
 
+  @Test
+  public void testHeaderOnlyCxxLibrary() throws IOException {
+    workspace.runBuckCommand("build", "//apps/sample:app_header_only_cxx_lib_dep").assertSuccess();
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getFile(
+            "buck-out/gen/apps/sample/app_header_only_cxx_lib_dep.apk"));
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_headeronly.so");
+  }
+
 }

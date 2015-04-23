@@ -181,7 +181,7 @@ public class CxxLibraryTest {
         params,
         ruleResolver,
         pathResolver,
-        true,
+        /* headerOnly */ false,
         Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
         Functions.constant(ImmutableList.<String>of()),
         ImmutableList.<Path>of(),

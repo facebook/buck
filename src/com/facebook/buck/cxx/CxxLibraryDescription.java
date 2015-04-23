@@ -720,7 +720,7 @@ public class CxxLibraryDescription implements
         params,
         resolver,
         pathResolver,
-        hasObjects,
+        !hasObjects,
         new Function<CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>() {
           @Override
           public ImmutableMultimap<CxxSource.Type, String> apply(CxxPlatform input) {

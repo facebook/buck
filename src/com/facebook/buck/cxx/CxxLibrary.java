@@ -112,7 +112,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
 
-    if (!headerOnly) {
+    if (headerOnly) {
       return NativeLinkableInput.of(ImmutableSet.<SourcePath>of(), ImmutableList.<String>of());
     }
 
@@ -174,7 +174,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
   @Override
   public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
     ImmutableMap.Builder<Path, SourcePath> libs = ImmutableMap.builder();
-    if (linkage != Linkage.STATIC) {
+    if (!headerOnly && linkage != Linkage.STATIC) {
       String sharedLibrarySoname =
           soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(getBuildTarget(), cxxPlatform));
       BuildRule sharedLibraryBuildRule = CxxDescriptionEnhancer.requireBuildRule(
@@ -207,7 +207,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
-    if (linkage != Linkage.STATIC) {
+    if (!headerOnly && linkage != Linkage.STATIC) {
       String sharedLibrarySoname =
           soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(getBuildTarget(), cxxPlatform));
       BuildRule sharedLibraryBuildRule = CxxDescriptionEnhancer.requireBuildRule(

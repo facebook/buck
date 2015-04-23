@@ -50,3 +50,11 @@ cxx_library(
     'PUBLIC',
   ],
 )
+
+cxx_library(
+  name = 'headeronly',
+  exported_headers = [
+    'bar.h',
+  ],
+  visibility = [ 'PUBLIC' ],
+)
