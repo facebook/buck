@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -54,6 +55,21 @@ public class AppleBundleIntegrationTest {
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
+  }
+
+  @Test
+  public void bundleHasOutputPath() throws IOException{
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_application_bundle",
+        tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace
+        .runBuckCommand("targets", "--show-output", "//:DemoApp");
+    result.assertSuccess();
+    assertEquals("//:DemoApp buck-out/gen/DemoApp.zip", result.getStdout().trim());
   }
 
   @Test

@@ -33,9 +33,11 @@ import com.facebook.buck.step.fs.FindAndReplaceStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -65,6 +67,8 @@ public class AppleBundle extends AbstractBuildRule {
   @AddToRuleKey
   private final ImmutableMap<SourcePath, AppleBundleDestination> files;
 
+  private final Path outputZipPath;
+
   AppleBundle(
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -83,12 +87,15 @@ public class AppleBundle extends AbstractBuildRule {
     this.bundleSubfolders = ImmutableMap.copyOf(bundleSubfolders);
     this.dirs = ImmutableMap.copyOf(dirs);
     this.files = ImmutableMap.copyOf(files);
+    this.outputZipPath = BuildTargets.getGenPath(
+        params.getBuildTarget(),
+        "%s.zip");
   }
 
   @Override
   @Nullable
   public Path getPathToOutputFile() {
-    return null;
+    return outputZipPath;
   }
 
   @Override
@@ -153,6 +160,22 @@ public class AppleBundle extends AbstractBuildRule {
               resolvedFilePath,
               bundleDestinationPath.resolve(resolvedFilePath.getFileName())));
     }
+
+    // Ensure the bundle directory is archived so we can fetch it later.
+    buildableContext.recordArtifactsInDirectory(bundleRoot);
+
+    // A bundle is a directory by definition, but a BuildRule has to
+    // output a single file.
+    //
+    // Create an uncompressed zip to hold the bundle directory so we
+    // can refer to the output of this rule elsewhere.
+    stepsBuilder.add(
+        new ZipStep(
+            outputZipPath,
+            ImmutableSet.<Path>of(),
+            false, /* junkPaths */
+            ZipStep.MIN_COMPRESSION_LEVEL,
+            bundleRoot));
     return stepsBuilder.build();
   }
 
