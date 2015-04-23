@@ -120,6 +120,7 @@ public class BuildKeepGoingIntegrationTest {
     String buildReportContents = com.google.common.io.Files.toString(buildReport, Charsets.UTF_8);
     String expectedReport = Joiner.on('\n').join(
         "{",
+        "  \"success\" : false,",
         "  \"results\" : {",
         "    \"//:rule_with_output\" : {",
         "      \"success\" : true,",

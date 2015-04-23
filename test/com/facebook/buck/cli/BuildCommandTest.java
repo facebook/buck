@@ -89,6 +89,7 @@ public class BuildCommandTest {
   public void testGenerateJsonBuildReport() throws IOException {
     String expectedReport = Joiner.on('\n').join(
         "{",
+        "  \"success\" : false,",
         "  \"results\" : {",
         "    \"//fake:rule1\" : {",
         "      \"success\" : true,",

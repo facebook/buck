@@ -78,22 +78,28 @@ public class BuildReport {
 
   public String generateJsonBuildReport() throws IOException {
     LinkedHashMap<String, Object> results = Maps.newLinkedHashMap();
+    boolean isOverallSuccess = true;
     for (Map.Entry<BuildRule, Optional<BuildRuleSuccess>> entry : ruleToResult.entrySet()) {
       BuildRule rule = entry.getKey();
       Optional<BuildRuleSuccess> success = entry.getValue();
       Map<String, Object> value = Maps.newLinkedHashMap();
-      if (success.isPresent()) {
-        value.put("success", true);
+
+      boolean isSuccess = success.isPresent();
+      value.put("success", isSuccess);
+      if (!isSuccess) {
+        isOverallSuccess = false;
+      }
+
+      if (isSuccess) {
         value.put("type", success.get().getType().name());
         Path outputFile = rule.getPathToOutputFile();
         value.put("output", outputFile != null ? outputFile.toString() : null);
-      } else {
-        value.put("success", false);
       }
       results.put(rule.getFullyQualifiedName(), value);
     }
 
-    Map<String, Object> report = Maps.newHashMap();
+    Map<String, Object> report = Maps.newLinkedHashMap();
+    report.put("success", isOverallSuccess);
     report.put("results", results);
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
