@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
+import org.apache.commons.compress.archivers.zip.ZipUtil;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -44,7 +45,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
@@ -55,6 +58,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class JarDirectoryStepTest {
+
+  //private static final long DOS_EPOCH_START = (1 << 21) | (1 << 16);
 
   @Rule public TemporaryFolder folder = new TemporaryFolder();
 
@@ -243,6 +248,39 @@ public class JarDirectoryStepTest {
     assertZipFileCountIs(2, zip);
     assertZipContains(zip, "dir/file1.txt");
     assertZipDoesNotContain(zip, "dir/file2.txt");
+  }
+
+  @Test
+  public void timesAreSanitized() throws IOException {
+    File zipup = folder.newFolder("dir-zip");
+
+    // Create a jar file with a file and a directory.
+    File subdir = new File(zipup, "dir");
+    assertTrue(subdir.mkdirs());
+    new File(subdir, "a.txt");
+    Files.write(subdir.toPath().resolve("a.txt"), "cake".getBytes());
+    Path outputJar = folder.getRoot().toPath().resolve("output.jar");
+    JarDirectoryStep step =
+        new JarDirectoryStep(
+            outputJar,
+            ImmutableSet.of(zipup.toPath()),
+            /* main class */ null,
+            /* manifest file */ null);
+    ExecutionContext context =
+        TestExecutionContext.newBuilder()
+            .setProjectFilesystem(new ProjectFilesystem(folder.getRoot().toPath()))
+            .build();
+    int returnCode = step.execute(context);
+    assertEquals(0, returnCode);
+
+    // Iterate over each of the entries, expecting to see all zeros in the time fields.
+    assertTrue(Files.exists(outputJar));
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime((1 << 21) | (1 << 16)));
+    try (ZipInputStream is = new ZipInputStream(new FileInputStream(outputJar.toFile()))) {
+      for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+        assertEquals(entry.getName(), dosEpoch, new Date(entry.getTime()));
+      }
+    }
   }
 
   private Manifest createManifestWithExampleSection(Map<String, String> attributes) {

@@ -33,16 +33,21 @@ import com.google.common.io.Files;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.compress.archivers.zip.ZipUtil;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class ZipStepTest {
 
@@ -255,6 +260,33 @@ public class ZipStepTest {
       assertArrayEquals(contents, ByteStreams.toByteArray(zip.getInputStream(entry2)));
       ZipArchiveEntry entry3 = entries.nextElement();
       assertArrayEquals(contents, ByteStreams.toByteArray(zip.getInputStream(entry3)));
+    }
+  }
+
+  @Test
+  public void timesAreSanitized() throws IOException {
+    File parent = tmp.newFolder("zipstep");
+
+    // Create a zip file with a file and a directory.
+    File toZip = tmp.newFolder("zipdir");
+    assertTrue(new File(toZip, "child").mkdir());
+    Files.touch(new File(toZip, "child/file.txt"));
+    Path outputZip = parent.toPath().resolve("output.zip");
+    ZipStep step = new ZipStep(
+        outputZip,
+        ImmutableSet.<Path>of(),
+        false,
+        ZipStep.DEFAULT_COMPRESSION_LEVEL,
+        Paths.get("zipdir"));
+    assertEquals(0, step.execute(executionContext));
+
+    // Iterate over each of the entries, expecting to see all zeros in the time fields.
+    assertTrue(java.nio.file.Files.exists(outputZip));
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime((1 << 21) | (1 << 16)));
+    try (ZipInputStream is = new ZipInputStream(new FileInputStream(outputZip.toFile()))) {
+      for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+        assertEquals(entry.getName(), dosEpoch, new Date(entry.getTime()));
+      }
     }
   }
 
