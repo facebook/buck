@@ -118,7 +118,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
-            "/usr/bin/dx " + xmx + "--dex --output classes.dex.tmp.jar foo.dex.jar bar.dex.jar",
+            Paths.get("/usr/bin/dx") + " " + xmx +
+                "--dex --output classes.dex.tmp.jar foo.dex.jar bar.dex.jar",
             "repack classes.dex.tmp.jar in classes.dex.jar",
             "rm -f classes.dex.tmp.jar",
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
@@ -139,7 +140,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
-        "/usr/bin/dx " + xmx + "--dex --output classes.dex foo.dex.jar bar.dex.jar",
+        Paths.get("/usr/bin/dx") + " " + xmx +
+            "--dex --output classes.dex foo.dex.jar bar.dex.jar",
         dxStep.getDescription(createMockedExecutionContext()));
     verifyAll();
   }
@@ -154,7 +156,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
-        "/usr/bin/dx " + xmx + "--dex --output classes.dex.jar " +
+        Paths.get("/usr/bin/dx") + " " + xmx + "--dex --output classes.dex.jar " +
         "foo.dex.jar bar.dex.jar && dex_meta dexPath:classes.dex.jar " +
         "dexMetaPath:classes.dex.jar.meta",
         dxStep.getDescription(createMockedExecutionContext()));
