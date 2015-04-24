@@ -135,6 +135,6 @@ public class AppleConfig {
   }
 
   public Optional<String> getTargetSdkVersion(ApplePlatform platform) {
-    return delegate.getValue("apple", platform.toString() + "_target_sdk_version");
+    return delegate.getValue("apple", platform.getName() + "_target_sdk_version");
   }
 }

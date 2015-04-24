@@ -119,7 +119,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx10.9")
             .setVersion("10.9")
             .setXcodeVersion("6A2008a")
-            .setApplePlatform(ApplePlatform.MACOSX)
+            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
             .addArchitectures("i386", "x86_64")
             .build();
     AppleSdkPaths macosx109Paths =
@@ -165,7 +165,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx10.9")
             .setVersion("10.9")
             .setXcodeVersion("6A2008a")
-            .setApplePlatform(ApplePlatform.MACOSX)
+            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
             .addArchitectures("i386", "x86_64")
             .build();
     AppleSdkPaths macosx109Paths =
@@ -192,7 +192,7 @@ public class AppleSdkDiscoveryTest {
   }
 
   @Test
-  public void shouldIgnoreSdkWithUnrecognizedPlatform() throws Exception {
+  public void shouldNotIgnoreSdkWithUnrecognizedPlatform() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "sdk-unknown-platform-discovery",
@@ -211,7 +211,7 @@ public class AppleSdkDiscoveryTest {
         versionPlistPath,
         toolchainPaths);
 
-    assertEquals(0, sdks.size());
+    assertEquals(2, sdks.size());
   }
 
   @Test
@@ -286,7 +286,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx10.9")
             .setVersion("10.9")
             .setXcodeVersion("6A2008a")
-            .setApplePlatform(ApplePlatform.MACOSX)
+            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
             .addArchitectures("i386", "x86_64")
             .build();
     AppleSdkPaths macosx109Paths =
@@ -302,7 +302,7 @@ public class AppleSdkDiscoveryTest {
             .setName("iphoneos8.0")
             .setVersion("8.0")
             .setXcodeVersion("6A2008a")
-            .setApplePlatform(ApplePlatform.IPHONEOS)
+            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
             .addArchitectures("armv7", "arm64")
             .addToolchains("com.apple.dt.toolchain.iOS8_0")
             .build();
@@ -319,7 +319,8 @@ public class AppleSdkDiscoveryTest {
             .setName("iphonesimulator8.0")
             .setVersion("8.0")
             .setXcodeVersion("6A2008a")
-            .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
+            .setApplePlatform(
+                ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
             .addArchitectures("i386", "x86_64")
             .addToolchains("com.apple.dt.toolchain.iOS8_0")
             .build();
@@ -390,7 +391,7 @@ public class AppleSdkDiscoveryTest {
             .setName("macosx10.9")
             .setVersion("10.9")
             .setXcodeVersion("6A2008a")
-            .setApplePlatform(ApplePlatform.MACOSX)
+            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
             .addArchitectures("i386", "x86_64")
             .build();
     AppleSdkPaths macosx109Paths =
@@ -406,7 +407,7 @@ public class AppleSdkDiscoveryTest {
             .setName("iphoneos8.0")
             .setVersion("8.0")
             .setXcodeVersion("6A2008a")
-            .setApplePlatform(ApplePlatform.IPHONEOS)
+            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
             .addArchitectures("armv7", "arm64")
             .addToolchains("com.apple.dt.toolchain.iOS8_0")
             .build();
@@ -423,7 +424,8 @@ public class AppleSdkDiscoveryTest {
             .setName("iphonesimulator8.0")
             .setVersion("8.0")
             .setXcodeVersion("6A2008a")
-            .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
+            .setApplePlatform(
+                ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
             .addArchitectures("i386", "x86_64")
             .addToolchains("com.apple.dt.toolchain.iOS8_0")
             .build();
@@ -442,7 +444,7 @@ public class AppleSdkDiscoveryTest {
             .setName("iphoneos8.1")
             .setVersion("8.1")
             .setXcodeVersion("6A2008a")
-            .setApplePlatform(ApplePlatform.IPHONEOS)
+            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
             .addArchitectures("armv7", "arm64")
             .addToolchains("com.apple.dt.toolchain.iOS8_1")
             .build();
@@ -459,7 +461,8 @@ public class AppleSdkDiscoveryTest {
             .setName("iphonesimulator8.1")
             .setVersion("8.1")
             .setXcodeVersion("6A2008a")
-            .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
+            .setApplePlatform(
+                ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
             .addArchitectures("i386", "x86_64")
             .addToolchains("com.apple.dt.toolchain.iOS8_1")
             .build();

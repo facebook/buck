@@ -90,15 +90,16 @@ public class AppleCxxPlatforms {
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
     cflagsBuilder.add("-arch", targetArchitecture);
-    switch (targetPlatform) {
-      case MACOSX:
-        cflagsBuilder.add("-mmacosx-version-min=" + targetVersion);
+    switch (targetPlatform.getName()) {
+      case ApplePlatform.Name.IPHONEOS:
+        cflagsBuilder.add("-mios-version-min=" + targetVersion);
         break;
-      case IPHONESIMULATOR:
+      case ApplePlatform.Name.IPHONESIMULATOR:
         cflagsBuilder.add("-mios-simulator-version-min=" + targetVersion);
         break;
-      case IPHONEOS:
-        cflagsBuilder.add("-mios-version-min=" + targetVersion);
+      default:
+        // For Mac builds, -mmacosx-version-min=<version>.
+        cflagsBuilder.add("-m" + targetPlatform.getName() + "-version-min=" + targetVersion);
         break;
     }
     // TODO(user): Add more and better cflags.

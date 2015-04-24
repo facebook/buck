@@ -60,7 +60,8 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
+        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);

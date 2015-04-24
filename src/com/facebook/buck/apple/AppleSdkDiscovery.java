@@ -40,7 +40,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.Locale;
 
 /**
  * Utility class to discover the location of SDKs contained inside an Xcode
@@ -182,9 +181,11 @@ public class AppleSdkDiscovery {
 
     for (ApplePlatform platform : orderedSdksForPlatform.keySet()) {
       AppleSdk mostRecentSdkForPlatform = orderedSdksForPlatform.get(platform).last();
-      appleSdkPathsBuilder.put(
-          mostRecentSdkForPlatform.withName(platform.toString()),
-          discoveredSdkPaths.get(mostRecentSdkForPlatform));
+      if (!mostRecentSdkForPlatform.getName().equals(platform.getName())) {
+        appleSdkPathsBuilder.put(
+            mostRecentSdkForPlatform.withName(platform.getName()),
+            discoveredSdkPaths.get(mostRecentSdkForPlatform));
+      }
     }
 
     // This includes both the discovered SDKs with versions in their names, as well as
@@ -196,14 +197,17 @@ public class AppleSdkDiscovery {
       AppleSdk.Builder sdkBuilder,
       ApplePlatform applePlatform) {
     // TODO(user): These need to be read from the SDK, not hard-coded.
-    switch (applePlatform) {
-      case MACOSX:
+    switch (applePlatform.getName()) {
+      case ApplePlatform.Name.MACOSX:
         // Fall through.
-      case IPHONESIMULATOR:
+      case ApplePlatform.Name.IPHONESIMULATOR:
         sdkBuilder.addArchitectures("i386", "x86_64");
         break;
-      case IPHONEOS:
+      case ApplePlatform.Name.IPHONEOS:
         sdkBuilder.addArchitectures("armv7", "arm64");
+        break;
+      default:
+        sdkBuilder.addArchitectures("armv7", "arm64", "i386", "x86_64");
         break;
     }
   }
@@ -230,17 +234,11 @@ public class AppleSdkDiscovery {
         }
       }
       NSString platformName = (NSString) defaultProperties.objectForKey("PLATFORM_NAME");
-      // TODO(grp): Generalize this to handle new platforms as they are added.
-      ApplePlatform applePlatform;
-      try {
-        applePlatform = ApplePlatform.valueOf(platformName.toString().toUpperCase(Locale.US));
-        sdkBuilder.setName(name).setVersion(version).setApplePlatform(applePlatform);
-        addArchitecturesForPlatform(sdkBuilder, applePlatform);
-        return true;
-      } catch (IllegalArgumentException e) {
-        LOG.debug(e, "Ignoring SDK at %s with unrecognized platform %s", sdkDir, platformName);
-        return false;
-      }
+      ApplePlatform applePlatform =
+          ApplePlatform.builder().setName(platformName.toString()).build();
+      sdkBuilder.setName(name).setVersion(version).setApplePlatform(applePlatform);
+      addArchitecturesForPlatform(sdkBuilder, applePlatform);
+      return true;
     } catch (FileNotFoundException e) {
       LOG.error(e, "No SDKSettings.plist found under SDK path %s", sdkDir);
       return false;

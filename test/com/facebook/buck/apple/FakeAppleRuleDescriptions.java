@@ -49,7 +49,7 @@ public class FakeAppleRuleDescriptions {
 
   private static final CxxPlatform DEFAULT_IPHONEOS_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
-          ApplePlatform.IPHONEOS,
+          ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build(),
           "iphoneos",
           "8.0",
           "8.0",

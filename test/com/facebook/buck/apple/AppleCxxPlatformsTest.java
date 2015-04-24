@@ -68,7 +68,7 @@ public class AppleCxxPlatformsTest {
 
     CxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            ApplePlatform.IPHONEOS,
+            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build(),
             "iphoneos8.0",
             "6A2008a",
             "7.0",
@@ -125,7 +125,7 @@ public class AppleCxxPlatformsTest {
 
     CxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            ApplePlatform.IPHONEOS,
+            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build(),
             "iphoneos8.0",
             "6A2008a",
             "7.0",
@@ -167,7 +167,7 @@ public class AppleCxxPlatformsTest {
             .build();
 
     AppleCxxPlatforms.buildWithExecutableChecker(
-        ApplePlatform.IPHONEOS,
+        ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build(),
         "iphoneos8.0",
         "6A2008a",
         "7.0",
@@ -196,7 +196,7 @@ public class AppleCxxPlatformsTest {
 
     CxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
-            ApplePlatform.IPHONESIMULATOR,
+            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build(),
             "iphonesimulator8.0",
             "6A2008a",
             "7.0",

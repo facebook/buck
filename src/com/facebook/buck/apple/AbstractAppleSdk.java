@@ -44,7 +44,7 @@ interface AbstractAppleSdk {
   String getXcodeVersion();
 
   /**
-   * The platform of the SDK. For example, {@link ApplePlatform#IPHONESIMULATOR}.
+   * The platform of the SDK. For example, {@code iphoneos}.
    */
   ApplePlatform getApplePlatform();
 
