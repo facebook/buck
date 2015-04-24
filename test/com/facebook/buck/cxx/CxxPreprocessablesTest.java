@@ -283,7 +283,11 @@ public class CxxPreprocessablesTest {
     BuildRule top = createFakeCxxPreprocessorDep("//:top", pathResolver, topInput, bottom);
 
     exception.expect(CxxPreprocessorInput.ConflictingHeadersException.class);
-    exception.expectMessage("'prefix/file.h' maps to both [bottom/file.h, top/file.h].");
+    exception.expectMessage(String.format(
+            "'%s' maps to both [%s, %s].",
+            Paths.get("prefix/file.h"),
+            Paths.get("bottom/file.h"),
+            Paths.get("top/file.h")));
 
     CxxPreprocessables.getTransitiveCxxPreprocessorInput(
         cxxPlatform,
