@@ -36,6 +36,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #define NAILGUN_VERSION "0.9.0"
 
@@ -195,7 +196,7 @@ int sendAll(SOCKET s, char *buf, int len) {
   int n = 0;
 
   while(total < len) {
-    n = send(s, buf+total, bytesleft, 0);
+    n = send(s, buf+total, bytesleft, MSG_NOSIGNAL);
 
     if (n == -1) {
       break;
@@ -238,9 +239,9 @@ void sendChunk(unsigned int size, char chunkType, char* buf) {
   if (bytesSent != 0 && size > 0) {
 	  bytesSent = sendAll(nailgunsocket, buf, size);
   }
-  if (bytesSent == 0) {
-    perror("send");
-    handleSocketClose();
+  if (bytesSent == 0 && (chunkType != CHUNKTYPE_HEARTBEAT || errno != EPIPE)) {
+      perror("send");
+      handleSocketClose();
   }
 
 #ifdef WIN32
