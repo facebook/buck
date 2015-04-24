@@ -36,11 +36,11 @@ public class PreDexMergeIntegrationTest {
 
   private ProjectWorkspace workspace;
 
-  private static final String MAIN_BUILD_TARGET = "//apps/multidex:app";
+  private static final String MAIN_BUILD_TARGET = "//apps/multidex:java-only";
   private static final String PRIMARY_SOURCE_FILE = "java/com/sample/app/MyApplication.java";
   private static final String SECONDARY_SOURCE_FILE = "java/com/sample/lib/Sample.java";
   private static final String PRIMARY_HASH_PATH =
-      "buck-out/bin/apps/multidex/.app#dex_merge/metadata/primary_dex_hash";
+      "buck-out/bin/apps/multidex/.java-only#dex_merge/metadata/primary_dex_hash";
 
   @Before
   public void setUp() throws IOException {

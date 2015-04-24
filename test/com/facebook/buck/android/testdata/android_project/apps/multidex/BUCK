@@ -1,4 +1,19 @@
 android_binary(
+  name = 'java-only',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  use_split_dex = True,
+  dex_compression = 'jar',
+  primary_dex_patterns = [
+    '/MyApplication^',
+  ],
+  deps = [
+    '//java/com/sample/app:app',
+    '//java/com/sample/lib:lib',
+  ],
+)
+
+android_binary(
   name = 'app',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
