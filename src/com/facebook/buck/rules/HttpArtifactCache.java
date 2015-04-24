@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.HashingInputStream;
+import com.google.common.hash.HashingOutputStream;
 import com.google.common.io.ByteStreams;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -33,6 +34,7 @@ import com.squareup.okhttp.Response;
 
 import org.apache.commons.compress.utils.BoundedInputStream;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -127,7 +129,18 @@ public class HttpArtifactCache implements ArtifactCache {
         ".tmp");
 
     // Open the stream to server just long enough to read the hash code and artifact.
-    try (DataInputStream input = new DataInputStream(response.body().byteStream())) {
+    try (InputStream raw = response.body().byteStream();
+         HashingInputStream hasher = new HashingInputStream(hashFunction, raw);
+         DataInputStream input = new DataInputStream(hasher)) {
+
+      // Read the key we packaged with the artifact.  This should *always* match the key we
+      // used to fetch with, unless there is something significantly wrong with the cache.
+      String key = input.readUTF();
+      if (!key.equals(ruleKey.toString())) {
+        String msg = "incorrect key name";
+        reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
+        return CacheResult.error(name, msg);
+      }
 
       // First, extract the size of the file data portion, which we put in the beginning of
       // the artifact.
@@ -135,22 +148,25 @@ public class HttpArtifactCache implements ArtifactCache {
 
       // Now, write the remaining response data to the temp file, while grabbing the hash.
       try (BoundedInputStream boundedInput = new BoundedInputStream(input, length);
-           HashingInputStream hashingInput = new HashingInputStream(hashFunction, boundedInput);
            OutputStream output = projectFilesystem.newFileOutputStream(temp)) {
-        ByteStreams.copy(hashingInput, output);
-        actualHashCode = hashingInput.hash();
+        ByteStreams.copy(boundedInput, output);
       }
+
+      // Compute the hash now that we've processed the relevant parts of the artifact -- only
+      // the expected hash remains.
+      actualHashCode = hasher.hash();
 
       // Lastly, extract the hash code from the end of the request data.
       byte[] hashCodeBytes = new byte[hashFunction.bits() / Byte.SIZE];
-      ByteStreams.readFully(input, hashCodeBytes);
+      ByteStreams.readFully(raw, hashCodeBytes);
       expectedHashCode = HashCode.fromBytes(hashCodeBytes);
 
       // We should be at the end of output -- verify this.  Also, we could just try to read a
-      // single byte here, instead of all remaining input, but some network stack implementations
-      // require that we exhaust the input stream before the connection can be reusable.
-      try (OutputStream output = ByteStreams.nullOutputStream()) {
-        if (ByteStreams.copy(input, output) != 0) {
+      // single byte here, instead of all remaining input, but some network stack
+      // implementations require that we exhaust the input stream before the connection can be
+      // reusable.
+      try (OutputStream theVoid = ByteStreams.nullOutputStream()) {
+        if (ByteStreams.copy(input, theVoid) != 0) {
           String msg = "unexpected end of input";
           reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
           return CacheResult.error(name, msg);
@@ -189,7 +205,17 @@ public class HttpArtifactCache implements ArtifactCache {
     return storeClient.newCall(request).execute();
   }
 
-  public void storeImpl(RuleKey ruleKey, final File file) throws IOException {
+  private byte[] writeUTF(String str) throws IOException {
+    try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+         DataOutputStream out = new DataOutputStream(bytes)) {
+      out.writeUTF(str);
+      return bytes.toByteArray();
+    }
+  }
+
+  public void storeImpl(final RuleKey ruleKey, final File file) throws IOException {
+    final byte[] keyBytes = writeUTF(ruleKey.toString());
+
     Request request = createRequestBuilder(ruleKey.toString())
         .put(
             new RequestBody() {
@@ -201,6 +227,7 @@ public class HttpArtifactCache implements ArtifactCache {
               @Override
               public long contentLength() throws IOException {
                 return
+                    keyBytes.length +
                     Long.SIZE / Byte.SIZE +
                     projectFilesystem.getFileSize(file.toPath()) +
                     hashFunction.bits() / Byte.SIZE;
@@ -208,13 +235,25 @@ public class HttpArtifactCache implements ArtifactCache {
 
               @Override
               public void writeTo(BufferedSink sink) throws IOException {
-                try (DataOutputStream output = new DataOutputStream(sink.outputStream());
-                     InputStream input = projectFilesystem.newFileInputStream(file.toPath());
-                     HashingInputStream hasher = new HashingInputStream(hashFunction, input)) {
+                try (InputStream fileInput = projectFilesystem.newFileInputStream(file.toPath());
+                     OutputStream raw = sink.outputStream();
+                     HashingOutputStream hasher = new HashingOutputStream(hashFunction, raw);
+                     DataOutputStream output = new DataOutputStream(hasher)) {
+
+                  // Write the rule key in the stored artifact for verification in the face of
+                  // incorrect objects.
+                  output.write(keyBytes);
+
+                  // Write the artifact size so fetching can easily know where the checksum is.
                   output.writeLong(projectFilesystem.getFileSize(file.toPath()));
-                  ByteStreams.copy(hasher, output);
-                  output.write(hasher.hash().asBytes());
+
+                  // Write the artifact bytes.
+                  ByteStreams.copy(fileInput, output);
+
+                  // Write the checksum to the raw output stream.
+                  raw.write(hasher.hash().asBytes());
                 }
+
               }
             })
         .build();
