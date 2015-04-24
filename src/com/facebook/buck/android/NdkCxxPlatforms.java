@@ -294,7 +294,10 @@ public class NdkCxxPlatforms {
                     executableFinder)))
         // Default linker flags added by the NDK
         .addLdflags(
-            //  Enforce the NX (no execute) security feature
+            // Add a deterministic build ID to Android builds.
+            // We use it to find symbols from arbitrary binaries.
+            "--build-id",
+            // Enforce the NX (no execute) security feature
             "-z", "noexecstack",
             // Strip unused code
             "--gc-sections",
