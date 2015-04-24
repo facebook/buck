@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -34,7 +35,6 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Set;
 import java.util.regex.Matcher;
 
@@ -45,7 +45,7 @@ public class AndroidPlatformTargetTest {
   @Test
   public void testCreateFromDefaultDirectoryStructure() {
     String name = "Example Inc.:Google APIs:16";
-    Path androidSdkDir = Paths.get("/home/android");
+    Path androidSdkDir = MorePathsForTests.rootRelativePath("home/android");
     String platformDirectoryPath = "platforms/android-16";
     Set<Path> additionalJarPaths = ImmutableSet.of();
     AndroidDirectoryResolver androidDirectoryResolver =
@@ -62,17 +62,25 @@ public class AndroidPlatformTargetTest {
             additionalJarPaths,
             /* aaptOverride */ Optional.<Path>absent());
     assertEquals(name, androidPlatformTarget.getName());
-    assertEquals(ImmutableList.of(Paths.get("/home/android/platforms/android-16/android.jar")),
+    assertEquals(
+        ImmutableList.of(
+            MorePathsForTests.rootRelativePath(
+                "home/android/platforms/android-16/android.jar")),
         androidPlatformTarget.getBootclasspathEntries());
-    assertEquals(Paths.get("/home/android/platforms/android-16/android.jar"),
+    assertEquals(MorePathsForTests.rootRelativePath(
+            "home/android/platforms/android-16/android.jar"),
         androidPlatformTarget.getAndroidJar());
-    assertEquals(Paths.get("/home/android/platforms/android-16/framework.aidl"),
+    assertEquals(MorePathsForTests.rootRelativePath(
+            "home/android/platforms/android-16/framework.aidl"),
         androidPlatformTarget.getAndroidFrameworkIdlFile());
-    assertEquals(Paths.get("/home/android/tools/proguard/lib/proguard.jar"),
+    assertEquals(MorePathsForTests.rootRelativePath(
+            "home/android/tools/proguard/lib/proguard.jar"),
         androidPlatformTarget.getProguardJar());
-    assertEquals(Paths.get("/home/android/tools/proguard/proguard-android.txt"),
+    assertEquals(MorePathsForTests.rootRelativePath(
+            "home/android/tools/proguard/proguard-android.txt"),
         androidPlatformTarget.getProguardConfig());
-    assertEquals(Paths.get("/home/android/tools/proguard/proguard-android-optimize.txt"),
+    assertEquals(MorePathsForTests.rootRelativePath(
+            "home/android/tools/proguard/proguard-android-optimize.txt"),
         androidPlatformTarget.getOptimizedProguardConfig());
     assertEquals(androidSdkDir.resolve("platform-tools/aapt").toAbsolutePath(),
         androidPlatformTarget.getAaptExecutable());
