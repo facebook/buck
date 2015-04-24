@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Optionals;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -39,9 +38,27 @@ import java.util.Set;
  */
 public abstract class IjLibraryFactory {
 
-  public abstract ImmutableSet<IjLibrary> getLibraries(ImmutableSet<TargetNode<?>> targetNodes);
+  /**
+   * From the supplied set of nodes finds all of the first-degree dependencies which can
+   * be satisfied using a prebuilt library and returns a list of those libraries.
+   *
+   * @param targetNodes nodes whose dependencies to resolve.
+   * @return list of dependencies which resolved to libraries.
+   */
+  public ImmutableSet<IjLibrary> getLibraries(ImmutableSet<TargetNode<?>> targetNodes) {
+    ImmutableSet.Builder<IjLibrary> librariesBuilder = ImmutableSet.builder();
+    for (TargetNode<?> targetNode : targetNodes) {
+      for (BuildTarget dep : targetNode.getDeps()) {
+        if (targetNodes.contains(dep)) {
+          continue;
+        }
+        Optional<IjLibrary> libraryOptional = getLibrary(dep.getBuildTarget());
+        Optionals.addIfPresent(libraryOptional, librariesBuilder);
+      }
+    }
+    return librariesBuilder.build();
+  }
 
-  @VisibleForTesting
   public abstract Optional<IjLibrary> getLibrary(BuildTarget target);
 
   public static IjLibraryFactory create(ImmutableSet<TargetNode<?>> targetNodes) {
@@ -77,28 +94,6 @@ public abstract class IjLibraryFactory {
     private void addToIndex(IjLibraryRule<?> rule) {
       Preconditions.checkArgument(!libraryRuleIndex.containsKey(rule.getType()));
       libraryRuleIndex.put(rule.getType(), rule);
-    }
-
-    /**
-     * From the supplied set of nodes finds all of the first-degree dependencies which can
-     * be satisfied using a prebuilt library and returns a list of those libraries.
-     *
-     * @param targetNodes nodes whose dependencies to resolve.
-     * @return list of dependencies which resolved to libraries.
-     */
-    @Override
-    public ImmutableSet<IjLibrary> getLibraries(ImmutableSet<TargetNode<?>> targetNodes) {
-      ImmutableSet.Builder<IjLibrary> librariesBuilder = ImmutableSet.builder();
-      for (TargetNode<?> targetNode : targetNodes) {
-        for (BuildTarget dep : targetNode.getDeps()) {
-          if (targetNodes.contains(dep)) {
-            continue;
-          }
-          Optional<IjLibrary> libraryOptional = getLibrary(dep.getBuildTarget());
-          Optionals.addIfPresent(libraryOptional, librariesBuilder);
-        }
-      }
-      return librariesBuilder.build();
     }
 
     @Override

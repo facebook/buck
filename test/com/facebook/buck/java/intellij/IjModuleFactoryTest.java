@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -61,7 +62,39 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testIjLibraryResolution() {
+    final IjLibrary testLibrary = IjLibrary.builder()
+        .setName("library_test_library")
+        .setBinaryJar(new TestSourcePath("test.jar"))
+        .build();
 
+    final TargetNode<?> prebuiltJar = PrebuiltJarBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third-party:prebuilt"))
+        .build();
+
+    TargetNode<?> javaLib = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .addSrc(Paths.get("java/com/example/base/File.java"))
+        .addDep(prebuiltJar.getBuildTarget())
+        .build();
+
+    IjLibraryFactory testLibraryFactory = new IjLibraryFactory() {
+
+      @Override
+      public Optional<IjLibrary> getLibrary(BuildTarget target) {
+        if (target.equals(prebuiltJar.getBuildTarget())) {
+          return Optional.of(testLibrary);
+        }
+        return Optional.absent();
+      }
+    };
+
+    IjModuleFactory factory = new IjModuleFactory(testLibraryFactory);
+    Path moduleBasePath = Paths.get("java/com/example/base");
+    IjModule module = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.<TargetNode<?>>of(javaLib));
+
+    assertEquals(ImmutableSet.of(testLibrary), module.getLibraries());
   }
 
   @Test
