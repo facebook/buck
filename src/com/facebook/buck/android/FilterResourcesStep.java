@@ -200,12 +200,14 @@ public class FilterResourcesStep implements Step {
                   .matches()) {
                 return true;
               }
+              // Include whitelisted strings in both the fbstr files and built-in resources
+              // This allows us to log on the client if the downloaded fbstr file has missing strings
+              nonEnglishStringFilesBuilder.add(pathRelativeToProjectRoot);
               for (Path whitelistedStringDir : whitelistedStringDirs) {
                 if (pathRelativeToProjectRoot.startsWith(whitelistedStringDir)) {
                   return true;
                 }
               }
-              nonEnglishStringFilesBuilder.add(pathRelativeToProjectRoot);
               return false;
             }
           });
