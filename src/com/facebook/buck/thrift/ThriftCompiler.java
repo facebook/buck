@@ -16,13 +16,11 @@
 
 package com.facebook.buck.thrift;
 
-import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
@@ -30,14 +28,13 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
+public class ThriftCompiler extends AbstractBuildRule {
 
   @AddToRuleKey
   private final SourcePath compiler;
@@ -108,11 +105,6 @@ public class ThriftCompiler extends AbstractBuildRule implements AbiRule {
   @Override
   public Path getPathToOutputFile() {
     return null;
-  }
-
-  @Override
-  public Sha1HashCode getAbiKeyForDeps() {
-    return Sha1HashCode.fromHashCode(HashCode.fromInt(0));
   }
 
 }
