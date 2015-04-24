@@ -47,7 +47,7 @@ import java.util.EnumSet;
 public class DxStepTest extends EasyMockSupport {
 
   private static final String EXPECTED_DX_PREFIX =
-      "/usr/bin/dx" +
+      Paths.get("/usr/bin/dx") +
           " --dex";
 
   private static final Path SAMPLE_OUTPUT_PATH =
@@ -204,7 +204,7 @@ public class DxStepTest extends EasyMockSupport {
           });
 
       String expected = String.format("%s --output %s %s",
-          EXPECTED_DX_PREFIX.replace("/usr/bin/dx", "/home/mbolin/dx"),
+          EXPECTED_DX_PREFIX.replace(Paths.get("/usr/bin/dx").toString(), "/home/mbolin/dx"),
           SAMPLE_OUTPUT_PATH,
           Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
       MoreAsserts.assertShellCommands(
