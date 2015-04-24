@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
@@ -178,7 +179,7 @@ public class FilterResourcesStep implements Step {
           new Predicate<Path>() {
             @Override
             public boolean apply(Path input) {
-              Matcher matcher = VALUES_DIR_PATTERN.matcher(input.toString());
+              Matcher matcher = VALUES_DIR_PATTERN.matcher(MorePaths.pathWithUnixSeparators(input));
               if (!matcher.matches()) {
                 return true;
               }
@@ -196,12 +197,13 @@ public class FilterResourcesStep implements Step {
           new Predicate<Path>() {
             @Override
             public boolean apply(Path pathRelativeToProjectRoot) {
-              if (!NON_ENGLISH_STRING_PATH.matcher(pathRelativeToProjectRoot.toString())
+              if (!NON_ENGLISH_STRING_PATH.matcher(MorePaths.pathWithUnixSeparators(
+                      pathRelativeToProjectRoot))
                   .matches()) {
                 return true;
               }
-              // Include whitelisted strings in both the fbstr files and built-in resources
-              // This allows us to log on the client if the downloaded fbstr file has missing strings
+              // Include whitelisted strings in both the fbstr files and built-in resources.  This
+              // allows us to log on the client if the downloaded fbstr file has missing strings.
               nonEnglishStringFilesBuilder.add(pathRelativeToProjectRoot);
               for (Path whitelistedStringDir : whitelistedStringDirs) {
                 if (pathRelativeToProjectRoot.startsWith(whitelistedStringDir)) {
@@ -270,7 +272,7 @@ public class FilterResourcesStep implements Step {
         // Replace density qualifier with target density using regular expression to match
         // the qualifier in the context of a path to a drawable.
         String fromDensity = (density == Density.NO_QUALIFIER ? "" : "-") + density.toString();
-        Path destination = Paths.get(drawable.toString().replaceFirst(
+        Path destination = Paths.get(MorePaths.pathWithUnixSeparators(drawable).replaceFirst(
             "((?:^|/)drawable[^/]*)" + Pattern.quote(fromDensity) + "(-|$|/)",
             "$1-" + targetDensity + "$2"));
 
@@ -321,8 +323,9 @@ public class FilterResourcesStep implements Step {
         filesystem.walkRelativeFileTree(dir, new SimpleFileVisitor<Path>() {
               @Override
               public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
-                if (DRAWABLE_PATH_PATTERN.matcher(path.toString()).matches() &&
-                    !DRAWABLE_EXCLUDE_PATTERN.matcher(path.toString()).matches()) {
+                String unixPath = MorePaths.pathWithUnixSeparators(path);
+                if (DRAWABLE_PATH_PATTERN.matcher(unixPath).matches() &&
+                    !DRAWABLE_EXCLUDE_PATTERN.matcher(unixPath).matches()) {
                   // The path is normalized so that the value can be matched against patterns.
                   drawableBuilder.add(path);
                 }
