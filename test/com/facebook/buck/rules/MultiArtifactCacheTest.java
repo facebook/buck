@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 import com.google.common.collect.ImmutableList;
 
@@ -32,7 +33,8 @@ public class MultiArtifactCacheTest {
       new RuleKey("76b1c1beae69428db2d1befb31cf743ac8ce90df");
   private static final File dummyFile = new File("dummy");
 
-  class DummyArtifactCache implements ArtifactCache {
+  class DummyArtifactCache extends NoopArtifactCache {
+
     @Nullable public RuleKey storeKey;
 
     public void reset() {
@@ -54,10 +56,16 @@ public class MultiArtifactCacheTest {
       return true;
     }
 
+  }
+
+  // An cache which always returns errors from fetching.
+  class ErroringArtifactCache extends NoopArtifactCache {
+
     @Override
-    public void close() {
-      // Nothing to complete - do nothing.
+    public CacheResult fetch(RuleKey ruleKey, File output) {
+      return CacheResult.error("cache", "error");
     }
+
   }
 
   @Test
@@ -106,4 +114,14 @@ public class MultiArtifactCacheTest {
 
     multiArtifactCache.close();
   }
+
+  @Test
+  public void preserveErrorsFromInnerCache() throws InterruptedException, IOException {
+    ErroringArtifactCache inner = new ErroringArtifactCache();
+    MultiArtifactCache cache = new MultiArtifactCache(ImmutableList.<ArtifactCache>of(inner));
+    CacheResult result = cache.fetch(dummyRuleKey, dummyFile);
+    assertSame(result.getType(), CacheResult.Type.ERROR);
+    cache.close();
+  }
+
 }
