@@ -22,6 +22,7 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.step.StepEvent;
@@ -34,11 +35,13 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -46,6 +49,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Console that provides rich, updating ansi output about the current build.
@@ -66,6 +70,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final Optional<WebServer> webServer;
   private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent>> threadsToRunningEvent;
   private final ConcurrentMap<Long, Optional<? extends LeafEvent>> threadsToRunningStep;
+
+  // Counts the rules that have updated rule keys.
+  private final AtomicInteger updated = new AtomicInteger(0);
+
+  // Counts the number of cache hits and errors, respectively.
+  private final AtomicInteger cacheHits = new AtomicInteger(0);
+  private final AtomicInteger cacheErrors = new AtomicInteger(0);
 
   private final ConcurrentLinkedQueue<ConsoleEvent> logEvents;
 
@@ -170,12 +181,24 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     // If parsing has not finished, then there is no build rule information to print yet.
     if (parseTime != UNFINISHED_EVENT_PAIR) {
       // Log build time, excluding time spent in parsing.
-      String jobsCount = null;
+      String jobSummary = null;
       if (ruleCount.isPresent()) {
-        jobsCount = String.format(
-                "(%d/%d JOBS)",
-                numRulesCompleted.get(),
-                ruleCount.get());
+        List<String> columns = Lists.newArrayList();
+        columns.add(String.format("%d/%d JOBS", numRulesCompleted.get(), ruleCount.get()));
+        columns.add(String.format("%d UPDATED", updated.get()));
+        if (updated.get() > 0) {
+          columns.add(
+              String.format(
+                  "%.1f%% CACHE HITS",
+                  100 * (double) cacheHits.get() / updated.get()));
+          if (cacheErrors.get() > 0) {
+            columns.add(
+                String.format(
+                    "%.1f%% CACHE ERRORS",
+                    100 * (double) cacheErrors.get() / updated.get()));
+          }
+        }
+        jobSummary = "(" + Joiner.on(", ").join(columns) + ")";
       }
 
       // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
@@ -191,7 +214,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       }
 
       String suffix = Joiner.on(" ")
-          .join(FluentIterable.of(new String[] {jobsCount, buildTrace})
+          .join(FluentIterable.of(new String[] {jobSummary, buildTrace})
               .filter(Predicates.notNull()));
       Optional<String> suffixOptional =
           suffix.isEmpty() ? Optional.<String>absent() : Optional.of(suffix);
@@ -313,6 +336,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     threadsToRunningEvent.put(finished.getThreadId(), Optional.<BuildRuleEvent>absent());
+    CacheResult cacheResult = finished.getCacheResult();
+    if (cacheResult.getType() != CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT) {
+      updated.incrementAndGet();
+      if (cacheResult.getType() == CacheResult.Type.HIT) {
+        cacheHits.incrementAndGet();
+      } else if (cacheResult.getType() == CacheResult.Type.ERROR) {
+        cacheErrors.incrementAndGet();
+      }
+    }
   }
 
   @Subscribe
