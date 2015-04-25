@@ -59,6 +59,11 @@ public class WebServerBuckEventListener implements BuckEventListener {
   }
 
   @Subscribe
+  public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
+    streamingWebSocketServlet.tellClients(calculated);
+  }
+
+  @Subscribe
   public void buildFinished(BuildEvent.Finished finished) {
     streamingWebSocketServlet.tellClients(finished);
   }
