@@ -264,12 +264,12 @@ public class NdkCxxPlatforms {
         .setAs(getTool(ndkRoot, targetConfiguration, host, "as", version, executableFinder))
         // Default assembler flags added by the NDK to enforce the NX (no execute) security feature.
         .addAsflags("--noexecstack")
-        .setAspp(getTool(ndkRoot, targetConfiguration, host, "gcc", version, executableFinder))
-        .setCc(getTool(ndkRoot, targetConfiguration, host, "gcc", version, executableFinder))
+        .setAspp(getCTool(ndkRoot, targetConfiguration, host, "gcc", version, executableFinder))
+        .setCc(getCTool(ndkRoot, targetConfiguration, host, "gcc", version, executableFinder))
         .addAllCflags(getCflagsInternal(targetConfiguration))
         .setCpp(getCppTool(ndkRoot, targetConfiguration, host, "gcc", version, executableFinder))
         .addAllCppflags(getCppflags(ndkRoot, targetConfiguration))
-        .setCxx(getTool(ndkRoot, targetConfiguration, host, "g++", version, executableFinder))
+        .setCxx(getCTool(ndkRoot, targetConfiguration, host, "g++", version, executableFinder))
         .addAllCxxflags(getCxxflagsInternal(targetConfiguration))
         .setCxxpp(getCppTool(ndkRoot, targetConfiguration, host, "g++", version, executableFinder))
         .addAllCxxppflags(getCxxppflags(ndkRoot, targetConfiguration))
@@ -367,6 +367,26 @@ public class NdkCxxPlatforms {
         .resolve(host.toString());
   }
 
+  private static Path getLibexecGccToolPath(
+      Path ndkRoot,
+      TargetConfiguration targetConfiguration,
+      Host host) {
+    return getNdkToolRoot(ndkRoot, targetConfiguration, host)
+        .resolve("libexec")
+        .resolve("gcc")
+        .resolve(targetConfiguration.toolchainPrefix.toString())
+        .resolve(targetConfiguration.compilerVersion);
+  }
+
+  private static Path getToolchainBinPath(
+      Path ndkRoot,
+      TargetConfiguration targetConfiguration,
+      Host host) {
+    return getNdkToolRoot(ndkRoot, targetConfiguration, host)
+        .resolve(targetConfiguration.toolchainPrefix.toString())
+        .resolve("bin");
+  }
+
   private static Path getToolPath(
       Path ndkRoot,
       TargetConfiguration targetConfiguration,
@@ -374,9 +394,7 @@ public class NdkCxxPlatforms {
       String tool,
       ExecutableFinder executableFinder) {
       Optional<Path> path = executableFinder.getOptionalExecutable(
-          getNdkToolRoot(ndkRoot, targetConfiguration, host)
-              .resolve(targetConfiguration.toolchainPrefix.toString())
-              .resolve("bin")
+          getToolchainBinPath(ndkRoot, targetConfiguration, host)
               .resolve(tool),
           ImmutableMap.<String, String>of());
     Preconditions.checkState(path.isPresent());
@@ -396,6 +414,23 @@ public class NdkCxxPlatforms {
         tool,
         targetConfiguration.toolchain.toString() + " " + version);
   }
+
+  private static Tool getCTool(
+      Path ndkRoot,
+      TargetConfiguration targetConfiguration,
+      Host host,
+      String tool,
+      String version,
+      ExecutableFinder executableFinder) {
+    return new VersionedTool(
+        getToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder),
+        ImmutableList.of(
+            "-B" + getLibexecGccToolPath(ndkRoot, targetConfiguration, host),
+            "-B" + getToolchainBinPath(ndkRoot, targetConfiguration, host)),
+        tool,
+        targetConfiguration.toolchain.toString() + " " + version);
+  }
+
 
   private static Tool getCppTool(
       Path ndkRoot,
@@ -424,7 +459,8 @@ public class NdkCxxPlatforms {
                 .resolve(targetConfiguration.toolchainPrefix.toString())
                 .resolve(targetConfiguration.compilerVersion)
                 .resolve("include")
-                .toString()),
+                .toString(),
+            "-B" + getLibexecGccToolPath(ndkRoot, targetConfiguration, host)),
         tool,
         targetConfiguration.toolchain.toString() + " " + version);
   }
@@ -452,6 +488,13 @@ public class NdkCxxPlatforms {
     return new VersionedTool(
         getToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder),
         ImmutableList.of(
+            "-B" + getToolchainBinPath(ndkRoot, targetConfiguration, host),
+            "-B" + getLibexecGccToolPath(ndkRoot, targetConfiguration, host),
+            "-B" + getNdkToolRoot(ndkRoot, targetConfiguration, host)
+                .resolve("lib")
+                .resolve("gcc")
+                .resolve(targetConfiguration.toolchainPrefix.toString())
+                .resolve(targetConfiguration.compilerVersion),
             "-B" + ndkRoot
                 .resolve("platforms")
                 .resolve(targetConfiguration.targetPlatform)
