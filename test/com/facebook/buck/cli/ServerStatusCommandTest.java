@@ -77,6 +77,6 @@ public class ServerStatusCommandTest extends EasyMockSupport {
     options.enableShowHttpserverPort();
     options.enablePrintJson();
     command.runCommandWithOptionsInternal(options);
-    assertEquals("{\"http.port\":\"9000\"}", console.getTextWrittenToStdOut().trim());
+    assertEquals("{\"http.port\":9000}", console.getTextWrittenToStdOut().trim());
   }
 }

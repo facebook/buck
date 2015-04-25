@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.util.Console;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
@@ -39,27 +38,26 @@ public class ServerStatusCommand extends AbstractCommandRunner<ServerStatusComma
   @Override
   int runCommandWithOptionsInternal(ServerStatusCommandOptions options)
       throws IOException, InterruptedException {
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
 
     if (options.isShowHttpserverPort()) {
-      String value = "-1";
+      int port = -1;
       Optional<WebServer> webServer = getCommandRunnerParams().getWebServer();
       if (webServer.isPresent()) {
-        Optional<Integer> port = webServer.get().getPort();
-        value = port.transform(Functions.toStringFunction()).or(value);
+        port = webServer.get().getPort().or(port);
       }
 
-      builder.put("http.port", value);
+      builder.put("http.port", port);
     }
 
-    ImmutableMap<String, String> values = builder.build();
+    ImmutableMap<String, Object> values = builder.build();
 
     Console console = getCommandRunnerParams().getConsole();
 
     if (options.isPrintJson()) {
       console.getStdOut().println(getObjectMapper().writeValueAsString(values));
     } else {
-      for (Map.Entry<String, String> entry : values.entrySet()) {
+      for (Map.Entry<String, Object> entry : values.entrySet()) {
         console.getStdOut().printf("%s=%s%n", entry.getKey(), entry.getValue());
       }
     }
