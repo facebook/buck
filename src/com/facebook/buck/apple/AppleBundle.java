@@ -20,9 +20,9 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.AppleBundleDestination;
@@ -32,6 +32,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.FindAndReplaceStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Optional;
@@ -169,6 +170,7 @@ public class AppleBundle extends AbstractBuildRule {
     //
     // Create an uncompressed zip to hold the bundle directory so we
     // can refer to the output of this rule elsewhere.
+    stepsBuilder.add(new RmStep(outputZipPath, /* shouldForceDeletion */ true));
     stepsBuilder.add(
         new ZipStep(
             outputZipPath,
