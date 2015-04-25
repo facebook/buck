@@ -23,7 +23,7 @@ function establishConnection() {
   };
 
   var connect = function() {
-    currentWebSocket = new WebSocket('ws://localhost:' + location.port + '/comet/echo');
+    currentWebSocket = new WebSocket('ws://localhost:' + location.port + '/ws/build');
 
     currentWebSocket.onopen = function() {
       console.log('Connected!');

@@ -138,10 +138,10 @@ public class WebServer {
     // Create a handler that acts as a WebSocket server.
     ServletContextHandler servletContextHandler = new ServletContextHandler(
         /* parent */ server,
-        /* contextPath */ "/comet",
+        /* contextPath */ "/ws",
         /* sessions */ true,
         /* security */ false);
-    servletContextHandler.addServlet(new ServletHolder(streamingWebSocketServlet), "/echo");
+    servletContextHandler.addServlet(new ServletHolder(streamingWebSocketServlet), "/build");
     handlers.add(servletContextHandler);
     return handlers.build();
   }
