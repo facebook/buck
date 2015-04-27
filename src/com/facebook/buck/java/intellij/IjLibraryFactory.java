@@ -45,7 +45,7 @@ public abstract class IjLibraryFactory {
    * @param targetNodes nodes whose dependencies to resolve.
    * @return list of dependencies which resolved to libraries.
    */
-  public ImmutableSet<IjLibrary> getLibraries(ImmutableSet<TargetNode<?>> targetNodes) {
+  public final ImmutableSet<IjLibrary> getLibraries(ImmutableSet<TargetNode<?>> targetNodes) {
     ImmutableSet.Builder<IjLibrary> librariesBuilder = ImmutableSet.builder();
     for (TargetNode<?> targetNode : targetNodes) {
       for (BuildTarget dep : targetNode.getDeps()) {

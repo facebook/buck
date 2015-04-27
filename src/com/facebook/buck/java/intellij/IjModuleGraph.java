@@ -122,6 +122,8 @@ public class IjModuleGraph extends DefaultTraversableGraph<IjModule> {
     final MutableDirectedGraph<IjModule> moduleGraph = new MutableDirectedGraph<>();
     final ImmutableMap<BuildTarget, IjModule> rulesToModules =
         createModules(targetGraph);
+    final ExportedDepsClosureResolver exportedDepsClosureResolver =
+        new ExportedDepsClosureResolver(targetGraph);
 
     for (IjModule module : rulesToModules.values()) {
       moduleGraph.addNode(module);
@@ -136,7 +138,18 @@ public class IjModuleGraph extends DefaultTraversableGraph<IjModule> {
               return;
             }
 
-            for (BuildTarget dep : node.getDeps()) {
+            ImmutableSet<BuildTarget> deps = FluentIterable.from(node.getDeps())
+                .transformAndConcat(
+                    new Function<BuildTarget, Iterable<BuildTarget>>() {
+                      @Override
+                      public Iterable<BuildTarget> apply(BuildTarget input) {
+                        return exportedDepsClosureResolver.getExportedDepsClosure(input);
+                      }
+                    })
+                .append(node.getDeps())
+                .toSet();
+
+            for (BuildTarget dep : deps) {
               IjModule depModule = rulesToModules.get(dep);
               if (depModule == null || depModule.equals(module)) {
                 continue;

@@ -48,11 +48,6 @@ public class IjModuleFactoryTest {
   private static final IjLibraryFactory NO_OP_LIBRARY_FACTORY = new IjLibraryFactory() {
 
     @Override
-    public ImmutableSet<IjLibrary> getLibraries(ImmutableSet<TargetNode<?>> targetNodes) {
-      return ImmutableSet.of();
-    }
-
-    @Override
     public Optional<IjLibrary> getLibrary(BuildTarget target) {
       return Optional.absent();
     }

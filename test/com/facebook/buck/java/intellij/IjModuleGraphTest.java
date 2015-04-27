@@ -82,6 +82,105 @@ public class IjModuleGraphTest {
   }
 
   @Test
+  public void testExportedDependencies() {
+    TargetNode<?> junitReflect = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third-party/junit/reflect:reflect"))
+        .build();
+
+    TargetNode<?> junitCore = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third-party/junit/core:core"))
+        .addExportedDep(junitReflect.getBuildTarget())
+        .build();
+
+    TargetNode<?> junitRule = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third-party/junit/rule:rule"))
+        .addDep(junitCore.getBuildTarget())
+        .build();
+
+    IjModuleGraph moduleGraph = createModuleGraph(
+        ImmutableSet.of(
+            junitReflect,
+            junitCore,
+            junitRule));
+
+    IjModule junitReflectModule = getModuleForTarget(moduleGraph, junitReflect);
+    IjModule junitCoreModule = getModuleForTarget(moduleGraph, junitCore);
+    IjModule junitRuleModule = getModuleForTarget(moduleGraph, junitRule);
+
+    assertEquals(
+        ImmutableSet.of(junitReflectModule, junitCoreModule),
+        moduleGraph.getOutgoingNodesFor(junitRuleModule));
+  }
+
+  @Test
+  public void testExportedDependenciesDependsOnDepOfExportedDep() {
+    TargetNode<?> junitReflect = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third-party/junit/reflect:reflect"))
+        .build();
+
+    TargetNode<?> junitCore = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third-party/junit/core:core"))
+        .addExportedDep(junitReflect.getBuildTarget())
+        .build();
+
+    TargetNode<?> junitRule = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third-party/junit/rule:rule"))
+        .addExportedDep(junitCore.getBuildTarget())
+        .build();
+
+    IjModuleGraph moduleGraph = createModuleGraph(
+        ImmutableSet.of(
+            junitReflect,
+            junitCore,
+            junitRule));
+
+    IjModule junitReflectModule = getModuleForTarget(moduleGraph, junitReflect);
+    IjModule junitCoreModule = getModuleForTarget(moduleGraph, junitCore);
+    IjModule junitRuleModule = getModuleForTarget(moduleGraph, junitRule);
+
+    assertEquals(
+        ImmutableSet.of(junitReflectModule, junitCoreModule),
+        moduleGraph.getOutgoingNodesFor(junitRuleModule));
+  }
+
+  @Test
+  public void testExportedDependenciesDontLeak() {
+
+    TargetNode<?> junitReflect = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third-party/junit/reflect:reflect"))
+        .build();
+
+    TargetNode<?> junitCore = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third-party/junit/core:core"))
+        .addExportedDep(junitReflect.getBuildTarget())
+        .build();
+
+    TargetNode<?> junitRule = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third-party/junit/rule:rule"))
+        .addDep(junitCore.getBuildTarget())
+        .build();
+
+    TargetNode<?> testRule = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//tests/feature:tests"))
+        .addDep(junitRule.getBuildTarget())
+        .build();
+
+    IjModuleGraph moduleGraph = createModuleGraph(
+        ImmutableSet.of(
+            junitReflect,
+            junitCore,
+            junitRule,
+            testRule));
+
+    IjModule junitRuleModule = getModuleForTarget(moduleGraph, junitRule);
+    IjModule testRuleModule = getModuleForTarget(moduleGraph, testRule);
+
+    assertEquals(
+        ImmutableSet.of(junitRuleModule),
+        moduleGraph.getOutgoingNodesFor(testRuleModule));
+  }
+
+  @Test
   public void testDropDependenciesToUnsupportedTargets() {
     TargetNode<?> parentKeystoreTarget = KeystoreBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook/parent:keystore"))
