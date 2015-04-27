@@ -67,7 +67,6 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
 
   private static final Set<Flavor> NON_LIBRARY_FLAVORS = ImmutableSet.of(
       CxxCompilationDatabase.COMPILATION_DATABASE,
-      AppleDescriptions.HEADERS,
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 

@@ -48,7 +48,6 @@ public class AppleLibraryDescription implements
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_library");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
-      AppleDescriptions.HEADERS,
       CxxCompilationDatabase.COMPILATION_DATABASE,
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
@@ -98,14 +97,6 @@ public class AppleLibraryDescription implements
       BuildRuleResolver resolver,
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    Optional<BuildRule> flavoredRule = AppleDescriptions
-        .createFlavoredRule(
-            params,
-            args,
-            pathResolver);
-    if (flavoredRule.isPresent()) {
-      return flavoredRule.get();
-    }
 
     CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
     TypeAndPlatform typeAndPlatform =

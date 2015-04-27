@@ -46,8 +46,7 @@ public class AppleBinaryDescription
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_binary");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
-      CxxCompilationDatabase.COMPILATION_DATABASE,
-      AppleDescriptions.HEADERS);
+      CxxCompilationDatabase.COMPILATION_DATABASE);
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
     @Override
@@ -91,14 +90,6 @@ public class AppleBinaryDescription
       BuildRuleResolver resolver,
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    Optional<BuildRule> flavoredRule = AppleDescriptions
-        .createFlavoredRule(
-            params,
-            args,
-            pathResolver);
-    if (flavoredRule.isPresent()) {
-      return flavoredRule.get();
-    }
 
     CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
     TypeAndPlatform typeAndPlatform =

@@ -22,16 +22,9 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -39,7 +32,6 @@ import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,7 +39,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -55,97 +46,11 @@ import java.util.Set;
  */
 public class AppleDescriptions {
 
-  public static final Flavor HEADERS = ImmutableFlavor.of("headers");
-
-  private static final BuildRuleType HEADERS_RULE_TYPE = BuildRuleType.of("headers");
-
   private static final Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>
       EMPTY_HEADERS = Either.ofLeft(ImmutableSortedSet.<SourcePath>of());
 
   /** Utility class: do not instantiate. */
   private AppleDescriptions() {}
-
-  /**
-   * Tries to create a {@link BuildRule} based on the flavors of {@code params.getBuildTarget()} and
-   * the specified args.
-   * If this method does not know how to handle the specified flavors, it returns {@code null}.
-   */
-  static <A extends AppleNativeTargetDescriptionArg> Optional<BuildRule> createFlavoredRule(
-      BuildRuleParams params,
-      A args,
-      SourcePathResolver pathResolver) {
-    BuildTarget target = params.getBuildTarget();
-    if (target.getFlavors().contains(HEADERS)) {
-      return Optional.of(createHeadersFlavor(params, pathResolver, args));
-    } else {
-      return Optional.absent();
-    }
-  }
-
-  /**
-   * @return A rule for making the headers of an Apple target available to other targets.
-   */
-  static BuildRule createHeadersFlavor(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      AppleNativeTargetDescriptionArg args) {
-    UnflavoredBuildTarget targetForOriginalRule =
-        params.getBuildTarget().getUnflavoredBuildTarget();
-    BuildTarget headersTarget = BuildTargets.createFlavoredBuildTarget(
-        targetForOriginalRule,
-        AppleDescriptions.HEADERS);
-
-    BuildRuleParams headerRuleParams = params.copyWithChanges(
-        HEADERS_RULE_TYPE,
-        headersTarget,
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-        Suppliers.ofInstance(params.getExtraDeps()));
-
-    boolean useBuckHeaderMaps = args.getUseBuckHeaderMaps();
-
-    Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, params.getBuildTarget());
-    ImmutableMap<String, SourcePath> publicHeaders = convertAppleHeadersToPublicCxxHeaders(
-        resolver.getPathFunction(),
-        headerPathPrefix,
-        args);
-
-    return createSymlinkTree(
-        headerRuleParams,
-        resolver,
-        publicHeaders,
-        useBuckHeaderMaps);
-  }
-
-  public static Path getPathToHeaders(BuildTarget buildTarget) {
-    return BuildTargets.getScratchPath(buildTarget, "__%s_public_headers__");
-  }
-
-  private static SymlinkTree createSymlinkTree(
-      BuildRuleParams params,
-      SourcePathResolver pathResolver,
-      ImmutableMap<String, SourcePath> publicHeaders,
-      boolean useBuckHeaderMaps) {
-    // Note that the set of headersToCopy may be empty. If so, the returned rule will be a no-op.
-    // TODO(mbolin): Make headersToCopy an ImmutableSortedMap once we clean up the iOS codebase and
-    // can guarantee that the keys are unique.
-    ImmutableMap<Path, SourcePath> headersToCopy;
-    if (useBuckHeaderMaps) {
-      // No need to copy headers because header maps are used.
-      headersToCopy = ImmutableMap.of();
-    } else {
-      ImmutableMap.Builder<Path, SourcePath> headersToCopyBuilder = ImmutableMap.builder();
-      for (Map.Entry<String, SourcePath> entry : publicHeaders.entrySet()) {
-        headersToCopyBuilder.put(Paths.get(entry.getKey()), entry.getValue());
-      }
-      headersToCopy = headersToCopyBuilder.build();
-    }
-
-    BuildRuleParams headerParams = params.copyWithDeps(
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-        Suppliers.ofInstance(params.getExtraDeps()));
-    Path root = getPathToHeaders(params.getBuildTarget());
-    return new SymlinkTree(headerParams, pathResolver, root, headersToCopy);
-  }
 
   public static Optional<Path> getPathToHeaderSymlinkTree(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,

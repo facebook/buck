@@ -17,9 +17,7 @@
 package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cxx.CxxCompilationDatabaseEntry;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -66,23 +64,6 @@ public class CompilationDatabaseIntegrationTest {
     Files.createSymbolicLink(sdk.getParent().resolve("iPhoneOS8.0.sdk"), sdk);
     sdk = platforms.resolve("iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk");
     Files.createSymbolicLink(sdk.getParent().resolve("iPhoneSimulator8.0.sdk"), sdk);
-  }
-
-  @Test
-  public void testBuildHeadersFlavorDirectly() throws IOException {
-    // build an intermediate #headers rule.
-    workspace.runBuckBuild("//Libraries/EXExample:EXExample#headers").assertSuccess();
-
-    // Verify the contents of the headers directory.
-    String pathToHeaders =
-        "buck-out/bin/Libraries/EXExample/__EXExample#headers_public_headers__";
-    File headersDirectory = workspace.getFile(pathToHeaders);
-    assertTrue(
-        "public header should be available in " + headersDirectory + ".",
-        new File(headersDirectory, "EXExample/EXExampleModel.h").exists());
-    assertFalse(
-        "non-public header should not be available in " + headersDirectory + ".",
-        new File(headersDirectory, "EXExample/NSString+Palindrome.h").exists());
   }
 
   @Test
