@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -32,6 +33,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -47,6 +49,7 @@ import java.util.Set;
 
 public class CxxSourceRuleFactory {
 
+  private static final Logger LOG = Logger.get(CxxSourceRuleFactory.class);
   private static final BuildRuleType PREPROCESS_TYPE = BuildRuleType.of("preprocess");
   private static final BuildRuleType COMPILE_TYPE = BuildRuleType.of("compile");
   private static final BuildRuleType PREPROCESS_AND_COMPILE_TYPE =
@@ -173,7 +176,8 @@ public class CxxSourceRuleFactory {
   }
 
   @VisibleForTesting
-  CxxPreprocessAndCompile createPreprocessBuildRule(
+  CxxPreprocessAndCompile requirePreprocessBuildRule(
+      BuildRuleResolver resolver,
       String name,
       CxxSource source,
       PicType pic) {
@@ -181,6 +185,12 @@ public class CxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
     BuildTarget target = createPreprocessBuildTarget(name, source.getType(), pic);
+    Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
+        target, CxxPreprocessAndCompile.class);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    }
+
     Tool tool = CxxSourceTypes.getPreprocessor(cxxPlatform, source.getType());
 
     // Build up the list of dependencies for this rule.
@@ -209,7 +219,7 @@ public class CxxSourceRuleFactory {
             .build();
 
     // Build the CxxCompile rule and add it to our sorted set of build rules.
-    return CxxPreprocessAndCompile.preprocess(
+    CxxPreprocessAndCompile result = CxxPreprocessAndCompile.preprocess(
         params.copyWithChanges(
             PREPROCESS_TYPE,
             target,
@@ -225,6 +235,8 @@ public class CxxSourceRuleFactory {
         ImmutableList.copyOf(cxxPreprocessorInput.getFrameworkRoots()),
         cxxPreprocessorInput.getIncludes(),
         cxxPlatform.getDebugPathSanitizer());
+    resolver.addToIndex(result);
+    return result;
   }
 
   /**
@@ -323,7 +335,8 @@ public class CxxSourceRuleFactory {
    *    given {@link CxxSource}.
    */
   @VisibleForTesting
-  CxxPreprocessAndCompile createCompileBuildRule(
+  CxxPreprocessAndCompile requireCompileBuildRule(
+      BuildRuleResolver resolver,
       String name,
       CxxSource source,
       PicType pic) {
@@ -331,6 +344,12 @@ public class CxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isCompilableType(source.getType()));
 
     BuildTarget target = createCompileBuildTarget(name, pic);
+    Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
+        target, CxxPreprocessAndCompile.class);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    }
+
     Tool tool = getCompiler(source.getType());
 
     ImmutableSortedSet<BuildRule> dependencies =
@@ -353,7 +372,7 @@ public class CxxSourceRuleFactory {
             .build();
 
     // Build the CxxCompile rule and add it to our sorted set of build rules.
-    return CxxPreprocessAndCompile.compile(
+    CxxPreprocessAndCompile result = CxxPreprocessAndCompile.compile(
         params.copyWithChanges(
             COMPILE_TYPE,
             target,
@@ -365,6 +384,8 @@ public class CxxSourceRuleFactory {
         getCompileOutputPath(target, name),
         source.getPath(),
         cxxPlatform.getDebugPathSanitizer());
+    resolver.addToIndex(result);
+    return result;
   }
 
   /**
@@ -372,7 +393,8 @@ public class CxxSourceRuleFactory {
    *    given {@link CxxSource}.
    */
   @VisibleForTesting
-  CxxPreprocessAndCompile createPreprocessAndCompileBuildRule(
+  CxxPreprocessAndCompile requirePreprocessAndCompileBuildRule(
+      BuildRuleResolver resolver,
       String name,
       CxxSource source,
       PicType pic) {
@@ -380,6 +402,12 @@ public class CxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
     BuildTarget target = createCompileBuildTarget(name, pic);
+    Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
+        target, CxxPreprocessAndCompile.class);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    }
+
     Tool tool = getCompiler(source.getType());
 
     ImmutableSortedSet<BuildRule> dependencies =
@@ -408,8 +436,10 @@ public class CxxSourceRuleFactory {
             .addAll(source.getFlags())
             .build();
 
+    LOG.verbose("Creating preprocess and compile %s for %s", target, source);
+
     // Build the CxxCompile rule and add it to our sorted set of build rules.
-    return CxxPreprocessAndCompile.preprocessAndCompile(
+    CxxPreprocessAndCompile result = CxxPreprocessAndCompile.preprocessAndCompile(
         params.copyWithChanges(
             PREPROCESS_AND_COMPILE_TYPE,
             target,
@@ -425,9 +455,11 @@ public class CxxSourceRuleFactory {
         ImmutableList.copyOf(cxxPreprocessorInput.getFrameworkRoots()),
         cxxPreprocessorInput.getIncludes(),
         cxxPlatform.getDebugPathSanitizer());
+    resolver.addToIndex(result);
+    return result;
   }
 
-  private ImmutableMap<CxxPreprocessAndCompile, SourcePath> createPreprocessAndCompileRules(
+  private ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
       BuildRuleResolver resolver,
       Strategy strategy,
       ImmutableMap<String, CxxSource> sources,
@@ -451,12 +483,11 @@ public class CxxSourceRuleFactory {
           // If it's a preprocessable source, use a combine preprocess-and-compile build rule.
           // Otherwise, use a regular compile rule.
           if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-            rule = createPreprocessAndCompileBuildRule(name, source, pic);
+            rule = requirePreprocessAndCompileBuildRule(resolver, name, source, pic);
           } else {
-            rule = createCompileBuildRule(name, source, pic);
+            rule = requireCompileBuildRule(resolver, name, source, pic);
           }
 
-          resolver.addToIndex(rule);
           objects.add(rule);
           break;
         }
@@ -466,8 +497,7 @@ public class CxxSourceRuleFactory {
           // If this is a preprocessable source, first create the preprocess build rule and
           // update the source and name to represent it's compilable output.
           if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-            CxxPreprocessAndCompile rule = createPreprocessBuildRule(name, source, pic);
-            resolver.addToIndex(rule);
+            CxxPreprocessAndCompile rule = requirePreprocessBuildRule(resolver, name, source, pic);
             source = CxxSource.copyOf(source)
                 .withType(CxxSourceTypes.getPreprocessorOutputType(source.getType()))
                 .withPath(
@@ -477,8 +507,7 @@ public class CxxSourceRuleFactory {
           }
 
           // Now build the compile build rule.
-          CxxPreprocessAndCompile rule = createCompileBuildRule(name, source, pic);
-          resolver.addToIndex(rule);
+          CxxPreprocessAndCompile rule = requireCompileBuildRule(resolver, name, source, pic);
           objects.add(rule);
 
           break;
@@ -501,7 +530,7 @@ public class CxxSourceRuleFactory {
         });
   }
 
-  public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> createPreprocessAndCompileRules(
+  public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -519,7 +548,7 @@ public class CxxSourceRuleFactory {
             cxxPlatform,
             cxxPreprocessorInput,
             compilerFlags);
-    return factory.createPreprocessAndCompileRules(resolver, strategy, sources, pic);
+    return factory.requirePreprocessAndCompileRules(resolver, strategy, sources, pic);
   }
 
   public static enum Strategy {

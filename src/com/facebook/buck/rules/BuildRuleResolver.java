@@ -75,6 +75,25 @@ public class BuildRuleResolver {
     return Optional.fromNullable(buildRuleIndex.get(buildTarget));
   }
 
+  @SuppressWarnings("unchecked")
+  public <T extends BuildRule> Optional<T> getRuleOptionalWithType(
+      BuildTarget buildTarget,
+      Class<T> cls) {
+    BuildRule rule = buildRuleIndex.get(buildTarget);
+    if (rule != null) {
+      if (cls.isInstance(rule)) {
+        return Optional.of((T) rule);
+      } else {
+        throw new HumanReadableException(
+            "Rule for target '%s' is present but not of expected type %s (got %s)",
+            buildTarget,
+            cls,
+            rule.getClass());
+      }
+    }
+    return Optional.absent();
+  }
+
   public Function<BuildTarget, BuildRule> getRuleFunction() {
     return new Function<BuildTarget, BuildRule>() {
       @Override

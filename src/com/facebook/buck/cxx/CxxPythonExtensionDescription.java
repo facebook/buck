@@ -153,7 +153,7 @@ public class CxxPythonExtensionDescription implements
 
     // Generate rule to build the object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =
-        CxxSourceRuleFactory.createPreprocessAndCompileRules(
+        CxxSourceRuleFactory.requirePreprocessAndCompileRules(
             params,
             ruleResolver,
             pathResolver,

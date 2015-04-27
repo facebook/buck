@@ -164,7 +164,7 @@ public class CxxLibraryDescription implements
             .build();
 
     // Create rule to build the object files.
-    return CxxSourceRuleFactory.createPreprocessAndCompileRules(
+    return CxxSourceRuleFactory.requirePreprocessAndCompileRules(
         params,
         ruleResolver,
         pathResolver,
@@ -335,7 +335,7 @@ public class CxxLibraryDescription implements
     BuildRuleParams paramsWithoutCompilationDatabaseFlavor = CxxCompilationDatabase
         .paramsWithoutCompilationDatabaseFlavor(params);
     // Invoking requireObjects has the side-effect of invoking
-    // CxxSourceRuleFactory.createPreprocessAndCompileRules(), which has the side-effect of
+    // CxxSourceRuleFactory.requirePreprocessAndCompileRules(), which has the side-effect of
     // creating CxxPreprocessAndCompile rules and adding them to the ruleResolver.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
         paramsWithoutCompilationDatabaseFlavor,
