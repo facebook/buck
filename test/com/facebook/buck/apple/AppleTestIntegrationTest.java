@@ -158,6 +158,23 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  public void testDefaultPlatformBuilds() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_default_platform", tmp);
+    workspace.setUp();
+
+    BuildTarget buildTarget = BuildTarget.builder("//", "foo")
+        .build();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        buildTarget.getFullyQualifiedName());
+    result.assertSuccess();
+    workspace.verify();
+  }
+
+  @Test
   public void testWithResourcesCopiesResourceFilesAndDirs() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
 

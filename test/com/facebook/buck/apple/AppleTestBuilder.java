@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
@@ -70,6 +71,8 @@ public final class AppleTestBuilder
   }
 
   private static AppleTestDescription createDescription() {
-    return new AppleTestDescription(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION);
+    return new AppleTestDescription(
+        FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
+        CxxPlatformUtils.DEFAULT_PLATFORM);
   }
 }

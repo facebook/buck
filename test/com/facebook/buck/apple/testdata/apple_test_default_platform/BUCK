@@ -1,0 +1,10 @@
+apple_test(
+    name = 'foo',
+    extension = 'xctest',
+    srcs = ['Foo.m'],
+    info_plist = 'Test.plist',
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework'
+    ],
+)

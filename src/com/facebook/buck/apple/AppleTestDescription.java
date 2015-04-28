@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -71,9 +72,13 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
       CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
   private final AppleLibraryDescription appleLibraryDescription;
+  private final CxxPlatform defaultCxxPlatform;
 
-  public AppleTestDescription(AppleLibraryDescription description) {
+  public AppleTestDescription(
+      AppleLibraryDescription description,
+      CxxPlatform defaultCxxPlatform) {
     appleLibraryDescription = description;
+    this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
   @Override
@@ -100,17 +105,23 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     boolean createBundle = Sets.intersection(
         params.getBuildTarget().getFlavors(),
         NON_LIBRARY_FLAVORS).isEmpty();
-    Set<Flavor> extraFlavors = ImmutableSet.of();
+    boolean addDefaultPlatform = Sets.difference(
+        params.getBuildTarget().getFlavors(),
+        NON_LIBRARY_FLAVORS).isEmpty();
+    ImmutableSet.Builder<Flavor> extraFlavorsBuilder = ImmutableSet.builder();
     if (createBundle) {
-      extraFlavors = ImmutableSet.of(
+      extraFlavorsBuilder.add(
           LIBRARY_FLAVOR,
           CxxDescriptionEnhancer.SHARED_FLAVOR);
+    }
+    if (addDefaultPlatform) {
+      extraFlavorsBuilder.add(defaultCxxPlatform.getFlavor());
     }
     BuildRule library = appleLibraryDescription.createBuildRule(
         params.copyWithChanges(
             AppleLibraryDescription.TYPE,
             BuildTarget.builder(params.getBuildTarget())
-                .addAllFlavors(extraFlavors)
+                .addAllFlavors(extraFlavorsBuilder.build())
                 .build(),
             Suppliers.ofInstance(params.getDeclaredDeps()),
             Suppliers.ofInstance(params.getExtraDeps())),

@@ -471,7 +471,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AppleAssetCatalogDescription());
     builder.register(new AppleBundleDescription(appleBinaryDescription, appleLibraryDescription));
     builder.register(new AppleResourceDescription());
-    builder.register(new AppleTestDescription(appleLibraryDescription));
+    builder.register(new AppleTestDescription(appleLibraryDescription, defaultCxxPlatform));
     builder.register(new BuckExtensionDescription(defaultJavacOptions));
     builder.register(new CoreDataModelDescription());
     builder.register(cxxBinaryDescription);
