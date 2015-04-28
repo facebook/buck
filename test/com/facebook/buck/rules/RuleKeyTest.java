@@ -25,9 +25,12 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.util.FileHashCache;
+import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -408,6 +411,65 @@ public class RuleKeyTest {
     assertNotNull(key);
   }
 
+  @Test
+  public void changingRuleKeyFieldChangesKeyWhenClassImplementsAppendToRuleKey() {
+    BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(
+        params,
+        pathResolver,
+        "foo",
+        "bar");
+    BuildRule buildRule2 = new TestRuleKeyAppendableBuildRule(
+        params,
+        pathResolver,
+        "foo",
+        "xyzzy");
+
+    DefaultRuleKeyBuilderFactory factory =
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
+    RuleKeyPair ruleKey1 = factory.newInstance(buildRule1, pathResolver).build();
+    RuleKeyPair ruleKey2 = factory.newInstance(buildRule2, pathResolver).build();
+
+    assertNotEquals(ruleKey1, ruleKey2);
+  }
+
+  @Test
+  public void changingRuleKeyFieldOfDepChangesKeyWhenClassImplementsAppendToRuleKey() {
+    BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRule buildRule1 = new TestRuleKeyAppendableBuildRule(
+        params,
+        pathResolver,
+        "foo",
+        "bar");
+    BuildRule buildRule2 = new TestRuleKeyAppendableBuildRule(
+        params,
+        pathResolver,
+        "foo",
+        "xyzzy");
+
+    BuildTarget parentTarget = BuildTargetFactory.newInstance("//cheese:milk");
+
+    BuildRuleParams parentParams1 = new FakeBuildRuleParamsBuilder(parentTarget)
+        .setDeps(ImmutableSortedSet.of(buildRule1))
+        .build();
+    BuildRule parentRule1 = new NoopBuildRule(parentParams1, pathResolver);
+    BuildRuleParams parentParams2 = new FakeBuildRuleParamsBuilder(parentTarget)
+        .setDeps(ImmutableSortedSet.of(buildRule2))
+        .build();
+    BuildRule parentRule2 = new NoopBuildRule(parentParams2, pathResolver);
+
+    DefaultRuleKeyBuilderFactory factory =
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
+    RuleKeyPair ruleKey1 = factory.newInstance(parentRule1, pathResolver).build();
+    RuleKeyPair ruleKey2 = factory.newInstance(parentRule2, pathResolver).build();
+
+    assertNotEquals(ruleKey1, ruleKey2);
+  }
+
   private static class TestRuleKeyAppendable implements RuleKeyAppendable {
     private final String value;
 
@@ -421,6 +483,31 @@ public class RuleKeyTest {
           .setReflectively(key + ".value", value)
           .setReflectively(key + ".foo", "foo")
           .setReflectively(key + ".bar", "bar");
+    }
+  }
+
+  private static class TestRuleKeyAppendableBuildRule extends NoopBuildRule
+      implements RuleKeyAppendable {
+    private final String foo;
+
+    @SuppressWarnings("PMD.UnusedPrivateField")
+    @AddToRuleKey
+    private final String bar;
+
+    public TestRuleKeyAppendableBuildRule(
+        BuildRuleParams buildRuleParams,
+        SourcePathResolver sourcePathResolver,
+        String foo,
+        String bar) {
+      super(buildRuleParams, sourcePathResolver);
+      this.foo = foo;
+      this.bar = bar;
+    }
+
+    @Override
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+      return builder
+          .setReflectively(key + ".foo", foo);
     }
   }
 

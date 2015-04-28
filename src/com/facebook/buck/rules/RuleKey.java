@@ -258,7 +258,14 @@ public class RuleKey {
       }
 
       if (val instanceof RuleKeyAppendable) {
-        return ((RuleKeyAppendable) val).appendToRuleKey(this, key);
+        ((RuleKeyAppendable) val).appendToRuleKey(this, key);
+        if (!(val instanceof BuildRule)) {
+          return this;
+        }
+
+        // Explicitly fall through for BuildRule objects so we include
+        // their cache keys (which may include more data than
+        // appendToRuleKey() does).
       }
 
       return setSingleValue(val);
