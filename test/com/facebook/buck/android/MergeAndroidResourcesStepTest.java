@@ -165,7 +165,8 @@ public class MergeAndroidResourcesStepTest {
         "  }\n" +
         "\n" +
         "}\n",
-        filesystem.readFileIfItExists(Paths.get("output/com/facebook/R.java")).get());
+        filesystem.readFileIfItExists(Paths.get("output/com/facebook/R.java")).get()
+            .replace("\r", ""));
   }
 
   // sortSymbols has a goofy API.  This will help.

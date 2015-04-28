@@ -32,6 +32,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.DefaultPropertyFinder;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -116,7 +117,7 @@ public class NdkLibraryTest {
                     "NDK_OUT=%s " +
                     "NDK_LIBS_OUT=%s " +
                     "BUCK_PROJECT_DIR=. " +
-                    "host-echo-build-step=@# " +
+                    "host-echo-build-step=%s " +
                     "--silent",
                 ndkBuildCommand,
                 Runtime.getRuntime().availableProcessors(),
@@ -125,7 +126,7 @@ public class NdkLibraryTest {
                 /* APP_BUILD_SCRIPT */ Paths.get(basePath, "Android.mk"),
                 /* NDK_OUT */ libbase + File.separator,
                 /* NDK_LIBS_OUT */ Paths.get(libbase, "libs"),
-                Paths.get(libbase, "libs").toString())
+                /* host-echo-build-step */ Platform.detect() == Platform.WINDOWS ? "@REM" : "@#")
         ),
         steps.subList(0, 1),
         executionContext);
