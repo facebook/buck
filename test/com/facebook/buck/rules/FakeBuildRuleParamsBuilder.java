@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
@@ -88,7 +89,7 @@ public class FakeBuildRuleParamsBuilder {
         Suppliers.ofInstance(deps),
         Suppliers.ofInstance(extraDeps),
         filesystem,
-        new FakeRuleKeyBuilderFactory(hashCache),
+        new DefaultRuleKeyBuilderFactory(hashCache),
         buildRuleType,
         targetGraph);
   }
