@@ -64,7 +64,7 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
 
   @Override
   public String getUsername() {
-    return getenv("USER", "unknown");
+    return getenv("USER", getProperty("user.name", "<unknown>"));
   }
 
   @Override

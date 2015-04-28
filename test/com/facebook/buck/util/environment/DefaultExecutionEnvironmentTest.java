@@ -23,6 +23,8 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
+import java.util.Properties;
+
 public class DefaultExecutionEnvironmentTest {
   @Test
   public void testParseNetworksetupOutputForWifi() throws Exception {
@@ -84,4 +86,18 @@ public class DefaultExecutionEnvironmentTest {
         System.getProperties());
     assertEquals("Username should match test data.", name, environment.getUsername());
   }
+
+  @Test
+  public void getUsernameFallsBackToPropertyIfUnsetInEnvironment() {
+    String name = "TEST_USER_PLEASE_IGNORE";
+    Properties properties = new Properties();
+    properties.setProperty("user.name", name);
+    DefaultExecutionEnvironment environment =
+        new DefaultExecutionEnvironment(
+            new FakeProcessExecutor(),
+            ImmutableMap.<String, String>of(),
+            properties);
+    assertEquals("Username should match test data.", name, environment.getUsername());
+  }
+
 }
