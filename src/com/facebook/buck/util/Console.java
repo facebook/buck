@@ -16,12 +16,16 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.log.Logger;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 
 import java.io.PrintStream;
 
 public class Console {
+
+  private static final Logger LOG = Logger.get(Console.class);
 
   private final Verbosity verbosity;
   private final DirtyPrintStreamDecorator stdOut;
@@ -61,6 +65,7 @@ public class Console {
   public void printSuccess(String successMessage) {
     Preconditions.checkArgument(!successMessage.endsWith("\n"),
         "Trailing newline will be added by this method");
+    LOG.debug("Build success: %s", successMessage);
     ansi.printHighlightedSuccessText(stdErr, successMessage);
     stdErr.print('\n');
   }
@@ -69,6 +74,7 @@ public class Console {
    * Prints an error message to stderr that will be highlighted in red if stderr is a tty.
    */
   public void printErrorText(String message) {
+    LOG.warn("Build error: %s", message);
     stdErr.println(ansi.asErrorText(message));
   }
 
@@ -77,8 +83,10 @@ public class Console {
    * @see #printBuildFailure(String)
    */
   public void printBuildFailureWithStacktrace(Throwable t) {
+    LOG.warn(t, "Build error caused by exception");
     t.printStackTrace(stdErr);
-    printBuildFailure("Unexpected internal error (if you are using buckd, you should restart it).");
+    printBuildFailureInternal(
+        "Unexpected internal error (if you are using buckd, you should restart it).");
   }
 
   /**
@@ -86,7 +94,8 @@ public class Console {
    * @see #printBuildFailure(String)
    */
   public void printBuildFailureWithoutStacktrace(Throwable t) {
-    printBuildFailure(Throwables.getRootCause(t).getMessage());
+    LOG.warn(t, "Build error caused by exception");
+    printBuildFailureInternal(Throwables.getRootCause(t).getMessage());
   }
 
   /**
@@ -94,6 +103,11 @@ public class Console {
    * in red if stderr is a tty.
    */
   public void printBuildFailure(String failureMessage) {
+    LOG.warn("Build failure: %s", failureMessage);
+    printBuildFailureInternal(failureMessage);
+  }
+
+  private void printBuildFailureInternal(String failureMessage) {
     ansi.printlnHighlightedFailureText(stdErr, String.format("BUILD FAILED: %s", failureMessage));
   }
 }
