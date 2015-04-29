@@ -70,7 +70,7 @@ public class JavaSymbolFinderIntegrationTest {
     SrcRootsFinder srcRootsFinder = new SrcRootsFinder(projectFilesystem);
     ProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
-            projectFilesystem,
+            projectFilesystem.getRootPath(),
             new ParserConfig(config),
             allDescriptions);
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();

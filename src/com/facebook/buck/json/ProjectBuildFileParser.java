@@ -19,7 +19,6 @@ package com.facebook.buck.json;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuckPyFunction;
@@ -97,13 +96,13 @@ public class ProjectBuildFileParser implements AutoCloseable {
   @Nullable private Thread stderrConsumer;
 
   protected ProjectBuildFileParser(
-      ProjectFilesystem projectFilesystem,
+      Path projectRoot,
       ParserConfig parserConfig,
       ImmutableSet<Description<?>> descriptions,
       Console console,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus) {
-    this.projectRoot = projectFilesystem.getRootPath();
+    this.projectRoot = projectRoot;
     this.parserConfig = parserConfig;
     this.descriptions = descriptions;
     this.pathToBuckPy = Optional.absent();

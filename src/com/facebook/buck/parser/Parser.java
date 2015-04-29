@@ -219,7 +219,7 @@ public class Parser {
         // TODO(jacko): Get rid of this global BuildTargetParser completely.
         rootRepository.getBuildTargetParser(),
         new DefaultProjectBuildFileParserFactory(
-            rootRepository.getFilesystem(),
+            rootRepository.getFilesystem().getRootPath(),
             parserConfig,
             rootRepository.getAllDescriptions()),
         ruleKeyBuilderFactory);

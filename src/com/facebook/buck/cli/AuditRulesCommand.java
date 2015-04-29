@@ -76,7 +76,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
 
     ProjectBuildFileParserFactory factory = new DefaultProjectBuildFileParserFactory(
-        projectFilesystem,
+        projectFilesystem.getRootPath(),
         new ParserConfig(options.getBuckConfig()),
         // TODO(simons): When we land dynamic loading, this MUST change.
         getRepository().getAllDescriptions());

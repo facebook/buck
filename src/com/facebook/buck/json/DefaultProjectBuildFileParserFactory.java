@@ -17,23 +17,24 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Console;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
+
 public class DefaultProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
-  private final ProjectFilesystem projectFilesystem;
+  private final Path projectRoot;
   private final ParserConfig parserConfig;
   private final ImmutableSet<Description<?>> descriptions;
 
   public DefaultProjectBuildFileParserFactory(
-      ProjectFilesystem projectFilesystem,
+      Path projectRoot,
       ParserConfig parserConfig,
       ImmutableSet<Description<?>> descriptions) {
-    this.projectFilesystem = projectFilesystem;
+    this.projectRoot = projectRoot;
     this.parserConfig = parserConfig;
     this.descriptions = descriptions;
   }
@@ -44,7 +45,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus) {
     return new ProjectBuildFileParser(
-        projectFilesystem,
+        projectRoot,
         parserConfig,
         descriptions,
         console,

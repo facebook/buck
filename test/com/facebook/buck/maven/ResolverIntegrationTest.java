@@ -112,7 +112,7 @@ public class ResolverIntegrationTest {
         new PrebuiltJarDescription());
 
     DefaultProjectBuildFileParserFactory parserFactory = new DefaultProjectBuildFileParserFactory(
-        filesystem,
+        filesystem.getRootPath(),
         parserConfig,
         descriptions);
     buildFileParser = parserFactory.createParser(

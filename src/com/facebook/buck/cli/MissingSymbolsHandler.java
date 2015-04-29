@@ -69,7 +69,7 @@ public class MissingSymbolsHandler {
     ParserConfig parserConfig = new ParserConfig(config);
     ProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
-            projectFilesystem,
+            projectFilesystem.getRootPath(),
             parserConfig,
             descriptions);
     JavaSymbolFinder javaSymbolFinder = new JavaSymbolFinder(
