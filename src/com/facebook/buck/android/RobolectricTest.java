@@ -122,6 +122,9 @@ public class RobolectricTest extends JavaTest {
         "DummyRDotJava must have been created!");
     vmArgsBuilder.add(getRobolectricResourceDirectories(
         optionalDummyRDotJava.get().getAndroidResourceDeps()));
+
+    // Force robolectric to only use local dependency resolution.
+    vmArgsBuilder.add("-Drobolectric.offline=true");
   }
 
   @VisibleForTesting
