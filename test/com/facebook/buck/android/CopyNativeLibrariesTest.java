@@ -42,44 +42,63 @@ import com.google.common.collect.Iterables;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CopyNativeLibrariesTest {
 
   @Test
   public void testCopyNativeLibraryCommandWithoutCpuFilter() {
+    final String source = Paths.get("/path/to/source").toString();
+    final String destination = Paths.get("/path/to/destination/").toString();
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.<TargetCpuType>of() /* cpuFilters */,
-        "/path/to/source",
-        "/path/to/destination/",
+        source,
+        destination,
         ImmutableList.of(
-            "cp -R /path/to/source/* /path/to/destination",
+            String.format("cp -R %s/* %s", source, destination),
             "rename_native_executables"));
   }
 
   @Test
   public void testCopyNativeLibraryCommand() {
+    final Path source = Paths.get("/path/to/source");
+    final Path destination = Paths.get("/path/to/destination/");
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.of(TargetCpuType.ARMV7),
-        "/path/to/source",
-        "/path/to/destination/",
+        source.toString(),
+        destination.toString(),
         ImmutableList.of(
-            "[ -d /path/to/source/armeabi-v7a ] && mkdir -p /path/to/destination/armeabi-v7a " +
-                "&& cp -R /path/to/source/armeabi-v7a/* /path/to/destination/armeabi-v7a",
+            String.format(
+                "[ -d %s ] && mkdir -p %s && cp -R %s/* %s",
+                source.resolve("armeabi-v7a"),
+                destination.resolve("armeabi-v7a"),
+                source.resolve("armeabi-v7a"),
+                destination.resolve("armeabi-v7a")),
             "rename_native_executables"));
   }
 
   @Test
   public void testCopyNativeLibraryCommandWithMultipleCpuFilters() {
+    final Path source = Paths.get("/path/to/source");
+    final Path destination = Paths.get("/path/to/destination/");
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
         ImmutableSet.of(TargetCpuType.ARM, TargetCpuType.X86),
-        "/path/to/source",
-        "/path/to/destination/",
+        source.toString(),
+        destination.toString(),
         ImmutableList.of(
-            "[ -d /path/to/source/armeabi ] && mkdir -p /path/to/destination/armeabi " +
-                "&& cp -R /path/to/source/armeabi/* /path/to/destination/armeabi",
-            "[ -d /path/to/source/x86 ] && mkdir -p /path/to/destination/x86 " +
-                "&& cp -R /path/to/source/x86/* /path/to/destination/x86",
+            String.format(
+                "[ -d %s ] && mkdir -p %s && cp -R %s/* %s",
+                source.resolve("armeabi"),
+                destination.resolve("armeabi"),
+                source.resolve("armeabi"),
+                destination.resolve("armeabi")),
+            String.format(
+                "[ -d %s ] && mkdir -p %s && cp -R %s/* %s",
+                source.resolve("x86"),
+                destination.resolve("x86"),
+                source.resolve("x86"),
+                destination.resolve("x86")),
             "rename_native_executables"));
   }
 

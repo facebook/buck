@@ -53,7 +53,7 @@ public class MkdirStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return String.format("mkdir -p %s",
-        Escaper.escapeAsBashString(getPath(context)));
+        Escaper.escapeAsShellString(getPath(context).toString()));
   }
 
   /**
