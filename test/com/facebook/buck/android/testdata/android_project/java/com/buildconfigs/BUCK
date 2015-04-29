@@ -30,8 +30,12 @@ android_binary(
 genrule(
   name = 'extract-classes-dex',
   bash = ' && '.join([
-      '$(exe //third-party/smali:baksmali) -o $TMP $(location :app)',
-      'find $TMP -name \\*.smali > $OUT',
-      ]),
+    '$(exe //third-party/smali:baksmali) -o $TMP $(location :app)',
+    'find $TMP -name \\*.smali > $OUT',
+  ]),
+  cmd = ' && '.join([
+    '$(exe //third-party/smali:baksmali) -o %TMP% $(location :app)',
+    'for /R %TMP% %i in (*.smali) do echo %i >> %OUT%',
+  ]),
   out = 'smali-files.txt',
 )

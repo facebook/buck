@@ -27,6 +27,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class MultipleBuildConfigIntegrationTest {
 
@@ -46,7 +47,11 @@ public class MultipleBuildConfigIntegrationTest {
         .assertSuccess();
 
     String smali = workspace.getFileContents("buck-out/gen/java/com/buildconfigs/smali-files.txt");
-    assertThat(smali, containsString("com/example/config1/BuildConfig.smali"));
-    assertThat(smali, containsString("com/example/config2/BuildConfig.smali"));
+    assertThat(
+        smali,
+        containsString(Paths.get("com/example/config1/BuildConfig.smali").toString()));
+    assertThat(
+        smali,
+        containsString(Paths.get("com/example/config2/BuildConfig.smali").toString()));
   }
 }
