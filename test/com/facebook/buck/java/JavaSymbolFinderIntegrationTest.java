@@ -63,6 +63,7 @@ public class JavaSymbolFinderIntegrationTest {
         ImmutableList.of(projectFilesystem.getFileForRelativePath(".buckconfig")),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
+    ParserConfig parserConfig = new ParserConfig(config);
     ImmutableSet<Description<?>> allDescriptions =
         DefaultKnownBuildRuleTypes
         .getDefaultKnownBuildRuleTypes(projectFilesystem)
@@ -71,7 +72,10 @@ public class JavaSymbolFinderIntegrationTest {
     ProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             projectFilesystem.getRootPath(),
-            new ParserConfig(config),
+            parserConfig.getPythonInterpreter(),
+            parserConfig.getAllowEmptyGlobs(),
+            parserConfig.getBuildFileName(),
+            parserConfig.getDefaultIncludes(),
             allDescriptions);
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     JavaSymbolFinder finder = new JavaSymbolFinder(

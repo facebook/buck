@@ -70,7 +70,10 @@ public class MissingSymbolsHandler {
     ProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             projectFilesystem.getRootPath(),
-            parserConfig,
+            parserConfig.getPythonInterpreter(),
+            parserConfig.getAllowEmptyGlobs(),
+            parserConfig.getBuildFileName(),
+            parserConfig.getDefaultIncludes(),
             descriptions);
     JavaSymbolFinder javaSymbolFinder = new JavaSymbolFinder(
         projectFilesystem,

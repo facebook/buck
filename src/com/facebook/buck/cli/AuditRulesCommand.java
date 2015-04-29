@@ -75,9 +75,13 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
 
+    ParserConfig parserConfig = new ParserConfig(options.getBuckConfig());
     ProjectBuildFileParserFactory factory = new DefaultProjectBuildFileParserFactory(
         projectFilesystem.getRootPath(),
-        new ParserConfig(options.getBuckConfig()),
+        parserConfig.getPythonInterpreter(),
+        parserConfig.getAllowEmptyGlobs(),
+        parserConfig.getBuildFileName(),
+        parserConfig.getDefaultIncludes(),
         // TODO(simons): When we land dynamic loading, this MUST change.
         getRepository().getAllDescriptions());
     try (ProjectBuildFileParser parser = factory.createParser(

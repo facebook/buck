@@ -20,7 +20,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
@@ -83,7 +82,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
   @Nullable private BufferedWriter buckPyStdinWriter;
 
   private final Path projectRoot;
-  private final ParserConfig parserConfig;
+  private final String pythonInterpreter;
+  private final boolean allowEmptyGlobs;
+  private final String buildFileName;
+  private final Iterable<String> defaultIncludes;
   private final ImmutableSet<Description<?>> descriptions;
   private final Console console;
   private final BuckEventBus buckEventBus;
@@ -97,13 +99,19 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   protected ProjectBuildFileParser(
       Path projectRoot,
-      ParserConfig parserConfig,
+      String pythonInterpreter,
+      boolean allowEmptyGlobs,
+      String buildFileName,
+      Iterable<String> defaultIncludes,
       ImmutableSet<Description<?>> descriptions,
       Console console,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus) {
     this.projectRoot = projectRoot;
-    this.parserConfig = parserConfig;
+    this.pythonInterpreter = pythonInterpreter;
+    this.allowEmptyGlobs = allowEmptyGlobs;
+    this.buildFileName = buildFileName;
+    this.defaultIncludes = defaultIncludes;
     this.descriptions = descriptions;
     this.pathToBuckPy = Optional.absent();
     this.console = console;
@@ -191,7 +199,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     // Invoking buck.py and read JSON-formatted build rules from its stdout.
     ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
 
-    argBuilder.add(parserConfig.getPythonInterpreter());
+    argBuilder.add(pythonInterpreter);
 
     // Ask python to unbuffer stdout so that we can coordinate based on the output as it is
     // produced.
@@ -207,15 +215,15 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     argBuilder.add(getPathToBuckPy(descriptions).toString());
 
-    if (parserConfig.getAllowEmptyGlobs()) {
+    if (allowEmptyGlobs) {
       argBuilder.add("--allow_empty_globs");
     }
 
     argBuilder.add("--project_root", projectRoot.toAbsolutePath().toString());
-    argBuilder.add("--build_file_name", parserConfig.getBuildFileName());
+    argBuilder.add("--build_file_name", buildFileName);
 
     // Add the --include flags.
-    for (String include : parserConfig.getDefaultIncludes()) {
+    for (String include : defaultIncludes) {
       argBuilder.add("--include");
       argBuilder.add(include);
     }

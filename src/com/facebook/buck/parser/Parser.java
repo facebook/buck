@@ -220,7 +220,10 @@ public class Parser {
         rootRepository.getBuildTargetParser(),
         new DefaultProjectBuildFileParserFactory(
             rootRepository.getFilesystem().getRootPath(),
-            parserConfig,
+            parserConfig.getPythonInterpreter(),
+            parserConfig.getAllowEmptyGlobs(),
+            parserConfig.getBuildFileName(),
+            parserConfig.getDefaultIncludes(),
             rootRepository.getAllDescriptions()),
         ruleKeyBuilderFactory);
   }

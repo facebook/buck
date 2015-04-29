@@ -156,10 +156,14 @@ public class ParserTest extends EasyMockSupport {
 
     buildRuleTypes = repository.getKnownBuildRuleTypes();
 
+    ParserConfig parserConfig = new ParserConfig(new FakeBuckConfig());
     DefaultProjectBuildFileParserFactory testBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             filesystem.getRootPath(),
-            new ParserConfig(new FakeBuckConfig()),
+            parserConfig.getPythonInterpreter(),
+            parserConfig.getAllowEmptyGlobs(),
+            parserConfig.getBuildFileName(),
+            parserConfig.getDefaultIncludes(),
             buildRuleTypes.getAllDescriptions());
     testParser = createParser(emptyBuildTargets(), testBuildFileParserFactory);
   }
@@ -1706,13 +1710,10 @@ public class ParserTest extends EasyMockSupport {
       public TestProjectBuildFileParser(String pythonInterpreter) {
         super(
             projectRoot,
-            new ParserConfig(
-                new FakeBuckConfig(
-                    ImmutableMap.<String, Map<String, String>>of(
-                        "buildfile",
-                        ImmutableMap.of("includes", "//java/com/facebook/defaultIncludeFile"),
-                        "python",
-                        ImmutableMap.of("interpreter", pythonInterpreter)))),
+            pythonInterpreter,
+            ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS,
+            ParserConfig.DEFAULT_BUILD_FILE_NAME,
+            ImmutableSet.of("//java/com/facebook/defaultIncludeFile"),
             buildRuleTypes.getAllDescriptions(),
             new TestConsole(),
             ImmutableMap.<String, String>of(),

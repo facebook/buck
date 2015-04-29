@@ -113,7 +113,10 @@ public class ResolverIntegrationTest {
 
     DefaultProjectBuildFileParserFactory parserFactory = new DefaultProjectBuildFileParserFactory(
         filesystem.getRootPath(),
-        parserConfig,
+        parserConfig.getPythonInterpreter(),
+        parserConfig.getAllowEmptyGlobs(),
+        parserConfig.getBuildFileName(),
+        parserConfig.getDefaultIncludes(),
         descriptions);
     buildFileParser = parserFactory.createParser(
         new TestConsole(),
