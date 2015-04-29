@@ -21,7 +21,6 @@ import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
@@ -38,7 +37,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
@@ -46,7 +44,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
@@ -171,19 +168,6 @@ public abstract class ExecutionContext implements Closeable {
    */
   public AndroidPlatformTarget getAndroidPlatformTarget() throws NoAndroidSdkException {
     return getAndroidPlatformTargetSupplier().get();
-  }
-
-  /**
-   * Attempts to resolve an executable in a cross-platform way.
-   * @param base The folder you expect to find the executable in.
-   * @param executable The name of the executable you wish to find.
-   * @return The {@link Path} to the executable is resolved, or {@link Optional#absent()}.
-   */
-  public Optional<Path> resolveExecutable(Path base, String executable) {
-    return new ExecutableFinder().getOptionalExecutable(
-        Paths.get(executable),
-        ImmutableSet.of(base),
-        ImmutableSet.<String>of());
   }
 
   @Override

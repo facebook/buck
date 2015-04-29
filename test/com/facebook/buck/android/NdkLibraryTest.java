@@ -20,6 +20,7 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
@@ -67,9 +68,9 @@ public class NdkLibraryTest {
     executionContext = TestExecutionContext.newBuilder()
         .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
         .build();
-    ndkBuildCommand = executionContext.resolveExecutable(
-        resolver.findAndroidNdkDir().get(),
-        "ndk-build").get().toAbsolutePath().toString();
+    ndkBuildCommand = new ExecutableFinder().getOptionalExecutable(
+        Paths.get("ndk-build"),
+        resolver.findAndroidNdkDir().get()).get().toAbsolutePath().toString();
   }
 
   @Test

@@ -92,6 +92,19 @@ public class ExecutableFinder {
 
   public Optional<Path> getOptionalExecutable(
       Path suggestedExecutable,
+      Path basePath) {
+    Optional<Path> executable = Optional.fromNullable(
+        findExecutable(
+            suggestedExecutable,
+            ImmutableSet.of(basePath),
+            getExecutableSuffixes(ImmutableMap.<String, String>of())));
+    LOG.debug("Executable '%s' mapped to '%s'", suggestedExecutable, executable);
+
+    return executable;
+  }
+
+  public Optional<Path> getOptionalExecutable(
+      Path suggestedExecutable,
       ImmutableCollection<Path> path,
       ImmutableCollection<String> fileSuffixes) {
     Optional<Path> executable = Optional.fromNullable(

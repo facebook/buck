@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -31,6 +32,7 @@ import com.google.common.collect.Iterables;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class NdkBuildStep extends ShellStep {
 
@@ -74,7 +76,9 @@ public class NdkBuildStep extends ShellStep {
           " with a property named 'ndk.dir' that points to the absolute path of" +
           " your Android NDK directory, or set ANDROID_NDK.");
     }
-    Optional<Path> ndkBuild = context.resolveExecutable(ndkRoot.get(), "ndk-build");
+    Optional<Path> ndkBuild = new ExecutableFinder().getOptionalExecutable(
+        Paths.get("ndk-build"),
+        ndkRoot.get());
     if (!ndkBuild.isPresent()) {
       throw new HumanReadableException("Unable to find ndk-build");
     }
