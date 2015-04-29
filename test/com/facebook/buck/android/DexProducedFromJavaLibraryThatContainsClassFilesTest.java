@@ -108,13 +108,15 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         .setProjectFilesystem(projectFilesystem)
         .build();
 
-    String expectedDxCommand = "/usr/bin/dx" +
-        " --dex --no-optimize --force-jumbo --output /home/user/buck-out/gen/foo/bar#dex.dex.jar " +
-        "/home/user/buck-out/gen/foo/bar.jar";
+    String expectedDxCommand = String.format(
+        "%s --dex --no-optimize --force-jumbo --output %s %s",
+        Paths.get("/usr/bin/dx"),
+        Paths.get("/home/user/buck-out/gen/foo/bar#dex.dex.jar"),
+        Paths.get("/home/user/buck-out/gen/foo/bar.jar"));
     MoreAsserts.assertSteps("Generate bar.dex.jar.",
         ImmutableList.of(
-          "rm -f /home/user/buck-out/gen/foo/bar#dex.dex.jar",
-          "mkdir -p /home/user/buck-out/gen/foo",
+          String.format("rm -f %s", Paths.get("/home/user/buck-out/gen/foo/bar#dex.dex.jar")),
+          String.format("mkdir -p %s", Paths.get("/home/user/buck-out/gen/foo")),
           "estimate_linear_alloc",
           expectedDxCommand,
           "record_dx_success"),
@@ -178,8 +180,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     MoreAsserts.assertSteps("Do not generate a .dex.jar file.",
         ImmutableList.of(
-          "rm -f /home/user/buck-out/gen/foo/bar.dex.jar",
-          "mkdir -p /home/user/buck-out/gen/foo",
+          String.format("rm -f %s", Paths.get("/home/user/buck-out/gen/foo/bar.dex.jar")),
+          String.format("mkdir -p %s", Paths.get("/home/user/buck-out/gen/foo")),
           "record_empty_dx"),
         steps,
         executionContext);
