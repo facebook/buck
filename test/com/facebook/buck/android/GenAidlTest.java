@@ -53,7 +53,7 @@ public class GenAidlTest {
     BuildContext context = null;
 
     Path pathToAidl = Paths.get("java/com/example/base/IWhateverService.aidl");
-    String importPath = "java/com/example/base";
+    String importPath = Paths.get("java/com/example/base").toString();
 
     BuildTarget target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
@@ -69,8 +69,9 @@ public class GenAidlTest {
 
     List<Step> steps = genAidlRule.getBuildSteps(context, new FakeBuildableContext());
 
-    final String pathToAidlExecutable = "/usr/local/bin/aidl";
-    final String pathToFrameworkAidl = "/home/root/android/platforms/android-16/framework.aidl";
+    final String pathToAidlExecutable = Paths.get("/usr/local/bin/aidl").toString();
+    final String pathToFrameworkAidl = Paths.get(
+        "/home/root/android/platforms/android-16/framework.aidl").toString();
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(androidPlatformTarget.getAidlExecutable()).andReturn(Paths.get(pathToAidlExecutable));
     expect(androidPlatformTarget.getAndroidFrameworkIdlFile())
