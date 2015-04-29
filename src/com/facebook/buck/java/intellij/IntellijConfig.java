@@ -43,6 +43,10 @@ public class IntellijConfig {
     return delegate.getValue(sectionName, "language_level");
   }
 
+  public Optional<String> getOutputUrl() {
+    return delegate.getValue(sectionName, "output_url");
+  }
+
   public Optional<Path> getAndroidManifest() {
     return delegate.getPath(sectionName, "default_android_manifest_path", false);
   }
