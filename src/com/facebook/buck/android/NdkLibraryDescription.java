@@ -121,7 +121,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       // including the initial escaping.  Since the makefiles eventually hand-off these values
       // to the shell, we first perform bash escaping.
       //
-      escapedArg = Escaper.escapeAsBashString(escapedArg);
+      escapedArg = Escaper.escapeAsShellString(escapedArg);
       for (int i = 0; i < 4; i++) {
         escapedArg = Escaper.escapeAsMakefileValueString(escapedArg);
       }

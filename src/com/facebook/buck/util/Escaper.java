@@ -157,6 +157,16 @@ public final class Escaper {
       Platform.detect() == Platform.WINDOWS ? CREATE_PROCESS_ESCAPER : BASH_ESCAPER;
 
   /**
+   * Quotes a string to be passed to the shell, if necessary.  This works for the appropriate shell
+   * regardless of the platform it is run on.
+   * @param str string to escape
+   * @return possibly escaped string
+   */
+  public static String escapeAsShellString(String str) {
+    return SHELL_ESCAPER.apply(str);
+  }
+
+  /**
    * Quotes a string to be passed to Bash, if necessary. Uses single quotes to prevent variable
    * expansion, `...` evaluation etc.
    * @param str string to quote
