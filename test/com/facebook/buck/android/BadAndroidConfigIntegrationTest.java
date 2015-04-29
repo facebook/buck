@@ -28,6 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class BadAndroidConfigIntegrationTest {
 
@@ -53,8 +54,8 @@ public class BadAndroidConfigIntegrationTest {
 
     ProcessResult resultForFailure = workspace.runBuckBuild("//:hello_android").assertFailure();
     assertThat(resultForFailure.getStderr(),
-        containsString(
-            "Properties file local.properties contains invalid path " +
-            "[/this/is/a/non/existent/directory] for key sdk.dir."));
+        containsString(String.format(
+            "Properties file local.properties contains invalid path [%s] for key sdk.dir.",
+            Paths.get("/this/is/a/non/existent/directory"))));
   }
 }
