@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.VersionStringComparator;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -295,7 +296,8 @@ public class AndroidPlatformTarget {
         androidSdkDir.resolve("platform-tools/adb").toAbsolutePath(),
         androidSdkDir.resolve(buildToolsPath).resolve("aidl").toAbsolutePath(),
         zipAlignExecutable,
-        androidSdkDir.resolve(buildToolsPath).resolve("dx").toAbsolutePath(),
+        androidSdkDir.resolve(buildToolsPath).resolve(
+            Platform.detect() == Platform.WINDOWS ? "dx.bat" : "dx").toAbsolutePath(),
         androidFrameworkIdlFile,
         proguardJar,
         proguardConfig,

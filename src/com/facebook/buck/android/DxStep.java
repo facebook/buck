@@ -171,9 +171,9 @@ public class DxStep extends ShellStep {
   private int executeInProcess(ExecutionContext context) {
     ImmutableList<String> argv = getShellCommandInternal(context);
 
-    // The first arguments should be ".../dx --dex" ("...\dx --dex on Windows).  Strip them off
+    // The first arguments should be ".../dx --dex" ("...\dx.bat --dex on Windows).  Strip them off
     // because we bypass the dispatcher and go straight to the dexer.
-    Preconditions.checkState(argv.get(0).endsWith("/dx") || argv.get(0).endsWith("\\dx"));
+    Preconditions.checkState(argv.get(0).endsWith("/dx") || argv.get(0).endsWith("\\dx.bat"));
     Preconditions.checkState(argv.get(1).equals("--dex"));
     ImmutableList<String> args = argv.subList(2, argv.size());
 

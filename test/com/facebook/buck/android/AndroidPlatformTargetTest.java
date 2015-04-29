@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -86,7 +87,9 @@ public class AndroidPlatformTargetTest {
         androidPlatformTarget.getAaptExecutable());
     assertEquals(androidSdkDir.resolve("platform-tools/aidl"),
         androidPlatformTarget.getAidlExecutable());
-    assertEquals(androidSdkDir.resolve("platform-tools/dx"),
+    assertEquals(
+        androidSdkDir.resolve(
+            Platform.detect() == Platform.WINDOWS ? "platform-tools/dx.bat" : "platform-tools/dx"),
         androidPlatformTarget.getDxExecutable());
   }
 
@@ -134,7 +137,8 @@ public class AndroidPlatformTargetTest {
         androidPlatformTarget.getAdbExecutable());
     assertEquals(pathToAndroidSdkDir.resolve("build-tools/17.0.0/aidl"),
         androidPlatformTarget.getAidlExecutable());
-    assertEquals(pathToAndroidSdkDir.resolve("build-tools/17.0.0/dx"),
+    assertEquals(pathToAndroidSdkDir.resolve(Platform.detect() == Platform.WINDOWS ?
+                "build-tools/17.0.0/dx.bat" : "build-tools/17.0.0/dx"),
         androidPlatformTarget.getDxExecutable());
   }
 
@@ -182,7 +186,8 @@ public class AndroidPlatformTargetTest {
         androidPlatformTarget.getAdbExecutable());
     assertEquals(pathToAndroidSdkDir.resolve("build-tools/android-4.2.2/aidl"),
         androidPlatformTarget.getAidlExecutable());
-    assertEquals(pathToAndroidSdkDir.resolve("build-tools/android-4.2.2/dx"),
+    assertEquals(pathToAndroidSdkDir.resolve(Platform.detect() == Platform.WINDOWS ?
+                "build-tools/android-4.2.2/dx.bat" : "build-tools/android-4.2.2/dx"),
         androidPlatformTarget.getDxExecutable());
   }
 
