@@ -16,12 +16,14 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
@@ -76,9 +78,12 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
 
     ParserConfig parserConfig = new ParserConfig(options.getBuckConfig());
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
+        options.getBuckConfig(),
+        new ExecutableFinder());
     ProjectBuildFileParserFactory factory = new DefaultProjectBuildFileParserFactory(
         projectFilesystem.getRootPath(),
-        parserConfig.getPythonInterpreter(),
+        pythonBuckConfig.getPythonInterpreter(),
         parserConfig.getAllowEmptyGlobs(),
         parserConfig.getBuildFileName(),
         parserConfig.getDefaultIncludes(),

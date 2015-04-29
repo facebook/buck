@@ -31,7 +31,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
@@ -206,7 +205,7 @@ public class AuditOwnerCommandTest {
         androidDirectoryResolver,
         new InstanceArtifactCacheFactory(artifactCache),
         eventBus,
-        new ParserConfig(buckConfig),
+        buckConfig,
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),

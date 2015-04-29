@@ -26,7 +26,6 @@ import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -83,7 +82,7 @@ public class AuditInputCommandTest {
             new FakeAndroidDirectoryResolver(),
             new InstanceArtifactCacheFactory(artifactCache),
             eventBus,
-            new ParserConfig(new FakeBuckConfig()),
+            new FakeBuckConfig(),
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
             new FakeJavaPackageFinder(),

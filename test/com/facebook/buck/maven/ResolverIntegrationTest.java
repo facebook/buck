@@ -25,6 +25,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.PrebuiltJarDescription;
@@ -32,6 +33,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -106,6 +108,9 @@ public class ResolverIntegrationTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     FakeBuckConfig buckConfig = new FakeBuckConfig();
     ParserConfig parserConfig = new ParserConfig(buckConfig);
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
+        buckConfig,
+        new ExecutableFinder());
 
     ImmutableSet<Description<?>> descriptions = ImmutableSet.of(
         new RemoteFileDescription(new ExplodingDownloader()),
@@ -113,7 +118,7 @@ public class ResolverIntegrationTest {
 
     DefaultProjectBuildFileParserFactory parserFactory = new DefaultProjectBuildFileParserFactory(
         filesystem.getRootPath(),
-        parserConfig.getPythonInterpreter(),
+        pythonBuckConfig.getPythonInterpreter(),
         parserConfig.getAllowEmptyGlobs(),
         parserConfig.getBuildFileName(),
         parserConfig.getDefaultIncludes(),

@@ -21,10 +21,12 @@ import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -58,13 +60,17 @@ public class CommandRunnerParamsForTesting {
       AndroidDirectoryResolver androidDirectoryResolver,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
-      ParserConfig parserConfig,
+      BuckConfig config,
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
       ObjectMapper objectMapper,
       Optional<WebServer> webServer)
       throws IOException, InterruptedException {
+    ParserConfig parserConfig = new ParserConfig(config);
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
+        config,
+        new ExecutableFinder());
     return new CommandRunnerParams(
         console,
         repository,
@@ -76,7 +82,7 @@ public class CommandRunnerParamsForTesting {
         eventBus,
         Parser.createParser(
             repositoryFactory,
-            parserConfig.getPythonInterpreter(),
+            pythonBuckConfig.getPythonInterpreter(),
             parserConfig.getAllowEmptyGlobs(),
             parserConfig.getEnforceBuckPackageBoundary(),
             parserConfig.getTempFilePatterns(),
@@ -107,7 +113,7 @@ public class CommandRunnerParamsForTesting {
     private ArtifactCacheFactory artifactCacheFactory = new InstanceArtifactCacheFactory(
         new NoopArtifactCache());
     private Console console = new TestConsole();
-    private ParserConfig parserConfig = new ParserConfig(new FakeBuckConfig());
+    private BuckConfig config = new FakeBuckConfig();
     private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     private Platform platform = Platform.detect();
     private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
@@ -124,7 +130,7 @@ public class CommandRunnerParamsForTesting {
           androidDirectoryResolver,
           artifactCacheFactory,
           eventBus,
-          parserConfig,
+          config,
           platform,
           environment,
           javaPackageFinder,

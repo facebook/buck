@@ -21,11 +21,13 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.FakeRepositoryFactory;
@@ -74,10 +76,13 @@ public class CrossRepoTargetsIntegrationTest {
     RepositoryFactory repositoryFactory = new FakeRepositoryFactory(mainFolder.getRoot().toPath());
     BuckConfig config = repositoryFactory.getRootRepository().getBuckConfig();
     ParserConfig parserConfig = new ParserConfig(config);
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
+        config,
+        new ExecutableFinder());
 
     Parser parser = Parser.createParser(
         repositoryFactory,
-        parserConfig.getPythonInterpreter(),
+        pythonBuckConfig.getPythonInterpreter(),
         parserConfig.getAllowEmptyGlobs(),
         parserConfig.getEnforceBuckPackageBoundary(),
         parserConfig.getTempFilePatterns(),

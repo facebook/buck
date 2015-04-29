@@ -156,11 +156,15 @@ public class ParserTest extends EasyMockSupport {
 
     buildRuleTypes = repository.getKnownBuildRuleTypes();
 
-    ParserConfig parserConfig = new ParserConfig(new FakeBuckConfig());
+    BuckConfig config = new FakeBuckConfig();
+    ParserConfig parserConfig = new ParserConfig(config);
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
+        config,
+        new ExecutableFinder());
     DefaultProjectBuildFileParserFactory testBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             filesystem.getRootPath(),
-            parserConfig.getPythonInterpreter(),
+            pythonBuckConfig.getPythonInterpreter(),
             parserConfig.getAllowEmptyGlobs(),
             parserConfig.getBuildFileName(),
             parserConfig.getDefaultIncludes(),

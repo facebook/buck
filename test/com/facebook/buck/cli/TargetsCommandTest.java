@@ -125,7 +125,7 @@ public class TargetsCommandTest {
             androidDirectoryResolver,
             new InstanceArtifactCacheFactory(artifactCache),
             eventBus,
-            new ParserConfig(new FakeBuckConfig()),
+            new FakeBuckConfig(),
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
             new FakeJavaPackageFinder(),

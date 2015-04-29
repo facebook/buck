@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.MissingSymbolEvent;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaSymbolFinder;
 import com.facebook.buck.java.JavacOptions;
@@ -28,6 +29,7 @@ import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Console;
@@ -67,10 +69,13 @@ public class MissingSymbolsHandler {
       ImmutableMap<String, String> environment) {
     SrcRootsFinder srcRootsFinder = new SrcRootsFinder(projectFilesystem);
     ParserConfig parserConfig = new ParserConfig(config);
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
+        config,
+        new ExecutableFinder());
     ProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             projectFilesystem.getRootPath(),
-            parserConfig.getPythonInterpreter(),
+            pythonBuckConfig.getPythonInterpreter(),
             parserConfig.getAllowEmptyGlobs(),
             parserConfig.getBuildFileName(),
             parserConfig.getDefaultIncludes(),

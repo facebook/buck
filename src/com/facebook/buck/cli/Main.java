@@ -29,6 +29,7 @@ import com.facebook.buck.event.listener.LoggingBuildListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavacOptions;
@@ -38,6 +39,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.RepositoryFactory;
@@ -178,9 +180,12 @@ public final class Main {
       this.objectMapper = objectMapper;
       this.hashCache = new DefaultFileHashCache(repository.getFilesystem());
       ParserConfig parserConfig = new ParserConfig(repository.getBuckConfig());
+      PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
+          repository.getBuckConfig(),
+          new ExecutableFinder());
       this.parser = Parser.createParser(
           repositoryFactory,
-          parserConfig.getPythonInterpreter(),
+          pythonBuckConfig.getPythonInterpreter(),
           parserConfig.getAllowEmptyGlobs(),
           parserConfig.getEnforceBuckPackageBoundary(),
           parserConfig.getTempFilePatterns(),
@@ -621,9 +626,12 @@ public final class Main {
 
       if (parser == null) {
         ParserConfig parserConfig = new ParserConfig(rootRepository.getBuckConfig());
+        PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
+            rootRepository.getBuckConfig(),
+            new ExecutableFinder());
         parser = Parser.createParser(
             repositoryFactory,
-            parserConfig.getPythonInterpreter(),
+            pythonBuckConfig.getPythonInterpreter(),
             parserConfig.getAllowEmptyGlobs(),
             parserConfig.getEnforceBuckPackageBoundary(),
             parserConfig.getTempFilePatterns(),
