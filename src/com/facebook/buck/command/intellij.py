@@ -268,7 +268,7 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
         # <content> element for the buck-out/android/gen folder should be
         # listed before the other source folders.
         num_source_folders = len(module['sourceFolders'])
-        if num_source_folders > 1:
+        if num_source_folders > 1 and module['hasAndroidFacet']:
             xml = add_buck_android_source_folder(xml, module)
 
         # Source folders.
@@ -304,7 +304,7 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
         # Empirically, if there is one source folder, then the <content>
         # element for the buck-out/android/gen folder should be listed after
         # the other source folders.
-        if num_source_folders <= 1:
+        if num_source_folders <= 1 and module['hasAndroidFacet']:
             xml = add_buck_android_source_folder(xml, module)
 
         # Dependencies.

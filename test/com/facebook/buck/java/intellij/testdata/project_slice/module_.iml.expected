@@ -13,9 +13,6 @@
       <excludeFolder url="file://$MODULE_DIR$/modules/tip" />
       <excludeFolder url="file://$MODULE_DIR$/tests" />
     </content>
-    <content url="file://$MODULE_DIR$/buck-out/android/gen">
-      <sourceFolder url="file://$MODULE_DIR$/buck-out/android/gen" isTestSource="false" />
-    </content>
     <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
   </component>
 </module>
