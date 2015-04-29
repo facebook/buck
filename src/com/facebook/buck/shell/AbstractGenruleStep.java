@@ -160,7 +160,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
       ExecutionArgsAndCommand original = getCommandAndExecutionArgs(platform, target);
       String expandedCommand = original.command;
       for (Map.Entry<String, String> variable : environmentVariablesToExpand.entrySet()) {
-        expandedCommand = original.command
+        expandedCommand = expandedCommand
             .replace("$" + variable.getKey(), variable.getValue())
             .replace("${" + variable.getKey() + "}", variable.getValue());
       }
