@@ -158,7 +158,7 @@ public class ApkGenruleTest {
 
     // Verify all of the observers of the Genrule.
     String expectedApkOutput =
-        "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a.apk";
+        Paths.get("/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a.apk").toString();
     assertEquals(expectedApkOutput,
         apkGenrule.getAbsoluteOutputFilePath());
     assertEquals(
