@@ -1,10 +1,12 @@
 genrule(
   name = 'gen_aar',
-  srcs = [
-    'gen_aar.sh',
-  ],
-  bash = './gen_aar.sh $TMP $OUT',
+  cmd = '$(exe :aar_generator) $TMP $OUT',
   out = 'the.aar',
+)
+
+python_binary(
+  name = 'aar_generator',
+  main = 'gen_aar.py',
 )
 
 android_prebuilt_aar(
