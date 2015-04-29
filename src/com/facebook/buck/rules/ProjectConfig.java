@@ -36,10 +36,16 @@ public class ProjectConfig extends NoopBuildRule {
   private final ImmutableList<SourceRoot> srcSourceRoots;
 
   @Nullable
+  private final ImmutableList<SourceRoot> srcResourceRoots;
+
+  @Nullable
   private final BuildRule testRule;
 
   @Nullable
   private final ImmutableList<SourceRoot> testsSourceRoots;
+
+  @Nullable
+  private final ImmutableList<SourceRoot> testsResourceRoots;
 
   private final boolean isIntelliJPlugin;
 
@@ -48,8 +54,10 @@ public class ProjectConfig extends NoopBuildRule {
       SourcePathResolver resolver,
       @Nullable BuildRule srcRule,
       @Nullable List<String> srcRoots,
+      @Nullable List<String> srcResourceRoots,
       @Nullable BuildRule testRule,
       @Nullable List<String> testRoots,
+      @Nullable List<String> testResourceRoots,
       boolean isIntelliJPlugin) {
     super(params, resolver);
     Preconditions.checkArgument(srcRule != null || testRule != null,
@@ -60,30 +68,40 @@ public class ProjectConfig extends NoopBuildRule {
         "but was %s.",
         testRule);
 
+    Function<String, SourceRoot> srcRootsTransform = new Function<String, SourceRoot>() {
+      @Override
+      public SourceRoot apply(String srcRoot) {
+        return new SourceRoot(srcRoot);
+      }
+    };
+
     this.srcRule = srcRule;
     if (srcRoots != null) {
       this.srcSourceRoots = ImmutableList.copyOf(Iterables.transform(srcRoots,
-          new Function<String, SourceRoot>() {
-        @Override
-        public SourceRoot apply(String srcRoot) {
-          return new SourceRoot(srcRoot);
-        }
-      }));
+            srcRootsTransform));
     } else {
       this.srcSourceRoots = null;
+    }
+
+    if (srcResourceRoots != null) {
+      this.srcResourceRoots = ImmutableList.copyOf(Iterables.transform(srcResourceRoots,
+            srcRootsTransform));
+    } else {
+      this.srcResourceRoots = null;
     }
 
     this.testRule = testRule;
     if (testRoots != null) {
       this.testsSourceRoots = ImmutableList.copyOf(Iterables.transform(testRoots,
-          new Function<String, SourceRoot>() {
-        @Override
-        public SourceRoot apply(String testRoot) {
-          return new SourceRoot(testRoot);
-        }
-      }));
+          srcRootsTransform));
     } else {
       this.testsSourceRoots = null;
+    }
+    if (testResourceRoots != null) {
+      this.testsResourceRoots = ImmutableList.copyOf(Iterables.transform(testResourceRoots,
+          srcRootsTransform));
+    } else {
+      this.testsResourceRoots = null;
     }
 
     this.isIntelliJPlugin = isIntelliJPlugin;
@@ -118,8 +136,18 @@ public class ProjectConfig extends NoopBuildRule {
   }
 
   @Nullable
+  public ImmutableList<SourceRoot> getResourceRoots() {
+    return srcResourceRoots;
+  }
+
+  @Nullable
   public ImmutableList<SourceRoot> getTestsSourceRoots() {
     return testsSourceRoots;
+  }
+
+  @Nullable
+  public ImmutableList<SourceRoot> getTestsResourceRoots() {
+    return testsResourceRoots;
   }
 
   public boolean getIsIntelliJPlugin() {

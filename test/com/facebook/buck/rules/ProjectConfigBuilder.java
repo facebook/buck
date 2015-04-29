@@ -41,6 +41,11 @@ public class ProjectConfigBuilder extends AbstractNodeBuilder<ProjectConfigDescr
     return this;
   }
 
+  public ProjectConfigBuilder setSrcResourceRoots(@Nullable ImmutableList<String> srcResourceRoots) {
+    arg.srcResourceRoots = Optional.fromNullable(srcResourceRoots);
+    return this;
+  }
+
   public ProjectConfigBuilder setTestRule(@Nullable BuildTarget testRule) {
     arg.testTarget = Optional.fromNullable(testRule);
     return this;
@@ -48,6 +53,11 @@ public class ProjectConfigBuilder extends AbstractNodeBuilder<ProjectConfigDescr
 
   public ProjectConfigBuilder setTestRoots(@Nullable ImmutableList<String> testRoots) {
     arg.testRoots = Optional.fromNullable(testRoots);
+    return this;
+  }
+
+  public ProjectConfigBuilder setTestResourceRoots(@Nullable ImmutableList<String> testResourceRoots) {
+    arg.testResourceRoots = Optional.fromNullable(testResourceRoots);
     return this;
   }
 }
