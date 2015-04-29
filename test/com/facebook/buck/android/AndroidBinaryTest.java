@@ -272,8 +272,8 @@ public class AndroidBinaryTest {
 
   @Test
   public void testDexingCommandWithIntraDexReorder() {
-    SourcePath reorderTool = new TestSourcePath("/tools:reorder_tool");
-    SourcePath reorderData = new TestSourcePath("/tools:reorder_data");
+    SourcePath reorderTool = new TestSourcePath("/tools#reorder_tool");
+    SourcePath reorderData = new TestSourcePath("/tools#reorder_data");
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     AndroidBinary splitDexRule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
