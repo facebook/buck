@@ -73,10 +73,16 @@ public class CrossRepoTargetsIntegrationTest {
 
     RepositoryFactory repositoryFactory = new FakeRepositoryFactory(mainFolder.getRoot().toPath());
     BuckConfig config = repositoryFactory.getRootRepository().getBuckConfig();
+    ParserConfig parserConfig = new ParserConfig(config);
 
     Parser parser = Parser.createParser(
         repositoryFactory,
-        new ParserConfig(config),
+        parserConfig.getPythonInterpreter(),
+        parserConfig.getAllowEmptyGlobs(),
+        parserConfig.getEnforceBuckPackageBoundary(),
+        parserConfig.getTempFilePatterns(),
+        parserConfig.getBuildFileName(),
+        parserConfig.getDefaultIncludes(),
         new FakeRuleKeyBuilderFactory());
 
     BuildTarget mainTarget = BuildTarget.builder("//", "main").build();

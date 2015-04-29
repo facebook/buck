@@ -177,9 +177,15 @@ public final class Main {
       this.clock = clock;
       this.objectMapper = objectMapper;
       this.hashCache = new DefaultFileHashCache(repository.getFilesystem());
+      ParserConfig parserConfig = new ParserConfig(repository.getBuckConfig());
       this.parser = Parser.createParser(
           repositoryFactory,
-          new ParserConfig(repository.getBuckConfig()),
+          parserConfig.getPythonInterpreter(),
+          parserConfig.getAllowEmptyGlobs(),
+          parserConfig.getEnforceBuckPackageBoundary(),
+          parserConfig.getTempFilePatterns(),
+          parserConfig.getBuildFileName(),
+          parserConfig.getDefaultIncludes(),
           createRuleKeyBuilderFactory(hashCache));
 
       this.fileEventBus = new EventBus("file-change-events");
@@ -614,9 +620,15 @@ public final class Main {
       }
 
       if (parser == null) {
+        ParserConfig parserConfig = new ParserConfig(rootRepository.getBuckConfig());
         parser = Parser.createParser(
             repositoryFactory,
-            new ParserConfig(rootRepository.getBuckConfig()),
+            parserConfig.getPythonInterpreter(),
+            parserConfig.getAllowEmptyGlobs(),
+            parserConfig.getEnforceBuckPackageBoundary(),
+            parserConfig.getTempFilePatterns(),
+            parserConfig.getBuildFileName(),
+            parserConfig.getDefaultIncludes(),
             createRuleKeyBuilderFactory(fileHashCache));
       }
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootRepository.getFilesystem());

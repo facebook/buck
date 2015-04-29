@@ -76,7 +76,12 @@ public class CommandRunnerParamsForTesting {
         eventBus,
         Parser.createParser(
             repositoryFactory,
-            parserConfig,
+            parserConfig.getPythonInterpreter(),
+            parserConfig.getAllowEmptyGlobs(),
+            parserConfig.getEnforceBuckPackageBoundary(),
+            parserConfig.getTempFilePatterns(),
+            parserConfig.getBuildFileName(),
+            parserConfig.getDefaultIncludes(),
             new RuleKeyBuilderFactory() {
               @Override
               public RuleKey.Builder newInstance(BuildRule buildRule, SourcePathResolver resolver) {

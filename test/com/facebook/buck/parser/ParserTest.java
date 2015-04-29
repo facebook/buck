@@ -211,12 +211,15 @@ public class ParserTest extends EasyMockSupport {
         BuildTargetParser buildTargetParser,
         RepositoryFactory repositoryFactory)
         throws IOException, InterruptedException {
+      ParserConfig parserConfig = new ParserConfig(
+          new FakeBuckConfig(
+              ImmutableMap.<String, Map<String, String>>of(
+                  "project", ImmutableMap.of("temp_files", ".*\\.swp$"))));
     Parser parser = new Parser(
         repositoryFactory,
-        new ParserConfig(
-            new FakeBuckConfig(
-                ImmutableMap.<String, Map<String, String>>of(
-                    "project", ImmutableMap.of("temp_files", ".*\\.swp$")))),
+        parserConfig.getEnforceBuckPackageBoundary(),
+        parserConfig.getTempFilePatterns(),
+        parserConfig.getBuildFileName(),
         buildFileTreeSupplier,
         buildTargetParser,
         buildFileParserFactory,

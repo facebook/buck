@@ -199,13 +199,20 @@ public class Parser {
 
   public static Parser createParser(
       final RepositoryFactory repositoryFactory,
-      final ParserConfig parserConfig,
+      String pythonInterpreter,
+      boolean allowEmptyGlobs,
+      boolean enforceBuckPackageBoundary,
+      ImmutableSet<Pattern> tempFilePatterns,
+      final String buildFileName,
+      Iterable<String> defaultIncludes,
       RuleKeyBuilderFactory ruleKeyBuilderFactory)
       throws IOException, InterruptedException {
     final Repository rootRepository = repositoryFactory.getRootRepository();
     return new Parser(
         repositoryFactory,
-        parserConfig,
+        enforceBuckPackageBoundary,
+        tempFilePatterns,
+        buildFileName,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
         // TODO(simons): Consider momoizing the suppler.
         new Supplier<BuildFileTree>() {
@@ -213,17 +220,17 @@ public class Parser {
           public BuildFileTree get() {
             return new FilesystemBackedBuildFileTree(
                 rootRepository.getFilesystem(),
-                parserConfig.getBuildFileName());
+                buildFileName);
           }
         },
         // TODO(jacko): Get rid of this global BuildTargetParser completely.
         rootRepository.getBuildTargetParser(),
         new DefaultProjectBuildFileParserFactory(
             rootRepository.getFilesystem().getRootPath(),
-            parserConfig.getPythonInterpreter(),
-            parserConfig.getAllowEmptyGlobs(),
-            parserConfig.getBuildFileName(),
-            parserConfig.getDefaultIncludes(),
+            pythonInterpreter,
+            allowEmptyGlobs,
+            buildFileName,
+            defaultIncludes,
             rootRepository.getAllDescriptions()),
         ruleKeyBuilderFactory);
   }
@@ -234,7 +241,9 @@ public class Parser {
   @VisibleForTesting
   Parser(
       RepositoryFactory repositoryFactory,
-      ParserConfig parserConfig,
+      boolean enforceBuckPackageBoundary,
+      ImmutableSet<Pattern> tempFilePatterns,
+      String buildFileName,
       Supplier<BuildFileTree> buildFileTreeSupplier,
       BuildTargetParser buildTargetParser,
       ProjectBuildFileParserFactory buildFileParserFactory,
@@ -246,10 +255,10 @@ public class Parser {
     this.buildTargetParser = buildTargetParser;
     this.buildFileParserFactory = buildFileParserFactory;
     this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
-    this.enforceBuckPackageBoundary = parserConfig.getEnforceBuckPackageBoundary();
+    this.enforceBuckPackageBoundary = enforceBuckPackageBoundary;
     this.buildFileDependents = ArrayListMultimap.create();
-    this.tempFilePatterns = parserConfig.getTempFilePatterns();
-    this.state = new CachedState(parserConfig.getBuildFileName());
+    this.tempFilePatterns = tempFilePatterns;
+    this.state = new CachedState(buildFileName);
   }
 
   public BuildTargetParser getBuildTargetParser() {
