@@ -54,8 +54,6 @@
 	#define FILE_SEPARATOR '/'
 	typedef int HANDLE;
 	typedef unsigned int SOCKET;
-	/* buffer used for reading an writing chunk data */
-	char buf[BUFSIZE];
 #endif
 
 #ifndef MIN
