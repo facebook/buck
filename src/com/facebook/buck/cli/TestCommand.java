@@ -60,6 +60,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
@@ -252,8 +253,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         }
 
         // Once all of the rules are built, then run the tests.
+        ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
+            options.getNumTestThreads(),
+            options.getLoadLimit());
         try (CommandThreadManager testPool =
-            new CommandThreadManager("Test-Run", options.getConcurrencyLimit())) {
+            new CommandThreadManager("Test-Run", concurrencyLimit)) {
           return runTests(
               testRules,
               Preconditions.checkNotNull(build.getBuildContext()),
