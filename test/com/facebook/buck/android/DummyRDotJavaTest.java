@@ -89,9 +89,10 @@ public class DummyRDotJavaTest {
         buildableContext);
     assertEquals("DummyRDotJava returns an incorrect number of Steps.", 6, steps.size());
 
-    String rDotJavaSrcFolder = "buck-out/bin/java/base/__rule_rdotjava_src__";
-    String rDotJavaBinFolder = "buck-out/bin/java/base/__rule_rdotjava_bin__";
-    String rDotJavaAbiFolder = "buck-out/gen/java/base/__rule_dummyrdotjava_abi__";
+    String rDotJavaSrcFolder = Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__").toString();
+    String rDotJavaBinFolder = Paths.get("buck-out/bin/java/base/__rule_rdotjava_bin__").toString();
+    String rDotJavaAbiFolder = Paths.get(
+        "buck-out/gen/java/base/__rule_dummyrdotjava_abi__").toString();
 
     List<String> expectedStepDescriptions = Lists.newArrayList(
         makeCleanDirDescription(rDotJavaSrcFolder),
@@ -102,7 +103,7 @@ public class DummyRDotJavaTest {
         makeCleanDirDescription(rDotJavaBinFolder),
         makeCleanDirDescription(rDotJavaAbiFolder),
         javacInMemoryDescription(rDotJavaBinFolder),
-        "calculate_abi buck-out/bin/java/base/__rule_rdotjava_bin__");
+        String.format("calculate_abi %s", rDotJavaBinFolder));
 
     MoreAsserts.assertSteps(
         "DummyRDotJava.getBuildSteps() must return these exact steps.",
