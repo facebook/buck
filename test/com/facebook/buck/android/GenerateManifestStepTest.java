@@ -73,7 +73,7 @@ public class GenerateManifestStepTest {
     String expected = Files.toString(new File(expectedOutputPath), Charsets.UTF_8);
     String output = Files.toString(manifestPath.toFile(), Charsets.UTF_8);
 
-    assertEquals(expected, output);
+    assertEquals(expected.replace("\r\n", "\n"), output.replace("\r\n", "\n"));
   }
 
   private Path testDataPath(String fileName) {
