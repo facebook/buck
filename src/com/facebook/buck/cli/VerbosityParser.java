@@ -58,10 +58,12 @@ public class VerbosityParser {
       return Verbosity.ALL;
     } else if (verbosityLevel >= 5) {
       return Verbosity.COMMANDS_AND_OUTPUT;
-    } else if (verbosityLevel >= 3) {
+    } else if (verbosityLevel >= 4) {
       return Verbosity.COMMANDS_AND_SPECIAL_OUTPUT;
-    } else if (verbosityLevel >= 2) {
+    } else if (verbosityLevel >= 3) {
       return Verbosity.COMMANDS;
+    } else if (verbosityLevel >= 2) {
+      return Verbosity.BINARY_OUTPUTS;
     } else if (verbosityLevel >= 1) {
       return Verbosity.STANDARD_INFORMATION;
     } else {

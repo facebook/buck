@@ -22,6 +22,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
@@ -34,11 +35,16 @@ import java.util.List;
 public class TestResultFormatter {
 
   private final Ansi ansi;
+  private final Verbosity verbosity;
   private final boolean isTreatingAssumptionsAsErrors;
 
-  public TestResultFormatter(Ansi ansi, boolean isTreatingAssumptionsAsErrors) {
-    this.isTreatingAssumptionsAsErrors = isTreatingAssumptionsAsErrors;
+  public TestResultFormatter(
+      Ansi ansi,
+      Verbosity verbosity,
+      boolean isTreatingAssumptionsAsErrors) {
     this.ansi = ansi;
+    this.verbosity = verbosity;
+    this.isTreatingAssumptionsAsErrors = isTreatingAssumptionsAsErrors;
   }
 
   public void runStarted(
@@ -61,13 +67,15 @@ public class TestResultFormatter {
 
   /** Writes a detailed summary that ends with a trailing newline. */
   public void reportResult(ImmutableList.Builder<String> addTo, TestResults results) {
-    if (results.getTotalNumberOfTests() > 1) {
+    if (
+        verbosity.shouldPrintBinaryRunInformation() &&
+            results.getTotalNumberOfTests() > 1) {
       addTo.add("");
       addTo.add(String.format(
-              "Results for %s (%d/%d)",
+              "Results for %s (%d/%d) %s",
               results.getBuildTarget().getFullyQualifiedName(),
               results.getSequenceNumber(),
-              results.getTotalNumberOfTests()));
+              results.getTotalNumberOfTests(), verbosity));
     }
     for (TestCaseSummary testCase : results.getTestCases()) {
       addTo.add(testCase.getOneLineSummary(results.getDependenciesPassTheirTests(), ansi));

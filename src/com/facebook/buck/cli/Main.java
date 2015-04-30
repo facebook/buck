@@ -575,7 +575,6 @@ public final class Main {
              createConsoleEventListener(
                  clock,
                  console,
-                 verbosity,
                  executionEnvironment,
                  rootRepository.getBuckConfig(),
                  webServer);
@@ -919,10 +918,11 @@ public final class Main {
   private AbstractConsoleEventBusListener createConsoleEventListener(
       Clock clock,
       Console console,
-      Verbosity verbosity,
       ExecutionEnvironment executionEnvironment,
       BuckConfig config,
       Optional<WebServer> webServer) {
+    Verbosity verbosity = console.getVerbosity();
+
     if (Platform.WINDOWS != Platform.detect() &&
         console.getAnsi().isAnsiTerminal() &&
         !verbosity.shouldPrintCommand() &&

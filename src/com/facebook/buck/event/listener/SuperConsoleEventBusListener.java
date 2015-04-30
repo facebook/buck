@@ -101,7 +101,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     this.renderScheduler = Executors.newScheduledThreadPool(1,
         new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
-    this.testFormatter = new TestResultFormatter(console.getAnsi(), isTreatingAssumptionsAsErrors);
+    this.testFormatter = new TestResultFormatter(
+        console.getAnsi(),
+        console.getVerbosity(),
+        isTreatingAssumptionsAsErrors);
   }
 
   /**

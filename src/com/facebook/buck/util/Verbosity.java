@@ -30,6 +30,11 @@ public enum Verbosity {
    */
   STANDARD_INFORMATION,
 
+  /**
+   * Print extra output from generated binaries and tests being run, but nothing else.
+   */
+  BINARY_OUTPUTS,
+
   /** Print the command being executed, but do not print its output. */
   COMMANDS,
 
@@ -48,6 +53,10 @@ public enum Verbosity {
 
   public boolean shouldPrintStandardInformation() {
     return this.ordinal() >= STANDARD_INFORMATION.ordinal();
+  }
+
+  public boolean shouldPrintBinaryRunInformation() {
+    return this.ordinal() >= BINARY_OUTPUTS.ordinal();
   }
 
   public boolean shouldPrintCommand() {

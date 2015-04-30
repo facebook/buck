@@ -18,6 +18,7 @@ package com.facebook.buck.junit;
 
 import static com.facebook.buck.testutil.OutputHelper.createBuckTestOutputLineRegex;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
+import static com.facebook.buck.util.Verbosity.BINARY_OUTPUTS;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
@@ -86,8 +87,11 @@ public class TestSelectorsIntegrationTest {
 
   @Test
   public void shouldNeverCacheWhenUsingSelectors() throws IOException {
-    String[] commandWithoutSelector = {"test", "--all"};
-    String[] commandWithSelector = {"test", "--all", "--test-selectors", "#testIsComical"};
+    String spammyTestOutput = String.valueOf(BINARY_OUTPUTS.ordinal());
+    String[] commandWithoutSelector = {"test", "-v", spammyTestOutput, "--all"};
+    String[] commandWithSelector =
+        {"test", "-v", spammyTestOutput,
+        "--all", "--test-selectors", "#testIsComical"};
 
     // Without selectors, the first run isn't cached and the second run is.
     ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand(commandWithoutSelector);

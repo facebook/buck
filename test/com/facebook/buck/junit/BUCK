@@ -14,6 +14,7 @@ java_test(
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/test/result/type:type',
+    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',

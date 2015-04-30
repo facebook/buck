@@ -25,6 +25,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -44,6 +45,7 @@ public class TestResultFormatterTest {
   public void createFormatter() {
     formatter = new TestResultFormatter(
         new Ansi(false),
+        Verbosity.COMMANDS,
         /* isAnAssumptionViolationAnError) */ false);
   }
 
