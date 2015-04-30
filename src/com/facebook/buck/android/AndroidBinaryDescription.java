@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.android.AndroidBinaryGraphEnhancer.PACKAGE_STRING_ASSETS_FLAVOR;
+
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
@@ -26,6 +28,8 @@ import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
@@ -59,7 +63,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AndroidBinaryDescription implements Description<AndroidBinaryDescription.Arg> {
+public class AndroidBinaryDescription
+    implements Description<AndroidBinaryDescription.Arg>, Flavored {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("android_binary");
 
@@ -77,6 +82,9 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
               "location", new LocationMacroExpander(BUILD_TARGET_PARSER)));
 
   private static final Pattern COUNTRY_LOCALE_PATTERN = Pattern.compile("([a-z]{2})-[A-Z]{2}");
+
+  private static final ImmutableSet<Flavor> FLAVORS = ImmutableSet.of(
+      PACKAGE_STRING_ASSETS_FLAVOR);
 
   private final JavacOptions javacOptions;
   private final ProGuardConfig proGuardConfig;
@@ -102,10 +110,24 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
   }
 
   @Override
-  public <A extends Arg> AndroidBinary createBuildRule(
-      final BuildRuleParams params,
-      final BuildRuleResolver resolver,
+  public <A extends Arg> BuildRule createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
       A args) {
+    ResourceCompressionMode compressionMode = getCompressionMode(args);
+
+    BuildTarget target = params.getBuildTarget();
+    boolean isFlavored = target.isFlavored();
+    if (isFlavored) {
+      if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR) &&
+          !compressionMode.isStoreStringsAsAssets()) {
+        throw new HumanReadableException(
+            "'package_string_assets' flavor does not exist for %s.",
+            target.getUnflavoredBuildTarget());
+      }
+      params = params.copyWithBuildTarget(BuildTarget.of(target.getUnflavoredBuildTarget()));
+    }
+
     BuildRule keystore = resolver.getRule(args.keystore);
     if (!(keystore instanceof Keystore)) {
       throw new HumanReadableException(
@@ -139,24 +161,11 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
 
     DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
-    boolean allowNonExistentRule =
-          false;
-    ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = BuildRules.toBuildRulesFor(
-        params.getBuildTarget(),
-        resolver,
-        args.noDx.or(ImmutableSet.<BuildTarget>of()),
-        allowNonExistentRule);
-    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
-        FluentIterable.from(buildRulesToExcludeFromDex)
-            .filter(JavaLibrary.class)
-            .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
-
     PackageType packageType = getPackageType(args);
     boolean shouldPreDex = !args.disablePreDex.or(false) &&
         PackageType.DEBUG.equals(packageType) &&
         !args.preprocessJavaClassesBash.isPresent();
 
-    ResourceCompressionMode compressionMode = getCompressionMode(args);
     ResourceFilter resourceFilter =
         new ResourceFilter(args.resourceFilter.or(ImmutableList.<String>of()));
 
@@ -182,8 +191,25 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
         args.buildConfigValues.get(),
         args.buildConfigValuesFile,
         nativePlatforms);
-    AndroidGraphEnhancementResult result =
-        graphEnhancer.createAdditionalBuildables();
+    AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
+
+    if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR)) {
+      Optional<PackageStringAssets> packageStringAssets = result.getPackageStringAssets();
+      Preconditions.checkState(packageStringAssets.isPresent());
+      return packageStringAssets.get();
+    }
+
+    boolean allowNonExistentRule =
+          false;
+    ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = BuildRules.toBuildRulesFor(
+        params.getBuildTarget(),
+        resolver,
+        args.noDx.or(ImmutableSet.<BuildTarget>of()),
+        allowNonExistentRule);
+    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
+        FluentIterable.from(buildRulesToExcludeFromDex)
+            .filter(JavaLibrary.class)
+            .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
 
     return new AndroidBinary(
         params.copyWithExtraDeps(Suppliers.ofInstance(result.getFinalDeps())),
@@ -259,6 +285,16 @@ public class AndroidBinaryDescription implements Description<AndroidBinaryDescri
       }
     }
     return allLocales.build();
+  }
+
+  @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    for (Flavor flavor : flavors) {
+      if (!FLAVORS.contains(flavor)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @SuppressFieldNotInitialized

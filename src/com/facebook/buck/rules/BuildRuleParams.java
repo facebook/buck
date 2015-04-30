@@ -100,6 +100,10 @@ public class BuildRuleParams {
     return copyWithChanges(buildRuleType, buildTarget, declaredDeps, extraDeps);
   }
 
+  public BuildRuleParams copyWithBuildTarget(BuildTarget target) {
+    return copyWithChanges(buildRuleType, target, declaredDeps, extraDeps);
+  }
+
   public BuildRuleParams copyWithChanges(
       BuildRuleType buildRuleType,
       BuildTarget buildTarget,
