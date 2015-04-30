@@ -145,6 +145,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     } else {
       Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
           getBuildTarget(),
+          soname,
           cxxPlatform);
       libraryRule = CxxDescriptionEnhancer.requireBuildRule(
           params,

@@ -640,9 +640,10 @@ public class CxxDescriptionEnhancer {
 
   public static Path getSharedLibraryPath(
       BuildTarget target,
+      Optional<String> soname,
       CxxPlatform platform) {
     String extension = platform.getSharedLibraryExtension();
-    String name = String.format("lib%s.%s", target.getShortName(), extension);
+    String name = soname.or(String.format("lib%s.%s", target.getShortName(), extension));
     return BuildTargets.getGenPath(
         createSharedLibraryBuildTarget(target, platform.getFlavor()),
         "%s/" + name);
