@@ -199,10 +199,14 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
         .addAll(getBootClasspathEntries(executionContext))
         .build();
 
+    ImmutableList<String> properVmArgs = amendVmArgs(
+        this.vmArgs,
+        executionContext.getTargetDeviceOptional());
+
     junit = new JUnitStep(
         classpathEntries,
         reorderedTestClasses,
-        amendVmArgs(vmArgs, executionContext.getTargetDeviceOptional()),
+        properVmArgs,
         pathToTestOutput,
         getBuildTarget().getBasePath(),
         tmpDirectory,
