@@ -22,7 +22,9 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
+import java.io.File;
 import java.nio.file.Path;
+import java.util.Iterator;
 
 public final class Escaper {
 
@@ -315,6 +317,44 @@ public final class Escaper {
    */
   public static String escapeAsMakefileValueString(String str) {
     return escapeAsMakefileString("#", str);
+  }
+
+  /**
+   * Platform-aware Path escaping {@link com.google.common.base.Function Function} which can be
+   * passed to {@link com.google.common.collect.Iterables#transform Iterables.transform()}
+   */
+  public static final Function<Path, String> PATH_FOR_C_INCLUDE_STRING_ESCAPER =
+      new Function<Path, String>() {
+        @Override
+        public String apply(Path input) {
+          return escapePathForCIncludeString(input);
+        }
+      };
+
+  /**
+   * Escapes forward slashes in a Path as a String that is safe to consume with other tools (such
+   * as gcc).  On Unix systems, this is equivalent to {@link java.nio.file.Path Path.toString()}.
+   * @param path the Path to escape
+   * @return the escaped Path
+   */
+  public static String escapePathForCIncludeString(Path path) {
+    if (File.separatorChar != '\\') {
+      return path.toString();
+    }
+    StringBuilder result = new StringBuilder();
+    if (path.startsWith(File.separator)) {
+      result.append("\\\\");
+    }
+    for (Iterator<Path> iterator = path.iterator(); iterator.hasNext();) {
+      result.append(iterator.next());
+      if (iterator.hasNext()) {
+        result.append("\\\\");
+      }
+    }
+    if (path.getNameCount() > 0 && path.endsWith(File.separator)) {
+      result.append("\\\\");
+    }
+    return result.toString();
   }
 
   @VisibleForTesting

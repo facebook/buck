@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.util.Escaper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
@@ -73,10 +74,10 @@ public class CxxPreprocessAndCompileStepTest {
 
     // Fixup line marker lines properly.
     assertEquals(
-        String.format("# 12 \"%s\"", finalPath),
+        String.format("# 12 \"%s\"", Escaper.escapePathForCIncludeString(finalPath)),
         processor.apply(String.format("# 12 \"%s\"", original)));
     assertEquals(
-        String.format("# 12 \"%s\" 2 1", finalPath),
+        String.format("# 12 \"%s\" 2 1", Escaper.escapePathForCIncludeString(finalPath)),
         processor.apply(String.format("# 12 \"%s\" 2 1", original)));
 
     // test.h isn't in the replacement map, so shouldn't be replaced.

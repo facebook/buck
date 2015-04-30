@@ -24,7 +24,6 @@ import com.facebook.buck.util.FunctionLineProcessorThread;
 import com.facebook.buck.util.MoreThrowables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -109,7 +108,7 @@ public class CxxPreprocessAndCompileStep implements Step {
 
             replacementPath = Optional
                 .fromNullable(replacementPaths.get(Paths.get(replacementPath)))
-                .transform(Functions.toStringFunction())
+                .transform(Escaper.PATH_FOR_C_INCLUDE_STRING_ESCAPER)
                 .or(replacementPath);
 
             if (sanitizer.isPresent()) {
@@ -146,9 +145,10 @@ public class CxxPreprocessAndCompileStep implements Step {
             }
 
             // And, of course, we need to fixup any replacement paths.
-            path = Optional.fromNullable(replacementPaths.get(path)).or(path);
-
-            return path.toString();
+            return Optional
+                .fromNullable(replacementPaths.get(path))
+                .transform(Escaper.PATH_FOR_C_INCLUDE_STRING_ESCAPER)
+                .or(Escaper.escapePathForCIncludeString(path));
           }
         });
   }

@@ -16,9 +16,15 @@
 
 package com.facebook.buck.util;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
 import org.junit.Test;
+
+import java.io.File;
+import java.nio.file.Paths;
 
 public class EscaperTest {
 
@@ -94,4 +100,39 @@ public class EscaperTest {
     assertEquals("hello\\world", Escaper.escapeAsMakefileValueString("hello\\world"));
   }
 
+  @Test
+  public void testEscapePathForCIncludeStringWindows() {
+    assumeThat(File.separatorChar, equalTo('\\'));
+
+    assertThat(
+        Escaper.escapePathForCIncludeString(Paths.get("/")),
+        equalTo("\\\\"));
+    assertThat(
+        Escaper.escapePathForCIncludeString(Paths.get("some/path")),
+        equalTo("some\\\\path"));
+    assertThat(
+        Escaper.escapePathForCIncludeString(Paths.get("/some/path")),
+        equalTo("\\\\some\\\\path"));
+    assertThat(
+        Escaper.escapePathForCIncludeString(Paths.get("some/path/to.file")),
+        equalTo("some\\\\path\\\\to.file"));
+  }
+
+  @Test
+  public void testEscapePathForCIncludeStringUnix() {
+    assumeThat(File.separatorChar, equalTo('/'));
+
+    assertThat(
+        Escaper.escapePathForCIncludeString(Paths.get("/")),
+        equalTo("/"));
+    assertThat(
+        Escaper.escapePathForCIncludeString(Paths.get("some/path")),
+        equalTo("some/path"));
+    assertThat(
+        Escaper.escapePathForCIncludeString(Paths.get("/some/path")),
+        equalTo("/some/path"));
+    assertThat(
+        Escaper.escapePathForCIncludeString(Paths.get("some/path/to.file")),
+        equalTo("some/path/to.file"));
+  }
 }
