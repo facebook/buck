@@ -16,8 +16,12 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasSourceUnderTest;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -26,30 +30,42 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
 
 public class JavaTestDescription implements Description<JavaTestDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("java_test");
 
+  private static final Flavor NATIVE_LIBS_SYMLINKS_FLAVOR =
+      ImmutableFlavor.of("native_libs_symlinks");
+
   private final JavacOptions templateOptions;
   private final Optional<Long> testRuleTimeoutMs;
+  private final CxxPlatform cxxPlatform;
 
   public JavaTestDescription(
       JavacOptions templateOptions,
-      Optional<Long> testRuleTimeoutMs) {
+      Optional<Long> testRuleTimeoutMs,
+      CxxPlatform cxxPlatform) {
     this.templateOptions = templateOptions;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.cxxPlatform = cxxPlatform;
   }
 
   @Override
@@ -82,6 +98,15 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     javacOptionsBuilder.setAnnotationProcessingParams(annotationParams);
     JavacOptions javacOptions = javacOptionsBuilder.build();
 
+    CxxLibraryEnhancement cxxLibraryEnhancement = new CxxLibraryEnhancement(
+        params,
+        args.useCxxLibraries,
+        args.vmArgs.or(ImmutableList.<String>of()),
+        pathResolver,
+        cxxPlatform);
+    params = cxxLibraryEnhancement.updatedParams;
+    ImmutableList<String> vmArgs = cxxLibraryEnhancement.updatedVmArgs;
+
     return new JavaTest(
         params.appendExtraDeps(
             Iterables.concat(
@@ -101,7 +126,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         args.testType.or(TestType.JUNIT),
         javacOptions,
-        args.vmArgs.get(),
+        vmArgs,
         validateAndGetSourcesUnderTest(
             args.sourceUnderTest.get(),
             params.getBuildTarget(),
@@ -141,6 +166,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     public Optional<ImmutableList<String>> vmArgs;
     public Optional<TestType> testType;
     public Optional<Boolean> runTestSeparately;
+    public Optional<Boolean> useCxxLibraries;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
@@ -149,6 +175,71 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
 
     public boolean getRunTestSeparately() {
       return runTestSeparately.or(false);
+    }
+  }
+
+  public static class CxxLibraryEnhancement {
+    public final BuildRuleParams updatedParams;
+    public final ImmutableList<String> updatedVmArgs;
+
+    public CxxLibraryEnhancement(
+        BuildRuleParams params,
+        Optional<Boolean> useCxxLibraries,
+        ImmutableList<String> vmArgs,
+        SourcePathResolver pathResolver,
+        CxxPlatform cxxPlatform) {
+      if (useCxxLibraries.or(false)) {
+        SymlinkTree nativeLibsSymlinkTree =
+            buildNativeLibsSymlinkTreeRule(params, pathResolver, cxxPlatform);
+        updatedParams = params.appendExtraDeps(ImmutableList.<BuildRule>builder()
+            .add(nativeLibsSymlinkTree)
+                // Add all the native libraries as first-order dependencies.
+                // This has two effects:
+                // (1) They become runtime deps because JavaTest adds all first-order deps.
+                // (2) They affect the JavaTest's RuleKey, so changing them will invalidate
+                // the test results cache.
+            .addAll(nativeLibsSymlinkTree.getDeps())
+            .build());
+        updatedVmArgs = ImmutableList.<String>builder()
+            .addAll(vmArgs)
+            .add("-Djava.library.path=" + nativeLibsSymlinkTree.getRoot())
+            .build();
+      } else {
+        updatedParams = params;
+        updatedVmArgs = vmArgs;
+      }
+    }
+
+    public static SymlinkTree buildNativeLibsSymlinkTreeRule(
+        BuildRuleParams buildRuleParams,
+        SourcePathResolver pathResolver,
+        CxxPlatform cxxPlatform) {
+      ImmutableMap<String, SourcePath> nativeLibrariesStringKeys =
+          JavaLibraryRules.getNativeLibraries(
+              buildRuleParams.getDeps(),
+              cxxPlatform);
+      ImmutableMap.Builder<Path, SourcePath> nativeLibrariesBuilder = ImmutableMap.builder();
+      for (Map.Entry<String, SourcePath> entry : nativeLibrariesStringKeys.entrySet()) {
+        nativeLibrariesBuilder.put(Paths.get(entry.getKey()), entry.getValue());
+      }
+      ImmutableMap<Path, SourcePath> nativeLibraries = nativeLibrariesBuilder.build();
+
+      BuildRuleParams paramsForNativeLibsSymlinkTree = buildRuleParams.copyWithChanges(
+          buildRuleParams.getBuildTarget().withFlavors(NATIVE_LIBS_SYMLINKS_FLAVOR),
+          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+          Suppliers.ofInstance(
+              ImmutableSortedSet.copyOf(
+                  pathResolver.filterBuildRuleInputs(nativeLibraries.values()))));
+
+      Path nativeLibsSymlinkDir = BuildTargets.getScratchPath(
+          paramsForNativeLibsSymlinkTree.getBuildTarget(),
+          "_%s_linktree");
+
+      return new SymlinkTree(
+          paramsForNativeLibsSymlinkTree,
+          pathResolver,
+          nativeLibsSymlinkDir,
+          nativeLibraries);
     }
   }
 }

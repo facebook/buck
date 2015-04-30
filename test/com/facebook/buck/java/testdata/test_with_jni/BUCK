@@ -1,0 +1,42 @@
+import os  # See hack note below.
+
+java_library(
+  name = "jlib",
+  srcs = ["JLib.java"],
+  deps = [
+    ":jlib-native",
+  ],
+)
+
+cxx_library(
+  name = "jlib-native",
+
+  # Hack until Buck can provide the JDK include path automatically.
+  preprocessor_flags = [
+    "-I" + os.environ["JAVA_HOME"] + "/include",
+    "-I" + os.environ["JAVA_HOME"] + "/include/linux",
+  ],
+
+  srcs = ["jlib.c"],
+)
+
+prebuilt_jar(
+  name = "junit-jar",
+  binary_jar = "junit-4.11.jar",
+)
+
+prebuilt_jar(
+  name = "hamcrest-jar",
+  binary_jar = "hamcrest-core-1.3.jar",
+)
+
+java_test(
+  name = "jtest",
+  srcs = ["JTest.java"],
+  use_cxx_libraries = True,
+  deps = [
+    ":jlib",
+    ":junit-jar",
+    ":hamcrest-jar",
+  ],
+)

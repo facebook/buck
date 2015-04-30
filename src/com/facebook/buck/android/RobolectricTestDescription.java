@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
@@ -45,12 +46,15 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
   private final JavacOptions templateOptions;
   private final Optional<Long> testRuleTimeoutMs;
+  private final CxxPlatform cxxPlatform;
 
   public RobolectricTestDescription(
       JavacOptions templateOptions,
-      Optional<Long> testRuleTimeoutMs) {
+      Optional<Long> testRuleTimeoutMs,
+      CxxPlatform cxxPlatform) {
     this.templateOptions = templateOptions;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.cxxPlatform = cxxPlatform;
   }
 
   @Override
@@ -103,6 +107,12 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
           .build();
       params = params.copyWithExtraDeps(Suppliers.ofInstance(newExtraDeps));
     }
+
+    JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
+        new JavaTestDescription.CxxLibraryEnhancement(
+            params, args.useCxxLibraries, vmArgs, pathResolver, cxxPlatform);
+    params = cxxLibraryEnhancement.updatedParams;
+    vmArgs = cxxLibraryEnhancement.updatedVmArgs;
 
     return new RobolectricTest(
         params.appendExtraDeps(

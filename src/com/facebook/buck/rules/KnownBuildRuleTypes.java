@@ -437,7 +437,11 @@ public class KnownBuildRuleTypes {
     builder.register(new IosReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform));
     builder.register(new JavaLibraryDescription(defaultJavacOptions));
-    builder.register(new JavaTestDescription(defaultJavacOptions, testRuleTimeoutMs));
+    builder.register(
+        new JavaTestDescription(
+            defaultJavacOptions,
+            testRuleTimeoutMs,
+            defaultCxxPlatform));
     builder.register(new KeystoreDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
     OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
@@ -469,7 +473,8 @@ public class KnownBuildRuleTypes {
     builder.register(new RemoteFileDescription(downloader));
     builder.register(new RobolectricTestDescription(
             androidBinaryOptions,
-            testRuleTimeoutMs));
+            testRuleTimeoutMs,
+            defaultCxxPlatform));
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription());
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
