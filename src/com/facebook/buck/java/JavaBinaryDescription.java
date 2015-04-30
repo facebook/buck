@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.DefaultDirectoryTraverser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -37,7 +36,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -69,32 +67,6 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
     return new Args();
   }
 
-  /**
-   * @return all the transitive native libraries we depend on, represented as a map from their
-   *     system-specific library names to their {@link SourcePath} objects.
-   */
-  private ImmutableMap<String, SourcePath> getNativeLibraries(Iterable<BuildRule> deps) {
-    final ImmutableMap.Builder<String, SourcePath> libraries = ImmutableMap.builder();
-
-    new AbstractBreadthFirstTraversal<BuildRule>(deps) {
-      @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) {
-        if (rule instanceof JavaNativeLinkable) {
-          JavaNativeLinkable linkable = (JavaNativeLinkable) rule;
-          libraries.putAll(linkable.getSharedLibraries(cxxPlatform));
-        }
-        if (rule instanceof JavaNativeLinkable ||
-            rule instanceof JavaLibrary) {
-          return rule.getDeps();
-        } else {
-          return ImmutableSet.of();
-        }
-      }
-    }.start();
-
-    return libraries.build();
-  }
-
   @Override
   public <A extends Args> BuildRule createBuildRule(
       BuildRuleParams params,
@@ -102,7 +74,8 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
       A args) {
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    ImmutableMap<String, SourcePath> nativeLibraries = getNativeLibraries(params.getDeps());
+    ImmutableMap<String, SourcePath> nativeLibraries =
+        JavaLibraryRules.getNativeLibraries(params.getDeps(), cxxPlatform);
     BuildRuleParams binaryParams = params;
 
     // If we're packaging native libraries, we'll build the binary JAR in a separate rule and

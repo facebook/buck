@@ -16,16 +16,22 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 
@@ -75,5 +81,33 @@ public class JavaLibraryRules {
 
   private static Path getPathToClassHashes(BuildTarget buildTarget) {
     return BuildTargets.getGenPath(buildTarget, "%s.classes.txt");
+  }
+
+  /**
+   * @return all the transitive native libraries a rule depends on, represented as
+   *     a map from their system-specific library names to their {@link SourcePath} objects.
+   */
+  public static ImmutableMap<String, SourcePath> getNativeLibraries(
+      Iterable<BuildRule> deps,
+      final CxxPlatform cxxPlatform) {
+    final ImmutableMap.Builder<String, SourcePath> libraries = ImmutableMap.builder();
+
+    new AbstractBreadthFirstTraversal<BuildRule>(deps) {
+      @Override
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
+        if (rule instanceof JavaNativeLinkable) {
+          JavaNativeLinkable linkable = (JavaNativeLinkable) rule;
+          libraries.putAll(linkable.getSharedLibraries(cxxPlatform));
+        }
+        if (rule instanceof JavaNativeLinkable ||
+            rule instanceof JavaLibrary) {
+          return rule.getDeps();
+        } else {
+          return ImmutableSet.of();
+        }
+      }
+    }.start();
+
+    return libraries.build();
   }
 }
