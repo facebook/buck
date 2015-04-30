@@ -61,7 +61,6 @@ public class PythonBuckConfigTest {
     assertEquals("Python 2.7", version.toString());
   }
 
-
   @Test
   public void whenToolsPythonIsExecutableFileThenItIsUsed() throws IOException {
     File configPythonFile = temporaryFolder.newFile("python");
@@ -291,5 +290,14 @@ public class PythonBuckConfigTest {
                 projectFilesystem),
             new ExecutableFinder());
     config.getPathToPexExecuter();
+  }
+
+  @Test
+  public void testGetPyrunVersion() throws Exception {
+    PythonVersion version =
+        PythonBuckConfig.extractPythonVersion(
+            Paths.get("non", "important", "path"),
+            new ProcessExecutor.Result(0, "", "pyrun 2.7.6 (release 2.0.0)\n"));
+    assertEquals("pyrun 2.7", version.toString());
   }
 }
