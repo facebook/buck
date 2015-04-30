@@ -72,6 +72,7 @@ public class CxxPlatforms {
       Optional<CxxPlatform.LinkerType> linkerType,
       Tool ld,
       Tool ar,
+      byte[] expectedGlobalHeader,
       Optional<Tool> lex,
       Optional<Tool> yacc) {
     // TODO(user, agallagher): Generalize this so we don't need all these setters.
@@ -87,6 +88,7 @@ public class CxxPlatforms {
         .setCxxld(getTool(flavor, "cxxld", config).or(cxxld))
         .setLd(getLd(flavor, platform, config, linkerType, getTool(flavor, "ld", config).or(ld)))
         .setAr(getTool(flavor, "ar", config).or(ar))
+        .setArExpectedGlobalHeader(expectedGlobalHeader)
         .setLex(getTool(flavor, "lex", config).or(lex))
         .setYacc(getTool(flavor, "yacc", config).or(yacc))
         .setSharedLibraryExtension(CxxPlatforms.getSharedLibraryExtension(platform))

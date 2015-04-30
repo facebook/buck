@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.ImmutableFlavor;
+import com.google.common.base.Charsets;
 
 import java.nio.file.Paths;
 
@@ -36,6 +37,8 @@ public class CxxPlatformUtils {
           .setCxxld(new HashedFileTool(Paths.get("tool")))
           .setLd(new GnuLinker(new HashedFileTool(Paths.get("tool"))))
           .setAr(new HashedFileTool(Paths.get("tool")))
+          .setArExpectedGlobalHeader(String.format("!<arch>%s", System.lineSeparator()).getBytes(
+                  Charsets.US_ASCII))
           .setSharedLibraryExtension(".so")
           .build();
 

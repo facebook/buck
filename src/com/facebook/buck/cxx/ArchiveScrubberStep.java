@@ -37,14 +37,16 @@ import java.util.Arrays;
  */
 public class ArchiveScrubberStep implements Step {
 
-  private static final byte[] GLOBAL_HEADER =
-      String.format("!<arch>%s", System.lineSeparator()).getBytes(Charsets.US_ASCII);
   private static final byte[] FILE_MAGIC = {0x60, 0x0A};
 
   private final Path archive;
+  private final byte[] expectedGlobalHeader;
 
-  public ArchiveScrubberStep(Path archive) {
+  public ArchiveScrubberStep(
+      Path archive,
+      byte[] expectedGlobalHeader) {
     this.archive = archive;
+    this.expectedGlobalHeader = expectedGlobalHeader;
   }
 
   private byte[] getBytes(ByteBuffer buffer, int len) {
@@ -89,9 +91,9 @@ public class ArchiveScrubberStep implements Step {
     try {
 
       // Grab the global header chunk and verify it's accurate.
-      byte[] globalHeader = getBytes(archive, GLOBAL_HEADER.length);
+      byte[] globalHeader = getBytes(archive, this.expectedGlobalHeader.length);
       checkArchive(
-          Arrays.equals(GLOBAL_HEADER, globalHeader),
+          Arrays.equals(this.expectedGlobalHeader, globalHeader),
           "invalid global header");
 
       // Iterate over all the file meta-data entries, injecting zero's for timestamp,

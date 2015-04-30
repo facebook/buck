@@ -67,6 +67,7 @@ interface AbstractCxxPlatform {
 
   Tool getAr();
   List<String> getArflags();
+  byte[] getArExpectedGlobalHeader();
 
   Optional<Tool> getLex();
   List<String> getLexFlags();

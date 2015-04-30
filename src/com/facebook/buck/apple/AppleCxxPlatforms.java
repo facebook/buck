@@ -27,6 +27,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -149,6 +150,7 @@ public class AppleCxxPlatforms {
         Optional.of(CxxPlatform.LinkerType.DARWIN),
         libtool,
         ar,
+        "!<arch>\n".getBytes(Charsets.US_ASCII),
         getOptionalTool("lex", toolSearchPaths, executableFinder, xcodeAndSdkVersion),
         getOptionalTool("yacc", toolSearchPaths, executableFinder, xcodeAndSdkVersion));
   }

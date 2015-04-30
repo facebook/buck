@@ -32,6 +32,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,6 +45,8 @@ import java.nio.file.Paths;
 public class ArchiveTest {
 
   private static final Tool DEFAULT_ARCHIVER = new HashedFileTool(Paths.get("ar"));
+  private static final byte[] DEFAULT_EXPECTED_GLOBAL_HEADER =
+      "test_expected_global_header".getBytes(Charsets.US_ASCII);
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
       ImmutableList.<SourcePath>of(
@@ -83,6 +86,7 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            DEFAULT_EXPECTED_GLOBAL_HEADER,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
 
@@ -94,6 +98,7 @@ public class ArchiveTest {
             params,
             pathResolver,
             new HashedFileTool(Paths.get("different")),
+            DEFAULT_EXPECTED_GLOBAL_HEADER,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, archiverChange);
@@ -106,6 +111,7 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            DEFAULT_EXPECTED_GLOBAL_HEADER,
             Paths.get("different"),
             DEFAULT_INPUTS));
     assertNotEquals(defaultRuleKey, outputChange);
@@ -118,6 +124,7 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
+            DEFAULT_EXPECTED_GLOBAL_HEADER,
             DEFAULT_OUTPUT,
             ImmutableList.<SourcePath>of(new TestSourcePath("different"))));
     assertNotEquals(defaultRuleKey, inputChange);

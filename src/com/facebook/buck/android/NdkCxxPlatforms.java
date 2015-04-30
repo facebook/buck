@@ -27,6 +27,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
@@ -309,6 +310,8 @@ public class NdkCxxPlatforms {
             // means the resulting link will only use it if it was actually needed it.
             "--as-needed")
         .setAr(getTool(ndkRoot, targetConfiguration, host, "ar", version, executableFinder))
+        // NDK builds are cross compiled, so the header is the same regardless of the host platform.
+        .setArExpectedGlobalHeader("!<arch>\n".getBytes(Charsets.US_ASCII))
         .setDebugPathSanitizer(
             Optional.of(
                 new DebugPathSanitizer(

@@ -64,7 +64,9 @@ public class ArchiveStepIntegrationTest {
         archiver,
         output,
         ImmutableList.of(input));
-    ArchiveScrubberStep archiveScrubberStep = new ArchiveScrubberStep(output);
+    ArchiveScrubberStep archiveScrubberStep = new ArchiveScrubberStep(
+        output,
+        DefaultCxxPlatforms.DEFAULT_EXPECTED_GLOBAL_HEADER);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext =

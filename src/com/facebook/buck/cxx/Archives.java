@@ -48,6 +48,7 @@ public class Archives {
       BuildTarget target,
       BuildRuleParams originalParams,
       Tool archiver,
+      byte[] expectedGlobalHeader,
       Path output,
       ImmutableList<SourcePath> inputs) {
 
@@ -67,6 +68,7 @@ public class Archives {
         archiveParams,
         resolver,
         archiver,
+        expectedGlobalHeader,
         output,
         inputs);
   }

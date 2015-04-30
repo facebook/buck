@@ -19,6 +19,8 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -44,6 +46,9 @@ public class DefaultCxxPlatforms {
   private static final Path DEFAULT_CXXLD = Paths.get("/usr/bin/g++");
   private static final Path DEFAULT_LD = Paths.get("/usr/bin/ld");
   private static final Path DEFAULT_AR = Paths.get("/usr/bin/ar");
+  @VisibleForTesting
+  static final byte[] DEFAULT_EXPECTED_GLOBAL_HEADER =
+      String.format("!<arch>%s", System.lineSeparator()).getBytes(Charsets.US_ASCII);
   private static final Path DEFAULT_LEX = Paths.get("/usr/bin/flex");
   private static final Path DEFAULT_YACC = Paths.get("/usr/bin/bison");
 
@@ -69,6 +74,7 @@ public class DefaultCxxPlatforms {
         Optional.<CxxPlatform.LinkerType>absent(),
         new HashedFileTool(DEFAULT_LD),
         new HashedFileTool(DEFAULT_AR),
+        DEFAULT_EXPECTED_GLOBAL_HEADER,
         Optional.<Tool>of(new HashedFileTool(DEFAULT_LEX)),
         Optional.<Tool>of(new HashedFileTool(DEFAULT_YACC)));
   }
