@@ -43,7 +43,6 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 public class ThriftPythonEnhancerTest {
 
@@ -165,7 +164,7 @@ public class ThriftPythonEnhancerTest {
       strConfig.put(ent.getKey(), ent.getValue().toString());
     }
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of("thrift", strConfig.build()));
+        ImmutableMap.of("thrift", strConfig.build()));
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftPythonEnhancer enhancer = new ThriftPythonEnhancer(
         thriftBuckConfig,

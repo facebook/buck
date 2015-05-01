@@ -45,7 +45,6 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 public class ThriftJavaEnhancerTest {
 
@@ -53,7 +52,7 @@ public class ThriftJavaEnhancerTest {
   private static final BuildTarget JAVA_LIB_TARGET =
       BuildTargetFactory.newInstance("//java:library");
   private static final FakeBuckConfig BUCK_CONFIG = new FakeBuckConfig(
-      ImmutableMap.<String, Map<String, String>>of(
+      ImmutableMap.of(
           "thrift", ImmutableMap.of("java_library", JAVA_LIB_TARGET.toString())));
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
   private static final ThriftJavaEnhancer ENHANCER = new ThriftJavaEnhancer(

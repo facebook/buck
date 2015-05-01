@@ -19,12 +19,12 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;
@@ -58,8 +58,9 @@ public class AppleConfig {
   }
 
   public ImmutableList<Path> getExtraToolchainPaths() {
-    Optional<String> extraPathsConfig = delegate.getValue("apple", "extra_toolchain_paths");
-    ImmutableList<String> extraPathsStrings = delegate.asListWithoutComments(extraPathsConfig);
+    ImmutableList<String> extraPathsStrings = delegate.getListWithoutComments(
+        "apple",
+        "extra_toolchain_paths");
     return ImmutableList.copyOf(Lists.transform(
         extraPathsStrings,
         new Function<String, Path>() {
@@ -71,8 +72,9 @@ public class AppleConfig {
   }
 
   public ImmutableList<Path> getExtraPlatformPaths() {
-    Optional<String> extraPathsConfig = delegate.getValue("apple", "extra_platform_paths");
-    ImmutableList<String> extraPathsStrings = delegate.asListWithoutComments(extraPathsConfig);
+    ImmutableList<String> extraPathsStrings = delegate.getListWithoutComments(
+        "apple",
+        "extra_platform_paths");
     return ImmutableList.copyOf(Lists.transform(
         extraPathsStrings,
         new Function<String, Path>() {

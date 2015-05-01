@@ -25,10 +25,9 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 
-import java.nio.file.Paths;
-import java.util.Map;
-
 import org.junit.Test;
+
+import java.nio.file.Paths;
 
 /**
  * Unit tests for {@link CxxPlatforms}.
@@ -36,8 +35,8 @@ import org.junit.Test;
 public class CxxPlatformsTest {
   @Test
   public void returnsKnownDefaultPlatformSetInConfig() {
-    Map<String, Map<String, String>> sections = ImmutableMap.of(
-        "cxx", (Map<String, String>) ImmutableMap.of("default_platform", "borland_cxx_452"));
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "cxx", ImmutableMap.of("default_platform", "borland_cxx_452"));
     CxxPlatform borlandCxx452Platform =
       CxxPlatform.builder()
           .setFlavor(ImmutableFlavor.of("borland_cxx_452"))
@@ -66,8 +65,8 @@ public class CxxPlatformsTest {
 
   @Test
   public void unknownDefaultPlatformSetInConfigFallsBackToSystemDefault() {
-    Map<String, Map<String, String>> sections = ImmutableMap.of(
-        "cxx", (Map<String, String>) ImmutableMap.of("default_platform", "borland_cxx_452"));
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "cxx", ImmutableMap.of("default_platform", "borland_cxx_452"));
     FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
     assertThat(
         CxxPlatforms.getConfigDefaultCxxPlatform(

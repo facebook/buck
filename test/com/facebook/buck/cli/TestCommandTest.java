@@ -76,7 +76,6 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -733,7 +732,7 @@ public class TestCommandTest {
   @Test
   public void testIfAGlobalExcludeExcludesALabel() throws CmdLineException {
     BuckConfig config = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "test",
             ImmutableMap.of("excluded_labels", "e2e")));
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
@@ -748,7 +747,7 @@ public class TestCommandTest {
   public void testIfALabelIsIncludedItShouldNotBeExcludedEvenIfTheExcludeIsGlobal()
       throws CmdLineException {
     BuckConfig config = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "test",
             ImmutableMap.of("excluded_labels", "e2e")));
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
@@ -763,7 +762,7 @@ public class TestCommandTest {
   public void testIncludingATestOnTheCommandLineMeansYouWouldLikeItRun() throws CmdLineException {
     String excludedLabel = "exclude_me";
     BuckConfig config = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "test",
             ImmutableMap.of("excluded_labels", excludedLabel)));
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains(excludedLabel));

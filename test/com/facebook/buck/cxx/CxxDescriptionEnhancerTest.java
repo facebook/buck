@@ -51,7 +51,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 public class CxxDescriptionEnhancerTest {
 
@@ -66,7 +65,7 @@ public class CxxDescriptionEnhancerTest {
     Path yaccPath = Paths.get("yacc");
     filesystem.touch(yaccPath);
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "cxx", ImmutableMap.of(
                 "lex", lexPath.toString(),
                 "yacc", yaccPath.toString())),

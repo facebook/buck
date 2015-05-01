@@ -71,7 +71,7 @@ public class ParserConfig {
 
   public ImmutableSet<Pattern> getTempFilePatterns() {
     return FluentIterable
-        .from(delegate.asListWithoutComments(delegate.getValue("project", "temp_files")))
+        .from(delegate.getListWithoutComments("project", "temp_files"))
         .transform(
             new Function<String, Pattern>() {
               @Nullable

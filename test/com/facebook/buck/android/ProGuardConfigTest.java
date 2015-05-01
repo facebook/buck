@@ -32,7 +32,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 public class ProGuardConfigTest {
 
@@ -46,7 +45,7 @@ public class ProGuardConfigTest {
     filesystem.touch(proGuardJar);
 
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "tools",
             ImmutableMap.of("proguard", proGuardJar.toString())),
         filesystem);
@@ -64,7 +63,7 @@ public class ProGuardConfigTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "tools",
             ImmutableMap.of("proguard", proGuardJar.toString())),
         filesystem);
@@ -82,7 +81,7 @@ public class ProGuardConfigTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "tools",
             ImmutableMap.of("proguard-max-heap-size", proGuardMaxHeapSize)),
         filesystem);

@@ -45,8 +45,8 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
@@ -491,9 +491,7 @@ public class DaemonIntegrationTest {
         new FakeRepositoryFactory().setRootRepoForTesting(
             new TestRepositoryBuilder().setBuckConfig(
                 new FakeBuckConfig(
-                    ImmutableMap.<String, Map<String, String>>builder()
-                        .put("somesection", ImmutableMap.of("somename", "somevalue"))
-                        .build()))
+                    ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
                 .setFilesystem(filesystem)
                 .build()),
         new FakeClock(0),
@@ -505,9 +503,7 @@ public class DaemonIntegrationTest {
             new FakeRepositoryFactory().setRootRepoForTesting(
                 new TestRepositoryBuilder().setBuckConfig(
                     new FakeBuckConfig(
-                        ImmutableMap.<String, Map<String, String>>builder()
-                            .put("somesection", ImmutableMap.of("somename", "somevalue"))
-                            .build()))
+                        ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
                     .setFilesystem(filesystem)
                     .build()),
             new FakeClock(0),
@@ -519,9 +515,9 @@ public class DaemonIntegrationTest {
             new FakeRepositoryFactory().setRootRepoForTesting(
                 new TestRepositoryBuilder().setBuckConfig(
                     new FakeBuckConfig(
-                        ImmutableMap.<String, Map<String, String>>builder()
-                            .put("somesection", ImmutableMap.of("somename", "someothervalue"))
-                            .build()))
+                        ImmutableMap.of(
+                            "somesection",
+                            ImmutableMap.of("somename", "someothervalue"))))
                     .setFilesystem(filesystem)
                     .build()),
             new FakeClock(0),

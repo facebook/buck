@@ -26,14 +26,12 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
-import java.util.Map;
-
 public class BuildCommandOptionsTest {
 
   @Test
   public void testCreateJavaPackageFinder() {
     BuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "java",
             ImmutableMap.of("src_roots", "src, test")));
     DefaultJavaPackageFinder javaPackageFinder = buckConfig.createDefaultJavaPackageFinder();
@@ -51,7 +49,7 @@ public class BuildCommandOptionsTest {
 
   @Test
   public void testShouldSetNumberOfThreadsFromBuckConfig() throws CmdLineException {
-    BuckConfig buckConfig = new FakeBuckConfig(ImmutableMap.<String, Map<String, String>>of(
+    BuckConfig buckConfig = new FakeBuckConfig(ImmutableMap.of(
         "build",
         ImmutableMap.of("threads", "3")));
     BuildCommandOptions options = new BuildCommandOptions();

@@ -202,7 +202,7 @@ public class ThriftCxxEnhancerTest {
       strConfig.put(ent.getKey(), ent.getValue().toString());
     }
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of("thrift", strConfig.build()));
+        ImmutableMap.of("thrift", strConfig.build()));
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftCxxEnhancer cppEnhancerWithSettings = new ThriftCxxEnhancer(
         thriftBuckConfig,

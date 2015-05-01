@@ -53,7 +53,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 public class ThriftLibraryDescriptionTest {
 
@@ -188,7 +187,7 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup an thrift buck config, with the path to the thrift compiler set.
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "thrift", ImmutableMap.of("compiler", thriftPath.toString())),
         filesystem);
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
@@ -282,7 +281,7 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup an empty thrift buck config, and set compiler target.
     buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "thrift", ImmutableMap.of("compiler", thriftRule.getBuildTarget().toString())),
         filesystem);
     thriftBuckConfig = new ThriftBuckConfig(buckConfig);
@@ -318,7 +317,9 @@ public class ThriftLibraryDescriptionTest {
         BuildRuleParamsFactory.createTrivialBuildRuleParams(unflavoredTarget);
 
     // Setup an empty thrift buck config, missing the compiler.
-    FakeBuckConfig buckConfig = new FakeBuckConfig(ImmutableMap.<String, String>of());
+    FakeBuckConfig buckConfig = new FakeBuckConfig(
+        ImmutableMap.<String, ImmutableMap<String, String>>of(),
+        ImmutableMap.<String, String>of());
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLibraryDescription desc = new ThriftLibraryDescription(
         thriftBuckConfig,
@@ -413,7 +414,7 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup a simple description with an empty config.
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "thrift", ImmutableMap.of("compiler", thriftRule.getBuildTarget().toString())));
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLibraryDescription desc = new ThriftLibraryDescription(
@@ -539,7 +540,7 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup an empty thrift buck config and description.
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "thrift", ImmutableMap.of("compiler", thriftTarget.toString())));
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLanguageSpecificEnhancer enhancer =

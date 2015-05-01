@@ -34,8 +34,8 @@ import com.facebook.buck.java.Jsr199Javac;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.python.PythonEnvironment;
+import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -172,8 +172,8 @@ public class KnownBuildRuleTypesTest {
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 
-    Map<String, Map<String, String>> sections = ImmutableMap.of(
-        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "tools", ImmutableMap.of("javac", javac.toString()));
     FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
@@ -197,8 +197,8 @@ public class KnownBuildRuleTypesTest {
     final File javac = temporaryFolder.newFile();
     assertTrue(javac.setExecutable(true));
 
-    Map<String, Map<String, String>> sections = ImmutableMap.of(
-        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "tools", ImmutableMap.of("javac", javac.toString()));
     FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
 
     KnownBuildRuleTypes buildRuleTypes =
@@ -261,8 +261,8 @@ public class KnownBuildRuleTypesTest {
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 
-    Map<String, Map<String, String>> sections = ImmutableMap.of(
-        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "tools", ImmutableMap.of("javac", javac.toString()));
     FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
@@ -329,8 +329,8 @@ public class KnownBuildRuleTypesTest {
 
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
-    Map<String, Map<String, String>> sections = ImmutableMap.of(
-        "tools", (Map<String, String>) ImmutableMap.of("javac", javac.toString()));
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "tools", ImmutableMap.of("javac", javac.toString()));
     FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
@@ -349,8 +349,8 @@ public class KnownBuildRuleTypesTest {
   public void canSetDefaultPlatformToDefault() throws IOException,
         InterruptedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    Map<String, Map<String, String>> sections = ImmutableMap.of(
-        "cxx", (Map<String, String>) ImmutableMap.of("default_platform", "default"));
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "cxx", ImmutableMap.of("default_platform", "default"));
     FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
 
     // This would throw if "default" weren't available as a platform.

@@ -26,8 +26,6 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
-import java.util.Map;
-
 public class DefaultCxxPlatformsTest {
 
   @Test
@@ -35,7 +33,7 @@ public class DefaultCxxPlatformsTest {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(
             new FakeBuckConfig(
-                ImmutableMap.<String, Map<String, String>>of(
+                ImmutableMap.of(
                     "cxx", ImmutableMap.of(
                         "lexflags", "-lex -lex",
                         "yaccflags", "-yacc -yacc")))));
@@ -49,7 +47,7 @@ public class DefaultCxxPlatformsTest {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(
             new FakeBuckConfig(
-                ImmutableMap.<String, Map<String, String>>of(
+                ImmutableMap.of(
                     "cxx", ImmutableMap.of(
                         "cflags", "-std=gnu11",
                         "cppflags", "-DCFOO",

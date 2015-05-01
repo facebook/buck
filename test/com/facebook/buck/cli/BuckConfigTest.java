@@ -52,63 +52,11 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
-import java.util.Map;
 
 public class BuckConfigTest {
 
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
-
-  @Test
-  public void testSortOrder() throws IOException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[alias]",
-        "one =   //foo:one",
-        "two =   //foo:two",
-        "three = //foo:three",
-        "four  = //foo:four"));
-    Map<String, Map<String, String>> sectionsToEntries = BuckConfig.createFromReaders(
-        ImmutableList.of(reader));
-    Map<String, String> aliases = sectionsToEntries.get("alias");
-
-    // Verify that entries are sorted in the order that they appear in the file, rather than in
-    // alphabetical order, or some sort of hashed-key order.
-    Iterator<Map.Entry<String, String>> entries = aliases.entrySet().iterator();
-
-    Map.Entry<String, String> first = entries.next();
-    assertEquals("one", first.getKey());
-
-    Map.Entry<String, String> second = entries.next();
-    assertEquals("two", second.getKey());
-
-    Map.Entry<String, String> third = entries.next();
-    assertEquals("three", third.getKey());
-
-    Map.Entry<String, String> fourth = entries.next();
-    assertEquals("four", fourth.getKey());
-
-    assertFalse(entries.hasNext());
-  }
-
-  @Test
-  public void shouldGetBooleanValues() throws IOException {
-    assertTrue(
-        "a.b is true when 'yes'",
-        createFromText("[a]", "  b = yes").getBooleanValue("a", "b", true));
-    assertTrue(
-        "a.b is true when literally 'true'",
-        createFromText("[a]", "  b = true").getBooleanValue("a", "b", true));
-    assertTrue(
-        "a.b is true when 'YES' (capitalized)",
-        createFromText("[a]", "  b = YES").getBooleanValue("a", "b", true));
-    assertFalse(
-        "a.b is false by default",
-        createFromText("[x]", "  y = COWS").getBooleanValue("a", "b", false));
-    assertFalse(
-        "a.b is true when 'no'",
-        createFromText("[a]", "  b = no").getBooleanValue("a", "b", true));
-  }
 
   /**
    * Ensure that whichever alias is listed first in the file is the one used in the reverse map if
@@ -489,18 +437,6 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testOverride() throws IOException {
-    Reader readerA = new StringReader(Joiner.on('\n').join(
-        "[cache]",
-        "    mode = dir,cassandra"));
-    Reader readerB = new StringReader(Joiner.on('\n').join(
-        "[cache]",
-        "    mode ="));
-    // Verify that no exception is thrown when a definition is overridden.
-    BuckConfig.createFromReaders(ImmutableList.of(readerA, readerB));
-  }
-
-  @Test
   public void testCreateAnsi() {
     FakeBuckConfig windowsConfig = new FakeBuckConfig(Platform.WINDOWS);
     // "auto" on Windows is equivalent to "never".
@@ -519,40 +455,11 @@ public class BuckConfigTest {
   public void getEnvUsesSuppliedEnvironment() {
     String name = "SOME_ENVIRONMENT_VARIABLE";
     String value = "SOME_VALUE";
-    FakeBuckConfig config = new FakeBuckConfig(ImmutableMap.of(name, value));
+    FakeBuckConfig config = new FakeBuckConfig(
+        ImmutableMap.<String, ImmutableMap<String, String>>of(),
+        ImmutableMap.of(name, value));
     String[] expected = {value};
     assertArrayEquals("Should match value in environment.", expected, config.getEnv(name, ":"));
-  }
-
-  private static enum TestEnum {
-    A,
-    B
-  }
-
-  @Test
-  public void getEnum() {
-    FakeBuckConfig config = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of("section",
-            ImmutableMap.of("field", "A")));
-    Optional<TestEnum> value = config.getEnum("section", "field", TestEnum.class);
-    assertEquals(Optional.of(TestEnum.A), value);
-  }
-
-  @Test
-  public void getEnumLowerCase() {
-    FakeBuckConfig config = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of("section",
-            ImmutableMap.of("field", "a")));
-    Optional<TestEnum> value = config.getEnum("section", "field", TestEnum.class);
-    assertEquals(Optional.of(TestEnum.A), value);
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void getEnumInvalidValue() {
-    FakeBuckConfig config = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of("section",
-            ImmutableMap.of("field", "C")));
-    config.getEnum("section", "field", TestEnum.class);
   }
 
   private BuckConfig createFromText(String... lines) throws IOException {

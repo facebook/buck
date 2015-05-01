@@ -51,7 +51,6 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 public class CxxPythonExtensionDescriptionTest {
 
@@ -70,7 +69,7 @@ public class CxxPythonExtensionDescriptionTest {
 
   public CxxPythonExtensionBuilder getBuilder(BuildTarget target) {
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "cxx", ImmutableMap.of(
                 "python_dep", PYTHON_DEP_TARGET.toString())));
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);

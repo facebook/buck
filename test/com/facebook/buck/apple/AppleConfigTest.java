@@ -31,7 +31,6 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 public class AppleConfigTest {
 
@@ -45,7 +44,7 @@ public class AppleConfigTest {
   @Test
   public void getSpecifiedAppleDeveloperDirectorySupplier() {
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of("apple",
+        ImmutableMap.of("apple",
             ImmutableMap.of("xcode_developer_dir", "/path/to/somewhere")));
     AppleConfig config = new AppleConfig(buckConfig);
     Supplier<Path> supplier = config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());

@@ -39,7 +39,6 @@ import org.junit.rules.ExpectedException;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 /**
  * Unit tests for {@link AppleCxxPlatforms}.
@@ -165,7 +164,7 @@ public class AppleCxxPlatformsTest {
             "armv7",
             appleSdkPaths,
             new FakeBuckConfig(
-                ImmutableMap.<String, Map<String, String>>of(
+                ImmutableMap.of(
                     "cxx", ImmutableMap.of(
                         "cflags", "-std=gnu11",
                         "cppflags", "-DCTHING",

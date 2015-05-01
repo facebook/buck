@@ -217,7 +217,7 @@ public class ParserTest extends EasyMockSupport {
         throws IOException, InterruptedException {
       ParserConfig parserConfig = new ParserConfig(
           new FakeBuckConfig(
-              ImmutableMap.<String, Map<String, String>>of(
+              ImmutableMap.of(
                   "project", ImmutableMap.of("temp_files", ".*\\.swp$"))));
     Parser parser = new Parser(
         repositoryFactory,
@@ -1082,8 +1082,7 @@ public class ParserTest extends EasyMockSupport {
         filesystem,
         new ParserConfig(
             new FakeBuckConfig(
-                ImmutableMap.<String, Map<String, String>>of(
-                    "buildfile", ImmutableMap.of("includes", "//bar.py")))),
+                ImmutableMap.of("buildfile", ImmutableMap.of("includes", "//bar.py")))),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         config.getEnvironment(),
@@ -1698,7 +1697,7 @@ public class ParserTest extends EasyMockSupport {
         ImmutableMap<String, String> environment,
         BuckEventBus buckEventBus) {
       PythonBuckConfig config = new PythonBuckConfig(
-          new FakeBuckConfig(environment),
+          new FakeBuckConfig(ImmutableMap.<String, ImmutableMap<String, String>>of(), environment),
           new ExecutableFinder());
       return new TestProjectBuildFileParser(config.getPythonInterpreter());
     }

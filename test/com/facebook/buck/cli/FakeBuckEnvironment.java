@@ -18,17 +18,15 @@ package com.facebook.buck.cli;
 
 import com.google.common.collect.ImmutableMap;
 
-import java.util.Map;
-
 public class FakeBuckEnvironment extends FakeBuckConfig {
 
   private final ImmutableMap<String, String> environment;
 
   public FakeBuckEnvironment(
-      Map<String, Map<String, String>> sections,
-      Map<String, String> environment) {
+      ImmutableMap<String, ImmutableMap<String, String>> sections,
+      ImmutableMap<String, String> environment) {
     super(sections);
-    this.environment = ImmutableMap.copyOf(environment);
+    this.environment = environment;
   }
 
   @Override

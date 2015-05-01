@@ -38,8 +38,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.Config;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.Inis;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.Beta;
@@ -50,9 +52,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -60,7 +59,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
-import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.squareup.okhttp.ConnectionPool;
@@ -68,13 +66,9 @@ import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Response;
 
-import org.ini4j.Ini;
-import org.ini4j.Profile.Section;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -82,7 +76,6 @@ import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -123,7 +116,7 @@ public class BuckConfig {
   private static final String DEFAULT_HTTP_CACHE_MODE = CacheMode.readwrite.name();
   private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "10";
 
-  private final ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
+  private final Config config;
 
   private final ImmutableMap<String, BuildTarget> aliasToBuildTargetMap;
 
@@ -157,21 +150,15 @@ public class BuckConfig {
 
   @VisibleForTesting
   BuckConfig(
-      Map<String, Map<String, String>> sectionsToEntries,
+      Config config,
       ProjectFilesystem projectFilesystem,
       BuildTargetParser buildTargetParser,
       Platform platform,
       ImmutableMap<String, String> environment,
       ImmutableMap<String, Path> repoNamesToPaths) {
+    this.config = config;
     this.projectFilesystem = projectFilesystem;
     this.buildTargetParser = buildTargetParser;
-
-    ImmutableMap.Builder<String, ImmutableMap<String, String>> sectionsToEntriesBuilder =
-        ImmutableMap.builder();
-    for (Map.Entry<String, Map<String, String>> entry : sectionsToEntries.entrySet()) {
-      sectionsToEntriesBuilder.put(entry.getKey(), ImmutableMap.copyOf(entry.getValue()));
-    }
-    this.sectionsToEntries = sectionsToEntriesBuilder.build();
 
     // We could create this Map on demand; however, in practice, it is almost always needed when
     // BuckConfig is needed because CommandLineBuildTargetNormalizer needs it.
@@ -201,7 +188,7 @@ public class BuckConfig {
 
     if (Iterables.isEmpty(files)) {
       return new BuckConfig(
-          ImmutableMap.<String, Map<String, String>>of(),
+          new Config(),
           projectFilesystem,
           buildTargetParser,
           platform,
@@ -251,67 +238,23 @@ public class BuckConfig {
   }
 
   @VisibleForTesting
-  static Map<String, Map<String, String>> createFromReaders(Iterable<Reader> readers)
-      throws IOException {
-
-    Ini ini = new Ini();
-    for (Reader reader : readers) {
-      // The data contained by reader need to be processed twice (first during validation, then
-      // when merging into ini), so read the data into a string that can be used as the source of
-      // two StringReaders.
-      try (Reader r = reader) {
-        String iniString = CharStreams.toString(r);
-        validateReader(new StringReader(iniString));
-        ini.load(new StringReader(iniString));
-      }
-    }
-
-    Map<String, Map<String, String>> sectionsToEntries = Maps.newHashMap();
-    for (String sectionName : ini.keySet()) {
-      ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-      Section section = ini.get(sectionName);
-      for (String propertyName : section.keySet()) {
-        String propertyValue = section.get(propertyName);
-        builder.put(propertyName, propertyValue);
-      }
-
-      ImmutableMap<String, String> sectionToEntries = builder.build();
-      sectionsToEntries.put(sectionName, sectionToEntries);
-    }
-
-    return sectionsToEntries;
-  }
-
-  private static void validateReader(Reader reader) throws IOException {
-    // Verify that within each ini file, no section has the same key specified more than once.
-    Ini ini = new Ini();
-    ini.load(reader);
-    for (String sectionName : ini.keySet()) {
-      Section section = ini.get(sectionName);
-      for (String propertyName : section.keySet()) {
-        if (section.getAll(propertyName).size() > 1) {
-          throw new HumanReadableException(
-              "Duplicate definition for %s in the [%s] section of your .buckconfig or " +
-                  ".buckconfig.local.",
-              propertyName,
-              sectionName);
-        }
-      }
-    }
-  }
-
-  @VisibleForTesting
-  static BuckConfig createFromReaders(Iterable<Reader> readers,
+  static BuckConfig createFromReaders(
+      Iterable<Reader> readers,
       ProjectFilesystem projectFilesystem,
       BuildTargetParser buildTargetParser,
       Platform platform,
       ImmutableMap<String, String> environment)
       throws IOException {
-    Map<String, Map<String, String>> sectionsToEntries = createFromReaders(readers);
+    ImmutableList.Builder<ImmutableMap<String, ImmutableMap<String, String>>> builder =
+        ImmutableList.builder();
+    for (Reader reader : readers) {
+      builder.add(Inis.read(reader));
+    }
+    Config config = new Config(builder.build());
     ImmutableMap<String, Path> repoNamesToPaths =
-        createRepoNamesToPaths(projectFilesystem, sectionsToEntries);
+        createRepoNamesToPaths(projectFilesystem, config.getSectionToEntries());
     return new BuckConfig(
-        sectionsToEntries,
+        config,
         projectFilesystem,
         buildTargetParser,
         platform,
@@ -320,7 +263,7 @@ public class BuckConfig {
   }
 
   public ImmutableMap<String, String> getEntriesForSection(String section) {
-    ImmutableMap<String, String> entries = sectionsToEntries.get(section);
+    ImmutableMap<String, String> entries = config.get(section);
     if (entries != null) {
       return entries;
     } else {
@@ -334,8 +277,9 @@ public class BuckConfig {
    * as well as relative paths.
    */
   public ImmutableSet<Path> getIgnorePaths() {
-    final ImmutableMap<String, String> projectConfig = getEntriesForSection("project");
+    final String projectKey = "project";
     final String ignoreKey = "ignore";
+    final ImmutableMap<String, String> projectConfig = getEntriesForSection(projectKey);
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
     builder.add(Paths.get(BuckConstant.BUCK_OUTPUT_DIRECTORY));
@@ -351,45 +295,15 @@ public class BuckConfig {
 
     if (projectConfig.containsKey(ignoreKey)) {
       builder.addAll(
-          Lists.transform(asListWithoutComments(projectConfig.get(ignoreKey)), MorePaths.TO_PATH));
+          Lists.transform(getListWithoutComments(projectKey, ignoreKey), MorePaths.TO_PATH));
     }
 
     // Normalize paths in order to eliminate trailing '/' characters and whatnot.
     return builder.build();
   }
 
-  /**
-   * ini4j leaves things that look like comments in the values of entries in the file. Generally,
-   * we don't want to include these in our parameters, so filter them out where necessary. In an INI
-   * file, the comment separator is ";", but some parsers (ini4j included) use "#" too. This method
-   * handles both cases.
-   *
-   * @return An {@link ImmutableList} containing all entries that don't look like comments, or the
-   *     empty list if there are no values of if {@code value} is null.
-   */
-  private ImmutableList<String> asListWithoutComments(@Nullable String value) {
-    if (value == null) {
-      return ImmutableList.of();
-    }
-
-    Iterable<String> allValues = Splitter.on(',')
-        .omitEmptyStrings()
-        .trimResults()
-        .split(value);
-    return FluentIterable.from(allValues)
-        .filter(
-            new Predicate<String>() {
-              @Override
-              public boolean apply(String input) {
-                // Reject if the first printable character is an ini comment char (';' or '#')
-                return !Pattern.compile("^\\s*[#;]").matcher(input).find();
-              }
-            })
-        .toList();
-  }
-
-  public ImmutableList<String> asListWithoutComments(Optional<String> value) {
-    return asListWithoutComments(value.orNull());
+  public ImmutableList<String> getListWithoutComments(String section, String field) {
+    return config.getListWithoutComments(section, field);
   }
 
   @Nullable
@@ -427,20 +341,7 @@ public class BuckConfig {
   }
 
   public <T extends Enum<T>> Optional<T> getEnum(String section, String field, Class<T> clazz) {
-    Optional<String> value = getValue(section, field);
-    if (!value.isPresent()) {
-      return Optional.absent();
-    }
-    try {
-      return Optional.of(Enum.valueOf(clazz, value.get().toUpperCase(Locale.ROOT)));
-    } catch (IllegalArgumentException e) {
-      throw new HumanReadableException(
-          ".buckconfig: %s:%s must be one of %s (was %s)",
-          section,
-          field,
-          clazz.getEnumConstants(),
-          value.get());
-    }
+    return config.getEnum(section, field, clazz);
   }
 
   public <T extends Enum<T>> T getRequiredEnum(String section, String field, Class<T> clazz) {
@@ -517,7 +418,7 @@ public class BuckConfig {
    * one alias to a base path, so the first one listed in the .buckconfig will be chosen.
    */
   public ImmutableMap<Path, String> getBasePathToAliasMap() {
-    ImmutableMap<String, String> aliases = sectionsToEntries.get(ALIAS_SECTION_HEADER);
+    ImmutableMap<String, String> aliases = config.get(ALIAS_SECTION_HEADER);
     if (aliases == null) {
       return ImmutableMap.of();
     }
@@ -562,11 +463,11 @@ public class BuckConfig {
   }
 
   public ImmutableSet<String> getListenerJars() {
-    return ImmutableSet.copyOf(asListWithoutComments(getValue("extensions", "listeners")));
+    return ImmutableSet.copyOf(getListWithoutComments("extensions", "listeners"));
   }
 
   public ImmutableSet<String> getSrcRoots() {
-    return ImmutableSet.copyOf(asListWithoutComments(getValue("java", "src_roots")));
+    return ImmutableSet.copyOf(getListWithoutComments("java", "src_roots"));
   }
 
   @VisibleForTesting
@@ -579,8 +480,7 @@ public class BuckConfig {
    * Return Strings so as to avoid a dependency on {@link LabelSelector}!
    */
   ImmutableList<String> getDefaultRawExcludedLabelSelectors() {
-    Optional<String> excludedRulesOptional = getValue("test", "excluded_labels");
-    return asListWithoutComments(excludedRulesOptional);
+    return getListWithoutComments("test", "excluded_labels");
   }
 
   @Beta
@@ -673,7 +573,7 @@ public class BuckConfig {
   }
 
   ImmutableList<String> getArtifactCacheModes() {
-    return asListWithoutComments(getValue("cache", "mode"));
+    return getListWithoutComments("cache", "mode");
   }
 
   /**
@@ -763,7 +663,7 @@ public class BuckConfig {
   boolean isWifiUsableForDistributedCache(Optional<String> currentWifiSsid) {
     // cache.blacklisted_wifi_ssids
     ImmutableSet<String> blacklistedWifi = ImmutableSet.copyOf(
-        asListWithoutComments(getValue("cache", "blacklisted_wifi_ssids")));
+        getListWithoutComments("cache", "blacklisted_wifi_ssids"));
     if (currentWifiSsid.isPresent() && blacklistedWifi.contains(currentWifiSsid.get())) {
       // We're connected to a wifi hotspot that has been explicitly blacklisted from connecting to
       // a distributed cache.
@@ -854,39 +754,15 @@ public class BuckConfig {
   }
 
   public Optional<String> getValue(String sectionName, String propertyName) {
-    ImmutableMap<String, String> properties = this.getEntriesForSection(sectionName);
-    return Optional.fromNullable(properties.get(propertyName));
+    return config.getValue(sectionName, propertyName);
   }
 
   public Optional<Long> getLong(String sectionName, String propertyName) {
-    Optional<String> value = getValue(sectionName, propertyName);
-    return value.isPresent() ?
-        Optional.of(Long.valueOf(value.get())) :
-        Optional.<Long>absent();
+    return  config.getLong(sectionName, propertyName);
   }
 
   public boolean getBooleanValue(String sectionName, String propertyName, boolean defaultValue) {
-    Map<String, String> entries = getEntriesForSection(sectionName);
-    if (!entries.containsKey(propertyName)) {
-      return defaultValue;
-    }
-
-    String answer = Preconditions.checkNotNull(entries.get(propertyName));
-    switch (answer.toLowerCase()) {
-      case "yes":
-      case "true":
-        return true;
-
-      case "no":
-      case "false":
-        return false;
-
-      default:
-        throw new HumanReadableException(
-            "Unknown value for %s in [%s]: %s; should be yes/no true/false!",
-            propertyName,
-            sectionName);
-    }
+    return config.getBooleanValue(sectionName, propertyName, defaultValue);
   }
 
   private <T> T required(String section, String field, Optional<T> value) {
@@ -907,12 +783,12 @@ public class BuckConfig {
       return false;
     }
     BuckConfig that = (BuckConfig) obj;
-    return Objects.equal(this.sectionsToEntries, that.sectionsToEntries);
+    return Objects.equal(this.config, that.config);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(sectionsToEntries);
+    return Objects.hashCode(config);
   }
 
   public ImmutableMap<String, String> getEnvironment() {
@@ -980,7 +856,7 @@ public class BuckConfig {
 
   private static ImmutableMap<String, Path> createRepoNamesToPaths(
       ProjectFilesystem filesystem,
-      Map<String, Map<String, String>> sectionsToEntries)
+      ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries)
       throws IOException {
     @Nullable Map<String, String> repositoryConfigs = sectionsToEntries.get("repositories");
     if (repositoryConfigs == null) {

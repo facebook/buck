@@ -49,7 +49,6 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class CxxSourceRuleFactoryTest {
 
@@ -135,7 +134,7 @@ public class CxxSourceRuleFactoryTest {
     CxxPlatform platform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(
             new FakeBuckConfig(
-                ImmutableMap.<String, Map<String, String>>of(
+                ImmutableMap.of(
                     "cxx", ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags))))));
 
     CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.EMPTY;
@@ -202,7 +201,7 @@ public class CxxSourceRuleFactoryTest {
     ImmutableList<String> cxxppflags = ImmutableList.of("-cxxppflag", "-cxxppflag");
 
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "cxx", ImmutableMap.<String, String>builder()
                 .put("asppflags", space.join(asppflags))
                 .put("cpp", sourcePathResolver.getPath(cpp).toString())
@@ -548,7 +547,7 @@ public class CxxSourceRuleFactoryTest {
     CxxPlatform platform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(
             new FakeBuckConfig(
-                ImmutableMap.<String, Map<String, String>>of(
+                ImmutableMap.of(
                     "cxx", ImmutableMap.of("cxxflags", Joiner.on(" ").join(platformFlags))))));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
@@ -616,7 +615,7 @@ public class CxxSourceRuleFactoryTest {
     ImmutableList<String> cxxflags = ImmutableList.of("-cxxflag", "-cxxflag");
 
     FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.<String, Map<String, String>>of(
+        ImmutableMap.of(
             "cxx", ImmutableMap.<String, String>builder()
                 .put("as", sourcePathResolver.getPath(as).toString())
                 .put("asflags", space.join(asflags))
