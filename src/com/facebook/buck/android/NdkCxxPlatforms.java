@@ -268,11 +268,11 @@ public class NdkCxxPlatforms {
         .setAspp(getCTool(ndkRoot, targetConfiguration, host, "gcc", version, executableFinder))
         .setCc(getCTool(ndkRoot, targetConfiguration, host, "gcc", version, executableFinder))
         .addAllCflags(getCflagsInternal(targetConfiguration))
-        .setCpp(getCppTool(ndkRoot, targetConfiguration, host, "gcc", version, executableFinder))
+        .setCpp(getCTool(ndkRoot, targetConfiguration, host, "gcc", version, executableFinder))
         .addAllCppflags(getCppflags(ndkRoot, targetConfiguration))
         .setCxx(getCTool(ndkRoot, targetConfiguration, host, "g++", version, executableFinder))
         .addAllCxxflags(getCxxflagsInternal(targetConfiguration))
-        .setCxxpp(getCppTool(ndkRoot, targetConfiguration, host, "g++", version, executableFinder))
+        .setCxxpp(getCTool(ndkRoot, targetConfiguration, host, "g++", version, executableFinder))
         .addAllCxxppflags(getCxxppflags(ndkRoot, targetConfiguration))
         .setCxxld(
             getCcLinkTool(
@@ -428,23 +428,6 @@ public class NdkCxxPlatforms {
     return new VersionedTool(
         getToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder),
         ImmutableList.of(
-            "-B" + getLibexecGccToolPath(ndkRoot, targetConfiguration, host),
-            "-B" + getToolchainBinPath(ndkRoot, targetConfiguration, host)),
-        tool,
-        targetConfiguration.toolchain.toString() + " " + version);
-  }
-
-
-  private static Tool getCppTool(
-      Path ndkRoot,
-      TargetConfiguration targetConfiguration,
-      Host host,
-      String tool,
-      String version,
-      ExecutableFinder executableFinder) {
-    return new VersionedTool(
-        getToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder),
-        ImmutableList.of(
             "-isystem", ndkRoot
                 .resolve("toolchains")
                 .resolve(targetConfiguration.toolchain.toString())
@@ -463,7 +446,8 @@ public class NdkCxxPlatforms {
                 .resolve(targetConfiguration.compilerVersion)
                 .resolve("include")
                 .toString(),
-            "-B" + getLibexecGccToolPath(ndkRoot, targetConfiguration, host)),
+            "-B" + getLibexecGccToolPath(ndkRoot, targetConfiguration, host),
+            "-B" + getToolchainBinPath(ndkRoot, targetConfiguration, host)),
         tool,
         targetConfiguration.toolchain.toString() + " " + version);
   }

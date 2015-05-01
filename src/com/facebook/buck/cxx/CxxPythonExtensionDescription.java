@@ -47,7 +47,7 @@ public class CxxPythonExtensionDescription implements
     Description<CxxPythonExtensionDescription.Arg>,
     ImplicitDepsInferringDescription<CxxPythonExtensionDescription.Arg> {
 
-  private static enum Type {
+  private enum Type {
     EXTENSION,
   }
 
@@ -163,7 +163,9 @@ public class CxxPythonExtensionDescription implements
                 args.compilerFlags,
                 args.platformCompilerFlags,
                 cxxPlatform.getFlavor()),
-            CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE,
+            cxxBuckConfig.useCombinedPreprocessAndCompile() ?
+                CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE :
+                CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE,
             allSources,
             CxxSourceRuleFactory.PicType.PIC);
 

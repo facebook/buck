@@ -92,4 +92,8 @@ public class CxxBuckConfig {
     return Optional.of(split.build());
   }
 
+  public boolean useCombinedPreprocessAndCompile() {
+    return delegate.getBooleanValue("cxx", "combined_preprocess_and_compile", /* default*/ false);
+  }
+
 }

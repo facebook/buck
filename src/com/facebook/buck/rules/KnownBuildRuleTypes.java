@@ -423,33 +423,32 @@ public class KnownBuildRuleTypes {
     JavacOptions androidBinaryOptions = JavacOptions.builder(defaultJavacOptions)
         .build();
 
-    CxxBinaryDescription cxxBinaryDescription = new CxxBinaryDescription(
-        cxxBuckConfig,
-        defaultCxxPlatform,
-        cxxPlatforms,
-        CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE);
+    CxxSourceRuleFactory.Strategy compileStrategy =
+        cxxBuckConfig.useCombinedPreprocessAndCompile() ?
+            CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE :
+            CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE;
+
+    CxxBinaryDescription cxxBinaryDescription =
+        new CxxBinaryDescription(
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            cxxPlatforms,
+            compileStrategy);
 
     CxxLibraryDescription cxxLibraryDescription = new CxxLibraryDescription(
         cxxBuckConfig,
         cxxPlatforms,
-        CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE);
+        compileStrategy);
 
     AppleLibraryDescription appleLibraryDescription =
         new AppleLibraryDescription(
-            new CxxLibraryDescription(
-                cxxBuckConfig,
-                cxxPlatforms,
-                CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE),
+            cxxLibraryDescription,
             cxxPlatforms,
             appleCxxPlatformsToAppleSdkPaths);
     builder.register(appleLibraryDescription);
 
     AppleBinaryDescription appleBinaryDescription = new AppleBinaryDescription(
-        new CxxBinaryDescription(
-            cxxBuckConfig,
-            defaultCxxPlatform,
-            cxxPlatforms,
-            CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE),
+        cxxBinaryDescription,
         cxxPlatforms,
         appleCxxPlatformsToAppleSdkPaths);
     builder.register(appleBinaryDescription);
