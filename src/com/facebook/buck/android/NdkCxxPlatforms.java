@@ -199,7 +199,7 @@ public class NdkCxxPlatforms {
     public final ToolchainPrefix toolchainPrefix;
     public final TargetArch targetArch;
     public final TargetArchAbi targetArchAbi;
-    public final String targetPlatform;
+    public final String targetAppPlatform;
     public final String compilerVersion;
     public final ImmutableList<String> compilerFlags;
     public final ImmutableList<String> linkerFlags;
@@ -209,7 +209,7 @@ public class NdkCxxPlatforms {
         ToolchainPrefix toolchainPrefix,
         TargetArch targetArch,
         TargetArchAbi targetArchAbi,
-        String targetPlatform,
+        String targetAppPlatform,
         String compilerVersion,
         ImmutableList<String> compilerFlags,
         ImmutableList<String> linkerFlags) {
@@ -217,7 +217,7 @@ public class NdkCxxPlatforms {
       this.toolchainPrefix = Preconditions.checkNotNull(toolchainPrefix);
       this.targetArch = Preconditions.checkNotNull(targetArch);
       this.targetArchAbi = Preconditions.checkNotNull(targetArchAbi);
-      this.targetPlatform = Preconditions.checkNotNull(targetPlatform);
+      this.targetAppPlatform = Preconditions.checkNotNull(targetAppPlatform);
       this.compilerVersion = Preconditions.checkNotNull(compilerVersion);
       this.compilerFlags = Preconditions.checkNotNull(compilerFlags);
       this.linkerFlags = Preconditions.checkNotNull(linkerFlags);
@@ -500,14 +500,19 @@ public class NdkCxxPlatforms {
                 .resolve(targetConfiguration.compilerVersion),
             "-B" + ndkRoot
                 .resolve("platforms")
-                .resolve(targetConfiguration.targetPlatform)
+                .resolve(targetConfiguration.targetAppPlatform)
                 .resolve("arch-" + targetConfiguration.targetArch)
                 .resolve("usr")
                 .resolve("lib")
                 .toString(),
             "-L" + getCxxRuntimeDirectory(ndkRoot, targetConfiguration).toString()),
         tool,
-        targetConfiguration.toolchain.toString() + " " + version + " " + cxxRuntime.toString());
+        String.format(
+            "%s %s %s %s",
+            targetConfiguration.toolchain,
+            targetConfiguration.targetAppPlatform,
+            version,
+            cxxRuntime));
   }
 
   /**
@@ -569,14 +574,14 @@ public class NdkCxxPlatforms {
     return ImmutableList.of(
         "-isystem", ndkRoot
             .resolve("platforms")
-            .resolve(targetConfiguration.targetPlatform)
+            .resolve(targetConfiguration.targetAppPlatform)
             .resolve("arch-" + targetConfiguration.targetArch)
             .resolve("usr")
             .resolve("include")
             .toString(),
         "-isystem", ndkRoot
             .resolve("platforms")
-            .resolve(targetConfiguration.targetPlatform)
+            .resolve(targetConfiguration.targetAppPlatform)
             .resolve("arch-" + targetConfiguration.targetArch)
             .resolve("usr")
             .resolve("include")

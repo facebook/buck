@@ -389,6 +389,14 @@ only versions r7 through r8d:
   max_version = r8d
 </pre>{/literal}
 
+This section may also define an <code>app_platform</code> which is the android
+platform libraries should target.  This is equivalent to{sp}
+<code>APP_TARGET</code> in the NDK build system.  This setting defaults to{sp}
+<code>android-9</code>.
+ {literal}<pre class="prettyprint lang-ini">
+[ndk]
+  app_platform = android-21
+</pre>{/literal}
 
 {call .section}{param title: 'project' /}{/call}
 

@@ -178,6 +178,7 @@ public class KnownBuildRuleTypes {
    */
   private static ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> getNdkCxxPlatforms(
       Path ndkRoot,
+      String androidPlatform,
       Platform platform) {
 
     ImmutableMap.Builder<AndroidBinary.TargetCpuType, NdkCxxPlatform> ndkCxxPlatformBuilder =
@@ -193,7 +194,7 @@ public class KnownBuildRuleTypes {
                 NdkCxxPlatforms.ToolchainPrefix.ARM_LINUX_ANDROIDEABI,
                 NdkCxxPlatforms.TargetArch.ARM,
                 NdkCxxPlatforms.TargetArchAbi.ARMEABI,
-                /* androidPlatform */ "android-9",
+                androidPlatform,
                 /* compilerVersion */ "4.8",
                 /* compilerFlags */ ImmutableList.of(
                     "-march=armv5te",
@@ -216,7 +217,7 @@ public class KnownBuildRuleTypes {
                 NdkCxxPlatforms.ToolchainPrefix.ARM_LINUX_ANDROIDEABI,
                 NdkCxxPlatforms.TargetArch.ARM,
                 NdkCxxPlatforms.TargetArchAbi.ARMEABI_V7A,
-                /* androidPlatform */ "android-9",
+                androidPlatform,
                 /* compilerVersion */ "4.8",
                 /* compilerFlags */ ImmutableList.of(
                     "-finline-limit=64",
@@ -238,7 +239,7 @@ public class KnownBuildRuleTypes {
                 NdkCxxPlatforms.ToolchainPrefix.I686_LINUX_ANDROID,
                 NdkCxxPlatforms.TargetArch.X86,
                 NdkCxxPlatforms.TargetArchAbi.X86,
-                /* androidPlatform */ "android-9",
+                androidPlatform,
                 /* compilerVersion */ "4.8",
                 /* compilerFlags */ ImmutableList.of(
                     "-funswitch-loops",
@@ -353,7 +354,10 @@ public class KnownBuildRuleTypes {
         ImmutableMap.builder();
     Optional<Path> ndkRoot = androidDirectoryResolver.findAndroidNdkDir();
     if (ndkRoot.isPresent()) {
-      ndkCxxPlatformsBuilder.putAll(getNdkCxxPlatforms(ndkRoot.get(), platform));
+      ndkCxxPlatformsBuilder.putAll(getNdkCxxPlatforms(
+              ndkRoot.get(),
+              config.getNdkAppPlatform().or("android-9"),
+              platform));
     }
     ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
         ndkCxxPlatformsBuilder.build();

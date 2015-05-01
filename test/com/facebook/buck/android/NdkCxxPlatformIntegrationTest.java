@@ -42,4 +42,21 @@ public class NdkCxxPlatformIntegrationTest {
     workspace.runBuckCommand("build", "//:main#android-x86").assertSuccess();
   }
 
+  @Test
+  public void changedPlatformTarget() throws IOException {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "ndk_app_platform", tmp);
+    workspace.setUp();
+
+    String target = "//:main#android-arm";
+
+    workspace.runBuckCommand("build", target).assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(target);
+
+    // Change the app platform and verify that our rulekey has changed.
+    workspace.writeContentsToPath("[ndk]\n  app_platform = android-9", ".buckconfig");
+    workspace.runBuckCommand("build", target).assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(target);
+  }
 }

@@ -753,6 +753,10 @@ public class BuckConfig {
     return getValue("ndk", "ndk_version");
   }
 
+  public Optional<String> getNdkAppPlatform() {
+    return getValue("ndk", "app_platform");
+  }
+
   public Optional<String> getValue(String sectionName, String propertyName) {
     return config.getValue(sectionName, propertyName);
   }
