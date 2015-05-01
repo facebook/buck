@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
 import com.facebook.buck.cxx.ObjcopyStep;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
@@ -267,7 +268,8 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
                   });
               for (Path exePath : executablesBuilder.build()) {
                 Path fakeSoPath = Paths.get(
-                    exePath.toString().replaceAll("/([^/]+)-disguised-exe$", "/lib$1.so"));
+                    MorePaths.pathWithUnixSeparators(exePath)
+                        .replaceAll("/([^/]+)-disguised-exe$", "/lib$1.so"));
                 filesystem.move(exePath, fakeSoPath);
               }
             } catch (IOException e) {
