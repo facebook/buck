@@ -39,55 +39,51 @@ import java.net.Proxy;
 
 public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
-  public FetchCommand(CommandRunnerParams params) {
-    super(params);
-  }
-
   @Override
   BuildCommandOptions createOptions(BuckConfig buckConfig) {
     return new BuildCommandOptions(buckConfig);
   }
 
   @Override
-  int runCommandWithOptionsInternal(BuildCommandOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, BuildCommandOptions options)
       throws IOException, InterruptedException {
 
     ImmutableSet<BuildTarget> buildTargets =
-        getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
+        getBuildTargets(params, options.getArgumentsFormattedAsBuildTargets());
 
     if (buildTargets.isEmpty()) {
-      console.printBuildFailure("Must specify at least one build target to fetch.");
+      params.getConsole().printBuildFailure("Must specify at least one build target to fetch.");
       return 1;
     }
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
-    if (getParser().getParseStartTime().isPresent()) {
-      getBuckEventBus().post(
+    if (params.getParser().getParseStartTime().isPresent()) {
+      params.getBuckEventBus().post(
           BuildEvent.started(buildTargets),
-          getParser().getParseStartTime().get());
+          params.getParser().getParseStartTime().get());
     } else {
-      getBuckEventBus().post(BuildEvent.started(buildTargets));
+      params.getBuckEventBus().post(BuildEvent.started(buildTargets));
     }
 
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(options);
     TargetGraphToActionGraph transformer = new TargetGraphToActionGraph(
-        getBuckEventBus(),
+        params.getBuckEventBus(),
         ruleGenerator);
 
     ActionGraph actionGraph;
     try {
-      TargetGraph targetGraph = getParser().buildTargetGraphForBuildTargets(
+      TargetGraph targetGraph = params.getParser().buildTargetGraphForBuildTargets(
           buildTargets,
           new ParserConfig(options.getBuckConfig()),
-          getBuckEventBus(),
-          console,
-          environment,
+          params.getBuckEventBus(),
+          params.getConsole(),
+          params.getEnvironment(),
           options.getEnableProfiling());
 
       actionGraph = transformer.apply(targetGraph);
       buildTargets = ruleGenerator.getDownloadableTargets();
     } catch (BuildTargetException | BuildFileParseException e) {
-      console.printBuildFailureWithoutStacktrace(e);
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
@@ -97,27 +93,27 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
          Build build = options.createBuild(
              options.getBuckConfig(),
              actionGraph,
-             getProjectFilesystem(),
-             getAndroidPlatformTargetSupplier(),
+             params.getRepository().getFilesystem(),
+             params.getAndroidPlatformTargetSupplier(),
              new CachingBuildEngine(
                  pool.getExecutor(),
                  options.getBuckConfig().getSkipLocalBuildChainDepth().or(1L)),
-             getArtifactCache(),
-             console,
-             getBuckEventBus(),
+             getArtifactCache(params, options),
+             params.getConsole(),
+             params.getBuckEventBus(),
              Optional.<TargetDevice>absent(),
-             getCommandRunnerParams().getPlatform(),
-             getCommandRunnerParams().getEnvironment(),
-             getCommandRunnerParams().getObjectMapper(),
-             getCommandRunnerParams().getClock())) {
+             params.getPlatform(),
+             params.getEnvironment(),
+             params.getObjectMapper(),
+             params.getClock())) {
       exitCode = build.executeAndPrintFailuresToConsole(
           buildTargets,
           options.isKeepGoing(),
-          console,
+          params.getConsole(),
           options.getPathToBuildReport());
     }
 
-    getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
+    params.getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
 
     return exitCode;
   }

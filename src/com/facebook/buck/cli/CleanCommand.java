@@ -17,10 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.intellij.Project;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Console;
 import com.google.common.base.Joiner;
 
 import org.kohsuke.args4j.CmdLineException;
@@ -30,17 +28,10 @@ import java.io.IOException;
 import java.util.List;
 
 public class CleanCommand implements CommandRunner {
-  private final Console console;
-  private final ProjectFilesystem filesystem;
-
-  public CleanCommand(CommandRunnerParams params) {
-    console = params.getConsole();
-    filesystem = params.getRepository().getFilesystem();
-  }
 
   @Override
-  public int runCommand(BuckConfig buckConfig, List<String> args) throws IOException {
-    CleanCommandOptions options = new CleanCommandOptions(buckConfig);
+  public int runCommand(CommandRunnerParams params, List<String> args) throws IOException {
+    CleanCommandOptions options = new CleanCommandOptions(params.getBuckConfig());
     CmdLineParser parser = new CmdLineParserAdditionalOptions(options);
 
     boolean hasValidOptions = false;
@@ -48,21 +39,22 @@ public class CleanCommand implements CommandRunner {
       parser.parseArgument(args);
       hasValidOptions = true;
     } catch (CmdLineException e) {
-      console.getStdErr().println(e.getMessage());
+      params.getConsole().getStdErr().println(e.getMessage());
     }
 
     if (hasValidOptions && !options.showHelp()) {
-      return runCommandWithOptions(options);
+      return runCommandWithOptions(params, options);
     } else {
-      console.getStdErr().println("deletes any generated files");
-      parser.printUsage(console.getStdErr());
+      params.getConsole().getStdErr().println("deletes any generated files");
+      parser.printUsage(params.getConsole().getStdErr());
       return 1;
     }
   }
 
-  int runCommandWithOptions(CleanCommandOptions options) throws IOException {
+  int runCommandWithOptions(CommandRunnerParams params, CleanCommandOptions options)
+      throws IOException {
     if (!options.getArguments().isEmpty()) {
-      console.getStdErr().printf("Unrecognized argument%s to buck clean: %s\n",
+      params.getConsole().getStdErr().printf("Unrecognized argument%s to buck clean: %s\n",
           options.getArguments().size() == 1 ? "" : "s",
           Joiner.on(' ').join(options.getArguments()));
       return 1;
@@ -87,14 +79,14 @@ public class CleanCommand implements CommandRunner {
       // Delete directories that were created for the purpose of `buck project`.
       // TODO(mbolin): Unify these two directories under a single buck-ide directory,
       // which is distinct from the buck-out directory.
-      filesystem.rmdir(Project.ANDROID_GEN_PATH);
-      filesystem.rmdir(BuckConstant.ANNOTATION_PATH);
+      params.getRepository().getFilesystem().rmdir(Project.ANDROID_GEN_PATH);
+      params.getRepository().getFilesystem().rmdir(BuckConstant.ANNOTATION_PATH);
     } else {
       // On Windows, you have to close all files that will be deleted.
       // Because buck clean will delete build.log, you must close it first.
       JavaUtilsLoggingBuildListener.closeLogFile();
-      filesystem.rmdir(BuckConstant.SCRATCH_PATH);
-      filesystem.rmdir(BuckConstant.GEN_PATH);
+      params.getRepository().getFilesystem().rmdir(BuckConstant.SCRATCH_PATH);
+      params.getRepository().getFilesystem().rmdir(BuckConstant.GEN_PATH);
     }
 
     return 0;

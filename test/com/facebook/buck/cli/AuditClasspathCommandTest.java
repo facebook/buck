@@ -21,11 +21,15 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.TargetGraphToActionGraph;
+import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -47,14 +51,19 @@ public class AuditClasspathCommandTest {
 
   private TestConsole console;
   private AuditClasspathCommand auditClasspathCommand;
+  private CommandRunnerParams params;
+  private TargetGraphTransformer<ActionGraph> targetGraphTransformer;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     console = new TestConsole();
-    auditClasspathCommand = new AuditClasspathCommand(
-        CommandRunnerParamsForTesting.builder()
-            .setConsole(console)
-            .build());
+    auditClasspathCommand = new AuditClasspathCommand();
+    params = CommandRunnerParamsForTesting.builder()
+        .setConsole(console)
+        .build();
+    targetGraphTransformer = new TargetGraphToActionGraph(
+        BuckEventBusFactory.newInstance(),
+        new BuildTargetNodeToBuildRuleTransformer());
   }
 
   @Test
@@ -62,7 +71,9 @@ public class AuditClasspathCommandTest {
       throws IOException, InterruptedException {
     // Test that no output is created.
     auditClasspathCommand.printClasspath(
+        params,
         TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of()),
+        targetGraphTransformer,
         ImmutableSet.<BuildTarget>of());
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
@@ -105,6 +116,7 @@ public class AuditClasspathCommandTest {
         .build();
 
     auditClasspathCommand.printClasspath(
+        params,
         TargetGraphFactory.newInstance(
             ImmutableSet.of(
                 javaLibraryNode,
@@ -112,6 +124,7 @@ public class AuditClasspathCommandTest {
                 keystoreNode,
                 testAndroidNode,
                 testJavaNode)),
+        targetGraphTransformer,
         ImmutableSet.<BuildTarget>of());
 
     // Still empty.
@@ -123,6 +136,7 @@ public class AuditClasspathCommandTest {
     // - dependencies are walked
     // - independent targets in the same BUCK file are not included in the output
     auditClasspathCommand.printClasspath(
+        params,
         TargetGraphFactory.newInstance(
             ImmutableSet.of(
                 javaLibraryNode,
@@ -130,6 +144,7 @@ public class AuditClasspathCommandTest {
                 keystoreNode,
                 testAndroidNode,
                 testJavaNode)),
+        targetGraphTransformer,
         ImmutableSet.of(
             testAndroidTarget));
 
@@ -148,6 +163,7 @@ public class AuditClasspathCommandTest {
     // Note that the output streams are reset.
     setUp();
     auditClasspathCommand.printClasspath(
+        params,
         TargetGraphFactory.newInstance(
             ImmutableSet.of(
                 javaLibraryNode,
@@ -155,6 +171,7 @@ public class AuditClasspathCommandTest {
                 keystoreNode,
                 testAndroidNode,
                 testJavaNode)),
+        targetGraphTransformer,
         ImmutableSet.of(
             testAndroidTarget,
             javaLibraryTarget,
@@ -198,10 +215,12 @@ public class AuditClasspathCommandTest {
         .build();
 
     auditClasspathCommand.printJsonClasspath(
+        params,
         TargetGraphFactory.newInstance(
             ImmutableSet.of(
                 androidNode,
                 javaNode)),
+        targetGraphTransformer,
         ImmutableSet.of(
             androidTarget,
             javaTarget));

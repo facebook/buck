@@ -80,15 +80,13 @@ public class CommandTest {
   }
 
   @Test
-  public void commandConstructorsTakeJustCommandRunnerParams()
+  public void commandConstructorsTakeNoParameters()
       throws IOException, InterruptedException {
-    CommandRunnerParams params = CommandRunnerParamsForTesting.builder()
-        .build();
     for (Command command : Command.values()) {
       try {
         command.getCommandRunnerClass()
-            .getDeclaredConstructor(CommandRunnerParams.class)
-            .newInstance(params);
+            .getDeclaredConstructor()
+            .newInstance();
       } catch (Exception e) {
         fail(String.format("%s: %s %s", command.getDeclaringClass(), e.getClass(), e.getMessage()));
       }

@@ -26,23 +26,19 @@ import java.util.Map;
 
 public class ServerStatusCommand extends AbstractCommandRunner<ServerStatusCommandOptions> {
 
-  protected ServerStatusCommand(CommandRunnerParams params) {
-    super(params);
-  }
-
   @Override
   ServerStatusCommandOptions createOptions(BuckConfig buckConfig) {
     return new ServerStatusCommandOptions(buckConfig);
   }
 
   @Override
-  int runCommandWithOptionsInternal(ServerStatusCommandOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, ServerStatusCommandOptions options)
       throws IOException, InterruptedException {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
 
     if (options.isShowHttpserverPort()) {
       int port = -1;
-      Optional<WebServer> webServer = getCommandRunnerParams().getWebServer();
+      Optional<WebServer> webServer = params.getWebServer();
       if (webServer.isPresent()) {
         port = webServer.get().getPort().or(port);
       }
@@ -52,10 +48,10 @@ public class ServerStatusCommand extends AbstractCommandRunner<ServerStatusComma
 
     ImmutableMap<String, Object> values = builder.build();
 
-    Console console = getCommandRunnerParams().getConsole();
+    Console console = params.getConsole();
 
     if (options.isPrintJson()) {
-      console.getStdOut().println(getObjectMapper().writeValueAsString(values));
+      console.getStdOut().println(params.getObjectMapper().writeValueAsString(values));
     } else {
       for (Map.Entry<String, Object> entry : values.entrySet()) {
         console.getStdOut().printf("%s=%s%n", entry.getKey(), entry.getValue());

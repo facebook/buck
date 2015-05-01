@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.util.Console;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
@@ -26,40 +25,38 @@ import java.util.Map;
 // TODO(natthu): Implement this using the @Subcommands annotation from args4j.
 public class ServerCommandRunner implements CommandRunner {
 
-  private final Console console;
-  private final ImmutableMap<String, ? extends AbstractCommandRunner<?>> subcommands;
-
-  public ServerCommandRunner(CommandRunnerParams params) {
-    console = params.getConsole();
-    subcommands = ImmutableMap.of("status", new ServerStatusCommand(params));
-  }
+  private static final ImmutableMap<String, ? extends AbstractCommandRunner<?>> subcommands =
+      ImmutableMap.of("status", new ServerStatusCommand());
 
   @Override
-  public int runCommand(BuckConfig buckConfig, List<String> args)
+  public int runCommand(CommandRunnerParams params, List<String> args)
       throws IOException, InterruptedException {
     boolean invalid = false;
     String subcommand = "";
     if (args.isEmpty()) {
-      console.printBuildFailure("No server command is given.");
+      params.getConsole().printBuildFailure("No server command is given.");
       invalid = true;
     } else {
       subcommand = args.get(0);
       if (!subcommands.containsKey(subcommand)) {
-        console.printBuildFailure("Unknown server subcommand: " + args.get(0));
+        params.getConsole().printBuildFailure("Unknown server subcommand: " + args.get(0));
         invalid = true;
       }
     }
 
     if (invalid) {
-      console.getStdErr().println("buck server <cmd>");
+      params.getConsole().getStdErr().println("buck server <cmd>");
       for (Map.Entry<String, ? extends AbstractCommandRunner<?>> entry : subcommands.entrySet()) {
-        console.getStdErr().printf("  %s - %s%n", entry.getKey(), entry.getValue().getUsageIntro());
+        params
+            .getConsole()
+            .getStdErr()
+            .printf("  %s - %s%n", entry.getKey(), entry.getValue().getUsageIntro());
       }
       return 1;
     }
 
     AbstractCommandRunner<?> commandRunner = subcommands.get(subcommand);
-    return commandRunner.runCommand(buckConfig, args.subList(1, args.size()));
+    return commandRunner.runCommand(params, args.subList(1, args.size()));
   }
 
 }

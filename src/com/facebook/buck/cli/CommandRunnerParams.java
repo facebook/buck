@@ -22,6 +22,7 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.Repository;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessManager;
@@ -50,6 +51,7 @@ class CommandRunnerParams {
   private final Clock clock;
   private final Optional<ProcessManager> processManager;
   private final Optional<WebServer> webServer;
+  private final BuckConfig buckConfig;
 
   public CommandRunnerParams(
       Console console,
@@ -64,7 +66,8 @@ class CommandRunnerParams {
       ObjectMapper objectMapper,
       Clock clock,
       Optional<ProcessManager> processManager,
-      Optional<WebServer> webServer) {
+      Optional<WebServer> webServer,
+      BuckConfig buckConfig) {
     this.console = console;
     this.repository = repository;
     this.artifactCacheFactory = artifactCacheFactory;
@@ -78,6 +81,7 @@ class CommandRunnerParams {
     this.clock = clock;
     this.processManager = processManager;
     this.webServer = webServer;
+    this.buckConfig = buckConfig;
   }
 
   public Console getConsole() {
@@ -131,4 +135,22 @@ class CommandRunnerParams {
   public Optional<WebServer> getWebServer() {
     return webServer;
   }
+
+  public BuckConfig getBuckConfig() {
+    return buckConfig;
+  }
+
+  protected ExecutionContext createExecutionContext() {
+    return ExecutionContext.builder()
+        .setProjectFilesystem(repository.getFilesystem())
+        .setConsole(console)
+        .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
+        .setEventBus(eventBus)
+        .setPlatform(platform)
+        .setEnvironment(environment)
+        .setJavaPackageFinder(javaPackageFinder)
+        .setObjectMapper(objectMapper)
+        .build();
+  }
+
 }

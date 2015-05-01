@@ -34,16 +34,17 @@ public class ServerStatusCommandTest extends EasyMockSupport {
   private TestConsole console;
   private WebServer webServer;
   private ServerStatusCommand command;
+  private CommandRunnerParams params;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     console = new TestConsole();
     webServer = createStrictMock(WebServer.class);
-    command = new ServerStatusCommand(
-        CommandRunnerParamsForTesting.builder()
-            .setWebserver(Optional.of(webServer))
-            .setConsole(console)
-            .build());
+    command = new ServerStatusCommand();
+    params = CommandRunnerParamsForTesting.builder()
+        .setWebserver(Optional.of(webServer))
+        .setConsole(console)
+        .build();
   }
 
   @Test
@@ -53,7 +54,7 @@ public class ServerStatusCommandTest extends EasyMockSupport {
 
     ServerStatusCommandOptions options = new ServerStatusCommandOptions(new FakeBuckConfig());
     options.enableShowHttpserverPort();
-    command.runCommandWithOptionsInternal(options);
+    command.runCommandWithOptionsInternal(params, options);
     assertEquals("http.port=9000", console.getTextWrittenToStdOut().trim());
   }
 
@@ -64,7 +65,7 @@ public class ServerStatusCommandTest extends EasyMockSupport {
 
     ServerStatusCommandOptions options = new ServerStatusCommandOptions(new FakeBuckConfig());
     options.enableShowHttpserverPort();
-    command.runCommandWithOptionsInternal(options);
+    command.runCommandWithOptionsInternal(params, options);
     assertEquals("http.port=-1", console.getTextWrittenToStdOut().trim());
   }
 
@@ -76,7 +77,7 @@ public class ServerStatusCommandTest extends EasyMockSupport {
     ServerStatusCommandOptions options = new ServerStatusCommandOptions(new FakeBuckConfig());
     options.enableShowHttpserverPort();
     options.enablePrintJson();
-    command.runCommandWithOptionsInternal(options);
+    command.runCommandWithOptionsInternal(params, options);
     assertEquals("{\"http.port\":9000}", console.getTextWrittenToStdOut().trim());
   }
 }

@@ -32,31 +32,27 @@ import java.util.List;
  */
 public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
 
-  protected CacheCommand(CommandRunnerParams params) {
-    super(params);
-  }
-
   @Override
   CacheCommandOptions createOptions(BuckConfig buckConfig) {
     return new CacheCommandOptions(buckConfig);
   }
 
   @Override
-  int runCommandWithOptionsInternal(CacheCommandOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, CacheCommandOptions options)
       throws IOException, InterruptedException {
 
     if (options.isNoCache()) {
-      console.printErrorText("Caching is disabled.");
+      params.getConsole().printErrorText("Caching is disabled.");
       return 1;
     }
 
     List<String> arguments = options.getArguments();
     if (arguments.isEmpty()) {
-      console.printErrorText("No cache keys specified.");
+      params.getConsole().printErrorText("No cache keys specified.");
       return 1;
     }
 
-    ArtifactCache cache = getArtifactCache();
+    ArtifactCache cache = getArtifactCache(params, options);
 
     File tmpDir = Files.createTempDir();
     int exitCode = 0;
@@ -68,12 +64,12 @@ public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
 
       // Display the result.
       if (success.getType().isSuccess()) {
-        console.printSuccess(String.format(
+        params.getConsole().printSuccess(String.format(
             "Successfully downloaded artifact with id %s at %s.",
             ruleKey,
             artifact));
       } else {
-        console.printErrorText(String.format(
+        params.getConsole().printErrorText(String.format(
             "Failed to retrieve an artifact with id %s.", ruleKey));
         exitCode = 1;
       }

@@ -100,7 +100,8 @@ public class CommandRunnerParamsForTesting {
         objectMapper,
         new DefaultClock(),
         Optional.<ProcessManager>absent(),
-        webServer);
+        webServer,
+        config);
   }
 
   public static Builder builder() {

@@ -49,7 +49,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
-import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -109,43 +108,33 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
   private static final String XCODE_PROCESS_NAME = "Xcode";
 
-  private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
-
-  public ProjectCommand(CommandRunnerParams params) {
-    super(params);
-
-    this.targetGraphTransformer = new TargetGraphToActionGraph(
-        params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer());
-  }
-
   @Override
   ProjectCommandOptions createOptions(BuckConfig buckConfig) {
     return new ProjectCommandOptions(buckConfig);
   }
 
   @Override
-  int runCommandWithOptionsInternal(ProjectCommandOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, ProjectCommandOptions options)
       throws IOException, InterruptedException {
     if (options.getIde() == ProjectCommandOptions.Ide.XCODE) {
-      checkForAndKillXcodeIfRunning(options.getIdePrompt());
+      checkForAndKillXcodeIfRunning(params, options.getIdePrompt());
     }
 
     ImmutableSet<BuildTarget> passedInTargetsSet =
-        getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
+        getBuildTargets(params, options.getArgumentsFormattedAsBuildTargets());
     ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
-        getParser(),
+        params.getParser(),
         new ParserConfig(options.getBuckConfig()),
-        getBuckEventBus(),
-        console,
-        environment,
+        params.getBuckEventBus(),
+        params.getConsole(),
+        params.getEnvironment(),
         options.getEnableProfiling());
 
     TargetGraph projectGraph = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
         getTargetNodeSpecsForIde(
             options.getIde(),
             passedInTargetsSet,
-            getProjectFilesystem().getIgnorePaths()));
+            params.getRepository().getFilesystem().getIgnorePaths()));
 
     ProjectPredicates projectPredicates = ProjectPredicates.forIde(options.getIde());
 
@@ -168,11 +157,11 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           projectPredicates.getAssociatedProjectPredicate(),
           options.isWithTests(),
           options.getIde(),
-          getProjectFilesystem().getIgnorePaths());
+          params.getRepository().getFilesystem().getIgnorePaths());
 
     if (options.getDryRun()) {
       for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
-        console.getStdOut().println(targetNode.toString());
+        params.getConsole().getStdOut().println(targetNode.toString());
       }
 
       return 0;
@@ -181,12 +170,14 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     switch (options.getIde()) {
       case INTELLIJ:
         return runIntellijProjectGenerator(
+            params,
             projectGraph,
             targetGraphAndTargets,
             passedInTargetsSet,
             options);
       case XCODE:
         return runXcodeProjectGenerator(
+            params,
             targetGraphAndTargets,
             passedInTargetsSet,
             options);
@@ -223,6 +214,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    * Run intellij specific project generation actions.
    */
   int runIntellijProjectGenerator(
+      CommandRunnerParams params,
       TargetGraph projectGraph,
       TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet,
@@ -230,9 +222,11 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       throws IOException, InterruptedException {
     // Create an ActionGraph that only contains targets that can be represented as IDE
     // configuration files.
-    ActionGraph actionGraph = targetGraphTransformer.apply(targetGraphAndTargets.getTargetGraph());
+    ActionGraph actionGraph = new TargetGraphToActionGraph(
+        params.getBuckEventBus(),
+        new BuildTargetNodeToBuildRuleTransformer()).apply(targetGraphAndTargets.getTargetGraph());
 
-    try (ExecutionContext executionContext = createExecutionContext()) {
+    try (ExecutionContext executionContext = createExecutionContext(params)) {
       Project project = new Project(
           new SourcePathResolver(new BuildRuleResolver(actionGraph.getNodes())),
           FluentIterable
@@ -245,16 +239,16 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           options.getJavaPackageFinder(),
           executionContext,
           new FilesystemBackedBuildFileTree(
-              getProjectFilesystem(),
+              params.getRepository().getFilesystem(),
               new ParserConfig(options.getBuckConfig()).getBuildFileName()),
-          getProjectFilesystem(),
+          params.getRepository().getFilesystem(),
           options.getPathToDefaultAndroidManifest(),
           new IntellijConfig(options.getBuckConfig()),
           options.getPathToPostProcessScript(),
           new PythonBuckConfig(
               options.getBuckConfig(),
               new ExecutableFinder()).getPythonInterpreter(),
-          getObjectMapper(),
+          params.getObjectMapper(),
           options.isAndroidAutoGenerateDisabled(),
           options.isExperimentalIntelliJProjectGenerationEnabled());
 
@@ -266,8 +260,8 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             tempFile,
             executionContext.getProcessExecutor(),
             !passedInTargetsSet.isEmpty(),
-            console.getStdOut(),
-            console.getStdErr());
+            params.getConsole().getStdOut(),
+            params.getConsole().getStdErr());
         if (exitCode != 0) {
           return exitCode;
         }
@@ -285,20 +279,22 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
 
         // Build initial targets.
         if (options.hasInitialTargets() || !additionalInitialTargets.isEmpty()) {
-          BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
+          BuildCommand buildCommand = new BuildCommand();
           BuildCommandOptions buildOptions =
               options.createBuildCommandOptionsWithInitialTargets(additionalInitialTargets);
 
 
-          exitCode = buildCommand.runCommandWithOptions(buildOptions);
+          exitCode = buildCommand.runCommandWithOptions(params, buildOptions);
           if (exitCode != 0) {
             return exitCode;
           }
         }
       } finally {
         // Either leave project.json around for debugging or delete it on exit.
-        if (console.getVerbosity().shouldPrintOutput()) {
-          getStdErr().printf("project.json was written to %s", tempFile.getAbsolutePath());
+        if (params.getConsole().getVerbosity().shouldPrintOutput()) {
+          params.getConsole().getStdErr().printf(
+              "project.json was written to %s",
+              tempFile.getAbsolutePath());
         } else {
           tempFile.delete();
           tempDir.delete();
@@ -306,15 +302,15 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
       }
 
       if (passedInTargetsSet.isEmpty()) {
-        String greenStar = console.getAnsi().asHighlightedSuccessText(" * ");
-        getStdErr().printf(
-            console.getAnsi().asHighlightedSuccessText("=== Did you know ===") + "\n" +
-            greenStar + "You can run `buck project <target>` to generate a minimal project " +
-            "just for that target.\n" +
-            greenStar + "This will make your IDE faster when working on large projects.\n" +
-            greenStar + "See buck project --help for more info.\n" +
-            console.getAnsi().asHighlightedSuccessText(
-                "--=* Knowing is half the battle!") + "\n");
+        String greenStar = params.getConsole().getAnsi().asHighlightedSuccessText(" * ");
+        params.getConsole().getStdErr().printf(
+            params.getConsole().getAnsi().asHighlightedSuccessText("=== Did you know ===") + "\n" +
+                greenStar + "You can run `buck project <target>` to generate a minimal project " +
+                "just for that target.\n" +
+                greenStar + "This will make your IDE faster when working on large projects.\n" +
+                greenStar + "See buck project --help for more info.\n" +
+                params.getConsole().getAnsi().asHighlightedSuccessText(
+                    "--=* Knowing is half the battle!") + "\n");
       }
 
       return 0;
@@ -343,6 +339,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
    * Run xcode specific project generation actions.
    */
   int runXcodeProjectGenerator(
+      final CommandRunnerParams params,
       final TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       ProjectCommandOptions options)
@@ -395,7 +392,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             inputNode);
       }
       WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
-          getProjectFilesystem(),
+          params.getRepository().getFilesystem(),
           targetGraphAndTargets.getTargetGraph(),
           workspaceArgs,
           inputTarget,
@@ -407,7 +404,7 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
             @Override
             public Path apply(TargetNode<?> input) {
               TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
-                  getBuckEventBus(),
+                  params.getBuckEventBus(),
                   new BuildTargetNodeToBuildRuleTransformer());
               TargetGraph subgraph = targetGraphAndTargets.getTargetGraph().getSubgraph(
                   ImmutableSet.of(
@@ -433,13 +430,13 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     int exitCode = 0;
     ImmutableSet<BuildTarget> requiredBuildTargets = requiredBuildTargetsBuilder.build();
     if (!requiredBuildTargets.isEmpty()) {
-      BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
+      BuildCommand buildCommand = new BuildCommand();
       BuildCommandOptions buildCommandOptions = new BuildCommandOptions(options.getBuckConfig());
       buildCommandOptions.setArguments(
           FluentIterable.from(requiredBuildTargets)
               .transform(Functions.toStringFunction())
               .toList());
-      exitCode = buildCommand.runCommandWithOptions(buildCommandOptions);
+      exitCode = buildCommand.runCommandWithOptions(params, buildCommandOptions);
     }
     return exitCode;
   }
@@ -451,9 +448,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return (TargetNode<XcodeWorkspaceConfigDescription.Arg>) targetNode;
   }
 
-  private void checkForAndKillXcodeIfRunning(boolean enablePrompt)
+  private void checkForAndKillXcodeIfRunning(CommandRunnerParams params, boolean enablePrompt)
       throws InterruptedException, IOException {
-    Optional<ProcessManager> processManager = getProcessManager();
+    Optional<ProcessManager> processManager = params.getProcessManager();
     if (!processManager.isPresent()) {
       LOG.warn("Could not check if Xcode is running (no process manager)");
       return;
@@ -465,22 +462,24 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     }
 
     if (enablePrompt && canPrompt()) {
-      if (prompt(
+      if (
+          prompt(
+              params,
               "Xcode is currently running. Buck will modify files Xcode currently has " +
               "open, which can cause it to become unstable.\n\n" +
               "Kill Xcode and continue?")) {
         processManager.get().killProcess(XCODE_PROCESS_NAME);
       } else {
-        console.getStdOut().println(
-            console.getAnsi().asWarningText(
+        params.getConsole().getStdOut().println(
+            params.getConsole().getAnsi().asWarningText(
                 "Xcode is running. Generated projects might be lost or corrupted if Xcode " +
-                "currently has them open."));
+                    "currently has them open."));
       }
-      console.getStdOut().format(
+      params.getConsole().getStdOut().format(
           "To disable this prompt in the future, add the following to %s: \n\n" +
               "[project]\n" +
               "  ide_prompt = false\n\n",
-          getProjectFilesystem()
+          params.getRepository().getFilesystem()
               .getRootPath()
               .resolve(BuckConfig.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME)
               .toAbsolutePath());
@@ -495,11 +494,14 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
     return System.console() != null;
   }
 
-  private boolean prompt(String prompt) throws IOException {
+  private boolean prompt(CommandRunnerParams params, String prompt) throws IOException {
     Preconditions.checkState(canPrompt());
 
     LOG.debug("Displaying prompt %s..", prompt);
-    console.getStdOut().print(console.getAnsi().asWarningText(prompt + " [Y/n] "));
+    params
+        .getConsole()
+        .getStdOut()
+        .print(params.getConsole().getAnsi().asWarningText(prompt + " [Y/n] "));
 
     Optional<String> result;
     try (InputStreamReader stdinReader = new InputStreamReader(System.in, Charsets.UTF_8);

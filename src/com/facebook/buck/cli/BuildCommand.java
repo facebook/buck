@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
-import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.step.TargetDevice;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -42,18 +41,9 @@ import javax.annotation.Nullable;
 
 public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
-  private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
   @Nullable private Build lastBuild;
 
   private ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of();
-
-  public BuildCommand(CommandRunnerParams params) {
-    super(params);
-
-    this.targetGraphTransformer = new TargetGraphToActionGraph(
-        params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer());
-  }
 
   @Override
   BuildCommandOptions createOptions(BuckConfig buckConfig) {
@@ -62,22 +52,22 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   @Override
   @SuppressWarnings("PMD.PrematureDeclaration")
-  int runCommandWithOptionsInternal(BuildCommandOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, BuildCommandOptions options)
       throws IOException, InterruptedException {
     // Create artifact cache to initialize Cassandra connection, if appropriate.
-    ArtifactCache artifactCache = getArtifactCache();
+    ArtifactCache artifactCache = getArtifactCache(params, options);
 
 
-    buildTargets = getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
+    buildTargets = getBuildTargets(params, options.getArgumentsFormattedAsBuildTargets());
 
     if (buildTargets.isEmpty()) {
-      console.printBuildFailure("Must specify at least one build target.");
+      params.getConsole().printBuildFailure("Must specify at least one build target.");
 
       // If there are aliases defined in .buckconfig, suggest that the user
       // build one of them. We show the user only the first 10 aliases.
       ImmutableSet<String> aliases = options.getBuckConfig().getAliases();
       if (!aliases.isEmpty()) {
-        console.getStdErr().println(String.format(
+        params.getConsole().getStdErr().println(String.format(
             "Try building one of the following targets:\n%s",
             Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10))));
       }
@@ -85,27 +75,29 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     }
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
-    if (getParser().getParseStartTime().isPresent()) {
-      getBuckEventBus().post(
+    if (params.getParser().getParseStartTime().isPresent()) {
+      params.getBuckEventBus().post(
           BuildEvent.started(buildTargets),
-          getParser().getParseStartTime().get());
+          params.getParser().getParseStartTime().get());
     } else {
-      getBuckEventBus().post(BuildEvent.started(buildTargets));
+      params.getBuckEventBus().post(BuildEvent.started(buildTargets));
     }
 
     // Parse the build files to create a ActionGraph.
     ActionGraph actionGraph;
     try {
-      TargetGraph targetGraph = getParser().buildTargetGraphForBuildTargets(
+      TargetGraph targetGraph = params.getParser().buildTargetGraphForBuildTargets(
           buildTargets,
           new ParserConfig(options.getBuckConfig()),
-          getBuckEventBus(),
-          console,
-          environment,
+          params.getBuckEventBus(),
+          params.getConsole(),
+          params.getEnvironment(),
           options.getEnableProfiling());
-      actionGraph = targetGraphTransformer.apply(targetGraph);
+      actionGraph = new TargetGraphToActionGraph(
+          params.getBuckEventBus(),
+          new BuildTargetNodeToBuildRuleTransformer()).apply(targetGraph);
     } catch (BuildTargetException | BuildFileParseException e) {
-      console.printBuildFailureWithoutStacktrace(e);
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
@@ -115,26 +107,26 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
          Build build = options.createBuild(
              options.getBuckConfig(),
              actionGraph,
-             getProjectFilesystem(),
-             getAndroidPlatformTargetSupplier(),
+             params.getRepository().getFilesystem(),
+             params.getAndroidPlatformTargetSupplier(),
              new CachingBuildEngine(
                  pool.getExecutor(),
                  options.getBuckConfig().getSkipLocalBuildChainDepth().or(1L)),
              artifactCache,
-             console,
-             getBuckEventBus(),
+             params.getConsole(),
+             params.getBuckEventBus(),
              Optional.<TargetDevice>absent(),
-             getCommandRunnerParams().getPlatform(),
-             getCommandRunnerParams().getEnvironment(),
-             getCommandRunnerParams().getObjectMapper(),
-             getCommandRunnerParams().getClock())) {
+             params.getPlatform(),
+             params.getEnvironment(),
+             params.getObjectMapper(),
+             params.getClock())) {
       lastBuild = build;
       int exitCode = build.executeAndPrintFailuresToConsole(
           buildTargets,
           options.isKeepGoing(),
-          console,
+          params.getConsole(),
           options.getPathToBuildReport());
-      getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
+      params.getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
       return exitCode;
     }
   }

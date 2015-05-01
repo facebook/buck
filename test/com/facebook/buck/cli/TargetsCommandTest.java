@@ -87,6 +87,7 @@ public class TargetsCommandTest {
 
   private TestConsole console;
   private TargetsCommand targetsCommand;
+  private CommandRunnerParams params;
   private ObjectMapper objectMapper;
 
   private SortedMap<String, TargetNode<?>> buildTargetNodes(String baseName, String name) {
@@ -117,20 +118,20 @@ public class TargetsCommandTest {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     objectMapper = new ObjectMapper();
 
-    targetsCommand =
-        new TargetsCommand(CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
-            console,
-            new FakeRepositoryFactory(),
-            repository,
-            androidDirectoryResolver,
-            new InstanceArtifactCacheFactory(artifactCache),
-            eventBus,
-            new FakeBuckConfig(),
-            Platform.detect(),
-            ImmutableMap.copyOf(System.getenv()),
-            new FakeJavaPackageFinder(),
-            objectMapper,
-            Optional.<WebServer>absent()));
+    targetsCommand = new TargetsCommand();
+    params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+        console,
+        new FakeRepositoryFactory(),
+        repository,
+        androidDirectoryResolver,
+        new InstanceArtifactCacheFactory(artifactCache),
+        eventBus,
+        new FakeBuckConfig(),
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()),
+        new FakeJavaPackageFinder(),
+        objectMapper,
+        Optional.<WebServer>absent());
   }
 
   @Test
@@ -143,7 +144,7 @@ public class TargetsCommandTest {
         "//" + testDataPath(""),
         "test-library");
 
-    targetsCommand.printJsonForTargets(nodes, new ParserConfig(new FakeBuckConfig()));
+    targetsCommand.printJsonForTargets(params, nodes, new ParserConfig(new FakeBuckConfig()));
     String observedOutput = console.getTextWrittenToStdOut();
     JsonNode observed = objectMapper.readTree(
         objectMapper.getJsonFactory().createJsonParser(observedOutput));
@@ -165,7 +166,7 @@ public class TargetsCommandTest {
       throws BuildFileParseException, IOException, InterruptedException {
     // nonexistent target should not exist.
     SortedMap<String, TargetNode<?>> buildRules = buildTargetNodes("//", "nonexistent");
-    targetsCommand.printJsonForTargets(buildRules, new ParserConfig(new FakeBuckConfig()));
+    targetsCommand.printJsonForTargets(params, buildRules, new ParserConfig(new FakeBuckConfig()));
 
     String output = console.getTextWrittenToStdOut();
     assertEquals("[\n]\n", output);

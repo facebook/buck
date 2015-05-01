@@ -45,17 +45,13 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
 
   private static final Logger LOG = Logger.get(AuditInputCommand.class);
 
-  public AuditInputCommand(CommandRunnerParams params) {
-    super(params);
-  }
-
   @Override
   AuditCommandOptions createOptions(BuckConfig buckConfig) {
     return new AuditCommandOptions(buckConfig);
   }
 
   @Override
-  int runCommandWithOptionsInternal(AuditCommandOptions options)
+  int runCommandWithOptionsInternal(final CommandRunnerParams params, AuditCommandOptions options)
       throws IOException, InterruptedException {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // TargetNodes for the specified BuildTargets.
@@ -63,7 +59,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
         options.getArgumentsFormattedAsBuildTargets());
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
-      console.printBuildFailure("Please specify at least one build target.");
+      params.getConsole().printBuildFailure("Please specify at least one build target.");
       return 1;
     }
 
@@ -72,10 +68,10 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
         .transform(new Function<String, BuildTarget>() {
                      @Override
                      public BuildTarget apply(String input) {
-                       return getParser().getBuildTargetParser().parse(
+                       return params.getParser().getBuildTargetParser().parse(
                            input,
                            BuildTargetPatternParser.fullyQualified(
-                               getParser().getBuildTargetParser()));
+                               params.getParser().getBuildTargetParser()));
                      }
                    })
         .toSet();
@@ -84,26 +80,26 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
 
     TargetGraph graph;
     try {
-      graph = getParser().buildTargetGraphForBuildTargets(
+      graph = params.getParser().buildTargetGraphForBuildTargets(
           targets,
           new ParserConfig(options.getBuckConfig()),
-          getBuckEventBus(),
-          console,
-          environment,
+          params.getBuckEventBus(),
+          params.getConsole(),
+          params.getEnvironment(),
           options.getEnableProfiling());
     } catch (BuildTargetException | BuildFileParseException e) {
-      console.printBuildFailureWithoutStacktrace(e);
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
     if (options.shouldGenerateJsonOutput()) {
-      return printJsonInputs(graph);
+      return printJsonInputs(params, graph);
     }
-    return printInputs(graph);
+    return printInputs(params, graph);
   }
 
   @VisibleForTesting
-  int printJsonInputs(TargetGraph graph) throws IOException {
+  int printJsonInputs(final CommandRunnerParams params, TargetGraph graph) throws IOException {
     final SortedMap<String, ImmutableSortedSet<Path>> targetToInputs =
         new TreeMap<>();
 
@@ -119,11 +115,11 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
         for (Path input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
-            if (!getProjectFilesystem().exists(input)) {
+            if (!params.getRepository().getFilesystem().exists(input)) {
               throw new HumanReadableException(
                   "Target %s refers to non-existent input file: %s", node, input);
             }
-            targetInputs.addAll(getProjectFilesystem().getFilesUnderPath(input));
+            targetInputs.addAll(params.getRepository().getFilesystem().getFilesUnderPath(input));
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
@@ -140,14 +136,14 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
 
     }.traverse();
 
-    getObjectMapper().writeValue(
-        console.getStdOut(),
+    params.getObjectMapper().writeValue(
+        params.getConsole().getStdOut(),
         targetToInputs);
 
     return 0;
   }
 
-  private int printInputs(TargetGraph graph) {
+  private int printInputs(final CommandRunnerParams params, TargetGraph graph) {
     // Traverse the TargetGraph and print out all of the inputs used to produce each TargetNode.
     // Keep track of the inputs that have been displayed to ensure that they are not displayed more
     // than once.
@@ -160,14 +156,14 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
         for (Path input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
-            if (!getProjectFilesystem().exists(input)) {
+            if (!params.getRepository().getFilesystem().exists(input)) {
               throw new HumanReadableException(
                   "Target %s refers to non-existent input file: %s",
                   node,
                   input);
             }
             ImmutableSortedSet<Path> nodeContents = ImmutableSortedSet.copyOf(
-                getProjectFilesystem().getFilesUnderPath(input));
+                params.getRepository().getFilesystem().getFilesUnderPath(input));
             for (Path path : nodeContents) {
               putInput(path);
             }
@@ -180,7 +176,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
       private void putInput(Path input) {
         boolean isNewInput = inputs.add(input);
         if (isNewInput) {
-          getStdOut().println(input);
+          params.getConsole().getStdOut().println(input);
         }
       }
 

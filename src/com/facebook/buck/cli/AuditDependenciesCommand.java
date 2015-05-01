@@ -45,23 +45,21 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
 
   private static final Logger LOG = Logger.get(AuditDependenciesCommand.class);
 
-  public AuditDependenciesCommand(CommandRunnerParams params) {
-    super(params);
-  }
-
   @Override
   AuditDependenciesOptions createOptions(BuckConfig buckConfig) {
     return new AuditDependenciesOptions(buckConfig);
   }
 
   @Override
-  int runCommandWithOptionsInternal(AuditDependenciesOptions options)
+  int runCommandWithOptionsInternal(
+      final CommandRunnerParams params,
+      AuditDependenciesOptions options)
       throws IOException, InterruptedException {
     final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
         options.getArgumentsFormattedAsBuildTargets());
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
-      console.printBuildFailure("Must specify at least one build target.");
+      params.getConsole().printBuildFailure("Must specify at least one build target.");
       return 1;
     }
 
@@ -71,43 +69,46 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
             new Function<String, BuildTarget>() {
               @Override
               public BuildTarget apply(String input) {
-                return getParser().getBuildTargetParser().parse(
+                return params.getParser().getBuildTargetParser().parse(
                     input,
                     BuildTargetPatternParser.fullyQualified(
-                        getParser().getBuildTargetParser()));
+                        params.getParser().getBuildTargetParser()));
               }
             })
         .toSet();
 
     TargetGraph graph;
     try {
-      graph = getParser().buildTargetGraphForBuildTargets(
+      graph = params.getParser().buildTargetGraphForBuildTargets(
           targets,
           new ParserConfig(options.getBuckConfig()),
-          getBuckEventBus(),
-          console,
-          environment,
+          params.getBuckEventBus(),
+          params.getConsole(),
+          params.getEnvironment(),
           options.getEnableProfiling());
     } catch (BuildTargetException | BuildFileParseException e) {
-      console.printBuildFailureWithoutStacktrace(e);
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
     TreeMultimap<BuildTarget, BuildTarget> targetsAndDependencies = TreeMultimap.create();
     for (BuildTarget target : targets) {
-      targetsAndDependencies.putAll(target, getDependenciesWithOptions(target, graph, options));
+      targetsAndDependencies.putAll(
+          target,
+          getDependenciesWithOptions(params, target, graph, options));
     }
 
     if (options.shouldGenerateJsonOutput()) {
-      printJSON(targetsAndDependencies);
+      printJSON(params, targetsAndDependencies);
     } else {
-      printToConsole(targetsAndDependencies);
+      printToConsole(params, targetsAndDependencies);
     }
 
     return 0;
   }
 
   ImmutableSet<BuildTarget> getDependenciesWithOptions(
+      CommandRunnerParams params,
       BuildTarget target,
       TargetGraph graph,
       AuditDependenciesOptions options) throws IOException, InterruptedException {
@@ -119,7 +120,7 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
       ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
       targetsToPrint = builder
           .addAll(targetsToPrint)
-          .addAll(getTestTargetDependencies(target, graph, options))
+          .addAll(getTestTargetDependencies(params, target, graph, options))
           .build();
     }
     return targetsToPrint;
@@ -160,6 +161,7 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
 
   @VisibleForTesting
   Collection<BuildTarget> getTestTargetDependencies(
+      CommandRunnerParams params,
       BuildTarget target,
       TargetGraph graph,
       AuditDependenciesOptions options) throws IOException, InterruptedException {
@@ -168,11 +170,11 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
     }
 
     ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
-        getParser(),
+        params.getParser(),
         new ParserConfig(options.getBuckConfig()),
-        getBuckEventBus(),
-        console,
-        environment,
+        params.getBuckEventBus(),
+        params.getConsole(),
+        params.getEnvironment(),
         options.getEnableProfiling());
 
     TargetGraph graphWithTests = TargetGraphTestParsing.expandedTargetGraphToIncludeTestsForTargets(
@@ -195,6 +197,7 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
   }
 
   private void printJSON(
+      CommandRunnerParams params,
       Multimap<BuildTarget, BuildTarget> targetsAndDependencies) throws IOException {
     Multimap<BuildTarget, String> targetsAndDependenciesNames =
         Multimaps.transformValues(
@@ -204,14 +207,16 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
                 return Preconditions.checkNotNull(input.getFullyQualifiedName());
               }
             });
-    getObjectMapper().writeValue(
-        console.getStdOut(),
+    params.getObjectMapper().writeValue(
+        params.getConsole().getStdOut(),
         targetsAndDependenciesNames.asMap());
   }
 
-  private void printToConsole(Multimap<BuildTarget, BuildTarget> targetsAndDependencies) {
+  private void printToConsole(
+      CommandRunnerParams params,
+      Multimap<BuildTarget, BuildTarget> targetsAndDependencies) {
     for (BuildTarget target : targetsAndDependencies.values()) {
-      getStdOut().println(target.getFullyQualifiedName());
+      params.getConsole().getStdOut().println(target.getFullyQualifiedName());
     }
   }
 

@@ -16,71 +16,26 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.Repository;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.environment.Platform;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
 abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implements CommandRunner {
-
-  private final CommandRunnerParams commandRunnerParams;
-  protected final Console console;
-  private final Repository repository;
-  private final ArtifactCacheFactory artifactCacheFactory;
-  private final Parser parser;
-  private final BuckEventBus eventBus;
-  private final Platform platform;
-  private final Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier;
-  private final ObjectMapper objectMapper;
-  private final Optional<ProcessManager> processManager;
-  protected final ImmutableMap<String, String> environment;
-
-  /** This is constructed lazily. */
-  @Nullable private T options;
-
-  /** This is constructed lazily. */
-  @Nullable private volatile ArtifactCache artifactCache;
-
-  protected AbstractCommandRunner(CommandRunnerParams params) {
-    this.commandRunnerParams = params;
-    this.console = params.getConsole();
-    this.repository = params.getRepository();
-    this.artifactCacheFactory = params.getArtifactCacheFactory();
-    this.parser = params.getParser();
-    this.eventBus = params.getBuckEventBus();
-    this.platform = params.getPlatform();
-    this.androidPlatformTargetSupplier = params.getAndroidPlatformTargetSupplier();
-    this.environment = params.getEnvironment();
-    this.objectMapper = params.getObjectMapper();
-    this.processManager = params.getProcessManager();
-  }
 
   abstract T createOptions(BuckConfig buckConfig);
 
@@ -90,9 +45,9 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   }
 
   @Override
-  public final int runCommand(BuckConfig buckConfig, List<String> args)
+  public final int runCommand(CommandRunnerParams params, List<String> args)
       throws IOException, InterruptedException {
-    ParserAndOptions<T> parserAndOptions = createParser(buckConfig);
+    ParserAndOptions<T> parserAndOptions = createParser(params.getBuckConfig());
     T options = parserAndOptions.options;
     CmdLineParser parser = parserAndOptions.parser;
 
@@ -101,47 +56,46 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
       parser.parseArgument(args);
       hasValidOptions = true;
     } catch (CmdLineException e) {
-      console.getStdErr().println(e.getMessage());
+      params.getConsole().getStdErr().println(e.getMessage());
     }
 
     if (hasValidOptions && !options.showHelp()) {
-      return runCommandWithOptions(options);
+      return runCommandWithOptions(params, options);
     } else {
-      printUsage(parser);
+      printUsage(params, parser);
       return 1;
     }
   }
 
-  public final void printUsage(CmdLineParser parser) {
+  public final void printUsage(CommandRunnerParams params, CmdLineParser parser) {
     String intro = getUsageIntro();
     if (intro != null) {
-      getStdErr().println(intro);
+      params.getConsole().getStdErr().println(intro);
     }
-    parser.printUsage(getStdErr());
+    parser.printUsage(params.getConsole().getStdErr());
   }
 
   /**
    * @return the exit code this process should exit with
    */
-  public final synchronized int runCommandWithOptions(T options)
+  public final synchronized int runCommandWithOptions(CommandRunnerParams params, T options)
       throws IOException, InterruptedException {
-    this.options = options;
     // At this point, we have parsed options but haven't started running the command yet.  This is
     // a good opportunity to augment the event bus with our serialize-to-file event-listener.
     Optional<Path> eventsOutputPath = options.getEventsOutputPath();
     if (eventsOutputPath.isPresent()) {
       BuckEventListener listener = new FileSerializationEventBusListener(eventsOutputPath.get());
-      eventBus.register(listener);
+      params.getBuckEventBus().register(listener);
     }
-    return runCommandWithOptionsInternal(options);
+    return runCommandWithOptionsInternal(params, options);
   }
 
   /**
-   * Invoked by {@link #runCommandWithOptions(AbstractCommandOptions)} after {@code #options} has
-   * been set.
+   * Invoked by {@link #runCommandWithOptions(CommandRunnerParams, AbstractCommandOptions)} after
+   * {@code #options} has been set.
    * @return the exit code this process should exit with
    */
-  abstract int runCommandWithOptionsInternal(T options)
+  abstract int runCommandWithOptionsInternal(CommandRunnerParams params, T options)
       throws IOException, InterruptedException;
 
   /**
@@ -151,33 +105,15 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
   abstract String getUsageIntro();
 
   /**
-   * Sometimes a {@link CommandRunner} needs to create another {@link CommandRunner}, so it should
-   * use this method so it can reuse the constructor parameter that it received.
-   */
-  protected CommandRunnerParams getCommandRunnerParams() {
-    return commandRunnerParams;
-  }
-
-  public Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier() {
-    return androidPlatformTargetSupplier;
-  }
-
-  public ProjectFilesystem getProjectFilesystem() {
-    return repository.getFilesystem();
-  }
-
-  public Repository getRepository() {
-    return repository;
-  }
-
-  /**
    * @return A set of {@link BuildTarget}s for the input buildTargetNames.
    */
-  protected ImmutableSet<BuildTarget> getBuildTargets(Iterable<String> buildTargetNames) {
+  protected ImmutableSet<BuildTarget> getBuildTargets(
+      CommandRunnerParams params,
+      Iterable<String> buildTargetNames) {
     ImmutableSet.Builder<BuildTarget> buildTargets = ImmutableSet.builder();
 
     // Parse all of the build targets specified by the user.
-    BuildTargetParser buildTargetParser = getParser().getBuildTargetParser();
+    BuildTargetParser buildTargetParser = params.getParser().getBuildTargetParser();
 
     for (String buildTargetName : buildTargetNames) {
       buildTargets.add(buildTargetParser.parse(
@@ -188,45 +124,9 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     return buildTargets.build();
   }
 
-  public ArtifactCache getArtifactCache() throws InterruptedException {
-    // Lazily construct the ArtifactCache, as not all commands (like `buck clean`) need it.
-    if (artifactCache == null) {
-      synchronized (this) {
-        if (artifactCache == null) {
-          Preconditions.checkNotNull(options,
-              "getArtifactCache() should not be invoked before runCommand().");
-          artifactCache = artifactCacheFactory.newInstance(options);
-        }
-      }
-    }
-    return artifactCache;
-  }
-
-  protected PrintStream getStdOut() {
-    return console.getStdOut();
-  }
-
-  protected PrintStream getStdErr() {
-    return console.getStdErr();
-  }
-
-  protected BuckEventBus getBuckEventBus() {
-    return eventBus;
-  }
-
-  /**
-   * @return Returns a potentially cached Parser for this command.
-   */
-  public Parser getParser() {
-    return parser;
-  }
-
-  public ObjectMapper getObjectMapper() {
-    return objectMapper;
-  }
-
-  public Optional<ProcessManager> getProcessManager() {
-    return processManager;
+  public ArtifactCache getArtifactCache(CommandRunnerParams params, T options)
+      throws InterruptedException {
+    return params.getArtifactCacheFactory().newInstance(options);
   }
 
   private static class ParserAndOptions<T> {
@@ -239,16 +139,16 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
     }
   }
 
-  protected ExecutionContext createExecutionContext() {
+  protected ExecutionContext createExecutionContext(CommandRunnerParams params) {
     return ExecutionContext.builder()
-        .setProjectFilesystem(getProjectFilesystem())
-        .setConsole(console)
-        .setAndroidPlatformTargetSupplier(commandRunnerParams.getAndroidPlatformTargetSupplier())
-        .setEventBus(eventBus)
-        .setPlatform(platform)
-        .setEnvironment(environment)
-        .setJavaPackageFinder(commandRunnerParams.getJavaPackageFinder())
-        .setObjectMapper(objectMapper)
+        .setProjectFilesystem(params.getRepository().getFilesystem())
+        .setConsole(params.getConsole())
+        .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
+        .setEventBus(params.getBuckEventBus())
+        .setPlatform(params.getPlatform())
+        .setEnvironment(params.getEnvironment())
+        .setJavaPackageFinder(params.getJavaPackageFinder())
+        .setObjectMapper(params.getObjectMapper())
         .build();
   }
 }

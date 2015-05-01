@@ -37,32 +37,22 @@ import java.io.IOException;
 
 public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOptions> {
 
-  private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
-
-  public UninstallCommand(CommandRunnerParams params) {
-    super(params);
-
-    this.targetGraphTransformer = new TargetGraphToActionGraph(
-        params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer());
-  }
-
   @Override
   UninstallCommandOptions createOptions(BuckConfig buckConfig) {
     return new UninstallCommandOptions(buckConfig);
   }
 
   @Override
-  int runCommandWithOptionsInternal(UninstallCommandOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, UninstallCommandOptions options)
       throws IOException, InterruptedException {
     // Make sure that only one build target is specified.
     if (options.getArguments().size() != 1) {
-      getStdErr().println("Must specify exactly one android_binary() rule.");
+      params.getConsole().getStdErr().println("Must specify exactly one android_binary() rule.");
       return 1;
     }
 
     // Get a parser.
-    Parser parser = getParser();
+    Parser parser = params.getParser();
 
     // Parse all of the build targets specified by the user.
     BuildTargetParser buildTargetParser = parser.getBuildTargetParser();
@@ -76,13 +66,16 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
       TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           ImmutableList.of(buildTarget),
           new ParserConfig(options.getBuckConfig()),
-          getBuckEventBus(),
-          console,
-          environment,
+          params.getBuckEventBus(),
+          params.getConsole(),
+          params.getEnvironment(),
           options.getEnableProfiling());
+      TargetGraphTransformer<ActionGraph> targetGraphTransformer = new TargetGraphToActionGraph(
+          params.getBuckEventBus(),
+          new BuildTargetNodeToBuildRuleTransformer());
       actionGraph = targetGraphTransformer.apply(targetGraph);
     } catch (BuildTargetException | BuildFileParseException e) {
-      console.printBuildFailureWithoutStacktrace(e);
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
@@ -90,22 +83,23 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
     BuildRule buildRule = Preconditions.checkNotNull(
         actionGraph.findBuildRuleByTarget(buildTarget));
     if (buildRule == null || !(buildRule instanceof InstallableApk)) {
-      console.printBuildFailure(String.format(
-          "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
-          buildRule.getFullyQualifiedName(),
-          buildRule.getType().getName()));
+      params.getConsole().printBuildFailure(
+          String.format(
+              "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
+              buildRule.getFullyQualifiedName(),
+              buildRule.getType().getName()));
       return 1;
     }
     InstallableApk installableApk = (InstallableApk) buildRule;
 
     // We need this in case adb isn't already running.
-    try (ExecutionContext context = createExecutionContext()) {
+    try (ExecutionContext context = createExecutionContext(params)) {
       final AdbHelper adbHelper = new AdbHelper(
           options.adbOptions(),
           options.targetDeviceOptions(),
           context,
-          console,
-          getBuckEventBus(),
+          params.getConsole(),
+          params.getBuckEventBus(),
           options.getBuckConfig());
 
       // Find application package name from manifest and uninstall from matching devices.

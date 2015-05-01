@@ -653,8 +653,8 @@ public final class Main {
               buckConfig,
               buildEventBus);
 
-      exitCode = executingCommand.execute(remainingArgs,
-          buckConfig,
+      exitCode = executingCommand.execute(
+          remainingArgs,
           new CommandRunnerParams(
               console,
               rootRepository,
@@ -668,7 +668,8 @@ public final class Main {
               objectMapper,
               clock,
               processManager,
-              webServer));
+              webServer,
+              buckConfig));
       parser.cleanCache();
       buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
     } catch (Throwable t) {

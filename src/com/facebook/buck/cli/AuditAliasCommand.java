@@ -20,10 +20,6 @@ import java.io.IOException;
 
 public class AuditAliasCommand extends AbstractCommandRunner<AuditAliasCommandOptions> {
 
-  public AuditAliasCommand(CommandRunnerParams params) {
-    super(params);
-  }
-
   @Override
   String getUsageIntro() {
     return "Query information about the [alias] list in .buckconfig.";
@@ -35,16 +31,16 @@ public class AuditAliasCommand extends AbstractCommandRunner<AuditAliasCommandOp
   }
 
   @Override
-  int runCommandWithOptionsInternal(AuditAliasCommandOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, AuditAliasCommandOptions options)
       throws IOException, InterruptedException {
     if (options.isListAliases()) {
       for (String alias : options.getAliases()) {
-        console.getStdOut().println(alias);
+        params.getConsole().getStdOut().println(alias);
       }
       return 0;
     }
 
-    console.getStdErr().println("No query supplied.");
+    params.getConsole().getStdErr().println("No query supplied.");
     return 1;
   }
 }

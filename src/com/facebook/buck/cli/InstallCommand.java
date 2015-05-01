@@ -31,27 +31,24 @@ import java.io.IOException;
  */
 public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions> {
 
-  public InstallCommand(CommandRunnerParams params) {
-    super(params);
-  }
-
   @Override
   InstallCommandOptions createOptions(BuckConfig buckConfig) {
     return new InstallCommandOptions(buckConfig);
   }
 
   @Override
-  int runCommandWithOptionsInternal(InstallCommandOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, InstallCommandOptions options)
       throws IOException, InterruptedException {
     // Make sure that only one build target is specified.
     if (options.getArguments().size() != 1) {
-      getStdErr().println("Must specify exactly one android_binary() or apk_genrule() rule.");
+      params.getConsole().getStdErr().println(
+          "Must specify exactly one android_binary() or apk_genrule() rule.");
       return 1;
     }
 
     // Build the specified target.
-    BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
-    int exitCode = buildCommand.runCommandWithOptions(options);
+    BuildCommand buildCommand = new BuildCommand();
+    int exitCode = buildCommand.runCommandWithOptions(params, options);
     if (exitCode != 0) {
       return exitCode;
     }
@@ -63,7 +60,7 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
         Preconditions.checkNotNull(
             graph.findBuildRuleByTarget(buildCommand.getBuildTargets().get(0)));
     if (buildRule == null || !(buildRule instanceof InstallableApk)) {
-      console.printBuildFailure(String.format(
+      params.getConsole().printBuildFailure(String.format(
           "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
           buildRule.getFullyQualifiedName(),
           buildRule.getType().getName()));
@@ -75,8 +72,8 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
         options.adbOptions(),
         options.targetDeviceOptions(),
         build.getExecutionContext(),
-        console,
-        getBuckEventBus(),
+        params.getConsole(),
+        params.getBuckEventBus(),
         options.getBuckConfig());
 
     // Uninstall the app first, if requested.

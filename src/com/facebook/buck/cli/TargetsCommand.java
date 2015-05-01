@@ -81,27 +81,17 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
   private static final Logger LOG = Logger.get(TargetsCommand.class);
 
-  private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
-
-  public TargetsCommand(CommandRunnerParams params) {
-    super(params);
-
-    this.targetGraphTransformer = new TargetGraphToActionGraph(
-        params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer());
-  }
-
   @Override
   TargetsCommandOptions createOptions(BuckConfig buckConfig) {
     return new TargetsCommandOptions(buckConfig);
   }
 
   @Override
-  int runCommandWithOptionsInternal(TargetsCommandOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, TargetsCommandOptions options)
       throws IOException, InterruptedException {
     // Exit early if --resolve-alias is passed in: no need to parse any build files.
     if (options.isResolveAlias()) {
-      return doResolveAlias(options);
+      return doResolveAlias(params, options);
     }
 
     if (options.isShowRuleKey() && options.isShowTargetHash()) {
@@ -109,7 +99,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     }
 
     if (options.isShowOutput() || options.isShowRuleKey() || options.isShowTargetHash()) {
-      return doShowRules(options);
+      return doShowRules(params, options);
     }
 
     // Verify the --type argument.
@@ -117,15 +107,15 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     ImmutableSet.Builder<BuildRuleType> buildRuleTypesBuilder = ImmutableSet.builder();
     for (String name : types) {
       try {
-        buildRuleTypesBuilder.add(getRepository().getBuildRuleType(name));
+        buildRuleTypesBuilder.add(params.getRepository().getBuildRuleType(name));
       } catch (IllegalArgumentException e) {
-        console.printBuildFailure("Invalid build rule type: " + name);
+        params.getConsole().printBuildFailure("Invalid build rule type: " + name);
         return 1;
       }
     }
 
     ImmutableSet<BuildTarget> matchingBuildTargets = ImmutableSet.copyOf(
-        getBuildTargets(options.getArgumentsFormattedAsBuildTargets()));
+        getBuildTargets(params, options.getArgumentsFormattedAsBuildTargets()));
 
     // Parse the entire action graph, or (if targets are specified),
     // only the specified targets and their dependencies..
@@ -139,32 +129,32 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     TargetGraph graph;
     try {
       if (matchingBuildTargets.isEmpty() || options.isDetectTestChanges()) {
-        graph = getParser().buildTargetGraphForTargetNodeSpecs(
+        graph = params.getParser().buildTargetGraphForTargetNodeSpecs(
             ImmutableList.of(
                 new TargetNodePredicateSpec(
                     Predicates.<TargetNode<?>>alwaysTrue(),
-                    getProjectFilesystem().getIgnorePaths())),
+                    params.getRepository().getFilesystem().getIgnorePaths())),
             parserConfig,
-            getBuckEventBus(),
-            console,
-            environment,
+            params.getBuckEventBus(),
+            params.getConsole(),
+            params.getEnvironment(),
             options.getEnableProfiling());
       } else {
-        graph = getParser().buildTargetGraphForBuildTargets(
+        graph = params.getParser().buildTargetGraphForBuildTargets(
             matchingBuildTargets,
             parserConfig,
-            getBuckEventBus(),
-            console,
-            environment,
+            params.getBuckEventBus(),
+            params.getConsole(),
+            params.getEnvironment(),
             options.getEnableProfiling());
       }
     } catch (BuildTargetException | BuildFileParseException e) {
-      console.printBuildFailureWithoutStacktrace(e);
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
     PathArguments.ReferencedFiles referencedFiles = options.getReferencedFiles(
-        getProjectFilesystem().getRootPath());
+        params.getRepository().getFilesystem().getRootPath());
     SortedMap<String, TargetNode<?>> matchingNodes;
     // If all of the referenced files are paths outside the project root, then print nothing.
     if (!referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths.isEmpty() &&
@@ -191,16 +181,16 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     // Print out matching targets in alphabetical order.
     if (options.getPrintJson()) {
       try {
-        printJsonForTargets(matchingNodes, new ParserConfig(options.getBuckConfig()));
+        printJsonForTargets(params, matchingNodes, new ParserConfig(options.getBuckConfig()));
       } catch (BuildFileParseException e) {
-        console.printBuildFailureWithoutStacktrace(e);
+        params.getConsole().printBuildFailureWithoutStacktrace(e);
         return 1;
       }
     } else if (options.isPrint0()) {
-      printNullDelimitedTargets(matchingNodes.keySet(), getStdOut());
+      printNullDelimitedTargets(matchingNodes.keySet(), params.getConsole().getStdOut());
     } else {
       for (String target : matchingNodes.keySet()) {
-        getStdOut().println(target);
+        params.getConsole().getStdOut().println(target);
       }
     }
 
@@ -339,13 +329,14 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
   @VisibleForTesting
   void printJsonForTargets(
+      CommandRunnerParams params,
       SortedMap<String, TargetNode<?>> buildIndex,
       ParserConfig parserConfig)
       throws BuildFileParseException, IOException, InterruptedException {
     // Print the JSON representation of the build node for the specified target(s).
-    getStdOut().println("[");
+    params.getConsole().getStdOut().println("[");
 
-    ObjectMapper mapper = getObjectMapper();
+    ObjectMapper mapper = params.getObjectMapper();
     Iterator<TargetNode<?>> valueIterator = buildIndex.values().iterator();
 
     while (valueIterator.hasNext()) {
@@ -353,15 +344,15 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
       List<Map<String, Object>> rules;
       try {
-        Path buildFile = getRepository().getAbsolutePathToBuildFile(buildTarget);
-        rules = getParser().parseBuildFile(
+        Path buildFile = params.getRepository().getAbsolutePathToBuildFile(buildTarget);
+        rules = params.getParser().parseBuildFile(
             buildFile,
             parserConfig,
-            environment,
-            console,
-            getBuckEventBus());
+            params.getEnvironment(),
+            params.getConsole(),
+            params.getBuckEventBus());
       } catch (BuildTargetException e) {
-        console.printErrorText(
+        params.getConsole().printErrorText(
             "unable to find rule for target " + buildTarget.getFullyQualifiedName());
         continue;
       }
@@ -377,7 +368,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       }
 
       if (targetRule == null) {
-        console.printErrorText(
+        params.getConsole().printErrorText(
             "unable to find rule for target " + buildTarget.getFullyQualifiedName());
         continue;
       }
@@ -399,10 +390,10 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       if (valueIterator.hasNext()) {
         output += ",";
       }
-      getStdOut().println(output);
+      params.getConsole().getStdOut().println(output);
     }
 
-    getStdOut().println("]");
+    params.getConsole().getStdOut().println("]");
   }
 
   @VisibleForTesting
@@ -417,13 +408,17 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
    * or a fully qualified (non-alias) target to be verified by checking the build files.
    * Prints the build target that each alias maps to on its own line to standard out.
    */
-  private int doResolveAlias(TargetsCommandOptions options)
+  private int doResolveAlias(CommandRunnerParams params, TargetsCommandOptions options)
       throws IOException, InterruptedException {
     List<String> resolvedAliases = Lists.newArrayList();
     for (String alias : options.getArguments()) {
       String buildTarget;
       if (alias.startsWith("//")) {
-        buildTarget = validateBuildTargetForFullyQualifiedTarget(alias, options, getParser());
+        buildTarget = validateBuildTargetForFullyQualifiedTarget(
+            params,
+            alias,
+            options,
+            params.getParser());
         if (buildTarget == null) {
           throw new HumanReadableException("%s is not a valid target.", alias);
         }
@@ -437,7 +432,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     }
 
     for (String resolvedAlias : resolvedAliases) {
-      getStdOut().println(resolvedAlias);
+      params.getConsole().getStdOut().println(resolvedAlias);
     }
 
     return 0;
@@ -448,34 +443,38 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
    * specified targets, followed by the rule key, output path, and/or
    * target hash, depending on what flags are passed in.
    */
-  private int doShowRules(TargetsCommandOptions options) throws IOException, InterruptedException {
+  private int doShowRules(CommandRunnerParams params, TargetsCommandOptions options)
+      throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> matchingBuildTargets = ImmutableSet.copyOf(
-        getBuildTargets(options.getArgumentsFormattedAsBuildTargets()));
+        getBuildTargets(params, options.getArgumentsFormattedAsBuildTargets()));
 
     if (matchingBuildTargets.isEmpty()) {
-      console.printBuildFailure("Must specify at least one build target.");
+      params.getConsole().printBuildFailure("Must specify at least one build target.");
       return 1;
     }
 
     if (options.isShowTargetHash()) {
-      return doShowTargetHash(options, matchingBuildTargets);
+      return doShowTargetHash(params, options, matchingBuildTargets);
     } else {
       TargetGraph targetGraph;
       try {
-        targetGraph = getParser().buildTargetGraphForBuildTargets(
+        targetGraph = params.getParser().buildTargetGraphForBuildTargets(
             matchingBuildTargets,
             new ParserConfig(options.getBuckConfig()),
-            getBuckEventBus(),
-            console,
-            environment,
+            params.getBuckEventBus(),
+            params.getConsole(),
+            params.getEnvironment(),
             options.getEnableProfiling());
       } catch (BuildTargetException | BuildFileParseException e) {
-        console.printBuildFailureWithoutStacktrace(e);
+        params.getConsole().printBuildFailureWithoutStacktrace(e);
         return 1;
       }
 
       Optional<ActionGraph> actionGraph;
       if (options.isShowRuleKey() || options.isShowOutput()) {
+        TargetGraphTransformer<ActionGraph> targetGraphTransformer = new TargetGraphToActionGraph(
+            params.getBuckEventBus(),
+            new BuildTargetNodeToBuildRuleTransformer());
         actionGraph = Optional.of(targetGraphTransformer.apply(targetGraph));
       } else {
         actionGraph = Optional.absent();
@@ -497,7 +496,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
             }
           }
         }
-        getStdOut().println(Joiner.on(' ').join(builder.build()));
+        params.getConsole().getStdOut().println(Joiner.on(' ').join(builder.build()));
       }
     }
 
@@ -505,17 +504,18 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   }
 
   private int doShowTargetHash(
+      CommandRunnerParams params,
       final TargetsCommandOptions options,
       ImmutableSet<BuildTarget> matchingBuildTargets)
     throws IOException, InterruptedException {
     LOG.debug("Getting target hash for %s", matchingBuildTargets);
 
     ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
-        getParser(),
+        params.getParser(),
         new ParserConfig(options.getBuckConfig()),
-        getBuckEventBus(),
-        console,
-        environment,
+        params.getBuckEventBus(),
+        params.getConsole(),
+        params.getEnvironment(),
         options.getEnableProfiling());
 
     // Parse the BUCK files for the targets passed in from the command line and their deps.
@@ -548,9 +548,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     // Hash each target's rule description and contents of any files.
     ImmutableMap<BuildTarget, HashCode> buildTargetHashes =
         TargetGraphHashing.hashTargetGraph(
-            getProjectFilesystem(),
+            params.getRepository().getFilesystem(),
             projectGraphWithTests,
-            getParser().getBuildTargetHashCodeCache(),
+            params.getParser().getBuildTargetHashCodeCache(),
             matchingBuildTargetsWithTests);
 
     // Now that we've parsed all the BUCK files for the rules and their tests,
@@ -589,7 +589,10 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
         Preconditions.checkNotNull(dependencyHash, "Couldn't get hash for node: %s", nodeToHash);
         hasher.putBytes(dependencyHash.asBytes());
       }
-      getStdOut().format("%s %s\n", target.getFullyQualifiedName(), hasher.hash().toString());
+      params.getConsole().getStdOut().format(
+          "%s %s\n",
+          target.getFullyQualifiedName(),
+          hasher.hash().toString());
     }
 
     return 0;
@@ -601,6 +604,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   @Nullable
   @VisibleForTesting
   String validateBuildTargetForFullyQualifiedTarget(
+      CommandRunnerParams params,
       String target,
       TargetsCommandOptions options,
       Parser parser) throws IOException, InterruptedException {
@@ -615,11 +619,11 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     List<Map<String, Object>> ruleObjects;
     try {
       ruleObjects = parser.parseBuildFile(
-          getRepository().getAbsolutePathToBuildFile(buildTarget),
+          params.getRepository().getAbsolutePathToBuildFile(buildTarget),
           new ParserConfig(options.getBuckConfig()),
-          environment,
-          console,
-          getBuckEventBus());
+          params.getEnvironment(),
+          params.getConsole(),
+          params.getBuckEventBus());
     } catch (BuildTargetException | BuildFileParseException e) {
       // TODO(devjasta): this doesn't smell right!
       return null;

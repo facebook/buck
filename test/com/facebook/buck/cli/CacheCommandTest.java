@@ -49,13 +49,13 @@ public class CacheCommandTest extends EasyMockSupport {
         .builder()
         .setConsole(console)
         .build();
-    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams);
+    CacheCommand cacheCommand = new CacheCommand();
     BuckConfig buckConfig = createMock(BuckConfig.class);
 
     replayAll();
 
     CacheCommandOptions options = new CacheCommandOptions(buckConfig);
-    int exitCode = cacheCommand.runCommandWithOptions(options);
+    int exitCode = cacheCommand.runCommandWithOptions(commandRunnerParams, options);
     assertEquals(1, exitCode);
 
     verifyAll();
@@ -83,7 +83,7 @@ public class CacheCommandTest extends EasyMockSupport {
         .setArtifactCacheFactory(artifactCacheFactory)
         .build();
 
-    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams);
+    CacheCommand cacheCommand = new CacheCommand();
 
     BuckConfig buckConfig = createMock(BuckConfig.class);
 
@@ -91,7 +91,7 @@ public class CacheCommandTest extends EasyMockSupport {
 
     CacheCommandOptions options = new CacheCommandOptions(buckConfig);
     options.setArguments(ImmutableList.of(ruleKeyHash));
-    int exitCode = cacheCommand.runCommandWithOptions(options);
+    int exitCode = cacheCommand.runCommandWithOptions(commandRunnerParams, options);
     assertEquals(0, exitCode);
     assertThat(successMessage.getValue(),
         startsWith("Successfully downloaded artifact with id " + ruleKeyHash + " at "));
@@ -120,7 +120,7 @@ public class CacheCommandTest extends EasyMockSupport {
         .setArtifactCacheFactory(artifactCacheFactory)
         .build();
 
-    CacheCommand cacheCommand = new CacheCommand(commandRunnerParams);
+    CacheCommand cacheCommand = new CacheCommand();
 
     BuckConfig buckConfig = createMock(BuckConfig.class);
 
@@ -128,7 +128,7 @@ public class CacheCommandTest extends EasyMockSupport {
 
     CacheCommandOptions options = new CacheCommandOptions(buckConfig);
     options.setArguments(ImmutableList.of(ruleKeyHash));
-    int exitCode = cacheCommand.runCommandWithOptions(options);
+    int exitCode = cacheCommand.runCommandWithOptions(commandRunnerParams, options);
     assertEquals(1, exitCode);
 
     verifyAll();

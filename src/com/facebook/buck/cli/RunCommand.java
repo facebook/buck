@@ -31,35 +31,32 @@ import java.io.IOException;
 
 public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
 
-  public RunCommand(CommandRunnerParams params) {
-    super(params);
-  }
-
   @Override
   String getUsageIntro() {
     return "runs the specified target as a command, with provided args";
   }
 
   @Override
-  int runCommandWithOptionsInternal(RunCommandOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, RunCommandOptions options)
       throws IOException, InterruptedException {
     if (!options.hasTargetSpecified()) {
-      console.printBuildFailure("No target given to run");
-      console.getStdOut().println("buck run <target> <arg1> <arg2>...");
+      params.getConsole().printBuildFailure("No target given to run");
+      params.getConsole().getStdOut().println("buck run <target> <arg1> <arg2>...");
       return 1;
     }
 
     // Make sure the target is built.
-    BuildCommand buildCommand = new BuildCommand(getCommandRunnerParams());
+    BuildCommand buildCommand = new BuildCommand();
     BuildCommandOptions buildCommandOptions = new BuildCommandOptions(options.getBuckConfig());
     buildCommandOptions.setArguments(ImmutableList.of(options.getTarget()));
-    int exitCode = buildCommand.runCommandWithOptions(buildCommandOptions);
+    int exitCode = buildCommand.runCommandWithOptions(params, buildCommandOptions);
     if (exitCode != 0) {
       return exitCode;
     }
 
     String targetName = options.getTarget();
-    BuildTarget target = Iterables.getOnlyElement(getBuildTargets(ImmutableSet.of(targetName)));
+    BuildTarget target = Iterables.getOnlyElement(
+        getBuildTargets(params, ImmutableSet.of(targetName)));
 
     Build build = buildCommand.getBuild();
     BuildRule targetRule = build.getActionGraph().findBuildRuleByTarget(target);
@@ -68,7 +65,7 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
       binaryBuildRule = (BinaryBuildRule) targetRule;
     }
     if (binaryBuildRule == null) {
-      console.printBuildFailure(
+      params.getConsole().printBuildFailure(
           "target " + targetName + " is not a binary rule (only binary rules can be `run`)");
       return 1;
     }
@@ -83,7 +80,7 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
     // or some other process that is meant to "run forever," then it's pretty common to do:
     // `buck run`, test server, hit ctrl-C, edit server code, repeat. This should not wedge buckd.
     ImmutableList<String> fullCommand = new ImmutableList.Builder<String>()
-        .addAll(binaryBuildRule.getExecutableCommand(getProjectFilesystem()))
+        .addAll(binaryBuildRule.getExecutableCommand(params.getRepository().getFilesystem()))
         .addAll(options.getTargetArguments())
         .build();
 

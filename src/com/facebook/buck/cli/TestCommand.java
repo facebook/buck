@@ -41,7 +41,6 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
-import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.TestRunEvent;
@@ -115,17 +114,8 @@ import javax.xml.transform.stream.StreamResult;
 public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
   public static final int TEST_FAILURES_EXIT_CODE = 42;
-  private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
   private final AtomicInteger lastReportedTestSequenceNumber = new AtomicInteger();
   private int totalNumberOfTests;
-
-  public TestCommand(CommandRunnerParams params) {
-    super(params);
-
-    this.targetGraphTransformer = new TargetGraphToActionGraph(
-        params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer());
-  }
 
   @Override
   TestCommandOptions createOptions(BuckConfig buckConfig) {
@@ -133,7 +123,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   @Override
-  int runCommandWithOptionsInternal(final TestCommandOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, final TestCommandOptions options)
       throws IOException, InterruptedException {
 
     // In the event the user specifies explicit targets, parse these out and post them for the
@@ -142,15 +132,15 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     ImmutableSet<BuildTarget> explicitBuildTargets =
         options.isRunAllTests() ?
             ImmutableSet.<BuildTarget>of() :
-            getBuildTargets(options.getArgumentsFormattedAsBuildTargets());
+            getBuildTargets(params, options.getArgumentsFormattedAsBuildTargets());
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
-    if (getParser().getParseStartTime().isPresent()) {
-      getBuckEventBus().post(
+    if (params.getParser().getParseStartTime().isPresent()) {
+      params.getBuckEventBus().post(
           BuildEvent.started(explicitBuildTargets),
-          getParser().getParseStartTime().get());
+          params.getParser().getParseStartTime().get());
     } else {
-      getBuckEventBus().post(BuildEvent.started(explicitBuildTargets));
+      params.getBuckEventBus().post(BuildEvent.started(explicitBuildTargets));
     }
 
     // The first step is to parse all of the build files. This will populate the parser and find all
@@ -163,7 +153,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       // If the user asked to run all of the tests, parse all of the build files looking for any
       // test rules.
       if (options.isRunAllTests()) {
-        targetGraph = getParser().buildTargetGraphForTargetNodeSpecs(
+        targetGraph = params.getParser().buildTargetGraphForTargetNodeSpecs(
             ImmutableList.of(
                 new TargetNodePredicateSpec(
                     new Predicate<TargetNode<?>>() {
@@ -172,31 +162,33 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
                         return input.getType().isTestRule();
                       }
                     },
-                    getProjectFilesystem().getIgnorePaths())),
+                    params.getRepository().getFilesystem().getIgnorePaths())),
             parserConfig,
-            getBuckEventBus(),
-            console,
-            environment,
+            params.getBuckEventBus(),
+            params.getConsole(),
+            params.getEnvironment(),
             options.getEnableProfiling());
 
       // Otherwise, the user specified specific test targets to build and run, so build a graph
       // around these.
       } else {
-        targetGraph = getParser().buildTargetGraphForBuildTargets(
+        targetGraph = params.getParser().buildTargetGraphForBuildTargets(
             explicitBuildTargets,
             parserConfig,
-            getBuckEventBus(),
-            console,
-            environment,
+            params.getBuckEventBus(),
+            params.getConsole(),
+            params.getEnvironment(),
             options.getEnableProfiling());
       }
 
     } catch (BuildTargetException | BuildFileParseException e) {
-      console.printBuildFailureWithoutStacktrace(e);
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
-    ActionGraph graph = targetGraphTransformer.apply(targetGraph);
+    ActionGraph graph = new TargetGraphToActionGraph(
+        params.getBuckEventBus(),
+        new BuildTargetNodeToBuildRuleTransformer()).apply(targetGraph);
 
     // Look up all of the test rules in the action graph.
     Iterable<TestRule> testRules = Iterables.filter(graph.getNodes(), TestRule.class);
@@ -208,11 +200,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     }
 
     if (options.isDryRun()) {
-      printMatchingTestRules(console, testRules);
+      printMatchingTestRules(params.getConsole(), testRules);
     }
 
     // Create artifact cache to initialize Cassandra connection, if appropriate.
-    ArtifactCache artifactCache = getArtifactCache();
+    ArtifactCache artifactCache = getArtifactCache(params, options);
 
     try (CommandThreadManager pool =
         new CommandThreadManager("Test", options.getConcurrencyLimit())) {
@@ -223,25 +215,25 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       try (Build build = options.createBuild(
           options.getBuckConfig(),
           graph,
-          getProjectFilesystem(),
-          getAndroidPlatformTargetSupplier(),
+          params.getRepository().getFilesystem(),
+          params.getAndroidPlatformTargetSupplier(),
           cachingBuildEngine,
           artifactCache,
-          console,
-          getBuckEventBus(),
+          params.getConsole(),
+          params.getBuckEventBus(),
           options.getTargetDeviceOptional(),
-          getCommandRunnerParams().getPlatform(),
-          getCommandRunnerParams().getEnvironment(),
-          getCommandRunnerParams().getObjectMapper(),
-          getCommandRunnerParams().getClock())) {
+          params.getPlatform(),
+          params.getEnvironment(),
+          params.getObjectMapper(),
+          params.getClock())) {
 
         // Build all of the test rules.
         int exitCode = build.executeAndPrintFailuresToConsole(
             testRules,
             options.isKeepGoing(),
-            console,
+            params.getConsole(),
             options.getPathToBuildReport());
-        getBuckEventBus().post(BuildEvent.finished(explicitBuildTargets, exitCode));
+        params.getBuckEventBus().post(BuildEvent.finished(explicitBuildTargets, exitCode));
         if (exitCode != 0) {
           return exitCode;
         }
@@ -259,6 +251,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         try (CommandThreadManager testPool =
             new CommandThreadManager("Test-Run", concurrencyLimit)) {
           return runTests(
+              params,
               testRules,
               Preconditions.checkNotNull(build.getBuildContext()),
               build.getExecutionContext(),
@@ -266,7 +259,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
               testPool.getExecutor(),
               cachingBuildEngine);
         } catch (ExecutionException e) {
-          console.printBuildFailureWithoutStacktrace(e);
+          params.getConsole().printBuildFailureWithoutStacktrace(e);
           return 1;
         }
       }
@@ -462,6 +455,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private int runTests(
+      CommandRunnerParams params,
       Iterable<TestRule> tests,
       BuildContext buildContext,
       ExecutionContext executionContext,
@@ -485,7 +479,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
           stepRunner.runStep(
               new MakeCleanDirectoryStep(JUnitStep.JACOCO_OUTPUT_DIR));
         } catch (StepFailedException e) {
-          console.printBuildFailureWithoutStacktrace(e);
+          params.getConsole().printBuildFailureWithoutStacktrace(e);
           return 1;
         }
       }
@@ -495,11 +489,12 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     totalNumberOfTests = Iterables.size(tests);
 
-    getBuckEventBus().post(TestRunEvent.started(
-        options.isRunAllTests(),
-        options.getTestSelectorList(),
-        options.shouldExplainTestSelectorList(),
-        options.getArgumentsFormattedAsBuildTargets()));
+    params.getBuckEventBus().post(
+        TestRunEvent.started(
+            options.isRunAllTests(),
+            options.getTestSelectorList(),
+            options.shouldExplainTestSelectorList(),
+            options.getArgumentsFormattedAsBuildTargets()));
 
     // Start running all of the tests. The result of each java_test() rule is represented as a
     // ListenableFuture.
@@ -508,7 +503,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Unless `--verbose 0` is specified, print out test results as they become available.
     // Failures with the ListenableFuture should always be printed, as they indicate an error with
     // Buck, not the test being run.
-    Verbosity verbosity = console.getVerbosity();
+    Verbosity verbosity = params.getConsole().getVerbosity();
     final boolean printTestResults = (verbosity != Verbosity.SILENT);
 
     // For grouping results!
@@ -534,8 +529,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
       List<Step> steps;
       if (isTestRunRequired) {
-        getBuckEventBus().post(IndividualTestEvent.started(
-            options.getArgumentsFormattedAsBuildTargets()));
+        params.getBuckEventBus().post(
+            IndividualTestEvent.started(
+                options.getArgumentsFormattedAsBuildTargets()));
         ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
         Preconditions.checkState(buildEngine.isRuleBuilt(test.getBuildTarget()));
         List<Step> testSteps = test.runTests(
@@ -565,7 +561,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
               test.getBuildTarget(),
               service);
       results.add(
-        transformTestResults(testResults, grouper, test, options, printTestResults));
+        transformTestResults(params, testResults, grouper, test, options, printTestResults));
     }
 
     // Block until all the tests have finished running.
@@ -574,7 +570,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     try {
       completedResults = uberFuture.get();
     } catch (ExecutionException e) {
-      e.printStackTrace(getStdErr());
+      e.printStackTrace(params.getConsole().getStdErr());
       return 1;
     } catch (InterruptedException e) {
       try {
@@ -586,8 +582,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       throw e;
     }
 
-    getBuckEventBus().post(TestRunEvent.finished(
-        options.getArgumentsFormattedAsBuildTargets(), completedResults));
+    params.getBuckEventBus().post(
+        TestRunEvent.finished(
+            options.getArgumentsFormattedAsBuildTargets(), completedResults));
 
     // Write out the results as XML, if requested.
     String path = options.getPathToXmlTestOutput();
@@ -607,11 +604,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         stepRunner.runStep(
             getReportCommand(rulesUnderTest,
                 defaultJavaPackageFinderOptional,
-                getProjectFilesystem(),
+                params.getRepository().getFilesystem(),
                 JUnitStep.JACOCO_OUTPUT_DIR,
                 options.getCoverageReportFormat()));
       } catch (StepFailedException e) {
-        console.printBuildFailureWithoutStacktrace(e);
+        params.getConsole().printBuildFailureWithoutStacktrace(e);
         return 1;
       }
     }
@@ -639,6 +636,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   private ListenableFuture<TestResults> transformTestResults(
+      final CommandRunnerParams params,
       ListenableFuture<TestResults> originalTestResults,
       @Nullable final TestResultsGrouper grouper,
       final TestRule testRule,
@@ -650,7 +648,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       private void postTestResults(TestResults testResults) {
         testResults.setSequenceNumber(lastReportedTestSequenceNumber.incrementAndGet());
         testResults.setTotalNumberOfTests(totalNumberOfTests);
-        getBuckEventBus().post(
+        params.getBuckEventBus().post(
             IndividualTestEvent.finished(
                 options.getArgumentsFormattedAsBuildTargets(),
                 testResults));

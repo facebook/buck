@@ -49,23 +49,13 @@ import javax.annotation.Nullable;
 
 public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOptions> {
 
-  private final TargetGraphTransformer<ActionGraph> targetGraphTransformer;
-
-  public AuditClasspathCommand(CommandRunnerParams params) {
-    super(params);
-
-    this.targetGraphTransformer = new TargetGraphToActionGraph(
-        params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer());
-  }
-
   @Override
   AuditCommandOptions createOptions(BuckConfig buckConfig) {
     return new AuditCommandOptions(buckConfig);
   }
 
   @Override
-  int runCommandWithOptionsInternal(AuditCommandOptions options)
+  int runCommandWithOptionsInternal(final CommandRunnerParams params, AuditCommandOptions options)
       throws IOException, InterruptedException {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // BuildRules for the specified BuildTargets.
@@ -74,44 +64,48 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
         .transform(new Function<String, BuildTarget>() {
                      @Override
                      public BuildTarget apply(String input) {
-                       return getParser().getBuildTargetParser().parse(
+                       return params.getParser().getBuildTargetParser().parse(
                            input,
                            BuildTargetPatternParser.fullyQualified(
-                               getParser().getBuildTargetParser()));
+                               params.getParser().getBuildTargetParser()));
                      }
                    })
         .toSet();
 
     if (targets.isEmpty()) {
-      console.printBuildFailure("Please specify at least one build target.");
+      params.getConsole().printBuildFailure("Please specify at least one build target.");
       return 1;
     }
 
     TargetGraph targetGraph;
     try {
-      targetGraph = getParser().buildTargetGraphForBuildTargets(
+      targetGraph = params.getParser().buildTargetGraphForBuildTargets(
           targets,
           new ParserConfig(options.getBuckConfig()),
-          getBuckEventBus(),
-          console,
-          environment,
+          params.getBuckEventBus(),
+          params.getConsole(),
+          params.getEnvironment(),
           options.getEnableProfiling());
     } catch (BuildTargetException | BuildFileParseException e) {
-      console.printBuildFailureWithoutStacktrace(e);
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
+    TargetGraphTransformer<ActionGraph> targetGraphTransformer = new TargetGraphToActionGraph(
+        params.getBuckEventBus(),
+        new BuildTargetNodeToBuildRuleTransformer());
+
     if (options.shouldGenerateDotOutput()) {
-      return printDotOutput(targetGraph);
+      return printDotOutput(params, targetGraph);
     } else if (options.shouldGenerateJsonOutput()) {
-      return printJsonClasspath(targetGraph, targets);
+      return printJsonClasspath(params, targetGraph, targetGraphTransformer, targets);
     } else {
-      return printClasspath(targetGraph, targets);
+      return printClasspath(params, targetGraph, targetGraphTransformer, targets);
     }
   }
 
   @VisibleForTesting
-  int printDotOutput(TargetGraph targetGraph) {
+  int printDotOutput(CommandRunnerParams params, TargetGraph targetGraph) {
     Dot<TargetNode<?>> dot = new Dot<>(
         targetGraph,
         "target_graph",
@@ -121,7 +115,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
             return "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"";
           }
         },
-        getStdOut());
+        params.getConsole().getStdOut());
     try {
       dot.writeOutput();
     } catch (IOException e) {
@@ -131,7 +125,11 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   }
 
   @VisibleForTesting
-  int printClasspath(TargetGraph targetGraph, ImmutableSet<BuildTarget> targets) {
+  int printClasspath(
+      CommandRunnerParams params,
+      TargetGraph targetGraph,
+      TargetGraphTransformer<ActionGraph> targetGraphTransformer,
+      ImmutableSet<BuildTarget> targets) {
     ActionGraph graph = targetGraphTransformer.apply(targetGraph);
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
@@ -147,14 +145,18 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
     }
 
     for (Path path : classpathEntries) {
-      getStdOut().println(path);
+      params.getConsole().getStdOut().println(path);
     }
 
     return 0;
   }
 
   @VisibleForTesting
-  int printJsonClasspath(TargetGraph targetGraph, ImmutableSet<BuildTarget> targets)
+  int printJsonClasspath(
+      CommandRunnerParams params,
+      TargetGraph targetGraph,
+      TargetGraphTransformer<ActionGraph> targetGraphTransformer,
+      ImmutableSet<BuildTarget> targets)
       throws IOException {
     ActionGraph graph = targetGraphTransformer.apply(targetGraph);
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
@@ -173,7 +175,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
     }
 
     // Note: using `asMap` here ensures that the keys are sorted
-    getObjectMapper().writeValue(console.getStdOut(), targetClasspaths.asMap());
+    params.getObjectMapper().writeValue(params.getConsole().getStdOut(), targetClasspaths.asMap());
 
     return 0;
   }

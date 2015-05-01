@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.util.Console;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
@@ -27,29 +26,26 @@ import java.util.Map;
 public class AuditCommandRunner implements CommandRunner {
   private static ImmutableMap<String, ? extends AbstractCommandRunner<?>> auditCommands;
 
-  private final Console console;
-
-  public AuditCommandRunner(CommandRunnerParams params) {
-    console = params.getConsole();
-    setAuditCommands(params);
+  public AuditCommandRunner() {
+    setAuditCommands();
   }
 
   @Override
-  public int runCommand(BuckConfig buckConfig, List<String> args)
+  public int runCommand(CommandRunnerParams params, List<String> args)
       throws IOException, InterruptedException {
     if (args.isEmpty()) {
-      console.printBuildFailure("No audit command is given.");
-      printUsage();
+      params.getConsole().printBuildFailure("No audit command is given.");
+      printUsage(params);
       return 1;
     }
 
     String auditCmd = args.get(0);
     if (getAuditCommands().containsKey(auditCmd)) {
       CommandRunner cmd = Preconditions.checkNotNull(getAuditCommands().get(auditCmd));
-      return cmd.runCommand(buckConfig, args.subList(1, args.size()));
+      return cmd.runCommand(params, args.subList(1, args.size()));
     } else {
-      console.printBuildFailure("Unknown audit command: " + auditCmd);
-      printUsage();
+      params.getConsole().printBuildFailure("Unknown audit command: " + auditCmd);
+      printUsage(params);
       return 1;
     }
   }
@@ -58,25 +54,27 @@ public class AuditCommandRunner implements CommandRunner {
     return auditCommands;
   }
 
-  private void setAuditCommands(CommandRunnerParams params) {
+  private void setAuditCommands() {
     ImmutableMap.Builder<String, AbstractCommandRunner<?>> commandBuilder = ImmutableMap.builder();
     auditCommands = commandBuilder
-        .put("alias", new AuditAliasCommand(params))
-        .put("classpath", new AuditClasspathCommand(params))
-        .put("dependencies", new AuditDependenciesCommand(params))
-        .put("input", new AuditInputCommand(params))
-        .put("owner", new AuditOwnerCommand(params))
-        .put("rules", new AuditRulesCommand(params))
-        .put("tests", new AuditTestsCommand(params))
+        .put("alias", new AuditAliasCommand())
+        .put("classpath", new AuditClasspathCommand())
+        .put("dependencies", new AuditDependenciesCommand())
+        .put("input", new AuditInputCommand())
+        .put("owner", new AuditOwnerCommand())
+        .put("rules", new AuditRulesCommand())
+        .put("tests", new AuditTestsCommand())
         .build();
   }
 
-  private void printUsage() {
+  private void printUsage(CommandRunnerParams params) {
     // TODO(user): implement better way of showing help
-    console.getStdOut().println("buck audit <cmd>");
+    params.getConsole().getStdOut().println("buck audit <cmd>");
     for (Map.Entry<String, ? extends AbstractCommandRunner<?>> entry :
         getAuditCommands().entrySet()) {
-      console.getStdOut().println("  " + entry.getKey() + " - " + entry.getValue().getUsageIntro());
+      params.getConsole()
+          .getStdOut()
+          .println("  " + entry.getKey() + " - " + entry.getValue().getUsageIntro());
     }
   }
 }

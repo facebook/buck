@@ -43,10 +43,6 @@ public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOp
           "buck.quickstart_origin_dir",
           new File("src/com/facebook/buck/cli/quickstart/android").getAbsolutePath()));
 
-  public QuickstartCommand(CommandRunnerParams params) {
-    super(params);
-  }
-
   @Override
   QuickstartCommandOptions createOptions(BuckConfig buckConfig) {
     return new QuickstartCommandOptions(buckConfig);
@@ -66,31 +62,41 @@ public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOp
    *     new project
    */
   @Override
-  int runCommandWithOptionsInternal(QuickstartCommandOptions options) throws IOException {
+  int runCommandWithOptionsInternal(CommandRunnerParams params, QuickstartCommandOptions options)
+      throws IOException {
     String projectDir = options.getDestDir().trim();
     if (projectDir.isEmpty()) {
-      projectDir = promptForPath("Enter the directory where you would like to create the " +
-          "project: ");
+      projectDir = promptForPath(
+          params,
+          "Enter the directory where you would like to create the project: ");
     }
 
     File dir = new File(projectDir);
     while (!dir.isDirectory() && !dir.mkdirs() && !projectDir.isEmpty()) {
-      projectDir = promptForPath("Cannot create project directory. Enter another directory: ");
+      projectDir = promptForPath(
+          params,
+          "Cannot create project directory. Enter another directory: ");
       dir = new File(projectDir);
     }
     if (projectDir.isEmpty()) {
-      getStdErr().println("No project directory specified. Aborting quickstart.");
+      params
+          .getConsole()
+          .getStdErr()
+          .println("No project directory specified. Aborting quickstart.");
       return 1;
     }
 
     String sdkLocation = options.getAndroidSdkDir();
     if (sdkLocation.isEmpty()) {
-      sdkLocation = promptForPath("Enter your Android SDK's location: ");
+      sdkLocation = promptForPath(params, "Enter your Android SDK's location: ");
     }
 
     File sdkLocationFile = new File(sdkLocation);
     if (!sdkLocationFile.isDirectory()) {
-      getStdErr().println("WARNING: That Android SDK directory does not exist.");
+      params
+          .getConsole()
+          .getStdErr()
+          .println("WARNING: That Android SDK directory does not exist.");
     }
 
     sdkLocation = sdkLocationFile.getAbsoluteFile().toString();
@@ -109,16 +115,16 @@ public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOp
     File localProperties = new File(projectDir + "/local.properties");
     Files.write("sdk.dir=" + sdkLocation + "\n", localProperties, StandardCharsets.UTF_8);
 
-    getStdOut().print(
-      Files.toString(origin.resolve("README.md").toFile(), StandardCharsets.UTF_8));
-    getStdOut().flush();
+    params.getConsole().getStdOut().print(
+        Files.toString(origin.resolve("README.md").toFile(), StandardCharsets.UTF_8));
+    params.getConsole().getStdOut().flush();
 
     return 0;
   }
 
-  private String promptForPath(String prompt) throws IOException {
-    getStdOut().print(prompt);
-    getStdOut().flush();
+  private String promptForPath(CommandRunnerParams params, String prompt) throws IOException {
+    params.getConsole().getStdOut().print(prompt);
+    params.getConsole().getStdOut().flush();
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
     String path = br.readLine();
     if (path != null) {

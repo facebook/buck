@@ -111,14 +111,13 @@ public enum Command {
     return readOnly;
   }
 
-  public int execute(List<String> args,
-      BuckConfig buckConfig,
-      CommandRunnerParams params) throws IOException, InterruptedException {
+  public int execute(List<String> args, CommandRunnerParams params)
+      throws IOException, InterruptedException {
       CommandRunner commandRunner;
       try {
         commandRunner = commandRunnerClass
-            .getDeclaredConstructor(CommandRunnerParams.class)
-            .newInstance(params);
+            .getDeclaredConstructor()
+            .newInstance();
       } catch (InstantiationException
           | IllegalAccessException
           | IllegalArgumentException
@@ -127,7 +126,7 @@ public enum Command {
           | SecurityException e) {
         throw Throwables.propagate(e);
       }
-      return commandRunner.runCommand(buckConfig, args);
+      return commandRunner.runCommand(params, args);
   }
 
   public static class ParseResult {

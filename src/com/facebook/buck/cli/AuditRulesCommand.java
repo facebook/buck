@@ -57,10 +57,6 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
   /** Properties that should be listed last in the declaration of a build rule. */
   private static final ImmutableSet<String> LAST_PROPERTIES = ImmutableSet.of("deps", "visibility");
 
-  protected AuditRulesCommand(CommandRunnerParams params) {
-    super(params);
-  }
-
   @Override
   AuditRulesOptions createOptions(BuckConfig buckConfig) {
     return new AuditRulesOptions(buckConfig);
@@ -73,9 +69,9 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
 
   /** Prints the expanded build rules from the specified build files to the console. */
   @Override
-  int runCommandWithOptionsInternal(AuditRulesOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, AuditRulesOptions options)
       throws IOException, InterruptedException {
-    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    ProjectFilesystem projectFilesystem = params.getRepository().getFilesystem();
 
     ParserConfig parserConfig = new ParserConfig(options.getBuckConfig());
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
@@ -88,12 +84,12 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
         parserConfig.getBuildFileName(),
         parserConfig.getDefaultIncludes(),
         // TODO(simons): When we land dynamic loading, this MUST change.
-        getRepository().getAllDescriptions());
+        params.getRepository().getAllDescriptions());
     try (ProjectBuildFileParser parser = factory.createParser(
-        console,
-        environment,
-        getBuckEventBus())) {
-      PrintStream out = console.getStdOut();
+        params.getConsole(),
+        params.getEnvironment(),
+        params.getBuckEventBus())) {
+      PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : options.getArguments()) {
         // Print a comment with the path to the build file.
         out.printf("# %s\n\n", pathToBuildFile);
@@ -121,7 +117,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
             return types.isEmpty() || types.contains(type);
           }
         };
-        printRulesToStdout(rawRules, includeType);
+        printRulesToStdout(params, rawRules, includeType);
       }
     } catch (BuildFileParseException e) {
       throw new HumanReadableException("Unable to create parser");
@@ -130,9 +126,11 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
     return 0;
   }
 
-  private void printRulesToStdout(List<Map<String, Object>> rawRules,
+  private void printRulesToStdout(
+      CommandRunnerParams params,
+      List<Map<String, Object>> rawRules,
       Predicate<String> includeType) {
-    PrintStream out = console.getStdOut();
+    PrintStream out = params.getConsole().getStdOut();
 
     for (Map<String, Object> rawRule : rawRules) {
       String type = (String) rawRule.get(BuckPyFunction.TYPE_PROPERTY_NAME);

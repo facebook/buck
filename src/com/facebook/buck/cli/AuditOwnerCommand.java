@@ -17,13 +17,11 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
-import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Ansi;
@@ -58,10 +56,6 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
 
   private static final String FILE_INDENT = "    ";
   private static final int BUILD_TARGET_ERROR = 13;
-
-  public AuditOwnerCommand(CommandRunnerParams params) {
-    super(params);
-  }
 
   @VisibleForTesting
   static final class OwnersReport {
@@ -107,16 +101,17 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   }
 
   @Override
-  int runCommandWithOptionsInternal(AuditOwnerOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, AuditOwnerOptions options)
       throws IOException, InterruptedException {
     OwnersReport report = OwnersReport.emptyReport();
     Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
     ParserConfig parserConfig = new ParserConfig(options.getBuckConfig());
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(
-        getProjectFilesystem(),
+        params.getRepository().getFilesystem(),
         parserConfig.getBuildFileName());
 
-    for (Path filePath : options.getArgumentsAsPaths(getProjectFilesystem().getRootPath())) {
+    for (Path filePath : options.getArgumentsAsPaths(
+        params.getRepository().getFilesystem().getRootPath())) {
       Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(filePath);
       if (!basePath.isPresent()) {
         report = report.updatedWith(
@@ -129,25 +124,23 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       }
 
       Path buckFile = basePath.get().resolve(parserConfig.getBuildFileName());
-      Preconditions.checkState(getProjectFilesystem().exists(buckFile));
+      Preconditions.checkState(params.getRepository().getFilesystem().exists(buckFile));
 
       // Get the target base name.
       Path targetBasePath = MorePaths.relativize(
-          getProjectFilesystem().getRootPath().toAbsolutePath(),
+          params.getRepository().getFilesystem().getRootPath().toAbsolutePath(),
           buckFile.toAbsolutePath().getParent());
       String targetBaseName = "//" + targetBasePath.toString();
 
       // Parse buck files and load target nodes.
       if (!targetNodes.containsKey(buckFile)) {
         try {
-          Parser parser = getParser();
-
-          List<Map<String, Object>> buildFileTargets = parser.parseBuildFile(
+          List<Map<String, Object>> buildFileTargets = params.getParser().parseBuildFile(
               buckFile,
               parserConfig,
-              environment,
-              console,
-              getBuckEventBus());
+              params.getEnvironment(),
+              params.getConsole(),
+              params.getBuckEventBus());
 
           for (Map<String, Object> buildFileTarget : buildFileTargets) {
             if (!buildFileTarget.containsKey("name")) {
@@ -161,13 +154,16 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
             if (!targetNodes.containsKey(buckFile)) {
               targetNodes.put(buckFile, Lists.<TargetNode<?>>newArrayList());
             }
-            TargetNode<?> parsedTargetNode = parser.getTargetNode(target);
+            TargetNode<?> parsedTargetNode = params.getParser().getTargetNode(target);
             if (parsedTargetNode != null) {
               targetNodes.get(buckFile).add(parsedTargetNode);
             }
           }
         } catch (BuildFileParseException | BuildTargetException e) {
-          console.getStdErr().format("Could not parse build targets for %s", targetBaseName);
+          params
+              .getConsole()
+              .getStdErr()
+              .format("Could not parse build targets for %s", targetBaseName);
           return BUILD_TARGET_ERROR;
         }
       }
@@ -175,18 +171,20 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       for (TargetNode<?> targetNode : targetNodes.get(buckFile)) {
         report = report.updatedWith(
             generateOwnersReport(
+                params,
                 targetNode,
                 ImmutableList.of(filePath.toString()),
                 options.isGuessForDeletedEnabled()));
       }
     }
 
-    printReport(options, report);
+    printReport(params, options, report);
     return 0;
   }
 
   @VisibleForTesting
   OwnersReport generateOwnersReport(
+      CommandRunnerParams params,
       TargetNode<?> targetNode,
       Iterable<String> filePaths,
       boolean guessForDeletedEnabled) {
@@ -196,9 +194,8 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     Set<String> nonExistentInputs = Sets.newHashSet();
     Set<String> nonFileInputs = Sets.newHashSet();
 
-    ProjectFilesystem projectFilesystem = getProjectFilesystem();
     for (String filePath : filePaths) {
-      File file = projectFilesystem.getFileForRelativePath(filePath);
+      File file = params.getRepository().getFilesystem().getFileForRelativePath(filePath);
       if (!file.exists()) {
         nonExistentInputs.add(filePath);
       } else if (!file.isFile()) {
@@ -237,14 +234,18 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
   }
 
-  private void printReport(AuditOwnerOptions options, OwnersReport report) throws IOException {
+  private void printReport(
+      CommandRunnerParams params,
+      AuditOwnerOptions options,
+      OwnersReport report)
+      throws IOException {
     if (options.isFullReportEnabled()) {
-      printFullReport(report);
+      printFullReport(params, report);
     } else {
       if (options.shouldGenerateJsonOutput()) {
-        printOwnersOnlyJsonReport(report);
+        printOwnersOnlyJsonReport(params, report);
       } else {
-        printOwnersOnlyReport(report);
+        printOwnersOnlyReport(params, report);
       }
     }
   }
@@ -252,10 +253,10 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   /**
    * Print only targets which were identified as owners.
    */
-  private void printOwnersOnlyReport(OwnersReport report) {
+  private void printOwnersOnlyReport(CommandRunnerParams params, OwnersReport report) {
     Set<TargetNode<?>> sortedTargetNodes = report.owners.keySet();
     for (TargetNode<?> targetNode : sortedTargetNodes) {
-      console.getStdOut().println(targetNode.getBuildTarget().getFullyQualifiedName());
+      params.getConsole().getStdOut().println(targetNode.getBuildTarget().getFullyQualifiedName());
     }
   }
 
@@ -263,7 +264,8 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   * Print only targets which were identified as owners in JSON.
   */
   @VisibleForTesting
-  void printOwnersOnlyJsonReport(OwnersReport report) throws IOException {
+  void printOwnersOnlyJsonReport(CommandRunnerParams params, OwnersReport report)
+      throws IOException {
     final Multimap<String, String> output = TreeMultimap.create();
 
     Set<TargetNode<?>> sortedTargetNodes = report.owners.keySet();
@@ -274,15 +276,15 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       }
     }
 
-    getObjectMapper().writeValue(console.getStdOut(), output.asMap());
+    params.getObjectMapper().writeValue(params.getConsole().getStdOut(), output.asMap());
   }
 
   /**
    * Print detailed report on all owners.
    */
-  private void printFullReport(OwnersReport report) {
-    PrintStream out = console.getStdOut();
-    Ansi ansi = console.getAnsi();
+  private void printFullReport(CommandRunnerParams params, OwnersReport report) {
+    PrintStream out = params.getConsole().getStdOut();
+    Ansi ansi = params.getConsole().getAnsi();
     if (report.owners.isEmpty()) {
       out.println(ansi.asErrorText("No owners found"));
     } else {

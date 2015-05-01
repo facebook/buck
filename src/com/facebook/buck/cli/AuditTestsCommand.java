@@ -37,40 +37,36 @@ public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions
 
   private static final Logger LOG = Logger.get(AuditTestsCommand.class);
 
-  public AuditTestsCommand(CommandRunnerParams params) {
-    super(params);
-  }
-
   @Override
   AuditCommandOptions createOptions(BuckConfig buckConfig) {
     return new AuditCommandOptions(buckConfig);
   }
 
   @Override
-  int runCommandWithOptionsInternal(AuditCommandOptions options)
+  int runCommandWithOptionsInternal(CommandRunnerParams params, AuditCommandOptions options)
       throws IOException, InterruptedException {
     final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
         options.getArgumentsFormattedAsBuildTargets());
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
-      console.printBuildFailure("Must specify at least one build target.");
+      params.getConsole().printBuildFailure("Must specify at least one build target.");
       return 1;
     }
 
     ImmutableSet<BuildTarget> targets =
-        getBuildTargets(ImmutableSet.copyOf(options.getArgumentsFormattedAsBuildTargets()));
+        getBuildTargets(params, ImmutableSet.copyOf(options.getArgumentsFormattedAsBuildTargets()));
 
     TargetGraph graph;
     try {
-      graph = getParser().buildTargetGraphForBuildTargets(
+      graph = params.getParser().buildTargetGraphForBuildTargets(
           targets,
           new ParserConfig(options.getBuckConfig()),
-          getBuckEventBus(),
-          console,
-          environment,
+          params.getBuckEventBus(),
+          params.getConsole(),
+          params.getEnvironment(),
           options.getEnableProfiling());
     } catch (BuildTargetException | BuildFileParseException e) {
-      console.printBuildFailureWithoutStacktrace(e);
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
@@ -79,9 +75,9 @@ public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions
     LOG.debug("Printing out the following targets: " + targetsToPrint);
 
     if (options.shouldGenerateJsonOutput()) {
-      printJSON(targetsToPrint);
+      printJSON(params, targetsToPrint);
     } else {
-      printToConsole(targetsToPrint);
+      printToConsole(params, targetsToPrint);
     }
 
     return 0;
@@ -97,7 +93,9 @@ public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions
     return multimap;
   }
 
-  private void printJSON(Multimap<BuildTarget, BuildTarget> targetsAndTests)
+  private void printJSON(
+      CommandRunnerParams params,
+      Multimap<BuildTarget, BuildTarget> targetsAndTests)
       throws IOException {
     Multimap<BuildTarget, String> targetsAndTestNames =
         Multimaps.transformValues(targetsAndTests, new Function<BuildTarget, String>() {
@@ -106,14 +104,16 @@ public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions
                 return Preconditions.checkNotNull(input.getFullyQualifiedName());
               }
             });
-    getObjectMapper().writeValue(
-        console.getStdOut(),
+    params.getObjectMapper().writeValue(
+        params.getConsole().getStdOut(),
         targetsAndTestNames.asMap());
   }
 
-  private void printToConsole(Multimap<BuildTarget, BuildTarget> targetsAndTests) {
+  private void printToConsole(
+      CommandRunnerParams params,
+      Multimap<BuildTarget, BuildTarget> targetsAndTests) {
     for (BuildTarget target : targetsAndTests.values()) {
-      getStdOut().println(target.getFullyQualifiedName());
+      params.getConsole().getStdOut().println(target.getFullyQualifiedName());
     }
   }
 
