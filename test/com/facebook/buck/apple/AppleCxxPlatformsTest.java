@@ -107,6 +107,39 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
+  public void invalidFlavorCharactersInSdkAreEscaped() throws Exception {
+    AppleSdkPaths appleSdkPaths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(Paths.get("."))
+            .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
+            .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+            .build();
+
+    ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
+        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
+        .build();
+
+    CxxPlatform appleCxxPlatform =
+        AppleCxxPlatforms.buildWithExecutableChecker(
+            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build(),
+            "_(in)+va|id_",
+            "6A2008a",
+            "7.0",
+            "cha+rs",
+            appleSdkPaths,
+            new FakeBuckConfig(),
+            new FakeExecutableFinder(paths));
+
+    assertEquals(
+        ImmutableFlavor.of("__in__va_id_-cha_rs"),
+        appleCxxPlatform.getFlavor());
+  }
+
+  @Test
   public void cxxToolParamsReadFromBuckConfig() throws Exception {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()

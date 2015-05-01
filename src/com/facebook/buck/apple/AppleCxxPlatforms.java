@@ -136,8 +136,12 @@ public class AppleCxxPlatforms {
 
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 
+    ImmutableFlavor targetFlavor = ImmutableFlavor.of(
+        ImmutableFlavor.replaceInvalidCharacters(
+            targetSdkName + "-" + targetArchitecture));
+
     return CxxPlatforms.build(
-        ImmutableFlavor.of(targetSdkName + "-" + targetArchitecture),
+        targetFlavor,
         Platform.MACOS,
         config,
         clangPath,
