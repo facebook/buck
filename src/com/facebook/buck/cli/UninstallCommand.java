@@ -38,8 +38,8 @@ import java.io.IOException;
 public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOptions> {
 
   @Override
-  UninstallCommandOptions createOptions(BuckConfig buckConfig) {
-    return new UninstallCommandOptions(buckConfig);
+  UninstallCommandOptions createOptions() {
+    return new UninstallCommandOptions();
   }
 
   @Override
@@ -56,7 +56,9 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
 
     // Parse all of the build targets specified by the user.
     BuildTargetParser buildTargetParser = parser.getBuildTargetParser();
-    String buildTargetName = options.getArgumentsFormattedAsBuildTargets().get(0);
+    String buildTargetName = options
+        .getArgumentsFormattedAsBuildTargets(params.getBuckConfig())
+        .get(0);
     ActionGraph actionGraph;
     BuildTarget buildTarget;
     try {
@@ -65,7 +67,7 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
           BuildTargetPatternParser.fullyQualified(buildTargetParser));
       TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
           ImmutableList.of(buildTarget),
-          new ParserConfig(options.getBuckConfig()),
+          new ParserConfig(params.getBuckConfig()),
           params.getBuckEventBus(),
           params.getConsole(),
           params.getEnvironment(),
@@ -100,7 +102,7 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
           context,
           params.getConsole(),
           params.getBuckEventBus(),
-          options.getBuckConfig());
+          params.getBuckConfig());
 
       // Find application package name from manifest and uninstall from matching devices.
       String appId = AdbHelper.tryToExtractPackageNameFromManifest(installableApk, context);

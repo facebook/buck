@@ -82,8 +82,8 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   private static final Logger LOG = Logger.get(TargetsCommand.class);
 
   @Override
-  TargetsCommandOptions createOptions(BuckConfig buckConfig) {
-    return new TargetsCommandOptions(buckConfig);
+  TargetsCommandOptions createOptions() {
+    return new TargetsCommandOptions();
   }
 
   @Override
@@ -115,7 +115,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     }
 
     ImmutableSet<BuildTarget> matchingBuildTargets = ImmutableSet.copyOf(
-        getBuildTargets(params, options.getArgumentsFormattedAsBuildTargets()));
+        getBuildTargets(
+            params,
+            options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
 
     // Parse the entire action graph, or (if targets are specified),
     // only the specified targets and their dependencies..
@@ -125,7 +127,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     // know which targets can refer to the specified targets or their dependencies in their
     // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
     // longer be necessary.
-    ParserConfig parserConfig = new ParserConfig(options.getBuckConfig());
+    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     TargetGraph graph;
     try {
       if (matchingBuildTargets.isEmpty() || options.isDetectTestChanges()) {
@@ -181,7 +183,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     // Print out matching targets in alphabetical order.
     if (options.getPrintJson()) {
       try {
-        printJsonForTargets(params, matchingNodes, new ParserConfig(options.getBuckConfig()));
+        printJsonForTargets(params, matchingNodes, new ParserConfig(params.getBuckConfig()));
       } catch (BuildFileParseException e) {
         params.getConsole().printBuildFailureWithoutStacktrace(e);
         return 1;
@@ -423,7 +425,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
           throw new HumanReadableException("%s is not a valid target.", alias);
         }
       } else {
-        buildTarget = options.getBuildTargetForAlias(alias);
+        buildTarget = options.getBuildTargetForAlias(params.getBuckConfig(), alias);
         if (buildTarget == null) {
           throw new HumanReadableException("%s is not an alias.", alias);
         }
@@ -446,7 +448,9 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
   private int doShowRules(CommandRunnerParams params, TargetsCommandOptions options)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> matchingBuildTargets = ImmutableSet.copyOf(
-        getBuildTargets(params, options.getArgumentsFormattedAsBuildTargets()));
+        getBuildTargets(
+            params,
+            options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
 
     if (matchingBuildTargets.isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");
@@ -460,7 +464,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       try {
         targetGraph = params.getParser().buildTargetGraphForBuildTargets(
             matchingBuildTargets,
-            new ParserConfig(options.getBuckConfig()),
+            new ParserConfig(params.getBuckConfig()),
             params.getBuckEventBus(),
             params.getConsole(),
             params.getEnvironment(),
@@ -512,7 +516,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
 
     ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
         params.getParser(),
-        new ParserConfig(options.getBuckConfig()),
+        new ParserConfig(params.getBuckConfig()),
         params.getBuckEventBus(),
         params.getConsole(),
         params.getEnvironment(),
@@ -610,7 +614,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       Parser parser) throws IOException, InterruptedException {
     BuildTarget buildTarget;
     try {
-      buildTarget = options.getBuildTargetForFullyQualifiedTarget(target);
+      buildTarget = options.getBuildTargetForFullyQualifiedTarget(params.getBuckConfig(), target);
     } catch (NoSuchBuildTargetException e) {
       return null;
     }
@@ -620,7 +624,7 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     try {
       ruleObjects = parser.parseBuildFile(
           params.getRepository().getAbsolutePathToBuildFile(buildTarget),
-          new ParserConfig(options.getBuckConfig()),
+          new ParserConfig(params.getBuckConfig()),
           params.getEnvironment(),
           params.getConsole(),
           params.getBuckEventBus());

@@ -47,14 +47,14 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
 
     // Make sure the target is built.
     BuildCommand buildCommand = new BuildCommand();
-    BuildCommandOptions buildCommandOptions = new BuildCommandOptions(options.getBuckConfig());
-    buildCommandOptions.setArguments(ImmutableList.of(options.getTarget()));
+    BuildCommandOptions buildCommandOptions = new BuildCommandOptions();
+    buildCommandOptions.setArguments(ImmutableList.of(options.getTarget(params.getBuckConfig())));
     int exitCode = buildCommand.runCommandWithOptions(params, buildCommandOptions);
     if (exitCode != 0) {
       return exitCode;
     }
 
-    String targetName = options.getTarget();
+    String targetName = options.getTarget(params.getBuckConfig());
     BuildTarget target = Iterables.getOnlyElement(
         getBuildTargets(params, ImmutableSet.of(targetName)));
 
@@ -97,7 +97,7 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
   }
 
   @Override
-  RunCommandOptions createOptions(BuckConfig buckConfig) {
-    return new RunCommandOptions(buckConfig);
+  RunCommandOptions createOptions() {
+    return new RunCommandOptions();
   }
 }

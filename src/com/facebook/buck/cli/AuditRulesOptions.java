@@ -37,10 +37,6 @@ public class AuditRulesOptions extends AbstractCommandOptions {
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
-  AuditRulesOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-  }
-
   public List<String> getArguments() {
     return arguments;
   }

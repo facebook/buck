@@ -34,10 +34,6 @@ public class ServerStatusCommandOptions extends AbstractCommandOptions {
       usage = "Print the output in a json format.")
   private boolean printJson = false;
 
-  ServerStatusCommandOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-  }
-
   public boolean isShowHttpserverPort() {
     return showHttpserverPort;
   }

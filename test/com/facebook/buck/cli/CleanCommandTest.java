@@ -106,8 +106,7 @@ public class CleanCommandTest extends EasyMockSupport {
   }
 
   private CleanCommandOptions createOptionsFromArgs(String...args) throws CmdLineException {
-    BuckConfig buckConfig = new FakeBuckConfig();
-    CleanCommandOptions options = new CleanCommandOptions(buckConfig);
+    CleanCommandOptions options = new CleanCommandOptions();
     new CmdLineParserAdditionalOptions(options).parseArgument(args);
     return options;
   }

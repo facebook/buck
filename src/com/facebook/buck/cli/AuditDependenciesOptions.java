@@ -32,10 +32,6 @@ public class AuditDependenciesOptions extends AuditCommandOptions {
       usage = "Whether to include transitive dependencies in the output")
   private boolean transitive = false;
 
-  AuditDependenciesOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-  }
-
   public boolean shouldShowTransitiveDependencies() {
     return transitive;
   }

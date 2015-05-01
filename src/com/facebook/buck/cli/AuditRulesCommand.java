@@ -58,8 +58,8 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
   private static final ImmutableSet<String> LAST_PROPERTIES = ImmutableSet.of("deps", "visibility");
 
   @Override
-  AuditRulesOptions createOptions(BuckConfig buckConfig) {
-    return new AuditRulesOptions(buckConfig);
+  AuditRulesOptions createOptions() {
+    return new AuditRulesOptions();
   }
 
   @Override
@@ -73,9 +73,9 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = params.getRepository().getFilesystem();
 
-    ParserConfig parserConfig = new ParserConfig(options.getBuckConfig());
+    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
-        options.getBuckConfig(),
+        params.getBuckConfig(),
         new ExecutableFinder());
     ProjectBuildFileParserFactory factory = new DefaultProjectBuildFileParserFactory(
         projectFilesystem.getRootPath(),

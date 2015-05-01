@@ -46,8 +46,8 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
   private static final Logger LOG = Logger.get(AuditInputCommand.class);
 
   @Override
-  AuditCommandOptions createOptions(BuckConfig buckConfig) {
-    return new AuditCommandOptions(buckConfig);
+  AuditCommandOptions createOptions() {
+    return new AuditCommandOptions();
   }
 
   @Override
@@ -56,7 +56,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // TargetNodes for the specified BuildTargets.
     final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
-        options.getArgumentsFormattedAsBuildTargets());
+        options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
       params.getConsole().printBuildFailure("Please specify at least one build target.");
@@ -64,7 +64,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
     }
 
     ImmutableSet<BuildTarget> targets = FluentIterable
-        .from(options.getArgumentsFormattedAsBuildTargets())
+        .from(options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
         .transform(new Function<String, BuildTarget>() {
                      @Override
                      public BuildTarget apply(String input) {
@@ -82,7 +82,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
     try {
       graph = params.getParser().buildTargetGraphForBuildTargets(
           targets,
-          new ParserConfig(options.getBuckConfig()),
+          new ParserConfig(params.getBuckConfig()),
           params.getBuckEventBus(),
           params.getConsole(),
           params.getEnvironment(),

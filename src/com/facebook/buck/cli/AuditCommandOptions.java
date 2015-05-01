@@ -45,16 +45,12 @@ public class AuditCommandOptions extends AbstractCommandOptions {
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
-  public AuditCommandOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-  }
-
   public List<String> getArguments() {
     return arguments;
   }
 
-  public List<String> getArgumentsFormattedAsBuildTargets() {
-    return getCommandLineBuildTargetNormalizer().normalizeAll(getArguments());
+  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
+    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
   }
 
   /**

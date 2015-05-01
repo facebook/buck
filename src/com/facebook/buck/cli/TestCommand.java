@@ -118,8 +118,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   private int totalNumberOfTests;
 
   @Override
-  TestCommandOptions createOptions(BuckConfig buckConfig) {
-    return new TestCommandOptions(buckConfig);
+  TestCommandOptions createOptions() {
+    return new TestCommandOptions();
   }
 
   @Override
@@ -132,7 +132,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     ImmutableSet<BuildTarget> explicitBuildTargets =
         options.isRunAllTests() ?
             ImmutableSet.<BuildTarget>of() :
-            getBuildTargets(params, options.getArgumentsFormattedAsBuildTargets());
+            getBuildTargets(
+                params,
+                options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
     if (params.getParser().getParseStartTime().isPresent()) {
@@ -145,7 +147,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // The first step is to parse all of the build files. This will populate the parser and find all
     // of the test rules.
-    ParserConfig parserConfig = new ParserConfig(options.getBuckConfig());
+    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     TargetGraph targetGraph;
 
     try {
@@ -195,8 +197,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // Unless the user requests that we build filtered tests, filter them out here, before
     // the build.
-    if (!options.isBuildFiltered()) {
-      testRules = filterTestRules(options, testRules);
+    if (!options.isBuildFiltered(params.getBuckConfig())) {
+      testRules = filterTestRules(params.getBuckConfig(), options, testRules);
     }
 
     if (options.isDryRun()) {
@@ -207,13 +209,13 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     ArtifactCache artifactCache = getArtifactCache(params, options);
 
     try (CommandThreadManager pool =
-        new CommandThreadManager("Test", options.getConcurrencyLimit())) {
+        new CommandThreadManager("Test", options.getConcurrencyLimit(params.getBuckConfig()))) {
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
               pool.getExecutor(),
-              options.getBuckConfig().getSkipLocalBuildChainDepth().or(1L));
+              params.getBuckConfig().getSkipLocalBuildChainDepth().or(1L));
       try (Build build = options.createBuild(
-          options.getBuckConfig(),
+          params.getBuckConfig(),
           graph,
           params.getRepository().getFilesystem(),
           params.getAndroidPlatformTargetSupplier(),
@@ -232,7 +234,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
             testRules,
             options.isKeepGoing(),
             params.getConsole(),
-            options.getPathToBuildReport());
+            options.getPathToBuildReport(params.getBuckConfig()));
         params.getBuckEventBus().post(BuildEvent.finished(explicitBuildTargets, exitCode));
         if (exitCode != 0) {
           return exitCode;
@@ -240,14 +242,14 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
         // If the user requests that we build tests that we filter out, then we perform
         // the filtering here, after we've done the build but before we run the tests.
-        if (options.isBuildFiltered()) {
-          testRules = filterTestRules(options, testRules);
+        if (options.isBuildFiltered(params.getBuckConfig())) {
+          testRules = filterTestRules(params.getBuckConfig(), options, testRules);
         }
 
         // Once all of the rules are built, then run the tests.
         ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
-            options.getNumTestThreads(),
-            options.getLoadLimit());
+            options.getNumTestThreads(params.getBuckConfig()),
+            options.getLoadLimit(params.getBuckConfig()));
         try (CommandThreadManager testPool =
             new CommandThreadManager("Test-Run", concurrencyLimit)) {
           return runTests(
@@ -414,7 +416,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   @VisibleForTesting
-  static Iterable<TestRule> filterTestRules(final TestCommandOptions options,
+  static Iterable<TestRule> filterTestRules(
+      BuckConfig buckConfig,
+      final TestCommandOptions options,
       Iterable<TestRule> testRules) {
     ImmutableSortedSet.Builder<TestRule> builder =
         ImmutableSortedSet.orderedBy(
@@ -426,10 +430,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
               }
             });
 
-    ImmutableSet<String> allTargets = options.getArgumentsFormattedAsBuildTargets();
+    ImmutableSet<String> allTargets = options.getArgumentsFormattedAsBuildTargets(buckConfig);
     for (TestRule rule : testRules) {
       boolean explicitArgument = allTargets.contains(rule.getBuildTarget().getFullyQualifiedName());
-      boolean matchesLabel = options.isMatchedByLabelOptions(rule.getLabels());
+      boolean matchesLabel = options.isMatchedByLabelOptions(buckConfig, rule.getLabels());
 
       // We always want to run the rules that are given on the command line. Always. Unless we don't
       // want to.
@@ -494,7 +498,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
             options.isRunAllTests(),
             options.getTestSelectorList(),
             options.shouldExplainTestSelectorList(),
-            options.getArgumentsFormattedAsBuildTargets()));
+            options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
 
     // Start running all of the tests. The result of each java_test() rule is represented as a
     // ListenableFuture.
@@ -523,7 +527,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
           buildEngine,
           executionContext,
           testRuleKeyFileHelper,
-          options.isResultsCacheEnabled(),
+          options.isResultsCacheEnabled(params.getBuckConfig()),
           !options.getTestSelectorList().isEmpty());
 
 
@@ -531,7 +535,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       if (isTestRunRequired) {
         params.getBuckEventBus().post(
             IndividualTestEvent.started(
-                options.getArgumentsFormattedAsBuildTargets()));
+                options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
         ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
         Preconditions.checkState(buildEngine.isRuleBuilt(test.getBuildTarget()));
         List<Step> testSteps = test.runTests(
@@ -584,7 +588,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     params.getBuckEventBus().post(
         TestRunEvent.finished(
-            options.getArgumentsFormattedAsBuildTargets(), completedResults));
+            options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()), completedResults));
 
     // Write out the results as XML, if requested.
     String path = options.getPathToXmlTestOutput();
@@ -600,7 +604,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     if (options.isCodeCoverageEnabled() && !rulesUnderTest.isEmpty()) {
       try {
         Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional =
-            options.getJavaPackageFinder();
+            options.getJavaPackageFinder(params.getBuckConfig());
         stepRunner.runStep(
             getReportCommand(rulesUnderTest,
                 defaultJavaPackageFinderOptional,
@@ -621,7 +625,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     });
 
     boolean significantAssumptionViolations = false;
-    if (options.getBuckConfig().isTreatingAssumptionsAsErrors()) {
+    if (params.getBuckConfig().isTreatingAssumptionsAsErrors()) {
       // Assumption-violations are only significant if we are treating them as errors.
       significantAssumptionViolations =
           Iterables.any(completedResults, new Predicate<TestResults>() {
@@ -650,7 +654,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         testResults.setTotalNumberOfTests(totalNumberOfTests);
         params.getBuckEventBus().post(
             IndividualTestEvent.finished(
-                options.getArgumentsFormattedAsBuildTargets(),
+                options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
                 testResults));
       }
 

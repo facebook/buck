@@ -29,8 +29,7 @@ public class RunCommandOptionsTest {
   public ExpectedException expectedException = ExpectedException.none();
 
   private String[] testWithArgs(String[] args) throws CmdLineException {
-    BuckConfig buckConfig = new FakeBuckConfig();
-    RunCommandOptions options = new RunCommandOptions(buckConfig);
+    RunCommandOptions options = new RunCommandOptions();
     CmdLineParserAdditionalOptions parser = new CmdLineParserAdditionalOptions(options);
     parser.parseArgument(args);
     return options.getArguments().toArray(new String[options.getArguments().size()]);

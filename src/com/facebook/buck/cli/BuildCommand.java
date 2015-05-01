@@ -46,8 +46,8 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
   private ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of();
 
   @Override
-  BuildCommandOptions createOptions(BuckConfig buckConfig) {
-    return new BuildCommandOptions(buckConfig);
+  BuildCommandOptions createOptions() {
+    return new BuildCommandOptions();
   }
 
   @Override
@@ -58,14 +58,16 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     ArtifactCache artifactCache = getArtifactCache(params, options);
 
 
-    buildTargets = getBuildTargets(params, options.getArgumentsFormattedAsBuildTargets());
+    buildTargets = getBuildTargets(
+        params,
+        options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (buildTargets.isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");
 
       // If there are aliases defined in .buckconfig, suggest that the user
       // build one of them. We show the user only the first 10 aliases.
-      ImmutableSet<String> aliases = options.getBuckConfig().getAliases();
+      ImmutableSet<String> aliases = params.getBuckConfig().getAliases();
       if (!aliases.isEmpty()) {
         params.getConsole().getStdErr().println(String.format(
             "Try building one of the following targets:\n%s",
@@ -88,7 +90,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
     try {
       TargetGraph targetGraph = params.getParser().buildTargetGraphForBuildTargets(
           buildTargets,
-          new ParserConfig(options.getBuckConfig()),
+          new ParserConfig(params.getBuckConfig()),
           params.getBuckEventBus(),
           params.getConsole(),
           params.getEnvironment(),
@@ -103,15 +105,15 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
     try (CommandThreadManager pool = new CommandThreadManager(
             "Build",
-            options.getConcurrencyLimit());
+            options.getConcurrencyLimit(params.getBuckConfig()));
          Build build = options.createBuild(
-             options.getBuckConfig(),
+             params.getBuckConfig(),
              actionGraph,
              params.getRepository().getFilesystem(),
              params.getAndroidPlatformTargetSupplier(),
              new CachingBuildEngine(
                  pool.getExecutor(),
-                 options.getBuckConfig().getSkipLocalBuildChainDepth().or(1L)),
+                 params.getBuckConfig().getSkipLocalBuildChainDepth().or(1L)),
              artifactCache,
              params.getConsole(),
              params.getBuckEventBus(),
@@ -125,7 +127,7 @@ public class BuildCommand extends AbstractCommandRunner<BuildCommandOptions> {
           buildTargets,
           options.isKeepGoing(),
           params.getConsole(),
-          options.getPathToBuildReport());
+          options.getPathToBuildReport(params.getBuckConfig()));
       params.getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
       return exitCode;
     }

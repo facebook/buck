@@ -54,14 +54,14 @@ public class LoggingArtifactCacheFactory implements ArtifactCacheFactory {
   }
 
   @Override
-  public ArtifactCache newInstance(AbstractCommandOptions options)
+  public ArtifactCache newInstance(BuckConfig buckConfig, AbstractCommandOptions options)
       throws InterruptedException {
     if (options.isNoCache()) {
       return new NoopArtifactCache();
     } else {
       buckEventBus.post(ArtifactCacheConnectEvent.started());
       ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buckEventBus)
-          .decorate(options.getBuckConfig().createArtifactCache(
+          .decorate(buckConfig.createArtifactCache(
                   executionEnvironment.getWifiSsid(),
                   buckEventBus,
                   fileHashCache));

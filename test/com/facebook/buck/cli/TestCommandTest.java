@@ -217,7 +217,7 @@ public class TestCommandTest {
   }
 
   private TestCommandOptions getOptions(String...args) throws CmdLineException {
-    TestCommandOptions options = new TestCommandOptions(new FakeBuckConfig());
+    TestCommandOptions options = new TestCommandOptions();
     new CmdLineParserAdditionalOptions(options).parseArgument(args);
     return options;
   }
@@ -379,7 +379,9 @@ public class TestCommandTest {
     ActionGraph graph = createDependencyGraphFromBuildRules(rules);
     TestCommandOptions options = getOptions("--include", "linux", "windows");
 
-    Iterable<TestRule> result = TestCommand.filterTestRules(options,
+    Iterable<TestRule> result = TestCommand.filterTestRules(
+        new FakeBuckConfig(),
+        options,
         TestCommand.getCandidateRules(graph));
     assertThat(result, containsInAnyOrder((TestRule) rule1, rule3));
   }
@@ -415,7 +417,10 @@ public class TestCommandTest {
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2, rule3);
 
-    Iterable<TestRule> result = TestCommand.filterTestRules(options, testRules);
+    Iterable<TestRule> result = TestCommand.filterTestRules(
+        new FakeBuckConfig(),
+        options,
+        testRules);
     assertThat(result, contains(rule2));
   }
 
@@ -442,7 +447,10 @@ public class TestCommandTest {
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
-    Iterable<TestRule> result = TestCommand.filterTestRules(options, testRules);
+    Iterable<TestRule> result = TestCommand.filterTestRules(
+        new FakeBuckConfig(),
+        options,
+        testRules);
     assertEquals(ImmutableSet.of(rule1), result);
   }
 
@@ -469,7 +477,10 @@ public class TestCommandTest {
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
-    Iterable<TestRule> result = TestCommand.filterTestRules(options, testRules);
+    Iterable<TestRule> result = TestCommand.filterTestRules(
+        new FakeBuckConfig(),
+        options,
+        testRules);
     assertEquals(ImmutableSet.of(rule2), result);
   }
 
@@ -490,7 +501,10 @@ public class TestCommandTest {
 
     List<TestRule> testRules = ImmutableList.of(rule);
 
-    Iterable<TestRule> result = TestCommand.filterTestRules(options, testRules);
+    Iterable<TestRule> result = TestCommand.filterTestRules(
+        new FakeBuckConfig(),
+        options,
+        testRules);
     assertEquals(ImmutableSet.of(), result);
   }
 
@@ -511,7 +525,10 @@ public class TestCommandTest {
 
     List<TestRule> testRules = ImmutableList.of(rule);
 
-    Iterable<TestRule> result = TestCommand.filterTestRules(options, testRules);
+    Iterable<TestRule> result = TestCommand.filterTestRules(
+        new FakeBuckConfig(),
+        options,
+        testRules);
     assertEquals(ImmutableSet.of(), result);
   }
 
@@ -545,9 +562,12 @@ public class TestCommandTest {
     );
 
     List<TestRule> testRules = ImmutableList.<TestRule>of(rule1, rule2, rule3);
-    Iterable<TestRule> filtered = TestCommand.filterTestRules(options, testRules);
+    Iterable<TestRule> result = TestCommand.filterTestRules(
+        new FakeBuckConfig(),
+        options,
+        testRules);
 
-    assertEquals(rule3, Iterables.getOnlyElement(filtered));
+    assertEquals(rule3, Iterables.getOnlyElement(result));
   }
 
   @Test
@@ -573,9 +593,12 @@ public class TestCommandTest {
     );
 
     List<TestRule> testRules = ImmutableList.<TestRule>of(rule1, rule2);
-    Iterable<TestRule> filtered = TestCommand.filterTestRules(options, testRules);
+    Iterable<TestRule> result = TestCommand.filterTestRules(
+        new FakeBuckConfig(),
+        options,
+        testRules);
 
-    assertEquals(rule2, Iterables.getOnlyElement(filtered));
+    assertEquals(rule2, Iterables.getOnlyElement(result));
   }
 
   @Test
@@ -714,11 +737,11 @@ public class TestCommandTest {
             "test",
             ImmutableMap.of("excluded_labels", "e2e")));
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
-    TestCommandOptions options = new TestCommandOptions(config);
+    TestCommandOptions options = new TestCommandOptions();
 
     new CmdLineParserAdditionalOptions(options).parseArgument();
 
-    assertFalse(options.isMatchedByLabelOptions(ImmutableSet.<Label>of(Label.of("e2e"))));
+    assertFalse(options.isMatchedByLabelOptions(config, ImmutableSet.<Label>of(Label.of("e2e"))));
   }
 
   @Test
@@ -729,11 +752,11 @@ public class TestCommandTest {
             "test",
             ImmutableMap.of("excluded_labels", "e2e")));
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
-    TestCommandOptions options = new TestCommandOptions(config);
+    TestCommandOptions options = new TestCommandOptions();
 
     new CmdLineParserAdditionalOptions(options).parseArgument("--include", "e2e");
 
-    assertTrue(options.isMatchedByLabelOptions(ImmutableSet.<Label>of(Label.of("e2e"))));
+    assertTrue(options.isMatchedByLabelOptions(config, ImmutableSet.<Label>of(Label.of("e2e"))));
   }
 
   @Test
@@ -744,7 +767,7 @@ public class TestCommandTest {
             "test",
             ImmutableMap.of("excluded_labels", excludedLabel)));
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains(excludedLabel));
-    TestCommandOptions options = new TestCommandOptions(config);
+    TestCommandOptions options = new TestCommandOptions();
 
     new CmdLineParserAdditionalOptions(options).parseArgument("//example:test");
 
@@ -756,7 +779,7 @@ public class TestCommandTest {
         /* deps */ ImmutableSortedSet.<BuildRule>of()
         /* visibility */);
     Iterable<TestRule> filtered =
-        TestCommand.filterTestRules(options, ImmutableSet.<TestRule>of(rule));
+        TestCommand.filterTestRules(config, options, ImmutableSet.<TestRule>of(rule));
 
     assertEquals(rule, Iterables.getOnlyElement(filtered));
   }
@@ -766,10 +789,10 @@ public class TestCommandTest {
       throws CmdLineException {
     TestCommandOptions options = getOptions("-j", "15");
 
-    assertEquals(15, options.getNumTestThreads());
+    assertEquals(15, options.getNumTestThreads(new FakeBuckConfig()));
 
     options = getOptions("-j", "15", "--debug");
 
-    assertEquals(1, options.getNumTestThreads());
+    assertEquals(1, options.getNumTestThreads(new FakeBuckConfig()));
   }
 }

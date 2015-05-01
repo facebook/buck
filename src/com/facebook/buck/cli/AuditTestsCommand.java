@@ -38,29 +38,30 @@ public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions
   private static final Logger LOG = Logger.get(AuditTestsCommand.class);
 
   @Override
-  AuditCommandOptions createOptions(BuckConfig buckConfig) {
-    return new AuditCommandOptions(buckConfig);
+  AuditCommandOptions createOptions() {
+    return new AuditCommandOptions();
   }
 
   @Override
   int runCommandWithOptionsInternal(CommandRunnerParams params, AuditCommandOptions options)
       throws IOException, InterruptedException {
     final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
-        options.getArgumentsFormattedAsBuildTargets());
+        options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");
       return 1;
     }
 
-    ImmutableSet<BuildTarget> targets =
-        getBuildTargets(params, ImmutableSet.copyOf(options.getArgumentsFormattedAsBuildTargets()));
+    ImmutableSet<BuildTarget> targets = getBuildTargets(
+        params,
+        ImmutableSet.copyOf(options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
 
     TargetGraph graph;
     try {
       graph = params.getParser().buildTargetGraphForBuildTargets(
           targets,
-          new ParserConfig(options.getBuckConfig()),
+          new ParserConfig(params.getBuckConfig()),
           params.getBuckEventBus(),
           params.getConsole(),
           params.getEnvironment(),

@@ -52,7 +52,7 @@ public class ServerStatusCommandTest extends EasyMockSupport {
     expect(webServer.getPort()).andStubReturn(Optional.of(9000));
     replayAll();
 
-    ServerStatusCommandOptions options = new ServerStatusCommandOptions(new FakeBuckConfig());
+    ServerStatusCommandOptions options = new ServerStatusCommandOptions();
     options.enableShowHttpserverPort();
     command.runCommandWithOptionsInternal(params, options);
     assertEquals("http.port=9000", console.getTextWrittenToStdOut().trim());
@@ -63,7 +63,7 @@ public class ServerStatusCommandTest extends EasyMockSupport {
     expect(webServer.getPort()).andStubReturn(Optional.<Integer>absent());
     replayAll();
 
-    ServerStatusCommandOptions options = new ServerStatusCommandOptions(new FakeBuckConfig());
+    ServerStatusCommandOptions options = new ServerStatusCommandOptions();
     options.enableShowHttpserverPort();
     command.runCommandWithOptionsInternal(params, options);
     assertEquals("http.port=-1", console.getTextWrittenToStdOut().trim());
@@ -74,7 +74,7 @@ public class ServerStatusCommandTest extends EasyMockSupport {
     expect(webServer.getPort()).andStubReturn(Optional.of(9000));
     replayAll();
 
-    ServerStatusCommandOptions options = new ServerStatusCommandOptions(new FakeBuckConfig());
+    ServerStatusCommandOptions options = new ServerStatusCommandOptions();
     options.enableShowHttpserverPort();
     options.enablePrintJson();
     command.runCommandWithOptionsInternal(params, options);

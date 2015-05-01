@@ -25,10 +25,6 @@ import java.util.List;
 
 public class CleanCommandOptions extends AbstractCommandOptions {
 
-  CleanCommandOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-  }
-
   @Option(
       name = "--project",
       aliases = { "-p" },

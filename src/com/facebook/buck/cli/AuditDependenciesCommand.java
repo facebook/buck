@@ -46,8 +46,8 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
   private static final Logger LOG = Logger.get(AuditDependenciesCommand.class);
 
   @Override
-  AuditDependenciesOptions createOptions(BuckConfig buckConfig) {
-    return new AuditDependenciesOptions(buckConfig);
+  AuditDependenciesOptions createOptions() {
+    return new AuditDependenciesOptions();
   }
 
   @Override
@@ -56,7 +56,7 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
       AuditDependenciesOptions options)
       throws IOException, InterruptedException {
     final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
-        options.getArgumentsFormattedAsBuildTargets());
+        options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");
@@ -64,7 +64,7 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
     }
 
     ImmutableSet<BuildTarget> targets = FluentIterable
-        .from(options.getArgumentsFormattedAsBuildTargets())
+        .from(options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
         .transform(
             new Function<String, BuildTarget>() {
               @Override
@@ -81,7 +81,7 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
     try {
       graph = params.getParser().buildTargetGraphForBuildTargets(
           targets,
-          new ParserConfig(options.getBuckConfig()),
+          new ParserConfig(params.getBuckConfig()),
           params.getBuckEventBus(),
           params.getConsole(),
           params.getEnvironment(),
@@ -171,7 +171,7 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
 
     ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
         params.getParser(),
-        new ParserConfig(options.getBuckConfig()),
+        new ParserConfig(params.getBuckConfig()),
         params.getBuckEventBus(),
         params.getConsole(),
         params.getEnvironment(),

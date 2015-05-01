@@ -55,7 +55,8 @@ public class TestCommandOptions extends BuildCommandOptions {
   private String pathToXmlTestOutput = null;
 
   @Option(name = "--no-results-cache", usage = "Whether to use cached test results.")
-  private boolean isResultsCacheDisabled = false;
+  @Nullable
+  private Boolean isResultsCacheDisabled = null;
 
   @Option(name = "--build-filtered", usage = "Whether to build filtered out tests.")
   @Nullable
@@ -112,12 +113,6 @@ public class TestCommandOptions extends BuildCommandOptions {
   @SuppressFieldNotInitialized
   private TestLabelOptions testLabelOptions;
 
-  public TestCommandOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-
-    setUseResultsCacheFromConfig(buckConfig);
-  }
-
   public boolean isRunAllTests() {
     return all || getArguments().isEmpty();
   }
@@ -127,8 +122,8 @@ public class TestCommandOptions extends BuildCommandOptions {
     return pathToXmlTestOutput;
   }
 
-  public Optional<DefaultJavaPackageFinder> getJavaPackageFinder() {
-    return Optional.fromNullable(getBuckConfig().createDefaultJavaPackageFinder());
+  public Optional<DefaultJavaPackageFinder> getJavaPackageFinder(BuckConfig buckConfig) {
+    return Optional.fromNullable(buckConfig.createDefaultJavaPackageFinder());
   }
 
   @Override
@@ -140,14 +135,12 @@ public class TestCommandOptions extends BuildCommandOptions {
     return coverageReportFormat;
   }
 
-  private void setUseResultsCacheFromConfig(BuckConfig buckConfig) {
-    // The command line option is a negative one, hence the slightly confusing logic.
-    boolean isUseResultsCache = buckConfig.getBooleanValue("test", USE_RESULTS_CACHE, true);
-    isResultsCacheDisabled = !isUseResultsCache;
-  }
-
-  public boolean isResultsCacheEnabled() {
+  public boolean isResultsCacheEnabled(BuckConfig buckConfig) {
     // The option is negative (--no-X) but we prefer to reason about positives, in the code.
+    if (isResultsCacheDisabled == null) {
+      boolean isUseResultsCache = buckConfig.getBooleanValue("test", USE_RESULTS_CACHE, true);
+      isResultsCacheDisabled = !isUseResultsCache;
+    }
     return !isResultsCacheDisabled;
   }
 
@@ -180,8 +173,8 @@ public class TestCommandOptions extends BuildCommandOptions {
     return isDryRun;
   }
 
-  public boolean isMatchedByLabelOptions(Set<Label> labels) {
-    return testLabelOptions.isMatchedByLabelOptions(getBuckConfig(), labels);
+  public boolean isMatchedByLabelOptions(BuckConfig buckConfig, Set<Label> labels) {
+    return testLabelOptions.isMatchedByLabelOptions(buckConfig, labels);
   }
 
   public boolean isShufflingTests() {
@@ -196,16 +189,16 @@ public class TestCommandOptions extends BuildCommandOptions {
     return testLabelOptions.shouldExcludeWin();
   }
 
-  public boolean isBuildFiltered() {
+  public boolean isBuildFiltered(BuckConfig buckConfig) {
     return isBuildFiltered != null ?
         isBuildFiltered :
-        getBuckConfig().getBooleanValue("test", "build_filtered_tests", false);
+        buckConfig.getBooleanValue("test", "build_filtered_tests", false);
   }
 
-  public int getNumTestThreads() {
+  public int getNumTestThreads(BuckConfig buckConfig) {
     if (isDebugEnabled()) {
       return 1;
     }
-    return getNumThreads();
+    return getNumThreads(buckConfig);
   }
 }

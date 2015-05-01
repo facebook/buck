@@ -50,8 +50,8 @@ import javax.annotation.Nullable;
 public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOptions> {
 
   @Override
-  AuditCommandOptions createOptions(BuckConfig buckConfig) {
-    return new AuditCommandOptions(buckConfig);
+  AuditCommandOptions createOptions() {
+    return new AuditCommandOptions();
   }
 
   @Override
@@ -60,7 +60,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // BuildRules for the specified BuildTargets.
     final ImmutableSet<BuildTarget> targets = FluentIterable
-        .from(options.getArgumentsFormattedAsBuildTargets())
+        .from(options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
         .transform(new Function<String, BuildTarget>() {
                      @Override
                      public BuildTarget apply(String input) {
@@ -81,7 +81,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
     try {
       targetGraph = params.getParser().buildTargetGraphForBuildTargets(
           targets,
-          new ParserConfig(options.getBuckConfig()),
+          new ParserConfig(params.getBuckConfig()),
           params.getBuckEventBus(),
           params.getConsole(),
           params.getEnvironment(),

@@ -21,21 +21,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
 public class InstallCommandOptionsTest {
 
-  private BuckConfig buckConfig;
-
-  @Before
-  public void setUp() {
-    buckConfig = new FakeBuckConfig();
-  }
-
   private InstallCommandOptions getOptions(String...args) throws CmdLineException {
-    InstallCommandOptions options = new InstallCommandOptions(buckConfig);
+    InstallCommandOptions options = new InstallCommandOptions();
     new CmdLineParserAdditionalOptions(options).parseArgument(args);
     return options;
   }

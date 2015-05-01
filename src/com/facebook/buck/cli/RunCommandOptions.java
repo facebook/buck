@@ -51,10 +51,6 @@ public class RunCommandOptions extends AbstractCommandOptions {
       }
     });
 
-  public RunCommandOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-  }
-
   public List<String> getArguments() { return arguments.get(); }
 
   /** @return the arguments (if any) to be passed to the target command. */
@@ -67,8 +63,8 @@ public class RunCommandOptions extends AbstractCommandOptions {
   }
 
   /** @return the normalized target name for command to run. */
-  public String getTarget() {
-      return getCommandLineBuildTargetNormalizer().normalize(arguments.get().get(0));
+  public String getTarget(BuckConfig buckConfig) {
+      return getCommandLineBuildTargetNormalizer(buckConfig).normalize(arguments.get().get(0));
   }
 
   @VisibleForTesting

@@ -37,17 +37,17 @@ import javax.annotation.Nullable;
 
 abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implements CommandRunner {
 
-  abstract T createOptions(BuckConfig buckConfig);
+  abstract T createOptions();
 
-  private ParserAndOptions<T> createParser(BuckConfig buckConfig) {
-    T options = createOptions(buckConfig);
+  private ParserAndOptions<T> createParser() {
+    T options = createOptions();
     return new ParserAndOptions<>(options);
   }
 
   @Override
   public final int runCommand(CommandRunnerParams params, List<String> args)
       throws IOException, InterruptedException {
-    ParserAndOptions<T> parserAndOptions = createParser(params.getBuckConfig());
+    ParserAndOptions<T> parserAndOptions = createParser();
     T options = parserAndOptions.options;
     CmdLineParser parser = parserAndOptions.parser;
 
@@ -126,7 +126,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
 
   public ArtifactCache getArtifactCache(CommandRunnerParams params, T options)
       throws InterruptedException {
-    return params.getArtifactCacheFactory().newInstance(options);
+    return params.getArtifactCacheFactory().newInstance(params.getBuckConfig(), options);
   }
 
   private static class ParserAndOptions<T> {

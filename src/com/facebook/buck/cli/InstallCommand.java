@@ -32,8 +32,8 @@ import java.io.IOException;
 public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions> {
 
   @Override
-  InstallCommandOptions createOptions(BuckConfig buckConfig) {
-    return new InstallCommandOptions(buckConfig);
+  InstallCommandOptions createOptions() {
+    return new InstallCommandOptions();
   }
 
   @Override
@@ -74,7 +74,7 @@ public class InstallCommand extends AbstractCommandRunner<InstallCommandOptions>
         build.getExecutionContext(),
         params.getConsole(),
         params.getBuckEventBus(),
-        options.getBuckConfig());
+        params.getBuckConfig());
 
     // Uninstall the app first, if requested.
     if (options.shouldUninstallFirst()) {

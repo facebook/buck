@@ -24,7 +24,7 @@ import java.io.IOException;
 /**
  * An implementation of {@link ArtifactCacheFactory} used for testing that always returns the
  * instance of {@link ArtifactCache} passed to its constructor when its
- * {@link #newInstance(AbstractCommandOptions)} method is invoked.
+ * {@link #newInstance(BuckConfig, AbstractCommandOptions)} method is invoked.
  */
 public class InstanceArtifactCacheFactory implements ArtifactCacheFactory {
 
@@ -35,7 +35,7 @@ public class InstanceArtifactCacheFactory implements ArtifactCacheFactory {
   }
 
   @Override
-  public ArtifactCache newInstance(AbstractCommandOptions options) {
+  public ArtifactCache newInstance(BuckConfig buckConfig, AbstractCommandOptions options) {
     return artifactCache;
   }
 

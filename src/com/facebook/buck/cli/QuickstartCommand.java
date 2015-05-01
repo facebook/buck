@@ -44,8 +44,8 @@ public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOp
           new File("src/com/facebook/buck/cli/quickstart/android").getAbsolutePath()));
 
   @Override
-  QuickstartCommandOptions createOptions(BuckConfig buckConfig) {
-    return new QuickstartCommandOptions(buckConfig);
+  QuickstartCommandOptions createOptions() {
+    return new QuickstartCommandOptions();
   }
 
   /**

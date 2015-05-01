@@ -33,8 +33,8 @@ import java.util.List;
 public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
 
   @Override
-  CacheCommandOptions createOptions(BuckConfig buckConfig) {
-    return new CacheCommandOptions(buckConfig);
+  CacheCommandOptions createOptions() {
+    return new CacheCommandOptions();
   }
 
   @Override

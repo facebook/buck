@@ -82,16 +82,12 @@ public class TargetsCommandOptions extends AbstractCommandOptions {
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
-  public TargetsCommandOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-  }
-
   public List<String> getArguments() {
     return arguments;
   }
 
-  public List<String> getArgumentsFormattedAsBuildTargets() {
-    return getCommandLineBuildTargetNormalizer().normalizeAll(getArguments());
+  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
+    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
   }
 
   public ImmutableSet<String> getTypes() {
@@ -138,14 +134,14 @@ public class TargetsCommandOptions extends AbstractCommandOptions {
 
   /** @return the name of the build target identified by the specified alias or {@code null}. */
   @Nullable
-  public String getBuildTargetForAlias(String alias) {
-    return getBuckConfig().getBuildTargetForAlias(alias);
+  public String getBuildTargetForAlias(BuckConfig buckConfig, String alias) {
+    return buckConfig.getBuildTargetForAlias(alias);
   }
 
   /** @return the build target identified by the specified full path or {@code null}. */
-  public BuildTarget getBuildTargetForFullyQualifiedTarget(String target)
+  public BuildTarget getBuildTargetForFullyQualifiedTarget(BuckConfig buckConfig, String target)
       throws NoSuchBuildTargetException {
-    return getBuckConfig().getBuildTargetForFullyQualifiedTarget(target);
+    return buckConfig.getBuildTargetForFullyQualifiedTarget(target);
   }
 
 }

@@ -20,10 +20,6 @@ import org.kohsuke.args4j.Option;
 
 public class QuickstartCommandOptions extends AbstractCommandOptions {
 
-  public QuickstartCommandOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-  }
-
   @Option(name = "--dest-dir", usage = "Destination project directory")
   private String destDir = "";
 

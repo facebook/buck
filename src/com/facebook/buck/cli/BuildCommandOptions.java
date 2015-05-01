@@ -29,12 +29,11 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -50,7 +49,8 @@ import javax.annotation.Nullable;
 public class BuildCommandOptions extends AbstractCommandOptions {
 
   @Option(name = "--num-threads", aliases = "-j", usage = "Default is 1.25 * num processors.")
-  private int numThreads = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
+  @Nullable
+  private Integer numThreads = null;
 
   @Option(
       name = "--keep-going",
@@ -69,65 +69,16 @@ public class BuildCommandOptions extends AbstractCommandOptions {
   @Nullable
   private BuildDependencies buildDependencies = null;
 
+  @Nullable
   @Option(name = "--load-limit",
       aliases = "-L",
       usage = "[Float] Do not start new jobs when system load is above this level." +
       " See uptime(1).")
-  private double loadLimit = Double.POSITIVE_INFINITY;
+  private Double loadLimit = null;
 
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
-
-  public BuildCommandOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-
-    setNumThreadsFromConfig(buckConfig);
-    setLoadLimitFromConfig(buckConfig);
-  }
-
-  private Supplier<BuildDependencies> buildDependenciesSupplier =
-      Suppliers.memoize(new Supplier<BuildDependencies>() {
-        @Override
-        public BuildDependencies get() {
-          if (buildDependencies != null) {
-            return buildDependencies;
-          } else if (getBuckConfig().getBuildDependencies().isPresent()) {
-            return getBuckConfig().getBuildDependencies().get();
-          } else {
-            return BuildDependencies.getDefault();
-          }
-        }
-      });
-
-  private void setNumThreadsFromConfig(BuckConfig buckConfig) {
-    ImmutableMap<String, String> build = buckConfig.getEntriesForSection("build");
-    if (build.containsKey("threads")) {
-      try {
-        numThreads = Integer.parseInt(build.get("threads"));
-      } catch (NumberFormatException e) {
-        throw new HumanReadableException(
-            e,
-            "Unable to determine number of threads to use from building from buck config file. " +
-            "Value used was '%s'", build.get("threads"));
-      }
-    }
-  }
-
-  private void setLoadLimitFromConfig(BuckConfig buckConfig) {
-    ImmutableMap<String, String> build = buckConfig.getEntriesForSection("build");
-    if (build.containsKey("load_limit")) {
-      try {
-        loadLimit = Double.parseDouble(build.get("load_limit"));
-      } catch (NumberFormatException e) {
-        throw new HumanReadableException(
-            e,
-            "Unable to determine load limit to use from building from buck config file. " +
-            "Value used was '%s'", build.get("load_limit"));
-      }
-    }
-  }
-
 
   public List<String> getArguments() {
     return arguments;
@@ -137,8 +88,9 @@ public class BuildCommandOptions extends AbstractCommandOptions {
     this.arguments = arguments;
   }
 
-  public ImmutableSet<String> getArgumentsFormattedAsBuildTargets() {
-    return ImmutableSet.copyOf(getCommandLineBuildTargetNormalizer().normalizeAll(getArguments()));
+  public ImmutableSet<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
+    return ImmutableSet.copyOf(
+        getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments()));
   }
 
   public boolean isCodeCoverageEnabled() {
@@ -150,7 +102,22 @@ public class BuildCommandOptions extends AbstractCommandOptions {
   }
 
 
-  int getNumThreads() {
+  int getNumThreads(BuckConfig buckConfig) {
+    if (numThreads == null) {
+      ImmutableMap<String, String> build = buckConfig.getEntriesForSection("build");
+      if (build.containsKey("threads")) {
+        try {
+          numThreads = Integer.parseInt(build.get("threads"));
+        } catch (NumberFormatException e) {
+          throw new HumanReadableException(
+              e,
+              "Unable to determine number of threads to use from building from buck config file. " +
+                  "Value used was '%s'", build.get("threads"));
+        }
+      } else {
+        numThreads = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
+      }
+    }
     return numThreads;
   }
 
@@ -158,27 +125,49 @@ public class BuildCommandOptions extends AbstractCommandOptions {
     return keepGoing;
   }
 
-  public double getLoadLimit() {
+  public double getLoadLimit(BuckConfig buckConfig) {
+    if (loadLimit == null) {
+      ImmutableMap<String, String> build = buckConfig.getEntriesForSection("build");
+      if (build.containsKey("load_limit")) {
+        try {
+          loadLimit = Double.parseDouble(build.get("load_limit"));
+        } catch (NumberFormatException e) {
+          throw new HumanReadableException(
+              e,
+              "Unable to determine load limit to use from building from buck config file. " +
+                  "Value used was '%s'", build.get("load_limit"));
+        }
+      } else {
+        loadLimit = Double.POSITIVE_INFINITY;
+      }
+    }
     return loadLimit;
   }
 
-  public ConcurrencyLimit getConcurrencyLimit() {
-    return new ConcurrencyLimit(getNumThreads(), getLoadLimit());
+  public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {
+    return new ConcurrencyLimit(getNumThreads(buckConfig), getLoadLimit(buckConfig));
   }
 
   /**
    * @return an absolute path or {@link Optional#absent()}.
    */
-  public Optional<Path> getPathToBuildReport() {
-    return Optional.fromNullable(getBuckConfig().resolvePathThatMayBeOutsideTheProjectFilesystem(
-        buildReport));
+  public Optional<Path> getPathToBuildReport(BuckConfig buckConfig) {
+    return Optional.fromNullable(
+        buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(buildReport));
   }
 
-  public BuildDependencies getBuildDependencies() {
-    return buildDependenciesSupplier.get();
+  public BuildDependencies getBuildDependencies(BuckConfig buckConfig) {
+    if (buildDependencies != null) {
+      return buildDependencies;
+    } else if (buckConfig.getBuildDependencies().isPresent()) {
+      return buckConfig.getBuildDependencies().get();
+    } else {
+      return BuildDependencies.getDefault();
+    }
   }
 
-  Build createBuild(BuckConfig buckConfig,
+  Build createBuild(
+      BuckConfig buckConfig,
       ActionGraph graph,
       ProjectFilesystem projectFilesystem,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
@@ -201,18 +190,18 @@ public class BuildCommandOptions extends AbstractCommandOptions {
         androidPlatformTargetSupplier,
         buildEngine,
         artifactCache,
-        getBuckConfig().createDefaultJavaPackageFinder(),
+        buckConfig.createDefaultJavaPackageFinder(),
         console,
         buckConfig.getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
         isDebugEnabled(),
-        getBuildDependencies(),
+        getBuildDependencies(buckConfig),
         eventBus,
         platform,
         environment,
         objectMapper,
         clock,
-        getConcurrencyLimit());
+        getConcurrencyLimit(buckConfig));
   }
 
 }

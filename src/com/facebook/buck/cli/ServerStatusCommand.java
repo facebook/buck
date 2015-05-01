@@ -27,8 +27,8 @@ import java.util.Map;
 public class ServerStatusCommand extends AbstractCommandRunner<ServerStatusCommandOptions> {
 
   @Override
-  ServerStatusCommandOptions createOptions(BuckConfig buckConfig) {
-    return new ServerStatusCommandOptions(buckConfig);
+  ServerStatusCommandOptions createOptions() {
+    return new ServerStatusCommandOptions();
   }
 
   @Override

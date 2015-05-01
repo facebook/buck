@@ -54,11 +54,11 @@ public class BuildCommandOptionsTest {
     BuckConfig buckConfig = new FakeBuckConfig(ImmutableMap.<String, Map<String, String>>of(
         "build",
         ImmutableMap.of("threads", "3")));
-    BuildCommandOptions options = new BuildCommandOptions(buckConfig);
+    BuildCommandOptions options = new BuildCommandOptions();
     CmdLineParserAdditionalOptions parser = new CmdLineParserAdditionalOptions(options);
     parser.parseArgument();
 
-    int count = options.getNumThreads();
+    int count = options.getNumThreads(buckConfig);
 
     assertEquals(3, count);
   }
@@ -67,24 +67,24 @@ public class BuildCommandOptionsTest {
   public void testDefaultsNumberOfBuildThreadsToOneAndAQuarterTheNumberOfAvailableProcessors()
       throws CmdLineException {
     BuckConfig buckConfig = new FakeBuckConfig();
-    BuildCommandOptions options = new BuildCommandOptions(buckConfig);
+    BuildCommandOptions options = new BuildCommandOptions();
     CmdLineParserAdditionalOptions parser = new CmdLineParserAdditionalOptions(options);
     parser.parseArgument();
 
     int expected = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
 
-    assertEquals(expected, options.getNumThreads());
+    assertEquals(expected, options.getNumThreads(buckConfig));
   }
 
   @Test
   public void testCommandLineOptionOverridesOtherBuildThreadSettings() throws CmdLineException {
     BuckConfig buckConfig = new FakeBuckConfig();
-    BuildCommandOptions options = new BuildCommandOptions(buckConfig);
+    BuildCommandOptions options = new BuildCommandOptions();
 
     CmdLineParserAdditionalOptions parser = new CmdLineParserAdditionalOptions(options);
     parser.parseArgument("--num-threads", "5");
 
-    assertEquals(5, options.getNumThreads());
+    assertEquals(5, options.getNumThreads(buckConfig));
   }
 
 }

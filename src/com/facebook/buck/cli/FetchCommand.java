@@ -40,16 +40,17 @@ import java.net.Proxy;
 public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
   @Override
-  BuildCommandOptions createOptions(BuckConfig buckConfig) {
-    return new BuildCommandOptions(buckConfig);
+  BuildCommandOptions createOptions() {
+    return new BuildCommandOptions();
   }
 
   @Override
   int runCommandWithOptionsInternal(CommandRunnerParams params, BuildCommandOptions options)
       throws IOException, InterruptedException {
 
-    ImmutableSet<BuildTarget> buildTargets =
-        getBuildTargets(params, options.getArgumentsFormattedAsBuildTargets());
+    ImmutableSet<BuildTarget> buildTargets = getBuildTargets(
+        params,
+        options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (buildTargets.isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target to fetch.");
@@ -65,7 +66,7 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
       params.getBuckEventBus().post(BuildEvent.started(buildTargets));
     }
 
-    FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(options);
+    FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
     TargetGraphToActionGraph transformer = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
         ruleGenerator);
@@ -74,7 +75,7 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
     try {
       TargetGraph targetGraph = params.getParser().buildTargetGraphForBuildTargets(
           buildTargets,
-          new ParserConfig(options.getBuckConfig()),
+          new ParserConfig(params.getBuckConfig()),
           params.getBuckEventBus(),
           params.getConsole(),
           params.getEnvironment(),
@@ -89,15 +90,15 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
     int exitCode;
     try (CommandThreadManager pool =
-        new CommandThreadManager("Fetch", options.getConcurrencyLimit());
+        new CommandThreadManager("Fetch", options.getConcurrencyLimit(params.getBuckConfig()));
          Build build = options.createBuild(
-             options.getBuckConfig(),
+             params.getBuckConfig(),
              actionGraph,
              params.getRepository().getFilesystem(),
              params.getAndroidPlatformTargetSupplier(),
              new CachingBuildEngine(
                  pool.getExecutor(),
-                 options.getBuckConfig().getSkipLocalBuildChainDepth().or(1L)),
+                 params.getBuckConfig().getSkipLocalBuildChainDepth().or(1L)),
              getArtifactCache(params, options),
              params.getConsole(),
              params.getBuckEventBus(),
@@ -110,7 +111,7 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
           buildTargets,
           options.isKeepGoing(),
           params.getConsole(),
-          options.getPathToBuildReport());
+          options.getPathToBuildReport(params.getBuckConfig()));
     }
 
     params.getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
@@ -118,9 +119,8 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
     return exitCode;
   }
 
-  private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(
-      BuildCommandOptions options) {
-    Optional<String> defaultMavenRepo = options.getBuckConfig().getValue("download", "maven_repo");
+  private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
+    Optional<String> defaultMavenRepo = params.getBuckConfig().getValue("download", "maven_repo");
     Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(), defaultMavenRepo);
     Description<?> description = new RemoteFileDescription(downloader);
     return new FetchTargetNodeToBuildRuleTransformer(

@@ -30,10 +30,6 @@ public class AuditOwnerOptions extends AuditCommandOptions {
       usage = "Guess targets for deleted files by including all rules from guessed BUCK files.")
   private boolean guessForDeleted;
 
-  public AuditOwnerOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-  }
-
   public boolean isFullReportEnabled() {
     return fullReport;
   }

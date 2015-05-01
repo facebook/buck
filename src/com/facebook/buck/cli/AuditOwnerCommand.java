@@ -96,8 +96,8 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   }
 
   @Override
-  AuditOwnerOptions createOptions(BuckConfig buckConfig) {
-    return new AuditOwnerOptions(buckConfig);
+  AuditOwnerOptions createOptions() {
+    return new AuditOwnerOptions();
   }
 
   @Override
@@ -105,7 +105,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
       throws IOException, InterruptedException {
     OwnersReport report = OwnersReport.emptyReport();
     Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
-    ParserConfig parserConfig = new ParserConfig(options.getBuckConfig());
+    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(
         params.getRepository().getFilesystem(),
         parserConfig.getBuildFileName());

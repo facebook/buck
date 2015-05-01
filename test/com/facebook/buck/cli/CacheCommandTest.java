@@ -41,8 +41,7 @@ import java.io.IOException;
 public class CacheCommandTest extends EasyMockSupport {
 
   @Test
-  public void testRunCommandWithNoArguments()
-      throws IOException, InterruptedException {
+  public void testRunCommandWithNoArguments() throws IOException, InterruptedException {
     Console console = createMock(Console.class);
     console.printErrorText("No cache keys specified.");
     CommandRunnerParams commandRunnerParams = CommandRunnerParamsForTesting
@@ -50,15 +49,9 @@ public class CacheCommandTest extends EasyMockSupport {
         .setConsole(console)
         .build();
     CacheCommand cacheCommand = new CacheCommand();
-    BuckConfig buckConfig = createMock(BuckConfig.class);
-
-    replayAll();
-
-    CacheCommandOptions options = new CacheCommandOptions(buckConfig);
+    CacheCommandOptions options = new CacheCommandOptions();
     int exitCode = cacheCommand.runCommandWithOptions(commandRunnerParams, options);
     assertEquals(1, exitCode);
-
-    verifyAll();
   }
 
   @Test
@@ -85,18 +78,15 @@ public class CacheCommandTest extends EasyMockSupport {
 
     CacheCommand cacheCommand = new CacheCommand();
 
-    BuckConfig buckConfig = createMock(BuckConfig.class);
-
     replayAll();
 
-    CacheCommandOptions options = new CacheCommandOptions(buckConfig);
+    CacheCommandOptions options = new CacheCommandOptions();
     options.setArguments(ImmutableList.of(ruleKeyHash));
     int exitCode = cacheCommand.runCommandWithOptions(commandRunnerParams, options);
     assertEquals(0, exitCode);
-    assertThat(successMessage.getValue(),
+    assertThat(
+        successMessage.getValue(),
         startsWith("Successfully downloaded artifact with id " + ruleKeyHash + " at "));
-
-    verifyAll();
   }
 
   @Test
@@ -122,15 +112,11 @@ public class CacheCommandTest extends EasyMockSupport {
 
     CacheCommand cacheCommand = new CacheCommand();
 
-    BuckConfig buckConfig = createMock(BuckConfig.class);
-
     replayAll();
 
-    CacheCommandOptions options = new CacheCommandOptions(buckConfig);
+    CacheCommandOptions options = new CacheCommandOptions();
     options.setArguments(ImmutableList.of(ruleKeyHash));
     int exitCode = cacheCommand.runCommandWithOptions(commandRunnerParams, options);
     assertEquals(1, exitCode);
-
-    verifyAll();
   }
 }

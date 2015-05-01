@@ -26,15 +26,15 @@ public class AuditAliasCommand extends AbstractCommandRunner<AuditAliasCommandOp
   }
 
   @Override
-  AuditAliasCommandOptions createOptions(BuckConfig buckConfig) {
-    return new AuditAliasCommandOptions(buckConfig);
+  AuditAliasCommandOptions createOptions() {
+    return new AuditAliasCommandOptions();
   }
 
   @Override
   int runCommandWithOptionsInternal(CommandRunnerParams params, AuditAliasCommandOptions options)
       throws IOException, InterruptedException {
     if (options.isListAliases()) {
-      for (String alias : options.getAliases()) {
+      for (String alias : options.getAliases(params.getBuckConfig())) {
         params.getConsole().getStdOut().println(alias);
       }
       return 0;

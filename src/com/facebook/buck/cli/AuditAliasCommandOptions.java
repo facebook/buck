@@ -25,15 +25,11 @@ public class AuditAliasCommandOptions extends AbstractCommandOptions {
       usage = "List known build target aliases.")
   private boolean listAliases = false;
 
-  public AuditAliasCommandOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-  }
-
   boolean isListAliases() {
     return listAliases;
   }
 
-  Iterable<String> getAliases() {
-    return getBuckConfig().getAliases();
+  Iterable<String> getAliases(BuckConfig buckConfig) {
+    return buckConfig.getAliases();
   }
 }

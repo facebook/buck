@@ -31,7 +31,7 @@ public class CleanCommand implements CommandRunner {
 
   @Override
   public int runCommand(CommandRunnerParams params, List<String> args) throws IOException {
-    CleanCommandOptions options = new CleanCommandOptions(params.getBuckConfig());
+    CleanCommandOptions options = new CleanCommandOptions();
     CmdLineParser parser = new CmdLineParserAdditionalOptions(options);
 
     boolean hasValidOptions = false;

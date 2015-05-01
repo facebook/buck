@@ -65,22 +65,9 @@ public abstract class AbstractCommandOptions {
       usage = "Prints the available options and exits.")
   private boolean help = false;
 
-  private final BuckConfig buckConfig;
-
-  @Nullable // Lazily loaded via getCommandLineBuildTargetNormalizer().
-  private CommandLineBuildTargetNormalizer commandLineBuildTargetNormalizer;
-
-  AbstractCommandOptions(BuckConfig buckConfig) {
-    this.buckConfig = buckConfig;
-  }
-
   /** @return {code true} if the {@code [cache]} in {@code .buckconfig} should be ignored. */
   public boolean isNoCache() {
     return noCache;
-  }
-
-  protected BuckConfig getBuckConfig() {
-    return buckConfig;
   }
 
   public boolean showHelp() {
@@ -95,11 +82,9 @@ public abstract class AbstractCommandOptions {
     }
   }
 
-  protected CommandLineBuildTargetNormalizer getCommandLineBuildTargetNormalizer() {
-    if (commandLineBuildTargetNormalizer == null) {
-      commandLineBuildTargetNormalizer = new CommandLineBuildTargetNormalizer(buckConfig);
-    }
-    return commandLineBuildTargetNormalizer;
+  protected CommandLineBuildTargetNormalizer getCommandLineBuildTargetNormalizer(
+      BuckConfig buckConfig) {
+    return new CommandLineBuildTargetNormalizer(buckConfig);
   }
 
   public boolean getEnableProfiling() {

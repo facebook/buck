@@ -103,7 +103,4 @@ public class InstallCommandOptions extends BuildCommandOptions {
     return activity;
   }
 
-  public InstallCommandOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-  }
 }

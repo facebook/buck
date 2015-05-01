@@ -25,7 +25,8 @@ import com.google.common.base.Supplier;
  */
 public interface ArtifactCacheFactory {
 
-  public ArtifactCache newInstance(AbstractCommandOptions options) throws InterruptedException;
+  public ArtifactCache newInstance(BuckConfig buckConfig, AbstractCommandOptions options)
+      throws InterruptedException;
 
   /**
    * Close all instances of {@link ArtifactCache} created by the factory.

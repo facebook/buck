@@ -26,10 +26,6 @@ import java.util.List;
 /** Options for {@link CacheCommand}. */
 public class CacheCommandOptions extends AbstractCommandOptions {
 
-  CacheCommandOptions(BuckConfig buckConfig) {
-    super(buckConfig);
-  }
-
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
