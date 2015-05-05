@@ -5,6 +5,7 @@ java_library(
     # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/junit/BUCK.
   ],
   visibility = [
+    '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/d:d',
     '//src/com/facebook/buck/event:event',
@@ -14,6 +15,7 @@ java_library(
     '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/java:rules',
+    '//test/com/facebook/buck/apple:apple',
     '//test/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/event/listener:listener',
     '//test/com/facebook/buck/event:event',

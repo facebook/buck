@@ -1,0 +1,51 @@
+{"message":"Loading settings for scheme 'TestProject-Library' ...","timestamp":1378850764.212406,"level":"Info","event":"begin-status"}
+{"message":"Loading settings for scheme 'TestProject-Library' ...","timestamp":1378850764.814291,"level":"Info","event":"end-status"}
+{"workspace":null,"project":"xctool\/xctool-tests\/TestData\/TestProject-Library\/TestProject-Library.xcodeproj\/","event":"begin-action","name":"run-tests","scheme":"TestProject-Library"}
+{"message":"Collecting info for testables...","timestamp":1378850764.814471,"level":"Info","event":"begin-status"}
+{"message":"Collecting info for testables...","timestamp":1378850765.643678,"level":"Info","event":"end-status"}
+{"gcEnabled":false,"sdkName":"iphonesimulator6.1","event":"begin-ocunit","testType":"logic-test","bundleName":"TestProject-LibraryTests.octest"}
+{"suite":"Toplevel Test Suite","event":"begin-test-suite"}
+{"className":"OtherTests","methodName":"testSomething","event":"begin-test","test":"-[OtherTests testSomething]"}
+{"exceptions":[],"methodName":"testSomething","output":"","result":"success","totalDuration":0.003887951374053955,"test":"-[OtherTests testSomething]","event":"end-test","className":"OtherTests","succeeded":true}
+{"className":"SomeTests","methodName":"testBacktraceOutputIsCaptured","event":"begin-test","test":"-[SomeTests testBacktraceOutputIsCaptured]"}
+{"event":"test-output","output":"0   TestProject-LibraryTests            0x016cd817 -[SomeTests testBacktraceOutputIsCaptured] + 103\n"}
+{"event":"test-output","output":"1   CoreFoundation                      0x00a051bd __invoking___ + 29\n"}
+{"event":"test-output","output":"2   CoreFoundation                      0x00a050d6 -[NSInvocation invoke] + 342\n"}
+{"event":"test-output","output":"3   SenTestingKit                       0x20103ed1 -[SenTestCase invokeTest] + 219\n"}
+{"event":"test-output","output":"4   SenTestingKit                       0x2010405b -[SenTestCase performTest:] + 183\n"}
+{"event":"test-output","output":"5   SenTestingKit                       0x201037bf -[SenTest run] + 82\n"}
+{"event":"test-output","output":"6   SenTestingKit                       0x2010792b -[SenTestSuite performTest:] + 139\n"}
+{"event":"test-output","output":"7   SenTestingKit                       0x201037bf -[SenTest run] + 82\n"}
+{"event":"test-output","output":"8   SenTestingKit                       0x2010792b -[SenTestSuite performTest:] + 139\n"}
+{"event":"test-output","output":"9   SenTestingKit                       0x201037bf -[SenTest run] + 82\n"}
+{"event":"test-output","output":"10  SenTestingKit                       0x201063ec +[SenTestProbe runTests:] + 174\n"}
+{"event":"test-output","output":"11  libobjc.A.dylib                     0x0073c5c8 +[NSObject performSelector:withObject:] + 70\n"}
+{"event":"test-output","output":"12  otest                               0x00002342 otest + 4930\n"}
+{"event":"test-output","output":"13  otest                               0x000025ef otest + 5615\n"}
+{"event":"test-output","output":"14  otest                               0x0000268c otest + 5772\n"}
+{"event":"test-output","output":"15  otest                               0x00002001 otest + 4097\n"}
+{"event":"test-output","output":"16  otest                               0x00001f71 otest + 3953\n"}
+{"exceptions":[],"methodName":"testBacktraceOutputIsCaptured","output":"0   TestProject-LibraryTests            0x016cd817 -[SomeTests testBacktraceOutputIsCaptured] + 103\n1   CoreFoundation                      0x00a051bd __invoking___ + 29\n2   CoreFoundation                      0x00a050d6 -[NSInvocation invoke] + 342\n3   SenTestingKit                       0x20103ed1 -[SenTestCase invokeTest] + 219\n4   SenTestingKit                       0x2010405b -[SenTestCase performTest:] + 183\n5   SenTestingKit                       0x201037bf -[SenTest run] + 82\n6   SenTestingKit                       0x2010792b -[SenTestSuite performTest:] + 139\n7   SenTestingKit                       0x201037bf -[SenTest run] + 82\n8   SenTestingKit                       0x2010792b -[SenTestSuite performTest:] + 139\n9   SenTestingKit                       0x201037bf -[SenTest run] + 82\n10  SenTestingKit                       0x201063ec +[SenTestProbe runTests:] + 174\n11  libobjc.A.dylib                     0x0073c5c8 +[NSObject performSelector:withObject:] + 70\n12  otest                               0x00002342 otest + 4930\n13  otest                               0x000025ef otest + 5615\n14  otest                               0x0000268c otest + 5772\n15  otest                               0x00002001 otest + 4097\n16  otest                               0x00001f71 otest + 3953\n","result":"success","totalDuration":0.0005669593811035156,"test":"-[SomeTests testBacktraceOutputIsCaptured]","event":"end-test","className":"SomeTests","succeeded":true}
+{"className":"SomeTests","methodName":"testOutputMerging","event":"begin-test","test":"-[SomeTests testOutputMerging]"}
+{"event":"test-output","output":"stdout-line1\n"}
+{"event":"test-output","output":"stderr-line1\n"}
+{"event":"test-output","output":"stdout-line2\n"}
+{"event":"test-output","output":"stdout-line3\n"}
+{"event":"test-output","output":"stderr-line2\n"}
+{"event":"test-output","output":"stderr-line3\n"}
+{"exceptions":[],"methodName":"testOutputMerging","output":"stdout-line1\nstderr-line1\nstdout-line2\nstdout-line3\nstderr-line2\nstderr-line3\n","result":"success","totalDuration":0.0001479983329772949,"test":"-[SomeTests testOutputMerging]","event":"end-test","className":"SomeTests","succeeded":true}
+{"className":"SomeTests","methodName":"testPrintSDK","event":"begin-test","test":"-[SomeTests testPrintSDK]"}
+{"event":"test-output","output":"2013-09-10 15:06:05.784 otest[25153:707] SDK: 6.1\n"}
+{"exceptions":[],"methodName":"testPrintSDK","output":"2013-09-10 15:06:05.784 otest[25153:707] SDK: 6.1\n","result":"success","totalDuration":0.001750946044921875,"test":"-[SomeTests testPrintSDK]","event":"end-test","className":"SomeTests","succeeded":true}
+{"className":"SomeTests","methodName":"testStream","event":"begin-test","test":"-[SomeTests testStream]"}
+{"event":"test-output","output":"2013-09-10 15:06:05.784 otest[25153:707] >>>> i = 0\n"}
+{"event":"test-output","output":"2013-09-10 15:06:06.035 otest[25153:707] >>>> i = 1\n"}
+{"event":"test-output","output":"2013-09-10 15:06:06.286 otest[25153:707] >>>> i = 2\n"}
+{"exceptions":[],"methodName":"testStream","output":"2013-09-10 15:06:05.784 otest[25153:707] >>>> i = 0\n2013-09-10 15:06:06.035 otest[25153:707] >>>> i = 1\n2013-09-10 15:06:06.286 otest[25153:707] >>>> i = 2\n","result":"success","totalDuration":0.7540979981422424,"test":"-[SomeTests testStream]","event":"end-test","className":"SomeTests","succeeded":true}
+{"className":"SomeTests","methodName":"testWillFail","event":"begin-test","test":"-[SomeTests testWillFail]"}
+{"exceptions":[{"name":"SenTestFailureException","reason":"'a' should be equal to 'b' Strings aren't equal","lineNumber":40,"filePathInProject":"\/Users\/fpotter\/xctool\/xctool\/xctool-tests\/TestData\/TestProject-Library\/TestProject-LibraryTests\/SomeTests.m"}],"methodName":"testWillFail","output":"","result":"failure","totalDuration":0.0001729726791381836,"test":"-[SomeTests testWillFail]","event":"end-test","className":"SomeTests","succeeded":false}
+{"className":"SomeTests","methodName":"testWillPass","event":"begin-test","test":"-[SomeTests testWillPass]"}
+{"exceptions":[],"methodName":"testWillPass","output":"","result":"success","totalDuration":8.499622344970703e-05,"test":"-[SomeTests testWillPass]","event":"end-test","className":"SomeTests","succeeded":true}
+{"totalFailureCount":1,"testCaseCount":7,"totalDuration":0.7613800168037415,"testDuration":0.7599970102310181,"event":"end-test-suite","suite":"Toplevel Test Suite","unexpectedExceptionCount":0}
+{"bundleName":"TestProject-LibraryTests.octest","gcEnabled":false,"succeeded":false,"failureReason":null,"event":"end-ocunit","testType":"logic-test","sdkName":"iphonesimulator6.1"}
+{"scheme":"TestProject-Library","event":"end-action","succeeded":false,"workspace":null,"project":"xctool\/xctool-tests\/TestData\/TestProject-Library\/TestProject-Library.xcodeproj\/","duration":1.791453243000433,"name":"run-tests"}
