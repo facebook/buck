@@ -265,7 +265,8 @@ public class CxxLibraryDescription implements
       Optional<String> soname,
       CxxSourceRuleFactory.Strategy compileStrategy,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
-      Linker.LinkType linkType) {
+      Linker.LinkType linkType,
+      Linker.LinkableDepType linkableDepType) {
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
@@ -315,7 +316,7 @@ public class CxxLibraryDescription implements
             Optional.of(sharedLibrarySoname),
             sharedLibraryPath,
             objects.values(),
-            Linker.LinkableDepType.SHARED,
+            linkableDepType,
             params.getDeps(),
             cxxRuntimeType,
             Optional.<SourcePath>absent());
@@ -511,7 +512,8 @@ public class CxxLibraryDescription implements
       CxxPlatform cxxPlatform,
       A args,
       CxxSourceRuleFactory.Strategy compileStrategy,
-      Linker.LinkType linkType) {
+      Linker.LinkType linkType,
+      Linker.LinkableDepType linkableDepType) {
     ImmutableList.Builder<String> linkerFlags = ImmutableList.builder();
 
     linkerFlags.addAll(
@@ -560,7 +562,8 @@ public class CxxLibraryDescription implements
         args.soname,
         compileStrategy,
         args.cxxRuntimeType,
-        linkType);
+        linkType,
+        linkableDepType);
   }
 
   /**
@@ -632,14 +635,20 @@ public class CxxLibraryDescription implements
     TypeAndPlatform typeAndPlatform = getTypeAndPlatform(
         params.getBuildTarget(),
         cxxPlatforms);
-    return createBuildRule(params, resolver, args, typeAndPlatform);
+    return createBuildRule(
+        params,
+        resolver,
+        args,
+        typeAndPlatform,
+        Optional.<Linker.LinkableDepType>absent());
   }
 
   public <A extends Arg> BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       final A args,
-      TypeAndPlatform typeAndPlatform) {
+      TypeAndPlatform typeAndPlatform,
+      Optional<Linker.LinkableDepType> linkableDepType) {
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = typeAndPlatform.getPlatform();
 
     if (params.getBuildTarget().getFlavors()
@@ -690,7 +699,8 @@ public class CxxLibraryDescription implements
             platform.get().getValue(),
             args,
             compileStrategy,
-            Linker.LinkType.SHARED);
+            Linker.LinkType.SHARED,
+            linkableDepType.or(Linker.LinkableDepType.SHARED));
       } else if (type.get().getValue().equals(Type.MACH_O_BUNDLE)) {
         return createSharedLibraryBuildRule(
             typeParams,
@@ -698,7 +708,8 @@ public class CxxLibraryDescription implements
             platform.get().getValue(),
             args,
             compileStrategy,
-            Linker.LinkType.MACH_O_BUNDLE);
+            Linker.LinkType.MACH_O_BUNDLE,
+            linkableDepType.or(Linker.LinkableDepType.SHARED));
       } else if (type.get().getValue().equals(Type.STATIC)) {
         return createStaticLibraryBuildRule(
             typeParams,

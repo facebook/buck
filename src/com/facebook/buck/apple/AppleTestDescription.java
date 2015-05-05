@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -126,7 +127,10 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
             Suppliers.ofInstance(params.getDeclaredDeps()),
             Suppliers.ofInstance(params.getExtraDeps())),
         resolver,
-        args);
+        args,
+        // For now, instead of building all deps as dylibs and fixing up their install_names,
+        // we'll just link them statically.
+        Optional.of(Linker.LinkableDepType.STATIC));
     if (!createBundle) {
       return library;
     }

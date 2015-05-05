@@ -17,8 +17,12 @@
 package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -27,6 +31,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.ProcessExecutor;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -172,6 +177,61 @@ public class AppleTestIntegrationTest {
         buildTarget.getFullyQualifiedName());
     result.assertSuccess();
     workspace.verify();
+  }
+
+  @Test
+  public void testLinkedAsMachOBundleWithNoDylibDeps() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_with_deps", tmp);
+    workspace.setUp();
+
+    BuildTarget buildTarget = BuildTarget.builder("//", "foo")
+        .build();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        buildTarget.getFullyQualifiedName());
+    result.assertSuccess();
+    workspace.verify();
+
+    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+    BuildTarget appleTestBundleFlavoredBuildTarget = BuildTarget.copyOf(buildTarget)
+        .withFlavors(
+            ImmutableFlavor.of("apple-test-bundle"));
+    Path outputPath = projectRoot.resolve(
+        BuildTargets.getGenPath(
+            appleTestBundleFlavoredBuildTarget,
+            "%s"));
+    Path bundlePath = outputPath.resolve("foo.xctest");
+    Path testBinaryPath = bundlePath.resolve("foo");
+
+    ProcessExecutor.Result binaryFileTypeResult = workspace.runCommand(
+        "file", "-b", testBinaryPath.toString());
+    assertEquals(0, binaryFileTypeResult.getExitCode());
+    assertThat(
+        binaryFileTypeResult.getStdout().or(""),
+        containsString("Mach-O 64-bit bundle x86_64"));
+
+    ProcessExecutor.Result otoolResult = workspace.runCommand(
+        "otool", "-L", testBinaryPath.toString());
+    assertEquals(0, otoolResult.getExitCode());
+    assertThat(
+        otoolResult.getStdout().or(""),
+        containsString("foo"));
+    assertThat(
+        otoolResult.getStdout().or(""),
+        not(containsString("bar.dylib")));
+
+    ProcessExecutor.Result nmResult = workspace.runCommand(
+        "nm", "-j", testBinaryPath.toString());
+    assertEquals(0, nmResult.getExitCode());
+    assertThat(
+        nmResult.getStdout().or(""),
+        containsString("_OBJC_CLASS_$_Foo"));
+    assertThat(
+        nmResult.getStdout().or(""),
+        containsString("_OBJC_CLASS_$_Bar"));
   }
 
   @Test

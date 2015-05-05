@@ -1,0 +1,19 @@
+apple_library(
+    name = 'bar',
+    srcs = ['Bar.m'],
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    ],
+)
+
+apple_test(
+    name = 'foo',
+    deps = [':bar'],
+    extension = 'xctest',
+    srcs = ['Foo.m'],
+    info_plist = 'Test.plist',
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework'
+    ],
+)
