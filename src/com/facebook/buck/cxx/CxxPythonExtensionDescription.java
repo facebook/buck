@@ -188,7 +188,8 @@ public class CxxPythonExtensionDescription implements
         picObjects.values(),
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
-        args.cxxRuntimeType);
+        args.cxxRuntimeType,
+        Optional.<SourcePath>absent());
   }
 
   @Override

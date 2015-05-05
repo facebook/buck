@@ -65,6 +65,7 @@ public class CxxDescriptionEnhancer {
   public static final Flavor STATIC_FLAVOR = ImmutableFlavor.of("static");
   public static final Flavor STATIC_PIC_FLAVOR = ImmutableFlavor.of("static-pic");
   public static final Flavor SHARED_FLAVOR = ImmutableFlavor.of("shared");
+  public static final Flavor MACH_O_BUNDLE_FLAVOR = ImmutableFlavor.of("mach-o-bundle");
 
   public static final Flavor CXX_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
   public static final Flavor LEX_YACC_SOURCE_FLAVOR = ImmutableFlavor.of("lex_yacc_sources");
@@ -761,7 +762,8 @@ public class CxxDescriptionEnhancer {
         objects.values(),
         Linker.LinkableDepType.STATIC,
         params.getDeps(),
-        args.cxxRuntimeType);
+        args.cxxRuntimeType,
+        Optional.<SourcePath>absent());
     resolver.addToIndex(cxxLink);
 
     return new CxxLinkAndCompileRules(cxxLink, ImmutableSortedSet.copyOf(objects.keySet()));

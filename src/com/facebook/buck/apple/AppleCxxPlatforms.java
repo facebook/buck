@@ -122,12 +122,6 @@ public class AppleCxxPlatforms {
         "apple-clang++",
         xcodeAndSdkVersion);
 
-    Tool libtool = new VersionedTool(
-        getToolPath("libtool", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
-        "apple-libtool",
-        xcodeAndSdkVersion);
-
     Tool ar = new VersionedTool(
         getToolPath("ar", toolSearchPaths, executableFinder),
         ImmutableList.<String>of(),
@@ -152,7 +146,7 @@ public class AppleCxxPlatforms {
         clangXxPath,
         clangXxPath,
         Optional.of(CxxPlatform.LinkerType.DARWIN),
-        libtool,
+        clangXxPath,
         ar,
         "!<arch>\n".getBytes(Charsets.US_ASCII),
         getOptionalTool("lex", toolSearchPaths, executableFinder, xcodeAndSdkVersion),

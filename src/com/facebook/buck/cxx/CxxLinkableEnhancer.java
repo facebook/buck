@@ -28,8 +28,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.EnumSet;
 
 public class CxxLinkableEnhancer {
+
+  private static final EnumSet<Linker.LinkType> SONAME_REQUIRED_LINK_TYPES = EnumSet.of(
+      Linker.LinkType.SHARED,
+      Linker.LinkType.MACH_O_BUNDLE
+  );
 
   // Utility class doesn't instantiate.
   private CxxLinkableEnhancer() {}
@@ -80,10 +86,15 @@ public class CxxLinkableEnhancer {
       Iterable<SourcePath> inputs,
       Linker.LinkableDepType depType,
       Iterable<? extends BuildRule> nativeLinkableDeps,
-      Optional<Linker.CxxRuntimeType> cxxRuntimeType) {
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
+      Optional<SourcePath> bundleLoader) {
 
     // Soname should only ever be set when linking a "shared" library.
-    Preconditions.checkState(!soname.isPresent() || linkType.equals(Linker.LinkType.SHARED));
+    Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));
+
+    // Bundle loaders are only supported for Mach-O bundle libraries
+    Preconditions.checkState(
+        !bundleLoader.isPresent() || linkType == Linker.LinkType.MACH_O_BUNDLE);
 
     Linker linker = cxxPlatform.getLd();
 
@@ -123,6 +134,12 @@ public class CxxLinkableEnhancer {
     // the soname.
     if (linkType == Linker.LinkType.SHARED) {
       argsBuilder.add("-shared");
+    } else if (linkType == Linker.LinkType.MACH_O_BUNDLE) {
+      argsBuilder.add("-bundle");
+      // It's possible to build a Mach-O bundle without a bundle loader (logic tests, for example).
+      if (bundleLoader.isPresent()) {
+        argsBuilder.add("-bundle_loader", resolver.getPath(bundleLoader.get()).toString());
+      }
     }
     if (soname.isPresent()) {
       argsBuilder.addAll(iXlinker(linker.soname(soname.get())));

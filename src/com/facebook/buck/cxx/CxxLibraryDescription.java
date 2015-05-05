@@ -63,6 +63,7 @@ public class CxxLibraryDescription implements
     SHARED,
     STATIC_PIC,
     STATIC,
+    MACH_O_BUNDLE,
   }
 
   public static final BuildRuleType TYPE = BuildRuleType.of("cxx_library");
@@ -70,12 +71,16 @@ public class CxxLibraryDescription implements
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       new FlavorDomain<>(
           "C/C++ Library Type",
-          ImmutableMap.of(
-              CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR, Type.HEADERS,
-              CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR, Type.EXPORTED_HEADERS,
-              CxxDescriptionEnhancer.SHARED_FLAVOR, Type.SHARED,
-              CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, Type.STATIC_PIC,
-              CxxDescriptionEnhancer.STATIC_FLAVOR, Type.STATIC));
+          ImmutableMap.<Flavor, Type>builder()
+              .put(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR, Type.HEADERS)
+              .put(
+                  CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
+                  Type.EXPORTED_HEADERS)
+              .put(CxxDescriptionEnhancer.SHARED_FLAVOR, Type.SHARED)
+              .put(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, Type.STATIC_PIC)
+              .put(CxxDescriptionEnhancer.STATIC_FLAVOR, Type.STATIC)
+              .put(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR, Type.MACH_O_BUNDLE)
+              .build());
 
   private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
@@ -259,7 +264,8 @@ public class CxxLibraryDescription implements
       ImmutableList<Path> frameworkSearchPaths,
       Optional<String> soname,
       CxxSourceRuleFactory.Strategy compileStrategy,
-      Optional<Linker.CxxRuntimeType> cxxRuntimeType) {
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
+      Linker.LinkType linkType) {
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
@@ -305,13 +311,14 @@ public class CxxLibraryDescription implements
             extraCxxLdFlags,
             linkerFlags,
             sharedTarget,
-            Linker.LinkType.SHARED,
+            linkType,
             Optional.of(sharedLibrarySoname),
             sharedLibraryPath,
             objects.values(),
             Linker.LinkableDepType.SHARED,
             params.getDeps(),
-            cxxRuntimeType);
+            cxxRuntimeType,
+            Optional.<SourcePath>absent());
   }
 
   /**
@@ -503,7 +510,8 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       A args,
-      CxxSourceRuleFactory.Strategy compileStrategy) {
+      CxxSourceRuleFactory.Strategy compileStrategy,
+      Linker.LinkType linkType) {
     ImmutableList.Builder<String> linkerFlags = ImmutableList.builder();
 
     linkerFlags.addAll(
@@ -551,7 +559,8 @@ public class CxxLibraryDescription implements
         args.frameworkSearchPaths.get(),
         args.soname,
         compileStrategy,
-        args.cxxRuntimeType);
+        args.cxxRuntimeType,
+        linkType);
   }
 
   /**
@@ -680,7 +689,16 @@ public class CxxLibraryDescription implements
             resolver,
             platform.get().getValue(),
             args,
-            compileStrategy);
+            compileStrategy,
+            Linker.LinkType.SHARED);
+      } else if (type.get().getValue().equals(Type.MACH_O_BUNDLE)) {
+        return createSharedLibraryBuildRule(
+            typeParams,
+            resolver,
+            platform.get().getValue(),
+            args,
+            compileStrategy,
+            Linker.LinkType.MACH_O_BUNDLE);
       } else if (type.get().getValue().equals(Type.STATIC)) {
         return createStaticLibraryBuildRule(
             typeParams,

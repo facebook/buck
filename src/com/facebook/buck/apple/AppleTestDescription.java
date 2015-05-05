@@ -112,7 +112,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     if (createBundle) {
       extraFlavorsBuilder.add(
           LIBRARY_FLAVOR,
-          CxxDescriptionEnhancer.SHARED_FLAVOR);
+          CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR);
     }
     if (addDefaultPlatform) {
       extraFlavorsBuilder.add(defaultCxxPlatform.getFlavor());

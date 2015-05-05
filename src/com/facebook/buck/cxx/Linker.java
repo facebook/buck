@@ -50,6 +50,10 @@ public interface Linker {
     // Link as shared library, which can be loaded into a process image.
     SHARED,
 
+    // Mach-O only: Link as a bundle, which can be loaded into a process image and
+    // use that image's symbols.
+    MACH_O_BUNDLE,
+
   }
 
   /**

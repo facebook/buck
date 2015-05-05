@@ -210,7 +210,8 @@ public class PrebuiltCxxLibraryDescription
             new PathSourcePath(params.getProjectFilesystem(), staticLibraryPath)),
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
-        Optional.<Linker.CxxRuntimeType>absent());
+        Optional.<Linker.CxxRuntimeType>absent(),
+        Optional.<SourcePath>absent());
   }
 
   @Override
