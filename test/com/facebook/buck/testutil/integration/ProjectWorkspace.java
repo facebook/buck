@@ -361,6 +361,10 @@ public class ProjectWorkspace {
     Files.copy(getFile(source), getFile(dest));
   }
 
+  public void copyRecursively(Path source, Path pathRelativeToProjectRoot) throws IOException {
+    MoreFiles.copyRecursively(source, destPath.resolve(pathRelativeToProjectRoot));
+  }
+
   public void move(String source, String dest) throws IOException {
     Files.move(getFile(source), getFile(dest));
   }

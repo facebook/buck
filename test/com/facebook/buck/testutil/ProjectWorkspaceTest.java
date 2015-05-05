@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -28,6 +29,9 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ProjectWorkspaceTest {
 
@@ -44,5 +48,27 @@ public class ProjectWorkspaceTest {
     workspace.writeContentsToPath("bye world", "test.file");
 
     assertEquals("bye world", Files.toString(workspace.getFile("test.file"), Charsets.UTF_8));
+  }
+
+  @Test
+  public void testCopyRecursively() throws IOException {
+    Path templateDir = java.nio.file.Files.createTempDirectory("template");
+    Path sourceDir = java.nio.file.Files.createTempDirectory("source");
+    Path testSubdir = sourceDir.resolve("subdir");
+    java.nio.file.Files.createDirectory(testSubdir);
+    Path testFile = testSubdir.resolve("test.file");
+    java.nio.file.Files.write(testFile, ImmutableList.of("Hello world"), Charsets.UTF_8);
+    Path testFile2 = testSubdir.resolve("test.file2");
+    java.nio.file.Files.write(testFile2, ImmutableList.of("Goodbye world"), Charsets.UTF_8);
+
+    ProjectWorkspace workspace = new ProjectWorkspace(templateDir, tmpFolder);
+    workspace.copyRecursively(sourceDir, Paths.get("destdir"));
+
+    assertEquals(
+        "Hello world\n",
+        Files.toString(workspace.getFile("destdir/subdir/test.file"), Charsets.UTF_8));
+    assertEquals(
+        "Goodbye world\n",
+        Files.toString(workspace.getFile("destdir/subdir/test.file2"), Charsets.UTF_8));
   }
 }
