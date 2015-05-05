@@ -30,13 +30,13 @@ public interface BuildEngine {
   /**
    * Build the given build rule and return a future to the build rule success.
    */
-  ListenableFuture<BuildRuleSuccess> build(BuildContext context, BuildRule rule);
+  ListenableFuture<BuildResult> build(BuildContext context, BuildRule rule);
 
   /**
    * Returns the build result of the build rule associated with the given build target.
    * Returns {@code null} if the build rule has not yet been built.
    */
-  BuildRuleSuccess getBuildRuleResult(BuildTarget buildTarget)
+  BuildResult getBuildRuleResult(BuildTarget buildTarget)
       throws ExecutionException, InterruptedException;
 
   /**

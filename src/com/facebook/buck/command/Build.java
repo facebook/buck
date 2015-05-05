@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.ImmutableBuildContext;
@@ -217,24 +218,24 @@ public class Build implements Closeable {
             numRules));
 
 
-    List<ListenableFuture<BuildRuleSuccess>> futures = FluentIterable.from(rulesToBuild)
+    List<ListenableFuture<BuildResult>> futures = FluentIterable.from(rulesToBuild)
         .transform(
-        new Function<BuildRule, ListenableFuture<BuildRuleSuccess>>() {
+        new Function<BuildRule, ListenableFuture<BuildResult>>() {
           @Override
-          public ListenableFuture<BuildRuleSuccess> apply(BuildRule rule) {
+          public ListenableFuture<BuildResult> apply(BuildRule rule) {
             return buildEngine.build(buildContext, rule);
           }
         }).toList();
 
     // Get the Future representing the build and then block until everything is built.
-    ListenableFuture<List<BuildRuleSuccess>> buildFuture;
+    ListenableFuture<List<BuildResult>> buildFuture;
     if (isKeepGoing) {
       buildFuture = Futures.successfulAsList(futures);
     } else {
       buildFuture = Futures.allAsList(futures);
     }
 
-    List<BuildRuleSuccess> results;
+    List<BuildResult> results;
     try {
       results = buildFuture.get();
     } catch (InterruptedException e) {
@@ -253,7 +254,10 @@ public class Build implements Closeable {
     Preconditions.checkState(rulesToBuild.size() == results.size());
     for (int i = 0, len = rulesToBuild.size(); i < len; i++) {
       BuildRule rule = rulesToBuild.get(i);
-      BuildRuleSuccess success = results.get(i);
+      BuildRuleSuccess success = null;
+      if (results.get(i) != null) {
+        success = new BuildRuleSuccess(rule, results.get(i).getSuccess());
+      }
       resultBuilder.put(rule, Optional.fromNullable(success));
     }
 

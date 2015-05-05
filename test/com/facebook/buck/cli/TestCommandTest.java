@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.rules.BuildRuleSuccess.Type.BUILT_LOCALLY;
+import static com.facebook.buck.rules.BuildRuleSuccess.Type.FETCHED_FROM_CACHE;
+import static com.facebook.buck.rules.BuildRuleSuccess.Type.MATCHING_RULE_KEY;
 import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createNiceMock;
@@ -38,10 +41,11 @@ import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
@@ -637,8 +641,9 @@ public class TestCommandTest {
     );
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    BuildResult result = new BuildResult(FETCHED_FROM_CACHE, CacheResult.hit("dir"));
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
-        .andReturn(new BuildRuleSuccess(testRule, BuildRuleSuccess.Type.FETCHED_FROM_CACHE));
+        .andReturn(result);
     replay(executionContext, cachingBuildEngine);
 
     assertTrue(
@@ -670,8 +675,9 @@ public class TestCommandTest {
     );
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    BuildResult result = new BuildResult(BUILT_LOCALLY, CacheResult.skip());
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
-        .andReturn(new BuildRuleSuccess(testRule, BuildRuleSuccess.Type.BUILT_LOCALLY));
+        .andReturn(result);
     replay(executionContext, cachingBuildEngine);
 
     assertTrue(
@@ -711,8 +717,9 @@ public class TestCommandTest {
     expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(false);
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    BuildResult result = new BuildResult(MATCHING_RULE_KEY, CacheResult.skip());
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
-        .andReturn(new BuildRuleSuccess(testRule, BuildRuleSuccess.Type.MATCHING_RULE_KEY));
+        .andReturn(result);
     replay(executionContext, cachingBuildEngine, testRuleKeyFileHelper);
 
     assertTrue(

@@ -54,7 +54,7 @@ public class BuildResult {
   }
 
   @Nullable
-  BuildRuleSuccess.Type getSuccess() {
+  public BuildRuleSuccess.Type getSuccess() {
     return success;
   }
 

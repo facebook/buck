@@ -35,6 +35,7 @@ import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.CachingBuildEngine;
@@ -745,7 +746,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       boolean isRunningWithTestSelectors)
       throws IOException, ExecutionException, InterruptedException {
     boolean isTestRunRequired;
-    BuildRuleSuccess success;
+    BuildResult result;
     if (executionContext.isDebugEnabled()) {
       // If debug is enabled, then we should always run the tests as the user is expecting to
       // hook up a debugger.
@@ -755,9 +756,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       // we should always run each test (and never look at the cache.)
       // TODO(user) When #3090004 and #3436849 are closed we can respect the cache again.
       isTestRunRequired = true;
-    } else if (((success = cachingBuildEngine.getBuildRuleResult(
+    } else if (((result = cachingBuildEngine.getBuildRuleResult(
         test.getBuildTarget())) != null) &&
-            success.getType() == BuildRuleSuccess.Type.MATCHING_RULE_KEY &&
+            result.getSuccess() == BuildRuleSuccess.Type.MATCHING_RULE_KEY &&
             isResultsCacheEnabled &&
             test.hasTestResultFiles(executionContext) &&
             testRuleKeyFileHelper.isRuleKeyInDir(test)) {

@@ -71,7 +71,7 @@ public class CachingBuildEngine implements BuildEngine {
    * These are the values returned by {@link #build(BuildContext, BuildRule)}.
    * This must always return the same value for the build of each target.
    */
-  private final ConcurrentMap<BuildTarget, SettableFuture<BuildRuleSuccess>> results =
+  private final ConcurrentMap<BuildTarget, SettableFuture<BuildResult>> results =
       Maps.newConcurrentMap();
 
   private final ConcurrentMap<BuildTarget, RuleKey> ruleKeys = Maps.newConcurrentMap();
@@ -90,10 +90,9 @@ public class CachingBuildEngine implements BuildEngine {
     this(service, 0L);
   }
 
-  @VisibleForTesting
-  public SettableFuture<BuildRuleSuccess> createFutureFor(BuildTarget buildTarget) {
-    SettableFuture<BuildRuleSuccess> newFuture = SettableFuture.create();
-    SettableFuture<BuildRuleSuccess> result = results.putIfAbsent(
+  private SettableFuture<BuildResult> createFutureFor(BuildTarget buildTarget) {
+    SettableFuture<BuildResult> newFuture = SettableFuture.create();
+    SettableFuture<BuildResult> result = results.putIfAbsent(
         buildTarget,
         newFuture);
     return result == null ? newFuture : result;
@@ -102,13 +101,14 @@ public class CachingBuildEngine implements BuildEngine {
   @VisibleForTesting
   void setBuildRuleResult(
       BuildTarget buildTarget,
-      BuildRuleSuccess success) {
-    createFutureFor(buildTarget).set(success);
+      BuildRuleSuccess success,
+      CacheResult cacheResult) {
+    createFutureFor(buildTarget).set(new BuildResult(success.getType(), cacheResult));
   }
 
   @Override
   public boolean isRuleBuilt(BuildTarget buildTarget) throws InterruptedException {
-    SettableFuture<BuildRuleSuccess> resultFuture = results.get(buildTarget);
+    SettableFuture<BuildResult> resultFuture = results.get(buildTarget);
     return resultFuture != null && MoreFutures.isSuccess(resultFuture);
   }
 
@@ -118,13 +118,13 @@ public class CachingBuildEngine implements BuildEngine {
     return ruleKeys.get(buildTarget);
   }
 
-  private ListenableFuture<BuildRuleSuccess> buildInternal(
+  private ListenableFuture<BuildResult> buildInternal(
       final BuildContext context,
       final BuildRule rule,
       List<ListenableFuture<Void>> asyncJobs) {
 
-    final SettableFuture<BuildRuleSuccess> newFuture = SettableFuture.create();
-    SettableFuture<BuildRuleSuccess> existingFuture = results.putIfAbsent(
+    final SettableFuture<BuildResult> newFuture = SettableFuture.create();
+    SettableFuture<BuildResult> existingFuture = results.putIfAbsent(
         rule.getBuildTarget(),
         newFuture);
 
@@ -139,17 +139,17 @@ public class CachingBuildEngine implements BuildEngine {
 
       // Invoke every dep's build() method and create an uber-ListenableFuture that represents the
       // successful completion of all deps.
-      List<ListenableFuture<BuildRuleSuccess>> builtDeps =
+      List<ListenableFuture<BuildResult>> builtDeps =
           Lists.newArrayListWithCapacity(rule.getDeps().size());
       for (BuildRule dep : rule.getDeps()) {
         builtDeps.add(buildInternal(context, dep, asyncJobs));
       }
-      ListenableFuture<List<BuildRuleSuccess>> allBuiltDeps = Futures.allAsList(builtDeps);
+      ListenableFuture<List<BuildResult>> allBuiltDeps = Futures.allAsList(builtDeps);
 
       // Schedule this rule to build itself once all of the deps are built.
       ListenableFuture<Void> callbackFuture = context.getStepRunner().addCallback(
           allBuiltDeps,
-          new FutureCallback<List<BuildRuleSuccess>>() {
+          new FutureCallback<List<BuildResult>>() {
 
             private final BuckEventBus eventBus = context.getEventBus();
 
@@ -189,12 +189,12 @@ public class CachingBuildEngine implements BuildEngine {
             private boolean startOfBuildWasRecordedOnTheEventBus = false;
 
             @Override
-            public void onSuccess(List<BuildRuleSuccess> deps) {
+            public void onSuccess(List<BuildResult> deps) {
               // Record the start of the build.
               eventBus.logVerboseAndPost(LOG, BuildRuleEvent.started(rule));
               startOfBuildWasRecordedOnTheEventBus = true;
 
-              BuildResult result = null;
+              BuildResult result;
               try {
                 ruleKeys.putIfAbsent(rule.getBuildTarget(), rule.getRuleKey());
                 result = buildOnceDepsAreBuilt(
@@ -248,8 +248,7 @@ public class CachingBuildEngine implements BuildEngine {
               doHydrationAfterBuildStepsFinish(rule, onDiskBuildInfo);
 
               // Only now that the rule should be in a completely valid state, resolve the future.
-              BuildRuleSuccess buildRuleSuccess = new BuildRuleSuccess(rule, result.getSuccess());
-              newFuture.set(buildRuleSuccess);
+              newFuture.set(result);
 
               // Finally, upload to the artifact cache.
               if (success != null && success.shouldUploadResultingArtifact()) {
@@ -317,16 +316,16 @@ public class CachingBuildEngine implements BuildEngine {
   }
 
   @Override
-  public ListenableFuture<BuildRuleSuccess> build(BuildContext context, BuildRule rule) {
+  public ListenableFuture<BuildResult> build(BuildContext context, BuildRule rule) {
     // Keep track of all jobs that run asynchronously with respect to the build dep chain.  We want
     // to make sure we wait for these before calling the build finished.
     List<ListenableFuture<Void>> asyncJobs = Lists.newArrayListWithCapacity(rule.getDeps().size());
-    final ListenableFuture<BuildRuleSuccess> result = buildInternal(context, rule, asyncJobs);
+    final ListenableFuture<BuildResult> result = buildInternal(context, rule, asyncJobs);
     return Futures.transform(
         Futures.allAsList(asyncJobs),
-        new AsyncFunction<List<Void>, BuildRuleSuccess>() {
+        new AsyncFunction<List<Void>, BuildResult>() {
           @Override
-          public ListenableFuture<BuildRuleSuccess> apply(List<Void> input) throws Exception {
+          public ListenableFuture<BuildResult> apply(List<Void> input) throws Exception {
             return result;
           }
         });
@@ -459,9 +458,9 @@ public class CachingBuildEngine implements BuildEngine {
   private boolean hasLocalBuildChain(BuildRule rule, long depth) {
 
     // Look up the success result for this `BuildRule`.
-    BuildRuleSuccess success;
+    BuildRuleSuccess.Type success;
     try {
-      success = Preconditions.checkNotNull(getBuildRuleResult(rule.getBuildTarget()));
+      success = Preconditions.checkNotNull(getBuildRuleResult(rule.getBuildTarget())).getSuccess();
     } catch (InterruptedException | ExecutionException e) {
       // This shouldn't ever happen, as the only way we can get to this point is if the
       // previous build rules in the dep tree generated results.
@@ -470,7 +469,7 @@ public class CachingBuildEngine implements BuildEngine {
 
     // If we built this locally, and caching is enabled for this rule, it means we likely had
     // a cache miss, and may have a local build chain for the given depth.
-    if (success.getType() == BuildRuleSuccess.Type.BUILT_LOCALLY &&
+    if (success == BuildRuleSuccess.Type.BUILT_LOCALLY &&
         rule.getCacheMode() == CacheMode.ENABLED) {
 
       // If the given `depth` is zero, we've found our local build chain, so return true.
@@ -695,9 +694,9 @@ public class CachingBuildEngine implements BuildEngine {
 
   @Nullable
   @Override
-  public BuildRuleSuccess getBuildRuleResult(BuildTarget buildTarget)
+  public BuildResult getBuildRuleResult(BuildTarget buildTarget)
       throws ExecutionException, InterruptedException {
-    SettableFuture<BuildRuleSuccess> result = results.get(buildTarget);
+    SettableFuture<BuildResult> result = results.get(buildTarget);
     if (result == null) {
       return null;
     }
