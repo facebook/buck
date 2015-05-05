@@ -76,16 +76,19 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
+  private final AppleConfig appleConfig;
   private final AppleLibraryDescription appleLibraryDescription;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
 
   public AppleTestDescription(
+      AppleConfig appleConfig,
       AppleLibraryDescription description,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform) {
+    this.appleConfig = appleConfig;
     appleLibraryDescription = description;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.platformFlavorsToAppleCxxPlatforms =
@@ -114,6 +117,15 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    String extension = args.extension.isLeft() ?
+        args.extension.getLeft().toFileExtension() :
+        args.extension.getRight();
+    if (!AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS.contains(extension)) {
+      throw new HumanReadableException(
+          "Invalid bundle extension for apple_test rule: %s (must be one of %s)",
+          extension,
+          AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS);
+    }
     boolean createBundle = Sets.intersection(
         params.getBuildTarget().getFlavors(),
         NON_LIBRARY_FLAVORS).isEmpty();
@@ -218,14 +230,17 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         mergedAssetCatalog);
 
     return new AppleTest(
+        appleConfig.getXctoolPath(),
+        "iphonesimulator", // TODO(user): Get this from the CxxPlatform.
+        "x86_64", // TODO(user): Get this from the CxxPlatform.
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         sourcePathResolver,
         bundle,
+        extension,
         args.contacts.get(),
-        args.labels.get(),
-        ImmutableSet.<BuildRule>of());
+        args.labels.get());
   }
 
   @SuppressFieldNotInitialized

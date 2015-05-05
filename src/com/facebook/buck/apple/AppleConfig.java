@@ -139,4 +139,13 @@ public class AppleConfig {
   public Optional<String> getTargetSdkVersion(ApplePlatform platform) {
     return delegate.getValue("apple", platform.getName() + "_target_sdk_version");
   }
+
+  public Optional<Path> getXctoolPath() {
+    Optional<String> xctoolPath = delegate.getValue("apple", "xctool_path");
+    if (xctoolPath.isPresent()) {
+      return Optional.of(Paths.get(xctoolPath.get()));
+    } else {
+      return Optional.absent();
+    }
+  }
 }

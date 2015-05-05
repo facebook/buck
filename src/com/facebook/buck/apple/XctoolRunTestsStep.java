@@ -67,7 +67,7 @@ public class XctoolRunTestsStep extends ShellStep {
         AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS,
         logicTestBundlePaths);
     Preconditions.checkArgument(
-        AppleBundleExtensions.allPathsHaveValidTestExtensions(logicTestBundlePaths),
+        AppleBundleExtensions.allPathsHaveValidTestExtensions(appTestBundleToHostAppPaths.keySet()),
         "Extension of all app tests must be one of %s (got %s)",
         AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS,
         appTestBundleToHostAppPaths.keySet());

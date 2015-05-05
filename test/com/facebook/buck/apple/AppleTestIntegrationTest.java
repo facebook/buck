@@ -30,11 +30,13 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.ProcessExecutor;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,6 +47,9 @@ public class AppleTestIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testAppleTestHeaderSymlinkTree() throws IOException {
@@ -250,6 +255,61 @@ public class AppleTestIntegrationTest {
         buildTarget.getFullyQualifiedName());
     result.assertSuccess();
     workspace.verify();
+  }
+
+  @Test
+  public void shouldRefuseToRunAppleTestIfXctestNotPresent() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_xctest", tmp);
+    workspace.setUp();
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(containsString(
+        "Set xctool_path = /path/to/xctool in the [apple] section of .buckconfig " +
+        "to run this test"));
+    workspace.runBuckCommand("test", "//:foo");
+  }
+
+  @Test
+  public void successOnTestPassing() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_xctest", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    workspace.writeContentsToPath(
+         "[apple]\n  xctool_path = xctool/bin/xctool\n",
+         ".buckconfig.local");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:foo");
+    result.assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
+  }
+
+  @Test
+  public void exitCodeIsCorrectOnTestFailure() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_xctest_failure", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    workspace.writeContentsToPath(
+         "[apple]\n  xctool_path = xctool/bin/xctool\n",
+         ".buckconfig.local");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:foo");
+    result.assertSpecialExitCode("test should fail", 42);
+    assertThat(
+        result.getStderr(),
+        containsString("0 Passed   0 Skipped   1 Failed   FooXCTest"));
+    assertThat(
+        result.getStderr(),
+        containsString("FAILURE -[FooXCTest testTwoPlusTwoEqualsFive]: FooXCTest.m:9"));
   }
 
   private static void assertIsSymbolicLink(

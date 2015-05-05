@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -25,38 +27,71 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.test.TestCaseSummary;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.UnzipStep;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.BufferedReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
+import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class AppleTest extends NoopBuildRule implements TestRule {
 
+  @AddToRuleKey
+  private final Optional<Path> xctoolPath;
+
+  @AddToRuleKey
+  private final String sdkName;
+
+  @AddToRuleKey
+  private final String arch;
+
+  @AddToRuleKey
   private final BuildRule testBundle;
+
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<Label> labels;
-  private final ImmutableSet<BuildRule> sourceUnderTest;
+
+  private final Path testBundleDirectory;
+  private final Path testOutputPath;
 
   AppleTest(
+      Optional<Path> xctoolPath,
+      String sdkName,
+      String arch,
       BuildRuleParams params,
       SourcePathResolver resolver,
       BuildRule testBundle,
+      String testBundleExtension,
       ImmutableSet<String> contacts,
-      ImmutableSet<Label> labels,
-      ImmutableSet<BuildRule> sourceUnderTest) {
+      ImmutableSet<Label> labels) {
     super(params, resolver);
+    this.xctoolPath = xctoolPath;
+    this.sdkName = sdkName;
+    this.arch = arch;
     this.testBundle = testBundle;
     this.contacts = contacts;
     this.labels = labels;
-    this.sourceUnderTest = sourceUnderTest;
+    // xctool requires the extension to be present to determine whether the test is ocunit or xctest
+    this.testBundleDirectory = BuildTargets.getScratchPath(
+        params.getBuildTarget(),
+        "__test_bundle_%s__." + testBundleExtension);
+    this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
   }
 
   /**
@@ -78,12 +113,14 @@ public class AppleTest extends NoopBuildRule implements TestRule {
 
   @Override
   public ImmutableSet<BuildRule> getSourceUnderTest() {
-    return sourceUnderTest;
+    // Apple tests always express a rule -> test dependency, not the other way
+    // around.
+    return ImmutableSet.of();
   }
 
   @Override
   public boolean hasTestResultFiles(ExecutionContext executionContext) {
-    return false;
+    return executionContext.getProjectFilesystem().exists(testOutputPath);
   }
 
   @Override
@@ -93,31 +130,74 @@ public class AppleTest extends NoopBuildRule implements TestRule {
       boolean isDryRun,
       boolean isShufflingTests,
       TestSelectorList testSelectorList) {
-    // TODO(user): Make iOS tests runnable by Buck.
-    return ImmutableList.of();
+    if (!xctoolPath.isPresent()) {
+      throw new HumanReadableException(
+          "Set xctool_path = /path/to/xctool in the [apple] section of .buckconfig " +
+          "to run this test");
+    }
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    Path resolvedTestBundleDirectory = executionContext.getProjectFilesystem().resolve(
+        testBundleDirectory);
+    steps.add(new MakeCleanDirectoryStep(resolvedTestBundleDirectory));
+    steps.add(new UnzipStep(testBundle.getPathToOutputFile(), resolvedTestBundleDirectory));
+
+    Path pathToTestOutput = executionContext.getProjectFilesystem().resolve(
+        getPathToTestOutputDirectory());
+    steps.add(new MakeCleanDirectoryStep(pathToTestOutput));
+
+    Path resolvedTestOutputPath = executionContext.getProjectFilesystem().resolve(
+        testOutputPath);
+
+    steps.add(
+        new XctoolRunTestsStep(
+            xctoolPath.get(),
+            arch,
+            sdkName,
+            ImmutableSet.of(resolvedTestBundleDirectory),
+            ImmutableMap.<Path, Path>of(), // TODO(user): Add support for app tests.
+            resolvedTestOutputPath));
+
+    return steps.build();
   }
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext,
+      final ExecutionContext executionContext,
       boolean isUsingTestSelectors,
       boolean isDryRun) {
     return new Callable<TestResults>() {
       @Override
       public TestResults call() throws Exception {
-        // TODO(user): Make iOS tests runnable by Buck.
-        return new TestResults(
+        Path resolvedOutputPath = executionContext.getProjectFilesystem().resolve(testOutputPath);
+        try (BufferedReader reader =
+               Files.newBufferedReader(resolvedOutputPath, StandardCharsets.UTF_8)) {
+          return new TestResults(
             getBuildTarget(),
-            ImmutableList.<TestCaseSummary>of(),
+            XctoolOutputParsing.parseOutputFromReader(reader),
             contacts,
             FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+        }
       }
     };
   }
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    // TODO(user): Make iOS tests runnable by Buck.
-    return Paths.get("testOutputDirectory");
+    // TODO(user): Refactor the JavaTest implementation; this is identical.
+
+    List<String> pathsList = new ArrayList<>();
+    pathsList.add(getBuildTarget().getBaseNameWithSlash());
+    pathsList.add(
+        String.format("__apple_test_%s_output__", getBuildTarget().getShortNameAndFlavorPostfix()));
+
+    // Putting the one-time test-sub-directory below the usual directory has the nice property that
+    // doing a test run without "--one-time-output" will tidy up all the old one-time directories!
+    String subdir = BuckConstant.oneTimeTestSubdirectory;
+    if (subdir != null && !subdir.isEmpty()) {
+      pathsList.add(subdir);
+    }
+
+    String[] pathsArray = pathsList.toArray(new String[pathsList.size()]);
+    return Paths.get(BuckConstant.GEN_DIR, pathsArray);
   }
 }

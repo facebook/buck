@@ -126,6 +126,7 @@ public class FakeAppleRuleDescriptions {
    */
   public static final AppleTestDescription TEST_DESCRIPTION =
       new AppleTestDescription(
+          new FakeAppleConfig(),
           LIBRARY_DESCRIPTION,
           DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
