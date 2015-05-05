@@ -331,12 +331,6 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
         } else {
           localPath = canonicalPath.getFileName().toString();
         }
-      // MOE:begin_strip
-      } else {
-        // In fbandroid, we have genrules that break the invariant about not referring to something
-        // out of the current BUCK package. Handle that case in an inelegant but effective way.
-        localPath = new File(localPath).getName();
-      // MOE:end_strip
       }
 
       Path destination = pathToSrcDirectory.resolve(localPath);
