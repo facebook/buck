@@ -144,14 +144,12 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
             BuildRules.toBuildRulesFor(
                 params.getBuildTarget(),
                 resolver,
-                binaryTargetNode.getDeclaredDeps(),
-                false /* allowNonExistentRule */)),
+                binaryTargetNode.getDeclaredDeps())),
         Suppliers.ofInstance(
             BuildRules.toBuildRulesFor(
                 params.getBuildTarget(),
                 resolver,
-                binaryTargetNode.getExtraDeps(),
-                false /* allowNonExistentRule */)),
+                binaryTargetNode.getExtraDeps())),
         params.getProjectFilesystem(),
         params.getRuleKeyBuilderFactory(),
         binaryTargetNode.getType(),

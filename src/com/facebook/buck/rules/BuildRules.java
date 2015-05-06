@@ -40,15 +40,14 @@ public class BuildRules {
   public static ImmutableSortedSet<BuildRule> toBuildRulesFor(
       BuildTarget invokingBuildTarget,
       BuildRuleResolver ruleResolver,
-      Iterable<BuildTarget> buildTargets,
-      boolean allowNonExistentRule) {
+      Iterable<BuildTarget> buildTargets) {
     ImmutableSortedSet.Builder<BuildRule> buildRules = ImmutableSortedSet.naturalOrder();
 
     for (BuildTarget target : buildTargets) {
       Optional<BuildRule> buildRule = ruleResolver.getRuleOptional(target);
       if (buildRule.isPresent()) {
         buildRules.add(buildRule.get());
-      } else if (!allowNonExistentRule) {
+      } else {
         throw new HumanReadableException("No rule for %s found when processing %s",
             target, invokingBuildTarget.getFullyQualifiedName());
       }

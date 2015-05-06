@@ -334,8 +334,7 @@ public class ThriftLibraryDescription
                 ImmutableList.<FlavorDomain<?>>of(enhancers),
                 FluentIterable.from(thriftDeps)
                     .transform(HasBuildTarget.TO_TARGET)),
-            implicitDeps),
-        false);
+            implicitDeps));
 
     // Create a a build rule for thrift source file, to compile the language specific sources.
     // They keys in this map are the logical names of the thrift files (e.g as specific in a BUCK

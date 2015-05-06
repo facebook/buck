@@ -27,6 +27,7 @@ import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.Keystore;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -36,7 +37,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
@@ -67,6 +67,7 @@ public class AndroidBinaryDescription
     implements Description<AndroidBinaryDescription.Arg>, Flavored {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("android_binary");
+  private static final Logger LOG = Logger.get(AndroidBinaryDescription.class);
 
   /**
    * By default, assume we have 5MB of linear alloc,
@@ -199,13 +200,19 @@ public class AndroidBinaryDescription
       return packageStringAssets.get();
     }
 
-    boolean allowNonExistentRule =
-          false;
-    ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = BuildRules.toBuildRulesFor(
-        params.getBuildTarget(),
-        resolver,
-        args.noDx.or(ImmutableSet.<BuildTarget>of()),
-        allowNonExistentRule);
+    // Build rules added to "no_dx" are only hints, not hard dependencies. Therefore, although a
+    // target may be mentioned in that parameter, it may not be present as a build rule.
+    ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
+    for (BuildTarget noDxTarget : args.noDx.or(ImmutableSet.<BuildTarget>of())) {
+      Optional<BuildRule> ruleOptional = resolver.getRuleOptional(noDxTarget);
+      if (ruleOptional.isPresent()) {
+        builder.add(ruleOptional.get());
+      } else {
+        LOG.info("%s: no_dx target not a dependency: %s", target, noDxTarget);
+      }
+    }
+
+    ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = builder.build();
     ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
         FluentIterable.from(buildRulesToExcludeFromDex)
             .filter(JavaLibrary.class)

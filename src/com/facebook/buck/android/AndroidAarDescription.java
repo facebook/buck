@@ -238,8 +238,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     return BuildRules.toBuildRulesFor(
         originalBuildTarget,
         ruleResolver,
-        buildTargets,
-        /* allowNonExistentRules */ false);
+        buildTargets);
   }
 
   private ImmutableList<SourcePath> getSourcePathForDirectories(

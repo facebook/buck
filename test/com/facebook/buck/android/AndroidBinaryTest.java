@@ -266,7 +266,8 @@ public class AndroidBinaryTest {
         "secondary zips)", 2, secondaryDexDirectories.build().size());
 
     List<Step> steps = commandsBuilder.build();
-    assertCommandsInOrder(steps,
+    assertCommandsInOrder(
+        steps,
         ImmutableList.<Class<?>>of(SplitZipStep.class, SmartDexingStep.class));
   }
 
@@ -283,7 +284,8 @@ public class AndroidBinaryTest {
         .setLinearAllocHardLimit(0)
         .setPrimaryDexScenarioOverflowAllowed(true)
         .setDexCompression(DexStore.JAR)
-        .setIntraDexReorderResources(true,
+        .setIntraDexReorderResources(
+            true,
             reorderTool,
             reorderData)
         .build(ruleResolver);
@@ -340,6 +342,21 @@ public class AndroidBinaryTest {
             Paths.get("buck-out/bin/__filtered__target#resources_filter__/0"),
             Paths.get("buck-out/bin/__filtered__target#resources_filter__/1")),
         filteredDirs.build());
+  }
+
+  @Test
+  public void noDxParametersAreHintsAndNotHardDependencies() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRule keystoreRule = addKeystoreRule(resolver);
+
+    AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:target"))
+        .setBuildTargetsToExcludeFromDex(
+            ImmutableSet.of(
+                BuildTargetFactory.newInstance(
+                    "//missing:dep")))
+        .setKeystore(keystoreRule.getBuildTarget())
+        .setManifest(new TestSourcePath("AndroidManifest.xml"))
+        .build(resolver);
   }
 
   private Keystore addKeystoreRule(BuildRuleResolver ruleResolver) {

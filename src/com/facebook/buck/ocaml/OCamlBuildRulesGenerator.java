@@ -183,8 +183,7 @@ public class OCamlBuildRulesGenerator {
                       BuildRules.toBuildRulesFor(
                           params.getBuildTarget(),
                           resolver,
-                          cxxPreprocessorInput.getRules(),
-                          false))
+                          cxxPreprocessorInput.getRules()))
                   .addAll(params.getDeclaredDeps())
                   .build()),
         /* extraDeps */ Suppliers.ofInstance(params.getExtraDeps()));

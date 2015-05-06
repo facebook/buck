@@ -82,8 +82,7 @@ public class CxxSourceRuleFactory {
                   BuildRules.toBuildRulesFor(
                       params.getBuildTarget(),
                       resolver,
-                      cxxPreprocessorInput.getRules(),
-                      false))
+                      cxxPreprocessorInput.getRules()))
               .build();
         }
       });

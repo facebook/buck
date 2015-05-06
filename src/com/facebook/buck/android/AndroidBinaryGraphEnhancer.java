@@ -578,8 +578,7 @@ public class AndroidBinaryGraphEnhancer {
     return BuildRules.toBuildRulesFor(
         originalBuildTarget,
         ruleResolver,
-        buildTargets,
-        /* allowNonExistentRules */ false);
+        buildTargets);
   }
 
   private ImmutableList<HasAndroidResourceDeps> getTargetsAsResourceDeps(
