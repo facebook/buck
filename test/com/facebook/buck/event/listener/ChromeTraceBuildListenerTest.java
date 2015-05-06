@@ -41,7 +41,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
-import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -179,7 +179,7 @@ public class ChromeTraceBuildListenerTest {
         rule,
         BuildRuleStatus.SUCCESS,
         CacheResult.miss(),
-        Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)));
+        Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
 
     try (TraceEventLogger ignored = TraceEventLogger.start(
         eventBus, "planning", ImmutableMap.of("nefarious", "true")

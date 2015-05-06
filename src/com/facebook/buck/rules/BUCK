@@ -85,7 +85,7 @@ java_immutables_library(
     'BuildRuleParams.java',
     'BuildRules.java',
     'BuildRuleStatus.java',
-    'BuildRuleSuccess.java',
+    'BuildRuleSuccessType.java',
     'BuildTargetSourcePath.java',
     'ConstructorArgMarshaller.java',
     'ConstructorArgMarshalException.java',

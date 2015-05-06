@@ -184,10 +184,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(MoreExecutors.newDirectExecutorService());
     // The dependent rule will be built immediately with a distinct rule key.
-    cachingBuildEngine.setBuildRuleResult(
-        depTarget,
-        new BuildRuleSuccess(dep, BuildRuleSuccess.Type.FETCHED_FROM_CACHE),
-        CacheResult.skip());
     expect(dep.getRuleKey()).andReturn(new RuleKey("19d2558a6bd3a34fb3f95412de9da27ed32fe208"));
 
     // Add a build step so we can verify that the steps are executed.
@@ -206,8 +202,14 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Attempting to build the rule should force a rebuild due to a cache miss.
     replayAll();
+
+    cachingBuildEngine.setBuildRuleResult(
+        dep,
+        BuildRuleSuccessType.FETCHED_FROM_CACHE,
+        CacheResult.skip());
+
     BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
-    assertEquals(BuildRuleSuccess.Type.BUILT_LOCALLY, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
     buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
     verifyAll();
 
@@ -218,7 +220,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertEquals(configureTestEvent(BuildRuleEvent.finished(ruleToTest,
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
-            Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
+            Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
             buckEventBus),
         events.get(events.size() - 2));
   }
@@ -233,16 +235,16 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildTarget target1 = BuildTargetFactory.newInstance("//java/com/example:rule1");
     FakeBuildRule dep1 = new FakeBuildRule(AndroidResourceDescription.TYPE, target1, pathResolver);
     cachingBuildEngine.setBuildRuleResult(
-        target1,
-        new BuildRuleSuccess(dep1, BuildRuleSuccess.Type.BUILT_LOCALLY),
+        dep1,
+        BuildRuleSuccessType.BUILT_LOCALLY,
         CacheResult.skip());
     dep1.setRuleKey(new RuleKey(Strings.repeat("a", 40)));
 
     BuildTarget target2 = BuildTargetFactory.newInstance("//java/com/example:rule2");
     FakeBuildRule dep2 = new FakeBuildRule(AndroidResourceDescription.TYPE, target2, pathResolver);
     cachingBuildEngine.setBuildRuleResult(
-        target2,
-        new BuildRuleSuccess(dep2, BuildRuleSuccess.Type.FETCHED_FROM_CACHE),
+        dep2,
+        BuildRuleSuccessType.FETCHED_FROM_CACHE,
         CacheResult.skip());
         dep2.setRuleKey(new RuleKey(Strings.repeat("b", 40)));
 
@@ -296,7 +298,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         .build();
 
     BuildResult result = cachingBuildEngine.build(buildContext, buildRuleToTest).get();
-    assertEquals(result.getSuccess(), BuildRuleSuccess.Type.BUILT_LOCALLY);
+    assertEquals(result.getSuccess(), BuildRuleSuccessType.BUILT_LOCALLY);
     eventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
     MoreAsserts.assertListEquals(Lists.newArrayList("Step was executed."), strings);
 
@@ -324,16 +326,16 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildTarget target2 = BuildTargetFactory.newInstance("//java/com/example:rule2");
     FakeBuildRule dep2 = new FakeBuildRule(target2, pathResolver);
     cachingBuildEngine.setBuildRuleResult(
-        target2,
-        new BuildRuleSuccess(dep2, BuildRuleSuccess.Type.FETCHED_FROM_CACHE),
+        dep2,
+        BuildRuleSuccessType.FETCHED_FROM_CACHE,
         CacheResult.skip());
     dep2.setRuleKey(new RuleKey(Strings.repeat("b", 40)));
 
     BuildTarget target1 = BuildTargetFactory.newInstance("//java/com/example:rule1");
     FakeBuildRule dep1 = new FakeBuildRule(target1, pathResolver, dep2);
     cachingBuildEngine.setBuildRuleResult(
-        target1,
-        new BuildRuleSuccess(dep1, BuildRuleSuccess.Type.BUILT_LOCALLY),
+        dep1,
+        BuildRuleSuccessType.BUILT_LOCALLY,
         CacheResult.skip());
     dep1.setRuleKey(new RuleKey(Strings.repeat("a", 40)));
 
@@ -394,7 +396,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             "so the future should already be resolved.",
         MoreFutures.isSuccess(buildResult));
     BuildResult result = buildResult.get();
-    assertEquals(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, result.getSuccess());
     assertTrue(
         ((BuildableAbstractCachingBuildRule) buildRule).isInitializedFromDisk());
     assertTrue(
@@ -464,7 +466,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
 
     BuildResult result = buildResult.get();
-    assertEquals(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS, result.getSuccess());
     assertTrue(buildRule.isAbiLoadedFromDisk());
 
     List<BuckEvent> events = listener.getEvents();
@@ -474,7 +476,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(BuildRuleEvent.finished(buildRule,
             BuildRuleStatus.SUCCESS,
             CacheResult.localKeyUnchangedHit(),
-            Optional.of(BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS)),
+            Optional.of(BuildRuleSuccessType.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS)),
             buckEventBus));
 
     verifyAll();
@@ -550,7 +552,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
 
     BuildResult result = buildResult.get();
-    assertEquals(BuildRuleSuccess.Type.BUILT_LOCALLY, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
 
     List<BuckEvent> events = listener.getEvents();
     assertEquals(events.get(0),
@@ -559,7 +561,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(BuildRuleEvent.finished(buildRule,
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
-            Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
+            Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
             buckEventBus));
 
     verifyAll();
@@ -627,7 +629,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
 
     BuildResult result = buildResult.get();
-    assertEquals(BuildRuleSuccess.Type.BUILT_LOCALLY, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
 
     assertTrue(service.shutdownNow().isEmpty());
 
@@ -640,7 +642,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             BuildRuleEvent.finished(buildRule,
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
-                Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
+                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
             buckEventBus).getEventName(),
         events.get(1).getEventName());
 
@@ -709,7 +711,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             "so the future should already be resolved.",
         MoreFutures.isSuccess(buildResult));
     BuildResult result = buildResult.get();
-    assertEquals(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, result.getSuccess());
     assertTrue(
         ((BuildableAbstractCachingBuildRule) buildRule).isInitializedFromDisk());
     assertTrue(
@@ -778,7 +780,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     verifyAll();
 
     BuildResult result = buildResult.get();
-    assertEquals(BuildRuleSuccess.Type.FETCHED_FROM_CACHE, result.getSuccess());
+    assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, result.getSuccess());
     assertTrue(
         ((BuildableAbstractCachingBuildRule) buildRule).isInitializedFromDisk());
     assertTrue(

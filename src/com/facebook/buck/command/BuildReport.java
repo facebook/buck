@@ -16,8 +16,9 @@
 
 package com.facebook.buck.command;
 
+import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.util.Ansi;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -34,7 +35,7 @@ import java.util.Map;
 public class BuildReport {
 
   @SuppressWarnings("PMD.LooseCoupling")
-  private final LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult;
+  private final LinkedHashMap<BuildRule, Optional<BuildResult>> ruleToResult;
 
   /**
    * @param ruleToResult Keys are build rules built during this invocation of Buck. Values reflect
@@ -42,22 +43,23 @@ public class BuildReport {
    *     failed build rule.)
    */
   public BuildReport(@SuppressWarnings("PMD.LooseCoupling") LinkedHashMap<
-      BuildRule, Optional<BuildRuleSuccess>> ruleToResult) {
+      BuildRule, Optional<BuildResult>> ruleToResult) {
     this.ruleToResult = ruleToResult;
   }
 
   public String generateForConsole(Ansi ansi) {
     StringBuilder report = new StringBuilder();
-    for (Map.Entry<BuildRule, Optional<BuildRuleSuccess>> entry : ruleToResult.entrySet()) {
+    for (Map.Entry<BuildRule, Optional<BuildResult>> entry : ruleToResult.entrySet()) {
       BuildRule rule = entry.getKey();
-      Optional<BuildRuleSuccess> success = entry.getValue();
+      Optional<BuildRuleSuccessType> success =
+          entry.getValue().transform(BuildResult.RULE_TO_SUCCESS);
 
       String successIndicator;
       String successType;
       Path outputFile;
       if (success.isPresent()) {
         successIndicator = ansi.asHighlightedSuccessText("OK  ");
-        successType = success.get().getType().name();
+        successType = success.get().name();
         outputFile = rule.getPathToOutputFile();
       } else {
         successIndicator = ansi.asHighlightedFailureText("FAIL");
@@ -79,9 +81,10 @@ public class BuildReport {
   public String generateJsonBuildReport() throws IOException {
     LinkedHashMap<String, Object> results = Maps.newLinkedHashMap();
     boolean isOverallSuccess = true;
-    for (Map.Entry<BuildRule, Optional<BuildRuleSuccess>> entry : ruleToResult.entrySet()) {
+    for (Map.Entry<BuildRule, Optional<BuildResult>> entry : ruleToResult.entrySet()) {
       BuildRule rule = entry.getKey();
-      Optional<BuildRuleSuccess> success = entry.getValue();
+      Optional<BuildRuleSuccessType> success =
+          entry.getValue().transform(BuildResult.RULE_TO_SUCCESS);
       Map<String, Object> value = Maps.newLinkedHashMap();
 
       boolean isSuccess = success.isPresent();
@@ -91,7 +94,7 @@ public class BuildReport {
       }
 
       if (isSuccess) {
-        value.put("type", success.get().getType().name());
+        value.put("type", success.get().name());
         Path outputFile = rule.getPathToOutputFile();
         value.put("output", outputFile != null ? outputFile.toString() : null);
       }

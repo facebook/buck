@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleSuccess;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -41,8 +40,8 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -74,11 +73,11 @@ import javax.annotation.Nullable;
 
 public class Build implements Closeable {
 
-  private static final Predicate<Optional<BuildRuleSuccess>> RULES_FAILED_PREDICATE =
-      new Predicate<Optional<BuildRuleSuccess>>() {
+  private static final Predicate<Optional<BuildResult>> RULES_FAILED_PREDICATE =
+      new Predicate<Optional<BuildResult>>() {
         @Override
-        public boolean apply(Optional<BuildRuleSuccess> input) {
-          return !input.isPresent();
+        public boolean apply(Optional<BuildResult> input) {
+          return !input.isPresent() || input.get().getSuccess() == null;
         }
       };
 
@@ -172,7 +171,7 @@ public class Build implements Closeable {
    * @param targetish The targets to build. All targets in this iterable must be unique.
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  public LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> executeBuild(
+  public LinkedHashMap<BuildRule, Optional<BuildResult>> executeBuild(
       Iterable<? extends HasBuildTarget> targetish,
       boolean isKeepGoing)
       throws IOException, StepFailedException, ExecutionException, InterruptedException {
@@ -249,16 +248,12 @@ public class Build implements Closeable {
     }
 
     // Insertion order matters
-    LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> resultBuilder = new LinkedHashMap<>();
+    LinkedHashMap<BuildRule, Optional<BuildResult>> resultBuilder = new LinkedHashMap<>();
 
     Preconditions.checkState(rulesToBuild.size() == results.size());
     for (int i = 0, len = rulesToBuild.size(); i < len; i++) {
       BuildRule rule = rulesToBuild.get(i);
-      BuildRuleSuccess success = null;
-      if (results.get(i) != null) {
-        success = new BuildRuleSuccess(rule, results.get(i).getSuccess());
-      }
-      resultBuilder.put(rule, Optional.fromNullable(success));
+      resultBuilder.put(rule, Optional.fromNullable(results.get(i)));
     }
 
     return resultBuilder;
@@ -272,7 +267,7 @@ public class Build implements Closeable {
     int exitCode;
 
     try {
-      LinkedHashMap<BuildRule, Optional<BuildRuleSuccess>> ruleToResult = executeBuild(
+      LinkedHashMap<BuildRule, Optional<BuildResult>> ruleToResult = executeBuild(
           targetsish,
           isKeepGoing);
 

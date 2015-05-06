@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.rules.BuildRuleSuccess.Type.BUILT_LOCALLY;
-import static com.facebook.buck.rules.BuildRuleSuccess.Type.FETCHED_FROM_CACHE;
-import static com.facebook.buck.rules.BuildRuleSuccess.Type.MATCHING_RULE_KEY;
+import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
+import static com.facebook.buck.rules.BuildRuleSuccessType.FETCHED_FROM_CACHE;
+import static com.facebook.buck.rules.BuildRuleSuccessType.MATCHING_RULE_KEY;
 import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createNiceMock;
@@ -641,7 +641,7 @@ public class TestCommandTest {
     );
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
-    BuildResult result = new BuildResult(FETCHED_FROM_CACHE, CacheResult.hit("dir"));
+    BuildResult result = new BuildResult(testRule, FETCHED_FROM_CACHE, CacheResult.hit("dir"));
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
     replay(executionContext, cachingBuildEngine);
@@ -675,7 +675,7 @@ public class TestCommandTest {
     );
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
-    BuildResult result = new BuildResult(BUILT_LOCALLY, CacheResult.skip());
+    BuildResult result = new BuildResult(testRule, BUILT_LOCALLY, CacheResult.skip());
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
     replay(executionContext, cachingBuildEngine);
@@ -717,7 +717,7 @@ public class TestCommandTest {
     expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(false);
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
-    BuildResult result = new BuildResult(MATCHING_RULE_KEY, CacheResult.skip());
+    BuildResult result = new BuildResult(testRule, MATCHING_RULE_KEY, CacheResult.skip());
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
     replay(executionContext, cachingBuildEngine, testRuleKeyFileHelper);

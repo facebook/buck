@@ -29,7 +29,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
-import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.IndividualTestEvent;
@@ -134,7 +134,7 @@ public class EventSerializationTest {
     BuildRuleEvent.Finished event = BuildRuleEvent.finished(generateFakeBuildRule(),
         BuildRuleStatus.SUCCESS,
         CacheResult.miss(),
-        Optional.<BuildRuleSuccess.Type>absent());
+        Optional.<BuildRuleSuccessType>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +

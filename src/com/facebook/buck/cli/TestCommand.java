@@ -37,7 +37,7 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TargetGraph;
@@ -746,7 +746,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       isTestRunRequired = true;
     } else if (((result = cachingBuildEngine.getBuildRuleResult(
         test.getBuildTarget())) != null) &&
-            result.getSuccess() == BuildRuleSuccess.Type.MATCHING_RULE_KEY &&
+            result.getSuccess() == BuildRuleSuccessType.MATCHING_RULE_KEY &&
             isResultsCacheEnabled &&
             test.hasTestResultFiles(executionContext) &&
             testRuleKeyFileHelper.isRuleKeyInDir(test)) {

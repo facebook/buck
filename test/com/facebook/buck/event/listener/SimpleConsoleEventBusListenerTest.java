@@ -30,7 +30,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
-import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -98,7 +98,7 @@ public class SimpleConsoleEventBusListenerTest {
         fakeRule,
         BuildRuleStatus.SUCCESS,
         CacheResult.miss(),
-        Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
+        Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
         1000L, TimeUnit.MILLISECONDS, threadId));
     rawEventBus.post(configureTestEventAtTime(
         BuildEvent.finished(buildTargets, 0), 1234L, TimeUnit.MILLISECONDS, threadId));

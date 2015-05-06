@@ -33,7 +33,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
-import com.facebook.buck.rules.BuildRuleSuccess;
+import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -181,7 +181,7 @@ public class SuperConsoleEventBusListenerTest {
           fakeRule,
           BuildRuleStatus.SUCCESS,
           CacheResult.miss(),
-          Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
+          Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
         1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 1000L, ImmutableList.of(parsingLine,
@@ -202,7 +202,7 @@ public class SuperConsoleEventBusListenerTest {
           cachedRule,
           BuildRuleStatus.SUCCESS,
           CacheResult.miss(),
-          Optional.of(BuildRuleSuccess.Type.BUILT_LOCALLY)),
+          Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
         1120L, TimeUnit.MILLISECONDS, /* threadId */ 2L));
 
     rawEventBus.post(configureTestEventAtTime(

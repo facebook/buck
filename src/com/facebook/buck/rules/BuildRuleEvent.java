@@ -72,7 +72,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
   public static Finished finished(BuildRule rule,
       BuildRuleStatus status,
       CacheResult cacheResult,
-      Optional<BuildRuleSuccess.Type> successType) {
+      Optional<BuildRuleSuccessType> successType) {
     return new Finished(rule, status, cacheResult, successType);
   }
 
@@ -90,12 +90,12 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
   public static class Finished extends BuildRuleEvent {
     private final BuildRuleStatus status;
     private final CacheResult cacheResult;
-    private final Optional<BuildRuleSuccess.Type> successType;
+    private final Optional<BuildRuleSuccessType> successType;
 
     protected Finished(BuildRule rule,
         BuildRuleStatus status,
         CacheResult cacheResult,
-        Optional<BuildRuleSuccess.Type> successType) {
+        Optional<BuildRuleSuccessType> successType) {
       super(rule);
       this.status = status;
       this.cacheResult = cacheResult;
@@ -111,7 +111,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
     }
 
     @JsonIgnore
-    public Optional<BuildRuleSuccess.Type> getSuccessType() {
+    public Optional<BuildRuleSuccessType> getSuccessType() {
       return successType;
     }
 

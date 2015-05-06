@@ -100,10 +100,11 @@ public class CachingBuildEngine implements BuildEngine {
 
   @VisibleForTesting
   void setBuildRuleResult(
-      BuildTarget buildTarget,
-      BuildRuleSuccess success,
+      BuildRule buildRule,
+      BuildRuleSuccessType success,
       CacheResult cacheResult) {
-    createFutureFor(buildTarget).set(new BuildResult(success.getType(), cacheResult));
+    createFutureFor(buildRule.getBuildTarget()).set(
+        new BuildResult(buildRule, success, cacheResult));
   }
 
   @Override
@@ -213,7 +214,7 @@ public class CachingBuildEngine implements BuildEngine {
                 // return from it.
                 // For now, we'll just catch the RuntimeException.
                 // TODO(simons, t5597862): Consider modifying StepRunner#addCallback
-                result = new BuildResult(e);
+                result = new BuildResult(rule, e);
               }
               if (result.getStatus() == BuildRuleStatus.FAIL) {
                 recordBuildRuleFailure(result);
@@ -229,7 +230,7 @@ public class CachingBuildEngine implements BuildEngine {
                 throws InterruptedException {
               // Make sure that all of the local files have the same values they would as if the
               // rule had been built locally.
-              BuildRuleSuccess.Type success = result.getSuccess();
+              BuildRuleSuccessType success = result.getSuccess();
               if (success != null && success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
                 try {
                   boolean clearExistingMetadata = success.shouldClearAndOverwriteMetadataOnDisk();
@@ -262,7 +263,7 @@ public class CachingBuildEngine implements BuildEngine {
 
             @Override
             public void onFailure(Throwable failure) {
-              recordBuildRuleFailure(new BuildResult(failure));
+              recordBuildRuleFailure(new BuildResult(rule, failure));
             }
 
             private void recordBuildRuleFailure(BuildResult result) {
@@ -358,7 +359,8 @@ public class CachingBuildEngine implements BuildEngine {
     // If the RuleKeys match, then there is nothing to build.
     if (ruleKey.equals(cachedRuleKey.orNull())) {
       return new BuildResult(
-          BuildRuleSuccess.Type.MATCHING_RULE_KEY,
+          rule,
+          BuildRuleSuccessType.MATCHING_RULE_KEY,
           CacheResult.localKeyUnchangedHit());
     }
 
@@ -393,7 +395,8 @@ public class CachingBuildEngine implements BuildEngine {
             ABI_KEY_FOR_DEPS_ON_DISK_METADATA);
         if (abiKeyForDeps.equals(cachedAbiKeyForDeps.orNull())) {
           return new BuildResult(
-              BuildRuleSuccess.Type.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
+              rule,
+              BuildRuleSuccessType.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
               CacheResult.localKeyUnchangedHit());
         }
       }
@@ -411,7 +414,7 @@ public class CachingBuildEngine implements BuildEngine {
             context.getProjectRoot(),
             context);
       } catch (InterruptedException e) {
-        return new BuildResult(e);
+        return new BuildResult(rule, e);
       }
     } else {
       cacheResult = CacheResult.skip();
@@ -427,7 +430,7 @@ public class CachingBuildEngine implements BuildEngine {
         executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext);
       } catch (StepFailedException e) {
         // If the build fails, delete all of the on disk metadata.
-        return new BuildResult(e);
+        return new BuildResult(rule, e);
       }
     }
 
@@ -440,14 +443,15 @@ public class CachingBuildEngine implements BuildEngine {
             context);
       } catch (StepFailedException e) {
         // If the build fails, delete all of the on disk metadata.
-        return new BuildResult(e);
+        return new BuildResult(rule, e);
       }
     }
 
     return new BuildResult(
+        rule,
         cacheResult.getType().isSuccess() ?
-            BuildRuleSuccess.Type.FETCHED_FROM_CACHE :
-            BuildRuleSuccess.Type.BUILT_LOCALLY,
+            BuildRuleSuccessType.FETCHED_FROM_CACHE :
+            BuildRuleSuccessType.BUILT_LOCALLY,
         cacheResult);
   }
 
@@ -458,7 +462,7 @@ public class CachingBuildEngine implements BuildEngine {
   private boolean hasLocalBuildChain(BuildRule rule, long depth) {
 
     // Look up the success result for this `BuildRule`.
-    BuildRuleSuccess.Type success;
+    BuildRuleSuccessType success;
     try {
       success = Preconditions.checkNotNull(getBuildRuleResult(rule.getBuildTarget())).getSuccess();
     } catch (InterruptedException | ExecutionException e) {
@@ -469,7 +473,7 @@ public class CachingBuildEngine implements BuildEngine {
 
     // If we built this locally, and caching is enabled for this rule, it means we likely had
     // a cache miss, and may have a local build chain for the given depth.
-    if (success == BuildRuleSuccess.Type.BUILT_LOCALLY) {
+    if (success == BuildRuleSuccessType.BUILT_LOCALLY) {
 
       // If the given `depth` is zero, we've found our local build chain, so return true.
       if (depth == 0) {
@@ -489,7 +493,7 @@ public class CachingBuildEngine implements BuildEngine {
   }
 
   /**
-   * Returns {@code true} if none of the {@link BuildRuleSuccess} objects are built locally.
+   * Returns {@code true} if none of the {@link BuildRuleSuccessType} objects are built locally.
    */
   private boolean shouldTryToFetchFromCache(BuildRule rule) {
 
