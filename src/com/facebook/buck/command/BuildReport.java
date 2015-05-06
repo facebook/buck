@@ -51,8 +51,11 @@ public class BuildReport {
     StringBuilder report = new StringBuilder();
     for (Map.Entry<BuildRule, Optional<BuildResult>> entry : ruleToResult.entrySet()) {
       BuildRule rule = entry.getKey();
-      Optional<BuildRuleSuccessType> success =
-          entry.getValue().transform(BuildResult.RULE_TO_SUCCESS);
+      Optional<BuildRuleSuccessType> success = Optional.absent();
+      Optional<BuildResult> result = entry.getValue();
+      if (result.isPresent()) {
+        success = Optional.fromNullable(result.get().getSuccess());
+      }
 
       String successIndicator;
       String successType;
@@ -83,8 +86,11 @@ public class BuildReport {
     boolean isOverallSuccess = true;
     for (Map.Entry<BuildRule, Optional<BuildResult>> entry : ruleToResult.entrySet()) {
       BuildRule rule = entry.getKey();
-      Optional<BuildRuleSuccessType> success =
-          entry.getValue().transform(BuildResult.RULE_TO_SUCCESS);
+      Optional<BuildRuleSuccessType> success = Optional.absent();
+      Optional<BuildResult> result = entry.getValue();
+      if (result.isPresent()) {
+        success = Optional.fromNullable(result.get().getSuccess());
+      }
       Map<String, Object> value = Maps.newLinkedHashMap();
 
       boolean isSuccess = success.isPresent();

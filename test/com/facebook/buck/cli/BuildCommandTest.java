@@ -70,7 +70,7 @@ public class BuildCommandTest {
     BuildRule rule2 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule2"),
         resolver);
-    ruleToResult.put(rule2, Optional.<BuildResult>absent());
+    ruleToResult.put(rule2, Optional.of(new BuildResult(rule2, new RuntimeException("some"))));
 
     BuildRule rule3 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule3"),
@@ -78,6 +78,11 @@ public class BuildCommandTest {
     ruleToResult.put(
         rule3,
         Optional.of(new BuildResult(rule3, FETCHED_FROM_CACHE, CacheResult.hit("dir"))));
+
+    BuildRule rule4 = new FakeBuildRule(
+        BuildTargetFactory.newInstance("//fake:rule4"),
+        resolver);
+    ruleToResult.put(rule4, Optional.<BuildResult>absent());
   }
 
   @Test
@@ -86,7 +91,8 @@ public class BuildCommandTest {
         "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule1 " +
             "BUILT_LOCALLY buck-out/gen/fake/rule1.txt\n" +
         "\u001B[1m\u001B[41m\u001B[37mFAIL\u001B[0m //fake:rule2\n" +
-        "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE\n";
+        "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE\n" +
+        "\u001B[1m\u001B[41m\u001B[37mFAIL\u001B[0m //fake:rule4\n";
     String observedReport = new BuildReport(ruleToResult).generateForConsole(Ansi.forceTty());
     assertEquals(expectedReport, observedReport);
   }
@@ -109,6 +115,9 @@ public class BuildCommandTest {
         "      \"success\" : true,",
         "      \"type\" : \"FETCHED_FROM_CACHE\",",
         "      \"output\" : null",
+        "    },",
+        "    \"//fake:rule4\" : {",
+        "      \"success\" : false",
         "    }",
         "  }",
         "}");

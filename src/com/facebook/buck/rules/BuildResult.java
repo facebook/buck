@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Function;
-
 import javax.annotation.Nullable;
 
 /**
@@ -33,15 +31,6 @@ public class BuildResult {
 
   @Nullable private final BuildRuleSuccessType success;
   @Nullable private final Throwable failure;
-
-  public static final Function<BuildResult, BuildRuleSuccessType> RULE_TO_SUCCESS =
-      new Function<BuildResult, BuildRuleSuccessType>() {
-        @Nullable
-        @Override
-        public BuildRuleSuccessType apply(BuildResult input) {
-          return input.getSuccess();
-        }
-      };
 
   public BuildResult(BuildRule rule, BuildRuleSuccessType success, CacheResult cacheResult) {
     this.rule = rule;
