@@ -59,7 +59,6 @@ import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -150,8 +149,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         ImmutableSet.of(dep),
         buildSteps,
         /* postBuildSteps */ ImmutableList.<Step>of(),
-        pathToOutputFile,
-        CacheMode.ENABLED);
+        pathToOutputFile);
     verifyAll();
     resetAll();
 
@@ -261,8 +259,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         ImmutableSet.<BuildRule>of(dep1, dep2),
         ImmutableList.of(buildStep),
         /* postBuildSteps */ ImmutableList.<Step>of(),
-        "buck-out/gen/src/com/facebook/orca/some_file",
-        CacheMode.ENABLED);
+        "buck-out/gen/src/com/facebook/orca/some_file");
 
     // Inject artifactCache to verify that its fetch method is never called.
     ArtifactCache artifactCache = new NoopArtifactCache() {
@@ -351,8 +348,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         /* deps */ ImmutableSet.<BuildRule>of(dep1),
         ImmutableList.of(step),
         /* postBuildSteps */ ImmutableList.<Step>of(),
-        /* pathToOutputFile */ null,
-        CacheMode.ENABLED);
+        /* pathToOutputFile */ null);
 
     StepRunner stepRunner = createStepRunner();
 
@@ -665,8 +661,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         /* deps */ ImmutableSet.<BuildRule>of(),
         ImmutableList.of(step),
         /* postBuildSteps */ ImmutableList.<Step>of(),
-        /* pathToOutputFile */ null,
-        CacheMode.ENABLED);
+        /* pathToOutputFile */ null);
 
     StepRunner stepRunner = createStepRunner();
 
@@ -723,64 +718,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   }
 
   @Test
-  public void testCacheModeDisabledPreventsArtifactFetchedFromCache()
-      throws InterruptedException, ExecutionException, IOException {
-    Step step = new AbstractExecutionStep("exploding step") {
-      @Override
-      public int execute(ExecutionContext context) {
-        return 0;
-      }
-    };
-    BuildRule buildRule = createRule(
-        new SourcePathResolver(new BuildRuleResolver()),
-        /* deps */ ImmutableSet.<BuildRule>of(),
-        ImmutableList.of(step),
-        /* postBuildSteps */ ImmutableList.<Step>of(),
-        /* pathToOutputFile */ null,
-        CacheMode.DISABLED);
-
-    // Mock out all of the disk I/O.
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    expect(projectFilesystem
-            .readFileIfItExists(
-                Paths.get("buck-out/bin/src/com/facebook/orca/.orca/metadata/RULE_KEY")))
-        .andReturn(Optional.<String>absent());
-    projectFilesystem.rmdir(anyObject(Path.class));
-    projectFilesystem.mkdirs(anyObject(Path.class));
-    projectFilesystem.writeContentsToPath(anyObject(String.class), anyObject(Path.class));
-    projectFilesystem.writeContentsToPath(anyObject(String.class), anyObject(Path.class));
-
-    // Simulate successfully fetching the output file from the ArtifactCache.
-    ArtifactCache artifactCache = createMock(ArtifactCache.class);
-    expect(artifactCache.isStoreSupported()).andReturn(false);
-    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-    StepRunner stepRunner = createStepRunner(buckEventBus);
-    BuildContext buildContext = ImmutableBuildContext.builder()
-        .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
-        .setStepRunner(stepRunner)
-        .setProjectFilesystem(projectFilesystem)
-        .setClock(new DefaultClock())
-        .setBuildId(new BuildId())
-        .setArtifactCache(artifactCache)
-        .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-        .setEventBus(buckEventBus)
-        .build();
-
-    // Build the rule!
-    replayAll();
-    CachingBuildEngine cachingBuildEngine =
-        new CachingBuildEngine(MoreExecutors.newDirectExecutorService());
-    ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
-    buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
-    verifyAll();
-
-    BuildResult result = buildResult.get();
-    assertEquals(BuildRuleSuccess.Type.BUILT_LOCALLY, result.getSuccess());
-    assertTrue(
-        ((BuildableAbstractCachingBuildRule) buildRule).isInitializedFromDisk());
-  }
-
-  @Test
   public void testArtifactFetchedFromCacheStillRunsPostBuildSteps()
       throws InterruptedException, ExecutionException, IOException {
 
@@ -808,8 +745,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         /* deps */ ImmutableSet.<BuildRule>of(),
         /* buildSteps */ ImmutableList.<Step>of(),
         /* postBuildSteps */ ImmutableList.of(buildStep),
-        /* pathToOutputFile */ null,
-        CacheMode.ENABLED);
+        /* pathToOutputFile */ null);
 
     // Simulate successfully fetching the output file from the ArtifactCache.
     ArtifactCache artifactCache = createMock(ArtifactCache.class);
@@ -866,8 +802,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
       ImmutableSet<BuildRule> deps,
       List<Step> buildSteps,
       ImmutableList<Step> postBuildSteps,
-      @Nullable String pathToOutputFile,
-      CacheMode cacheMode) {
+      @Nullable String pathToOutputFile) {
     Comparator<BuildRule> comparator = RetainOrderComparator.createComparator(deps);
     ImmutableSortedSet<BuildRule> sortedDeps = ImmutableSortedSet.copyOf(comparator, deps);
 
@@ -885,8 +820,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         resolver,
         pathToOutputFile,
         buildSteps,
-        postBuildSteps,
-        cacheMode);
+        postBuildSteps);
   }
 
   private static class BuildableAbstractCachingBuildRule extends AbstractBuildRule
@@ -896,7 +830,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     private final List<Step> buildSteps;
     private final ImmutableList<Step> postBuildSteps;
     private final BuildOutputInitializer<Object> buildOutputInitializer;
-    private final CacheMode cacheMode;
 
     private boolean isInitializedFromDisk = false;
 
@@ -905,15 +838,13 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         SourcePathResolver resolver,
         @Nullable String pathToOutputFile,
         List<Step> buildSteps,
-        ImmutableList<Step> postBuildSteps,
-        CacheMode cacheMode) {
+        ImmutableList<Step> postBuildSteps) {
       super(params, resolver);
       this.pathToOutputFile = pathToOutputFile == null ? null : Paths.get(pathToOutputFile);
       this.buildSteps = buildSteps;
       this.postBuildSteps = postBuildSteps;
       this.buildOutputInitializer =
           new BuildOutputInitializer<>(params.getBuildTarget(), this);
-      this.cacheMode = Preconditions.checkNotNull(cacheMode);
     }
 
     @Override
@@ -937,11 +868,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         BuildContext context,
         BuildableContext buildableContext) {
       return postBuildSteps;
-    }
-
-    @Override
-    public CacheMode getCacheMode() {
-      return cacheMode;
     }
 
     @Override

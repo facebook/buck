@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.CacheMode;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyPair;
@@ -383,11 +382,6 @@ public class DefaultRuleKeyBuilderFactoryTest {
     @Override
     public Path getPathToOutputFile() {
       return null;
-    }
-
-    @Override
-    public CacheMode getCacheMode() {
-      throw new UnsupportedOperationException("getCacheMode");
     }
 
     @Override

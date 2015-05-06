@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -35,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -98,23 +100,39 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void testSymlinkTreeBuildSteps() throws IOException {
+  public void testSymlinkTreeBuildStepsAreEmpty() throws IOException {
 
     // Create the fake build contexts.
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     // Verify the build steps are as expected.
-    ImmutableList<Step> expectedBuildSteps = ImmutableList.of(
-        new MakeCleanDirectoryStep(outputPath),
-        new SymlinkTreeStep(
-            outputPath,
-            new SourcePathResolver(new BuildRuleResolver()).getMappedPaths(links)));
-    ImmutableList<Step> actualBuildSteps = symlinkTreeBuildRule.getBuildSteps(
-        buildContext,
-        buildableContext);
-    assertEquals(expectedBuildSteps, actualBuildSteps);
+    ImmutableList<Step> actualBuildSteps =
+        symlinkTreeBuildRule.getBuildSteps(
+            buildContext,
+            buildableContext);
+    assertThat(actualBuildSteps, Matchers.empty());
+  }
 
+  @Test
+  public void testSymlinkTreePostBuildSteps() throws IOException {
+
+    // Create the fake build contexts.
+    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+
+    // Verify the build steps are as expected.
+    ImmutableList<Step> expectedBuildSteps =
+        ImmutableList.of(
+            new MakeCleanDirectoryStep(outputPath),
+            new SymlinkTreeStep(
+                outputPath,
+                new SourcePathResolver(new BuildRuleResolver()).getMappedPaths(links)));
+    ImmutableList<Step> actualBuildSteps =
+        symlinkTreeBuildRule.getPostBuildSteps(
+            buildContext,
+            buildableContext);
+    assertEquals(expectedBuildSteps, actualBuildSteps);
   }
 
   @Test

@@ -469,8 +469,7 @@ public class CachingBuildEngine implements BuildEngine {
 
     // If we built this locally, and caching is enabled for this rule, it means we likely had
     // a cache miss, and may have a local build chain for the given depth.
-    if (success == BuildRuleSuccess.Type.BUILT_LOCALLY &&
-        rule.getCacheMode() == CacheMode.ENABLED) {
+    if (success == BuildRuleSuccess.Type.BUILT_LOCALLY) {
 
       // If the given `depth` is zero, we've found our local build chain, so return true.
       if (depth == 0) {
@@ -494,12 +493,7 @@ public class CachingBuildEngine implements BuildEngine {
    */
   private boolean shouldTryToFetchFromCache(BuildRule rule) {
 
-    // If this rule explicitly disables caching, we won't try to fetch.
-    if (rule.getCacheMode() == CacheMode.DISABLED) {
-      return false;
-    }
-
-    // Otherwise, look for a sequence of local builds, which we use as a heuristic to avoid
+    // Look for a sequence of local builds, which we use as a heuristic to avoid
     // fetching this rule from cache, since this will likely result in a miss.
     if (skipLocalBuildDepth > 0) {
       for (BuildRule dep : rule.getDeps()) {

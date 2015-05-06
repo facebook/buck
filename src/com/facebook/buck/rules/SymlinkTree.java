@@ -30,7 +30,9 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class SymlinkTree extends AbstractBuildRule implements AbiRule, RuleKeyAppendable {
+public class SymlinkTree
+    extends AbstractBuildRule
+    implements AbiRule, RuleKeyAppendable, HasPostBuildSteps {
 
   private final Path root;
   private final ImmutableSortedMap<Path, SourcePath> links;
@@ -68,9 +70,7 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule, RuleKeyAp
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    return ImmutableList.of(
-        new MakeCleanDirectoryStep(root),
-        new SymlinkTreeStep(root, resolveLinks()));
+    return ImmutableList.of();
   }
 
   /**
@@ -103,11 +103,16 @@ public class SymlinkTree extends AbstractBuildRule implements AbiRule, RuleKeyAp
     return null;
   }
 
-  // We never want to cache this step, as we're only writing symlinks, and caching can
-  // *only* ever make this slower.
+  // We generate the symlinks using post-build steps to avoid the cache because:
+  // 1) We don't currently support caching symlinks
+  // 2) It's almost certainly always more expensive to cache them rather than just re-create them.
   @Override
-  public CacheMode getCacheMode() {
-    return CacheMode.DISABLED;
+  public ImmutableList<Step> getPostBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+    return ImmutableList.of(
+        new MakeCleanDirectoryStep(root),
+        new SymlinkTreeStep(root, resolveLinks()));
   }
 
   // Since we're just setting up symlinks to existing files, we don't actually need to

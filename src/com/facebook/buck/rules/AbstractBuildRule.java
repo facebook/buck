@@ -144,9 +144,4 @@ public abstract class AbstractBuildRule implements BuildRule {
     return ruleKeyPair;
   }
 
-  @Override
-  public CacheMode getCacheMode() {
-    return CacheMode.ENABLED;
-  }
-
 }
