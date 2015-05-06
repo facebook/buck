@@ -38,17 +38,11 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   private final AtomicLong parseTime;
   private final TestResultFormatter testFormatter;
 
-  public SimpleConsoleEventBusListener(
-      Console console,
-      Clock clock,
-      boolean isTreatingAssumptionsAsErrors) {
+  public SimpleConsoleEventBusListener(Console console, Clock clock) {
     super(console, clock);
 
     this.parseTime = new AtomicLong(0);
-    this.testFormatter = new TestResultFormatter(
-        console.getAnsi(),
-        console.getVerbosity(),
-        isTreatingAssumptionsAsErrors);
+    this.testFormatter = new TestResultFormatter(console.getAnsi(), console.getVerbosity());
   }
 
   @Override

@@ -446,10 +446,6 @@ public class BuckConfig {
     return Long.parseLong(getValue("test", "timeout").or("0"));
   }
 
-  public boolean isTreatingAssumptionsAsErrors() {
-    return getBooleanValue("test", "assumptions-are-errors", false);
-  }
-
   public int getMaxTraces() {
     return Integer.parseInt(getValue("log", "max_traces").or(DEFAULT_MAX_TRACES));
   }

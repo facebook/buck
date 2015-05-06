@@ -90,7 +90,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Console console,
       Clock clock,
       ExecutionEnvironment executionEnvironment,
-      boolean isTreatingAssumptionsAsErrors,
       Optional<WebServer> webServer) {
     super(console, clock);
     this.webServer = webServer;
@@ -101,10 +100,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     this.renderScheduler = Executors.newScheduledThreadPool(1,
         new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
-    this.testFormatter = new TestResultFormatter(
-        console.getAnsi(),
-        console.getVerbosity(),
-        isTreatingAssumptionsAsErrors);
+    this.testFormatter = new TestResultFormatter(console.getAnsi(), console.getVerbosity());
   }
 
   /**

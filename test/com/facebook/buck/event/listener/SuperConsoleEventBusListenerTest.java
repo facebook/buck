@@ -111,7 +111,6 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            /* isTreatingAssumptionsAsErrors */ false,
         Optional.<WebServer>absent());
     eventBus.register(listener);
 

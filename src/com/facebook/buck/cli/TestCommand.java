@@ -625,19 +625,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       }
     });
 
-    boolean significantAssumptionViolations = false;
-    if (params.getBuckConfig().isTreatingAssumptionsAsErrors()) {
-      // Assumption-violations are only significant if we are treating them as errors.
-      significantAssumptionViolations =
-          Iterables.any(completedResults, new Predicate<TestResults>() {
-        @Override
-        public boolean apply(TestResults results) {
-          return results.hasAssumptionViolations();
-        }
-      });
-    }
-
-    return (failures || significantAssumptionViolations) ? TEST_FAILURES_EXIT_CODE : 0;
+    return failures ? TEST_FAILURES_EXIT_CODE : 0;
   }
 
   private ListenableFuture<TestResults> transformTestResults(

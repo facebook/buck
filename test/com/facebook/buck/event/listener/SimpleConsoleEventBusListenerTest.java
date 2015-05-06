@@ -65,10 +65,7 @@ public class SimpleConsoleEventBusListenerTest {
         ImmutableSortedSet.<BuildRule>of()
     );
 
-    SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(
-        console,
-        fakeClock,
-        /* isAnAssumptionViolationAnError */ false);
+    SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(console, fakeClock);
     eventBus.register(listener);
 
     final long threadId = 0;

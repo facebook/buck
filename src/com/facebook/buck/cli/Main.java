@@ -576,7 +576,6 @@ public final class Main {
                  clock,
                  console,
                  executionEnvironment,
-                 rootRepository.getBuckConfig(),
                  webServer);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
       // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
@@ -920,7 +919,6 @@ public final class Main {
       Clock clock,
       Console console,
       ExecutionEnvironment executionEnvironment,
-      BuckConfig config,
       Optional<WebServer> webServer) {
     Verbosity verbosity = console.getVerbosity();
 
@@ -932,16 +930,12 @@ public final class Main {
           console,
           clock,
           executionEnvironment,
-          config.isTreatingAssumptionsAsErrors(),
           webServer);
       superConsole.startRenderScheduler(SUPER_CONSOLE_REFRESH_RATE.getDuration(),
           SUPER_CONSOLE_REFRESH_RATE.getUnit());
       return superConsole;
     }
-    return new SimpleConsoleEventBusListener(
-        console,
-        clock,
-        config.isTreatingAssumptionsAsErrors());
+    return new SimpleConsoleEventBusListener(console, clock);
   }
 
   /**

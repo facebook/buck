@@ -43,10 +43,7 @@ public class TestResultFormatterTest {
 
   @Before
   public void createFormatter() {
-    formatter = new TestResultFormatter(
-        new Ansi(false),
-        Verbosity.COMMANDS,
-        /* isAnAssumptionViolationAnError) */ false);
+    formatter = new TestResultFormatter(new Ansi(false), Verbosity.COMMANDS);
   }
 
   @Before
