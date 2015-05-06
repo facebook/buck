@@ -244,7 +244,7 @@ if __name__ == "__main__":
                       help='Target platform.  Choices are iphonesimulator, '
                       'iphoneos, and macosx.')
     parser.add_option('-d', '--device', action='append', type=str,
-                      help='Choices are iphone and ipad. May be specified '
+                      help='Choices are iphone, ipad, and watch. May be specified '
                       'multiple times. When platform is macosx, this '
                       'option cannot be specified. Otherwise, this option '
                       'must be specified.')
