@@ -73,7 +73,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void appBundleWithDirsAndFiles() throws IOException{
+  public void appBundleWithDirsAndFiles() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

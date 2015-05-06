@@ -17,8 +17,11 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.BuildRule;
@@ -33,6 +36,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.AppleBundleDestination;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -46,6 +50,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 public class AppleBundleDescription implements Description<AppleBundleDescription.Arg>, Flavored {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_bundle");
@@ -71,12 +76,22 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
 
   private final AppleBinaryDescription appleBinaryDescription;
   private final AppleLibraryDescription appleLibraryDescription;
+  private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
+  private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
+  private final CxxPlatform defaultCxxPlatform;
 
   public AppleBundleDescription(
       AppleBinaryDescription appleBinaryDescription,
-      AppleLibraryDescription appleLibraryDescription) {
+      AppleLibraryDescription appleLibraryDescription,
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
+      CxxPlatform defaultCxxPlatform) {
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
+    this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
+    this.platformFlavorsToAppleCxxPlatforms =
+        ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
+    this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
   @Override
@@ -100,6 +115,23 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+
+    CxxPlatform cxxPlatform;
+    try {
+      cxxPlatform = cxxPlatformFlavorDomain
+          .getValue(params.getBuildTarget().getFlavors())
+          .or(defaultCxxPlatform);
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
+    }
+    AppleCxxPlatform appleCxxPlatform =
+        platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor());
+    if (appleCxxPlatform == null) {
+      throw new HumanReadableException(
+          "%s: Apple bundle requires an Apple platform, found '%s'",
+          params.getBuildTarget(),
+          cxxPlatform.getFlavor().getName());
+    }
 
     // TODO(user): Sort through the changes needed to make project generation work with
     // binary being optional.

@@ -86,6 +86,7 @@ public class AppleCxxPlatforms {
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
       toolSearchPathsBuilder.add(toolchainPath.resolve(USR_BIN));
     }
+    toolSearchPathsBuilder.add(sdkPaths.getDeveloperPath().resolve(USR_BIN));
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
@@ -128,6 +129,12 @@ public class AppleCxxPlatforms {
         "apple-ar",
         xcodeAndSdkVersion);
 
+    Tool actool = new VersionedTool(
+        getToolPath("actool", toolSearchPaths, executableFinder),
+        ImmutableList.<String>of(),
+        "apple-actool",
+        xcodeAndSdkVersion);
+
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 
     ImmutableFlavor targetFlavor = ImmutableFlavor.of(
@@ -155,6 +162,7 @@ public class AppleCxxPlatforms {
     return AppleCxxPlatform.builder()
         .setCxxPlatform(cxxPlatform)
         .setAppleSdkPaths(sdkPaths)
+        .setActool(actool)
         .build();
   }
 

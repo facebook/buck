@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -57,7 +58,9 @@ public class AppleBuildRulesTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
     AppleTestBuilder appleTestBuilder = new AppleTestBuilder(
-        BuildTarget.builder("//foo", "xctest").build())
+        BuildTarget.builder("//foo", "xctest")
+            .addFlavors(ImmutableFlavor.of("iphoneos-i386"))
+            .build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setContacts(Optional.of(ImmutableSortedSet.<String>of()))
         .setLabels(Optional.of(ImmutableSortedSet.<Label>of()))

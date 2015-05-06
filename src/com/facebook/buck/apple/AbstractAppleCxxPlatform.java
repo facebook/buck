@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 
@@ -40,5 +41,7 @@ abstract class AbstractAppleCxxPlatform {
   public abstract CxxPlatform getCxxPlatform();
 
   public abstract AppleSdkPaths getAppleSdkPaths();
+
+  public abstract Tool getActool();
 
 }

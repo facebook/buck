@@ -31,9 +31,7 @@ public class AppleBundleBuilder
 
   protected AppleBundleBuilder(BuildTarget target) {
     super(
-        new AppleBundleDescription(
-            FakeAppleRuleDescriptions.BINARY_DESCRIPTION,
-            FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION),
+        FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION,
         target);
   }
 

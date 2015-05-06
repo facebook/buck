@@ -476,9 +476,20 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
-    builder.register(new AppleBundleDescription(appleBinaryDescription, appleLibraryDescription));
+    builder.register(
+        new AppleBundleDescription(
+            appleBinaryDescription,
+            appleLibraryDescription,
+            cxxPlatforms,
+            platformFlavorsToAppleCxxPlatforms,
+            defaultCxxPlatform));
     builder.register(new AppleResourceDescription());
-    builder.register(new AppleTestDescription(appleLibraryDescription, defaultCxxPlatform));
+    builder.register(
+        new AppleTestDescription(
+            appleLibraryDescription,
+            cxxPlatforms,
+            platformFlavorsToAppleCxxPlatforms,
+            defaultCxxPlatform));
     builder.register(new BuckExtensionDescription(defaultJavacOptions));
     builder.register(new CoreDataModelDescription());
     builder.register(cxxBinaryDescription);

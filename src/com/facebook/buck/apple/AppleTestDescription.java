@@ -23,6 +23,8 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
@@ -35,6 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.AppleBundleDestination;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -48,6 +51,7 @@ import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 
+import java.util.Map;
 import java.util.Set;
 
 public class AppleTestDescription implements Description<AppleTestDescription.Arg>, Flavored {
@@ -73,12 +77,19 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
       CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
   private final AppleLibraryDescription appleLibraryDescription;
+  private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
+  private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
 
   public AppleTestDescription(
       AppleLibraryDescription description,
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
+      Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform) {
     appleLibraryDescription = description;
+    this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
+    this.platformFlavorsToAppleCxxPlatforms =
+        ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
     this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
@@ -134,6 +145,24 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     if (!createBundle) {
       return library;
     }
+
+    CxxPlatform cxxPlatform;
+    try {
+      cxxPlatform = cxxPlatformFlavorDomain
+          .getValue(params.getBuildTarget().getFlavors())
+          .or(defaultCxxPlatform);
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
+    }
+    AppleCxxPlatform appleCxxPlatform =
+        platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor());
+    if (appleCxxPlatform == null) {
+      throw new HumanReadableException(
+          "%s: Apple test requires an Apple platform, found '%s'",
+          params.getBuildTarget(),
+          cxxPlatform.getFlavor().getName());
+    }
+
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     ImmutableSet<AppleResourceDescription.Arg> resourceDescriptions =
         AppleResources.collectRecursiveResources(

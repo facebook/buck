@@ -61,7 +61,8 @@ public class FakeAppleRuleDescriptions {
               Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"),
               Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
               Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
-              Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))));
+              Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),
+              Paths.get("usr/bin/actool"))));
 
   private static final BuckConfig DEFAULT_BUCK_CONFIG = new FakeBuckConfig();
 
@@ -108,4 +109,25 @@ public class FakeAppleRuleDescriptions {
             CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE),
         DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
         DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS);
+
+  /**
+   * A fake apple_bundle description with an iOS platform for use in tests.
+   */
+  public static final AppleBundleDescription BUNDLE_DESCRIPTION =
+      new AppleBundleDescription(
+          BINARY_DESCRIPTION,
+          LIBRARY_DESCRIPTION,
+          DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
+          DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
+          DEFAULT_PLATFORM);
+
+  /**
+   * A fake apple_test description with an iOS platform for use in tests.
+   */
+  public static final AppleTestDescription TEST_DESCRIPTION =
+      new AppleTestDescription(
+          LIBRARY_DESCRIPTION,
+          DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
+          DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
+          DEFAULT_PLATFORM);
 }

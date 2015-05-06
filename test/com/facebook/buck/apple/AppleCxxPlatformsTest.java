@@ -30,6 +30,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -63,6 +64,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
+        .add(Paths.get("usr/bin/actool"))
         .build();
 
     AppleCxxPlatform appleCxxPlatform =
@@ -79,6 +81,10 @@ public class AppleCxxPlatformsTest {
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+
+    assertEquals(
+        ImmutableList.of("usr/bin/actool"),
+        appleCxxPlatform.getActool().getCommandPrefix(resolver));
 
     assertEquals(
         ImmutableFlavor.of("iphoneos8.0-armv7"),
@@ -122,6 +128,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
+        .add(Paths.get("usr/bin/actool"))
         .build();
 
     AppleCxxPlatform appleCxxPlatform =
@@ -155,6 +162,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
+        .add(Paths.get("usr/bin/actool"))
         .build();
 
     AppleCxxPlatform appleCxxPlatform =
@@ -228,6 +236,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
+        .add(Paths.get("usr/bin/actool"))
         .build();
 
     AppleCxxPlatform appleCxxPlatform =
