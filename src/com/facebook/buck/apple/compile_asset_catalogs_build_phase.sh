@@ -29,6 +29,10 @@ case "$TARGETED_DEVICE_FAMILY" in
     DEVICES="-d ipad";;
   "1,2")
     DEVICES="-d iphone -d ipad";;
+  "4")
+    DEVICES="-d watch";;
+  "1,4")
+    DEVICES="-d iphone -d watch";;
   *)
     DEVICES=""
 esac
