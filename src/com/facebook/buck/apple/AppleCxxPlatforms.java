@@ -48,7 +48,7 @@ public class AppleCxxPlatforms {
 
   private static final Path USR_BIN = Paths.get("usr/bin");
 
-  public static CxxPlatform build(
+  public static AppleCxxPlatform build(
       ApplePlatform targetPlatform,
       String targetSdkName,
       String xcodeVersion,
@@ -68,7 +68,7 @@ public class AppleCxxPlatforms {
   }
 
   @VisibleForTesting
-  static CxxPlatform buildWithExecutableChecker(
+  static AppleCxxPlatform buildWithExecutableChecker(
       ApplePlatform targetPlatform,
       String targetSdkName,
       String xcodeVersion,
@@ -134,7 +134,7 @@ public class AppleCxxPlatforms {
         ImmutableFlavor.replaceInvalidCharacters(
             targetSdkName + "-" + targetArchitecture));
 
-    return CxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatforms.build(
         targetFlavor,
         Platform.MACOS,
         config,
@@ -151,6 +151,11 @@ public class AppleCxxPlatforms {
         "!<arch>\n".getBytes(Charsets.US_ASCII),
         getOptionalTool("lex", toolSearchPaths, executableFinder, xcodeAndSdkVersion),
         getOptionalTool("yacc", toolSearchPaths, executableFinder, xcodeAndSdkVersion));
+
+    return AppleCxxPlatform.builder()
+        .setCxxPlatform(cxxPlatform)
+        .setAppleSdkPaths(sdkPaths)
+        .build();
   }
 
   private static Optional<Tool> getOptionalTool(

@@ -65,7 +65,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .build();
 
-    CxxPlatform appleCxxPlatform =
+    AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
             ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build(),
             "iphoneos8.0",
@@ -76,33 +76,35 @@ public class AppleCxxPlatformsTest {
             new FakeBuckConfig(),
             new FakeExecutableFinder(paths));
 
+    CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
 
     assertEquals(
         ImmutableFlavor.of("iphoneos8.0-armv7"),
-        appleCxxPlatform.getFlavor());
+        cxxPlatform.getFlavor());
     assertEquals(
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
-        appleCxxPlatform.getCc().getCommandPrefix(resolver).get(0));
+        cxxPlatform.getCc().getCommandPrefix(resolver).get(0));
     assertThat(
-        appleCxxPlatform.getCc().getCommandPrefix(resolver),
+        cxxPlatform.getCc().getCommandPrefix(resolver),
         hasConsecutiveItems(
             "-isysroot",
             Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk").toString()));
     assertThat(
-        appleCxxPlatform.getCc().getCommandPrefix(resolver),
+        cxxPlatform.getCc().getCommandPrefix(resolver),
         hasConsecutiveItems("-arch", "armv7"));
     assertThat(
-        appleCxxPlatform.getCc().getCommandPrefix(resolver),
+        cxxPlatform.getCc().getCommandPrefix(resolver),
         hasConsecutiveItems("-mios-version-min=7.0"));
 
     assertEquals(
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
-        appleCxxPlatform.getCxx().getCommandPrefix(resolver).get(0));
+        cxxPlatform.getCxx().getCommandPrefix(resolver).get(0));
     assertEquals(
         Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar")
             .toString(),
-        appleCxxPlatform.getAr().getCommandPrefix(resolver).get(0));
+        cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
   }
 
   @Test
@@ -122,7 +124,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .build();
 
-    CxxPlatform appleCxxPlatform =
+    AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
             ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build(),
             "_(in)+va|id_",
@@ -135,7 +137,7 @@ public class AppleCxxPlatformsTest {
 
     assertEquals(
         ImmutableFlavor.of("__in__va_id_-cha_rs"),
-        appleCxxPlatform.getFlavor());
+        appleCxxPlatform.getCxxPlatform().getFlavor());
   }
 
   @Test
@@ -155,7 +157,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .build();
 
-    CxxPlatform appleCxxPlatform =
+    AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
             ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build(),
             "iphoneos8.0",
@@ -172,17 +174,19 @@ public class AppleCxxPlatformsTest {
                         "cxxppflags", "-DCXXTHING"))),
             new FakeExecutableFinder(paths));
 
+    CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+
     assertThat(
-        appleCxxPlatform.getCflags(),
+        cxxPlatform.getCflags(),
         hasItem("-std=gnu11"));
     assertThat(
-        appleCxxPlatform.getCppflags(),
+        cxxPlatform.getCppflags(),
         hasItems("-std=gnu11", "-DCTHING"));
     assertThat(
-        appleCxxPlatform.getCxxflags(),
+        cxxPlatform.getCxxflags(),
         hasItem("-std=c++11"));
     assertThat(
-        appleCxxPlatform.getCxxppflags(),
+        cxxPlatform.getCxxppflags(),
         hasItems("-std=c++11", "-DCXXTHING"));
   }
 
@@ -226,7 +230,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .build();
 
-    CxxPlatform appleCxxPlatform =
+    AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
             ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build(),
             "iphonesimulator8.0",
@@ -237,12 +241,14 @@ public class AppleCxxPlatformsTest {
             new FakeBuckConfig(),
             new FakeExecutableFinder(paths));
 
+    CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     assertThat(
-        appleCxxPlatform.getCc().getCommandPrefix(resolver),
+        cxxPlatform.getCc().getCommandPrefix(resolver),
         hasItem("-mios-simulator-version-min=7.0"));
     assertThat(
-        appleCxxPlatform.getCxxld().getCommandPrefix(resolver),
+        cxxPlatform.getCxxld().getCommandPrefix(resolver),
         hasItem("-mios-simulator-version-min=7.0"));
   }
 }

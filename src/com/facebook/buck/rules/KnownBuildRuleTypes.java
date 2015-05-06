@@ -38,6 +38,7 @@ import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.apple.AppleCxxPlatforms;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleResourceDescription;
@@ -259,7 +260,7 @@ public class KnownBuildRuleTypes {
       Platform buildPlatform,
       BuckConfig buckConfig,
       AppleConfig appleConfig,
-      ImmutableMap.Builder<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPathsBuilder)
+      ImmutableMap.Builder<Flavor, AppleCxxPlatform> platformFlavorsToAppleSdkPathsBuilder)
       throws IOException {
     if (!buildPlatform.equals(Platform.MACOS)) {
       return;
@@ -305,7 +306,7 @@ public class KnownBuildRuleTypes {
           sdk.getApplePlatform()).or(sdk.getVersion());
       LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
       for (String architecture : sdk.getArchitectures()) {
-        CxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
+        AppleCxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
             sdk.getApplePlatform(),
             sdk.getName(),
             sdk.getXcodeVersion(),
@@ -313,7 +314,9 @@ public class KnownBuildRuleTypes {
             architecture,
             appleSdkPaths,
             buckConfig);
-        appleCxxPlatformsToAppleSdkPathsBuilder.put(appleCxxPlatform, appleSdkPaths);
+        platformFlavorsToAppleSdkPathsBuilder.put(
+            appleCxxPlatform.getCxxPlatform().getFlavor(),
+            appleCxxPlatform);
       }
     }
   }
@@ -336,7 +339,7 @@ public class KnownBuildRuleTypes {
     }
 
     AppleConfig appleConfig = new AppleConfig(config);
-    ImmutableMap.Builder<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPathsBuilder =
+    ImmutableMap.Builder<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatformsBuilder =
         ImmutableMap.builder();
     buildAppleCxxPlatforms(
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
@@ -345,9 +348,9 @@ public class KnownBuildRuleTypes {
         platform,
         config,
         appleConfig,
-        appleCxxPlatformsToAppleSdkPathsBuilder);
-    ImmutableMap<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths =
-        appleCxxPlatformsToAppleSdkPathsBuilder.build();
+        platformFlavorsToAppleCxxPlatformsBuilder);
+    ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
+        platformFlavorsToAppleCxxPlatformsBuilder.build();
 
     // Setup the NDK C/C++ platforms.
     ImmutableMap.Builder<AndroidBinary.TargetCpuType, NdkCxxPlatform> ndkCxxPlatformsBuilder =
@@ -374,8 +377,9 @@ public class KnownBuildRuleTypes {
           ndkCxxPlatform.getCxxPlatform());
     }
 
-    for (CxxPlatform appleCxxPlatform : appleCxxPlatformsToAppleSdkPaths.keySet()) {
-      cxxPlatformsBuilder.put(appleCxxPlatform.getFlavor(), appleCxxPlatform);
+    for (Map.Entry<Flavor, AppleCxxPlatform> entry :
+        platformFlavorsToAppleCxxPlatforms.entrySet()) {
+      cxxPlatformsBuilder.put(entry.getKey(), entry.getValue().getCxxPlatform());
     }
 
     // Add the default, config-defined C/C++ platform.
@@ -444,13 +448,13 @@ public class KnownBuildRuleTypes {
         new AppleLibraryDescription(
             cxxLibraryDescription,
             cxxPlatforms,
-            appleCxxPlatformsToAppleSdkPaths);
+            platformFlavorsToAppleCxxPlatforms);
     builder.register(appleLibraryDescription);
 
     AppleBinaryDescription appleBinaryDescription = new AppleBinaryDescription(
         cxxBinaryDescription,
         cxxPlatforms,
-        appleCxxPlatformsToAppleSdkPaths);
+        platformFlavorsToAppleCxxPlatforms);
     builder.register(appleBinaryDescription);
 
     builder.register(new AndroidAarDescription(

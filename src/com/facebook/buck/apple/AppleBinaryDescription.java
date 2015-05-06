@@ -57,15 +57,16 @@ public class AppleBinaryDescription
 
   private final CxxBinaryDescription delegate;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final ImmutableMap<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths;
+  private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
 
   public AppleBinaryDescription(
       CxxBinaryDescription delegate,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Map<CxxPlatform, AppleSdkPaths> appleCxxPlatformsToAppleSdkPaths) {
+      Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms) {
     this.delegate = delegate;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.appleCxxPlatformsToAppleSdkPaths = ImmutableMap.copyOf(appleCxxPlatformsToAppleSdkPaths);
+    this.platformFlavorsToAppleCxxPlatforms =
+        ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
   }
 
   @Override
@@ -96,14 +97,16 @@ public class AppleBinaryDescription
         CxxLibraryDescription.getTypeAndPlatform(
             params.getBuildTarget(),
             cxxPlatformFlavorDomain);
-    Optional<AppleSdkPaths> appleSdkPaths = Optionals.bind(
+    Optional<AppleCxxPlatform> appleCxxPlatform = Optionals.bind(
         typeAndPlatform.getPlatform(),
-        new Function<Map.Entry<Flavor, CxxPlatform>, Optional<AppleSdkPaths>>() {
+        new Function<Map.Entry<Flavor, CxxPlatform>, Optional<AppleCxxPlatform>>() {
           @Override
-          public Optional<AppleSdkPaths> apply(Map.Entry<Flavor, CxxPlatform> input) {
-            return Optional.fromNullable(appleCxxPlatformsToAppleSdkPaths.get(input.getValue()));
+          public Optional<AppleCxxPlatform> apply(Map.Entry<Flavor, CxxPlatform> input) {
+            return Optional.fromNullable(platformFlavorsToAppleCxxPlatforms.get(input.getKey()));
           }
         });
+    Optional<AppleSdkPaths> appleSdkPaths = appleCxxPlatform.transform(
+        AppleCxxPlatform.TO_APPLE_SDK_PATHS);
     AppleDescriptions.populateCxxConstructorArg(
         pathResolver,
         delegateArg,

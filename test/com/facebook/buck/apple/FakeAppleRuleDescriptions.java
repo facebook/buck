@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.FakeExecutableFinder;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -47,7 +48,7 @@ public class FakeAppleRuleDescriptions {
           .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
           .build();
 
-  private static final CxxPlatform DEFAULT_IPHONEOS_PLATFORM =
+  private static final AppleCxxPlatform DEFAULT_IPHONEOS_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
           ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build(),
           "iphoneos",
@@ -74,12 +75,14 @@ public class FakeAppleRuleDescriptions {
           ImmutableMap.of(
               DEFAULT_PLATFORM.getFlavor(),
               DEFAULT_PLATFORM,
-              DEFAULT_IPHONEOS_PLATFORM.getFlavor(),
-              DEFAULT_IPHONEOS_PLATFORM));
+              DEFAULT_IPHONEOS_PLATFORM.getCxxPlatform().getFlavor(),
+              DEFAULT_IPHONEOS_PLATFORM.getCxxPlatform()));
 
-  private static final ImmutableMap<CxxPlatform, AppleSdkPaths>
-    DEFAULT_CXX_PLATFORM_TO_APPLE_SDK_PATHS =
-      ImmutableMap.of(DEFAULT_PLATFORM, DEFAULT_IPHONEOS_SDK_PATHS);
+  private static final ImmutableMap<Flavor, AppleCxxPlatform>
+    DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS =
+      ImmutableMap.of(
+          DEFAULT_IPHONEOS_PLATFORM.getCxxPlatform().getFlavor(),
+          DEFAULT_IPHONEOS_PLATFORM);
 
   /**
    * A fake apple_library description with an iOS platform for use in tests.
@@ -91,7 +94,7 @@ public class FakeAppleRuleDescriptions {
             DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
             CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE),
         DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
-        DEFAULT_CXX_PLATFORM_TO_APPLE_SDK_PATHS);
+        DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS);
 
   /**
    * A fake apple_binary description with an iOS platform for use in tests.
@@ -100,9 +103,9 @@ public class FakeAppleRuleDescriptions {
     new AppleBinaryDescription(
         new CxxBinaryDescription(
             new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
-            DEFAULT_IPHONEOS_PLATFORM,
+            DEFAULT_IPHONEOS_PLATFORM.getCxxPlatform(),
             DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
             CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE),
         DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
-        DEFAULT_CXX_PLATFORM_TO_APPLE_SDK_PATHS);
+        DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS);
 }
