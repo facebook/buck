@@ -23,13 +23,12 @@
       <entry name="*.py" />
     </wildcardResourcePatterns>
     <annotationProcessing>
-      <profile default="true" name="Default" enabled="false">
+      <profile default="true" name="Default" enabled="true">
         <sourceOutputDir name="build-ij/immutables" />
         <sourceTestOutputDir name="build-ij/immutables-test" />
         <outputRelativeToContentRoot value="true" />
-        <processor name="org.immutables.value.internal.$processor$.$Processor" />
         <processorPath useClasspath="false">
-          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-2.0.6.jar" />
+          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-2.0.11-SNAPSHOT.jar" />
         </processorPath>
       </profile>
     </annotationProcessing>
