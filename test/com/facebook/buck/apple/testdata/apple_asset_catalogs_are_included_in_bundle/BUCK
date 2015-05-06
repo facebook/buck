@@ -1,0 +1,61 @@
+apple_bundle(
+  name = 'DemoApp',
+  binary = ':DemoAppBinary',
+  extension = 'app',
+  info_plist = 'Info.plist',
+)
+
+apple_binary(
+  name = 'DemoAppBinary',
+  preprocessor_flags = ['-fobjc-arc'],
+  headers = glob([
+    'DemoAppBinary/*.h',
+  ]),
+  srcs = glob([
+    'DemoAppBinary/*.m',
+  ]),
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    '$SDKROOT/usr/lib/libobjc.dylib',
+  ],
+  deps = [
+    ':DemoAppLibrary',
+    ':Assets1',
+    ':Assets2',
+  ],
+)
+
+apple_library(
+  name = 'DemoAppLibrary',
+  preprocessor_flags = ['-fobjc-arc'],
+  exported_headers = glob([
+    'DemoAppLibrary/*.h',
+  ]),
+  srcs = glob([
+    'DemoAppLibrary/*.m',
+  ]),
+  deps = [
+    ':Assets1',
+    ':Assets3',
+  ],
+  frameworks = [],
+)
+
+apple_asset_catalog(
+  name = 'Assets1',
+  dirs = [ 'Assets1.xcassets' ],
+  copy_to_bundles = True,
+)
+
+apple_asset_catalog(
+  name = 'Assets2',
+  dirs = [ 'Assets2.xcassets' ],
+  copy_to_bundles = False,
+)
+
+apple_asset_catalog(
+  name = 'Assets3',
+  dirs = [ 'Assets3.xcassets' ],
+  copy_to_bundles = False,
+)

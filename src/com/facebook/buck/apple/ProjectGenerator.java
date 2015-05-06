@@ -475,7 +475,7 @@ public class ProjectGenerator {
         infoPlistPath,
         /* includeFrameworks */ true,
         AppleResources.collectRecursiveResources(targetGraph, ImmutableList.of(targetNode)),
-        collectRecursiveAssetCatalogs(ImmutableList.of(targetNode)));
+        AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode)));
 
     // -- copy any binary and bundle targets into this bundle
     Iterable<TargetNode<?>> copiedRules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -824,7 +824,7 @@ public class ProjectGenerator {
         .setResources(AppleResources.collectRecursiveResources(targetGraph, tests))
         .setAssetCatalogs(
             getAndMarkAssetCatalogBuildScript(),
-            collectRecursiveAssetCatalogs(tests));
+            AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, tests));
 
     ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
     frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(tests));
@@ -1655,28 +1655,6 @@ public class ProjectGenerator {
     return options.contains(Option.USE_SHORT_NAMES_FOR_TARGETS)
         ? target.getShortName()
         : target.getFullyQualifiedName();
-  }
-
-  /**
-   * Collect asset catalogs from recursive dependencies.
-   */
-  private <T> ImmutableSet<AppleAssetCatalogDescription.Arg> collectRecursiveAssetCatalogs(
-      Iterable<TargetNode<T>> targetNodes) {
-    return FluentIterable
-        .from(targetNodes)
-        .transformAndConcat(
-            AppleBuildRules.newRecursiveRuleDependencyTransformer(
-                targetGraph,
-                AppleBuildRules.RecursiveDependenciesMode.COPYING,
-                ImmutableSet.of(AppleAssetCatalogDescription.TYPE)))
-        .transform(
-            new Function<TargetNode<?>, AppleAssetCatalogDescription.Arg>() {
-              @Override
-              public AppleAssetCatalogDescription.Arg apply(TargetNode<?> input) {
-                return (AppleAssetCatalogDescription.Arg) input.getConstructorArg();
-              }
-            })
-        .toSet();
   }
 
   @SuppressWarnings("incomplete-switch")

@@ -16,34 +16,21 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
+import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
-/**
- * Adds Apple-specific tools to {@link CxxPlatform}.
- */
+import java.util.Set;
+
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractAppleCxxPlatform {
+interface AbstractCollectedAssetCatalogs {
 
-  public static final Function<AppleCxxPlatform, AppleSdkPaths> TO_APPLE_SDK_PATHS =
-      new Function<AppleCxxPlatform, AppleSdkPaths>() {
-        @Override
-        public AppleSdkPaths apply(AppleCxxPlatform platform) {
-          return platform.getAppleSdkPaths();
-        }
-      };
+  @Value.Parameter
+  Optional<AppleAssetCatalog> getMergedAssetCatalog();
 
-  public abstract CxxPlatform getCxxPlatform();
-
-  public abstract ApplePlatform getApplePlatform();
-
-  public abstract AppleSdkPaths getAppleSdkPaths();
-
-  public abstract Tool getActool();
+  @Value.Parameter
+  Set<AppleAssetCatalog> getBundledAssetCatalogs();
 
 }

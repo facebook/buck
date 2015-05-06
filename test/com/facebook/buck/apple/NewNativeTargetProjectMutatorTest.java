@@ -292,11 +292,11 @@ public class NewNativeTargetProjectMutatorTest {
   public void assetCatalogsBuildPhaseBuildsBothCommonAndBundledAssetCatalogs()
       throws NoSuchBuildTargetException {
     AppleAssetCatalogDescription.Arg arg1 = new AppleAssetCatalogDescription.Arg();
-    arg1.dirs = ImmutableSet.of(Paths.get("AssetCatalog1.xcassets"));
+    arg1.dirs = ImmutableSortedSet.of(Paths.get("AssetCatalog1.xcassets"));
     arg1.copyToBundles = Optional.of(false);
 
     AppleAssetCatalogDescription.Arg arg2 = new AppleAssetCatalogDescription.Arg();
-    arg2.dirs = ImmutableSet.of(Paths.get("AssetCatalog2.xcassets"));
+    arg2.dirs = ImmutableSortedSet.of(Paths.get("AssetCatalog2.xcassets"));
     arg2.copyToBundles = Optional.of(true);
 
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
@@ -314,11 +314,11 @@ public class NewNativeTargetProjectMutatorTest {
     ImmutableSet.Builder<AppleAssetCatalogDescription.Arg> assetsBuilder = ImmutableSet.builder();
     for (int i = 0; i < 10000; i += 2) {
       AppleAssetCatalogDescription.Arg arg1 = new AppleAssetCatalogDescription.Arg();
-      arg1.dirs = ImmutableSet.of(Paths.get(String.format("AssetCatalog%d.xcassets", i)));
+      arg1.dirs = ImmutableSortedSet.of(Paths.get(String.format("AssetCatalog%d.xcassets", i)));
       arg1.copyToBundles = Optional.of(false);
       assetsBuilder.add(arg1);
       AppleAssetCatalogDescription.Arg arg2 = new AppleAssetCatalogDescription.Arg();
-      arg2.dirs = ImmutableSet.of(Paths.get(String.format("AssetCatalog%d.xcassets", i + 1)));
+      arg2.dirs = ImmutableSortedSet.of(Paths.get(String.format("AssetCatalog%d.xcassets", i + 1)));
       arg2.copyToBundles = Optional.of(true);
       assetsBuilder.add(arg2);
     }

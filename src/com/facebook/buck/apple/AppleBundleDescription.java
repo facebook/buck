@@ -25,10 +25,10 @@ import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
@@ -51,6 +51,7 @@ import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 
 public class AppleBundleDescription implements Description<AppleBundleDescription.Arg>, Flavored {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_bundle");
@@ -133,14 +134,6 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
           cxxPlatform.getFlavor().getName());
     }
 
-    // TODO(user): Sort through the changes needed to make project generation work with
-    // binary being optional.
-    BuildRule flavoredBinaryRule = getFlavoredBinaryRule(params, resolver, args);
-    BuildRuleParams bundleParamsWithFlavoredBinaryDep = getBundleParamsWithFlavoredBinaryDep(
-        params,
-        args.binary,
-        flavoredBinaryRule);
-
     ImmutableMap.Builder<Path, AppleBundleDestination> bundleDirsBuilder =
         ImmutableMap.builder();
     ImmutableMap.Builder<SourcePath, AppleBundleDestination> bundleFilesBuilder =
@@ -153,16 +146,43 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     ImmutableMap<Path, AppleBundleDestination> bundleDirs = bundleDirsBuilder.build();
     ImmutableMap<SourcePath, AppleBundleDestination> bundleFiles = bundleFilesBuilder.build();
 
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+
+    CollectedAssetCatalogs collectedAssetCatalogs =
+        AppleDescriptions.createBuildRulesForTransitiveAssetCatalogDependencies(
+            params,
+            sourcePathResolver,
+            appleCxxPlatform.getApplePlatform(),
+            appleCxxPlatform.getActool());
+
+    Optional<AppleAssetCatalog> mergedAssetCatalog = collectedAssetCatalogs.getMergedAssetCatalog();
+    ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs =
+        collectedAssetCatalogs.getBundledAssetCatalogs();
+
+    // TODO(user): Sort through the changes needed to make project generation work with
+    // binary being optional.
+    BuildRule flavoredBinaryRule = getFlavoredBinaryRule(params, resolver, args);
+    BuildRuleParams bundleParamsWithFlavoredBinaryDep = getBundleParamsWithUpdatedDeps(
+        params,
+        args.binary,
+        ImmutableSet.<BuildRule>builder()
+            .add(flavoredBinaryRule)
+            .addAll(mergedAssetCatalog.asSet())
+            .addAll(bundledAssetCatalogs)
+            .build());
+
     return new AppleBundle(
         bundleParamsWithFlavoredBinaryDep,
-        new SourcePathResolver(resolver),
+        sourcePathResolver,
         args.extension,
         args.infoPlist,
         Optional.of(flavoredBinaryRule),
         // TODO(user): Check the flavor and decide whether to lay out with iOS or OS X style.
         IOS_APP_SUBFOLDER_SPEC_MAP,
         bundleDirs,
-        bundleFiles);
+        bundleFiles,
+        bundledAssetCatalogs,
+        mergedAssetCatalog);
   }
 
   private static <A extends Arg> BuildRule getFlavoredBinaryRule(
@@ -192,10 +212,10 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         params.getBuildTarget().getFlavors().toArray(new Flavor[0]));
   }
 
-  private static BuildRuleParams getBundleParamsWithFlavoredBinaryDep(
+  private static BuildRuleParams getBundleParamsWithUpdatedDeps(
       final BuildRuleParams params,
       final BuildTarget originalBinaryTarget,
-      final BuildRule flavoredBinaryRule) {
+      final Set<BuildRule> newDeps) {
     // Remove the unflavored binary rule and add the flavored one instead.
     final Predicate<BuildRule> notOriginalBinaryRule = Predicates.not(
         BuildRules.isBuildRuleWithTarget(originalBinaryTarget));
@@ -204,7 +224,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
             FluentIterable
                 .from(params.getDeclaredDeps())
                 .filter(notOriginalBinaryRule)
-                .append(flavoredBinaryRule)
+                .append(newDeps)
                 .toSortedSet(Ordering.natural())),
         Suppliers.ofInstance(
             FluentIterable

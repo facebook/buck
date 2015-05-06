@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -68,6 +69,10 @@ public class AppleBundle extends AbstractBuildRule {
   @AddToRuleKey
   private final ImmutableMap<SourcePath, AppleBundleDestination> files;
 
+  private final ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs;
+
+  private final Optional<AppleAssetCatalog> mergedAssetCatalog;
+
   private final Path outputZipPath;
 
   AppleBundle(
@@ -78,7 +83,9 @@ public class AppleBundle extends AbstractBuildRule {
       Optional<BuildRule> binary,
       Map<AppleBundleDestination.SubfolderSpec, String> bundleSubfolders,
       Map<Path, AppleBundleDestination> dirs,
-      Map<SourcePath, AppleBundleDestination> files) {
+      Map<SourcePath, AppleBundleDestination> files,
+      Set<AppleAssetCatalog> bundledAssetCatalogs,
+      Optional<AppleAssetCatalog> mergedAssetCatalog) {
     super(params, resolver);
     this.extension = extension.isLeft() ?
         extension.getLeft().toFileExtension() :
@@ -91,6 +98,8 @@ public class AppleBundle extends AbstractBuildRule {
     this.outputZipPath = BuildTargets.getGenPath(
         params.getBuildTarget(),
         "%s.zip");
+    this.bundledAssetCatalogs = ImmutableSet.copyOf(bundledAssetCatalogs);
+    this.mergedAssetCatalog = mergedAssetCatalog;
   }
 
   @Override
@@ -162,6 +171,24 @@ public class AppleBundle extends AbstractBuildRule {
               bundleDestinationPath.resolve(resolvedFilePath.getFileName())));
     }
 
+    for (AppleAssetCatalog bundledAssetCatalog : bundledAssetCatalogs) {
+      Path bundleDir = bundledAssetCatalog.getOutputDir();
+      stepsBuilder.add(
+          CopyStep.forDirectory(
+              bundleDir,
+              bundleRoot,
+              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+    }
+
+    if (mergedAssetCatalog.isPresent()) {
+      Path bundleDir = mergedAssetCatalog.get().getOutputDir();
+      stepsBuilder.add(
+          CopyStep.forDirectory(
+              bundleDir,
+              bundleRoot,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
+    }
+
     // Ensure the bundle directory is archived so we can fetch it later.
     buildableContext.recordArtifactsInDirectory(bundleRoot);
 
@@ -189,4 +216,5 @@ public class AppleBundle extends AbstractBuildRule {
         .resolve(bundleSubfolders.get(dest.getSubfolderSpec()))
         .resolve(dest.getSubpath().or(""));
   }
+
 }

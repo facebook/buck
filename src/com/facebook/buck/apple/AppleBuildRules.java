@@ -25,6 +25,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -300,6 +301,26 @@ public final class AppleBuildRules {
             Optional.of(types));
       }
     };
+  }
+
+  public static <T> ImmutableSet<AppleAssetCatalogDescription.Arg> collectRecursiveAssetCatalogs(
+      TargetGraph targetGraph,
+      Iterable<TargetNode<T>> targetNodes) {
+    return FluentIterable
+        .from(targetNodes)
+        .transformAndConcat(
+            newRecursiveRuleDependencyTransformer(
+                targetGraph,
+                RecursiveDependenciesMode.COPYING,
+                ImmutableSet.of(AppleAssetCatalogDescription.TYPE)))
+        .transform(
+            new Function<TargetNode<?>, AppleAssetCatalogDescription.Arg>() {
+              @Override
+              public AppleAssetCatalogDescription.Arg apply(TargetNode<?> input) {
+                return (AppleAssetCatalogDescription.Arg) input.getConstructorArg();
+              }
+            })
+        .toSet();
   }
 
 }

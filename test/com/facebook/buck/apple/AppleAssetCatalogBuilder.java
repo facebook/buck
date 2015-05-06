@@ -21,7 +21,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
-import java.util.Set;
+import java.util.SortedSet;
 
 public class AppleAssetCatalogBuilder
     extends AbstractNodeBuilder<AppleAssetCatalogDescription.Arg> {
@@ -34,7 +34,7 @@ public class AppleAssetCatalogBuilder
     return new AppleAssetCatalogBuilder(target);
   }
 
-  public AppleAssetCatalogBuilder setDirs(Set<Path> dirs) {
+  public AppleAssetCatalogBuilder setDirs(SortedSet<Path> dirs) {
     arg.dirs = dirs;
     return this;
   }

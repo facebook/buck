@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
@@ -148,5 +149,40 @@ public class AppleBundleIntegrationTest {
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
+  }
+
+  @Test
+  public void appleAssetCatalogsAreIncludedInBundle() throws IOException{
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "apple_asset_catalogs_are_included_in_bundle",
+        tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build", "//:DemoApp").assertSuccess();
+
+    System.err.println(tmp.getRootPath());
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve("DemoApp/DemoApp.app/Assets.car")));
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve("DemoApp/DemoApp.app/Assets1.bundle/Image1.png")));
+    assertFalse(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve("DemoApp/DemoApp.app/Assets2.bundle/Image2.png")));
+    assertFalse(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve("DemoApp/DemoApp.app/Assets3.bundle/Image3.png")));
+
+    workspace.verify();
   }
 }

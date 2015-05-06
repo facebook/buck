@@ -20,9 +20,12 @@ import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
@@ -32,9 +35,12 @@ import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -48,6 +54,9 @@ public class AppleDescriptions {
 
   private static final Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>
       EMPTY_HEADERS = Either.ofLeft(ImmutableSortedSet.<SourcePath>of());
+
+  static final String XCASSETS_DIRECTORY_EXTENSION = ".xcassets";
+  private static final String MERGED_ASSET_CATALOG_NAME = "Merged";
 
   /** Utility class: do not instantiate. */
   private AppleDescriptions() {}
@@ -307,6 +316,100 @@ public class AppleDescriptions {
         }
       }
     };
+  }
+
+  public static CollectedAssetCatalogs createBuildRulesForTransitiveAssetCatalogDependencies(
+      BuildRuleParams params,
+      SourcePathResolver sourcePathResolver,
+      ApplePlatform applePlatform,
+      Tool actool) {
+    TargetNode<?> targetNode = Preconditions.checkNotNull(
+        params.getTargetGraph().get(params.getBuildTarget()));
+
+    ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogArgs =
+        AppleBuildRules.collectRecursiveAssetCatalogs(
+            params.getTargetGraph(),
+            ImmutableList.of(targetNode));
+
+    ImmutableSortedSet.Builder<Path> mergeableAssetCatalogDirsBuilder =
+        ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<Path> unmergeableAssetCatalogDirsBuilder =
+        ImmutableSortedSet.naturalOrder();
+
+    for (AppleAssetCatalogDescription.Arg arg : assetCatalogArgs) {
+      if (arg.getCopyToBundles()) {
+        unmergeableAssetCatalogDirsBuilder.addAll(arg.dirs);
+      } else {
+        mergeableAssetCatalogDirsBuilder.addAll(arg.dirs);
+      }
+    }
+
+    ImmutableSortedSet<Path> mergeableAssetCatalogDirs =
+        mergeableAssetCatalogDirsBuilder.build();
+    ImmutableSortedSet<Path> unmergeableAssetCatalogDirs =
+        unmergeableAssetCatalogDirsBuilder.build();
+
+    Optional<AppleAssetCatalog> mergedAssetCatalog = Optional.absent();
+    if (!mergeableAssetCatalogDirs.isEmpty()) {
+      BuildRuleParams assetCatalogParams = params.copyWithChanges(
+          params.getBuildRuleType(),
+          BuildTarget.builder(params.getBuildTarget())
+              .addFlavors(AppleAssetCatalog.getFlavor(
+                      ActoolStep.BundlingMode.MERGE_BUNDLES,
+                      MERGED_ASSET_CATALOG_NAME))
+              .build(),
+          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+      mergedAssetCatalog = Optional.of(
+          new AppleAssetCatalog(
+              assetCatalogParams,
+              sourcePathResolver,
+              applePlatform.getName(),
+              actool,
+              mergeableAssetCatalogDirs,
+              ActoolStep.BundlingMode.MERGE_BUNDLES,
+              MERGED_ASSET_CATALOG_NAME));
+    }
+
+    ImmutableSet.Builder<AppleAssetCatalog> bundledAssetCatalogsBuilder =
+        ImmutableSet.builder();
+    for (Path assetDir : unmergeableAssetCatalogDirs) {
+      String bundleName = getCatalogNameFromPath(assetDir);
+      BuildRuleParams assetCatalogParams = params.copyWithChanges(
+          params.getBuildRuleType(),
+          BuildTarget.builder(params.getBuildTarget())
+              .addFlavors(AppleAssetCatalog.getFlavor(
+                      ActoolStep.BundlingMode.SEPARATE_BUNDLES,
+                      bundleName))
+              .build(),
+          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+      bundledAssetCatalogsBuilder.add(
+          new AppleAssetCatalog(
+              assetCatalogParams,
+              sourcePathResolver,
+              applePlatform.getName(),
+              actool,
+              ImmutableSortedSet.of(assetDir),
+              ActoolStep.BundlingMode.SEPARATE_BUNDLES,
+              bundleName));
+    }
+    ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs =
+        bundledAssetCatalogsBuilder.build();
+
+    return CollectedAssetCatalogs.of(
+        mergedAssetCatalog,
+        bundledAssetCatalogs);
+  }
+
+  private static String getCatalogNameFromPath(Path assetCatalogDir) {
+    String name = assetCatalogDir.getFileName().toString();
+    if (name.endsWith(AppleDescriptions.XCASSETS_DIRECTORY_EXTENSION)) {
+      name = name.substring(
+          0,
+          name.length() - AppleDescriptions.XCASSETS_DIRECTORY_EXTENSION.length());
+    }
+    return name;
   }
 
 }

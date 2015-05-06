@@ -2067,7 +2067,7 @@ public class ProjectGeneratorTest {
     BuildTarget assetCatalogTarget = BuildTarget.builder("//foo", "asset_catalog").build();
     TargetNode<?> assetCatalogNode = AppleAssetCatalogBuilder
         .createBuilder(assetCatalogTarget)
-        .setDirs(ImmutableSet.of(Paths.get("AssetCatalog.xcassets")))
+        .setDirs(ImmutableSortedSet.of(Paths.get("AssetCatalog.xcassets")))
         .build();
 
     BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();

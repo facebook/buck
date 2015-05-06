@@ -161,6 +161,7 @@ public class AppleCxxPlatforms {
 
     return AppleCxxPlatform.builder()
         .setCxxPlatform(cxxPlatform)
+        .setApplePlatform(targetPlatform)
         .setAppleSdkPaths(sdkPaths)
         .setActool(actool)
         .build();

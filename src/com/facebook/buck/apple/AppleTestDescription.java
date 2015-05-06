@@ -181,6 +181,17 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     AppleResources.addResourceFilesToBuilder(resourceFilesBuilder, resourceDescriptions);
     ImmutableMap<SourcePath, AppleBundleDestination> resourceFiles = resourceFilesBuilder.build();
 
+    CollectedAssetCatalogs collectedAssetCatalogs =
+        AppleDescriptions.createBuildRulesForTransitiveAssetCatalogDependencies(
+            params,
+            sourcePathResolver,
+            appleCxxPlatform.getApplePlatform(),
+            appleCxxPlatform.getActool());
+
+    Optional<AppleAssetCatalog> mergedAssetCatalog = collectedAssetCatalogs.getMergedAssetCatalog();
+    ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs =
+        collectedAssetCatalogs.getBundledAssetCatalogs();
+
     AppleBundle bundle = new AppleBundle(
         params.copyWithChanges(
             AppleBundleDescription.TYPE,
@@ -190,6 +201,8 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .add(library)
+                    .addAll(mergedAssetCatalog.asSet())
+                    .addAll(bundledAssetCatalogs)
                     .addAll(params.getDeclaredDeps())
                     .build()),
             Suppliers.ofInstance(params.getExtraDeps())),
@@ -200,7 +213,9 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         // TODO(user): Use flavors to switch between iOS and OSX layout
         AppleBundleDescription.IOS_APP_SUBFOLDER_SPEC_MAP,
         resourceDirs,
-        resourceFiles);
+        resourceFiles,
+        bundledAssetCatalogs,
+        mergedAssetCatalog);
 
     return new AppleTest(
         params.copyWithDeps(

@@ -16,19 +16,17 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableCollection;
 
 import java.nio.file.Path;
-import java.util.Set;
+import java.util.SortedSet;
 
 /**
  * Description for an apple_asset_catalog rule, which identifies an asset
@@ -48,23 +46,16 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
   }
 
   @Override
-  public <A extends Arg> AppleAssetCatalog createBuildRule(
+  public <A extends Arg> NoopBuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    ProjectFilesystem projectFilesystem = params.getProjectFilesystem();
-    Supplier<ImmutableCollection<Path>> inputPathsSupplier =
-        RuleUtils.subpathsOfPathsSupplier(projectFilesystem, args.dirs);
-    return new AppleAssetCatalog(
-        params,
-        new SourcePathResolver(resolver),
-        inputPathsSupplier,
-        args);
+    return new NoopBuildRule(params, new SourcePathResolver(resolver));
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public Set<Path> dirs;
+    public SortedSet<Path> dirs;
     public Optional<Boolean> copyToBundles;
 
     public boolean getCopyToBundles() {
