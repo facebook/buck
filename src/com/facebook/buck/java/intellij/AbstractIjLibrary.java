@@ -16,11 +16,12 @@
 
 package com.facebook.buck.java.intellij;
 
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
+
+import java.nio.file.Path;
 
 /**
  * Represents a prebuilt library (.jar or .aar) as seen by IntelliJ.
@@ -37,12 +38,12 @@ abstract class AbstractIjLibrary {
   /**
    * @return path to the binary (.jar or .aar) the library represents.
    */
-  public abstract SourcePath getBinaryJar();
+  public abstract Path getBinaryJar();
 
   /**
    * @return path to the jar containing sources for the library.
    */
-  public abstract Optional<SourcePath> getSourceJar();
+  public abstract Optional<Path> getSourceJar();
 
   /**
    * @return url to the javadoc.

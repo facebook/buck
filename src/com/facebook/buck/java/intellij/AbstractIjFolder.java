@@ -16,12 +16,8 @@
 
 package com.facebook.buck.java.intellij;
 
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 
 import org.immutables.value.Value;
 
@@ -35,7 +31,6 @@ import java.nio.file.Path;
 abstract class AbstractIjFolder {
   public enum Type {
     EXCLUDE_FOLDER("excludeFolder"),
-    GENERATED_FOLDER("generatedFolder"),
     SOURCE_FOLDER("sourceFolder"),
     TEST_FOLDER("testFolder")
     ;
@@ -53,14 +48,24 @@ abstract class AbstractIjFolder {
   }
 
   public abstract Type getType();
-  protected abstract Optional<Path> getModuleRelativePath();
-  protected abstract Optional<SourcePath> getSourcePath();
 
   /**
-   * @return whether the sources in this folder should inherit the package prefix related to
-   * the module in which they reside.
+   * @return path that this folder represents relative to the project root.
+   */
+  public abstract Path getPath();
+
+  /**
+   * Used to make IntelliJ ignore the package name->folder structure convention and assume the
+   * given package prefix. An example of a scenario this makes possible to achieve is having
+   * java/src/Foo.java declare the package "org.bar" (instead of having the path to the file be
+   * java/org/bar/Foo.java).
+   * The main effect of this is the elimination of IntelliJ warnings about incorrect package
+   * prefixes and having it use the correct package when creating new files.
+   *
+   * @return whether to generate package prefix for this folder.
    */
   public abstract boolean getWantsPackagePrefix();
+
 
   @Value.Derived
   public boolean isTest() {
@@ -68,24 +73,9 @@ abstract class AbstractIjFolder {
   }
 
   @Value.Check
-  public void eitherModuleRelativePathOrSourcePathArePresent() {
-    Preconditions.checkArgument(getModuleRelativePath().isPresent() ^ getSourcePath().isPresent());
-  }
-
-  /**
-   * Depending on how the {@link IjFolder} was created it could hold a {@link Path}
-   * or {@link SourcePath}. This method sort of encapsulates that.
-   *
-   * @param resolver resolver for the project
-   * @return path, relative to the module base path that represents this Folder.
-   */
-  public Path resolveModuleRelativePath(final SourcePathResolver resolver) {
-    return getModuleRelativePath().or(
-        new Supplier<Path>() {
-          @Override
-          public Path get() {
-            return resolver.getRelativePath(getSourcePath().get()).get();
-          }
-        });
+  protected void packagePrefixOnlyOnSources() {
+    Preconditions.checkArgument(!getWantsPackagePrefix() ||
+            Type.SOURCE_FOLDER.equals(getType()) ||
+            Type.TEST_FOLDER.equals(getType()));
   }
 }

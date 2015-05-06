@@ -46,6 +46,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.ProjectConfig;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.TargetGraph;
@@ -185,7 +186,16 @@ public class Project {
       PrintStream stdErr) throws IOException, InterruptedException {
     List<SerializableModule> modules;
     if (experimentalProjectGeneration) {
-      IjProject ijProject = IjProject.create(targetGraph, javaPackageFinder, resolver);
+      IjLibraryFactory.IjLibraryFactoryResolver moduleGraphResolver =
+          new IjLibraryFactory.IjLibraryFactoryResolver() {
+            @Override
+            public Path getPath(SourcePath path) {
+              return resolver.getPath(path);
+            }
+          };
+      IjProject ijProject = new IjProject(
+          IjModuleGraph.from(targetGraph, moduleGraphResolver),
+          javaPackageFinder);
       modules = Lists.newArrayList(ijProject.getSerializedProjectDescription());
       writeJsonConfig(
           jsonTempFile,

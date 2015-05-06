@@ -17,10 +17,7 @@
 package com.facebook.buck.java.intellij;
 
 import com.facebook.buck.java.JavaPackageFinder;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -39,22 +36,12 @@ public class IjProject {
 
   private final IjModuleGraph moduleGraph;
   private final JavaPackageFinder javaPackageFinder;
-  private final SourcePathResolver resolver;
 
   public IjProject(
       IjModuleGraph moduleGraph,
-      JavaPackageFinder javaPackageFinder,
-      SourcePathResolver resolver) {
+      JavaPackageFinder javaPackageFinder) {
     this.moduleGraph = moduleGraph;
     this.javaPackageFinder = javaPackageFinder;
-    this.resolver = resolver;
-  }
-
-  public static IjProject create(
-      TargetGraph targetGraph,
-      JavaPackageFinder javaPackageFinder,
-      SourcePathResolver resolver) {
-    return new IjProject(IjModuleGraph.from(targetGraph), javaPackageFinder, resolver);
   }
 
   /**
@@ -70,16 +57,11 @@ public class IjProject {
         new ImmutableSet.Builder<>();
     for (IjModule module: moduleGraph.getNodes()) {
       for (IjLibrary library : module.getLibraries()) {
-        Optional<Path> jarPath = resolver.getRelativePath(library.getBinaryJar());
-        if (!jarPath.isPresent()) {
-          // TODO(mkosiba): do local graph enhancement and depend on the output of the rule instead.
-          continue;
-        }
         SerializableAndroidAar serializableAndroidLibrary = new SerializableAndroidAar(
             library.getName(),
             null,
             null,
-            jarPath.get());
+            library.getBinaryJar());
         serializableLibrariesBuilder.add(serializableAndroidLibrary);
       }
     }
@@ -157,9 +139,8 @@ public class IjProject {
             new Function<IjFolder, SerializableModule.SourceFolder>() {
               @Override
               public SerializableModule.SourceFolder apply(IjFolder input) {
-                Path inputPath = moduleBasePath.resolve(input.resolveModuleRelativePath(resolver));
                 return new SerializableModule.SourceFolder(
-                    toModuleDirRelativeString(inputPath, moduleBasePath),
+                    toModuleDirRelativeString(input.getPath(), moduleBasePath),
                     input.isTest(),
                     input.getWantsPackagePrefix() ? packagePrefix : null);
               }

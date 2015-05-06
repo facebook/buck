@@ -208,7 +208,7 @@ public class IjModuleGraphTest {
   }
 
   private IjModuleGraph createModuleGraph(ImmutableSet<TargetNode<?>> targets) {
-    return IjModuleGraph.from(TargetGraphFactory.newInstance(targets));
+    return IjModuleGraph.from(TargetGraphFactory.newInstance(targets), null);
   }
 
   private IjModule getModuleForTarget(IjModuleGraph graph, final TargetNode<?> target) {

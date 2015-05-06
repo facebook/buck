@@ -26,9 +26,9 @@ import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
@@ -47,6 +47,7 @@ public class IjLibraryFactoryTest {
   private IjLibrary androidSupportLibrary;
   private TargetNode<?> base;
   private TargetNode<?> droid;
+  private IjLibraryFactory.IjLibraryFactoryResolver libraryFactoryResolver;
   private IjLibraryFactory factory;
 
   @Before
@@ -74,13 +75,21 @@ public class IjLibraryFactoryTest {
         .addDep(androidSupport.getBuildTarget())
         .build();
 
+    libraryFactoryResolver = new IjLibraryFactory.IjLibraryFactoryResolver() {
+      @Override
+      public Path getPath(SourcePath path) {
+        return sourcePathResolver.getPath(path);
+      }
+    };
+
     factory = IjLibraryFactory.create(
         ImmutableSet.of(
             guava,
             androidSupport,
             base,
             droid
-        ));
+        ),
+        libraryFactoryResolver);
 
     guavaLibrary = factory.getLibrary(guava.getBuildTarget()).get();
     androidSupportLibrary = factory.getLibrary(androidSupport.getBuildTarget()).get();
@@ -89,9 +98,7 @@ public class IjLibraryFactoryTest {
   @Test
   public void testPrebuiltJar() {
     assertEquals("library_third_party_java_guava_guava", guavaLibrary.getName());
-    assertEquals(
-        Optional.of(guavaJarPath),
-        sourcePathResolver.getRelativePath(guavaLibrary.getBinaryJar()));
+    assertEquals(guavaJarPath, guavaLibrary.getBinaryJar());
   }
 
   @Test
@@ -149,7 +156,8 @@ public class IjLibraryFactoryTest {
         .setBinaryJar(guavaJarPath)
         .build();
 
-    IjLibraryFactory factory = IjLibraryFactory.create(ImmutableSet.of(guava, hamcrest));
+    IjLibraryFactory factory =
+        IjLibraryFactory.create(ImmutableSet.of(guava, hamcrest), libraryFactoryResolver);
 
     IjLibrary guavaLibrary = factory.getLibrary(guava.getBuildTarget()).get();
     IjLibrary hamcrestLibrary = factory.getLibrary(hamcrest.getBuildTarget()).get();

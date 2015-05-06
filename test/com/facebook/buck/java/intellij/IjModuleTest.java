@@ -39,13 +39,13 @@ public class IjModuleTest {
         .build();
 
     IjFolder inferredFolder = IjFolder.builder()
-        .setModuleRelativePath(Paths.get("src"))
+        .setPath(Paths.get("src"))
         .setType(IjFolder.Type.SOURCE_FOLDER)
         .setWantsPackagePrefix(true)
         .build();
 
     IjFolder overrideFolder = IjFolder.builder()
-        .setModuleRelativePath(Paths.get("override"))
+        .setPath(Paths.get("override"))
         .setType(IjFolder.Type.SOURCE_FOLDER)
         .setWantsPackagePrefix(false)
         .build();

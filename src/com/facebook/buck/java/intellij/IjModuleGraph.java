@@ -70,7 +70,6 @@ public class IjModuleGraph extends DefaultTraversableGraph<IjModule> {
         }
       };
 
-
   /**
    * Create all the modules we are capable of representing in IntelliJ from the supplied graph.
    *
@@ -80,8 +79,11 @@ public class IjModuleGraph extends DefaultTraversableGraph<IjModule> {
    *             can't be prepresented in IntelliJ are missing from this mapping.
    */
   private static ImmutableMap<BuildTarget, IjModule> createModules(
-      TargetGraph targetGraph) {
-    IjLibraryFactory libraryFactory = IjLibraryFactory.create(targetGraph.getNodes());
+      TargetGraph targetGraph,
+      IjLibraryFactory.IjLibraryFactoryResolver libraryFactoryResolver) {
+    IjLibraryFactory libraryFactory = IjLibraryFactory.create(
+        targetGraph.getNodes(),
+        libraryFactoryResolver);
     IjModuleFactory moduleFactory = new IjModuleFactory(libraryFactory);
     ImmutableSet<TargetNode<?>> supportedTargets = FluentIterable.from(targetGraph.getNodes())
         .filter(SUPPORTED_MODULE_TYPES_PREDICATE)
@@ -118,10 +120,12 @@ public class IjModuleGraph extends DefaultTraversableGraph<IjModule> {
    *         exists between two modules (Ma, Mb) if a TargetGraph edge existed between a pair of
    *         nodes (Ta, Tb) and Ma contains Ta and Mb contains Tb.
    */
-  public static IjModuleGraph from(TargetGraph targetGraph) {
+  public static IjModuleGraph from(
+      TargetGraph targetGraph,
+      IjLibraryFactory.IjLibraryFactoryResolver libraryFactoryResolver) {
     final MutableDirectedGraph<IjModule> moduleGraph = new MutableDirectedGraph<>();
     final ImmutableMap<BuildTarget, IjModule> rulesToModules =
-        createModules(targetGraph);
+        createModules(targetGraph, libraryFactoryResolver);
     final ExportedDepsClosureResolver exportedDepsClosureResolver =
         new ExportedDepsClosureResolver(targetGraph);
 

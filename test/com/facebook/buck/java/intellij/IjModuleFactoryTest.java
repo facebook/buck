@@ -26,10 +26,8 @@ import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Function;
@@ -53,13 +51,11 @@ public class IjModuleFactoryTest {
     }
   };
 
-  private SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-
   @Test
   public void testIjLibraryResolution() {
     final IjLibrary testLibrary = IjLibrary.builder()
         .setName("library_test_library")
-        .setBinaryJar(new TestSourcePath("test.jar"))
+        .setBinaryJar(Paths.get("test.jar"))
         .build();
 
     final TargetNode<?> prebuiltJar = PrebuiltJarBuilder
@@ -111,7 +107,7 @@ public class IjModuleFactoryTest {
     assertEquals(1, module.getFolders().size());
 
     IjFolder folder = module.getFolders().iterator().next();
-    assertEquals(Optional.of(Paths.get("")), folder.getModuleRelativePath());
+    assertEquals(Paths.get("java/com/example/base"), folder.getPath());
     assertFalse(folder.isTest());
     assertTrue(folder.getWantsPackagePrefix());
   }
@@ -134,7 +130,7 @@ public class IjModuleFactoryTest {
 
     assertEquals(1, module.getFolders().size());
     IjFolder folder = module.getFolders().iterator().next();
-    assertEquals(Optional.of(Paths.get("")), folder.getModuleRelativePath());
+    assertEquals(Paths.get(""), folder.getPath());
   }
 
   private ImmutableSet<Path> getFolderPaths(ImmutableSet<IjFolder> folders) {
@@ -143,7 +139,7 @@ public class IjModuleFactoryTest {
             new Function<IjFolder, Path>() {
               @Override
               public Path apply(IjFolder input) {
-                return input.resolveModuleRelativePath(pathResolver);
+                return input.getPath();
               }
             })
         .toSet();
@@ -168,7 +164,12 @@ public class IjModuleFactoryTest {
         ImmutableSet.of(javaLib1, javaLib2));
 
     ImmutableSet<Path> folderPaths = getFolderPaths(module.getFolders());
-    assertEquals(ImmutableSet.of(Paths.get("base/src1"), Paths.get("base/src2")), folderPaths);
+    assertEquals(
+        ImmutableSet.of(
+            Paths.get("java/com/example/base/src1"),
+            Paths.get("java/com/example/base/src2")
+        ),
+        folderPaths);
   }
 
   @Test
@@ -186,7 +187,7 @@ public class IjModuleFactoryTest {
         ImmutableSet.<TargetNode<?>>of(androidLib));
 
     assertTrue(module.getAndroidFacet().isPresent());
-    assertEquals(ImmutableSet.of(Paths.get("")), getFolderPaths(module.getFolders()));
+    assertEquals(ImmutableSet.of(moduleBasePath), getFolderPaths(module.getFolders()));
   }
 
   @Test
@@ -248,7 +249,8 @@ public class IjModuleFactoryTest {
         moduleBasePath,
         ImmutableSet.of(javaLib, projectConfig));
 
-    assertEquals(ImmutableSet.of(Paths.get("1.0")), getFolderPaths(module.getFolders()));
+    assertEquals(ImmutableSet.of(Paths.get("third-party/lib/1.0")),
+        getFolderPaths(module.getFolders()));
   }
 
   @Test

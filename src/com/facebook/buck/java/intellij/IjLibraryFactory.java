@@ -20,13 +20,17 @@ import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Optionals;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -37,6 +41,13 @@ import java.util.Set;
  * TargetNodes and allows resolving those as dependencies of modules.
  */
 public abstract class IjLibraryFactory {
+
+  public interface IjLibraryFactoryResolver {
+    /**
+     * see {@link SourcePathResolver#getPath(SourcePath)}
+     */
+    Path getPath(SourcePath path);
+  }
 
   /**
    * From the supplied set of nodes finds all of the first-degree dependencies which can
@@ -61,8 +72,10 @@ public abstract class IjLibraryFactory {
 
   public abstract Optional<IjLibrary> getLibrary(BuildTarget target);
 
-  public static IjLibraryFactory create(ImmutableSet<TargetNode<?>> targetNodes) {
-    return new IjLibraryFactoryImpl(targetNodes);
+  public static IjLibraryFactory create(
+      ImmutableSet<TargetNode<?>> targetNodes,
+      IjLibraryFactoryResolver moduleGraphResolver) {
+    return new IjLibraryFactoryImpl(targetNodes, moduleGraphResolver);
   }
 
   private static class IjLibraryFactoryImpl extends IjLibraryFactory {
@@ -78,13 +91,18 @@ public abstract class IjLibraryFactory {
     }
 
     private final Map<BuildRuleType, IjLibraryRule<?>> libraryRuleIndex = new HashMap<>();
+    private final IjLibraryFactoryResolver moduleGraphResolver;
     private final ImmutableMap<BuildTarget, IjLibrary> rulesToLibraries;
 
     /**
      * @param targetNodes nodes to consider when creating the list of prebuilts. It's fine for this
      *                    to be all of the nodes in the graph.
      */
-    public IjLibraryFactoryImpl(ImmutableSet<TargetNode<?>> targetNodes) {
+    public IjLibraryFactoryImpl(
+        ImmutableSet<TargetNode<?>> targetNodes,
+        IjLibraryFactoryResolver moduleGraphResolver) {
+      this.moduleGraphResolver = moduleGraphResolver;
+
       addToIndex(new AndroidPrebuiltAarLibraryRule());
       addToIndex(new PrebuiltJarLibraryRule());
 
@@ -134,7 +152,7 @@ public abstract class IjLibraryFactory {
       return mapBuilder.build();
     }
 
-    private static class AndroidPrebuiltAarLibraryRule
+    private class AndroidPrebuiltAarLibraryRule
         implements IjLibraryRule<AndroidPrebuiltAarDescription.Arg> {
 
       @Override
@@ -146,11 +164,11 @@ public abstract class IjLibraryFactory {
       public void apply(
           TargetNode<AndroidPrebuiltAarDescription.Arg> targetNode, IjLibrary.Builder library) {
         AndroidPrebuiltAarDescription.Arg arg = targetNode.getConstructorArg();
-        library.setBinaryJar(arg.aar);
+        library.setBinaryJar(moduleGraphResolver.getPath(arg.aar));
       }
     }
 
-    private static class PrebuiltJarLibraryRule
+    private class PrebuiltJarLibraryRule
         implements IjLibraryRule<PrebuiltJarDescription.Arg> {
 
       @Override
@@ -162,8 +180,14 @@ public abstract class IjLibraryFactory {
       public void apply(
           TargetNode<PrebuiltJarDescription.Arg> targetNode, IjLibrary.Builder library) {
         PrebuiltJarDescription.Arg arg = targetNode.getConstructorArg();
-        library.setBinaryJar(arg.binaryJar);
-        library.setSourceJar(arg.sourceJar);
+        library.setBinaryJar(moduleGraphResolver.getPath(arg.binaryJar));
+        library.setSourceJar(arg.sourceJar.transform(
+                new Function<SourcePath, Path>() {
+                  @Override
+                  public Path apply(SourcePath input) {
+                    return moduleGraphResolver.getPath(input);
+                  }
+                }));
         library.setJavadocUrl(arg.javadocUrl);
       }
     }

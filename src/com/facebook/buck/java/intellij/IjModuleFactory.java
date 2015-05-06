@@ -259,10 +259,10 @@ public class IjModuleFactory {
         .toSet();
 
     for (Path path : sourceFolders) {
-      Path moduleRelativePath = context.getModuleBasePath().relativize(path);
+      Preconditions.checkArgument(path.startsWith(context.getModuleBasePath()));
       context.getModuleBuilder().addInferredFolders(
           IjFolder.builder()
-              .setModuleRelativePath(moduleRelativePath)
+              .setPath(path)
               .setType(type)
               .setWantsPackagePrefix(wantsPackagePrefix)
               .build());
@@ -379,13 +379,14 @@ public class IjModuleFactory {
     @Override
     public void apply(TargetNode<ProjectConfigDescription.Arg> target, ModuleBuildContext context) {
       ProjectConfigDescription.Arg arg = target.getConstructorArg();
+      Path baseTargetPath = target.getBuildTarget().getBasePath();
 
       // This was only ever added to support cases where we can't guess the package for the input
       // files properly (like for "third-party/java/lib/1.0.0/org/someone/lib").
       for (String root : (arg.srcRoots.or(ImmutableList.<String>of()))) {
         context.getModuleBuilder().addFolderOverride(
             IjFolder.builder()
-                .setModuleRelativePath(Paths.get(root))
+                .setPath(baseTargetPath.resolve(root))
                 .setType(IjFolder.Type.SOURCE_FOLDER)
                 .setWantsPackagePrefix(false)
                 .build());
@@ -394,7 +395,7 @@ public class IjModuleFactory {
       for (String root : (arg.testRoots.or(ImmutableList.<String>of()))) {
         context.getModuleBuilder().addFolderOverride(
             IjFolder.builder()
-                .setModuleRelativePath(Paths.get(root))
+                .setPath(baseTargetPath.resolve(root))
                 .setType(IjFolder.Type.TEST_FOLDER)
                 .setWantsPackagePrefix(false)
                 .build());
