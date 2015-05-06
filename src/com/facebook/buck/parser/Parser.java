@@ -40,6 +40,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuckPyFunction;
@@ -373,14 +374,15 @@ public class Parser {
    * @param eventBus used to log events while parsing.
    * @return the target graph containing the build targets and their related targets.
    */
-  public synchronized TargetGraph buildTargetGraphForTargetNodeSpecs(
-      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      ParserConfig parserConfig,
-      BuckEventBus eventBus,
-      Console console,
-      ImmutableMap<String, String> environment,
-      boolean enableProfiling)
-      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+  public synchronized Pair<ImmutableSet<BuildTarget>, TargetGraph>
+      buildTargetGraphForTargetNodeSpecs(
+          Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+          ParserConfig parserConfig,
+          BuckEventBus eventBus,
+          Console console,
+          ImmutableMap<String, String> environment,
+          boolean enableProfiling)
+          throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
     TargetGraph graph = null;
     // TODO(jacko): Instantiating one ProjectBuildFileParser here isn't enough. We a collection of
@@ -406,7 +408,7 @@ public class Parser {
             parserConfig,
             buildFileParser,
             environment);
-        return graph;
+        return new Pair<>(buildTargets, graph);
       } finally {
         eventBus.post(ParseEvent.finished(buildTargets, Optional.fromNullable(graph)));
       }
@@ -429,12 +431,12 @@ public class Parser {
     return buildTargetGraphForTargetNodeSpecs(
         Iterables.transform(
             buildTargets,
-            BuildTargetSpec.TO_BUILD_TARGET_SPEC),
+            AbstractBuildTargetSpec.TO_BUILD_TARGET_SPEC),
         parserConfig,
         eventBus,
         console,
         environment,
-        enableProfiling);
+        enableProfiling).getSecond();
   }
 
   @Nullable
@@ -467,7 +469,7 @@ public class Parser {
           @Override
           protected Iterator<BuildTarget> findChildren(BuildTarget buildTarget)
               throws IOException, InterruptedException {
-            BuildTargetPatternParser buildTargetPatternParser =
+            BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
                 BuildTargetPatternParser.forBaseName(buildTargetParser, buildTarget.getBaseName());
 
             // Verify that the BuildTarget actually exists in the map of known BuildTargets
@@ -708,14 +710,16 @@ public class Parser {
         .from(
             buildTargetGraphForTargetNodeSpecs(
                 ImmutableList.of(
-                    new TargetNodePredicateSpec(
+                    TargetNodePredicateSpec.of(
                         filter,
-                        filesystem.getIgnorePaths())),
+                        BuildFileSpec.fromRecursivePath(
+                            Paths.get(""),
+                            filesystem.getIgnorePaths()))),
                 parserConfig,
                 buckEventBus,
                 console,
                 environment,
-                enableProfiling).getNodes())
+                enableProfiling).getSecond().getNodes())
         .filter(filter)
         .transform(HasBuildTarget.TO_TARGET)
         .toSet();

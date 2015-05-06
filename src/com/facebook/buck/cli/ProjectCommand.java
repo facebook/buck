@@ -34,6 +34,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
@@ -77,6 +78,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -542,9 +544,9 @@ public class ProjectCommand extends AbstractCommandRunner<ProjectCommandOptions>
           BuildTargetSpec.TO_BUILD_TARGET_SPEC);
     } else {
       return ImmutableList.of(
-          new TargetNodePredicateSpec(
+          TargetNodePredicateSpec.of(
               Predicates.<TargetNode<?>>alwaysTrue(),
-              ignoreDirs));
+              BuildFileSpec.fromRecursivePath(Paths.get(""), ignoreDirs)));
     }
   }
 

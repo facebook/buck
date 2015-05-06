@@ -16,8 +16,13 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
+import com.facebook.buck.parser.TargetNodeSpec;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.kohsuke.args4j.Option;
 
@@ -89,6 +94,21 @@ public abstract class AbstractCommandOptions {
 
   public boolean getEnableProfiling() {
     return enableProfiling;
+  }
+
+  public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
+      BuckConfig config,
+      ImmutableSet<Path> ignorePaths,
+      Iterable<String> targetsAsArgs) {
+    ImmutableList.Builder<TargetNodeSpec> specs = ImmutableList.builder();
+    CommandLineTargetNodeSpecParser parser =
+        new CommandLineTargetNodeSpecParser(
+            config,
+            new BuildTargetPatternTargetNodeParser(new BuildTargetParser(), ignorePaths));
+    for (String arg : targetsAsArgs) {
+      specs.add(parser.parse(arg));
+    }
+    return specs.build();
   }
 
 }

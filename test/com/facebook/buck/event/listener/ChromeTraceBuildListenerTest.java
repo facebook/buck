@@ -58,12 +58,14 @@ import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -156,6 +158,7 @@ public class ChromeTraceBuildListenerTest {
     replay(context);
 
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(target);
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock,
         new BuildId("ChromeTraceBuildListenerTestBuildId"));
@@ -166,7 +169,7 @@ public class ChromeTraceBuildListenerTest {
         /* isDaemon */ true));
     eventBus.post(ArtifactCacheConnectEvent.started());
     eventBus.post(ArtifactCacheConnectEvent.finished());
-    eventBus.post(BuildEvent.started(buildTargets));
+    eventBus.post(BuildEvent.started(buildArgs));
     eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.FETCH, ruleKey));
     eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.FETCH,
         ruleKey,
@@ -189,7 +192,7 @@ public class ChromeTraceBuildListenerTest {
           ImmutableMap.of("success", "false")));
     }
 
-    eventBus.post(BuildEvent.finished(buildTargets, 0));
+    eventBus.post(BuildEvent.finished(buildArgs, 0));
     eventBus.post(CommandEvent.finished("party",
         ImmutableList.of("arg1", "arg2"),
         /* isDaemon */ true,

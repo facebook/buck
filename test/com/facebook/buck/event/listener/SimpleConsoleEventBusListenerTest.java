@@ -39,9 +39,11 @@ import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
 
 import org.junit.Test;
@@ -58,6 +60,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
     FakeBuildRule fakeRule = new FakeBuildRule(
         GenruleDescription.TYPE,
         fakeTarget,
@@ -70,8 +73,12 @@ public class SimpleConsoleEventBusListenerTest {
 
     final long threadId = 0;
 
-    rawEventBus.post(configureTestEventAtTime(
-        BuildEvent.started(buildTargets), 0L, TimeUnit.MILLISECONDS, threadId));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            BuildEvent.started(buildArgs),
+            0L,
+            TimeUnit.MILLISECONDS,
+            threadId));
     rawEventBus.post(configureTestEventAtTime(
         ParseEvent.started(buildTargets), 0L, TimeUnit.MILLISECONDS, threadId));
 
@@ -101,7 +108,7 @@ public class SimpleConsoleEventBusListenerTest {
         Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
         1000L, TimeUnit.MILLISECONDS, threadId));
     rawEventBus.post(configureTestEventAtTime(
-        BuildEvent.finished(buildTargets, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
+        BuildEvent.finished(buildArgs, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 
     final String buildingLine = "BUILT //banana:stand\n[-] BUILDING...FINISHED 0.8s\n";
 

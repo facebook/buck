@@ -23,6 +23,7 @@ import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEvent;
@@ -48,11 +49,7 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
   int runCommandWithOptionsInternal(CommandRunnerParams params, BuildCommandOptions options)
       throws IOException, InterruptedException {
 
-    ImmutableSet<BuildTarget> buildTargets = getBuildTargets(
-        params,
-        options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
-
-    if (buildTargets.isEmpty()) {
+    if (options.getArguments().isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target to fetch.");
       return 1;
     }
@@ -60,10 +57,10 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
     if (params.getParser().getParseStartTime().isPresent()) {
       params.getBuckEventBus().post(
-          BuildEvent.started(buildTargets),
+          BuildEvent.started(options.getArguments()),
           params.getParser().getParseStartTime().get());
     } else {
-      params.getBuckEventBus().post(BuildEvent.started(buildTargets));
+      params.getBuckEventBus().post(BuildEvent.started(options.getArguments()));
     }
 
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
@@ -72,16 +69,20 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
         ruleGenerator);
 
     ActionGraph actionGraph;
+    ImmutableSet<BuildTarget> buildTargets;
     try {
-      TargetGraph targetGraph = params.getParser().buildTargetGraphForBuildTargets(
-          buildTargets,
-          new ParserConfig(params.getBuckConfig()),
-          params.getBuckEventBus(),
-          params.getConsole(),
-          params.getEnvironment(),
-          options.getEnableProfiling());
-
-      actionGraph = transformer.apply(targetGraph);
+      Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
+          .buildTargetGraphForTargetNodeSpecs(
+              options.parseArgumentsAsTargetNodeSpecs(
+                  params.getBuckConfig(),
+                  params.getRepository().getFilesystem().getIgnorePaths(),
+                  options.getArguments()),
+              new ParserConfig(params.getBuckConfig()),
+              params.getBuckEventBus(),
+              params.getConsole(),
+              params.getEnvironment(),
+              options.getEnableProfiling());
+      actionGraph = transformer.apply(result.getSecond());
       buildTargets = ruleGenerator.getDownloadableTargets();
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
@@ -114,7 +115,7 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
           options.getPathToBuildReport(params.getBuckConfig()));
     }
 
-    params.getBuckEventBus().post(BuildEvent.finished(buildTargets, exitCode));
+    params.getBuckEventBus().post(BuildEvent.finished(options.getArguments(), exitCode));
 
     return exitCode;
   }

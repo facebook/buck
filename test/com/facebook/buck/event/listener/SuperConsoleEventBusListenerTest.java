@@ -47,12 +47,14 @@ import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
 
 import org.junit.Test;
@@ -90,6 +92,7 @@ public class SuperConsoleEventBusListenerTest {
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     BuildTarget cachedTarget = BuildTargetFactory.newInstance("//chicken:dance");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget, cachedTarget);
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
     FakeBuildRule fakeRule = new FakeBuildRule(
         GenruleDescription.TYPE,
         fakeTarget,
@@ -114,24 +117,29 @@ public class SuperConsoleEventBusListenerTest {
         Optional.<WebServer>absent());
     eventBus.register(listener);
 
-    rawEventBus.post(configureTestEventAtTime(
-        new ProjectBuildFileParseEvents.Started(),
-        0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            new ProjectBuildFileParseEvents.Started(),
+            0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     validateConsole(console, listener, 0L, ImmutableList.of(
         formatConsoleTimes("[+] PARSING BUCK FILES...%s", 0.0)));
 
-    validateConsole(console, listener, 100L, ImmutableList.of(
-        formatConsoleTimes("[+] PARSING BUCK FILES...%s", 0.1)));
+    validateConsole(
+        console, listener, 100L, ImmutableList.of(
+            formatConsoleTimes("[+] PARSING BUCK FILES...%s", 0.1)));
 
-    rawEventBus.post(configureTestEventAtTime(
-        new ProjectBuildFileParseEvents.Finished(),
-        200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    validateConsole(console, listener, 200L, ImmutableList.of(
-        formatConsoleTimes("[-] PARSING BUCK FILES...FINISHED %s", 0.2)));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            new ProjectBuildFileParseEvents.Finished(),
+            200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(
+        console, listener, 200L, ImmutableList.of(
+            formatConsoleTimes("[-] PARSING BUCK FILES...FINISHED %s", 0.2)));
 
-    rawEventBus.post(configureTestEventAtTime(
-        BuildEvent.started(buildTargets),
-        200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            BuildEvent.started(buildArgs),
+            200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     rawEventBus.post(configureTestEventAtTime(
         ParseEvent.started(buildTargets),
         200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
@@ -206,7 +214,7 @@ public class SuperConsoleEventBusListenerTest {
         1120L, TimeUnit.MILLISECONDS, /* threadId */ 2L));
 
     rawEventBus.post(configureTestEventAtTime(
-        BuildEvent.finished(buildTargets, 0),
+        BuildEvent.finished(buildArgs, 0),
         1234L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     final String buildingLine = formatConsoleTimes("[-] BUILDING...FINISHED %s", 0.8);

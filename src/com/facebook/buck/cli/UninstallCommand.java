@@ -19,9 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.Parser;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -31,7 +29,8 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 
@@ -45,41 +44,38 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
   @Override
   int runCommandWithOptionsInternal(CommandRunnerParams params, UninstallCommandOptions options)
       throws IOException, InterruptedException {
-    // Make sure that only one build target is specified.
-    if (options.getArguments().size() != 1) {
-      params.getConsole().getStdErr().println("Must specify exactly one android_binary() rule.");
-      return 1;
-    }
-
-    // Get a parser.
-    Parser parser = params.getParser();
 
     // Parse all of the build targets specified by the user.
-    BuildTargetParser buildTargetParser = parser.getBuildTargetParser();
-    String buildTargetName = options
-        .getArgumentsFormattedAsBuildTargets(params.getBuckConfig())
-        .get(0);
     ActionGraph actionGraph;
-    BuildTarget buildTarget;
+    ImmutableSet<BuildTarget> buildTargets;
     try {
-      buildTarget = buildTargetParser.parse(
-          buildTargetName,
-          BuildTargetPatternParser.fullyQualified(buildTargetParser));
-      TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
-          ImmutableList.of(buildTarget),
-          new ParserConfig(params.getBuckConfig()),
-          params.getBuckEventBus(),
-          params.getConsole(),
-          params.getEnvironment(),
-          options.getEnableProfiling());
+      Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
+          .buildTargetGraphForTargetNodeSpecs(
+              options.parseArgumentsAsTargetNodeSpecs(
+                  params.getBuckConfig(),
+                  params.getRepository().getFilesystem().getIgnorePaths(),
+                  options.getArguments()),
+              new ParserConfig(params.getBuckConfig()),
+              params.getBuckEventBus(),
+              params.getConsole(),
+              params.getEnvironment(),
+              options.getEnableProfiling());
+      buildTargets = result.getFirst();
       TargetGraphTransformer<ActionGraph> targetGraphTransformer = new TargetGraphToActionGraph(
           params.getBuckEventBus(),
           new BuildTargetNodeToBuildRuleTransformer());
-      actionGraph = targetGraphTransformer.apply(targetGraph);
+      actionGraph = targetGraphTransformer.apply(result.getSecond());
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
+
+    // Make sure that only one build target is specified.
+    if (buildTargets.size() != 1) {
+      params.getConsole().getStdErr().println("Must specify exactly one android_binary() rule.");
+      return 1;
+    }
+    BuildTarget buildTarget = Iterables.get(buildTargets, 0);
 
     // Find the android_binary() rule from the parse.
     BuildRule buildRule = Preconditions.checkNotNull(

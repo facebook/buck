@@ -28,25 +28,13 @@ import com.google.common.collect.ImmutableSet;
  */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class BuildEvent extends AbstractBuckEvent {
-  private final ImmutableSet<BuildTarget> buildTargets;
 
-  /**
-   * @param buildTargets The list of {@link BuildTarget}s being built.
-   */
-  protected BuildEvent(ImmutableSet<BuildTarget> buildTargets) {
-    this.buildTargets = ImmutableSet.copyOf(buildTargets);
+  public static Started started(Iterable<String> buildArgs) {
+    return new Started(ImmutableSet.copyOf(buildArgs));
   }
 
-  public ImmutableSet<BuildTarget> getBuildTargets() {
-    return buildTargets;
-  }
-
-  public static Started started(ImmutableSet<BuildTarget> buildTargets) {
-    return new Started(buildTargets);
-  }
-
-  public static Finished finished(ImmutableSet<BuildTarget> buildTargets, int exitCode) {
-    return new Finished(buildTargets, exitCode);
+  public static Finished finished(Iterable<String> buildArgs, int exitCode) {
+    return new Finished(ImmutableSet.copyOf(buildArgs), exitCode);
   }
 
   public static RuleCountCalculated ruleCountCalculated(
@@ -55,45 +43,56 @@ public abstract class BuildEvent extends AbstractBuckEvent {
     return new RuleCountCalculated(buildTargets, ruleCount);
   }
 
-  @Override
-  protected String getValueString() {
-    return Joiner.on(", ").join(buildTargets);
-  }
-
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof BuildEvent)) {
-      return false;
-    }
-
-    BuildEvent that = (BuildEvent) event;
-
-    return Objects.equal(getClass(), event.getClass()) &&
-        Objects.equal(getBuildTargets(), that.getBuildTargets());
-  }
-
-  @Override
-  public int hashCode() {
-    return buildTargets.hashCode();
-  }
-
   public static class Started extends BuildEvent {
-    protected Started(ImmutableSet<BuildTarget> buildTargets) {
-      super(buildTargets);
+
+    private final ImmutableSet<String> buildArgs;
+
+    protected Started(ImmutableSet<String> buildArgs) {
+      this.buildArgs = buildArgs;
     }
 
     @Override
     public String getEventName() {
       return "BuildStarted";
     }
+
+    @Override
+    protected String getValueString() {
+      return Joiner.on(", ").join(buildArgs);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(buildArgs);
+    }
+
+    @Override
+    public boolean isRelatedTo(BuckEvent event) {
+      if (!(event instanceof Started)) {
+        return false;
+      }
+      Started that = (Started) event;
+      return Objects.equal(buildArgs, that.buildArgs);
+    }
+
+    public ImmutableSet<String> getBuildArgs() {
+      return buildArgs;
+    }
+
   }
 
   public static class Finished extends BuildEvent {
+
+    private final ImmutableSet<String> buildArgs;
     private final int exitCode;
 
-    protected Finished(ImmutableSet<BuildTarget> buildRules, int exitCode) {
-      super(buildRules);
+    protected Finished(ImmutableSet<String> buildArgs, int exitCode) {
+      this.buildArgs = buildArgs;
       this.exitCode = exitCode;
+    }
+
+    public ImmutableSet<String> getBuildArgs() {
+      return buildArgs;
     }
 
     public int getExitCode() {
@@ -106,27 +105,38 @@ public abstract class BuildEvent extends AbstractBuckEvent {
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (!super.equals(o)) {
+    protected String getValueString() {
+      return String.format("exit code: %d", exitCode);
+    }
+
+    @Override
+    public boolean isRelatedTo(BuckEvent event) {
+      if (!(event instanceof Finished)) {
         return false;
       }
-
-      Finished that = (Finished) o;
-      return that.exitCode == getExitCode();
+      Finished that = (Finished) event;
+      return Objects.equal(exitCode, that.exitCode);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(getBuildTargets(), getExitCode());
+      return Objects.hashCode(exitCode);
     }
+
   }
 
   public static class RuleCountCalculated extends BuildEvent {
+
+    private final ImmutableSet<BuildTarget> buildRules;
     private final int numRules;
 
     protected RuleCountCalculated(ImmutableSet<BuildTarget> buildRules, int numRulesToBuild) {
-      super(buildRules);
+      this.buildRules = buildRules;
       this.numRules = numRulesToBuild;
+    }
+
+    public ImmutableSet<BuildTarget> getBuildRules() {
+      return buildRules;
     }
 
     public int getNumRules() {
@@ -139,18 +149,26 @@ public abstract class BuildEvent extends AbstractBuckEvent {
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (!super.equals(o)) {
+    protected String getValueString() {
+      return Joiner.on(", ").join(buildRules);
+    }
+
+    @Override
+    public boolean isRelatedTo(BuckEvent event) {
+      if (!(event instanceof RuleCountCalculated)) {
         return false;
       }
-
-      RuleCountCalculated that = (RuleCountCalculated) o;
-      return that.getNumRules() == getNumRules();
+      RuleCountCalculated that = (RuleCountCalculated) event;
+      return
+          Objects.equal(buildRules, that.buildRules) &&
+          Objects.equal(numRules, that.numRules);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(getBuildTargets(), getNumRules());
+      return Objects.hashCode(buildRules, numRules);
     }
+
   }
+
 }

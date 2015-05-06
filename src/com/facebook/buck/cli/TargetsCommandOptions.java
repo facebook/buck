@@ -86,10 +86,6 @@ public class TargetsCommandOptions extends AbstractCommandOptions {
     return arguments;
   }
 
-  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
-    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
-  }
-
   public ImmutableSet<String> getTypes() {
     return types.get();
   }

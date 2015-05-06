@@ -18,8 +18,11 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
+
+import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -30,38 +33,34 @@ import java.nio.file.attribute.BasicFileAttributes;
 /**
  * A specification used by the parser, via {@link TargetNodeSpec}, to match build files.
  */
-public class BuildFileSpec {
+@Value.Immutable(builder = false)
+@BuckStyleImmutable
+abstract class AbstractBuildFileSpec {
 
   // Base path where to find either a single build file or to recursively for many build files.
-  private final Path basePath;
+  @Value.Parameter
+  abstract Path getBasePath();
 
   // If present, this indicates that the above path should be recursively searched for build files,
   // and that the paths enumerated here should be ignored.
-  private final boolean recursive;
-  private final ImmutableSet<Path> recursiveIgnorePaths;
-
-  private BuildFileSpec(
-      Path basePath,
-      boolean recursive,
-      ImmutableSet<Path> recursiveIgnorePaths) {
-    this.basePath = basePath;
-    this.recursive = recursive;
-    this.recursiveIgnorePaths = recursiveIgnorePaths;
-  }
+  @Value.Parameter
+  abstract boolean isRecursive();
+  @Value.Parameter
+  abstract ImmutableSet<Path> getRecursiveIgnorePaths();
 
   public static BuildFileSpec fromRecursivePath(Path basePath, ImmutableSet<Path> ignorePaths) {
-    return new BuildFileSpec(basePath, /* recursive */ true, ignorePaths);
+    return BuildFileSpec.of(basePath, /* recursive */ true, ignorePaths);
   }
 
   public static BuildFileSpec fromRecursivePath(Path basePath) {
-    return new BuildFileSpec(
+    return BuildFileSpec.of(
         basePath,
         /* recursive */ true,
         /* ignorePaths */ ImmutableSet.<Path>of());
   }
 
   public static BuildFileSpec fromPath(Path basePath) {
-    return new BuildFileSpec(
+    return BuildFileSpec.of(
         basePath,
         /* recursive */ false,
         ImmutableSet.<Path>of());
@@ -81,14 +80,14 @@ public class BuildFileSpec {
       throws IOException {
 
     // If non-recursive, we just want the build file in the target spec's given base dir.
-    if (!recursive) {
-      function.apply(basePath.resolve(buildFileName));
+    if (!isRecursive()) {
+      function.apply(getBasePath().resolve(buildFileName));
       return;
     }
 
     // Otherwise, we need to do a recursive walk to find relevant build files.
     filesystem.walkRelativeFileTree(
-        basePath,
+        getBasePath(),
         new FileVisitor<Path>() {
           @Override
           public FileVisitResult preVisitDirectory(
@@ -96,7 +95,7 @@ public class BuildFileSpec {
               BasicFileAttributes attrs)
               throws IOException {
             // Skip sub-dirs that we should ignore.
-            if (recursiveIgnorePaths.contains(dir)) {
+            if (getRecursiveIgnorePaths().contains(dir)) {
               return FileVisitResult.SKIP_SUBTREE;
             }
             return FileVisitResult.CONTINUE;

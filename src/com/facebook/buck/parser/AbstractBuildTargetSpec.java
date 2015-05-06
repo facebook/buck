@@ -18,43 +18,46 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
+
+import org.immutables.value.Value;
 
 /**
  * Matches a {@link TargetNode} name by a specific {@link BuildTarget}.
  */
-public class BuildTargetSpec implements TargetNodeSpec {
+@Value.Immutable(builder = false)
+@BuckStyleImmutable
+abstract class AbstractBuildTargetSpec implements TargetNodeSpec {
 
   public static final Function<BuildTarget, BuildTargetSpec> TO_BUILD_TARGET_SPEC =
       new Function<BuildTarget, BuildTargetSpec>() {
         @Override
         public BuildTargetSpec apply(BuildTarget target) {
-          return new BuildTargetSpec(target);
+          return BuildTargetSpec.from(target);
         }
       };
 
-  private final BuildTarget buildTarget;
-  private final BuildFileSpec buildFileSpec;
+  @Value.Parameter
+  public abstract BuildTarget getBuildTarget();
 
-  public BuildTargetSpec(BuildTarget target) {
-    this.buildTarget = target;
-    this.buildFileSpec = BuildFileSpec.fromBuildTarget(target);
+  @Override
+  @Value.Parameter
+  public abstract BuildFileSpec getBuildFileSpec();
+
+  public static BuildTargetSpec from(BuildTarget target) {
+    return BuildTargetSpec.of(target, BuildFileSpec.fromBuildTarget(target));
   }
 
   @Override
   public ImmutableSet<BuildTarget> filter(Iterable<TargetNode<?>> nodes) {
-    return ImmutableSet.of(buildTarget);
-  }
-
-  @Override
-  public BuildFileSpec getBuildFileSpec() {
-    return buildFileSpec;
+    return ImmutableSet.of(getBuildTarget());
   }
 
   @Override
   public String toString() {
-    return buildTarget.getFullyQualifiedName();
+    return getBuildTarget().getFullyQualifiedName();
   }
 
 }

@@ -75,7 +75,7 @@ public class BuildTargetParser {
    */
   public BuildTarget parse(
       String buildTargetName,
-      BuildTargetPatternParser buildTargetPatternParser) {
+      BuildTargetPatternParser<?> buildTargetPatternParser) {
 
     if (buildTargetName.endsWith(BUILD_RULE_SEPARATOR) &&
         !buildTargetPatternParser.isWildCardAllowed()) {

@@ -72,7 +72,4 @@ public class UninstallCommandOptions extends AbstractCommandOptions {
     return arguments;
   }
 
-  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
-    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
-  }
 }

@@ -26,6 +26,8 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasSourceUnderTest;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.InMemoryBuildFileTree;
+import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
@@ -70,6 +72,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -114,11 +117,6 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
       }
     }
 
-    ImmutableSet<BuildTarget> matchingBuildTargets = ImmutableSet.copyOf(
-        getBuildTargets(
-            params,
-            options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
-
     // Parse the entire action graph, or (if targets are specified),
     // only the specified targets and their dependencies..
     //
@@ -128,27 +126,38 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
     // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
     // longer be necessary.
     ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
+    ImmutableSet<BuildTarget> matchingBuildTargets;
     TargetGraph graph;
     try {
-      if (matchingBuildTargets.isEmpty() || options.isDetectTestChanges()) {
-        graph = params.getParser().buildTargetGraphForTargetNodeSpecs(
-            ImmutableList.of(
-                new TargetNodePredicateSpec(
-                    Predicates.<TargetNode<?>>alwaysTrue(),
-                    params.getRepository().getFilesystem().getIgnorePaths())),
-            parserConfig,
-            params.getBuckEventBus(),
-            params.getConsole(),
-            params.getEnvironment(),
-            options.getEnableProfiling());
+      if (options.getArguments().isEmpty() || options.isDetectTestChanges()) {
+        matchingBuildTargets = ImmutableSet.of();
+        graph = params.getParser()
+            .buildTargetGraphForTargetNodeSpecs(
+                ImmutableList.of(
+                    TargetNodePredicateSpec.of(
+                        Predicates.<TargetNode<?>>alwaysTrue(),
+                        BuildFileSpec.fromRecursivePath(
+                            Paths.get(""),
+                            params.getRepository().getFilesystem().getIgnorePaths()))),
+                parserConfig,
+                params.getBuckEventBus(),
+                params.getConsole(),
+                params.getEnvironment(),
+                options.getEnableProfiling()).getSecond();
       } else {
-        graph = params.getParser().buildTargetGraphForBuildTargets(
-            matchingBuildTargets,
-            parserConfig,
-            params.getBuckEventBus(),
-            params.getConsole(),
-            params.getEnvironment(),
-            options.getEnableProfiling());
+        Pair<ImmutableSet<BuildTarget>, TargetGraph> results = params.getParser()
+            .buildTargetGraphForTargetNodeSpecs(
+                options.parseArgumentsAsTargetNodeSpecs(
+                    params.getBuckConfig(),
+                    params.getRepository().getFilesystem().getIgnorePaths(),
+                    options.getArguments()),
+                parserConfig,
+                params.getBuckEventBus(),
+                params.getConsole(),
+                params.getEnvironment(),
+                options.getEnableProfiling());
+        matchingBuildTargets = results.getFirst();
+        graph = results.getSecond();
       }
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
@@ -447,33 +456,35 @@ public class TargetsCommand extends AbstractCommandRunner<TargetsCommandOptions>
    */
   private int doShowRules(CommandRunnerParams params, TargetsCommandOptions options)
       throws IOException, InterruptedException {
-    ImmutableSet<BuildTarget> matchingBuildTargets = ImmutableSet.copyOf(
-        getBuildTargets(
-            params,
-            options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
-
-    if (matchingBuildTargets.isEmpty()) {
+    if (options.getArguments().isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");
+      return 1;
+    }
+
+    ImmutableSet<BuildTarget> matchingBuildTargets;
+    TargetGraph targetGraph;
+    try {
+      Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
+          .buildTargetGraphForTargetNodeSpecs(
+              options.parseArgumentsAsTargetNodeSpecs(
+                  params.getBuckConfig(),
+                  params.getRepository().getFilesystem().getIgnorePaths(),
+                  options.getArguments()),
+              new ParserConfig(params.getBuckConfig()),
+              params.getBuckEventBus(),
+              params.getConsole(),
+              params.getEnvironment(),
+              options.getEnableProfiling());
+      matchingBuildTargets = result.getFirst();
+      targetGraph = result.getSecond();
+    } catch (BuildTargetException | BuildFileParseException e) {
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
     if (options.isShowTargetHash()) {
       return doShowTargetHash(params, options, matchingBuildTargets);
     } else {
-      TargetGraph targetGraph;
-      try {
-        targetGraph = params.getParser().buildTargetGraphForBuildTargets(
-            matchingBuildTargets,
-            new ParserConfig(params.getBuckConfig()),
-            params.getBuckEventBus(),
-            params.getConsole(),
-            params.getEnvironment(),
-            options.getEnableProfiling());
-      } catch (BuildTargetException | BuildFileParseException e) {
-        params.getConsole().printBuildFailureWithoutStacktrace(e);
-        return 1;
-      }
-
       Optional<ActionGraph> actionGraph;
       if (options.isShowRuleKey() || options.isShowOutput()) {
         TargetGraphTransformer<ActionGraph> targetGraphTransformer = new TargetGraphToActionGraph(

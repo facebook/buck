@@ -1,0 +1,5 @@
+genrule(
+  name = 'ignored',
+  out = 'ignored',
+  cmd = 'touch $OUT',
+)

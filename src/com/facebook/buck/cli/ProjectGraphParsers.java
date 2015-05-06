@@ -61,7 +61,7 @@ public class ProjectGraphParsers {
               buckEventBus,
               console,
               environment,
-              enableProfiling);
+              enableProfiling).getSecond();
         } catch (BuildTargetException | BuildFileParseException e) {
           throw new HumanReadableException(e);
         }

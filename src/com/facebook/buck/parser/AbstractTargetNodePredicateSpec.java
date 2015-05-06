@@ -18,43 +18,37 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import org.immutables.value.Value;
 
 /**
  * Matches all {@link TargetNode} objects in a repository that match the given {@link Predicate}.
  */
-public class TargetNodePredicateSpec implements TargetNodeSpec {
+@Value.Immutable(builder = false)
+@BuckStyleImmutable
+abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {
 
-  private final Predicate<TargetNode<?>> predicate;
-  private final BuildFileSpec buildFileSpec;
+  @Value.Parameter
+  public abstract Predicate<? super TargetNode<?>> getPredicate();
 
-  public TargetNodePredicateSpec(
-      Predicate<TargetNode<?>> predicate,
-      ImmutableSet<Path> ignoreDirs) {
-    this.predicate = predicate;
-    this.buildFileSpec = BuildFileSpec.fromRecursivePath(Paths.get(""), ignoreDirs);
-  }
+  @Override
+  @Value.Parameter
+  public abstract BuildFileSpec getBuildFileSpec();
 
   @Override
   public ImmutableSet<BuildTarget> filter(Iterable<TargetNode<?>> nodes) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
 
     for (TargetNode<?> node : nodes) {
-      if (predicate.apply(node)) {
+      if (getPredicate().apply(node)) {
         targets.add(node.getBuildTarget());
       }
     }
 
     return targets.build();
-  }
-
-  @Override
-  public BuildFileSpec getBuildFileSpec() {
-    return buildFileSpec;
   }
 
 }

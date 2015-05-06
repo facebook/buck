@@ -15,15 +15,16 @@ java_library(
   ],
 )
 
-java_library(
+java_immutables_library(
   name = 'parser',
   srcs = [
-    'BuildFileSpec.java',
-    'BuildTargetSpec.java',
+    'AbstractBuildFileSpec.java',
+    'AbstractBuildTargetSpec.java',
+    'AbstractTargetNodePredicateSpec.java',
+    'BuildTargetPatternTargetNodeParser.java',
     'MissingBuildFileException.java',
     'ParseEvent.java',
     'Parser.java',
-    'TargetNodePredicateSpec.java',
     'TargetNodeSpec.java',
   ],
   deps = [

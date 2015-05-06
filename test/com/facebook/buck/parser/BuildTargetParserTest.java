@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.google.common.base.Optional;
@@ -36,7 +37,7 @@ import java.nio.file.Paths;
 
 public class BuildTargetParserTest {
 
-  private BuildTargetPatternParser fullyQualifiedParser;
+  private BuildTargetPatternParser<BuildTargetPattern> fullyQualifiedParser;
 
   @Before
   public void setUpFullyQualifiedBuildTargetPatternParser() {
@@ -170,7 +171,7 @@ public class BuildTargetParserTest {
   public void testParseWithVisibilityContext() {
     // Invoke the BuildTargetParser using the VISIBILITY context.
     BuildTargetParser parser = new BuildTargetParser();
-    BuildTargetPatternParser buildTargetPatternParser =
+    BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.forVisibilityArgument(new BuildTargetParser());
     BuildTarget target = parser.parse("//java/com/example:", buildTargetPatternParser);
     assertEquals(

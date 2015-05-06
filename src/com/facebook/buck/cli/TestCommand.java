@@ -28,6 +28,9 @@ import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
@@ -92,6 +95,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -127,29 +131,20 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   int runCommandWithOptionsInternal(CommandRunnerParams params, final TestCommandOptions options)
       throws IOException, InterruptedException {
 
-    // In the event the user specifies explicit targets, parse these out and post them for the
-    // build. However, if "--all" was specified, we won't have a list of targets until the build
-    // is already started, so BuildEvents will get an empty list.
-    ImmutableSet<BuildTarget> explicitBuildTargets =
-        options.isRunAllTests() ?
-            ImmutableSet.<BuildTarget>of() :
-            getBuildTargets(
-                params,
-                options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
-
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
     if (params.getParser().getParseStartTime().isPresent()) {
       params.getBuckEventBus().post(
-          BuildEvent.started(explicitBuildTargets),
+          BuildEvent.started(options.getArguments()),
           params.getParser().getParseStartTime().get());
     } else {
-      params.getBuckEventBus().post(BuildEvent.started(explicitBuildTargets));
+      params.getBuckEventBus().post(BuildEvent.started(options.getArguments()));
     }
 
     // The first step is to parse all of the build files. This will populate the parser and find all
     // of the test rules.
     ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     TargetGraph targetGraph;
+    ImmutableSet<BuildTarget> explicitBuildTargets;
 
     try {
 
@@ -158,30 +153,39 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       if (options.isRunAllTests()) {
         targetGraph = params.getParser().buildTargetGraphForTargetNodeSpecs(
             ImmutableList.of(
-                new TargetNodePredicateSpec(
+                TargetNodePredicateSpec.of(
                     new Predicate<TargetNode<?>>() {
                       @Override
                       public boolean apply(TargetNode<?> input) {
                         return input.getType().isTestRule();
                       }
                     },
-                    params.getRepository().getFilesystem().getIgnorePaths())),
+                    BuildFileSpec.fromRecursivePath(
+                        Paths.get(""),
+                        params.getRepository().getFilesystem().getIgnorePaths()))),
             parserConfig,
             params.getBuckEventBus(),
             params.getConsole(),
             params.getEnvironment(),
-            options.getEnableProfiling());
+            options.getEnableProfiling()).getSecond();
+        explicitBuildTargets = ImmutableSet.of();
 
       // Otherwise, the user specified specific test targets to build and run, so build a graph
       // around these.
       } else {
-        targetGraph = params.getParser().buildTargetGraphForBuildTargets(
-            explicitBuildTargets,
-            parserConfig,
-            params.getBuckEventBus(),
-            params.getConsole(),
-            params.getEnvironment(),
-            options.getEnableProfiling());
+        Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
+            .buildTargetGraphForTargetNodeSpecs(
+                options.parseArgumentsAsTargetNodeSpecs(
+                    params.getBuckConfig(),
+                    params.getRepository().getFilesystem().getIgnorePaths(),
+                    options.getArguments()),
+                parserConfig,
+                params.getBuckEventBus(),
+                params.getConsole(),
+                params.getEnvironment(),
+                options.getEnableProfiling());
+        targetGraph = result.getSecond();
+        explicitBuildTargets = result.getFirst();
       }
 
     } catch (BuildTargetException | BuildFileParseException e) {
@@ -199,7 +203,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     // Unless the user requests that we build filtered tests, filter them out here, before
     // the build.
     if (!options.isBuildFiltered(params.getBuckConfig())) {
-      testRules = filterTestRules(params.getBuckConfig(), options, testRules);
+      testRules = filterTestRules(params.getBuckConfig(), options, explicitBuildTargets, testRules);
     }
 
     if (options.isDryRun()) {
@@ -236,7 +240,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
             options.isKeepGoing(),
             params.getConsole(),
             options.getPathToBuildReport(params.getBuckConfig()));
-        params.getBuckEventBus().post(BuildEvent.finished(explicitBuildTargets, exitCode));
+        params.getBuckEventBus().post(BuildEvent.finished(options.getArguments(), exitCode));
         if (exitCode != 0) {
           return exitCode;
         }
@@ -244,7 +248,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         // If the user requests that we build tests that we filter out, then we perform
         // the filtering here, after we've done the build but before we run the tests.
         if (options.isBuildFiltered(params.getBuckConfig())) {
-          testRules = filterTestRules(params.getBuckConfig(), options, testRules);
+          testRules =
+              filterTestRules(params.getBuckConfig(), options, explicitBuildTargets, testRules);
         }
 
         // Once all of the rules are built, then run the tests.
@@ -420,7 +425,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   static Iterable<TestRule> filterTestRules(
       BuckConfig buckConfig,
       final TestCommandOptions options,
+      ImmutableSet<BuildTarget> explicitBuildTargets,
       Iterable<TestRule> testRules) {
+
     ImmutableSortedSet.Builder<TestRule> builder =
         ImmutableSortedSet.orderedBy(
             new Comparator<TestRule>() {
@@ -431,9 +438,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
               }
             });
 
-    ImmutableSet<String> allTargets = options.getArgumentsFormattedAsBuildTargets(buckConfig);
     for (TestRule rule : testRules) {
-      boolean explicitArgument = allTargets.contains(rule.getBuildTarget().getFullyQualifiedName());
+      boolean explicitArgument = explicitBuildTargets.contains(rule.getBuildTarget());
       boolean matchesLabel = options.isMatchedByLabelOptions(buckConfig, rule.getLabels());
 
       // We always want to run the rules that are given on the command line. Always. Unless we don't
@@ -492,6 +498,12 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       rulesUnderTest = ImmutableSet.of();
     }
 
+    ImmutableSet<String> testTargets =
+        FluentIterable.from(tests)
+            .transform(HasBuildTarget.TO_TARGET)
+            .transform(Functions.toStringFunction())
+            .toSet();
+
     totalNumberOfTests = Iterables.size(tests);
 
     params.getBuckEventBus().post(
@@ -499,7 +511,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
             options.isRunAllTests(),
             options.getTestSelectorList(),
             options.shouldExplainTestSelectorList(),
-            options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
+            testTargets));
 
     // Start running all of the tests. The result of each java_test() rule is represented as a
     // ListenableFuture.
@@ -534,9 +546,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
       List<Step> steps;
       if (isTestRunRequired) {
-        params.getBuckEventBus().post(
-            IndividualTestEvent.started(
-                options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
+        params.getBuckEventBus().post(IndividualTestEvent.started(testTargets));
         ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
         Preconditions.checkState(buildEngine.isRuleBuilt(test.getBuildTarget()));
         List<Step> testSteps = test.runTests(
@@ -566,7 +576,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
               test.getBuildTarget(),
               service);
       results.add(
-        transformTestResults(params, testResults, grouper, test, options, printTestResults));
+        transformTestResults(params, testResults, grouper, test, testTargets, printTestResults));
     }
 
     // Block until all the tests have finished running.
@@ -587,9 +597,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       throw e;
     }
 
-    params.getBuckEventBus().post(
-        TestRunEvent.finished(
-            options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()), completedResults));
+    params.getBuckEventBus().post(TestRunEvent.finished(testTargets, completedResults));
 
     // Write out the results as XML, if requested.
     String path = options.getPathToXmlTestOutput();
@@ -633,7 +641,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       ListenableFuture<TestResults> originalTestResults,
       @Nullable final TestResultsGrouper grouper,
       final TestRule testRule,
-      final TestCommandOptions options,
+      final ImmutableSet<String> testTargets,
       final boolean printTestResults) {
     final SettableFuture<TestResults> transformedTestResults = SettableFuture.create();
     FutureCallback<TestResults> callback = new FutureCallback<TestResults>() {
@@ -643,7 +651,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         testResults.setTotalNumberOfTests(totalNumberOfTests);
         params.getBuckEventBus().post(
             IndividualTestEvent.finished(
-                options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
+                testTargets,
                 testResults));
       }
 

@@ -35,7 +35,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Argument;
@@ -86,11 +85,6 @@ public class BuildCommandOptions extends AbstractCommandOptions {
 
   public void setArguments(List<String> arguments) {
     this.arguments = arguments;
-  }
-
-  public ImmutableSet<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
-    return ImmutableSet.copyOf(
-        getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments()));
   }
 
   public boolean isCodeCoverageEnabled() {

@@ -36,7 +36,7 @@ public class BuildTargetPatternParserTest {
 
   @Test
   public void testParse() throws NoSuchBuildTargetException {
-    BuildTargetPatternParser buildTargetPatternParser =
+    BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.forVisibilityArgument(targetParser);
 
     assertEquals(
@@ -54,7 +54,7 @@ public class BuildTargetPatternParserTest {
 
   @Test(expected = BuildTargetParseException.class)
   public void testParseWildcardWithInvalidContext() throws NoSuchBuildTargetException {
-    BuildTargetPatternParser buildTargetPatternParser =
+    BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.fullyQualified(targetParser);
 
     buildTargetPatternParser.parse("//...");
@@ -62,7 +62,7 @@ public class BuildTargetPatternParserTest {
 
   @Test
   public void testParseRootPattern() throws NoSuchBuildTargetException {
-    BuildTargetPatternParser buildTargetPatternParser =
+    BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.forVisibilityArgument(targetParser);
 
     assertEquals(
@@ -81,7 +81,8 @@ public class BuildTargetPatternParserTest {
   @Test
   public void visibilityParserCanHandleSpecialCasedPublicVisibility()
       throws NoSuchBuildTargetException {
-    BuildTargetPatternParser parser = BuildTargetPatternParser.forVisibilityArgument(targetParser);
+    BuildTargetPatternParser<BuildTargetPattern> parser =
+        BuildTargetPatternParser.forVisibilityArgument(targetParser);
 
     assertEquals(BuildTargetPattern.MATCH_ALL, parser.parse("PUBLIC"));
   }

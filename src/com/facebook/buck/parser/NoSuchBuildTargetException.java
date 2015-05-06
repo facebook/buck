@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.BuildTargetPattern;
 
 @SuppressWarnings("serial")
 public class NoSuchBuildTargetException extends BuildTargetException {
@@ -31,7 +32,7 @@ public class NoSuchBuildTargetException extends BuildTargetException {
    */
   static NoSuchBuildTargetException createForMissingBuildRule(
       BuildTarget buildTarget,
-      BuildTargetPatternParser buildTargetPatternParser,
+      BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser,
       String buildFileName) {
     String message = String.format("No rule found when resolving target %s",
         buildTargetPatternParser.makeTargetDescription(

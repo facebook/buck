@@ -214,4 +214,9 @@ public class ProjectCommandOptions extends BuildCommandOptions {
   public boolean isExperimentalIntelliJProjectGenerationEnabled() {
     return experimentalIntelliJProjectGenerationEnabled;
   }
+
+  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
+    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
+  }
+
 }

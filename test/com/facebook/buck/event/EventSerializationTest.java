@@ -97,24 +97,23 @@ public class EventSerializationTest {
 
   @Test
   public void testBuildEventStarted() throws IOException {
-    BuildEvent.Started event = BuildEvent.started(ImmutableSet.<BuildTarget>of(
-        BuildTarget.builder("//base", "short").build()));
+    BuildEvent.Started event = BuildEvent.started(ImmutableSet.of("//base:short"));
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
-    assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"buildTargets\":[{\"repository\":{\"present\":false},\"baseName\":\"//base\"," +
-        "\"shortName\":\"short\",\"flavor\":\"\"}],\"type\":\"BuildStarted\"}", message);
+    assertJsonEquals(
+        "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
+        "\"buildArgs\":[\"//base:short\"], \"type\":\"BuildStarted\"}",
+        message);
   }
 
   @Test
   public void testBuildEventFinished() throws IOException {
-    BuildEvent.Finished event = BuildEvent.finished(ImmutableSet.<BuildTarget>of(
-        BuildTarget.builder("//base", "short").build()), 0);
+    BuildEvent.Finished event = BuildEvent.finished(ImmutableSet.of("//base:short"), 0);
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
-    assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"buildTargets\":[{\"repository\":{\"present\":false},\"baseName\":\"//base\"," +
-        "\"shortName\":\"short\",\"flavor\":\"\"}],\"exitCode\":0,\"type\":\"BuildFinished\"}",
+    assertJsonEquals(
+        "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
+        "\"buildArgs\":[\"//base:short\"], \"exitCode\":0,\"type\":\"BuildFinished\"}",
         message);
   }
 
@@ -157,7 +156,8 @@ public class EventSerializationTest {
 
   @Test
   public void testTestRunEventFinished() throws IOException {
-    TestRunEvent.Finished event = TestRunEvent.finished(ImmutableSet.of("target"),
+    TestRunEvent.Finished event = TestRunEvent.finished(
+        ImmutableSet.of("target"),
         ImmutableList.of(generateFakeTestResults()));
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);

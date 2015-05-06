@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
@@ -99,4 +100,17 @@ public final class MoreStrings {
 
     return str.substring(str.length() - suffix.length()).equalsIgnoreCase(suffix);
   }
+
+  public static Optional<String> stripPrefix(String s, String prefix) {
+    return s.startsWith(prefix) ?
+        Optional.of(s.substring(prefix.length(), s.length())) :
+        Optional.<String>absent();
+  }
+
+  public static Optional<String> stripSuffix(String s, String suffix) {
+    return s.endsWith(suffix) ?
+        Optional.of(s.substring(0, s.length() - suffix.length())) :
+        Optional.<String>absent();
+  }
+
 }
