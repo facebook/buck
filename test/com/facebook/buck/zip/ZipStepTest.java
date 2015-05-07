@@ -42,6 +42,8 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
@@ -290,4 +292,34 @@ public class ZipStepTest {
     }
   }
 
+  @Test
+  public void zipMaintainsPosixPermissions() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    Path parent = tmp.newFolder("zipstep").toPath();
+    Path toZip = tmp.newFolder("zipdir").toPath();
+    Path file = toZip.resolve("foo.sh");
+    ImmutableSet<PosixFilePermission> filePermissions =
+        ImmutableSet.of(
+            PosixFilePermission.OWNER_READ,
+            PosixFilePermission.OWNER_WRITE,
+            PosixFilePermission.OWNER_EXECUTE,
+            PosixFilePermission.GROUP_READ,
+            PosixFilePermission.OTHERS_READ);
+    java.nio.file.Files.createFile(
+        file,
+        PosixFilePermissions.asFileAttribute(filePermissions));
+    Path outputZip = parent.resolve("output.zip");
+    ZipStep step = new ZipStep(
+        outputZip,
+        ImmutableSet.<Path>of(),
+        false,
+        ZipStep.MIN_COMPRESSION_LEVEL,
+        Paths.get("zipdir"));
+    assertEquals(0, step.execute(executionContext));
+
+    Path destination = tmp.newFolder("output").toPath();
+    Unzip.extractZipFile(outputZip, destination, false);
+    assertTrue(java.nio.file.Files.isExecutable(destination.resolve("foo.sh")));
+  }
 }

@@ -20,7 +20,9 @@ import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -35,6 +37,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.PosixFileAttributeView;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 
@@ -42,6 +46,8 @@ import java.util.zip.ZipEntry;
  * A {@link com.facebook.buck.step.Step} that creates a ZIP archive..
  */
 public class ZipStep implements Step {
+
+  private static final Logger LOG = Logger.get(ZipStep.class);
 
   public static final int MIN_COMPRESSION_LEVEL = 0;
   public static final int DEFAULT_COMPRESSION_LEVEL = 6;
@@ -133,6 +139,19 @@ public class ZipStep implements Step {
                 com.google.common.io.Files.hash(
                     path.toFile(),
                     Hashing.crc32()).padToLong());
+          }
+          PosixFileAttributeView posixAttrView = Files.getFileAttributeView(
+              path, PosixFileAttributeView.class);
+          if (posixAttrView != null) {
+            // Copy permissions (including the executable bit) into the
+            // external attributes field of the entry, starting at bit 16.
+            PosixFileAttributes posixAttr = posixAttrView.readAttributes();
+            long mode = MorePosixFilePermissions.toMode(posixAttr.permissions());
+            long externalAttributes = mode << 16;
+            LOG.verbose(
+                "Setting mode for entry %s path %s to 0x%08X (0x%08X)",
+                entryName, path, mode, externalAttributes);
+            entry.setExternalAttributes(externalAttributes);
           }
           return entry;
         }
