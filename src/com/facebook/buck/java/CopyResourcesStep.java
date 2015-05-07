@@ -120,7 +120,8 @@ public class CopyResourcesStep implements Step {
         // works fine.
         relativeSymlinkPath = pathToResource.getFileName();
       } else {
-        int lastIndex = resource.lastIndexOf(MorePaths.pathWithUnixSeparators(javaPackageAsPath));
+        int lastIndex = resource.lastIndexOf(
+            MorePaths.pathWithUnixSeparatorsAndTrailingSlash(javaPackageAsPath));
         if (lastIndex < 0) {
           Preconditions.checkState(
               rawResource instanceof BuildTargetSourcePath,

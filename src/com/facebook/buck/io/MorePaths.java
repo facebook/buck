@@ -74,6 +74,10 @@ public class MorePaths {
     }
   }
 
+  public static String pathWithUnixSeparatorsAndTrailingSlash(Path path) {
+    return pathWithUnixSeparators(path) + "/";
+  }
+
   /**
    * @param toMakeAbsolute The {@link Path} to act upon.
    * @return The Path, made absolute and normalized.
@@ -296,4 +300,5 @@ public class MorePaths {
       return dis.getMessageDigest().digest();
     }
   }
+
 }
