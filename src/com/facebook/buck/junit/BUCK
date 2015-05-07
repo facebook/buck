@@ -19,6 +19,7 @@ java_library(
     'DelegateRunNotifier.java',
     'JUnitMain.java',
     'JUnitRunner.java',
+    'SameThreadFailOnTimeout.java',
   ],
   deps = [
     ':base',

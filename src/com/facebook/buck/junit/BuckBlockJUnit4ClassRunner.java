@@ -32,8 +32,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * JUnit-4-compatible test class runner that supports the concept of a "default timeout." If the
@@ -74,10 +72,6 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
     // being run on a thread different from the one it was created on. Work around this by creating
     // the test on the same thread we will be timing it out on.
     // See https://github.com/junit-team/junit/issues/686 for more context.
-    if (isNeedingCustomTimeout()) {
-      return super.createTest();
-    }
-
     Callable<Object> maker = new Callable<Object>() {
       @Override
       public Object call() throws Exception {
@@ -93,6 +87,24 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
     return defaultTestTimeoutMillis <= 0 || hasTimeoutRule(getTestClass());
   }
 
+  private long getTimeout(FrameworkMethod method) {
+    // Check to see if the method has declared a timeout on the @Test annotation. If that's present
+    // and set, then let JUnit handle the timeout for us, which (counter-intuitively) means letting
+    // the test run indefinitely.
+    Test annotation = method.getMethod().getAnnotation(Test.class);
+    if (annotation != null) {
+      long timeout = annotation.timeout();
+      if (timeout != 0) {  // 0 represents the default timeout
+        return Long.MAX_VALUE;
+      }
+    }
+
+    if (!isNeedingCustomTimeout()) {
+      return defaultTestTimeoutMillis;
+    }
+    return Long.MAX_VALUE;
+  }
+
   /**
    * Override the default timeout behavior so that when no timeout is specified in the {@link Test}
    * annotation, the timeout specified by the constructor will be used (if it has been set).
@@ -101,51 +113,16 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
   protected Statement methodBlock(FrameworkMethod method) {
     Statement statement = super.methodBlock(method);
 
-    // If the test class has a Timeout @Rule, then that should supersede the default timeout.
-    if (!isNeedingCustomTimeout()) {
-      statement = new SameThreadFailOnTimeout(testName(method), statement);
-    }
+    // If the test class has a Timeout @Rule, then that should supersede the default timeout. The
+    // same applies if it has a timeout value for the @Test annotation.
 
-    return statement;
-  }
+    long timeout = getTimeout(method);
 
-  private class SameThreadFailOnTimeout extends Statement {
-    private final Callable<Throwable> callable;
-    private final String testName;
-
-    public SameThreadFailOnTimeout(String testName, final Statement next) {
-      this.testName = testName;
-      this.callable = new Callable<Throwable>() {
-        @Override
-        public Throwable call() {
-          try {
-            next.evaluate();
-            return null;
-          } catch (Throwable throwable) {
-            return throwable;
-          }
-        }
-      };
-    }
-
-    @Override
-    public void evaluate() throws Throwable {
-      Future<Throwable> submitted = executor.get().submit(callable);
-      try {
-        Throwable result = submitted.get(defaultTestTimeoutMillis, TimeUnit.MILLISECONDS);
-        if (result != null) {
-          throw result;
-        }
-      } catch (TimeoutException e) {
-        submitted.cancel(true);
-        // The default timeout doesn't indicate which test was running.
-        String message = String.format("test %s timed out after %d milliseconds",
-            testName,
-            defaultTestTimeoutMillis);
-
-        throw new Exception(message);
-      }
-    }
+    return new SameThreadFailOnTimeout(
+          executor.get(),
+          timeout,
+          testName(method),
+          statement);
   }
 
   /**

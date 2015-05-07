@@ -94,6 +94,18 @@ public class TimeoutIntegrationTest {
     workspace.verify();
   }
 
+  @Test
+  public void individualTestCanOverrideTheDefaultTestTimeout() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "overridden_timeouts", temporaryFolder);
+    workspace.setUp();
+
+    // The .buckconfig in that workspace sets the default timeout to 1000ms.
+    ProcessResult result = workspace.runBuckCommand("test", "//:test");
+
+    result.assertSuccess();
+  }
+
   /**
    * Swaps all instances of {@code @Test} with {@code @Test(timeout = 10000)} in the specified Java
    * file, as determined by the value of {@code addTimeout}.
