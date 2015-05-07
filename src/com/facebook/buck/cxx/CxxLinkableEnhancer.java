@@ -113,12 +113,24 @@ public class CxxLinkableEnhancer {
 
     // Construct our link build rule params.  The important part here is combining the build rules
     // that construct our object file inputs and also the deps that build our dependencies.
+    ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+    deps.addAll(resolver.filterBuildRuleInputs(allInputs));
+
+    // If this is being linked against a bundle loader created by another rule,
+    // add that rule to our deps.
+    if (bundleLoader.isPresent()) {
+      Optional<BuildRule> bundleLoaderRule = resolver.getRule(bundleLoader.get());
+      if (bundleLoaderRule.isPresent()) {
+        deps.add(bundleLoaderRule.get());
+      }
+    }
+
     BuildRuleParams linkParams = params.copyWithChanges(
         NativeLinkable.NATIVE_LINKABLE_TYPE,
         target,
         // Add dependencies for build rules generating the object files and inputs from
         // dependencies.
-        Suppliers.ofInstance(ImmutableSortedSet.copyOf(resolver.filterBuildRuleInputs(allInputs))),
+        Suppliers.ofInstance(deps.build()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     // Build up the arguments to pass to the linker.

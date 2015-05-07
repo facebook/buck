@@ -474,4 +474,54 @@ public class CxxLinkableEnhancerTest {
         cxxLink.getArgs(),
         hasConsecutiveItems("-bundle_loader", "path/to/MyBundleLoader"));
   }
+
+  @Test
+  public void machOBundleSourcePathIsInDepsOfRule() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+
+    BuildTarget bundleLoaderTarget = BuildTargetFactory.newInstance("//foo:bundleLoader");
+    BuildRuleParams bundleLoaderParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(
+        bundleLoaderTarget);
+    CxxLink bundleLoaderRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CXX_PLATFORM,
+        bundleLoaderParams,
+        new SourcePathResolver(resolver),
+        /* extraCxxLdFlags */ ImmutableList.<String>of(),
+        /* extraLdFlags */ ImmutableList.<String>of(),
+        bundleLoaderTarget,
+        Linker.LinkType.EXECUTABLE,
+        Optional.<String>absent(),
+        DEFAULT_OUTPUT,
+        ImmutableList.<SourcePath>of(new TestSourcePath("simple.o")),
+        Linker.LinkableDepType.STATIC,
+        EMPTY_DEPS,
+        Optional.<Linker.CxxRuntimeType>absent(),
+        Optional.<SourcePath>absent());
+    resolver.addToIndex(bundleLoaderRule);
+
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
+    BuildRuleParams bundleParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(
+        bundleTarget);
+    CxxLink bundleRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        CXX_PLATFORM,
+        bundleParams,
+        new SourcePathResolver(resolver),
+        /* extraCxxLdFlags */ ImmutableList.<String>of(),
+        /* extraLdFlags */ ImmutableList.<String>of(),
+        bundleTarget,
+        Linker.LinkType.MACH_O_BUNDLE,
+        Optional.<String>absent(),
+        DEFAULT_OUTPUT,
+        ImmutableList.<SourcePath>of(new TestSourcePath("another.o")),
+        Linker.LinkableDepType.STATIC,
+        EMPTY_DEPS,
+        Optional.<Linker.CxxRuntimeType>absent(),
+        Optional.<SourcePath>of(
+            new BuildTargetSourcePath(PROJECT_FILESYSTEM, bundleLoaderRule.getBuildTarget())));
+
+    // Ensure the bundle depends on the bundle loader rule.
+    assertThat(
+        bundleRule.getDeps(),
+        hasItem(bundleLoaderRule));
+  }
 }
