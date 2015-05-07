@@ -45,6 +45,7 @@ public class XctoolRunTestsStepTest {
         Paths.get("/path/to/xctool"),
         "x86_64",
         "iphonesimulator",
+        "iPhone 5s",
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
         ImmutableMap.<Path, Path>of(),
         Paths.get("/path/to/output.json"));
@@ -58,7 +59,7 @@ public class XctoolRunTestsStepTest {
                     "-sdk",
                     "iphonesimulator",
                     "-destination",
-                    "arch=x86_64",
+                    "arch=x86_64,name=iPhone 5s",
                     "-logicTest",
                     "/path/to/Foo.xctest",
                     "run-tests"))
@@ -86,6 +87,7 @@ public class XctoolRunTestsStepTest {
         Paths.get("/path/to/xctool"),
         "x86_64",
         "iphonesimulator",
+        "iPhone 5s",
         ImmutableSet.<Path>of(),
         ImmutableMap.of(
             Paths.get("/path/to/FooAppTest.xctest"),
@@ -101,7 +103,7 @@ public class XctoolRunTestsStepTest {
                     "-sdk",
                     "iphonesimulator",
                     "-destination",
-                    "arch=x86_64",
+                    "arch=x86_64,name=iPhone 5s",
                     "-appTest",
                     "/path/to/FooAppTest.xctest:/path/to/Foo.app",
                     "run-tests"))
@@ -129,6 +131,7 @@ public class XctoolRunTestsStepTest {
         Paths.get("/path/to/xctool"),
         "x86_64",
         "iphonesimulator",
+        "iPhone 5s",
         ImmutableSet.of(
             Paths.get("/path/to/FooLogicTest.xctest")),
         ImmutableMap.of(
@@ -145,7 +148,7 @@ public class XctoolRunTestsStepTest {
                     "-sdk",
                     "iphonesimulator",
                     "-destination",
-                    "arch=x86_64",
+                    "arch=x86_64,name=iPhone 5s",
                     "-logicTest",
                     "/path/to/FooLogicTest.xctest",
                     "-appTest",
@@ -175,6 +178,7 @@ public class XctoolRunTestsStepTest {
         Paths.get("/path/to/xctool"),
         "x86_64",
         "iphonesimulator",
+        "iPhone 5s",
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
         ImmutableMap.<Path, Path>of(),
         Paths.get("/path/to/output.json"));
@@ -188,7 +192,7 @@ public class XctoolRunTestsStepTest {
                     "-sdk",
                     "iphonesimulator",
                     "-destination",
-                    "arch=x86_64",
+                    "arch=x86_64,name=iPhone 5s",
                     "-logicTest",
                     "/path/to/Foo.xctest",
                     "run-tests"))
@@ -216,6 +220,7 @@ public class XctoolRunTestsStepTest {
         Paths.get("/path/to/xctool"),
         "x86_64",
         "iphonesimulator",
+        "iPhone 5s",
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
         ImmutableMap.<Path, Path>of(),
         Paths.get("/path/to/output.json"));
@@ -229,7 +234,7 @@ public class XctoolRunTestsStepTest {
                     "-sdk",
                     "iphonesimulator",
                     "-destination",
-                    "arch=x86_64",
+                    "arch=x86_64,name=iPhone 5s",
                     "-logicTest",
                     "/path/to/Foo.xctest",
                     "run-tests"))

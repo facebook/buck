@@ -41,6 +41,7 @@ public class XctoolRunTestsStep extends ShellStep {
   private final Path xctoolPath;
   private final String architecture;
   private final String sdkName;
+  private final String simulatorName;
   private final ImmutableSet<Path> logicTestBundlePaths;
   private final ImmutableMap<Path, Path> appTestBundleToHostAppPaths;
   private final Path outputPath;
@@ -49,6 +50,7 @@ public class XctoolRunTestsStep extends ShellStep {
       Path xctoolPath,
       String architecture,
       String sdkName,
+      String simulatorName,
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
       Path outputPath) {
@@ -75,6 +77,7 @@ public class XctoolRunTestsStep extends ShellStep {
     this.xctoolPath = xctoolPath;
     this.architecture = architecture;
     this.sdkName = sdkName;
+    this.simulatorName = simulatorName;
     this.logicTestBundlePaths = ImmutableSet.copyOf(logicTestBundlePaths);
     this.appTestBundleToHostAppPaths = ImmutableMap.copyOf(appTestBundleToHostAppPaths);
     this.outputPath = outputPath;
@@ -93,7 +96,7 @@ public class XctoolRunTestsStep extends ShellStep {
     args.add("json-stream:" + outputPath.toString());
     args.add("-sdk", sdkName);
     args.add("-destination");
-    args.add("arch=" + architecture);
+    args.add(String.format("arch=%s,name=%s", architecture, simulatorName));
     for (Path logicTestBundlePath : logicTestBundlePaths) {
       args.add("-logicTest");
       args.add(logicTestBundlePath.toString());
