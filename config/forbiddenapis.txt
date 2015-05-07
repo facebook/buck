@@ -1,0 +1,7 @@
+# Add any forbidden APIs here.
+#
+# Examples:
+#
+# @defaultMessage Uses default charset
+# org.apache.commons.io.IOUtils#toInputStream(java.lang.CharSequence)
+# org.apache.commons.io.output.WriterOutputStream#<init>(java.io.Writer)
