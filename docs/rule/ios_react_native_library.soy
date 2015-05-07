@@ -1,0 +1,48 @@
+{namespace ios_react_native_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'ios_react_native_library()' /}
+    {param prettify: true /}
+    {param description}
+      A rule used to bundle React Native Javascript code.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+An <code>ios_react_native_library()</code> rule builds a single javascript 
+bundle file from the input javascript sources.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call react_native_common.srcs_arg /}
+
+{call react_native_common.deps_arg /}
+
+{call react_native_common.entry_path_arg /}
+
+/***/
+{call buck.arg}
+  {param name : 'bundle_name' /}
+  {param desc}
+  A file name for the output of this rule, e.g. "MyApp.js".
+  {/param}
+{/call}
+{/param} // close args
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

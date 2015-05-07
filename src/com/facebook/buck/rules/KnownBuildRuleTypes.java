@@ -81,6 +81,9 @@ import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.KeystoreDescription;
 import com.facebook.buck.java.PrebuiltJarDescription;
+import com.facebook.buck.js.AndroidReactNativeLibraryDescription;
+import com.facebook.buck.js.IosReactNativeLibaryDescription;
+import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
@@ -305,6 +308,8 @@ public class KnownBuildRuleTypes {
 
     DBuckConfig dBuckConfig = new DBuckConfig(config);
 
+    ReactNativeBuckConfig reactNativeBuckConfig = new ReactNativeBuckConfig(config);
+
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, new ExecutableFinder());
@@ -385,6 +390,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidLibraryDescription(androidBinaryOptions));
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidPrebuiltAarDescription(androidBinaryOptions));
+    builder.register(new AndroidReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
@@ -418,6 +424,7 @@ public class KnownBuildRuleTypes {
     builder.register(new GenAidlDescription());
     builder.register(new GwtBinaryDescription());
     builder.register(new IosPostprocessResourcesDescription());
+    builder.register(new IosReactNativeLibaryDescription(reactNativeBuckConfig));
     builder.register(new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform));
     builder.register(new JavaLibraryDescription(defaultJavacOptions));
     builder.register(new JavaTestDescription(defaultJavacOptions, testRuleTimeoutMs));

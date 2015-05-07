@@ -109,6 +109,7 @@ public class ProjectFilesystem {
   private final Path projectRoot;
 
   private final Function<Path, Path> pathAbsolutifier;
+  private final Function<Path, Path> pathRelativizer;
 
   private final ImmutableSet<Path> ignorePaths;
 
@@ -132,7 +133,10 @@ public class ProjectFilesystem {
     this(projectRoot.getFileSystem(), projectRoot, ignorePaths);
   }
 
-  protected ProjectFilesystem(FileSystem vfs, Path projectRoot, ImmutableSet<Path> ignorePaths) {
+  protected ProjectFilesystem(
+      FileSystem vfs,
+      final Path projectRoot,
+      ImmutableSet<Path> ignorePaths) {
     Preconditions.checkArgument(Files.isDirectory(projectRoot));
     Preconditions.checkState(vfs.equals(projectRoot.getFileSystem()));
     this.projectRoot = projectRoot;
@@ -140,6 +144,12 @@ public class ProjectFilesystem {
       @Override
       public Path apply(Path path) {
         return resolve(path);
+      }
+    };
+    this.pathRelativizer = new Function<Path, Path>() {
+      @Override
+      public Path apply(Path input) {
+        return projectRoot.relativize(input);
       }
     };
     this.ignorePaths = MorePaths.filterForSubpaths(ignorePaths, this.projectRoot);
@@ -166,6 +176,10 @@ public class ProjectFilesystem {
    */
   public Function<Path, Path> getAbsolutifier() {
     return pathAbsolutifier;
+  }
+
+  public Function<Path, Path> getRelativizer() {
+    return pathRelativizer;
   }
 
   /**

@@ -1,0 +1,14 @@
+java_test(
+  name = 'js',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/js:js',
+  ],
+  deps = [
+    '//test/com/facebook/buck/android:testutil',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/junit:junit',
+    '//test/com/facebook/buck/testutil/integration:integration',
+  ],
+)

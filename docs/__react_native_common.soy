@@ -1,0 +1,37 @@
+{namespace react_native_common}
+
+/***/
+{template .deps_arg}
+{call buck.arg}
+  {param name : 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of dependencies of this rule.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .srcs_arg}
+{call buck.arg}
+  {param name : 'srcs' /}
+  {param desc}
+  The set of <code>.js</code> files in the React Native project that are 
+  referenced by the <code>entry_path</code>. For more information on the 
+  structure and contents of these javascript files, refer to
+  <a href="http://facebook.github.io/react-native/">React Native</a>.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .entry_path_arg}
+{call buck.arg}
+  {param name : 'entry_path' /}
+  {param desc}
+  Relative path to the <code>.js</code> file that represents the javascript 
+  entry point for the React Native project.
+  {/param}
+{/call}
+{/template}
+
