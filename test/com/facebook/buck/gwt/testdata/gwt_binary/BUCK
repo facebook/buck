@@ -1,0 +1,32 @@
+java_library(
+  name = 'a',
+  srcs = glob(['com/example/gwt/client/*.java']),
+  resources = ['com/example/gwt/A.gwt.xml'],
+  deps = [
+    ':gwt-user',
+  ],
+)
+
+gwt_binary(
+  name = 'binary',
+  style = 'PRETTY',
+  draft_compile = True,
+  optimize = 0,
+  modules = [ 'com/example/gwt/A' ],
+  module_deps = [
+    ':a',
+  ],
+  deps = [
+    ':gwt-dev',
+  ],
+)
+
+prebuilt_jar(
+  name = 'gwt-dev',
+  binary_jar = 'lib/gwt-dev-2.7.0.jar',
+)
+
+prebuilt_jar(
+  name = 'gwt-user',
+  binary_jar = 'lib/gwt-user-2.7.0.jar',
+)

@@ -1,0 +1,4 @@
+<module rename-to="a">
+  <inherits name="com.google.gwt.user.User"/>
+  <entry-point class="com.example.gwt.client.A"/>
+</module>
