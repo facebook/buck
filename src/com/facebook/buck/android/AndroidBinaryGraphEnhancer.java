@@ -340,7 +340,6 @@ public class AndroidBinaryGraphEnhancer {
       enhancedDeps.add(copyNativeLibraries.get());
     }
 
-    ImmutableSortedSet<BuildRule> finalDeps;
     Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi = Optional.absent();
     if (!exopackageModes.isEmpty()) {
       BuildRuleParams paramsForComputeExopackageAbi = buildRuleParams.copyWithChanges(
@@ -360,9 +359,7 @@ public class AndroidBinaryGraphEnhancer {
               preDexMerge,
               keystore));
       ruleResolver.addToIndex(computeExopackageDepsAbi.get());
-      finalDeps = ImmutableSortedSet.<BuildRule>of(computeExopackageDepsAbi.get());
-    } else {
-      finalDeps = enhancedDeps.build();
+      enhancedDeps.add(computeExopackageDepsAbi.get());
     }
 
     return AndroidGraphEnhancementResult.builder()
@@ -376,7 +373,7 @@ public class AndroidBinaryGraphEnhancer {
             .addAll(packageableCollection.getClasspathEntriesToDex())
             .addAll(buildConfigJarFiles)
             .build())
-        .setFinalDeps(finalDeps)
+        .setFinalDeps(enhancedDeps.build())
         .build();
   }
 
@@ -470,6 +467,8 @@ public class AndroidBinaryGraphEnhancer {
       AaptPackageResources aaptPackageResources,
       Iterable<DexProducedFromJavaLibrary> preDexRulesNotInThePackageableCollection,
       AndroidPackageableCollection packageableCollection) {
+    ImmutableSortedSet.Builder<JavaLibrary> javaLibraryDepsBuilder =
+        ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<DexProducedFromJavaLibrary> preDexDeps = ImmutableSet.builder();
     preDexDeps.addAll(preDexRulesNotInThePackageableCollection);
     for (BuildTarget buildTarget : packageableCollection.getJavaLibrariesToDex()) {
@@ -492,6 +491,9 @@ public class AndroidBinaryGraphEnhancer {
       if (javaLibrary.getPathToOutputFile() == null) {
         continue;
       }
+
+      // Take note of the rule so we add it to the enhanced deps.
+      javaLibraryDepsBuilder.add(javaLibrary);
 
       // See whether the corresponding IntermediateDexRule has already been added to the
       // ruleResolver.
@@ -523,7 +525,11 @@ public class AndroidBinaryGraphEnhancer {
     BuildRuleParams paramsForPreDexMerge = buildRuleParams.copyWithChanges(
         BuildRuleType.DEX_MERGE,
         createBuildTargetWithFlavor(DEX_MERGE_FLAVOR),
-        Suppliers.ofInstance(getDexMergeDeps(aaptPackageResources, allPreDexDeps)),
+        Suppliers.ofInstance(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(getDexMergeDeps(aaptPackageResources, allPreDexDeps))
+                .addAll(javaLibraryDepsBuilder.build())
+                .build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     PreDexMerge preDexMerge = new PreDexMerge(
         paramsForPreDexMerge,

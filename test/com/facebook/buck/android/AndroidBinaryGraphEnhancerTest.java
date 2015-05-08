@@ -23,7 +23,7 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -35,6 +35,8 @@ import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -56,13 +58,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
-import java.util.Iterator;
 
 public class AndroidBinaryGraphEnhancerTest {
 
@@ -175,24 +178,29 @@ public class AndroidBinaryGraphEnhancerTest {
 
     assertEquals(dexMergeRule, preDexMergeRule);
 
-    assertEquals(
+    Flavor dexFlavor = ImmutableFlavor.of("dex");
+    BuildTarget javaDep1DexBuildTarget =
+        BuildTarget.builder(javaDep1BuildTarget)
+            .addFlavors(dexFlavor)
+            .build();
+    BuildTarget javaDep2DexBuildTarget =
+        BuildTarget.builder(javaDep2BuildTarget)
+            .addFlavors(dexFlavor)
+            .build();
+    BuildTarget javaLibDexBuildTarget =
+        BuildTarget.builder(javaLibBuildTarget)
+            .addFlavors(dexFlavor)
+            .build();
+    assertThat(
         "There should be a #dex rule for dep1 and lib, but not dep2 because it is in the no_dx " +
-            "list.  And we should depend on uber_r_dot_java.",
-        3,
-        dexMergeRule.getDeps().size());
-
-    Iterator<BuildRule> depsForPreDexingIter = dexMergeRule.getDeps().iterator();
-
-    BuildRule shouldBeAaptPackageResourcesRule = depsForPreDexingIter.next();
-    assertEquals(aaptPackageResources, shouldBeAaptPackageResourcesRule);
-
-    BuildRule preDexRule1 = depsForPreDexingIter.next();
-    assertEquals("//java/com/example:dep1#dex", preDexRule1.getBuildTarget().toString());
-    assertNotNull(ruleResolver.getRule(preDexRule1.getBuildTarget()));
-
-    BuildRule preDexRule2 = depsForPreDexingIter.next();
-    assertEquals("//java/com/example:lib#dex", preDexRule2.getBuildTarget().toString());
-    assertNotNull(ruleResolver.getRule(preDexRule2.getBuildTarget()));
+            "list.  And we should depend on uber_r_dot_java",
+        Iterables.transform(dexMergeRule.getDeps(), HasBuildTarget.TO_TARGET),
+        Matchers.allOf(
+            Matchers.hasItem(javaDep1BuildTarget),
+            Matchers.hasItem(javaDep1DexBuildTarget),
+            Matchers.not(Matchers.hasItem(javaDep2DexBuildTarget)),
+            Matchers.hasItem(javaLibDexBuildTarget),
+            Matchers.hasItem(aaptPackageResources.getBuildTarget())));
   }
 
   @Test
@@ -273,11 +281,9 @@ public class AndroidBinaryGraphEnhancerTest {
         androidBuildConfig.getBuildConfigFields());
 
     ImmutableSortedSet<BuildRule> finalDeps = result.getFinalDeps();
-    // Verify that the only dep is computeExopackageDepsAbi
-    assertEquals(1, finalDeps.size());
     BuildRule computeExopackageDepsAbiRule =
         findRuleOfType(ruleResolver, ComputeExopackageDepsAbi.class);
-    assertEquals(computeExopackageDepsAbiRule, finalDeps.first());
+    assertThat(finalDeps, Matchers.hasItem(computeExopackageDepsAbiRule));
 
     FilteredResourcesProvider resourcesProvider = result.getAaptPackageResources()
         .getFilteredResourcesProvider();
