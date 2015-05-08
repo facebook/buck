@@ -195,7 +195,7 @@ public class DalvikStatsTool {
     private String className;
 
     private StatsClassVisitor(Map<Pattern, Integer> penalties) {
-      super(Opcodes.ASM4);
+      super(Opcodes.ASM5);
       this.penalties = ImmutableMap.copyOf(penalties);
       this.methodReferenceBuilder = ImmutableSet.builder();
     }
@@ -279,13 +279,12 @@ public class DalvikStatsTool {
     private class StatsMethodVisitor extends MethodVisitor {
 
       public StatsMethodVisitor() {
-        super(Opcodes.ASM4);
+        super(Opcodes.ASM5);
       }
 
       @Override
-      @SuppressWarnings("deprecation")
-      public void visitMethodInsn(int opcode, String owner, String name, String desc) {
-        super.visitMethodInsn(opcode, owner, name, desc);
+      public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+        super.visitMethodInsn(opcode, owner, name, desc, itf);
         methodReferenceBuilder.add(new MethodReference(owner, name, desc));
       }
 

@@ -82,7 +82,7 @@ public class RegisterSpecAnalyzer {
     @Nullable private String className;
 
     public RegSpecClassVisitor() {
-      super(Opcodes.ASM4);
+      super(Opcodes.ASM5);
     }
 
     @Override
