@@ -57,40 +57,6 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
    */
   private static final Integer DEFAULT_OPTIMIZE = Integer.valueOf(9);
 
-  @SuppressFieldNotInitialized
-  public static class Arg {
-    public Optional<ImmutableSortedSet<String>> modules;
-    public Optional<ImmutableSortedSet<BuildTarget>> moduleDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-
-    /**
-     * In practice, these may be values such as {@code -Xmx512m}.
-     */
-    public Optional<ImmutableList<String>> vmArgs;
-
-    /** This will be passed to the GWT Compiler's {@code -style} flag. */
-    // TODO(simons): t4058780 Introduce an EnumTypeCoercer so we can make this Optional<Style>.
-    public Optional<String> style;
-
-    /** If {@code true}, the GWT Compiler's {@code -draftCompile} flag will be set. */
-    public Optional<Boolean> draftCompile;
-
-    /** This will be passed to the GWT Compiler's {@code -optimize} flag. */
-    public Optional<Integer> optimize;
-
-    /** This will be passed to the GWT Compiler's {@code -localWorkers} flag. */
-    public Optional<Integer> localWorkers;
-
-    /** If {@code true}, the GWT Compiler's {@code -strict} flag will be set. */
-    public Optional<Boolean> strict;
-
-    /**
-     * In practice, these may be values such as {@code -XenableClosureCompiler},
-     * {@code -XdisableClassMetadata}, {@code -XdisableCastChecking}, or {@code -XfragmentMerge}.
-     */
-    public Optional<ImmutableList<String>> experimentalArgs;
-  }
-
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
@@ -151,5 +117,39 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
         args.strict.or(DEFAULT_STRICT),
         args.experimentalArgs.get(),
         gwtModuleJarsBuilder.build());
+  }
+
+  @SuppressFieldNotInitialized
+  public static class Arg {
+    public Optional<ImmutableSortedSet<String>> modules;
+    public Optional<ImmutableSortedSet<BuildTarget>> moduleDeps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+
+    /**
+     * In practice, these may be values such as {@code -Xmx512m}.
+     */
+    public Optional<ImmutableList<String>> vmArgs;
+
+    /** This will be passed to the GWT Compiler's {@code -style} flag. */
+    // TODO(simons): t4058780 Introduce an EnumTypeCoercer so we can make this Optional<Style>.
+    public Optional<String> style;
+
+    /** If {@code true}, the GWT Compiler's {@code -draftCompile} flag will be set. */
+    public Optional<Boolean> draftCompile;
+
+    /** This will be passed to the GWT Compiler's {@code -optimize} flag. */
+    public Optional<Integer> optimize;
+
+    /** This will be passed to the GWT Compiler's {@code -localWorkers} flag. */
+    public Optional<Integer> localWorkers;
+
+    /** If {@code true}, the GWT Compiler's {@code -strict} flag will be set. */
+    public Optional<Boolean> strict;
+
+    /**
+     * In practice, these may be values such as {@code -XenableClosureCompiler},
+     * {@code -XdisableClassMetadata}, {@code -XdisableCastChecking}, or {@code -XfragmentMerge}.
+     */
+    public Optional<ImmutableList<String>> experimentalArgs;
   }
 }
