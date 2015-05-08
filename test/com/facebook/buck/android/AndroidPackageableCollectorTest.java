@@ -71,15 +71,9 @@ public class AndroidPackageableCollectorTest {
         .build(ruleResolver);
 
     BuildRule ndkLibrary =
-        NdkLibraryBuilder
-            .createNdkLibrary(BuildTargetFactory.newInstance(
-                "//java/com/facebook/native_library:library"),
-                pathResolver,
-                ruleResolver,
-                projectFilesystem)
-            .addSrc(Paths.get("Android.mk"))
-            .setIsAsset(false).build();
-    ruleResolver.addToIndex(ndkLibrary);
+        new NdkLibraryBuilder(
+                BuildTargetFactory.newInstance("//java/com/facebook/native_library:library"))
+            .build(ruleResolver, projectFilesystem);
 
     BuildTarget prebuiltNativeLibraryTarget =
         BuildTargetFactory.newInstance("//java/com/facebook/prebuilt_native_library:library");

@@ -25,10 +25,12 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -162,7 +164,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
    * @return a {@link BuildRule} which generates a Android.mk which pulls in the local Android.mk
    *     file and also appends relevant preprocessor and linker flags to use C/C++ library deps.
    */
-  private BuildRule generateMakefile(
+  private Pair<BuildRule, Iterable<BuildRule>> generateMakefile(
       final BuildRuleParams params,
       BuildRuleResolver resolver) {
 
@@ -259,28 +261,24 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     BuildRuleParams makefileParams = params.copyWithChanges(
         MAKEFILE_TYPE,
         makefileTarget,
-        Suppliers.ofInstance(deps.build()),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     final Path makefilePath = getGeneratedMakefilePath(params.getBuildTarget());
     final String contents = Joiner.on(System.lineSeparator()).join(outputLinesBuilder.build());
 
-    return new WriteFile(makefileParams, pathResolver, contents, makefilePath);
+    return new Pair<BuildRule, Iterable<BuildRule>>(
+        new WriteFile(makefileParams, pathResolver, contents, makefilePath),
+        deps.build());
   }
 
-  @Override
-  public <A extends Arg> NdkLibrary createBuildRule(
-      final BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
-
-    BuildRule makefile = generateMakefile(params, resolver);
-    resolver.addToIndex(makefile);
-
+  @VisibleForTesting
+  protected ImmutableSortedSet<SourcePath> findSources(
+      final ProjectFilesystem filesystem,
+      final Path buildRulePath) {
     final ImmutableSortedSet.Builder<SourcePath> srcs = ImmutableSortedSet.naturalOrder();
 
     try {
-      final Path buildRulePath = params.getBuildTarget().getBasePath();
-      final Path rootDirectory = params.getProjectFilesystem().resolve(buildRulePath);
+      final Path rootDirectory = filesystem.resolve(buildRulePath);
       Files.walkFileTree(
           rootDirectory,
           EnumSet.of(FileVisitOption.FOLLOW_LINKS),
@@ -292,7 +290,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               if (EXTENSIONS_REGEX.matcher(file.toString()).matches()) {
                 srcs.add(
                     new PathSourcePath(
-                        params.getProjectFilesystem(),
+                        filesystem,
                         buildRulePath.resolve(rootDirectory.relativize(file))));
               }
 
@@ -303,16 +301,26 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       throw new RuntimeException(e);
     }
 
+    return srcs.build();
+  }
+
+  @Override
+  public <A extends Arg> NdkLibrary createBuildRule(
+      final BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+
+    Pair<BuildRule, Iterable<BuildRule>> makefilePair = generateMakefile(params, resolver);
+    resolver.addToIndex(makefilePair.getFirst());
     return new NdkLibrary(
-        params.copyWithExtraDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(params.getExtraDeps())
-                    .add(makefile)
-                    .build())),
+        params.appendExtraDeps(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .add(makefilePair.getFirst())
+                .addAll(makefilePair.getSecond())
+                .build()),
         new SourcePathResolver(resolver),
         getGeneratedMakefilePath(params.getBuildTarget()),
-        srcs.build(),
+        findSources(params.getProjectFilesystem(), params.getBuildTarget().getBasePath()),
         args.flags.get(),
         args.isAsset.or(false),
         ndkVersion,

@@ -22,11 +22,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -76,27 +77,15 @@ public class NdkLibraryTest {
   @Test
   public void testSimpleNdkLibraryRule() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-    BuildContext context = null;
+    BuildContext context = FakeBuildContext.NOOP_CONTEXT;
 
     String basePath = "java/src/com/facebook/base";
+    BuildTarget target = BuildTargetFactory.newInstance(String.format("//%s:base", basePath));
     NdkLibrary ndkLibrary =
-        NdkLibraryBuilder.createNdkLibrary(
-            BuildTargetFactory.newInstance(
-                String.format("//%s:base", basePath)),
-            pathResolver,
-            ruleResolver,
-            projectFilesystem)
-            .setNdkVersion("r8b")
-            .addSrc(Paths.get(basePath + "/Application.mk"))
-            .addSrc(Paths.get(basePath + "/main.cpp"))
-            .addSrc(Paths.get(basePath + "/Android.mk"))
-            .addFlag("flag1")
-            .addFlag("flag2")
+        (NdkLibrary) new NdkLibraryBuilder(target)
+            .setFlags(ImmutableList.of("flag1", "flag2"))
             .setIsAsset(true)
-            .build();
-
-    ruleResolver.addToIndex(ndkLibrary);
+            .build(ruleResolver, projectFilesystem);
 
     assertEquals(NdkLibraryDescription.TYPE, ndkLibrary.getType());
 
@@ -124,7 +113,7 @@ public class NdkLibraryTest {
                 Runtime.getRuntime().availableProcessors(),
                 Paths.get(basePath).toString(),
                 /* APP_PROJECT_PATH */ libbase + File.separator,
-                /* APP_BUILD_SCRIPT */ Paths.get(basePath, "Android.mk"),
+                /* APP_BUILD_SCRIPT */ NdkLibraryDescription.getGeneratedMakefilePath(target),
                 /* NDK_OUT */ libbase + File.separator,
                 /* NDK_LIBS_OUT */ Paths.get(libbase, "libs"),
                 /* host-echo-build-step */ Platform.detect() == Platform.WINDOWS ? "@REM" : "@#")

@@ -754,7 +754,7 @@ public class ProjectTest {
 
     // Execute Project's business logic.
     EasyMock.replay(executionContext, projectFilesystem);
-    List<Module> modules = new ArrayList<Module>(project.createModulesForProjectConfigs());
+    List<Module> modules = new ArrayList<>(project.createModulesForProjectConfigs());
     EasyMock.verify(executionContext, projectFilesystem);
 
     return new ProjectWithModules(project, ImmutableList.copyOf(modules));
@@ -771,7 +771,6 @@ public class ProjectTest {
   @Test
   public void testNdkLibraryHasCorrectPath() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     // Build up a the graph that corresponds to:
     //
@@ -785,14 +784,9 @@ public class ProjectTest {
 
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     BuildTarget fooJni = BuildTargetFactory.newInstance("//third_party/java/foo/jni:foo-jni");
-    NdkLibrary ndkLibrary = NdkLibraryBuilder.createNdkLibrary(fooJni,
-        pathResolver,
-        ruleResolver,
-        projectFilesystem)
-        .addSrc(Paths.get("Android.mk"))
-        .build();
-
-    ruleResolver.addToIndex(ndkLibrary);
+    NdkLibrary ndkLibrary =
+        (NdkLibrary) new NdkLibraryBuilder(fooJni)
+            .build(ruleResolver, projectFilesystem);
 
     ProjectConfig ndkProjectConfig = (ProjectConfig) ProjectConfigBuilder
         .createBuilder(

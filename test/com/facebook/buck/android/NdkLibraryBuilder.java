@@ -15,88 +15,64 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
-import javax.annotation.Nullable;
+public class NdkLibraryBuilder extends AbstractNodeBuilder<NdkLibraryDescription.Arg> {
 
-public class NdkLibraryBuilder {
+  private static final NdkCxxPlatform DEFAULT_NDK_PLATFORM =
+      NdkCxxPlatform.builder()
+          .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+          .setObjcopy(Paths.get("tool"))
+          .setCxxRuntime(NdkCxxPlatforms.CxxRuntime.GNUSTL)
+          .setCxxSharedRuntimePath(Paths.get("runtime"))
+          .build();
 
-  private NdkLibraryBuilder() {
-    // Utility class
+  private static final ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> NDK_PLATFORMS =
+      ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>builder()
+          .put(AndroidBinary.TargetCpuType.ARM, DEFAULT_NDK_PLATFORM)
+          .put(AndroidBinary.TargetCpuType.ARMV7, DEFAULT_NDK_PLATFORM)
+          .put(AndroidBinary.TargetCpuType.X86, DEFAULT_NDK_PLATFORM)
+          .build();
+
+  public NdkLibraryBuilder(BuildTarget target) {
+    super(
+        new NdkLibraryDescription(Optional.<String>absent(), NDK_PLATFORMS) {
+          @Override
+          protected ImmutableSortedSet<SourcePath> findSources(
+              ProjectFilesystem filesystem,
+              Path buildRulePath) {
+            return ImmutableSortedSet.<SourcePath>of(
+                new PathSourcePath(filesystem, buildRulePath.resolve("Android.mk")));
+          }
+        },
+        target);
   }
 
-  public static Builder createNdkLibrary(BuildTarget target,
-      SourcePathResolver resolver,
-      BuildRuleResolver ruleResolver,
-      ProjectFilesystem projectFilesystem) {
-    return new Builder(target, resolver, ruleResolver, projectFilesystem);
+  public NdkLibraryBuilder addDep(BuildTarget target) {
+    arg.deps = amend(arg.deps, target);
+    return this;
   }
-  public static class Builder {
-    private final SourcePathResolver resolver;
-    @Nullable
-    private BuildTarget buildTarget = null;
-    private ImmutableSet.Builder<SourcePath> sources = ImmutableSet.builder();
-    private ImmutableList.Builder<String> flags = ImmutableList.builder();
-    private boolean isAsset = false;
-    private Optional<String> ndkVersion = Optional.absent();
-    private BuildRuleResolver ruleResolver;
-    private ProjectFilesystem projectFilesystem;
 
-    public Builder(BuildTarget buildTarget, SourcePathResolver resolver,
-        BuildRuleResolver ruleResolver, ProjectFilesystem projectFilesystem) {
-      this.buildTarget = Preconditions.checkNotNull(buildTarget);
-      this.resolver = Preconditions.checkNotNull(resolver);
-      this.ruleResolver = ruleResolver;
-      this.projectFilesystem = projectFilesystem;
-    }
-
-    public Builder addSrc(Path source) {
-      this.sources.add(new PathSourcePath(new FakeProjectFilesystem(), source));
-      return this;
-    }
-
-    public Builder addFlag(String flag) {
-      this.flags.add(flag);
-      return this;
-    }
-
-    public Builder setIsAsset(boolean isAsset) {
-      this.isAsset = isAsset;
-      return this;
-    }
-
-    public Builder setNdkVersion(String ndkVersion) {
-      this.ndkVersion = Optional.of(ndkVersion);
-      return this;
-    }
-
-    public NdkLibrary build() {
-      return new NdkLibrary(
-          new FakeBuildRuleParamsBuilder(buildTarget).setType(NdkLibraryDescription.TYPE).build(),
-          resolver,
-          buildTarget.getBasePath().resolve("Android.mk"),
-          sources.build(),
-          flags.build(),
-          isAsset,
-          ndkVersion,
-          NdkLibraryDescription.MACRO_HANDLER.getExpander(
-              buildTarget,
-              ruleResolver,
-              projectFilesystem
-          ));
-    }
+  public NdkLibraryBuilder setFlags(Iterable<String> flags) {
+    arg.flags = Optional.of(ImmutableList.copyOf(flags));
+    return this;
   }
+
+  public NdkLibraryBuilder setIsAsset(boolean isAsset) {
+    arg.isAsset = Optional.of(isAsset);
+    return this;
+  }
+
 }
