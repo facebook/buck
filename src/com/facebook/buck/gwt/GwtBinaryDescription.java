@@ -17,6 +17,7 @@
 package com.facebook.buck.gwt;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.gwt.GwtBinary.Style;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -41,7 +42,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
   public static final BuildRuleType TYPE = BuildRuleType.of("gwt_binary");
 
   /** Default value for {@link Arg#style}. */
-  private static final String DEFAULT_STYLE = GwtBinary.Style.OBF.name();
+  private static final Style DEFAULT_STYLE = Style.OBF;
 
   /** Default value for {@link Arg#localWorkers}. */
   private static final Integer DEFAULT_NUM_LOCAL_WORKERS = Integer.valueOf(2);
@@ -110,7 +111,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
         new SourcePathResolver(resolver),
         args.modules.get(),
         args.vmArgs.get(),
-        GwtBinary.Style.valueOf(args.style.or(DEFAULT_STYLE)),
+        args.style.or(DEFAULT_STYLE),
         args.draftCompile.or(DEFAULT_DRAFT_COMPILE),
         args.optimize.or(DEFAULT_OPTIMIZE),
         args.localWorkers.or(DEFAULT_NUM_LOCAL_WORKERS),
@@ -131,8 +132,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
     public Optional<ImmutableList<String>> vmArgs;
 
     /** This will be passed to the GWT Compiler's {@code -style} flag. */
-    // TODO(simons): t4058780 Introduce an EnumTypeCoercer so we can make this Optional<Style>.
-    public Optional<String> style;
+    public Optional<Style> style;
 
     /** If {@code true}, the GWT Compiler's {@code -draftCompile} flag will be set. */
     public Optional<Boolean> draftCompile;
