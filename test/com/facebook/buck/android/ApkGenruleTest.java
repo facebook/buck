@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavaPackageFinder;
@@ -89,7 +90,7 @@ public class ApkGenruleTest {
       new Function<Path, Path>() {
         @Override
         public Path apply(Path path) {
-          return Paths.get("/opt/local/fbandroid").resolve(path);
+          return MorePathsForTests.rootRelativePath("/opt/local/fbandroid").resolve(path);
         }
       };
 
@@ -158,7 +159,8 @@ public class ApkGenruleTest {
 
     // Verify all of the observers of the Genrule.
     String expectedApkOutput =
-        Paths.get("/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a.apk").toString();
+        MorePathsForTests.rootRelativePath(
+            "/opt/local/fbandroid/" + GEN_DIR + "/src/com/facebook/sign_fb4a.apk").toString();
     assertEquals(expectedApkOutput,
         apkGenrule.getAbsoluteOutputFilePath());
     assertEquals(

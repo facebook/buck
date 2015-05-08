@@ -317,7 +317,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
 
     // Symlink all sources into the temp directory so that they can be used in the genrule.
     for (Map.Entry<Path, Path> entry : srcsToAbsolutePaths.entrySet()) {
-      String localPath = entry.getKey().toString();
+      String localPath = MorePaths.pathWithUnixSeparators(entry.getKey());
 
       Path canonicalPath;
       canonicalPath = MorePaths.absolutify(entry.getValue());
