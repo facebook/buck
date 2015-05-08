@@ -31,15 +31,19 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.AppleBundleDestination;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
@@ -77,6 +81,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
       CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
   private final AppleConfig appleConfig;
+  private final AppleBundleDescription appleBundleDescription;
   private final AppleLibraryDescription appleLibraryDescription;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
@@ -84,12 +89,14 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
 
   public AppleTestDescription(
       AppleConfig appleConfig,
-      AppleLibraryDescription description,
+      AppleBundleDescription appleBundleDescription,
+      AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform) {
     this.appleConfig = appleConfig;
-    appleLibraryDescription = description;
+    this.appleBundleDescription = appleBundleDescription;
+    this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.platformFlavorsToAppleCxxPlatforms =
         ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
@@ -129,9 +136,10 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     boolean createBundle = Sets.intersection(
         params.getBuildTarget().getFlavors(),
         NON_LIBRARY_FLAVORS).isEmpty();
-    boolean addDefaultPlatform = Sets.difference(
+    Sets.SetView<Flavor> nonLibraryFlavors = Sets.difference(
         params.getBuildTarget().getFlavors(),
-        NON_LIBRARY_FLAVORS).isEmpty();
+        NON_LIBRARY_FLAVORS);
+    boolean addDefaultPlatform = nonLibraryFlavors.isEmpty();
     ImmutableSet.Builder<Flavor> extraFlavorsBuilder = ImmutableSet.builder();
     if (createBundle) {
       extraFlavorsBuilder.add(
@@ -141,6 +149,53 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     if (addDefaultPlatform) {
       extraFlavorsBuilder.add(defaultCxxPlatform.getFlavor());
     }
+
+    Optional<AppleBundle> testHostApp;
+    Optional<SourcePath> testHostAppBinarySourcePath;
+    if (args.testHostApp.isPresent()) {
+      TargetNode<?> testHostAppNode = params.getTargetGraph().get(args.testHostApp.get());
+      Preconditions.checkNotNull(testHostAppNode);
+
+      if (testHostAppNode.getType() != AppleBundleDescription.TYPE) {
+        throw new HumanReadableException(
+            "Apple test rule %s has unrecognized test_host_app %s type %s (should be %s)",
+            params.getBuildTarget(),
+            args.testHostApp.get(),
+            testHostAppNode.getType(),
+            AppleBundleDescription.TYPE);
+      }
+
+      AppleBundleDescription.Arg testHostAppDescription = (AppleBundleDescription.Arg)
+          testHostAppNode.getConstructorArg();
+
+      testHostApp = Optional.of(
+          appleBundleDescription.createBuildRule(
+              params.copyWithChanges(
+                  AppleBundleDescription.TYPE,
+                  BuildTarget.builder(args.testHostApp.get())
+                      .addAllFlavors(nonLibraryFlavors)
+                      .build(),
+                  Suppliers.ofInstance(
+                      BuildRules.toBuildRulesFor(
+                          args.testHostApp.get(),
+                          resolver,
+                          testHostAppNode.getDeclaredDeps())),
+                  Suppliers.ofInstance(
+                      BuildRules.toBuildRulesFor(
+                          args.testHostApp.get(),
+                          resolver,
+                          testHostAppNode.getExtraDeps()))),
+              resolver,
+              testHostAppDescription));
+      testHostAppBinarySourcePath = Optional.<SourcePath>of(
+          new BuildTargetSourcePath(
+              params.getProjectFilesystem(),
+              testHostAppDescription.binary));
+    } else {
+      testHostApp = Optional.absent();
+      testHostAppBinarySourcePath = Optional.absent();
+    }
+
     BuildRule library = appleLibraryDescription.createBuildRule(
         params.copyWithChanges(
             AppleLibraryDescription.TYPE,
@@ -153,7 +208,8 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         args,
         // For now, instead of building all deps as dylibs and fixing up their install_names,
         // we'll just link them statically.
-        Optional.of(Linker.LinkableDepType.STATIC));
+        Optional.of(Linker.LinkableDepType.STATIC),
+        testHostAppBinarySourcePath);
     if (!createBundle) {
       return library;
     }
@@ -239,6 +295,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         sourcePathResolver,
         bundle,
+        testHostApp,
         extension,
         args.contacts.get(),
         args.labels.get());
@@ -249,6 +306,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<Boolean> canGroup;
+    public Optional<BuildTarget> testHostApp;
 
     // Bundle related fields.
     public Either<AppleBundleExtension, String> extension;

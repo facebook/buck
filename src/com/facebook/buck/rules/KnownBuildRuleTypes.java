@@ -476,17 +476,19 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
-    builder.register(
+    AppleBundleDescription appleBundleDescription =
         new AppleBundleDescription(
             appleBinaryDescription,
             appleLibraryDescription,
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
-            defaultCxxPlatform));
+            defaultCxxPlatform);
+    builder.register(appleBundleDescription);
     builder.register(new AppleResourceDescription());
     builder.register(
         new AppleTestDescription(
             appleConfig,
+            appleBundleDescription,
             appleLibraryDescription,
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,

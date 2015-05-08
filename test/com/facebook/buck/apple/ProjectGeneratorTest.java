@@ -2657,6 +2657,46 @@ public class ProjectGeneratorTest {
     assertEquals("../Vendor/header", settings.get("GCC_PREFIX_HEADER"));
   }
 
+  @Test
+  public void applicationTestUsesHostAppAsTestHostAndBundleLoader() throws IOException {
+    BuildTarget hostAppBinaryTarget = BuildTarget.builder("//foo", "HostAppBinary").build();
+    TargetNode<?> hostAppBinaryNode = AppleBinaryBuilder
+        .createBuilder(hostAppBinaryTarget)
+        .build();
+
+    BuildTarget hostAppTarget = BuildTarget.builder("//foo", "HostApp").build();
+    TargetNode<?> hostAppNode = AppleBundleBuilder
+        .createBuilder(hostAppTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
+        .setBinary(hostAppBinaryTarget)
+        .build();
+
+    BuildTarget testTarget = BuildTarget.builder("//foo", "AppTest").build();
+    TargetNode<?> testNode = AppleTestBuilder.createBuilder(testTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setTestHostApp(Optional.of(hostAppTarget))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(hostAppBinaryNode, hostAppNode, testNode),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:AppTest");
+
+    ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
+    assertEquals("$BUILT_PRODUCTS_DIR/./HostApp.app/HostApp", settings.get("BUNDLE_LOADER"));
+    assertEquals("$(BUNDLE_LOADER)", settings.get("TEST_HOST"));
+  }
+
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Iterable<TargetNode<?>> nodes) {
     return createProjectGeneratorForCombinedProject(

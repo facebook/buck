@@ -312,6 +312,47 @@ public class AppleTestIntegrationTest {
         containsString("FAILURE -[FooXCTest testTwoPlusTwoEqualsFive]: FooXCTest.m:9"));
   }
 
+  @Test
+  public void successOnAppTestPassing() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_with_host_app", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    workspace.writeContentsToPath(
+         "[apple]\n  xctool_path = xctool/bin/xctool\n",
+         ".buckconfig.local");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:AppTest");
+    result.assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
+  }
+
+  @Test
+  public void exitCodeIsCorrectOnAppTestFailure() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_with_host_app_failure", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    workspace.writeContentsToPath(
+         "[apple]\n  xctool_path = xctool/bin/xctool\n",
+         ".buckconfig.local");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:AppTest");
+    result.assertSpecialExitCode("test should fail", 42);
+    assertThat(
+        result.getStderr(),
+        containsString("0 Passed   0 Skipped   1 Failed   AppTest"));
+    assertThat(
+        result.getStderr(),
+        containsString("FAILURE -[AppTest testMagicValueShouldFail]: AppTest.m:13"));
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {

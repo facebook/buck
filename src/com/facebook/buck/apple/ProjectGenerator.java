@@ -400,7 +400,8 @@ public class ProjectGenerator {
       result = Optional.<PBXTarget>of(
           generateAppleLibraryTarget(
               project,
-              (TargetNode<AppleNativeTargetDescriptionArg>) targetNode));
+              (TargetNode<AppleNativeTargetDescriptionArg>) targetNode,
+              Optional.<TargetNode<AppleBundleDescription.Arg>>absent()));
     } else if (targetNode.getType().equals(AppleBinaryDescription.TYPE)) {
       result = Optional.<PBXTarget>of(
           generateAppleBinaryTarget(
@@ -414,19 +415,40 @@ public class ProjectGenerator {
               project,
               bundleTargetNode,
               (TargetNode<AppleNativeTargetDescriptionArg>) Preconditions.checkNotNull(
-                  targetGraph.get(bundleTargetNode.getConstructorArg().binary))));
+                  targetGraph.get(bundleTargetNode.getConstructorArg().binary)),
+              Optional.<TargetNode<AppleBundleDescription.Arg>>absent()));
     } else if (targetNode.getType().equals(AppleTestDescription.TYPE)) {
       TargetNode<AppleTestDescription.Arg> testTargetNode =
           (TargetNode<AppleTestDescription.Arg>) targetNode;
+      Optional<TargetNode<AppleBundleDescription.Arg>> testHostBundle;
+      if (testTargetNode.getConstructorArg().testHostApp.isPresent()) {
+        BuildTarget testHostBundleTarget =
+            testTargetNode.getConstructorArg().testHostApp.get();
+        TargetNode<?> testHostBundleNode = targetGraph.get(testHostBundleTarget);
+        Preconditions.checkNotNull(testHostBundleNode);
+        if (testHostBundleNode.getType() != AppleBundleDescription.TYPE) {
+          throw new HumanReadableException(
+              "The test host target '%s' has the wrong type (%s), must be apple_bundle",
+              testHostBundleTarget,
+              testHostBundleNode.getType());
+        }
+        testHostBundle = Optional.of((TargetNode<AppleBundleDescription.Arg>) testHostBundleNode);
+      } else {
+        testHostBundle = Optional.absent();
+      }
       if (testsToGenerateAsStaticLibraries.contains(testTargetNode)) {
         result = Optional.<PBXTarget>of(
-            generateAppleLibraryTarget(project, testTargetNode));
+            generateAppleLibraryTarget(
+                project,
+                testTargetNode,
+                testHostBundle));
       } else {
         result = Optional.<PBXTarget>of(
             generateAppleBundleTarget(
                 project,
                 testTargetNode,
-                testTargetNode));
+                testTargetNode,
+                testHostBundle));
       }
     } else if (targetNode.getType().equals(AppleResourceDescription.TYPE)) {
       // Check that the resource target node is referencing valid files or directories.
@@ -455,7 +477,8 @@ public class ProjectGenerator {
   PBXNativeTarget generateAppleBundleTarget(
       PBXProject project,
       TargetNode<? extends HasAppleBundleFields> targetNode,
-      TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode)
+      TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode,
+      Optional<TargetNode<AppleBundleDescription.Arg>> bundleLoaderNode)
       throws IOException {
     Optional<Path> infoPlistPath;
     if (targetNode.getConstructorArg().getInfoPlist().isPresent()) {
@@ -475,7 +498,8 @@ public class ProjectGenerator {
         infoPlistPath,
         /* includeFrameworks */ true,
         AppleResources.collectRecursiveResources(targetGraph, ImmutableList.of(targetNode)),
-        AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode)));
+        AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode)),
+        bundleLoaderNode);
 
     // -- copy any binary and bundle targets into this bundle
     Iterable<TargetNode<?>> copiedRules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -502,14 +526,16 @@ public class ProjectGenerator {
         Optional.<Path>absent(),
         /* includeFrameworks */ true,
         ImmutableSet.<AppleResourceDescription.Arg>of(),
-        ImmutableSet.<AppleAssetCatalogDescription.Arg>of());
+        ImmutableSet.<AppleAssetCatalogDescription.Arg>of(),
+        Optional.<TargetNode<AppleBundleDescription.Arg>>absent());
     LOG.debug("Generated Apple binary target %s", target);
     return target;
   }
 
   private PBXNativeTarget generateAppleLibraryTarget(
       PBXProject project,
-      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode)
+      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
+      Optional<TargetNode<AppleBundleDescription.Arg>> bundleLoaderNode)
       throws IOException {
     boolean isShared = targetNode
         .getBuildTarget()
@@ -527,7 +553,8 @@ public class ProjectGenerator {
         Optional.<Path>absent(),
         /* includeFrameworks */ isShared,
         ImmutableSet.<AppleResourceDescription.Arg>of(),
-        ImmutableSet.<AppleAssetCatalogDescription.Arg>of());
+        ImmutableSet.<AppleAssetCatalogDescription.Arg>of(),
+        bundleLoaderNode);
     LOG.debug("Generated iOS library target %s", target);
     return target;
   }
@@ -541,7 +568,8 @@ public class ProjectGenerator {
       Optional<Path> infoPlistOptional,
       boolean includeFrameworks,
       ImmutableSet<AppleResourceDescription.Arg> resources,
-      ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogs)
+      ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogs,
+      Optional<TargetNode<AppleBundleDescription.Arg>> bundleLoaderNode)
       throws IOException {
     Optional<String> targetGid = targetNode.getConstructorArg().gid;
     LOG.debug("Generating binary target for node %s (GID %s)", targetNode, targetGid);
@@ -644,6 +672,20 @@ public class ProjectGenerator {
     extraSettingsBuilder
         .put("TARGET_NAME", getProductName(buildTarget))
         .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString());
+    if (bundleLoaderNode.isPresent()) {
+      TargetNode<AppleBundleDescription.Arg> bundleLoader = bundleLoaderNode.get();
+      String bundleLoaderProductName = getProductName(bundleLoader.getBuildTarget());
+      String bundleName = bundleLoaderProductName + "." +
+          getExtensionString(bundleLoader.getConstructorArg().getExtension());
+      String bundleLoaderOutputPath = Joiner.on('/').join(
+          getTargetOutputPath(bundleLoader),
+          bundleName,
+          // TODO(user): How do we handle the "Contents" sub-directory for OS X app tests?
+          bundleLoaderProductName);
+      extraSettingsBuilder
+          .put("BUNDLE_LOADER", bundleLoaderOutputPath)
+          .put("TEST_HOST", "$(BUNDLE_LOADER)");
+    }
     if (infoPlistOptional.isPresent()) {
       Path infoPlistPath = pathRelativizer.outputDirToRootRelative(infoPlistOptional.get());
       extraSettingsBuilder.put("INFOPLIST_FILE", infoPlistPath.toString());

@@ -266,7 +266,8 @@ public class CxxLibraryDescription implements
       CxxSourceRuleFactory.Strategy compileStrategy,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Linker.LinkType linkType,
-      Linker.LinkableDepType linkableDepType) {
+      Linker.LinkableDepType linkableDepType,
+      Optional<SourcePath> bundleLoader) {
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
@@ -319,7 +320,7 @@ public class CxxLibraryDescription implements
             linkableDepType,
             params.getDeps(),
             cxxRuntimeType,
-            Optional.<SourcePath>absent());
+            bundleLoader);
   }
 
   /**
@@ -513,7 +514,8 @@ public class CxxLibraryDescription implements
       A args,
       CxxSourceRuleFactory.Strategy compileStrategy,
       Linker.LinkType linkType,
-      Linker.LinkableDepType linkableDepType) {
+      Linker.LinkableDepType linkableDepType,
+      Optional<SourcePath> bundleLoader) {
     ImmutableList.Builder<String> linkerFlags = ImmutableList.builder();
 
     linkerFlags.addAll(
@@ -563,7 +565,8 @@ public class CxxLibraryDescription implements
         compileStrategy,
         args.cxxRuntimeType,
         linkType,
-        linkableDepType);
+        linkableDepType,
+        bundleLoader);
   }
 
   /**
@@ -640,7 +643,8 @@ public class CxxLibraryDescription implements
         resolver,
         args,
         typeAndPlatform,
-        Optional.<Linker.LinkableDepType>absent());
+        Optional.<Linker.LinkableDepType>absent(),
+        Optional.<SourcePath>absent());
   }
 
   public <A extends Arg> BuildRule createBuildRule(
@@ -648,12 +652,14 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       final A args,
       TypeAndPlatform typeAndPlatform,
-      Optional<Linker.LinkableDepType> linkableDepType) {
+      Optional<Linker.LinkableDepType> linkableDepType,
+      Optional<SourcePath> bundleLoader) {
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = typeAndPlatform.getPlatform();
 
     if (params.getBuildTarget().getFlavors()
         .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
 
+      // XXX: This needs bundleLoader for tests..
       return createCompilationDatabaseBuildRule(
           params,
           resolver,
@@ -700,7 +706,8 @@ public class CxxLibraryDescription implements
             args,
             compileStrategy,
             Linker.LinkType.SHARED,
-            linkableDepType.or(Linker.LinkableDepType.SHARED));
+            linkableDepType.or(Linker.LinkableDepType.SHARED),
+            Optional.<SourcePath>absent());
       } else if (type.get().getValue().equals(Type.MACH_O_BUNDLE)) {
         return createSharedLibraryBuildRule(
             typeParams,
@@ -709,7 +716,8 @@ public class CxxLibraryDescription implements
             args,
             compileStrategy,
             Linker.LinkType.MACH_O_BUNDLE,
-            linkableDepType.or(Linker.LinkableDepType.SHARED));
+            linkableDepType.or(Linker.LinkableDepType.SHARED),
+            bundleLoader);
       } else if (type.get().getValue().equals(Type.STATIC)) {
         return createStaticLibraryBuildRule(
             typeParams,

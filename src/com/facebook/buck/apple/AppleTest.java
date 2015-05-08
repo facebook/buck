@@ -67,10 +67,14 @@ public class AppleTest extends NoopBuildRule implements TestRule {
   @AddToRuleKey
   private final BuildRule testBundle;
 
+  @AddToRuleKey
+  private final Optional<AppleBundle> testHostApp;
+
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<Label> labels;
 
   private final Path testBundleDirectory;
+  private final Path testHostAppDirectory;
   private final Path testOutputPath;
 
   AppleTest(
@@ -81,6 +85,7 @@ public class AppleTest extends NoopBuildRule implements TestRule {
       BuildRuleParams params,
       SourcePathResolver resolver,
       BuildRule testBundle,
+      Optional<AppleBundle> testHostApp,
       String testBundleExtension,
       ImmutableSet<String> contacts,
       ImmutableSet<Label> labels) {
@@ -90,12 +95,16 @@ public class AppleTest extends NoopBuildRule implements TestRule {
     this.simulatorName = simulatorName;
     this.arch = arch;
     this.testBundle = testBundle;
+    this.testHostApp = testHostApp;
     this.contacts = contacts;
     this.labels = labels;
     // xctool requires the extension to be present to determine whether the test is ocunit or xctest
     this.testBundleDirectory = BuildTargets.getScratchPath(
         params.getBuildTarget(),
         "__test_bundle_%s__." + testBundleExtension);
+    this.testHostAppDirectory = BuildTargets.getScratchPath(
+        params.getBuildTarget(),
+        "__test_host_app_%s__.app");
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
   }
 
@@ -153,14 +162,31 @@ public class AppleTest extends NoopBuildRule implements TestRule {
     Path resolvedTestOutputPath = executionContext.getProjectFilesystem().resolve(
         testOutputPath);
 
+    ImmutableSet.Builder<Path> logicTestPathsBuilder = ImmutableSet.builder();
+    ImmutableMap.Builder<Path, Path> appTestPathsToHostAppsBuilder = ImmutableMap.builder();
+    if (testHostApp.isPresent()) {
+      Path resolvedTestHostAppDirectory = executionContext.getProjectFilesystem().resolve(
+          testHostAppDirectory);
+      steps.add(new MakeCleanDirectoryStep(resolvedTestHostAppDirectory));
+      steps.add(
+          new UnzipStep(testHostApp.get().getPathToOutputFile(), resolvedTestHostAppDirectory));
+
+      appTestPathsToHostAppsBuilder.put(
+          resolvedTestBundleDirectory,
+          resolvedTestHostAppDirectory.resolve(
+              testHostApp.get().getUnzippedOutputFilePathToBinary()));
+    } else {
+      logicTestPathsBuilder.add(resolvedTestBundleDirectory);
+    }
+
     steps.add(
         new XctoolRunTestsStep(
             xctoolPath.get(),
             arch,
             sdkName,
             simulatorName,
-            ImmutableSet.of(resolvedTestBundleDirectory),
-            ImmutableMap.<Path, Path>of(), // TODO(user): Add support for app tests.
+            logicTestPathsBuilder.build(),
+            appTestPathsToHostAppsBuilder.build(),
             resolvedTestOutputPath));
 
     return steps.build();

@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -98,14 +99,20 @@ public class AppleLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return createBuildRule(params, resolver, args, Optional.<Linker.LinkableDepType>absent());
+    return createBuildRule(
+        params,
+        resolver,
+        args,
+        Optional.<Linker.LinkableDepType>absent(),
+        Optional.<SourcePath>absent());
   }
 
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,
-      Optional<Linker.LinkableDepType> linkableDepType) {
+      Optional<Linker.LinkableDepType> linkableDepType,
+      Optional<SourcePath> bundleLoader) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
@@ -136,7 +143,8 @@ public class AppleLibraryDescription implements
         resolver,
         delegateArg,
         typeAndPlatform,
-        linkableDepType);
+        linkableDepType,
+        bundleLoader);
   }
 
   public static boolean isSharedLibraryTarget(BuildTarget target) {

@@ -1,0 +1,37 @@
+apple_resource(
+    name = 'TestHostAppResources',
+    dirs = [],
+    files = glob(['*.png']),
+)
+
+apple_binary(
+    name = 'TestHostBinary',
+    srcs = ['TestHostApp.m'],
+    # TODO(user): We should be able to make this a private header
+    exported_headers = ['TestHostApp.h'],
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+        '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    ],
+)
+
+apple_bundle(
+    name = 'TestHostApp',
+    binary = ':TestHostBinary',
+    deps = [':TestHostAppResources'],
+    extension = 'app',
+    info_plist = 'TestHostApp.plist',
+)
+
+apple_test(
+    name = 'AppTest',
+    test_host_app = ':TestHostApp',
+    extension = 'xctest',
+    srcs = ['AppTest.m'],
+    info_plist = 'AppTest.plist',
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
+        '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    ],
+)
