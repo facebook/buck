@@ -16,8 +16,10 @@
 
 package com.facebook.buck.shell;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -25,6 +27,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
@@ -65,6 +68,9 @@ public class SymlinkFilesIntoDirectoryStepIntegrationTest {
     int exitCode = symlinkStep.execute(executionContext);
     assertEquals(0, exitCode);
 
+    // The remainder of the checks assert that we've created symlinks, which we may not have done
+    // on certain operating systems.
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     Path symlinkToADotTxt = new File(tmp.getRoot(), "output/a.txt").toPath();
     assertTrue(Files.isSymbolicLink(symlinkToADotTxt));
     assertEquals(projectFilesystem.resolve(Paths.get("a.txt")),

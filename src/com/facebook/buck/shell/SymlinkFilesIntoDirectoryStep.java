@@ -61,7 +61,7 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
       Path target = srcDir.resolve(entry);
       try {
         Files.createDirectories(link.getParent());
-        Files.createSymbolicLink(link, target);
+        projectFilesystem.createSymLink(link, target, false);
       } catch (IOException e) {
         context.logError(e, "Failed to create symlink from %s to %s.", link, target);
         return 1;
