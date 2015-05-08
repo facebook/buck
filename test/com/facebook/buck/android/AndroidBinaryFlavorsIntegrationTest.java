@@ -16,7 +16,8 @@
 
 package com.facebook.buck.android;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -31,6 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class AndroidBinaryFlavorsIntegrationTest {
 
@@ -56,10 +58,12 @@ public class AndroidBinaryFlavorsIntegrationTest {
         "targets",
         "--show-output",
         "//apps/sample:app_comp_str#package_string_assets");
+    String path =
+        "buck-out/bin/apps/sample/__strings_app_comp_str#package_string_assets__/string_assets.zip";
     result.assertSuccess();
-    assertEquals(
-        "buck-out/bin/apps/sample/__strings_app_comp_str#package_string_assets__/string_assets.zip",
-        result.getStdout().trim().split(" ")[1]);
+    assertThat(
+        result.getStdout().trim().split(" ")[1],
+        equalTo(Paths.get(path).toString()));
   }
 
   @Test
