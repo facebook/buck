@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 
@@ -75,6 +76,11 @@ public class AppleBundle extends AbstractBuildRule {
 
   private final Path outputZipPath;
 
+  private final String binaryName;
+  private final Path bundleRoot;
+  private final Path executablesPath;
+  private final Path binaryPath;
+
   AppleBundle(
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -100,6 +106,12 @@ public class AppleBundle extends AbstractBuildRule {
         "%s.zip");
     this.bundledAssetCatalogs = ImmutableSet.copyOf(bundledAssetCatalogs);
     this.mergedAssetCatalog = mergedAssetCatalog;
+    this.binaryName = getBuildTarget().getShortName();
+    this.bundleRoot = BuildTargets.getGenPath(getBuildTarget(), "%s")
+        .resolve(binaryName + "." + this.extension);
+    this.executablesPath =
+        Paths.get(this.bundleSubfolders.get(AppleBundleDestination.SubfolderSpec.EXECUTABLES));
+    this.binaryPath = this.executablesPath.resolve(this.binaryName);
   }
 
   @Override
@@ -108,13 +120,14 @@ public class AppleBundle extends AbstractBuildRule {
     return outputZipPath;
   }
 
+  public Path getUnzippedOutputFilePathToBinary() {
+    return this.binaryPath;
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    Path output = BuildTargets.getGenPath(getBuildTarget(), "%s");
-    Path bundleRoot = output.resolve(getBuildTarget().getShortName() + "." + extension);
-    String binaryName = getBuildTarget().getShortName();
     ImmutableMap<String, String> plistVariables = ImmutableMap.of(
         "EXECUTABLE_NAME", binaryName,
         "PRODUCT_NAME", binaryName
@@ -137,13 +150,11 @@ public class AppleBundle extends AbstractBuildRule {
             )));
 
     if (binary.isPresent()) {
-      Path executablesPath = bundleRoot.resolve(
-          bundleSubfolders.get(AppleBundleDestination.SubfolderSpec.EXECUTABLES));
-      stepsBuilder.add(new MkdirStep(executablesPath));
+      stepsBuilder.add(new MkdirStep(bundleRoot.resolve(executablesPath)));
       stepsBuilder.add(
           CopyStep.forFile(
               binary.get().getPathToOutputFile(),
-              executablesPath.resolve(binaryName)));
+              bundleRoot.resolve(binaryPath)));
     }
 
     for (Map.Entry<Path, AppleBundleDestination> dirEntry : dirs.entrySet()) {
