@@ -521,7 +521,7 @@ public class CachingBuildEngine implements BuildEngine {
     File zipFile;
     try {
       zipFile = File.createTempFile(
-          MoreFiles.sanitize(rule.getFullyQualifiedName()),
+          "buck_artifact_" + MoreFiles.sanitize(rule.getBuildTarget().getShortName()),
           ".zip");
     } catch (IOException e) {
       throw new RuntimeException(e);

@@ -201,7 +201,7 @@ public class BuildInfoRecorder {
     File zip;
     try {
       zip = File.createTempFile(
-          MoreFiles.sanitize(buildTarget.getFullyQualifiedName()),
+          "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()),
           ".zip");
       long time = TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis());
       String additionalArtifactInfo = String.format(
