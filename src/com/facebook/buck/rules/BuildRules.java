@@ -16,12 +16,15 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.DirectoryTraverser;
 import com.facebook.buck.io.DirectoryTraversers;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -92,10 +95,20 @@ public class BuildRules {
    */
   public static ImmutableSortedSet<BuildRule> getExportedRules(
       Iterable<? extends BuildRule> rules) {
-    ImmutableSortedSet.Builder<BuildRule> exportedRules = ImmutableSortedSet.naturalOrder();
-    for (ExportDependencies exporter : Iterables.filter(rules, ExportDependencies.class)) {
-      exportedRules.addAll(exporter.getExportedDeps());
-    }
+    final ImmutableSortedSet.Builder<BuildRule> exportedRules = ImmutableSortedSet.naturalOrder();
+    AbstractBreadthFirstTraversal<ExportDependencies> visitor =
+        new AbstractBreadthFirstTraversal<ExportDependencies>(
+            Iterables.filter(rules, ExportDependencies.class)) {
+          @Override
+          public ImmutableSet<ExportDependencies> visit(ExportDependencies exporter) {
+            Iterable<BuildRule> exported = exporter.getExportedDeps();
+            exportedRules.addAll(exported);
+            return FluentIterable.from(exported)
+                .filter(ExportDependencies.class)
+                .toSet();
+          }
+        };
+    visitor.start();
     return exportedRules.build();
   }
 

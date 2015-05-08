@@ -19,6 +19,7 @@ package com.facebook.buck.java.intellij;
 import static com.facebook.buck.testutil.MoreAsserts.assertListEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidBinaryBuilder;
@@ -60,6 +61,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import org.easymock.EasyMock;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -465,7 +467,9 @@ public class ProjectTest {
     // Verify that the single Module that is created transitively includes all JAR files.
     assertEquals("Should be one module for the android_library", 1, modules.size());
     Module androidLibraryModule = Iterables.getOnlyElement(modules);
-    assertListEquals(ImmutableList.of(
+    assertThat(
+        androidLibraryModule.getDependencies(),
+        Matchers.containsInAnyOrder(
             DependentModule.newSourceFolder(),
             DependentModule.newLibrary(
                 easymock.getBuildTarget(),
@@ -476,8 +480,7 @@ public class ProjectTest {
             DependentModule.newLibrary(
                 objenesis.getBuildTarget(),
                 "third_party_java_easymock_objenesis_jar"),
-            DependentModule.newInheritedJdk()),
-        androidLibraryModule.getDependencies());
+            DependentModule.newInheritedJdk()));
   }
 
   @Test

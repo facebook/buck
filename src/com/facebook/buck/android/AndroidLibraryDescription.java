@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -36,6 +37,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 
@@ -104,8 +106,10 @@ public class AndroidLibraryDescription
           Suppliers.ofInstance(params.getExtraDeps()));
     }
 
+    ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
     return new AndroidLibrary(
-        params,
+        params.appendExtraDeps(
+            BuildRules.getExportedRules(Sets.union(params.getDeclaredDeps(), exportedDeps))),
         pathResolver,
         args.srcs.get(),
         JavaLibraryDescription.validateResources(
@@ -114,7 +118,7 @@ public class AndroidLibraryDescription
             params.getProjectFilesystem()),
         args.proguardConfig,
         args.postprocessClassesCommands.get(),
-        resolver.getAllRules(args.exportedDeps.get()),
+        exportedDeps,
         resolver.getAllRules(args.providedDeps.get()),
         additionalClasspathEntries,
         javacOptions.build(),
