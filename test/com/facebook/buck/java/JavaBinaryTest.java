@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -84,7 +85,8 @@ public class JavaBinaryTest {
         /* merge manifests */ true,
         null,
         /* blacklist */ ImmutableSet.<String>of(),
-        new DefaultDirectoryTraverser());
+        new DefaultDirectoryTraverser(),
+        ImmutableSetMultimap.<JavaLibrary, Path>of());
 
     // Strip the trailing "." from the absolute path to the current directory.
     final String basePath = new File(".").getAbsolutePath().replaceFirst("\\.$", "");

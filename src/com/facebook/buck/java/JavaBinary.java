@@ -69,6 +69,7 @@ public class JavaBinary extends AbstractBuildRule
   private final ImmutableSet<String> blacklist;
 
   private final DirectoryTraverser directoryTraverser;
+  private final ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries;
 
   public JavaBinary(
       BuildRuleParams params,
@@ -78,15 +79,16 @@ public class JavaBinary extends AbstractBuildRule
       boolean mergeManifests,
       @Nullable Path metaInfDirectory,
       ImmutableSet<String> blacklist,
-      DirectoryTraverser directoryTraverser) {
+      DirectoryTraverser directoryTraverser,
+      ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries) {
     super(params, resolver);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;
     this.metaInfDirectory = metaInfDirectory;
     this.blacklist = blacklist;
-
     this.directoryTraverser = directoryTraverser;
+    this.transitiveClasspathEntries = transitiveClasspathEntries;
   }
 
   @Override
@@ -151,7 +153,7 @@ public class JavaBinary extends AbstractBuildRule
 
   @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-    return Classpaths.getClasspathEntries(getDeps());
+    return transitiveClasspathEntries;
   }
 
   private Path getOutputDirectory() {

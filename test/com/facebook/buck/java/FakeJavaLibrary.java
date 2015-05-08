@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -92,7 +93,9 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-    return ImmutableSetMultimap.of((JavaLibrary) this, getPathToOutputFile());
+    return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
+        this,
+        Optional.fromNullable(getPathToOutputFile()));
   }
 
   @Override
