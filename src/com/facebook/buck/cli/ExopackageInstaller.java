@@ -272,35 +272,38 @@ public class ExopackageInstaller {
           SECONDARY_DEX_DIR);
     }
 
+    private ImmutableList<String> getDeviceAbis() throws Exception {
+      ImmutableList.Builder<String> abis = ImmutableList.builder();
+      // Rare special indigenous to Lollipop devices
+      String abiListProperty = getProperty("ro.product.cpu.abilist");
+      if (!abiListProperty.isEmpty()) {
+        abis.addAll(Splitter.on(',').splitToList(abiListProperty));
+      } else {
+        String abi1 = getProperty("ro.product.cpu.abi");
+        if (abi1.isEmpty()) {
+          throw new RuntimeException("adb returned empty result for ro.product.cpu.abi property.");
+        }
+
+        abis.add(abi1);
+        String abi2 = getProperty("ro.product.cpu.abi2");
+        if (!abi2.isEmpty()) {
+          abis.add(abi2);
+        }
+      }
+
+      return abis.build();
+    }
+
     private void installNativeLibraryFiles() throws Exception {
-      String abi1 = getProperty("ro.product.cpu.abi");
-      if (abi1.isEmpty()) {
-        throw new RuntimeException("adb returned empty result for ro.product.cpu.abi property.");
-      }
-
       ImmutableMultimap<String, Path> allLibraries = getAllLibraries();
+      ImmutableSet.Builder<String> providedLibraries = ImmutableSet.builder();
+      for (String abi : getDeviceAbis()) {
+        ImmutableMap<String, Path> libraries =
+            getRequiredLibrariesForAbi(allLibraries, abi, providedLibraries.build());
 
-      ImmutableMap<String, Path> abi1Libraries =
-          getRequiredLibrariesForAbi(allLibraries, abi1, ImmutableSet.<String>of());
-      installNativeLibrariesForAbi(abi1, abi1Libraries);
-
-      String abi2 = getProperty("ro.product.cpu.abi2");
-      if (abi2.isEmpty()) {
-        return;
+        installNativeLibrariesForAbi(abi, libraries);
+        providedLibraries.addAll(libraries.keySet());
       }
-
-      ImmutableSet<String> abi1LibraryNames = FluentIterable.from(abi1Libraries.values())
-          .transform(
-              new Function<Path, String>() {
-                @Override
-                public String apply(Path input) {
-                  return input.getFileName().toString();
-                }
-              })
-          .toSet();
-      ImmutableMap<String, Path> abi2Libraries =
-          getRequiredLibrariesForAbi(allLibraries, abi2, abi1LibraryNames);
-      installNativeLibrariesForAbi(abi2, abi2Libraries);
     }
 
     private void installNativeLibrariesForAbi(String abi, ImmutableMap<String, Path> libraries)
