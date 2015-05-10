@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -262,7 +263,7 @@ public class CachingBuildEngine implements BuildEngine {
             }
 
             @Override
-            public void onFailure(Throwable failure) {
+            public void onFailure(@Nonnull Throwable failure) {
               recordBuildRuleFailure(new BuildResult(rule, failure));
             }
 
@@ -326,7 +327,7 @@ public class CachingBuildEngine implements BuildEngine {
         Futures.allAsList(asyncJobs),
         new AsyncFunction<List<Void>, BuildResult>() {
           @Override
-          public ListenableFuture<BuildResult> apply(List<Void> input) throws Exception {
+          public ListenableFuture<BuildResult> apply(@Nonnull List<Void> input) throws Exception {
             return result;
           }
         });
@@ -532,7 +533,11 @@ public class CachingBuildEngine implements BuildEngine {
     // there.
     CacheResult cacheResult = buildInfoRecorder.fetchArtifactForBuildable(zipFile, artifactCache);
     if (!cacheResult.getType().isSuccess()) {
-      zipFile.delete();
+      try {
+        Files.delete(zipFile.toPath());
+      } catch (IOException e) {
+        LOG.warn(e, "failed to delete %s", zipFile);
+      }
       return cacheResult;
     }
 
