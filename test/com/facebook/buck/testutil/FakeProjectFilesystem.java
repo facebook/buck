@@ -26,11 +26,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -52,6 +50,7 @@ import java.nio.file.CopyOption;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
@@ -62,7 +61,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -108,6 +106,58 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
         @Override
         public boolean isDirectory() {
           return false;
+        }
+
+        @Override
+        public boolean isSymbolicLink() {
+          return false;
+        }
+
+        @Override
+        public boolean isOther() {
+          return false;
+        }
+
+        @Override
+        public long size() {
+          return 0;
+        }
+
+        @Override
+        @Nullable
+        public Object fileKey() {
+          return null;
+        }
+      };
+
+  private static final BasicFileAttributes DEFAULT_DIR_ATTRIBUTES =
+      new BasicFileAttributes() {
+        @Override
+        @Nullable
+        public FileTime lastModifiedTime() {
+          return null;
+        }
+
+        @Override
+        @Nullable
+        public FileTime lastAccessTime() {
+          return null;
+        }
+
+        @Override
+        @Nullable
+        public FileTime creationTime() {
+          return null;
+        }
+
+        @Override
+        public boolean isRegularFile() {
+          return false;
+        }
+
+        @Override
+        public boolean isDirectory() {
+          return true;
         }
 
         @Override
@@ -248,6 +298,11 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     return directories.contains(path.normalize());
   }
 
+  @Override
+  public boolean isExecutable(Path child) {
+    return false;
+  }
+
   /**
    * Does not support symlinks.
    */
@@ -255,13 +310,17 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   public ImmutableCollection<Path> getDirectoryContents(final Path pathRelativeToProjectRoot)
       throws IOException {
     Preconditions.checkState(isDirectory(pathRelativeToProjectRoot));
-    return FluentIterable.from(fileContents.keySet()).filter(
-        new Predicate<Path>() {
-          @Override
-          public boolean apply(Path input) {
-            return input.getParent().equals(pathRelativeToProjectRoot);
-          }
-        })
+    return FluentIterable
+        .from(fileContents.keySet())
+        .append(directories)
+        .filter(
+            new Predicate<Path>() {
+              @Override
+              public boolean apply(Path input) {
+                return input.getParent() != null &&
+                    input.getParent().equals(pathRelativeToProjectRoot);
+              }
+            })
         .toList();
   }
 
@@ -501,18 +560,30 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       Path path,
       EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor) throws IOException {
-    for (Path file : filesUnderPath(path)) {
-      fileVisitor.visitFile(file, DEFAULT_FILE_ATTRIBUTES);
-    }
-  }
 
-  private Collection<Path> filesUnderPath(final Path dirPath) {
-    return Collections2.filter(fileContents.keySet(), new Predicate<Path>() {
-          @Override
-          public boolean apply(Path input) {
-            return input.startsWith(dirPath);
-          }
-        });
+    if (!isDirectory(path)) {
+      fileVisitor.visitFile(path, DEFAULT_FILE_ATTRIBUTES);
+      return;
+    }
+
+    ImmutableCollection<Path> ents = getDirectoryContents(path);
+    for (Path ent : ents) {
+      if (!isDirectory(ent)) {
+        FileVisitResult result = fileVisitor.visitFile(ent, DEFAULT_FILE_ATTRIBUTES);
+        if (result == FileVisitResult.SKIP_SIBLINGS) {
+          return;
+        }
+      } else {
+        FileVisitResult result = fileVisitor.preVisitDirectory(ent, DEFAULT_DIR_ATTRIBUTES);
+        if (result == FileVisitResult.SKIP_SIBLINGS) {
+          return;
+        }
+        if (result != FileVisitResult.SKIP_SUBTREE) {
+          walkRelativeFileTree(ent, fileVisitor);
+          fileVisitor.postVisitDirectory(ent, null);
+        }
+      }
+    }
   }
 
   @Override
@@ -550,14 +621,6 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       throw new NotLinkException(path.toString());
     }
     return target;
-  }
-
-  @Override
-  public void createZip(
-      Collection<Path> pathsToIncludeInZip,
-      File out,
-      ImmutableMap<Path, String> additionalFileContents) throws IOException {
-    throw new UnsupportedOperationException();
   }
 
   @Override

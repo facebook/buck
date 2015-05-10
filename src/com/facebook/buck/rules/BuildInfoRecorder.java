@@ -18,9 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.DefaultDirectoryTraverser;
-import com.facebook.buck.io.DirectoryTraversal;
-import com.facebook.buck.io.DirectoryTraverser;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
@@ -42,8 +39,11 @@ import com.google.gson.JsonPrimitive;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,8 +63,6 @@ public class BuildInfoRecorder {
   static final String ABSOLUTE_PATH_ERROR_FORMAT =
       "Error! '%s' is trying to record artifacts with absolute path: '%s'.";
 
-  private static final DirectoryTraverser DEFAULT_DIRECTORY_TRAVERSER =
-      new DefaultDirectoryTraverser();
   private static final Path PATH_TO_ARTIFACT_INFO = Paths.get("buck-out/log/cache_artifact.txt");
   private static final String BUCK_CACHE_DATA_ENV_VAR = "BUCK_CACHE_DATA";
 
@@ -83,7 +81,6 @@ public class BuildInfoRecorder {
   private final Set<Path> pathsToOutputFiles;
 
   private final Set<Path> pathsToOutputDirectories;
-  private final DirectoryTraverser directoryTraverser;
 
   BuildInfoRecorder(BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -92,25 +89,6 @@ public class BuildInfoRecorder {
       ImmutableMap<String, String> environment,
       RuleKey ruleKey,
       RuleKey rukeKeyWithoutDeps) {
-    this(
-        buildTarget,
-        projectFilesystem,
-        clock,
-        buildId,
-        environment,
-        ruleKey,
-        rukeKeyWithoutDeps,
-        DEFAULT_DIRECTORY_TRAVERSER);
-  }
-
-  BuildInfoRecorder(BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      Clock clock,
-      BuildId buildId,
-      ImmutableMap<String, String> environment,
-      RuleKey ruleKey,
-      RuleKey rukeKeyWithoutDeps,
-      DirectoryTraverser directoryTraverser) {
     this.buildTarget = buildTarget;
     this.pathToMetadataDirectory = BuildInfo.getPathToMetadataDirectory(buildTarget);
     this.projectFilesystem = projectFilesystem;
@@ -129,7 +107,6 @@ public class BuildInfoRecorder {
     this.ruleKey = ruleKey;
     this.pathsToOutputFiles = Sets.newHashSet();
     this.pathsToOutputDirectories = Sets.newHashSet();
-    this.directoryTraverser = directoryTraverser;
   }
 
   /**
@@ -231,18 +208,26 @@ public class BuildInfoRecorder {
 
   private List<Path> getEntries(final Path outputDirectory) throws IOException {
     final ImmutableList.Builder<Path> entries = ImmutableList.builder();
-    DirectoryTraversal traversal = new DirectoryTraversal(
-        projectFilesystem.getFileForRelativePath(outputDirectory)) {
+    projectFilesystem.walkRelativeFileTree(
+        outputDirectory,
+        new SimpleFileVisitor<Path>() {
           @Override
-          public void visit(File file, String relativePath) throws IOException {
-            entries.add(outputDirectory.resolve(relativePath));
+          public FileVisitResult visitFile(
+              Path file,
+              BasicFileAttributes attrs)
+              throws IOException {
+            entries.add(file);
+            return FileVisitResult.CONTINUE;
           }
           @Override
-          public void visitDirectory(File directory, String relativePath) throws IOException {
-            entries.add(outputDirectory.resolve(relativePath));
+          public FileVisitResult preVisitDirectory(
+              Path dir,
+              BasicFileAttributes attrs)
+              throws IOException {
+            entries.add(dir);
+            return FileVisitResult.CONTINUE;
           }
-    };
-    directoryTraverser.traverse(traversal);
+        });
     return entries.build();
   }
 

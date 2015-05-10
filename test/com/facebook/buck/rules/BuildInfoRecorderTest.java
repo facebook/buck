@@ -16,9 +16,12 @@
 
 package com.facebook.buck.rules;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
@@ -26,17 +29,24 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.timing.FakeClock;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BuildInfoRecorderTest {
 
@@ -92,7 +102,8 @@ public class BuildInfoRecorderTest {
   public void testCannotRecordArtifactWithAbsolutePath() {
     Path absPath = MorePathsForTests.rootRelativePath("some/absolute/path.txt");
     thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage(String.format(
+    thrown.expectMessage(
+        String.format(
             BuildInfoRecorder.ABSOLUTE_PATH_ERROR_FORMAT,
             BUILD_TARGET,
             absPath));
@@ -101,6 +112,69 @@ public class BuildInfoRecorderTest {
 
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
     buildInfoRecorder.recordArtifact(absPath);
+  }
+
+  @Test
+  public void testPerformUploadToArtifactCache()
+      throws IOException, InterruptedException {
+
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
+    BuckEventBus bus = new BuckEventBus(new FakeClock(0), new BuildId("BUILD"));
+
+    buildInfoRecorder.writeMetadataToDisk(true);
+
+    final byte[] contents = "contents".getBytes();
+
+    Path file = Paths.get("file");
+    filesystem.writeBytesToPath(contents, file);
+    buildInfoRecorder.recordArtifact(file);
+
+    Path dir = Paths.get("dir");
+    filesystem.mkdirs(dir);
+    filesystem.writeBytesToPath(contents, dir.resolve("file"));
+    buildInfoRecorder.recordArtifactsInDirectory(dir);
+
+    final AtomicBoolean stored = new AtomicBoolean(false);
+    final ArtifactCache cache =
+        new NoopArtifactCache() {
+          @Override
+          public boolean isStoreSupported() {
+            return true;
+          }
+          @Override
+          public void store(RuleKey ruleKey, File output) {
+            stored.set(true);
+            try (Zip zip = new Zip(output, /* forWriting */ false)) {
+              assertEquals(
+                  ImmutableSet.of(
+                      "",
+                      "dir/",
+                      "buck-out/",
+                      "buck-out/log/",
+                      "buck-out/bin/",
+                      "buck-out/bin/foo/",
+                      "buck-out/bin/foo/.bar/",
+                      "buck-out/bin/foo/.bar/metadata/"),
+                  zip.getDirNames());
+              assertEquals(
+                  ImmutableSet.of(
+                      "dir/file",
+                      "file",
+                      "buck-out/log/cache_artifact.txt",
+                      "buck-out/bin/foo/.bar/metadata/RULE_KEY",
+                      "buck-out/bin/foo/.bar/metadata/RULE_KEY_NO_DEPS"),
+                  zip.getFileNames());
+              assertArrayEquals(contents, zip.readFully("file"));
+              assertArrayEquals(contents, zip.readFully("dir/file"));
+            } catch (IOException e) {
+              throw Throwables.propagate(e);
+            }
+          }
+        };
+
+    buildInfoRecorder.performUploadToArtifactCache(cache, bus);
+    assertTrue(stored.get());
   }
 
   private static void assertOnDiskBuildInfoHasMetadata(

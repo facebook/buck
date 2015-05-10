@@ -19,10 +19,12 @@ package com.facebook.buck.testutil;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
@@ -31,8 +33,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 
+import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -49,6 +53,10 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 
 public class FakeProjectFilesystemTest {
+
+  @Rule
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
   @Test
   public void testFilesystemReturnsAddedContents() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -117,7 +125,8 @@ public class FakeProjectFilesystemTest {
     };
 
     filesystem.walkRelativeFileTree(Paths.get("root"), fileVisitor);
-    assertThat(filesVisited, containsInAnyOrder(
+    assertThat(
+        filesVisited, containsInAnyOrder(
             Paths.get("root/A.txt"),
             Paths.get("root/A/B/C.txt"),
             Paths.get("root/A/B.txt")));
@@ -380,4 +389,29 @@ public class FakeProjectFilesystemTest {
         filesystem2.getDirectoryContents(Paths.get("foo")),
         contains(Paths.get("foo/baz"), Paths.get("foo/bar"), Paths.get("foo/foo")));
   }
+
+  @Test
+  public void testCreateZip() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    byte[] contents = "contents".getBytes();
+
+    Path file = Paths.get("file");
+    filesystem.writeBytesToPath(contents, file);
+
+    Path dir = Paths.get("dir");
+    filesystem.mkdirs(dir);
+    filesystem.writeBytesToPath(contents, dir.resolve("file"));
+
+    File output = tmp.newFile("output.zip");
+    filesystem.createZip(ImmutableList.of(file, dir, dir.resolve("file")), output);
+
+    try (Zip zip = new Zip(output, /* forWriting */ false)) {
+      assertEquals(ImmutableSet.of("", "dir/"), zip.getDirNames());
+      assertEquals(ImmutableSet.of("file", "dir/file"), zip.getFileNames());
+      assertArrayEquals(contents, zip.readFully("file"));
+      assertArrayEquals(contents, zip.readFully("dir/file"));
+    }
+  }
+
 }

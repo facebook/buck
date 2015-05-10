@@ -388,6 +388,13 @@ public class ProjectFilesystem {
   }
 
   /**
+   * Allows {@link Files#isExecutable} to be faked in tests.
+   */
+  public boolean isExecutable(Path child) {
+    return Files.isExecutable(resolve(child));
+  }
+
+  /**
    * Allows {@link java.io.File#listFiles} to be faked in tests.
    *
    * // @deprecated Replaced by {@link #getDirectoryContents}
@@ -775,9 +782,7 @@ public class ProjectFilesystem {
     Preconditions.checkState(!Iterables.isEmpty(pathsToIncludeInZip));
     try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(out)) {
       for (Path path : pathsToIncludeInZip) {
-        Path full = getPathForRelativePath(path);
-        File file = full.toFile();
-        boolean isDirectory = isDirectory(full);
+        boolean isDirectory = isDirectory(path);
 
         String entryName = path.toString();
         if (isDirectory) {
@@ -788,7 +793,7 @@ public class ProjectFilesystem {
         // Support executable files.  If we detect this file is executable, store this
         // information as 0100 in the field typically used in zip implementations for
         // POSIX file permissions.  We'll use this information when unzipping.
-        if (file.canExecute()) {
+        if (isExecutable(path)) {
           entry.setExternalAttributes(
               MorePosixFilePermissions.toMode(
                   EnumSet.of(PosixFilePermission.OWNER_EXECUTE)) << 16);
@@ -796,7 +801,7 @@ public class ProjectFilesystem {
 
         zip.putNextEntry(entry);
         if (!isDirectory) {
-          try (InputStream input = Files.newInputStream(getPathForRelativePath(path))) {
+          try (InputStream input = newFileInputStream(path)) {
             ByteStreams.copy(input, zip);
           }
         }
