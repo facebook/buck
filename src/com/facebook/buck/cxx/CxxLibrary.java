@@ -207,21 +207,25 @@ public class CxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
-    ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
-    if (!headerOnly && linkage != Linkage.STATIC) {
-      String sharedLibrarySoname =
-          soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(getBuildTarget(), cxxPlatform));
-      BuildRule sharedLibraryBuildRule = CxxDescriptionEnhancer.requireBuildRule(
-          params,
-          ruleResolver,
-          cxxPlatform.getFlavor(),
-          CxxDescriptionEnhancer.SHARED_FLAVOR);
-      libs.put(
-          sharedLibrarySoname,
-          new BuildTargetSourcePath(
-              sharedLibraryBuildRule.getProjectFilesystem(),
-              sharedLibraryBuildRule.getBuildTarget()));
+    if (headerOnly) {
+      return ImmutableMap.of();
     }
+    if (linkage == Linkage.STATIC) {
+      return ImmutableMap.of();
+    }
+    ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
+    String sharedLibrarySoname =
+        soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(getBuildTarget(), cxxPlatform));
+    BuildRule sharedLibraryBuildRule = CxxDescriptionEnhancer.requireBuildRule(
+        params,
+        ruleResolver,
+        cxxPlatform.getFlavor(),
+        CxxDescriptionEnhancer.SHARED_FLAVOR);
+    libs.put(
+        sharedLibrarySoname,
+        new BuildTargetSourcePath(
+            sharedLibraryBuildRule.getProjectFilesystem(),
+            sharedLibraryBuildRule.getBuildTarget()));
     return libs.build();
   }
 
