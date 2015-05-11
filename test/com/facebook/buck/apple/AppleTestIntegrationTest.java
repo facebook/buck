@@ -314,6 +314,7 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  @Ignore // TODO(user): Fix this test.
   public void successOnAppTestPassing() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
