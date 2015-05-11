@@ -191,6 +191,17 @@ android_binary(
   ],
 )
 
+android_binary(
+  name = 'app_with_x86_lib',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//res/com/sample/base:base',
+    '//native/cxx:lib',
+    '//native/cxx:x86-only',
+  ],
+)
+
 project_config(
   src_target = ':app',
 )

@@ -58,3 +58,12 @@ cxx_library(
   ],
   visibility = [ 'PUBLIC' ],
 )
+
+cxx_library(
+  name = 'x86-only',
+  srcs = ['x86-only.c'],
+  supported_platforms_regex = "^android-x86$",
+  visibility = [
+    'PUBLIC'
+  ],
+)

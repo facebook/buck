@@ -779,6 +779,7 @@ public class CxxLibraryDescription implements
                 input.getFlavor());
           }
         },
+        args.supportedPlatformsRegex,
         args.frameworkSearchPaths.get(),
         args.forceStatic.or(false) ? CxxLibrary.Linkage.STATIC : CxxLibrary.Linkage.ANY,
         args.linkWhole.or(false),
@@ -816,6 +817,7 @@ public class CxxLibraryDescription implements
     public Optional<ImmutableList<String>> exportedLinkerFlags;
     public Optional<ImmutableList<Pair<String, ImmutableList<String>>>>
         exportedPlatformLinkerFlags;
+    public Optional<String> supportedPlatformsRegex;
     public Optional<String> soname;
     public Optional<Boolean> forceStatic;
     public Optional<Boolean> linkWhole;

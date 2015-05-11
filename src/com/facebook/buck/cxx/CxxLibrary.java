@@ -51,6 +51,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
       exportedPreprocessorFlags;
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
+  private final Optional<String> supportedPlatformsRegex;
   private final ImmutableList<Path> frameworkSearchPaths;
   private final Linkage linkage;
   private final boolean linkWhole;
@@ -65,6 +66,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
       Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
           exportedPreprocessorFlags,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
+      Optional<String> supportedPlatformsRegex,
       ImmutableList<Path> frameworkSearchPaths,
       Linkage linkage,
       boolean linkWhole,
@@ -76,6 +78,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     this.headerOnly = headerOnly;
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
     this.exportedLinkerFlags = exportedLinkerFlags;
+    this.supportedPlatformsRegex = supportedPlatformsRegex;
     this.frameworkSearchPaths = frameworkSearchPaths;
     this.linkage = linkage;
     this.linkWhole = linkWhole;
@@ -211,6 +214,12 @@ public class CxxLibrary extends AbstractCxxLibrary {
       return ImmutableMap.of();
     }
     if (linkage == Linkage.STATIC) {
+      return ImmutableMap.of();
+    }
+    if (supportedPlatformsRegex.isPresent() &&
+        !CxxFlags.compilePlatformRegex(supportedPlatformsRegex.get())
+            .matcher(cxxPlatform.getFlavor().toString())
+            .find()) {
       return ImmutableMap.of();
     }
     ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();

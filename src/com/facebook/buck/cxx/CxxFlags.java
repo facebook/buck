@@ -43,6 +43,14 @@ public class CxxFlags {
 
   private CxxFlags() {}
 
+  /**
+   * Compiles {@code regex} using {@link Pattern#compile(String)}, caching the result.
+   * Should only be used with patterns meant to match CxxPlatform names.
+   */
+  public static Pattern compilePlatformRegex(String regex) {
+    return patternCache.getUnchecked(regex);
+  }
+
   public static ImmutableList<String> getFlags(
       Optional<ImmutableList<String>> flags,
       Optional<ImmutableList<Pair<String, ImmutableList<String>>>> platformFlags,

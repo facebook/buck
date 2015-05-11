@@ -184,6 +184,7 @@ public class CxxLibraryTest {
         /* headerOnly */ false,
         Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
         Functions.constant(ImmutableList.<String>of()),
+        /* supportedPlatformsRegex */ Optional.<String>absent(),
         ImmutableList.<Path>of(),
         CxxLibrary.Linkage.STATIC,
         /* linkWhole */ false,
