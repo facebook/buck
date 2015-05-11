@@ -41,6 +41,7 @@ java_test(
     '//test/com/facebook/buck/util:testutil',
     '//third-party/java/easymock:easymock',
     '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/jackson:jackson-annotations',
     '//third-party/java/jackson:jackson-core',
     '//third-party/java/jackson:jackson-databind',

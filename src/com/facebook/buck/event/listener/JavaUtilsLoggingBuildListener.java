@@ -99,6 +99,20 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
     LOG.log(record);
   }
 
+  @Subscribe
+  public void ruleResumed(BuildRuleEvent.Resumed resumed) {
+    LogRecord record = new LogRecord(LEVEL, resumed.toString());
+    record.setMillis(resumed.getTimestamp());
+    LOG.log(record);
+  }
+
+  @Subscribe
+  public void ruleSuspended(BuildRuleEvent.Suspended suspended) {
+    LogRecord record = new LogRecord(LEVEL, suspended.toString());
+    record.setMillis(suspended.getTimestamp());
+    LOG.log(record);
+  }
+
   @Override
   public void outputTrace(BuildId buildId) {
     closeLogFile();

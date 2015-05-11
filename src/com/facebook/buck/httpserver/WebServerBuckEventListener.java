@@ -89,6 +89,16 @@ public class WebServerBuckEventListener implements BuckEventListener {
   }
 
   @Subscribe
+  public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
+    streamingWebSocketServlet.tellClients(suspended);
+  }
+
+  @Subscribe
+  public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
+    streamingWebSocketServlet.tellClients(resumed);
+  }
+
+  @Subscribe
   public void artifactStarted(ArtifactCacheEvent.Started started) {
     streamingWebSocketServlet.tellClients(started);
   }

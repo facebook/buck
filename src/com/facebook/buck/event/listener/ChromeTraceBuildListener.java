@@ -210,7 +210,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   @Subscribe
   public void ruleStarted(BuildRuleEvent.Started started) {
     BuildRule buildRule = started.getBuildRule();
-
     writeChromeTraceEvent("buck",
         buildRule.getFullyQualifiedName(),
         ChromeTraceEvent.Phase.BEGIN,
@@ -229,6 +228,27 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             finished.getSuccessType().transform(Functions.toStringFunction()).or("failed")
         ),
         finished);
+  }
+
+  @Subscribe
+  public void ruleResumed(BuildRuleEvent.Resumed resumed) {
+    BuildRule buildRule = resumed.getBuildRule();
+    writeChromeTraceEvent(
+        "buck",
+        buildRule.getFullyQualifiedName(),
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of("rule_key", resumed.getRuleKeySafe()),
+        resumed);
+  }
+
+  @Subscribe
+  public void ruleSuspended(BuildRuleEvent.Suspended suspended) {
+    BuildRule buildRule = suspended.getBuildRule();
+    writeChromeTraceEvent("buck",
+        buildRule.getFullyQualifiedName(),
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of("rule_key", suspended.getRuleKeySafe()),
+        suspended);
   }
 
   @Subscribe
