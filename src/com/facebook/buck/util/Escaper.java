@@ -28,24 +28,7 @@ import java.util.Iterator;
 
 public final class Escaper {
 
-  private static final char POWER_SHELL_ESCAPE_CHAR = '`';
-  private static final String POWER_SHELL_SPECIAL_CHARS = "$`;\"'&<>(){}\\/| ";
-  public static final Function<String, String> POWER_SHELL_ESCAPER =
-      new Function<String, String>() {
-        @Override
-        public String apply(String input) {
-          return escapeAsPowerShellString(input);
-        }
-      };
-
   private static final char MAKEFILE_ESCAPE_CHAR = '\\';
-  public static final Function<String, String> MAKEFILE_VALUE_ESCAPER =
-      new Function<String, String>() {
-        @Override
-        public String apply(String input) {
-          return escapeAsMakefileValueString(input);
-        }
-      };
 
   /** Utility class: do not instantiate. */
   private Escaper() {}
@@ -142,14 +125,6 @@ public final class Escaper {
         }
       };
 
-  public static final Function<String, String> JAVA_ESCAPER =
-      new Function<String, String>() {
-        @Override
-        public String apply(String input) {
-          return escapeAsJavaString(input);
-        }
-      };
-
   /**
    * Platform-aware shell quoting {@link com.google.common.base.Function Function} which can be
    * passed to {@link com.google.common.collect.Iterables#transform Iterables.transform()}
@@ -180,13 +155,6 @@ public final class Escaper {
 
   public static String escapeAsBashString(Path path) {
     return escapeAsBashString(path.toString());
-  }
-
-  public static String escapeAsXmlString(String str) {
-    return str.replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll("\\\"", "&quot;")
-        .replaceAll("\\\'", "&apos;");
   }
 
   // Adapted from org.apache.commons.lang.StringEscapeUtils
@@ -257,25 +225,6 @@ public final class Escaper {
       }
     }
     builder.append('"');
-    return builder.toString();
-  }
-
-  public static String escapeAsJavaString(String str) {
-    // Until we start to find special cases where Java and Python differ, just use the same logic.
-    return escapeAsPythonString(str);
-  }
-
-  /**
-   * @return an escaped string ready to be passed to powershell.
-   */
-  public static String escapeAsPowerShellString(String str) {
-    StringBuilder builder = new StringBuilder();
-    for (char c : str.toCharArray()) {
-      if (POWER_SHELL_SPECIAL_CHARS.indexOf(c) != -1) {
-        builder.append(POWER_SHELL_ESCAPE_CHAR);
-      }
-      builder.append(c);
-    }
     return builder.toString();
   }
 

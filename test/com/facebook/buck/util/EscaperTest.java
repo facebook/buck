@@ -29,13 +29,6 @@ import java.nio.file.Paths;
 public class EscaperTest {
 
   @Test
-  public void testEscapeAsXmlString() {
-    assertEquals("&lt;script type=&quot;text/javascript&quot;>",
-        Escaper.escapeAsXmlString("<script type=\"text/javascript\">"));
-    assertEquals("M&amp;M&apos;s", Escaper.escapeAsXmlString("M&M's"));
-  }
-
-  @Test
   public void testEscapeAsPythonString() {
     assertEquals("\"a\"", Escaper.escapeAsPythonString("a"));
     assertEquals("\"C:\\\\Program Files\\\\\"",
@@ -81,15 +74,6 @@ public class EscaperTest {
     assertEquals("\"\\u0080\"", Escaper.escapeAsPythonString(String.valueOf('\u0080')));
     assertEquals("\"\\u0100\"", Escaper.escapeAsPythonString(String.valueOf('\u0100')));
     assertEquals("\"\\u1000\"", Escaper.escapeAsPythonString(String.valueOf('\u1000')));
-  }
-
-  @Test
-  public void escapePowerShell() {
-    assertEquals("``", Escaper.escapeAsPowerShellString("`"));
-    assertEquals("hello`;world", Escaper.escapeAsPowerShellString("hello;world"));
-    assertEquals("string` with` spaces", Escaper.escapeAsPowerShellString("string with spaces"));
-    assertEquals("simple", Escaper.escapeAsPowerShellString("simple"));
-    assertEquals("`'hello` world`'", Escaper.escapeAsPowerShellString("'hello world'"));
   }
 
   @Test
