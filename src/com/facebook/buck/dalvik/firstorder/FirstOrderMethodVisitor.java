@@ -68,7 +68,7 @@ class FirstOrderMethodVisitor extends MethodVisitor {
   }
 
   @Override
-  public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+  public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
     mBuilder.addDependencyInternalName(owner);
     mBuilder.addDependencyDesc(desc);
   }
