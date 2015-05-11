@@ -494,7 +494,7 @@ public class CxxSourceRuleFactory {
         case SEPARATE_PREPROCESS_AND_COMPILE: {
 
           // If this is a preprocessable source, first create the preprocess build rule and
-          // update the source and name to represent it's compilable output.
+          // update the source and name to represent its compilable output.
           if (CxxSourceTypes.isPreprocessableType(source.getType())) {
             CxxPreprocessAndCompile rule = requirePreprocessBuildRule(resolver, name, source, pic);
             source = CxxSource.copyOf(source)
