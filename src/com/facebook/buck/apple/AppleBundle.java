@@ -59,6 +59,9 @@ public class AppleBundle extends AbstractBuildRule {
   private final Optional<SourcePath> infoPlist;
 
   @AddToRuleKey
+  private final ImmutableMap<String, String> infoPlistSubstitutions;
+
+  @AddToRuleKey
   private final Optional<BuildRule> binary;
 
   @AddToRuleKey
@@ -86,6 +89,7 @@ public class AppleBundle extends AbstractBuildRule {
       SourcePathResolver resolver,
       Either<AppleBundleExtension, String> extension,
       Optional<SourcePath> infoPlist,
+      Map<String, String> infoPlistSubstitutions,
       Optional<BuildRule> binary,
       Map<AppleBundleDestination.SubfolderSpec, String> bundleSubfolders,
       Map<Path, AppleBundleDestination> dirs,
@@ -97,6 +101,7 @@ public class AppleBundle extends AbstractBuildRule {
         extension.getLeft().toFileExtension() :
         extension.getRight();
     this.infoPlist = infoPlist;
+    this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
     this.binary = binary;
     this.bundleSubfolders = ImmutableMap.copyOf(bundleSubfolders);
     this.dirs = ImmutableMap.copyOf(dirs);
@@ -128,10 +133,12 @@ public class AppleBundle extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    ImmutableMap<String, String> plistVariables = ImmutableMap.of(
-        "EXECUTABLE_NAME", binaryName,
-        "PRODUCT_NAME", binaryName
-    );
+    // EXECUTABLE_NAME and PRODUCT_NAME default to the binary name, but can be overridden.
+    ImmutableMap<String, String> plistVariables = ImmutableMap.<String, String>builder()
+        .put("EXECUTABLE_NAME", binaryName)
+        .put("PRODUCT_NAME", binaryName)
+        .putAll(infoPlistSubstitutions)
+        .build();
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
     Path productsPath = bundleRoot.resolve(

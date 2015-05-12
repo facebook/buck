@@ -176,6 +176,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         sourcePathResolver,
         args.extension,
         args.infoPlist,
+        args.infoPlistSubstitutions.get(),
         Optional.of(flavoredBinaryRule),
         // TODO(user): Check the flavor and decide whether to lay out with iOS or OS X style.
         IOS_APP_SUBFOLDER_SPEC_MAP,
@@ -254,6 +255,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public Either<AppleBundleExtension, String> extension;
     public BuildTarget binary;
     public Optional<SourcePath> infoPlist;
+    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<ImmutableMap<String, SourcePath>> headers;
     public Optional<ImmutableMap<Path, AppleBundleDestination>> dirs;
     public Optional<ImmutableMap<SourcePath, AppleBundleDestination>> files;

@@ -277,6 +277,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         sourcePathResolver,
         args.extension,
         args.infoPlist,
+        args.infoPlistSubstitutions.get(),
         Optional.of(library),
         // TODO(user): Use flavors to switch between iOS and OSX layout
         AppleBundleDescription.IOS_APP_SUBFOLDER_SPEC_MAP,
@@ -311,6 +312,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     // Bundle related fields.
     public Either<AppleBundleExtension, String> extension;
     public Optional<SourcePath> infoPlist;
+    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<String> xcodeProductType;
     public Optional<String> resourcePrefixDir;
     public Optional<ImmutableMap<Path, AppleBundleDestination>> dirs;

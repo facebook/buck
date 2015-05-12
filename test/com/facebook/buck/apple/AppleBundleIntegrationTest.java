@@ -185,4 +185,36 @@ public class AppleBundleIntegrationTest {
 
     workspace.verify();
   }
+
+  @Test
+  public void infoPlistSubstitutionsAreApplied() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "application_bundle_with_substitutions",
+        tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
+
+    workspace.verify();
+
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
+  }
+
+  @Test
+  public void infoPlistWithUnrecognizedVariableFails() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "application_bundle_with_invalid_substitutions",
+        tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertFailure();
+  }
 }
