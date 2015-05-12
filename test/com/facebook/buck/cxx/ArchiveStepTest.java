@@ -17,9 +17,12 @@
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
@@ -54,6 +57,11 @@ public class ArchiveStepTest {
         output,
         inputs);
 
+    ImmutableList<Step> steps = ImmutableList.copyOf(archiveStep);
+    assertEquals(1, steps.size());
+    assertTrue(steps.get(0) instanceof ShellStep);
+    ShellStep shellStep = (ShellStep) steps.get(0);
+
     // Verify that the shell command is correct.
     ImmutableList<String> expected = ImmutableList.<String>builder()
         .addAll(archiver)
@@ -61,7 +69,7 @@ public class ArchiveStepTest {
         .add(output.toString())
         .addAll(Iterables.transform(inputs, Functions.toStringFunction()))
         .build();
-    ImmutableList<String> actual = archiveStep.getShellCommand(context);
+    ImmutableList<String> actual = shellStep.getShellCommand(context);
     assertEquals(expected, actual);
   }
 

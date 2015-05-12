@@ -17,39 +17,58 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.util.CommandSplitter;
 import com.google.common.base.Functions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
 /**
  * Create an object archive with ar.
  */
-public class ArchiveStep extends ShellStep {
-
-  private final ImmutableList<String> archiver;
-  private final Path output;
-  private final ImmutableList<Path> inputs;
+public class ArchiveStep extends CompositeStep {
 
   public ArchiveStep(
       ImmutableList<String> archiver,
       Path output,
       ImmutableList<Path> inputs) {
-    this.archiver = archiver;
-    this.output = output;
-    this.inputs = inputs;
+    super(getArchiveCommandSteps(archiver, output, inputs));
   }
 
-  @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    return ImmutableList.<String>builder()
+  private static ImmutableList<Step> getArchiveCommandSteps(
+      ImmutableList<String> archiver,
+      Path output,
+      ImmutableList<Path> inputs) {
+    ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
+
+    ImmutableList<String> archiveCommandPrefix = ImmutableList.<String>builder()
         .addAll(archiver)
         .add("rcs")
         .add(output.toString())
-        .addAll(Iterables.transform(inputs, Functions.toStringFunction()))
         .build();
+    CommandSplitter commandSplitter = new CommandSplitter(archiveCommandPrefix);
+    Iterable<String> arguments = FluentIterable.from(inputs)
+        .transform(Functions.toStringFunction());
+    for (final ImmutableList<String> command : commandSplitter.getCommandsForArguments(arguments)) {
+      stepsBuilder.add(
+          new ShellStep() {
+            @Override
+            public String getShortName() {
+              return "archive";
+            }
+
+            @Override
+            protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+              return command;
+            }
+          });
+    }
+
+    return stepsBuilder.build();
   }
 
   @Override
