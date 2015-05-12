@@ -290,9 +290,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         threadLine += "IDLE";
         threadLine = ansi.asSubtleText(threadLine);
       } else {
+        AtomicLong accumulatedTime = accumulatedBuildRuleTime.get(
+            startedEvent.get().getBuildRule().getBuildTarget());
         long elapsedTimeMs =
             (currentMillis - startedEvent.get().getTimestamp()) +
-            accumulatedBuildRuleTime.get(startedEvent.get().getBuildRule().getBuildTarget()).get();
+            (accumulatedTime != null ? accumulatedTime.get() : 0);
         Optional<? extends LeafEvent> leafEvent = threadsToRunningStep.get(entry.getKey());
 
         threadLine += String.format("%s...  %s",
