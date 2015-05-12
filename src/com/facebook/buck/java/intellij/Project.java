@@ -57,6 +57,7 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.KeystoreProperties;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -233,18 +234,26 @@ public class Project {
     // If the user specified a post-processing script, then run it.
     if (pathToPostProcessScript.isPresent()) {
       String pathToScript = pathToPostProcessScript.get();
-      Process process = Runtime.getRuntime().exec(new String[] {pathToScript});
-      ProcessExecutor.Result postProcessResult = processExecutor.execute(process);
+      ProcessExecutorParams params = ProcessExecutorParams.builder()
+          .setCommand(ImmutableList.of(pathToScript))
+          .build();
+      ProcessExecutor.Result postProcessResult = processExecutor.launchAndExecute(params);
       int postProcessExitCode = postProcessResult.getExitCode();
       if (postProcessExitCode != 0) {
         return postProcessExitCode;
       }
     }
 
-    // If any files have been modified by `buck project`, then list them for the user.
-    if (!modifiedFiles.isEmpty()) {
+    if (executionContext.getConsole().getVerbosity().shouldPrintOutput()) {
       SortedSet<String> modifiedFilesInSortedForder = Sets.newTreeSet(modifiedFiles);
       stdOut.printf("MODIFIED FILES:\n%s\n", Joiner.on('\n').join(modifiedFilesInSortedForder));
+    } else {
+      // If any files have been modified by `buck project`, then inform the user.
+      if (!modifiedFiles.isEmpty()) {
+        stdOut.printf("Modified %d IntelliJ project files.\n", modifiedFiles.size());
+      } else {
+        stdOut.println("No IntelliJ project files modified.");
+      }
     }
     // Blit stderr from intellij.py to parent stderr.
     stdErr.print(result.stdErr);

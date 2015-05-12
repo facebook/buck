@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="__libs_generated_jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/buck-out/gen/libs/generated.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
