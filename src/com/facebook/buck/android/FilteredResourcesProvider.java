@@ -30,14 +30,7 @@ public interface FilteredResourcesProvider {
 
   /**
    * @return The set of non-english {@code strings.xml} files identified by the resource filter.
-   *     Only used if {@link #isStoreStringsAsAssets()} returns {@code true}.
    */
   public ImmutableSet<Path> getNonEnglishStringFiles();
 
-  /**
-   * @return Whether non-english strings need to be stored as assets.
-   * TODO(natthu): Remove this method from the interface once string assets are created in a new
-   *     buildable.
-   */
-  public boolean isStoreStringsAsAssets();
 }
