@@ -1,0 +1,30 @@
+genrule(
+  name = 'GenResource',
+  srcs = [],
+  cmd = 'echo Hello > $OUT',
+  out = 'test.txt',
+)
+
+apple_resource(
+  name = 'TestResources',
+  files = [':GenResource'],
+  dirs = [],
+)
+
+apple_binary(
+  name = 'TestAppBinary',
+  configs = {
+    'Debug': {},
+    'Release': {},
+  },
+  srcs = [],
+  frameworks = [],
+  deps = [':TestResources'],
+)
+
+apple_bundle(
+  name = 'TestApp',
+  deps = [':TestAppBinary'],
+  binary = ':TestAppBinary',
+  extension = 'app',
+)

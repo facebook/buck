@@ -467,7 +467,11 @@ public class ProjectGenerator {
         }
       }
       for (SourcePath file : arg.files) {
-        if (!projectFilesystem.isFile(sourcePathResolver.apply(file))) {
+        // If file is a BuildTargetSourcePath (or some hypothetical future implementation of
+        // AbstractSourcePath), just assume it's a file; we have no way of checking now as it
+        // may not exist yet.
+        if (file instanceof PathSourcePath &&
+            !projectFilesystem.isFile(sourcePathResolver.apply(file))) {
           throw new HumanReadableException(
               "%s specified in the files parameter of %s is not a regular file",
               file.toString(), resource.toString());

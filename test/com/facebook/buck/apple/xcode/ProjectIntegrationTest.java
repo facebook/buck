@@ -261,4 +261,18 @@ public class ProjectIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//lib:gen");
   }
+
+  @Test
+  public void testGeneratingProjectWithGenruleResourceBuildsGenrule() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "target_using_genrule_resource", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand(
+        "project",
+        "//app:TestApp");
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//app:GenResource");
+  }
 }
