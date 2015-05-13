@@ -126,7 +126,9 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
 
   public ArtifactCache getArtifactCache(CommandRunnerParams params, T options)
       throws InterruptedException {
-    return params.getArtifactCacheFactory().newInstance(params.getBuckConfig(), options);
+    return params
+        .getArtifactCacheFactory()
+        .newInstance(params.getBuckConfig(), options.isNoCache());
   }
 
   private static class ParserAndOptions<T> {

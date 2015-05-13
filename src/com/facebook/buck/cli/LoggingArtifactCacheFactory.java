@@ -54,9 +54,9 @@ public class LoggingArtifactCacheFactory implements ArtifactCacheFactory {
   }
 
   @Override
-  public ArtifactCache newInstance(BuckConfig buckConfig, AbstractCommandOptions options)
+  public ArtifactCache newInstance(BuckConfig buckConfig, boolean noop)
       throws InterruptedException {
-    if (options.isNoCache()) {
+    if (noop) {
       return new NoopArtifactCache();
     } else {
       buckEventBus.post(ArtifactCacheConnectEvent.started());
