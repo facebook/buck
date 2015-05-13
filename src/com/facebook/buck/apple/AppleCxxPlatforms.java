@@ -49,17 +49,13 @@ public class AppleCxxPlatforms {
   private static final Path USR_BIN = Paths.get("usr/bin");
 
   public static AppleCxxPlatform build(
-      ApplePlatform targetPlatform,
-      String targetSdkName,
-      String xcodeVersion,
+      AppleSdk targetSdk,
       String targetVersion,
       String targetArchitecture,
       AppleSdkPaths sdkPaths,
       BuckConfig buckConfig) {
     return buildWithExecutableChecker(
-        targetPlatform,
-        targetSdkName,
-        xcodeVersion,
+        targetSdk,
         targetVersion,
         targetArchitecture,
         sdkPaths,
@@ -69,9 +65,7 @@ public class AppleCxxPlatforms {
 
   @VisibleForTesting
   static AppleCxxPlatform buildWithExecutableChecker(
-      ApplePlatform targetPlatform,
-      String targetSdkName,
-      String xcodeVersion,
+      AppleSdk targetSdk,
       String targetVersion,
       String targetArchitecture,
       AppleSdkPaths sdkPaths,
@@ -86,13 +80,15 @@ public class AppleCxxPlatforms {
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
       toolSearchPathsBuilder.add(toolchainPath.resolve(USR_BIN));
     }
-    toolSearchPathsBuilder.add(sdkPaths.getDeveloperPath().resolve(USR_BIN));
+    if (sdkPaths.getDeveloperPath().isPresent()) {
+      toolSearchPathsBuilder.add(sdkPaths.getDeveloperPath().get().resolve(USR_BIN));
+    }
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
     cflagsBuilder.add("-arch", targetArchitecture);
-    switch (targetPlatform.getName()) {
+    switch (targetSdk.getApplePlatform().getName()) {
       case ApplePlatform.Name.IPHONEOS:
         cflagsBuilder.add("-mios-version-min=" + targetVersion);
         break;
@@ -101,45 +97,49 @@ public class AppleCxxPlatforms {
         break;
       default:
         // For Mac builds, -mmacosx-version-min=<version>.
-        cflagsBuilder.add("-m" + targetPlatform.getName() + "-version-min=" + targetVersion);
+        cflagsBuilder.add(
+            "-m" + targetSdk.getApplePlatform().getName() + "-version-min=" + targetVersion);
         break;
     }
     // TODO(user): Add more and better cflags.
     ImmutableList<String> cflags = cflagsBuilder.build();
 
-    String xcodeAndSdkVersion = Joiner.on(':').join(
-        xcodeVersion,
-        targetSdkName);
+    ImmutableList.Builder<String> versionsBuilder = ImmutableList.builder();
+    versionsBuilder.add(targetSdk.getVersion());
+    for (AppleToolchain toolchain : targetSdk.getToolchains()) {
+      versionsBuilder.add(toolchain.getVersion());
+    }
+    String version = Joiner.on(':').join(versionsBuilder.build());
 
     Tool clangPath = new VersionedTool(
         getToolPath("clang", toolSearchPaths, executableFinder),
         cflags,
         "apple-clang",
-        xcodeAndSdkVersion);
+        version);
 
     Tool clangXxPath = new VersionedTool(
         getToolPath("clang++", toolSearchPaths, executableFinder),
         cflags,
         "apple-clang++",
-        xcodeAndSdkVersion);
+        version);
 
     Tool ar = new VersionedTool(
         getToolPath("ar", toolSearchPaths, executableFinder),
         ImmutableList.<String>of(),
         "apple-ar",
-        xcodeAndSdkVersion);
+        version);
 
     Tool actool = new VersionedTool(
         getToolPath("actool", toolSearchPaths, executableFinder),
         ImmutableList.<String>of(),
         "apple-actool",
-        xcodeAndSdkVersion);
+        version);
 
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 
     ImmutableFlavor targetFlavor = ImmutableFlavor.of(
         ImmutableFlavor.replaceInvalidCharacters(
-            targetSdkName + "-" + targetArchitecture));
+            targetSdk.getName() + "-" + targetArchitecture));
 
     CxxPlatform cxxPlatform = CxxPlatforms.build(
         targetFlavor,
@@ -156,12 +156,12 @@ public class AppleCxxPlatforms {
         clangXxPath,
         ar,
         "!<arch>\n".getBytes(Charsets.US_ASCII),
-        getOptionalTool("lex", toolSearchPaths, executableFinder, xcodeAndSdkVersion),
-        getOptionalTool("yacc", toolSearchPaths, executableFinder, xcodeAndSdkVersion));
+        getOptionalTool("lex", toolSearchPaths, executableFinder, version),
+        getOptionalTool("yacc", toolSearchPaths, executableFinder, version));
 
     return AppleCxxPlatform.builder()
         .setCxxPlatform(cxxPlatform)
-        .setApplePlatform(targetPlatform)
+        .setApplePlatform(targetSdk.getApplePlatform())
         .setAppleSdkPaths(sdkPaths)
         .setActool(actool)
         .build();

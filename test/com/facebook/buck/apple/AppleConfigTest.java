@@ -23,6 +23,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,9 +48,10 @@ public class AppleConfigTest {
         ImmutableMap.of("apple",
             ImmutableMap.of("xcode_developer_dir", "/path/to/somewhere")));
     AppleConfig config = new AppleConfig(buckConfig);
-    Supplier<Path> supplier = config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());
+    Supplier<Optional<Path>> supplier =
+        config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());
     assertNotNull(supplier);
-    assertEquals(Paths.get("/path/to/somewhere"), supplier.get());
+    assertEquals(Optional.of(Paths.get("/path/to/somewhere")), supplier.get());
   }
 
   @Test
@@ -63,8 +65,8 @@ public class AppleConfigTest {
     FakeProcess fakeXcodeSelect = new FakeProcess(0, "/path/to/another/place", "");
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
         ImmutableMap.of(xcodeSelectParams, fakeXcodeSelect));
-    Supplier<Path> supplier = config.getAppleDeveloperDirectorySupplier(processExecutor);
+    Supplier<Optional<Path>> supplier = config.getAppleDeveloperDirectorySupplier(processExecutor);
     assertNotNull(supplier);
-    assertEquals(Paths.get("/path/to/another/place"), supplier.get());
+    assertEquals(Optional.of(Paths.get("/path/to/another/place")), supplier.get());
   }
 }

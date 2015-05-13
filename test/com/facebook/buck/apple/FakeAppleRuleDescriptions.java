@@ -30,6 +30,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Paths;
 
@@ -48,11 +49,18 @@ public class FakeAppleRuleDescriptions {
           .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
           .build();
 
+  private static final AppleSdk DEFAULT_IPHONEOS_SDK =
+      AppleSdk.builder()
+          .setApplePlatform(
+              ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+          .setName("iphoneos")
+          .setVersion("8.0")
+          .setToolchains(ImmutableList.<AppleToolchain>of())
+          .build();
+
   private static final AppleCxxPlatform DEFAULT_IPHONEOS_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
-          ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build(),
-          "iphoneos",
-          "8.0",
+          DEFAULT_IPHONEOS_SDK,
           "8.0",
           "i386",
           DEFAULT_IPHONEOS_SDK_PATHS,

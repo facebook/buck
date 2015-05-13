@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
@@ -26,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -37,7 +36,6 @@ import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,32 +43,19 @@ import java.util.Set;
 
 public class AppleSdkDiscoveryTest {
 
-  private static final String XCODE_VERSION_PLIST =
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-      "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" " +
-      "\"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
-      "<plist version=\"1.0\">\n" +
-      "<dict>\n" +
-      "<key>BuildVersion</key>\n" +
-      "<string>4</string>\n" +
-      "<key>CFBundleShortVersionString</key>\n" +
-      "<string>6.1.1</string>\n" +
-      "<key>CFBundleVersion</key>\n" +
-      "<string>6611</string>\n" +
-      "<key>ProductBuildVersion</key>\n" +
-      "<string>6A2008a</string>\n" +
-      "<key>ProjectName</key>\n" +
-      "<string>IDEFrameworks</string>\n" +
-      "<key>SourceVersion</key>\n" +
-      "<string>6611000000000000</string>\n" +
-      "</dict>\n" +
-      "</plist>\n";
-
   @Rule
   public DebuggableTemporaryFolder temp = new DebuggableTemporaryFolder();
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
+
+  private AppleToolchain getDefaultToolchain(Path path) {
+    return AppleToolchain.builder()
+        .setIdentifier("com.apple.dt.toolchain.XcodeDefault")
+        .setPath(path.resolve("Toolchains/XcodeDefault.xctoolchain"))
+        .setVersion("1")
+        .build();
+  }
 
   @Test
   public void shouldReturnAnEmptyMapIfNoPlatformsFound() throws IOException {
@@ -81,15 +66,14 @@ public class AppleSdkDiscoveryTest {
     workspace.setUp();
     Path path = workspace.getPath("");
 
-    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
+    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
         "com.apple.dt.toolchain.XcodeDefault",
-        path.resolve("Toolchains/XcodeDefault.xctoolchain")
+        getDefaultToolchain(path)
     );
     ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
-        path,
+        Optional.of(path),
         ImmutableList.<Path>of(),
-        path.resolve("version.plist"),
-        toolchainPaths);
+        toolchains);
 
     assertEquals(0, sdks.size());
   }
@@ -110,17 +94,17 @@ public class AppleSdkDiscoveryTest {
     emptyWorkspace.setUp();
     Path path = emptyWorkspace.getPath("");
 
-    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
+    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
         "com.apple.dt.toolchain.XcodeDefault",
-        path.resolve("Toolchains/XcodeDefault.xctoolchain"));
+        getDefaultToolchain(path));
 
     AppleSdk macosx109Sdk =
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setXcodeVersion("6A2008a")
             .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
             .addArchitectures("i386", "x86_64")
+            .addAllToolchains(toolchains.values())
             .build();
     AppleSdkPaths macosx109Paths =
         AppleSdkPaths.builder()
@@ -138,10 +122,9 @@ public class AppleSdkDiscoveryTest {
 
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(
-            path,
+            Optional.of(path),
             ImmutableList.of(root),
-            path.resolve("version.plist"),
-            toolchainPaths),
+            toolchains),
         equalTo(expected));
   }
 
@@ -156,17 +139,17 @@ public class AppleSdkDiscoveryTest {
 
     Path path = Paths.get("invalid");
 
-    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
+    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
         "com.apple.dt.toolchain.XcodeDefault",
-        root.resolve("Toolchains/XcodeDefault.xctoolchain"));
+        getDefaultToolchain(root));
 
     AppleSdk macosx109Sdk =
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setXcodeVersion("6A2008a")
             .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
             .addArchitectures("i386", "x86_64")
+            .addAllToolchains(toolchains.values())
             .build();
     AppleSdkPaths macosx109Paths =
         AppleSdkPaths.builder()
@@ -184,10 +167,9 @@ public class AppleSdkDiscoveryTest {
 
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(
-            root,
+            Optional.of(root),
             ImmutableList.of(path),
-            root.resolve("version.plist"),
-            toolchainPaths),
+            toolchains),
         equalTo(expected));
   }
 
@@ -199,56 +181,22 @@ public class AppleSdkDiscoveryTest {
         temp);
     workspace.setUp();
     Path root = workspace.getPath("");
-    Path versionPlistPath = workspace.getPath("version.plist");
 
-    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
+    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
         "com.apple.dt.toolchain.XcodeDefault",
-        root.resolve("Toolchains/XcodeDefault")
+        getDefaultToolchain(root)
     );
     ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
-        root,
+        Optional.of(root),
         ImmutableList.<Path>of(),
-        versionPlistPath,
-        toolchainPaths);
+        toolchains);
 
     assertEquals(2, sdks.size());
   }
 
   @Test
-  public void shouldThrowIfVersionPlistMalformed() throws Exception {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "sdk-malformed-version-plist",
-        temp);
-    workspace.setUp();
-    Path root = workspace.getPath("");
-    Path versionPlistPath = workspace.getPath("version.plist");
-
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        containsString("Could not discover Xcode version, missing ProductBuildVersion")
-    );
-
-    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
-        "com.apple.dt.toolchain.XcodeDefault",
-        root.resolve("Toolchains/XcodeDefault")
-    );
-    AppleSdkDiscovery.discoverAppleSdkPaths(
-        root,
-        ImmutableList.<Path>of(),
-        versionPlistPath,
-        toolchainPaths);
-  }
-
-  @Test
   public void shouldIgnoreSdkWithBadSymlink() throws Exception {
     Path root = temp.newFolder().toPath();
-    Path versionPlist = temp.newFile().toPath();
-
-    Files.write(
-        versionPlist,
-        ImmutableList.of(XCODE_VERSION_PLIST),
-        StandardCharsets.UTF_8);
 
     // Create a dangling symlink
     File toDelete = File.createTempFile("foo", "bar");
@@ -257,15 +205,14 @@ public class AppleSdkDiscoveryTest {
     Files.createSymbolicLink(symlink, toDelete.toPath());
     assertTrue(toDelete.delete());
 
-    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
+    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
         "com.apple.dt.toolchain.XcodeDefault",
-        root.resolve("Toolchains/XcodeDefault")
+        getDefaultToolchain(root)
     );
     ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
-        root,
+        Optional.of(root),
         ImmutableList.<Path>of(),
-        versionPlist,
-        toolchainPaths);
+        toolchains);
 
     assertEquals(0, sdks.size());
   }
@@ -278,16 +225,15 @@ public class AppleSdkDiscoveryTest {
         temp);
     workspace.setUp();
     Path root = workspace.getPath("");
-    Path versionPlistPath = workspace.getPath("version.plist");
     createSymLinkIosSdks(root, "8.0");
 
     AppleSdk macosx109Sdk =
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setXcodeVersion("6A2008a")
             .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
             .addArchitectures("i386", "x86_64")
+            .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths macosx109Paths =
         AppleSdkPaths.builder()
@@ -301,10 +247,9 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphoneos8.0")
             .setVersion("8.0")
-            .setXcodeVersion("6A2008a")
             .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
             .addArchitectures("armv7", "arm64")
-            .addToolchains("com.apple.dt.toolchain.iOS8_0")
+            .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths iphoneos80Paths =
         AppleSdkPaths.builder()
@@ -318,11 +263,10 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphonesimulator8.0")
             .setVersion("8.0")
-            .setXcodeVersion("6A2008a")
             .setApplePlatform(
                 ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
             .addArchitectures("i386", "x86_64")
-            .addToolchains("com.apple.dt.toolchain.iOS8_0")
+            .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths iphonesimulator80Paths =
         AppleSdkPaths.builder()
@@ -334,9 +278,9 @@ public class AppleSdkDiscoveryTest {
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"))
             .build();
 
-    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
+    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
         "com.apple.dt.toolchain.XcodeDefault",
-        root.resolve("Toolchains/XcodeDefault.xctoolchain"));
+        getDefaultToolchain(root));
 
     ImmutableMap<AppleSdk, AppleSdkPaths> expected =
         ImmutableMap.<AppleSdk, AppleSdkPaths>builder()
@@ -350,8 +294,9 @@ public class AppleSdkDiscoveryTest {
 
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(
-            root,
-            ImmutableList.<Path>of(), versionPlistPath, toolchainPaths),
+            Optional.of(root),
+            ImmutableList.<Path>of(),
+            toolchains),
         equalTo(expected));
   }
 
@@ -363,14 +308,14 @@ public class AppleSdkDiscoveryTest {
         temp);
     workspace.setUp();
     Path root = workspace.getPath("");
-    Path versionPlistPath = workspace.getPath("version.plist");
 
-    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of();
+    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of();
 
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(
-            root,
-            ImmutableList.<Path>of(), versionPlistPath, toolchainPaths).entrySet(),
+            Optional.of(root),
+            ImmutableList.<Path>of(),
+            toolchains).entrySet(),
         empty());
   }
 
@@ -382,7 +327,6 @@ public class AppleSdkDiscoveryTest {
         temp);
     workspace.setUp();
     Path root = workspace.getPath("");
-    Path versionPlistPath = workspace.getPath("version.plist");
 
     createSymLinkIosSdks(root, "8.1");
 
@@ -390,9 +334,9 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("macosx10.9")
             .setVersion("10.9")
-            .setXcodeVersion("6A2008a")
             .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build())
             .addArchitectures("i386", "x86_64")
+            .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths macosx109Paths =
         AppleSdkPaths.builder()
@@ -406,10 +350,9 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphoneos8.0")
             .setVersion("8.0")
-            .setXcodeVersion("6A2008a")
             .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
             .addArchitectures("armv7", "arm64")
-            .addToolchains("com.apple.dt.toolchain.iOS8_0")
+            .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths iphoneos80Paths =
         AppleSdkPaths.builder()
@@ -423,11 +366,10 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphonesimulator8.0")
             .setVersion("8.0")
-            .setXcodeVersion("6A2008a")
             .setApplePlatform(
                 ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
             .addArchitectures("i386", "x86_64")
-            .addToolchains("com.apple.dt.toolchain.iOS8_0")
+            .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths iphonesimulator80Paths =
         AppleSdkPaths.builder()
@@ -443,10 +385,9 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphoneos8.1")
             .setVersion("8.1")
-            .setXcodeVersion("6A2008a")
             .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
             .addArchitectures("armv7", "arm64")
-            .addToolchains("com.apple.dt.toolchain.iOS8_1")
+            .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths iphoneos81Paths =
         AppleSdkPaths.builder()
@@ -460,11 +401,10 @@ public class AppleSdkDiscoveryTest {
         AppleSdk.builder()
             .setName("iphonesimulator8.1")
             .setVersion("8.1")
-            .setXcodeVersion("6A2008a")
             .setApplePlatform(
                 ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
             .addArchitectures("i386", "x86_64")
-            .addToolchains("com.apple.dt.toolchain.iOS8_1")
+            .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths iphonesimulator81Paths =
         AppleSdkPaths.builder()
@@ -488,14 +428,15 @@ public class AppleSdkDiscoveryTest {
             .put(iphonesimulator81Sdk.withName("iphonesimulator"), iphonesimulator81Paths)
             .build();
 
-    ImmutableMap<String, Path> toolchainPaths = ImmutableMap.of(
+    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
         "com.apple.dt.toolchain.XcodeDefault",
-        root.resolve("Toolchains/XcodeDefault.xctoolchain"));
+        getDefaultToolchain(root));
 
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(
-            root,
-            ImmutableList.<Path>of(), versionPlistPath, toolchainPaths),
+            Optional.of(root),
+            ImmutableList.<Path>of(),
+            toolchains),
         equalTo(expected));
   }
 

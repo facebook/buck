@@ -20,38 +20,26 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
 
-import java.util.Set;
-import java.util.List;
+import java.nio.file.Path;
 
 /**
- * Metadata about an Apple SDK.
+ * Metadata about an Apple toolchain.
  */
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractAppleSdk {
+interface AbstractAppleToolchain {
   /**
-   * The full name of the SDK. For example: {@code iphonesimulator8.0}.
+   * The identifier of the toolchain. For example: {@code com.apple.dt.XcodeDefault}.
    */
-  String getName();
+  String getIdentifier();
 
   /**
-   * The version number of the SDK. For example: {@code 8.0}.
+   * The version number of the toolchain. For example: {@code 0630}.
    */
   String getVersion();
 
   /**
-   * The platform of the SDK. For example, {@code iphoneos}.
+   * The path to the toolchain. For example, {@code .../XcodeDefault.xctoolchain}.
    */
-  ApplePlatform getApplePlatform();
-
-  /**
-   * The architectures supported by the SDK. For example: {@code [i386, x86_64]}.
-   */
-  Set<String> getArchitectures();
-
-  /**
-   * The toolchains used by the SDK. For example:
-   * {@code ["com.apple.dt.toolchain.XcodeDefault"]}
-   */
-  List<AppleToolchain> getToolchains();
+  Path getPath();
 }

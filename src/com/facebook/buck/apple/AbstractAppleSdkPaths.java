@@ -21,6 +21,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
@@ -40,7 +41,7 @@ abstract class AbstractAppleSdkPaths {
    *
    * {@code /Applications/Xcode.app/Contents/Developer}
    */
-  public abstract Path getDeveloperPath();
+  public abstract Optional<Path> getDeveloperPath();
 
   /**
    * Absolute paths to tools and files independent of the platform.
@@ -75,7 +76,13 @@ abstract class AbstractAppleSdkPaths {
     } else if (path.getSourceTree().equals(PBXReference.SourceTree.PLATFORM_DIR)) {
       return getPlatformPath().resolve(path.getPath());
     } else if (path.getSourceTree().equals(PBXReference.SourceTree.DEVELOPER_DIR)) {
-      return getDeveloperPath().resolve(path.getPath());
+      Optional<Path> developerPath = getDeveloperPath();
+      if (!developerPath.isPresent()) {
+        throw new HumanReadableException(
+            "DEVELOPER_DIR source tree unavailable without developer dir");
+      }
+
+      return developerPath.get().resolve(path.getPath());
     }
     throw new HumanReadableException("Unsupported source tree: '%s'", path.getSourceTree());
   }

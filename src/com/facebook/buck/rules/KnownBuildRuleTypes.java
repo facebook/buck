@@ -45,6 +45,7 @@ import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleSdk;
 import com.facebook.buck.apple.AppleSdkDiscovery;
 import com.facebook.buck.apple.AppleSdkPaths;
+import com.facebook.buck.apple.AppleToolchain;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.AppleToolchainDiscovery;
 import com.facebook.buck.apple.CoreDataModelDescription;
@@ -254,50 +255,31 @@ public class KnownBuildRuleTypes {
   }
 
   private static void buildAppleCxxPlatforms(
-      Supplier<Path> appleDeveloperDirectorySupplier,
+      Supplier<Optional<Path>> appleDeveloperDirectorySupplier,
       ImmutableList<Path> extraToolchainPaths,
       ImmutableList<Path> extraPlatformPaths,
-      Platform buildPlatform,
       BuckConfig buckConfig,
       AppleConfig appleConfig,
       ImmutableMap.Builder<Flavor, AppleCxxPlatform> platformFlavorsToAppleSdkPathsBuilder)
       throws IOException {
-    if (!buildPlatform.equals(Platform.MACOS)) {
+    Optional<Path> appleDeveloperDirectory = appleDeveloperDirectorySupplier.get();
+    if (appleDeveloperDirectory.isPresent() &&
+        !Files.isDirectory(appleDeveloperDirectory.get())) {
+      LOG.error(
+        "Developer directory is set to %s, but is not a directory",
+        appleDeveloperDirectory.get());
       return;
     }
 
-    Path appleDeveloperDirectory = appleDeveloperDirectorySupplier.get();
-    if (!Files.isDirectory(appleDeveloperDirectory)) {
-      // TODO(user): This should be fatal, but a ton of integration tests enter this code on
-      // Apple platforms.
-      return;
-    }
-
-    Path xcodeDir = appleDeveloperDirectory.getParent();
-    if (xcodeDir == null) {
-      LOG.warn(
-          "Couldn't find parent of developer directory %s (Apple platforms will be unavailable)",
-          appleDeveloperDirectory);
-      return;
-    }
-
-    Path versionPlistPath = xcodeDir.resolve("version.plist");
-    if (!Files.exists(versionPlistPath)) {
-      LOG.warn(
-          "Couldn't find version file at %s (Apple platforms will be unavailable)",
-          versionPlistPath);
-      return;
-    }
-
-    ImmutableMap<String, Path> toolchainPaths = AppleToolchainDiscovery.discoverAppleToolchainPaths(
-        appleDeveloperDirectory,
-        extraToolchainPaths);
+    ImmutableMap<String, AppleToolchain> toolchains =
+        AppleToolchainDiscovery.discoverAppleToolchains(
+            appleDeveloperDirectory,
+            extraToolchainPaths);
 
     ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths = AppleSdkDiscovery.discoverAppleSdkPaths(
         appleDeveloperDirectory,
         extraPlatformPaths,
-        versionPlistPath,
-        toolchainPaths);
+        toolchains);
 
     for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {
       AppleSdk sdk = entry.getKey();
@@ -307,9 +289,7 @@ public class KnownBuildRuleTypes {
       LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
       for (String architecture : sdk.getArchitectures()) {
         AppleCxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
-            sdk.getApplePlatform(),
-            sdk.getName(),
-            sdk.getXcodeVersion(),
+            sdk,
             targetSdkVersion,
             architecture,
             appleSdkPaths,
@@ -345,7 +325,6 @@ public class KnownBuildRuleTypes {
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
         appleConfig.getExtraToolchainPaths(),
         appleConfig.getExtraPlatformPaths(),
-        platform,
         config,
         appleConfig,
         platformFlavorsToAppleCxxPlatformsBuilder);

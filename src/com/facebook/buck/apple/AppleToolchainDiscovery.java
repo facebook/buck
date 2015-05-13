@@ -17,8 +17,10 @@
 package com.facebook.buck.apple;
 
 import com.dd.plist.NSDictionary;
+import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -49,16 +51,19 @@ public class AppleToolchainDiscovery {
    * toolchains and builds a map of (identifier: path) pairs of the
    * toolchains inside.
    */
-  public static ImmutableMap<String, Path> discoverAppleToolchainPaths(
-      Path xcodeDir,
+  public static ImmutableMap<String, AppleToolchain> discoverAppleToolchains(
+      Optional<Path> developerDir,
       ImmutableList<Path> extraDirs) throws IOException {
-    LOG.debug("Searching for Xcode toolchains under %s", xcodeDir);
+    ImmutableMap.Builder<String, AppleToolchain> toolchainIdentifiersToToolchainsBuilder =
+        ImmutableMap.builder();
 
-    ImmutableMap.Builder<String, Path> toolchainIdentifiersToPathsBuilder = ImmutableMap.builder();
-    Path toolchainsDir = xcodeDir.resolve("Toolchains");
-
-    Iterable<Path> toolchainPaths = Iterables.concat(
-        ImmutableSet.of(toolchainsDir), extraDirs);
+    Iterable<Path> toolchainPaths = extraDirs;
+    if (developerDir.isPresent()) {
+      Path toolchainsDir = developerDir.get().resolve("Toolchains");
+      LOG.debug("Searching for Xcode toolchains under %s", toolchainsDir);
+      toolchainPaths = Iterables.concat(
+        ImmutableSet.of(toolchainsDir), toolchainPaths);
+    }
 
     for (Path toolchains : toolchainPaths) {
       if (!Files.exists(toolchains)) {
@@ -73,17 +78,18 @@ public class AppleToolchainDiscovery {
                "*.xctoolchain")) {
         for (Path toolchainPath : toolchainStream) {
           LOG.debug("Getting identifier for for Xcode toolchain under %s", toolchainPath);
-          addIdentiferForToolchain(toolchainPath, toolchainIdentifiersToPathsBuilder);
+          addIdentiferForToolchain(toolchainPath, toolchainIdentifiersToToolchainsBuilder);
         }
       }
     }
 
-    return toolchainIdentifiersToPathsBuilder.build();
+    return toolchainIdentifiersToToolchainsBuilder.build();
   }
 
   private static void addIdentiferForToolchain(
         Path toolchainDir,
-        ImmutableMap.Builder<String, Path> toolchainBuilder) throws IOException {
+        ImmutableMap.Builder<String, AppleToolchain> identifierToToolchainBuilder)
+        throws IOException {
     try (InputStream toolchainInfoPlist = Files.newInputStream(
              toolchainDir.resolve("ToolchainInfo.plist"));
          BufferedInputStream bufferedToolchainInfoPlist = new BufferedInputStream(
@@ -95,10 +101,24 @@ public class AppleToolchainDiscovery {
       } catch (Exception e) {
         throw new IOException(e);
       }
-      String identifier = parsedToolchainInfoPlist.objectForKey("Identifier")
-          .toString();
+      NSObject identifierObject = parsedToolchainInfoPlist.objectForKey("Identifier");
+      NSObject versionObject = parsedToolchainInfoPlist.objectForKey("DTSDKBuild");
+      if (identifierObject == null || versionObject == null) {
+        LOG.error("Identifier, version not found for toolchain path %s, ignoring", toolchainDir);
+        return;
+      }
+
+      String identifier = identifierObject.toString();
+      String version = versionObject.toString();
       LOG.debug("Mapped SDK identifier %s to path %s", identifier, toolchainDir);
-      toolchainBuilder.put(identifier, toolchainDir);
+
+      AppleToolchain.Builder toolchainBuilder = AppleToolchain.builder();
+      toolchainBuilder.setIdentifier(identifier);
+      toolchainBuilder.setVersion(version);
+      toolchainBuilder.setPath(toolchainDir);
+
+      AppleToolchain toolchain = toolchainBuilder.build();
+      identifierToToolchainBuilder.put(identifier, toolchain);
     } catch (FileNotFoundException | NoSuchFileException e) {
       LOG.error(e, "No ToolchainInfo.plist found under toolchain path %s, ignoring", toolchainDir);
     }

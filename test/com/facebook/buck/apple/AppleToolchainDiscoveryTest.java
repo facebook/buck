@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableList;
 
@@ -40,9 +41,9 @@ public class AppleToolchainDiscoveryTest {
   public void shouldReturnAnEmptyMapIfNoToolchainsFound() throws IOException {
     Path path = temp.newFolder().toPath().toAbsolutePath();
 
-    ImmutableMap<String, Path> toolchains =
-        AppleToolchainDiscovery.discoverAppleToolchainPaths(
-            path,
+    ImmutableMap<String, AppleToolchain> toolchains =
+        AppleToolchainDiscovery.discoverAppleToolchains(
+            Optional.of(path),
             ImmutableList.<Path>of());
     assertThat(toolchains.entrySet(), empty());
   }
@@ -50,13 +51,23 @@ public class AppleToolchainDiscoveryTest {
   @Test
   public void appleToolchainPathsBuiltFromDirectory() throws Exception {
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery");
-    ImmutableMap<String, Path> expected = ImmutableMap.of(
-        "com.facebook.foo.toolchain.XcodeDefault", root.resolve("Toolchains/foo.xctoolchain"),
-        "com.facebook.bar.toolchain.XcodeDefault", root.resolve("Toolchains/bar.xctoolchain"));
+    ImmutableMap<String, AppleToolchain> expected = ImmutableMap.of(
+        "com.facebook.foo.toolchain.XcodeDefault",
+        AppleToolchain.builder()
+            .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
+            .setVersion("23B456")
+            .setPath(root.resolve("Toolchains/foo.xctoolchain"))
+            .build(),
+        "com.facebook.bar.toolchain.XcodeDefault",
+        AppleToolchain.builder()
+            .setIdentifier("com.facebook.bar.toolchain.XcodeDefault")
+            .setVersion("23B456")
+            .setPath(root.resolve("Toolchains/bar.xctoolchain"))
+            .build());
 
     assertThat(
-        AppleToolchainDiscovery.discoverAppleToolchainPaths(
-            root,
+        AppleToolchainDiscovery.discoverAppleToolchains(
+            Optional.of(root),
             ImmutableList.<Path>of()),
         equalTo(expected));
   }
@@ -66,13 +77,23 @@ public class AppleToolchainDiscoveryTest {
     Path path = temp.newFolder().toPath().toAbsolutePath();
 
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery");
-    ImmutableMap<String, Path> expected = ImmutableMap.of(
-        "com.facebook.foo.toolchain.XcodeDefault", root.resolve("Toolchains/foo.xctoolchain"),
-        "com.facebook.bar.toolchain.XcodeDefault", root.resolve("Toolchains/bar.xctoolchain"));
+    ImmutableMap<String, AppleToolchain> expected = ImmutableMap.of(
+        "com.facebook.foo.toolchain.XcodeDefault",
+        AppleToolchain.builder()
+            .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
+            .setVersion("23B456")
+            .setPath(root.resolve("Toolchains/foo.xctoolchain"))
+            .build(),
+        "com.facebook.bar.toolchain.XcodeDefault",
+        AppleToolchain.builder()
+            .setIdentifier("com.facebook.bar.toolchain.XcodeDefault")
+            .setVersion("23B456")
+            .setPath(root.resolve("Toolchains/bar.xctoolchain"))
+            .build());
 
     assertThat(
-        AppleToolchainDiscovery.discoverAppleToolchainPaths(
-            path,
+        AppleToolchainDiscovery.discoverAppleToolchains(
+            Optional.of(path),
             ImmutableList.of(root.resolve("Toolchains"))),
         equalTo(expected));
   }
@@ -80,13 +101,23 @@ public class AppleToolchainDiscoveryTest {
   @Test
   public void appleToolchainPathsIgnoresInvalidExtraPath() throws Exception {
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery");
-    ImmutableMap<String, Path> expected = ImmutableMap.of(
-        "com.facebook.foo.toolchain.XcodeDefault", root.resolve("Toolchains/foo.xctoolchain"),
-        "com.facebook.bar.toolchain.XcodeDefault", root.resolve("Toolchains/bar.xctoolchain"));
+    ImmutableMap<String, AppleToolchain> expected = ImmutableMap.of(
+        "com.facebook.foo.toolchain.XcodeDefault",
+        AppleToolchain.builder()
+            .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
+            .setVersion("23B456")
+            .setPath(root.resolve("Toolchains/foo.xctoolchain"))
+            .build(),
+        "com.facebook.bar.toolchain.XcodeDefault",
+        AppleToolchain.builder()
+            .setIdentifier("com.facebook.bar.toolchain.XcodeDefault")
+            .setVersion("23B456")
+            .setPath(root.resolve("Toolchains/bar.xctoolchain"))
+            .build());
 
     assertThat(
-        AppleToolchainDiscovery.discoverAppleToolchainPaths(
-            root,
+        AppleToolchainDiscovery.discoverAppleToolchains(
+            Optional.of(root),
             ImmutableList.<Path>of(Paths.get("invalid"))),
         equalTo(expected));
   }

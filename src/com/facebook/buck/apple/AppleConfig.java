@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
@@ -35,6 +36,8 @@ import java.util.Set;
 
 public class AppleConfig {
 
+  private static final Logger LOG = Logger.get(AppleConfig.class);
+
   private final BuckConfig delegate;
 
   public AppleConfig(BuckConfig delegate) {
@@ -46,12 +49,13 @@ public class AppleConfig {
    * Otherwise, this returns a {@link Supplier} that lazily runs {@code xcode-select --print-path}
    * and caches the result.
    */
-  public Supplier<Path> getAppleDeveloperDirectorySupplier(ProcessExecutor processExecutor) {
+  public Supplier<Optional<Path>> getAppleDeveloperDirectorySupplier(
+      ProcessExecutor processExecutor) {
     Optional<String> xcodeDeveloperDirectory = delegate.getValue("apple", "xcode_developer_dir");
     if (xcodeDeveloperDirectory.isPresent()) {
       Path developerDirectory = delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
           Paths.get(xcodeDeveloperDirectory.get()));
-      return Suppliers.ofInstance(developerDirectory);
+      return Suppliers.ofInstance(Optional.of(developerDirectory));
     } else {
       return createAppleDeveloperDirectorySupplier(processExecutor);
     }
@@ -86,16 +90,17 @@ public class AppleConfig {
   }
 
   public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(ProcessExecutor processExecutor) {
-    Path appleDeveloperDirectory = getAppleDeveloperDirectorySupplier(processExecutor).get();
+    Optional<Path> appleDeveloperDirectory =
+        getAppleDeveloperDirectorySupplier(processExecutor).get();
     try {
-      ImmutableMap<String, Path> toolchainPaths =
-          AppleToolchainDiscovery.discoverAppleToolchainPaths(
-              appleDeveloperDirectory, getExtraToolchainPaths());
+      ImmutableMap<String, AppleToolchain> toolchains =
+          AppleToolchainDiscovery.discoverAppleToolchains(
+              appleDeveloperDirectory,
+              getExtraToolchainPaths());
       return AppleSdkDiscovery.discoverAppleSdkPaths(
           appleDeveloperDirectory,
           getExtraPlatformPaths(),
-          appleDeveloperDirectory.getParent().resolve("version.plist"),
-          toolchainPaths);
+          toolchains);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -105,11 +110,11 @@ public class AppleConfig {
    * @return a memoizing {@link Supplier} that caches the output of
    *     {@code xcode-select --print-path}.
    */
-  private static Supplier<Path> createAppleDeveloperDirectorySupplier(
+  private static Supplier<Optional<Path>> createAppleDeveloperDirectorySupplier(
       final ProcessExecutor processExecutor) {
-    return Suppliers.memoize(new Supplier<Path>() {
+    return Suppliers.memoize(new Supplier<Optional<Path>>() {
       @Override
-      public Path get() {
+      public Optional<Path> get() {
         ProcessExecutorParams processExecutorParams =
             ProcessExecutorParams.builder()
                 .setCommand(ImmutableList.of("xcode-select", "--print-path"))
@@ -124,14 +129,15 @@ public class AppleConfig {
               /* stdin */ Optional.<String>absent(),
               /* timeOutMs */ Optional.<Long>absent());
         } catch (InterruptedException | IOException e) {
-          throw new RuntimeException(e);
+          LOG.warn("Could not execute xcode-select, continuing without developer dir.");
+          return Optional.absent();
         }
 
         if (result.getExitCode() != 0) {
           throw new RuntimeException("xcode-select --print-path failed: " + result.getStderr());
         }
 
-        return Paths.get(result.getStdout().get().trim());
+        return Optional.of(Paths.get(result.getStdout().get().trim()));
       }
     });
   }
