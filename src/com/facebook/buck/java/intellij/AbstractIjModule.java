@@ -58,24 +58,7 @@ abstract class AbstractIjModule {
   /**
    * @return paths to various directories the module is responsible for.
    */
-  public ImmutableSet<IjFolder> getFolders() {
-    ImmutableSet<IjFolder> folderOverride = getFolderOverride();
-    if (!folderOverride.isEmpty()) {
-       return folderOverride;
-    }
-    return getInferredFolders();
-  }
-
-  /**
-   * @return set of paths the module is responsible for inferred from the set of targets.
-   */
-  public abstract ImmutableSet<IjFolder> getInferredFolders();
-
-  /**
-   * @return set of paths the module is responsible for specified explicitly by the user. Empty
-   *         set means no override is in place.
-   */
-  public abstract ImmutableSet<IjFolder> getFolderOverride();
+  public abstract ImmutableSet<IjFolder> getFolders();
 
   public abstract ImmutableSet<IjLibrary> getLibraries();
 
@@ -116,7 +99,9 @@ abstract class AbstractIjModule {
     Path moduleBasePath = getModuleBasePath();
     for (TargetNode<?> target : getTargets()) {
       Path targetBasePath = target.getBuildTarget().getBasePath();
-      Preconditions.checkArgument(targetBasePath.startsWith(moduleBasePath));
+      Preconditions.checkArgument(
+          targetBasePath.startsWith(moduleBasePath),
+          "A module cannot be composed of targets which are outside of its base path.");
     }
   }
 }

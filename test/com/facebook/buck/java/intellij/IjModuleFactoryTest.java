@@ -23,17 +23,16 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
@@ -173,6 +172,30 @@ public class IjModuleFactoryTest {
   }
 
   @Test
+  public void testJavaLibraryAndTestLibraryResultInOnlyOneFolder() {
+    IjModuleFactory factory = new IjModuleFactory(
+        NO_OP_LIBRARY_FACTORY);
+
+    TargetNode<?> javaLib = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third-party/example:core"))
+        .addSrc(Paths.get("third-party/example/File.java"))
+        .build();
+
+    TargetNode<?> javaTest = JavaTestBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third-party/example:test"))
+        .addSrc(Paths.get("third-party/example/TestFile.java"))
+        .addDep(javaLib.getBuildTarget())
+        .build();
+
+    IjModule module = factory.createModule(
+        Paths.get("third-party/example"),
+        ImmutableSet.of(javaLib, javaTest));
+
+    assertEquals(ImmutableSet.of(Paths.get("third-party/example")),
+        getFolderPaths(module.getFolders()));
+  }
+
+  @Test
   public void testAndroidLibrary() {
     IjModuleFactory factory = new IjModuleFactory(NO_OP_LIBRARY_FACTORY);
 
@@ -228,58 +251,4 @@ public class IjModuleFactoryTest {
     assertTrue(module.getAndroidFacet().isPresent());
     assertEquals(manifestPath, module.getAndroidFacet().get().getManifestPath().get());
   }
-
-  @Test
-  public void testProjectConfig() {
-    IjModuleFactory factory = new IjModuleFactory(NO_OP_LIBRARY_FACTORY);
-
-    TargetNode<?> javaLib = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third-party/lib:lib"))
-        .addSrc(Paths.get("third-party/lib/1.0/org/lib/File.java"))
-        .build();
-
-    TargetNode<?> projectConfig = ProjectConfigBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third-party/lib:project_config"))
-        .setSrcRule(javaLib.getBuildTarget())
-        .setSrcRoots(ImmutableList.<String>of("1.0"))
-        .build();
-
-    Path moduleBasePath = Paths.get("third-party/lib");
-    IjModule module = factory.createModule(
-        moduleBasePath,
-        ImmutableSet.of(javaLib, projectConfig));
-
-    assertEquals(ImmutableSet.of(Paths.get("third-party/lib/1.0")),
-        getFolderPaths(module.getFolders()));
-  }
-
-  @Test
-  public void testProjectConfigExclusiveRuleResolution() {
-    IjModuleFactory factory = new IjModuleFactory(NO_OP_LIBRARY_FACTORY);
-
-    SourcePath blessedManifestPath = new TestSourcePath("AndroidManifest.xml");
-    TargetNode<?> blessedAndroidBinary = AndroidBinaryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/example:droid_blessed"))
-        .setManifest(blessedManifestPath)
-        .build();
-
-    TargetNode<?> otherAndroidBinary = AndroidBinaryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/example:droid_other"))
-        .setManifest(new TestSourcePath("OtherAndroidManifest.xml"))
-        .build();
-
-    TargetNode<?> projectConfig = ProjectConfigBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/example:project_config"))
-        .setSrcRule(blessedAndroidBinary.getBuildTarget())
-        .build();
-
-    Path moduleBasePath = Paths.get("java/com/example");
-    IjModule module = factory.createModule(
-        moduleBasePath,
-        ImmutableSet.of(blessedAndroidBinary, otherAndroidBinary, projectConfig));
-
-    assertTrue(module.getAndroidFacet().isPresent());
-    assertEquals(blessedManifestPath, module.getAndroidFacet().get().getManifestPath().get());
-  }
-
 }

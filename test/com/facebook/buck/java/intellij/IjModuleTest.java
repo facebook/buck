@@ -19,7 +19,6 @@ package com.facebook.buck.java.intellij;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.java.JavaLibraryBuilder;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
@@ -30,37 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class IjModuleTest {
-
-  @Test
-  public void testFolderOverride() {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/bar:foo");
-    TargetNode<?> javaLibrary = JavaLibraryBuilder
-        .createBuilder(buildTarget)
-        .build();
-
-    IjFolder inferredFolder = IjFolder.builder()
-        .setPath(Paths.get("src"))
-        .setType(IjFolder.Type.SOURCE_FOLDER)
-        .setWantsPackagePrefix(true)
-        .build();
-
-    IjFolder overrideFolder = IjFolder.builder()
-        .setPath(Paths.get("override"))
-        .setType(IjFolder.Type.SOURCE_FOLDER)
-        .setWantsPackagePrefix(false)
-        .build();
-
-    IjModule.Builder builder = IjModule.builder()
-        .setTargets(ImmutableSet.<TargetNode<?>>of(javaLibrary))
-        .setModuleBasePath(buildTarget.getBasePath())
-        .addInferredFolders(inferredFolder);
-
-    IjModule inferredModule = builder.build();
-    IjModule overrideModule = builder.addFolderOverride(overrideFolder).build();
-
-    assertEquals(ImmutableSet.of(inferredFolder), inferredModule.getFolders());
-    assertEquals(ImmutableSet.of(overrideFolder), overrideModule.getFolders());
-  }
 
   @Test
   public void testRelativeGenPath() {

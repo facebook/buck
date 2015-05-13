@@ -19,27 +19,20 @@ package com.facebook.buck.java.intellij;
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
-import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.annotation.Nullable;
 
 /**
  * Builds {@link IjModule}s out of {@link TargetNode}s.
@@ -54,24 +47,17 @@ public class IjModuleFactory {
    */
   private static class ModuleBuildContext {
     private final Path moduleBasePath;
-    private final IjModule.Builder moduleBuilder;
     private Optional<IjModuleAndroidFacet.Builder> androidFacetBuilder;
+    private final Map<Path, IjFolder> sourceFoldersMergeMap;
 
-    public ModuleBuildContext(
-        Path moduleBasePath,
-        IjModule.Builder moduleBuilder,
-        Optional<IjModuleAndroidFacet.Builder> androidFacetBuilder) {
+    public ModuleBuildContext(Path moduleBasePath) {
       this.moduleBasePath = moduleBasePath;
-      this.moduleBuilder = moduleBuilder;
-      this.androidFacetBuilder = androidFacetBuilder;
+      this.androidFacetBuilder = Optional.absent();
+      this.sourceFoldersMergeMap = new HashMap<>();
     }
 
     public Path getModuleBasePath() {
       return moduleBasePath;
-    }
-
-    public IjModule.Builder getModuleBuilder() {
-      return moduleBuilder;
     }
 
     public void ensureAndroidFacetBuilder() {
@@ -83,6 +69,21 @@ public class IjModuleFactory {
     public IjModuleAndroidFacet.Builder getOrCreateAndroidFacetBuilder() {
       ensureAndroidFacetBuilder();
       return androidFacetBuilder.get();
+    }
+
+    public ImmutableSet<IjFolder> getSourceFolders() {
+      return ImmutableSet.copyOf(sourceFoldersMergeMap.values());
+    }
+
+    public void addSourceFolder(IjFolder folder) {
+      Path path = folder.getPath();
+      if (!sourceFoldersMergeMap.containsKey(path)) {
+        sourceFoldersMergeMap.put(path, folder);
+        return;
+      }
+      IjFolder otherFolder = sourceFoldersMergeMap.get(path);
+      IjFolder merged = folder.merge(otherFolder);
+      sourceFoldersMergeMap.put(path, merged);
     }
   }
 
@@ -97,14 +98,6 @@ public class IjModuleFactory {
     void apply(TargetNode<T> targetNode, ModuleBuildContext context);
   }
 
-  /**
-   * Only one of a single target type from this set can be represented in a single IntelliJ module
-   * without substantial loss of information.
-   */
-  private static final ImmutableSet<BuildRuleType> MUTUALLY_EXCLUSIVE_TYPES = ImmutableSet.of(
-      AndroidBinaryDescription.TYPE,
-      JavaBinaryDescription.TYPE);
-
   private final Map<BuildRuleType, IjModuleRule<?>> moduleRuleIndex = new HashMap<>();
   private final IjLibraryFactory libraryFactory;
 
@@ -116,25 +109,11 @@ public class IjModuleFactory {
     addToIndex(new AndroidResourceModuleRule());
     addToIndex(new JavaLibraryModuleRule());
     addToIndex(new JavaTestModuleRule());
-    addToIndex(new ProjectConfigModuleRule());
   }
 
   private void addToIndex(IjModuleRule<?> rule) {
     Preconditions.checkArgument(!moduleRuleIndex.containsKey(rule.getType()));
     moduleRuleIndex.put(rule.getType(), rule);
-  }
-
-  public ImmutableSet<TargetNode<?>> getMutuallyExclusiveTargets(
-      ImmutableSet<TargetNode<?>> input) {
-    return FluentIterable.from(input)
-        .filter(
-            new Predicate<TargetNode<?>>() {
-              @Override
-              public boolean apply(TargetNode<?> input) {
-                return MUTUALLY_EXCLUSIVE_TYPES.contains(input.getType());
-              }
-            })
-        .toSet();
   }
 
   /**
@@ -147,62 +126,8 @@ public class IjModuleFactory {
   @SuppressWarnings({"unchecked", "rawtypes"})
   public IjModule createModule(Path moduleBasePath, ImmutableSet<TargetNode<?>> targetNodes) {
     Preconditions.checkArgument(!targetNodes.isEmpty());
-    final ImmutableSet<TargetNode<?>> mutuallyExclusiveTargets =
-        getMutuallyExclusiveTargets(targetNodes);
 
-    final ImmutableList<BuildTarget> targetsOverrides = FluentIterable.from(targetNodes)
-        .firstMatch(
-            new Predicate<TargetNode<?>>() {
-              @Override
-              public boolean apply(TargetNode<?> input) {
-                return input.getType() == ProjectConfigDescription.TYPE;
-              }
-            })
-        .transform(
-            new Function<TargetNode<?>, ImmutableList<BuildTarget>>() {
-              @Nullable
-              @Override
-              public ImmutableList<BuildTarget> apply(TargetNode<?> input) {
-                ImmutableList.Builder<BuildTarget> rootOverridesBuilder = ImmutableList.builder();
-                ProjectConfigDescription.Arg arg =
-                    (ProjectConfigDescription.Arg) input.getConstructorArg();
-                if (arg.srcTarget.isPresent()) {
-                  rootOverridesBuilder.add(arg.srcTarget.get());
-                }
-                if (arg.testTarget.isPresent()) {
-                  rootOverridesBuilder.add(arg.testTarget.get());
-                }
-                return rootOverridesBuilder.build();
-              }
-            })
-        .or(ImmutableList.<BuildTarget>of());
-
-    // This is a bit shady. We're essentially using the project_config to pick one out of many
-    // conflicting targets (like multiple android_binary targets) in a BUCK file.
-    // We should probably have two modes for project generation:
-    //  - edit-only, where we treat everything as a nail (well, Java library target) the purpose
-    //    of which would be to make it possible for IntelliJ to index the code, but not build it,
-    //  - strict, where we attempt a 1:1 mapping between buck and IntelliJ. In this case any buck
-    //    features which we can't map to IntelliJ would cause errors.
-    if (mutuallyExclusiveTargets.size() > 1 && !targetsOverrides.isEmpty()) {
-      targetNodes = FluentIterable.from(targetNodes)
-          .filter(
-              new Predicate<TargetNode<?>>() {
-                @Override
-                public boolean apply(TargetNode<?> input) {
-                  return !mutuallyExclusiveTargets.contains(input) ||
-                      targetsOverrides.contains(input.getBuildTarget());
-                }
-              })
-          .toSet();
-    }
-
-    Preconditions.checkArgument(getMutuallyExclusiveTargets(targetNodes).size() <= 1);
-
-    ModuleBuildContext context = new ModuleBuildContext(
-        moduleBasePath,
-        IjModule.builder(),
-        Optional.<IjModuleAndroidFacet.Builder>absent());
+    ModuleBuildContext context = new ModuleBuildContext(moduleBasePath);
 
     for (TargetNode<?> targetNode : targetNodes) {
       IjModuleRule<?> rule = moduleRuleIndex.get(targetNode.getType());
@@ -222,10 +147,11 @@ public class IjModuleFactory {
               }
             });
 
-    return context.moduleBuilder
+    return IjModule.builder()
         .setModuleBasePath(moduleBasePath)
         .setTargets(targetNodes)
         .addAllLibraries(libraryFactory.getLibraries(targetNodes))
+        .addAllFolders(context.getSourceFolders())
         .setAndroidFacet(androidFacetOptional)
         .build();
   }
@@ -260,7 +186,7 @@ public class IjModuleFactory {
 
     for (Path path : sourceFolders) {
       Preconditions.checkArgument(path.startsWith(context.getModuleBasePath()));
-      context.getModuleBuilder().addInferredFolders(
+      context.addSourceFolder(
           IjFolder.builder()
               .setPath(path)
               .setType(type)
@@ -365,41 +291,6 @@ public class IjModuleFactory {
           IjFolder.Type.TEST_FOLDER,
           true /* wantsPackagePrefix */,
           context);
-    }
-  }
-
-  private static class ProjectConfigModuleRule
-      implements IjModuleRule<ProjectConfigDescription.Arg> {
-
-    @Override
-    public BuildRuleType getType() {
-      return ProjectConfigDescription.TYPE;
-    }
-
-    @Override
-    public void apply(TargetNode<ProjectConfigDescription.Arg> target, ModuleBuildContext context) {
-      ProjectConfigDescription.Arg arg = target.getConstructorArg();
-      Path baseTargetPath = target.getBuildTarget().getBasePath();
-
-      // This was only ever added to support cases where we can't guess the package for the input
-      // files properly (like for "third-party/java/lib/1.0.0/org/someone/lib").
-      for (String root : (arg.srcRoots.or(ImmutableList.<String>of()))) {
-        context.getModuleBuilder().addFolderOverride(
-            IjFolder.builder()
-                .setPath(baseTargetPath.resolve(root))
-                .setType(IjFolder.Type.SOURCE_FOLDER)
-                .setWantsPackagePrefix(false)
-                .build());
-      }
-
-      for (String root : (arg.testRoots.or(ImmutableList.<String>of()))) {
-        context.getModuleBuilder().addFolderOverride(
-            IjFolder.builder()
-                .setPath(baseTargetPath.resolve(root))
-                .setType(IjFolder.Type.TEST_FOLDER)
-                .setWantsPackagePrefix(false)
-                .build());
-      }
     }
   }
 }

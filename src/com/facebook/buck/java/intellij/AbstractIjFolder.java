@@ -41,6 +41,30 @@ abstract class AbstractIjFolder {
       this.value = value;
     }
 
+    /**
+     * It's possible, by the use of glob patterns, to have different types of targets include
+     * sources from the same same folder. Since IntelliJ operates at the level of individual
+     * folders, not files this can result in the same {@link IjFolder} being marked with different
+     * types. This method implements the logic to merge the types of these folders.
+     *
+     * @param left type to merge, order does not matter.
+     * @param right type to merge, order does not matter.
+     * @return merged type.
+     */
+    public static Type merge(Type left, Type right) {
+      Preconditions.checkNotNull(left);
+      Preconditions.checkNotNull(right);
+      if (left.equals(right)) {
+        return left;
+      }
+      Preconditions.checkArgument(!left.equals(EXCLUDE_FOLDER) && !right.equals(EXCLUDE_FOLDER),
+          "Exclude folders cannot merge with other types.");
+
+      // Since left and right are not equal, and we've excluded EXCLUDE they have to be a mix of
+      // SOURCE and TEST. A mix of SOURCE and TEST gets promoted to SOURCE.
+      return SOURCE_FOLDER;
+    }
+
     @Override
     public String toString() {
       return value;
@@ -67,9 +91,16 @@ abstract class AbstractIjFolder {
   public abstract boolean getWantsPackagePrefix();
 
 
-  @Value.Derived
   public boolean isTest() {
     return getType() == Type.TEST_FOLDER;
+  }
+
+  public IjFolder merge(IjFolder otherFolder) {
+    Preconditions.checkArgument(otherFolder.getPath().equals(getPath()));
+
+    return otherFolder
+        .withWantsPackagePrefix(getWantsPackagePrefix() || otherFolder.getWantsPackagePrefix())
+        .withType(Type.merge(getType(), otherFolder.getType()));
   }
 
   @Value.Check

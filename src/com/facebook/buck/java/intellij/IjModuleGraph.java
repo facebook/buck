@@ -30,7 +30,6 @@ import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
@@ -59,7 +58,6 @@ public class IjModuleGraph extends DefaultTraversableGraph<IjModule> {
       JavaBinaryDescription.TYPE,
       JavaLibraryDescription.TYPE,
       JavaTestDescription.TYPE,
-      ProjectConfigDescription.TYPE,
       NdkLibraryDescription.TYPE);
 
   private static final Predicate<TargetNode<?>> SUPPORTED_MODULE_TYPES_PREDICATE =
