@@ -35,7 +35,7 @@ import java.util.Set;
  * Fields annotated with it should be of classes which have a default constructor, and will be
  * automatically instantiated.
  */
-public class CmdLineParserAdditionalOptions extends CmdLineParser {
+public class AdditionalOptionsCmdLineParser extends CmdLineParser {
 
   /**
    * Creates a new command line owner that parses arguments/options and set them into
@@ -51,7 +51,7 @@ public class CmdLineParserAdditionalOptions extends CmdLineParser {
    *      if the option bean class is using args4j annotations incorrectly.
    * @see CmdLineParser#CmdLineParser(Object)
    */
-  public CmdLineParserAdditionalOptions(Object bean) {
+  public AdditionalOptionsCmdLineParser(Object bean) {
     super(bean);
     Set<Class<?>> visited = Sets.newHashSet();
     parseAdditionalOptions(new ClassParser(), bean, visited);

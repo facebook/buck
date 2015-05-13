@@ -30,7 +30,7 @@ public class RunCommandOptionsTest {
 
   private String[] testWithArgs(String[] args) throws CmdLineException {
     RunCommandOptions options = new RunCommandOptions();
-    CmdLineParserAdditionalOptions parser = new CmdLineParserAdditionalOptions(options);
+    AdditionalOptionsCmdLineParser parser = new AdditionalOptionsCmdLineParser(options);
     parser.parseArgument(args);
     return options.getArguments().toArray(new String[options.getArguments().size()]);
   }

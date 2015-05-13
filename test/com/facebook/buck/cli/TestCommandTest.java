@@ -221,7 +221,7 @@ public class TestCommandTest {
 
   private TestCommandOptions getOptions(String...args) throws CmdLineException {
     TestCommandOptions options = new TestCommandOptions();
-    new CmdLineParserAdditionalOptions(options).parseArgument(args);
+    new AdditionalOptionsCmdLineParser(options).parseArgument(args);
     return options;
   }
 
@@ -763,7 +763,7 @@ public class TestCommandTest {
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
     TestCommandOptions options = new TestCommandOptions();
 
-    new CmdLineParserAdditionalOptions(options).parseArgument();
+    new AdditionalOptionsCmdLineParser(options).parseArgument();
 
     assertFalse(options.isMatchedByLabelOptions(config, ImmutableSet.<Label>of(Label.of("e2e"))));
   }
@@ -778,7 +778,7 @@ public class TestCommandTest {
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
     TestCommandOptions options = new TestCommandOptions();
 
-    new CmdLineParserAdditionalOptions(options).parseArgument("--include", "e2e");
+    new AdditionalOptionsCmdLineParser(options).parseArgument("--include", "e2e");
 
     assertTrue(options.isMatchedByLabelOptions(config, ImmutableSet.<Label>of(Label.of("e2e"))));
   }
@@ -793,7 +793,7 @@ public class TestCommandTest {
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains(excludedLabel));
     TestCommandOptions options = new TestCommandOptions();
 
-    new CmdLineParserAdditionalOptions(options).parseArgument("//example:test");
+    new AdditionalOptionsCmdLineParser(options).parseArgument("//example:test");
 
     FakeTestRule rule = new FakeTestRule(
         BuildRuleType.of("java_test"),

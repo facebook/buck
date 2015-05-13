@@ -27,7 +27,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.IllegalAnnotationError;
 import org.kohsuke.args4j.Option;
 
-public class CmdLineParserAdditionalOptionsTest {
+public class AdditionalOptionsCmdLineParserTest {
 
   public static final String O1 = "--one", V1 = "1";
   public static final String O2 = "--two", V2 = "2";
@@ -81,17 +81,17 @@ public class CmdLineParserAdditionalOptionsTest {
   @Before
   public void setUp() {
      options = new RootOptions();
-     parser = new CmdLineParserAdditionalOptions(options);
+     parser = new AdditionalOptionsCmdLineParser(options);
   }
 
   @Test(expected = IllegalAnnotationError.class)
   public void testDuplicateAdditionalOptionsClass() {
-      new CmdLineParserAdditionalOptions(new DuplicateOptions());
+      new AdditionalOptionsCmdLineParser(new DuplicateOptions());
   }
 
   @Test(expected = IllegalAnnotationError.class)
   public void testRecursiveAdditionalOptions() {
-      new CmdLineParserAdditionalOptions(new InfiniteOptions());
+      new AdditionalOptionsCmdLineParser(new InfiniteOptions());
   }
 
   @Test

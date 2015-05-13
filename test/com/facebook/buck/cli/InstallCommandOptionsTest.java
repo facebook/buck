@@ -28,7 +28,7 @@ public class InstallCommandOptionsTest {
 
   private InstallCommandOptions getOptions(String...args) throws CmdLineException {
     InstallCommandOptions options = new InstallCommandOptions();
-    new CmdLineParserAdditionalOptions(options).parseArgument(args);
+    new AdditionalOptionsCmdLineParser(options).parseArgument(args);
     return options;
   }
 

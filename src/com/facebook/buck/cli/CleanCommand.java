@@ -32,7 +32,7 @@ public class CleanCommand implements CommandRunner {
   @Override
   public int runCommand(CommandRunnerParams params, List<String> args) throws IOException {
     CleanCommandOptions options = new CleanCommandOptions();
-    CmdLineParser parser = new CmdLineParserAdditionalOptions(options);
+    CmdLineParser parser = new AdditionalOptionsCmdLineParser(options);
 
     boolean hasValidOptions = false;
     try {

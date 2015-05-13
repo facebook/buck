@@ -135,7 +135,7 @@ abstract class AbstractCommandRunner<T extends AbstractCommandOptions> implement
 
     private ParserAndOptions(T options) {
       this.options = options;
-      this.parser = new CmdLineParserAdditionalOptions(options);
+      this.parser = new AdditionalOptionsCmdLineParser(options);
     }
   }
 
