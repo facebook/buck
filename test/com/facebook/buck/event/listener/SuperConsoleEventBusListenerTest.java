@@ -39,7 +39,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.GenruleDescription;
-import com.facebook.buck.step.FakeStep;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
@@ -60,6 +59,7 @@ import com.google.common.eventbus.EventBus;
 import org.junit.Test;
 
 import java.text.DecimalFormat;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class SuperConsoleEventBusListenerTest {
@@ -172,9 +172,11 @@ public class SuperConsoleEventBusListenerTest {
         formatConsoleTimes("[+] BUILDING...%s", 0.4),
         formatConsoleTimes(" |=> //banana:stand...  %s (checking local cache)", 0.2)));
 
-    FakeStep fakeStep = new FakeStep("doing_something", "working hard", 0);
+    String stepShortName = "doing_something";
+    String stepDescription = "working hard";
+    UUID stepUuid = UUID.randomUUID();
     rawEventBus.post(configureTestEventAtTime(
-        StepEvent.started(fakeStep, "working hard"),
+        StepEvent.started(stepShortName, stepDescription, stepUuid),
           800L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 900L, ImmutableList.of(parsingLine,
@@ -182,7 +184,7 @@ public class SuperConsoleEventBusListenerTest {
         formatConsoleTimes(" |=> //banana:stand...  %s (running doing_something[%s])", 0.3, 0.1)));
 
     rawEventBus.post(configureTestEventAtTime(
-        StepEvent.finished(fakeStep, "working hard", 0),
+        StepEvent.finished(stepShortName, stepDescription, stepUuid, 0),
         900L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
@@ -276,7 +278,9 @@ public class SuperConsoleEventBusListenerTest {
         pathResolver,
         ImmutableSortedSet.<BuildRule>of()
     );
-    FakeStep fakeStep = new FakeStep("doing_something", "working hard", 0);
+    String stepShortName = "doing_something";
+    String stepDescription = "working hard";
+    UUID stepUuid = UUID.randomUUID();
 
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(
@@ -329,13 +333,13 @@ public class SuperConsoleEventBusListenerTest {
     // Post events that run a step for 100ms.
     rawEventBus.post(
         configureTestEventAtTime(
-            StepEvent.started(fakeStep, "working hard"),
+            StepEvent.started(stepShortName, stepDescription, stepUuid),
             0L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
     rawEventBus.post(
         configureTestEventAtTime(
-            StepEvent.finished(fakeStep, "working hard", /* exitCode */ 0),
+            StepEvent.finished(stepShortName, stepDescription, stepUuid, /* exitCode */ 0),
             100L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -380,7 +384,7 @@ public class SuperConsoleEventBusListenerTest {
     // Post events that run another step.
     rawEventBus.post(
         configureTestEventAtTime(
-            StepEvent.started(fakeStep, "working hard"),
+            StepEvent.started(stepShortName, stepDescription, stepUuid),
             400L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -401,7 +405,7 @@ public class SuperConsoleEventBusListenerTest {
     // Finish the step and rule.
     rawEventBus.post(
         configureTestEventAtTime(
-            StepEvent.finished(fakeStep, "working hard", /* exitCode */ 0),
+            StepEvent.finished(stepShortName, stepDescription, stepUuid, /* exitCode */ 0),
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

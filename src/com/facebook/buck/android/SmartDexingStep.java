@@ -76,6 +76,8 @@ import javax.annotation.Nullable;
  */
 public class SmartDexingStep implements Step {
 
+  public static final String SHORT_NAME = "smart_dex";
+
   public static interface DexInputHashesProvider {
     ImmutableMap<Path, Sha1HashCode> getDexInputHashes();
   }
@@ -200,7 +202,7 @@ public class SmartDexingStep implements Step {
 
   @Override
   public String getShortName() {
-    return "smart_dex";
+    return SHORT_NAME;
   }
 
   @Override

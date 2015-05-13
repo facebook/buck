@@ -48,7 +48,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.FakeStep;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
@@ -78,6 +77,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 
@@ -152,7 +152,9 @@ public class ChromeTraceBuildListenerTest {
     );
     RuleKey ruleKey = new RuleKey("abc123");
     rule.setRuleKey(ruleKey);
-    FakeStep step = new FakeStep("fakeStep", "I'm a Fake Step!", 0);
+    String stepShortName = "fakeStep";
+    String stepDescription = "I'm a Fake Step!";
+    UUID stepUuid = UUID.randomUUID();
 
     ExecutionContext context = createMock(ExecutionContext.class);
     replay(context);
@@ -175,9 +177,9 @@ public class ChromeTraceBuildListenerTest {
         ruleKey,
         CacheResult.hit("cassandra")));
     eventBus.post(BuildRuleEvent.started(rule));
-    eventBus.post(StepEvent.started(step, "I'm a Fake Step!"));
+    eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
 
-    eventBus.post(StepEvent.finished(step, "I'm a Fake Step!", 0));
+    eventBus.post(StepEvent.finished(stepShortName, stepDescription, stepUuid, 0));
     eventBus.post(BuildRuleEvent.finished(
         rule,
         BuildRuleStatus.SUCCESS,

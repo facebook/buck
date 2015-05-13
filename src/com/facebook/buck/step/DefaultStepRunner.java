@@ -30,6 +30,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -62,8 +63,11 @@ public final class DefaultStepRunner implements StepRunner {
       context.getStdErr().println(step.getDescription(context));
     }
 
+    String stepShortName = step.getShortName();
+    String stepDescription = step.getDescription(context);
+    UUID stepUuid = UUID.randomUUID();
     context.getBuckEventBus().logDebugAndPost(
-        LOG, StepEvent.started(step, step.getDescription(context)));
+        LOG, StepEvent.started(stepShortName, stepDescription, stepUuid));
     int exitCode = 1;
     try {
       exitCode = step.execute(context);
@@ -71,7 +75,7 @@ public final class DefaultStepRunner implements StepRunner {
       throw StepFailedException.createForFailingStepWithException(step, e, buildTarget);
     } finally {
       context.getBuckEventBus().logDebugAndPost(
-          LOG, StepEvent.finished(step, step.getDescription(context), exitCode));
+          LOG, StepEvent.finished(stepShortName, stepDescription, stepUuid, exitCode));
     }
     if (exitCode != 0) {
       throw StepFailedException.createForFailingStepWithExitCode(step,
