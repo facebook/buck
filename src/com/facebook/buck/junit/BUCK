@@ -17,6 +17,7 @@ java_library(
     'BuckBlockJUnit4ClassRunner.java',
     'DelegateRunnerWithTimeout.java',
     'DelegateRunNotifier.java',
+    'JulLogFormatter.java',
     'JUnitMain.java',
     'JUnitRunner.java',
     'SameThreadFailOnTimeout.java',

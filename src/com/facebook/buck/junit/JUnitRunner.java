@@ -35,10 +35,17 @@ import org.junit.runner.notification.RunListener;
 import org.junit.runners.model.RunnerBuilder;
 
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Formatter;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
+import java.util.logging.StreamHandler;
 
 /**
  * Class that runs a set of JUnit tests and writes the results to a directory.
@@ -48,6 +55,10 @@ import java.util.List;
  * not to interfere with the results of the test.
  */
 public final class JUnitRunner extends BaseRunner {
+
+  static final String JUL_DEBUG_LOGS_HEADER = "====DEBUG LOGS====\n\n";
+  static final String JUL_ERROR_LOGS_HEADER = "====ERROR LOGS====\n\n";
+
   public JUnitRunner() {
   }
 
@@ -261,6 +272,9 @@ public final class JUnitRunner extends BaseRunner {
     private final List<TestResult> results;
     private PrintStream originalOut, originalErr, stdOutStream, stdErrStream;
     private ByteArrayOutputStream rawStdOutBytes, rawStdErrBytes;
+    private ByteArrayOutputStream julLogBytes, julErrLogBytes;
+    private Handler julLogHandler;
+    private Handler julErrLogHandler;
     private Result result;
     private RunListener resultListener;
     private Failure assumptionFailure;
@@ -280,12 +294,26 @@ public final class JUnitRunner extends BaseRunner {
       originalErr = System.err;
       rawStdOutBytes = new ByteArrayOutputStream();
       rawStdErrBytes = new ByteArrayOutputStream();
+      julLogBytes = new ByteArrayOutputStream();
+      julErrLogBytes = new ByteArrayOutputStream();
       stdOutStream = new PrintStream(
           rawStdOutBytes, true /* autoFlush */, ENCODING);
       stdErrStream = new PrintStream(
           rawStdErrBytes, true /* autoFlush */, ENCODING);
       System.setOut(stdOutStream);
       System.setErr(stdErrStream);
+
+      // Listen to any java.util.logging messages reported by the test and write them to
+      // julLogBytes / julErrLogBytes.
+      Logger rootLogger = LogManager.getLogManager().getLogger("");
+
+      if (rootLogger != null) {
+        rootLogger.setLevel(Level.FINE);
+      }
+
+      JulLogFormatter formatter = new JulLogFormatter();
+      julLogHandler = addStreamHandler(rootLogger, julLogBytes, formatter, Level.FINE);
+      julErrLogHandler = addStreamHandler(rootLogger, julErrLogBytes, formatter, Level.WARNING);
 
       // Prepare single-test result.
       result = new Result();
@@ -304,6 +332,15 @@ public final class JUnitRunner extends BaseRunner {
       // Restore the original stdout/stderr.
       System.setOut(originalOut);
       System.setErr(originalErr);
+
+      // Flush any debug logs and remove the handlers.
+      Logger rootLogger = LogManager.getLogManager().getLogger("");
+
+      flushAndRemoveLogHandler(rootLogger, julLogHandler);
+      julLogHandler = null;
+
+      flushAndRemoveLogHandler(rootLogger, julErrLogHandler);
+      julErrLogHandler = null;
 
       // Get the stdout/stderr written during the test as strings.
       stdOutStream.flush();
@@ -339,16 +376,28 @@ public final class JUnitRunner extends BaseRunner {
         type = ResultType.FAILURE;
       }
 
-      String stdOut = rawStdOutBytes.size() == 0 ? null : rawStdOutBytes.toString(ENCODING);
-      String stdErr = rawStdErrBytes.size() == 0 ? null : rawStdErrBytes.toString(ENCODING);
+      StringBuilder stdOut = new StringBuilder();
+      stdOut.append(rawStdOutBytes.toString(ENCODING));
+      if (type == ResultType.FAILURE && julLogBytes.size() > 0) {
+        stdOut.append('\n');
+        stdOut.append(JUL_DEBUG_LOGS_HEADER);
+        stdOut.append(julLogBytes.toString(ENCODING));
+      }
+      StringBuilder stdErr = new StringBuilder();
+      stdErr.append(rawStdErrBytes.toString(ENCODING));
+      if (type == ResultType.FAILURE && julErrLogBytes.size() > 0) {
+        stdErr.append('\n');
+        stdErr.append(JUL_ERROR_LOGS_HEADER);
+        stdErr.append(julErrLogBytes.toString(ENCODING));
+      }
 
       results.add(new TestResult(className,
           methodName,
           result.getRunTime(),
           type,
           failure == null ? null : failure.getException(),
-          stdOut,
-          stdErr));
+          stdOut.length() == 0 ? null : stdOut.toString(),
+          stdErr.length() == 0 ? null : stdErr.toString()));
     }
 
     /**
@@ -403,6 +452,31 @@ public final class JUnitRunner extends BaseRunner {
           failure.getException(),
           null,
           null));
+    }
+
+    private static Handler addStreamHandler(
+        Logger rootLogger,
+        OutputStream stream,
+        Formatter formatter,
+        Level level) {
+      Handler result;
+      if (rootLogger != null) {
+        result = new StreamHandler(stream, formatter);
+        result.setLevel(level);
+        rootLogger.addHandler(result);
+      } else {
+        result = null;
+      }
+      return result;
+    }
+
+    private static void flushAndRemoveLogHandler(Logger rootLogger, Handler handler) {
+      if (handler != null) {
+        handler.flush();
+      }
+      if (rootLogger != null && handler != null) {
+        rootLogger.removeHandler(handler);
+      }
     }
   }
 }
