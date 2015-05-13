@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -34,7 +33,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -66,17 +64,11 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
       ImmutableFlavor.of("aar_assemble_assets");
   private static final Flavor AAR_ANDROID_RESOURCE_FLAVOR =
       ImmutableFlavor.of("aar_android_resource");
-  private static final Flavor AAR_JAVA_BINARY_FLAVOR =
-      ImmutableFlavor.of("aar_java_binary");
 
   private final AndroidManifestDescription androidManifestDescription;
-  private final JavaBinaryDescription javaBinaryDescription;
 
-  public AndroidAarDescription(
-      AndroidManifestDescription androidManifestDescription,
-      JavaBinaryDescription javaBinaryDescription) {
+  public AndroidAarDescription(AndroidManifestDescription androidManifestDescription) {
     this.androidManifestDescription = androidManifestDescription;
-    this.javaBinaryDescription = javaBinaryDescription;
   }
 
   @Override
@@ -184,28 +176,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         /* hasWhitelistedStrings */ false);
     depRules.add(resolver.addToIndex(androidResource));
 
-    /* java_binary */
-    JavaBinaryDescription.Args javaBinaryArgs =
-        javaBinaryDescription.createUnpopulatedConstructorArg();
-    javaBinaryArgs.deps = args.deps;
-    javaBinaryArgs.mainClass = Optional.absent();
-    javaBinaryArgs.manifestFile = Optional.absent();
-    javaBinaryArgs.mergeManifests = Optional.absent();
-    javaBinaryArgs.metaInfDirectory = Optional.absent();
-    javaBinaryArgs.blacklist = Optional.absent();
-
-    BuildRuleParams javaBinaryParams = originalBuildRuleParams.copyWithChanges(
-        JavaBinaryDescription.TYPE,
-        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_JAVA_BINARY_FLAVOR),
-        Suppliers.ofInstance(originalBuildRuleParams.getDeclaredDeps()),
-        Suppliers.ofInstance(originalBuildRuleParams.getExtraDeps()));
-
-    BuildRule javaBinary = javaBinaryDescription.createBuildRule(
-        javaBinaryParams,
-        resolver,
-        javaBinaryArgs);
-    depRules.add(resolver.addToIndex(javaBinary));
-
     /* android_aar */
     depRules.addAll(
         getTargetsAsRules(
@@ -224,7 +194,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         pathResolver,
         manifest,
         androidResource,
-        javaBinary,
         assembleResourceDirectories,
         assembleAssetsDirectories,
         packageableCollection.getNativeLibAssetsDirectories(),

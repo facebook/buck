@@ -457,9 +457,7 @@ public class KnownBuildRuleTypes {
         platformFlavorsToAppleCxxPlatforms);
     builder.register(appleBinaryDescription);
 
-    builder.register(new AndroidAarDescription(
-            new AndroidManifestDescription(),
-            new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform)));
+    builder.register(new AndroidAarDescription(new AndroidManifestDescription()));
     builder.register(
         new AndroidBinaryDescription(
             androidBinaryOptions,

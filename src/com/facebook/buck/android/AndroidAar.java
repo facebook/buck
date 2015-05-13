@@ -16,14 +16,21 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
+import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
+
 import com.facebook.buck.android.AndroidBinary.TargetCpuType;
+import com.facebook.buck.java.Classpaths;
+import com.facebook.buck.java.HasClasspathEntries;
+import com.facebook.buck.java.JarDirectoryStep;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -32,16 +39,18 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 
 import java.nio.file.Path;
 
-public class AndroidAar extends AbstractBuildRule {
+public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries {
+
+  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
 
   private final Path pathToOutputFile;
   private final Path temp;
   private final AndroidManifest manifest;
   private final AndroidResource androidResource;
-  private final BuildRule javaBinary;
   private final AssembleDirectories assembleResourceDirectories;
   private final AssembleDirectories assembleAssetsDirectories;
   private final ImmutableSet<Path> nativeLibAssetsDirectories;
@@ -52,7 +61,6 @@ public class AndroidAar extends AbstractBuildRule {
       SourcePathResolver resolver,
       AndroidManifest manifest,
       AndroidResource androidResource,
-      BuildRule javaBinary,
       AssembleDirectories assembleResourceDirectories,
       AssembleDirectories assembleAssetsDirectories,
       ImmutableSet<Path> nativeLibAssetsDirectories,
@@ -63,7 +71,6 @@ public class AndroidAar extends AbstractBuildRule {
     this.temp = BuildTargets.getScratchPath(buildTarget, "__temp__%s");
     this.manifest = manifest;
     this.androidResource = androidResource;
-    this.javaBinary = javaBinary;
     this.assembleAssetsDirectories = assembleAssetsDirectories;
     this.assembleResourceDirectories = assembleResourceDirectories;
     this.nativeLibAssetsDirectories = nativeLibAssetsDirectories;
@@ -101,8 +108,12 @@ public class AndroidAar extends AbstractBuildRule {
             temp.resolve("assets"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 
-    // put .jar into tmp folder
-    commands.add(CopyStep.forFile(javaBinary.getPathToOutputFile(), temp.resolve("classes.jar")));
+    // Create our Uber-jar, and place it in the tmp folder.
+    commands.add(new JarDirectoryStep(
+            temp.resolve("classes.jar"),
+            ImmutableSet.copyOf(getTransitiveClasspathEntries().values()),
+            null,
+            null));
 
     // move native libs into tmp folder under jni/
     for (Path dir : nativeLibsDirectories) {
@@ -133,4 +144,13 @@ public class AndroidAar extends AbstractBuildRule {
     return pathToOutputFile;
   }
 
+  @Override
+  public BuildableProperties getProperties() {
+    return PROPERTIES;
+  }
+
+  @Override
+  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
+    return Classpaths.getClasspathEntries(getDeps());
+  }
 }

@@ -98,7 +98,7 @@ public class PrebuiltNativeLibrary extends AbstractBuildRule
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
     if (isAsset) {
-      collector.addNativeLibAssetsDirectory(getLibraryPath());
+      collector.addNativeLibAssetsDirectory(getBuildTarget(), getLibraryPath());
     } else {
       collector.addNativeLibsDirectory(getBuildTarget(), getLibraryPath());
     }

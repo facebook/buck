@@ -151,8 +151,12 @@ public class AndroidPackageableCollector {
     return this;
   }
 
-  public AndroidPackageableCollector addNativeLibAssetsDirectory(Path nativeLibAssetsDir) {
-    collectionBuilder.addNativeLibAssetsDirectories(nativeLibAssetsDir);
+  public AndroidPackageableCollector addNativeLibAssetsDirectory(
+      BuildTarget owner,
+      Path assetsDir) {
+    // We need to build the native target in order to have the assets available still.
+    collectionBuilder.addNativeLibsTargets(owner);
+    collectionBuilder.addNativeLibAssetsDirectories(assetsDir);
     return this;
   }
 
