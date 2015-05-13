@@ -16,18 +16,28 @@
 
 package com.facebook.buck.java.intellij;
 
+import com.facebook.buck.android.AndroidAarDescription;
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryDescription;
+import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
+import com.facebook.buck.android.NdkLibraryDescription;
+import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,24 +50,45 @@ import java.util.Map;
 public class IjModuleFactory {
 
   /**
-   * This allows us to construct the module and it's android facet at the same time. Currently
-   * this makes the code simpler than splitting it out ino two phases. Should the complexity of the
-   * {@link IjModuleFactory.IjModuleRule} implementations increase we might want to re-visit the
-   * decision.
+   * These target types are mapped onto .iml module files.
+   */
+  private static final ImmutableSet<BuildRuleType> SUPPORTED_MODULE_TYPES = ImmutableSet.of(
+      AndroidAarDescription.TYPE,
+      AndroidBinaryDescription.TYPE,
+      AndroidLibraryDescription.TYPE,
+      AndroidPrebuiltAarDescription.TYPE,
+      AndroidResourceDescription.TYPE,
+      JavaBinaryDescription.TYPE,
+      JavaLibraryDescription.TYPE,
+      JavaTestDescription.TYPE,
+      NdkLibraryDescription.TYPE);
+
+  public static final Predicate<TargetNode<?>> SUPPORTED_MODULE_TYPES_PREDICATE =
+      new Predicate<TargetNode<?>>() {
+        @Override
+        public boolean apply(TargetNode<?> input) {
+          return SUPPORTED_MODULE_TYPES.contains(input.getType());
+        }
+      };
+
+  /**
+   * Holds all of the mutable state required during {@link IjModule} creation.
    */
   private static class ModuleBuildContext {
-    private final Path moduleBasePath;
-    private Optional<IjModuleAndroidFacet.Builder> androidFacetBuilder;
-    private final Map<Path, IjFolder> sourceFoldersMergeMap;
+    private final ImmutableSet<BuildTarget> circularDependencyInducingTargets;
 
-    public ModuleBuildContext(Path moduleBasePath) {
-      this.moduleBasePath = moduleBasePath;
+    private Optional<IjModuleAndroidFacet.Builder> androidFacetBuilder;
+    private Map<Path, IjFolder> sourceFoldersMergeMap;
+    // See comment in getDependencies for these two member variables.
+    private Map<BuildTarget, IjModuleGraph.DependencyType> dependencyTypeMap;
+    private Multimap<Path, BuildTarget> dependencyOriginMap;
+
+    public ModuleBuildContext(ImmutableSet<BuildTarget> circularDependencyInducingTargets) {
+      this.circularDependencyInducingTargets = circularDependencyInducingTargets;
       this.androidFacetBuilder = Optional.absent();
       this.sourceFoldersMergeMap = new HashMap<>();
-    }
-
-    public Path getModuleBasePath() {
-      return moduleBasePath;
+      this.dependencyTypeMap = new HashMap<>();
+      this.dependencyOriginMap = HashMultimap.create();
     }
 
     public void ensureAndroidFacetBuilder() {
@@ -71,19 +102,91 @@ public class IjModuleFactory {
       return androidFacetBuilder.get();
     }
 
+    public Optional<IjModuleAndroidFacet> getAndroidFacet() {
+      return androidFacetBuilder.transform(
+          new Function<IjModuleAndroidFacet.Builder, IjModuleAndroidFacet>() {
+            @Override
+            public IjModuleAndroidFacet apply(IjModuleAndroidFacet.Builder input) {
+              return input.build();
+            }
+          });
+    }
+
     public ImmutableSet<IjFolder> getSourceFolders() {
       return ImmutableSet.copyOf(sourceFoldersMergeMap.values());
     }
 
+    /**
+     * Adds a source folder to the context. If a folder with the same path has already been added
+     * the types of the two folders will be merged.
+     *
+     * @param folder folder to add/merge.
+     */
     public void addSourceFolder(IjFolder folder) {
       Path path = folder.getPath();
-      if (!sourceFoldersMergeMap.containsKey(path)) {
-        sourceFoldersMergeMap.put(path, folder);
-        return;
-      }
       IjFolder otherFolder = sourceFoldersMergeMap.get(path);
-      IjFolder merged = folder.merge(otherFolder);
-      sourceFoldersMergeMap.put(path, merged);
+      if (otherFolder != null) {
+        folder = folder.merge(otherFolder);
+      }
+      sourceFoldersMergeMap.put(path, folder);
+    }
+
+    public void addDeps(
+        ImmutableSet<BuildTarget> buildTargets,
+        IjModuleGraph.DependencyType dependencyType) {
+      addDeps(ImmutableSet.<Path>of(), buildTargets, dependencyType);
+    }
+
+    /**
+     * Record a dependency on a {@link BuildTarget}. The dependency's type will be merged if
+     * multiple {@link TargetNode}s refer to it or if multiple TargetNodes include sources from
+     * the same directory.
+     *
+     * @param sourcePaths the {@link Path}s to sources which need this dependency to build.
+     *                    Can be empty.
+     * @param buildTargets the {@link BuildTarget}s to depend on
+     * @param dependencyType what is the dependency needed for.
+     */
+    public void addDeps(
+        ImmutableSet<Path> sourcePaths,
+        ImmutableSet<BuildTarget> buildTargets,
+        IjModuleGraph.DependencyType dependencyType) {
+      for (BuildTarget buildTarget : buildTargets) {
+        if (circularDependencyInducingTargets.contains(buildTarget)) {
+          continue;
+        }
+        if (sourcePaths.isEmpty()) {
+          IjModuleGraph.DependencyType.putWithMerge(dependencyTypeMap, buildTarget, dependencyType);
+        } else {
+          for (Path sourcePath : sourcePaths) {
+            dependencyOriginMap.put(sourcePath, buildTarget);
+          }
+        }
+      }
+    }
+
+    public ImmutableMap<BuildTarget, IjModuleGraph.DependencyType> getDependencies() {
+      // Some targets may introduce dependencies without contributing to the IjFolder set. These
+      // are recorded in the dependencyTypeMap.
+      // Dependencies associated with source paths inherit the type from the folder. This is because
+      // IntelliJ only operates on folders and so it is impossible to distinguish between test and
+      // production code if it's in the same folder. That in turn means test-only dependencies need
+      // to be "promoted" to production dependencies in the above scenario to keep code compiling.
+      // It is also possible that a target is included in both maps, in which case the type gets
+      // merged anyway.
+      // Merging types does not back-propagate: if TargetA depends on TargetB and the type of
+      // TargetB has been changed that does not mean the dependency type of TargetA is changed too.
+      Map<BuildTarget, IjModuleGraph.DependencyType> result = new HashMap<>(dependencyTypeMap);
+      for (Path path : dependencyOriginMap.keySet()) {
+        IjModuleGraph.DependencyType dependencyType =
+            Preconditions.checkNotNull(sourceFoldersMergeMap.get(path)).isTest() ?
+                IjModuleGraph.DependencyType.TEST :
+                IjModuleGraph.DependencyType.PROD;
+        for (BuildTarget buildTarget : dependencyOriginMap.get(path)) {
+          IjModuleGraph.DependencyType.putWithMerge(result, buildTarget, dependencyType);
+        }
+      }
+      return ImmutableMap.copyOf(result);
     }
   }
 
@@ -99,11 +202,8 @@ public class IjModuleFactory {
   }
 
   private final Map<BuildRuleType, IjModuleRule<?>> moduleRuleIndex = new HashMap<>();
-  private final IjLibraryFactory libraryFactory;
 
-  public IjModuleFactory(IjLibraryFactory libraryFactory) {
-    this.libraryFactory = libraryFactory;
-
+  public IjModuleFactory() {
     addToIndex(new AndroidBinaryModuleRule());
     addToIndex(new AndroidLibraryModuleRule());
     addToIndex(new AndroidResourceModuleRule());
@@ -113,6 +213,7 @@ public class IjModuleFactory {
 
   private void addToIndex(IjModuleRule<?> rule) {
     Preconditions.checkArgument(!moduleRuleIndex.containsKey(rule.getType()));
+    Preconditions.checkArgument(SUPPORTED_MODULE_TYPES.contains(rule.getType()));
     moduleRuleIndex.put(rule.getType(), rule);
   }
 
@@ -127,7 +228,12 @@ public class IjModuleFactory {
   public IjModule createModule(Path moduleBasePath, ImmutableSet<TargetNode<?>> targetNodes) {
     Preconditions.checkArgument(!targetNodes.isEmpty());
 
-    ModuleBuildContext context = new ModuleBuildContext(moduleBasePath);
+
+    ImmutableSet<BuildTarget> moduleBuildTargets = FluentIterable.from(targetNodes)
+        .transform(HasBuildTarget.TO_TARGET)
+        .toSet();
+
+    ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);
 
     for (TargetNode<?> targetNode : targetNodes) {
       IjModuleRule<?> rule = moduleRuleIndex.get(targetNode.getType());
@@ -138,39 +244,24 @@ public class IjModuleFactory {
       rule.apply((TargetNode) targetNode, context);
     }
 
-    Optional<IjModuleAndroidFacet> androidFacetOptional = context.androidFacetBuilder
-        .transform(
-            new Function<IjModuleAndroidFacet.Builder, IjModuleAndroidFacet>() {
-              @Override
-              public IjModuleAndroidFacet apply(IjModuleAndroidFacet.Builder input) {
-                return input.build();
-              }
-            });
-
     return IjModule.builder()
         .setModuleBasePath(moduleBasePath)
         .setTargets(targetNodes)
-        .addAllLibraries(libraryFactory.getLibraries(targetNodes))
         .addAllFolders(context.getSourceFolders())
-        .setAndroidFacet(androidFacetOptional)
+        .putAllDependencies(context.getDependencies())
+        .setAndroidFacet(context.getAndroidFacet())
         .build();
   }
 
   /**
-   * Add the set of input paths to the {@link IjModule.Builder} as source folders.
+   * Calculate the set of directories containing inputs to the target.
    *
-   * @param target targets whose inputs to convert to source folders.
-   * @param type folder type.
-   * @param wantsPackagePrefix whether folders should be annotated with a package prefix. This
-   *                           only makes sense when the source folder is Java source code.
-   * @param context the module to add the folders to.
+   * @param target target to process.
+   * @return set of {@link Path}s representing the project root relative directory paths
+   *         where the target's inputs reside.
    */
-  private static void addSourceFolders(
-      TargetNode<?> target,
-      IjFolder.Type type,
-      boolean wantsPackagePrefix,
-      ModuleBuildContext context) {
-    ImmutableSet<Path> sourceFolders = FluentIterable.from(target.getInputs())
+  private static ImmutableSet<Path> getSourceFolders(TargetNode<?> target) {
+    return FluentIterable.from(target.getInputs())
         .transform(
             new Function<Path, Path>() {
               @Override
@@ -183,9 +274,23 @@ public class IjModuleFactory {
               }
             })
         .toSet();
+  }
 
+  /**
+   * Add the set of input paths to the {@link IjModule.Builder} as source folders.
+   *
+   * @param sourceFolders paths to add to the module as source folders.
+   * @param type folder type.
+   * @param wantsPackagePrefix whether folders should be annotated with a package prefix. This
+   *                           only makes sense when the source folder is Java source code.
+   * @param context the module to add the folders to.
+   */
+  private static void addSourceFolders(
+      ImmutableSet<Path> sourceFolders,
+      IjFolder.Type type,
+      boolean wantsPackagePrefix,
+      ModuleBuildContext context) {
     for (Path path : sourceFolders) {
-      Preconditions.checkArgument(path.startsWith(context.getModuleBasePath()));
       context.addSourceFolder(
           IjFolder.builder()
               .setPath(path)
@@ -193,6 +298,23 @@ public class IjModuleFactory {
               .setWantsPackagePrefix(wantsPackagePrefix)
               .build());
     }
+  }
+
+  private static void addDepsAndSources(
+      TargetNode<?> targetNode,
+      boolean isTest,
+      boolean wantsPackagePrefix,
+      ModuleBuildContext context) {
+    ImmutableSet<Path> folders = getSourceFolders(targetNode);
+    addSourceFolders(
+        folders,
+        isTest ? IjFolder.Type.TEST_FOLDER : IjFolder.Type.SOURCE_FOLDER,
+        wantsPackagePrefix,
+        context);
+    context.addDeps(
+        folders,
+        targetNode.getDeps(),
+        isTest ? IjModuleGraph.DependencyType.TEST : IjModuleGraph.DependencyType.PROD);
   }
 
   private static class AndroidBinaryModuleRule
@@ -205,9 +327,10 @@ public class IjModuleFactory {
 
     @Override
     public void apply(TargetNode<AndroidBinaryDescription.Arg> target, ModuleBuildContext context) {
+      context.addDeps(target.getDeps(), IjModuleGraph.DependencyType.PROD);
+
       AndroidBinaryDescription.Arg arg = target.getConstructorArg();
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
-
       // TODO(mkosiba): Add arg.keystore and arg.noDx.
       androidFacetBuilder
           .setManifestPath(arg.manifest)
@@ -226,9 +349,9 @@ public class IjModuleFactory {
     @Override
     public void apply(TargetNode<AndroidLibraryDescription.Arg> target,
         ModuleBuildContext context) {
-      addSourceFolders(
+      addDepsAndSources(
           target,
-          IjFolder.Type.SOURCE_FOLDER,
+          false /* isTest */,
           true /* wantsPackagePrefix */,
           context);
       context.ensureAndroidFacetBuilder();
@@ -247,6 +370,8 @@ public class IjModuleFactory {
     public void apply(
         TargetNode<AndroidResourceDescription.Arg> target,
         ModuleBuildContext context) {
+      context.addDeps(target.getDeps(), IjModuleGraph.DependencyType.PROD);
+
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
       AndroidResourceDescription.Arg arg = target.getConstructorArg();
 
@@ -269,9 +394,9 @@ public class IjModuleFactory {
 
     @Override
     public void apply(TargetNode<JavaLibraryDescription.Arg> target, ModuleBuildContext context) {
-      addSourceFolders(
+      addDepsAndSources(
           target,
-          IjFolder.Type.SOURCE_FOLDER,
+          false /* isTest */,
           true /* wantsPackagePrefix */,
           context);
     }
@@ -286,9 +411,9 @@ public class IjModuleFactory {
 
     @Override
     public void apply(TargetNode<JavaTestDescription.Arg> target, ModuleBuildContext context) {
-      addSourceFolders(
+      addDepsAndSources(
           target,
-          IjFolder.Type.TEST_FOLDER,
+          true /* isTest */,
           true /* wantsPackagePrefix */,
           context);
     }

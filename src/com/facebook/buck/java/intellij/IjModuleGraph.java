@@ -16,75 +16,73 @@
 
 package com.facebook.buck.java.intellij;
 
-import com.facebook.buck.android.AndroidAarDescription;
-import com.facebook.buck.android.AndroidBinaryDescription;
-import com.facebook.buck.android.AndroidLibraryDescription;
-import com.facebook.buck.android.AndroidPrebuiltAarDescription;
-import com.facebook.buck.android.AndroidResourceDescription;
-import com.facebook.buck.android.NdkLibraryDescription;
-import com.facebook.buck.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.graph.DefaultTraversableGraph;
-import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.java.JavaBinaryDescription;
-import com.facebook.buck.java.JavaLibraryDescription;
-import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Nullable;
 
 /**
  * Represents a graph of IjModules and the dependencies between them.
  */
-public class IjModuleGraph extends DefaultTraversableGraph<IjModule> {
+public class IjModuleGraph {
 
-  /**
-   * These target types are mapped onto .iml module files.
-   */
-  private static final ImmutableSet<BuildRuleType> SUPPORTED_MODULE_TYPES = ImmutableSet.of(
-      AndroidAarDescription.TYPE,
-      AndroidBinaryDescription.TYPE,
-      AndroidLibraryDescription.TYPE,
-      AndroidPrebuiltAarDescription.TYPE,
-      AndroidResourceDescription.TYPE,
-      JavaBinaryDescription.TYPE,
-      JavaLibraryDescription.TYPE,
-      JavaTestDescription.TYPE,
-      NdkLibraryDescription.TYPE);
+  enum DependencyType {
+    /**
+     * The current {@link IjModule} depends on the other element from test code only. This
+     * only happens if a particular module contains both test and production code and only code in
+     * the test folders needs to reference the other element.
+     */
+    TEST,
+    /**
+     * The current {@link IjModule} depends on the other element from production (non-test)
+     * code.
+     */
+    PROD,
+    ;
 
-  private static final Predicate<TargetNode<?>> SUPPORTED_MODULE_TYPES_PREDICATE =
-      new Predicate<TargetNode<?>>() {
-        @Override
-        public boolean apply(TargetNode<?> input) {
-          return SUPPORTED_MODULE_TYPES.contains(input.getType());
-        }
-      };
+    public static DependencyType merge(DependencyType left, DependencyType right) {
+      if (left.equals(right)) {
+        return left;
+      }
+      return DependencyType.PROD;
+    }
+
+    public static <T> void putWithMerge(Map<T, DependencyType> map, T key, DependencyType value) {
+      DependencyType oldValue = map.get(key);
+      if (oldValue != null) {
+        value = merge(oldValue, value);
+      }
+      map.put(key, value);
+    }
+  }
 
   /**
    * Create all the modules we are capable of representing in IntelliJ from the supplied graph.
    *
    * @param targetGraph graph whose nodes will be converted to {@link IjModule}s.
    * @return map which for every BuildTarget points to the corresponding IjModule. Multiple
-   *             BuildTarget can point to one IjModule (many:one mapping), the BuildTargets which
-   *             can't be prepresented in IntelliJ are missing from this mapping.
+   * BuildTarget can point to one IjModule (many:one mapping), the BuildTargets which
+   * can't be prepresented in IntelliJ are missing from this mapping.
    */
-  private static ImmutableMap<BuildTarget, IjModule> createModules(
-      TargetGraph targetGraph,
-      IjLibraryFactory.IjLibraryFactoryResolver libraryFactoryResolver) {
-    IjLibraryFactory libraryFactory = IjLibraryFactory.create(
-        targetGraph.getNodes(),
-        libraryFactoryResolver);
-    IjModuleFactory moduleFactory = new IjModuleFactory(libraryFactory);
+  public static ImmutableMap<BuildTarget, IjModule> createModules(TargetGraph targetGraph) {
+    IjModuleFactory moduleFactory = new IjModuleFactory();
     ImmutableSet<TargetNode<?>> supportedTargets = FluentIterable.from(targetGraph.getNodes())
-        .filter(SUPPORTED_MODULE_TYPES_PREDICATE)
+        .filter(IjModuleFactory.SUPPORTED_MODULE_TYPES_PREDICATE)
         .toSet();
     ImmutableListMultimap<Path, TargetNode<?>> baseTargetPathMultimap =
         FluentIterable.from(supportedTargets).index(
@@ -97,7 +95,7 @@ public class IjModuleGraph extends DefaultTraversableGraph<IjModule> {
 
     ImmutableMap.Builder<BuildTarget, IjModule> moduleMapBuilder = new ImmutableMap.Builder<>();
 
-    for (Path baseTargetPath: baseTargetPathMultimap.keySet()) {
+    for (Path baseTargetPath : baseTargetPathMultimap.keySet()) {
       ImmutableSet<TargetNode<?>> targets =
           FluentIterable.from(baseTargetPathMultimap.get(baseTargetPath)).toSet();
 
@@ -114,63 +112,110 @@ public class IjModuleGraph extends DefaultTraversableGraph<IjModule> {
   /**
    * @param targetGraph input graph.
    * @return module graph corresponding to the supplied {@link TargetGraph}. Multiple targets from
-   *         the same base path are mapped to a single module, therefore an IjModuleGraph edge
-   *         exists between two modules (Ma, Mb) if a TargetGraph edge existed between a pair of
-   *         nodes (Ta, Tb) and Ma contains Ta and Mb contains Tb.
+   * the same base path are mapped to a single module, therefore an IjModuleGraph edge
+   * exists between two modules (Ma, Mb) if a TargetGraph edge existed between a pair of
+   * nodes (Ta, Tb) and Ma contains Ta and Mb contains Tb.
    */
   public static IjModuleGraph from(
       TargetGraph targetGraph,
       IjLibraryFactory.IjLibraryFactoryResolver libraryFactoryResolver) {
-    final MutableDirectedGraph<IjModule> moduleGraph = new MutableDirectedGraph<>();
+    final IjLibraryFactory libraryFactory = IjLibraryFactory.create(
+        targetGraph.getNodes(),
+        libraryFactoryResolver);
     final ImmutableMap<BuildTarget, IjModule> rulesToModules =
-        createModules(targetGraph, libraryFactoryResolver);
+        createModules(targetGraph);
     final ExportedDepsClosureResolver exportedDepsClosureResolver =
         new ExportedDepsClosureResolver(targetGraph);
+    ImmutableMap.Builder<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>>
+        depsBuilder = ImmutableMap.builder();
+    final Set<IjLibrary> referencedLibraries = new HashSet<>();
 
-    for (IjModule module : rulesToModules.values()) {
-      moduleGraph.addNode(module);
+    for (IjModule module : FluentIterable.from(rulesToModules.values()).toSet()) {
+      Map<IjProjectElement, DependencyType> moduleDeps = new HashMap<>();
+
+      for (Map.Entry<BuildTarget, DependencyType> entry : module.getDependencies().entrySet()) {
+        BuildTarget depBuildTarget = entry.getKey();
+        DependencyType depType = entry.getValue();
+
+        ImmutableSet<IjProjectElement> depElements = FluentIterable.from(
+            exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget))
+            .append(depBuildTarget)
+            .transform(
+                new Function<BuildTarget, IjProjectElement>() {
+                  @Nullable
+                  @Override
+                  public IjProjectElement apply(BuildTarget depTarget) {
+                    IjModule depModule = rulesToModules.get(depTarget);
+                    if (depModule != null) {
+                      return depModule;
+                    }
+                    IjLibrary library = libraryFactory.getLibrary(depTarget).orNull();
+                    if (library != null) {
+                      referencedLibraries.add(library);
+                    }
+                    return library;
+                  }
+                })
+            .filter(Predicates.notNull())
+            .toSet();
+
+        for (IjProjectElement depElement : depElements) {
+          Preconditions.checkState(!depElement.equals(module));
+          DependencyType.putWithMerge(moduleDeps, depElement, depType);
+        }
+      }
+
+      depsBuilder.put(module, ImmutableMap.copyOf(moduleDeps));
     }
 
-    AbstractBottomUpTraversal<TargetNode<?>, IjModuleGraph> bottomUpTraversal =
-        new AbstractBottomUpTraversal<TargetNode<?>, IjModuleGraph>(targetGraph) {
-          @Override
-          public void visit(TargetNode<?> node) {
-            IjModule module = rulesToModules.get(node.getBuildTarget());
-            if (module == null) {
-              return;
-            }
+    for (IjLibrary library : referencedLibraries) {
+      depsBuilder.put(library, ImmutableMap.<IjProjectElement, DependencyType>of());
+    }
 
-            ImmutableSet<BuildTarget> deps = FluentIterable.from(node.getDeps())
-                .transformAndConcat(
-                    new Function<BuildTarget, Iterable<BuildTarget>>() {
-                      @Override
-                      public Iterable<BuildTarget> apply(BuildTarget input) {
-                        return exportedDepsClosureResolver.getExportedDepsClosure(input);
-                      }
-                    })
-                .append(node.getDeps())
-                .toSet();
-
-            for (BuildTarget dep : deps) {
-              IjModule depModule = rulesToModules.get(dep);
-              if (depModule == null || depModule.equals(module)) {
-                continue;
-              }
-              moduleGraph.addEdge(module, depModule);
-            }
-          }
-
-          @Override
-          public IjModuleGraph getResult() {
-            return new IjModuleGraph(moduleGraph);
-          }
-        };
-
-    bottomUpTraversal.traverse();
-    return bottomUpTraversal.getResult();
+    return new IjModuleGraph(depsBuilder.build());
   }
 
-  public IjModuleGraph(MutableDirectedGraph<IjModule> graph) {
-    super(graph);
+  public ImmutableSet<IjProjectElement> getNodes() {
+    return deps.keySet();
+  }
+
+  public ImmutableSet<IjModule> getModuleNodes() {
+    return FluentIterable.from(deps.keySet()).filter(IjModule.class).toSet();
+  }
+
+  public ImmutableMap<IjProjectElement, DependencyType> getDepsFor(IjProjectElement source) {
+    return Optional.fromNullable(deps.get(source))
+        .or(ImmutableMap.<IjProjectElement, DependencyType>of());
+  }
+
+  public ImmutableMap<IjModule, DependencyType> getDependentModulesFor(IjModule source) {
+    final ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
+    return FluentIterable.from(deps.keySet()).filter(IjModule.class)
+        .toMap(
+            new Function<IjModule, DependencyType>() {
+              @Override
+              public DependencyType apply(IjModule input) {
+                return Preconditions.checkNotNull(deps.get(input));
+              }
+            });
+  }
+
+  public ImmutableMap<IjLibrary, DependencyType> getDependentLibrariesFor(IjModule source) {
+    final ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
+    return FluentIterable.from(deps.keySet()).filter(IjLibrary.class)
+        .toMap(
+            new Function<IjLibrary, DependencyType>() {
+              @Override
+              public DependencyType apply(IjLibrary input) {
+                return Preconditions.checkNotNull(deps.get(input));
+              }
+            });
+  }
+
+  private ImmutableMap<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>> deps;
+
+  public IjModuleGraph(
+      ImmutableMap<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>> deps) {
+    this.deps = deps;
   }
 }

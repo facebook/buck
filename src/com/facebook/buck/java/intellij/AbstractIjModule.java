@@ -16,11 +16,13 @@
 
 package com.facebook.buck.java.intellij;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
@@ -33,7 +35,7 @@ import java.nio.file.Paths;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractIjModule {
+abstract class AbstractIjModule implements IjProjectElement {
 
   /**
    * This directory is analogous to the gen/ directory that IntelliJ would produce when building an
@@ -44,9 +46,13 @@ abstract class AbstractIjModule {
    */
   private static final Path ANDROID_GEN_PATH = BuckConstant.BUCK_OUTPUT_PATH.resolve("android");
 
-  /**
-   * @return set of targets that this module was created from.
-   */
+  @Override
+  @Value.Derived
+  public String getName() {
+    return Util.intelliJModuleNameFromPath(getModuleBasePath());
+  }
+
+  @Override
   public abstract ImmutableSet<TargetNode<?>> getTargets();
 
   /**
@@ -60,21 +66,20 @@ abstract class AbstractIjModule {
    */
   public abstract ImmutableSet<IjFolder> getFolders();
 
-  public abstract ImmutableSet<IjLibrary> getLibraries();
+  /**
+   * @return map of {@link BuildTarget}s the module depends on and information on whether it's a
+   *         test-only dependency or not.
+   */
+  public abstract ImmutableMap<BuildTarget, IjModuleGraph.DependencyType> getDependencies();
 
   public abstract Optional<IjModuleAndroidFacet> getAndroidFacet();
-
-  @Value.Derived
-  public String getModuleName() {
-    return Util.intelliJModuleNameFromPath(getModuleBasePath());
-  }
 
   /**
    * @return path where the XML describing the module to IntelliJ will be written to.
    */
   @Value.Derived
   public Path getModuleImlFilePath() {
-    return getModuleBasePath().resolve(getModuleName() + ".iml");
+    return getModuleBasePath().resolve(getName() + ".iml");
   }
 
   /**
@@ -92,16 +97,26 @@ abstract class AbstractIjModule {
   }
 
   @Value.Check
-  protected void check() {
+  protected void targetSetCantBeEmpty() {
     Preconditions.checkArgument(!getTargets().isEmpty());
+  }
 
-    // All rules sit under the module's base path
+  @Value.Check
+  protected void allRulesAreChildrenOfBasePath() {
     Path moduleBasePath = getModuleBasePath();
     for (TargetNode<?> target : getTargets()) {
       Path targetBasePath = target.getBuildTarget().getBasePath();
       Preconditions.checkArgument(
           targetBasePath.startsWith(moduleBasePath),
           "A module cannot be composed of targets which are outside of its base path.");
+    }
+  }
+
+  @Value.Check
+  protected void moduleDoesntDependOnItself() {
+    ImmutableSet<BuildTarget> deps = getDependencies().keySet();
+    for (TargetNode<?> targetNode : getTargets()) {
+      Preconditions.checkArgument(!deps.contains(targetNode.getBuildTarget()));
     }
   }
 }

@@ -146,6 +146,7 @@ public abstract class IjLibraryFactory {
         IjLibrary.Builder libraryBuilder = IjLibrary.builder();
         rule.apply((TargetNode) node, libraryBuilder);
         libraryBuilder.setName(libraryName);
+        libraryBuilder.setTargets(ImmutableSet.<TargetNode<?>>of(node));
         mapBuilder.put(node.getBuildTarget(), libraryBuilder.build());
       }
 

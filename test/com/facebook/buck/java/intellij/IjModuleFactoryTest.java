@@ -24,16 +24,16 @@ import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavaTestBuilder;
-import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
@@ -42,54 +42,196 @@ import java.nio.file.Paths;
 
 public class IjModuleFactoryTest {
 
-  private static final IjLibraryFactory NO_OP_LIBRARY_FACTORY = new IjLibraryFactory() {
-
-    @Override
-    public Optional<IjLibrary> getLibrary(BuildTarget target) {
-      return Optional.absent();
-    }
-  };
-
   @Test
-  public void testIjLibraryResolution() {
-    final IjLibrary testLibrary = IjLibrary.builder()
-        .setName("library_test_library")
-        .setBinaryJar(Paths.get("test.jar"))
-        .build();
+  public void testModuleDep() {
+    IjModuleFactory factory = new IjModuleFactory();
 
-    final TargetNode<?> prebuiltJar = PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third-party:prebuilt"))
-        .build();
-
-    TargetNode<?> javaLib = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
-        .addSrc(Paths.get("java/com/example/base/File.java"))
-        .addDep(prebuiltJar.getBuildTarget())
-        .build();
-
-    IjLibraryFactory testLibraryFactory = new IjLibraryFactory() {
-
-      @Override
-      public Optional<IjLibrary> getLibrary(BuildTarget target) {
-        if (target.equals(prebuiltJar.getBuildTarget())) {
-          return Optional.of(testLibrary);
-        }
-        return Optional.absent();
-      }
-    };
-
-    IjModuleFactory factory = new IjModuleFactory(testLibraryFactory);
     Path moduleBasePath = Paths.get("java/com/example/base");
+    BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party/guava:guava");
+
+    TargetNode<?> javaLibBase = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .addSrc(moduleBasePath.resolve("File.java"))
+        .addDep(buildTargetGuava)
+        .build();
+
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(javaLib));
+        ImmutableSet.<TargetNode<?>>of(javaLibBase));
 
-    assertEquals(ImmutableSet.of(testLibrary), module.getLibraries());
+    assertEquals(ImmutableMap.of(buildTargetGuava, IjModuleGraph.DependencyType.PROD),
+        module.getDependencies());
+  }
+
+  @Test
+  public void testModuleDepMerge() {
+    IjModuleFactory factory = new IjModuleFactory();
+
+    Path moduleBasePath = Paths.get("test/com/example/base");
+    BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party/guava:guava");
+    BuildTarget buildTargetJunit = BuildTargetFactory.newInstance("//third-party/junit:junit");
+
+    TargetNode<?> javaLibBase = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//test/com/example/base:base"))
+        .addSrc(moduleBasePath.resolve("File.java"))
+        .addDep(buildTargetGuava)
+        .build();
+
+    TargetNode<?> javaLibExtra = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//test/com/example/base:extra"))
+        .addSrc(moduleBasePath.resolve("File2.java"))
+        .addDep(javaLibBase.getBuildTarget())
+        .addDep(buildTargetJunit)
+        .build();
+
+    IjModule module = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.of(javaLibBase, javaLibExtra));
+
+    assertEquals(ImmutableMap.of(
+            buildTargetGuava, IjModuleGraph.DependencyType.PROD,
+            buildTargetJunit, IjModuleGraph.DependencyType.PROD),
+        module.getDependencies());
+  }
+
+  @Test
+  public void testModuleTestDep() {
+    IjModuleFactory factory = new IjModuleFactory();
+
+    Path moduleBasePath = Paths.get("test/com/example/base");
+    BuildTarget buildTargetJunit = BuildTargetFactory.newInstance("//third-party/junit:junit");
+
+    TargetNode<?> javaTestExtra = JavaTestBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//test/com/example/base:extra"))
+        .addSrc(moduleBasePath.resolve("base/File.java"))
+        .addDep(buildTargetJunit)
+        .build();
+
+    IjModule module = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.<TargetNode<?>>of(javaTestExtra));
+
+    assertEquals(ImmutableMap.of(buildTargetJunit, IjModuleGraph.DependencyType.TEST),
+        module.getDependencies());
+  }
+
+  @Test
+  public void testModuleDepTypeResolution() {
+    IjModuleFactory factory = new IjModuleFactory();
+
+    Path moduleBasePath = Paths.get("java/com/example");
+    BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party:guava");
+    BuildTarget buildTargetJunit = BuildTargetFactory.newInstance("//third-party:junit");
+
+    TargetNode<?> javaLibBase = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .addSrc(moduleBasePath.resolve("base/File.java"))
+        .addDep(buildTargetGuava)
+        .build();
+
+    TargetNode<?> javaTestBase = JavaTestBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/test:test"))
+        .addSrc(moduleBasePath.resolve("test/TestFile.java"))
+        .addDep(buildTargetJunit)
+        .addDep(buildTargetGuava)
+        .build();
+
+    IjModule module = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.of(javaLibBase, javaTestBase));
+
+    // Guava is a dependency of both a prod and test target therefore it should be kept as a
+    // prod dependency.
+    assertEquals(ImmutableMap.of(
+            buildTargetGuava, IjModuleGraph.DependencyType.PROD,
+            buildTargetJunit, IjModuleGraph.DependencyType.TEST),
+        module.getDependencies());
+  }
+
+  @Test
+  public void testModuleDepTypePromotion() {
+    IjModuleFactory factory = new IjModuleFactory();
+
+    Path moduleBasePath = Paths.get("java/com/example");
+    BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party:guava");
+    BuildTarget buildTargetHamcrest = BuildTargetFactory.newInstance("//third-party:hamcrest");
+    BuildTarget buildTargetJunit = BuildTargetFactory.newInstance("//third-party:junit");
+
+    TargetNode<?> javaLibBase = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .addSrc(moduleBasePath.resolve("base/File.java"))
+        .addDep(buildTargetGuava)
+        .build();
+
+    TargetNode<?> javaTestBase = JavaTestBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:test"))
+        .addSrc(moduleBasePath.resolve("base/TestFile.java"))
+        .addSrc(moduleBasePath.resolve("test/TestFile.java"))
+        .addDep(buildTargetJunit)
+        .addDep(buildTargetGuava)
+        .build();
+
+    TargetNode<?> javaTest = JavaTestBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/test:test"))
+        .addSrc(moduleBasePath.resolve("test/TestFile2.java"))
+        .addDep(javaLibBase.getBuildTarget())
+        .addDep(buildTargetJunit)
+        .addDep(buildTargetHamcrest)
+        .build();
+
+    IjModule module = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.of(javaLibBase, javaTestBase, javaTest));
+
+    // Because both javaLibBase and javaTestBase have source files in the same folder and IntelliJ
+    // operates at folder level granularity it is impossible to split the files into separate test
+    // and prod sets. Therefore it is necessary to "promote" the test dependencies to prod so that
+    // it's possible to compile all of the code in the folder.
+    assertEquals(ImmutableMap.of(
+            buildTargetGuava, IjModuleGraph.DependencyType.PROD,
+            buildTargetJunit, IjModuleGraph.DependencyType.PROD,
+            buildTargetHamcrest, IjModuleGraph.DependencyType.TEST),
+        module.getDependencies());
+  }
+
+  @Test
+  public void testDepWhenNoSources() {
+    IjModuleFactory factory = new IjModuleFactory();
+
+    Path moduleBasePath = Paths.get("java/com/example");
+    BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party:guava");
+
+    TargetNode<?> javaLibBase = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .addDep(buildTargetGuava)
+        .build();
+
+    TargetNode<?> androidBinary = AndroidBinaryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/test:test"))
+        .setManifest(new TestSourcePath("java/com/example/test/AndroidManifest.xml"))
+        .setOriginalDeps(ImmutableSortedSet.of(javaLibBase.getBuildTarget()))
+        .build();
+
+    IjModule moduleJavaLib = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.<TargetNode<?>>of(javaLibBase));
+
+    IjModule moduleFromBinary = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.<TargetNode<?>>of(androidBinary));
+
+    assertEquals(ImmutableMap.of(
+            buildTargetGuava, IjModuleGraph.DependencyType.PROD),
+        moduleJavaLib.getDependencies());
+
+    assertEquals(ImmutableMap.of(
+            javaLibBase.getBuildTarget(), IjModuleGraph.DependencyType.PROD),
+        moduleFromBinary.getDependencies());
   }
 
   @Test
   public void testJavaLibrary() {
-    IjModuleFactory factory = new IjModuleFactory(NO_OP_LIBRARY_FACTORY);
+    IjModuleFactory factory = new IjModuleFactory();
 
     TargetNode<?> javaLib = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
@@ -104,6 +246,7 @@ public class IjModuleFactoryTest {
     assertEquals(moduleBasePath, module.getModuleBasePath());
     assertFalse(module.getAndroidFacet().isPresent());
     assertEquals(1, module.getFolders().size());
+    assertEquals(ImmutableSet.of(javaLib), module.getTargets());
 
     IjFolder folder = module.getFolders().iterator().next();
     assertEquals(Paths.get("java/com/example/base"), folder.getPath());
@@ -113,7 +256,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testJavaLibraryInRoot() {
-    IjModuleFactory factory = new IjModuleFactory(NO_OP_LIBRARY_FACTORY);
+    IjModuleFactory factory = new IjModuleFactory();
 
     TargetNode<?> javaLib = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//:base"))
@@ -146,7 +289,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testJavaLibrariesWithParentBasePath() {
-    IjModuleFactory factory = new IjModuleFactory(NO_OP_LIBRARY_FACTORY);
+    IjModuleFactory factory = new IjModuleFactory();
 
     TargetNode<?> javaLib1 = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:core"))
@@ -173,8 +316,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testJavaLibraryAndTestLibraryResultInOnlyOneFolder() {
-    IjModuleFactory factory = new IjModuleFactory(
-        NO_OP_LIBRARY_FACTORY);
+    IjModuleFactory factory = new IjModuleFactory();
 
     TargetNode<?> javaLib = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third-party/example:core"))
@@ -197,7 +339,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testAndroidLibrary() {
-    IjModuleFactory factory = new IjModuleFactory(NO_OP_LIBRARY_FACTORY);
+    IjModuleFactory factory = new IjModuleFactory();
 
     TargetNode<?> androidLib = AndroidLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
@@ -215,7 +357,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testAndroidLibraries() {
-    IjModuleFactory factory = new IjModuleFactory(NO_OP_LIBRARY_FACTORY);
+    IjModuleFactory factory = new IjModuleFactory();
 
     TargetNode<?> javaLib = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
@@ -235,7 +377,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testAndroidBinary() {
-    IjModuleFactory factory = new IjModuleFactory(NO_OP_LIBRARY_FACTORY);
+    IjModuleFactory factory = new IjModuleFactory();
 
     SourcePath manifestPath = new TestSourcePath("AndroidManifest.xml");
     TargetNode<?> androidBinary = AndroidBinaryBuilder

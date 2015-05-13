@@ -55,8 +55,8 @@ public class IjProject {
   public ImmutableList<SerializableAndroidAar> getSerializedLibrariesDescription() {
     ImmutableSet.Builder<SerializableAndroidAar> serializableLibrariesBuilder =
         new ImmutableSet.Builder<>();
-    for (IjModule module: moduleGraph.getNodes()) {
-      for (IjLibrary library : module.getLibraries()) {
+    for (IjModule module : moduleGraph.getModuleNodes()) {
+      for (IjLibrary library : moduleGraph.getDependentLibrariesFor(module).keySet()) {
         SerializableAndroidAar serializableAndroidLibrary = new SerializableAndroidAar(
             library.getName(),
             null,
@@ -74,10 +74,10 @@ public class IjProject {
   public ImmutableList<SerializableModule> getSerializedProjectDescription() {
     ImmutableSet.Builder<SerializableModule> serializableModuleListBuilder =
         new ImmutableSet.Builder<>();
-    for (IjModule module: moduleGraph.getNodes()) {
+    for (IjModule module : moduleGraph.getModuleNodes()) {
       SerializableModule serializedModule = new SerializableModule();
 
-      serializedModule.name = module.getModuleName();
+      serializedModule.name = module.getName();
       serializedModule.pathToImlFile = module.getModuleImlFilePath();
       serializedModule.sourceFolders = toSourceFolders(
           module.getFolders(),
@@ -86,8 +86,8 @@ public class IjProject {
       serializedModule.moduleGenPath = module.getRelativeGenPath();
       serializedModule.dependencies =
           FluentIterable.from(Iterables.concat(
-              toDependentModules(moduleGraph.getOutgoingNodesFor(module)),
-              librariesToDependentModules(module.getLibraries()),
+              toDependentModules(moduleGraph.getDependentModulesFor(module).keySet()),
+              librariesToDependentModules(moduleGraph.getDependentLibrariesFor(module).keySet()),
               ImmutableList.of(DependentModule.newInheritedJdk())
           )).toList();
       serializedModule.isRootModule = module.getModuleBasePath().toString().isEmpty();
@@ -165,7 +165,7 @@ public class IjProject {
               public SerializableDependentModule apply(IjModule input) {
                 SerializableDependentModule module = new SerializableDependentModule("module");
                 module.forTests = false;
-                module.moduleName = input.getModuleName();
+                module.moduleName = input.getName();
                 // TODO(mkosiba): all modules are non-test and 'PROVIDED'. This works fine for
                 //                indexing purposes but the resulting project is not buildable.
                 module.scope = "PROVIDED";

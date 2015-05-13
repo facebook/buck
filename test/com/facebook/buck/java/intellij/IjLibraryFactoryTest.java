@@ -96,6 +96,11 @@ public class IjLibraryFactoryTest {
   }
 
   @Test
+  public void testTargets() {
+    assertEquals(ImmutableSet.of(guava), guavaLibrary.getTargets());
+  }
+
+  @Test
   public void testPrebuiltJar() {
     assertEquals("library_third_party_java_guava_guava", guavaLibrary.getName());
     assertEquals(guavaJarPath, guavaLibrary.getBinaryJar());

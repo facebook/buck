@@ -16,8 +16,10 @@
 
 package com.facebook.buck.java.intellij;
 
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
@@ -28,12 +30,12 @@ import java.nio.file.Path;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractIjLibrary {
-  /**
-   * @return unique string identifying the library. This will be used by modules to refer to the
-   *         library.
-   */
+abstract class AbstractIjLibrary implements IjProjectElement {
+  @Override
   public abstract String getName();
+
+  @Override
+  public abstract ImmutableSet<TargetNode<?>> getTargets();
 
   /**
    * @return path to the binary (.jar or .aar) the library represents.
