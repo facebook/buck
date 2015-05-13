@@ -18,81 +18,48 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.BuildId;
-import com.facebook.buck.util.CapturingPrintStream;
-import com.google.common.base.Charsets;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-import com.martiansoftware.nailgun.NGContext;
 
-import org.easymock.EasyMock;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.file.Paths;
 
-public class MainTest {
+public class MainIntegrationTest {
 
-  private PrintStream stdOut;
-
-  @Before
-  public void setUp() {
-    this.stdOut = EasyMock.createMock(PrintStream.class);
-    EasyMock.replay(this.stdOut);
-  }
-
-  @After
-  public void tearDown() {
-    EasyMock.verify(this.stdOut);
-    this.stdOut = null;
-  }
-
-  @Test
-  public void testUsage() {
-    CapturingPrintStream stdErr = new CapturingPrintStream();
-
-    Main main = new Main(stdOut, stdErr);
-    int exitCode = main.usage();
-    assertEquals("When usage information is displayed, the exit code is 1.", 1, exitCode);
-    assertEquals(getUsageString(), stdErr.getContentsAsString(Charsets.US_ASCII));
-  }
+  @Rule
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
   public void testBuckNoArgs() throws IOException, InterruptedException {
-    CapturingPrintStream stdErr = new CapturingPrintStream();
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "empty_project", tmp);
+    workspace.setUp();
 
-    Main main = new Main(stdOut, stdErr);
-    int exitCode = main.runMainWithExitCode(
-        new BuildId(),
-        Paths.get("."),
-        Optional.<NGContext>absent(),
-        ImmutableMap.<String, String>of());
-    assertEquals(1, exitCode);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand();
+
+    result.assertFailure();
     assertEquals(
         "When the user does not specify any arguments, the usage information should be displayed",
         getUsageString(),
-        stdErr.getContentsAsString(Charsets.US_ASCII));
+        result.getStderr());
   }
 
   @Test
   public void testBuckHelp() throws IOException, InterruptedException {
-    CapturingPrintStream stdErr = new CapturingPrintStream();
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "empty_project", tmp);
+    workspace.setUp();
 
-    Main main = new Main(stdOut, stdErr);
-    int exitCode = main.runMainWithExitCode(
-        new BuildId(),
-        Paths.get("."),
-        Optional.<NGContext>absent(),
-        ImmutableMap.<String, String>of(),
-        "--help");
-    assertEquals(1, exitCode);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand();
+
+    result.assertFailure();
     assertEquals("Users instinctively try running `buck --help`, so it should print usage info.",
         getUsageString(),
-        stdErr.getContentsAsString(Charsets.US_ASCII));
+        result.getStderr());
   }
 
   private String getUsageString() {
