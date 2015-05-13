@@ -1060,7 +1060,17 @@ public class ProjectGenerator {
     Path hashCodeFilePath = headerSymlinkTreeRoot.resolve(".contents-hash");
     Optional<String> currentHashCode = projectFilesystem.readFileIfItExists(hashCodeFilePath);
     String newHashCode = getHeaderSymlinkTreeHashCode(resolvedContents).toString();
-    if (!Optional.of(newHashCode).equals(currentHashCode)) {
+    if (Optional.of(newHashCode).equals(currentHashCode)) {
+      LOG.debug(
+          "Symlink tree at %s is up to date, not regenerating (key %s).",
+          headerSymlinkTreeRoot,
+          newHashCode);
+    } else {
+      LOG.debug(
+          "Updating symlink tree at %s (old key %s, new key %s).",
+          headerSymlinkTreeRoot,
+          currentHashCode,
+          newHashCode);
       projectFilesystem.rmdir(headerSymlinkTreeRoot);
       projectFilesystem.mkdirs(headerSymlinkTreeRoot);
       for (Map.Entry<Path, Path> entry : resolvedContents.entrySet()) {
