@@ -42,6 +42,18 @@ public class MavenUrlDecoderTest {
   }
 
   @Test
+  public void parseMvnUrlWithDefaultDomainAndAarType() throws URISyntaxException {
+    URI seen = MavenUrlDecoder.toHttpUrl(
+        Optional.of("http://foo.bar"),
+        new URI("mvn:org.jdeferred:jdeferred-android-aar:aar:1.2.4"));
+
+    URI expected = new URI(
+        "http://foo.bar/org/jdeferred/jdeferred-android-aar/1.2.4/jdeferred-android-aar-1.2.4.aar");
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
   public void parseMvnUrlWithCustomDomain() throws URISyntaxException {
     URI seen = MavenUrlDecoder.toHttpUrl(
         Optional.of("http://foo.bar"),

@@ -109,6 +109,9 @@ public class MavenUrlDecoder {
       case "jar":
         return ".jar";
 
+      case "aar":
+        return ".aar";
+
       case "src":
         return "-sources.jar";
 
