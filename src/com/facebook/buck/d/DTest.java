@@ -57,7 +57,7 @@ public class DTest extends DLinkable implements TestRule {
   public DTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableSet<SourcePath> inputs,
+      ImmutableList<SourcePath> inputs,
       ImmutableSortedSet<String> contacts,
       ImmutableSortedSet<Label> labels,
       ImmutableSet<BuildRule> sourceUnderTest,

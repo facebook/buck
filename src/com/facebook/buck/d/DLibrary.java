@@ -23,13 +23,12 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class DLibrary extends DLinkable {
   public DLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableSet<SourcePath> inputs,
+      ImmutableList<SourcePath> inputs,
       Tool compiler) {
     super(
         params,

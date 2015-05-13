@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
@@ -28,7 +27,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
@@ -36,7 +34,7 @@ abstract class DLinkable extends AbstractBuildRule {
   @AddToRuleKey
   private final Tool compiler;
   @AddToRuleKey
-  private final ImmutableSet<Path> inputPaths;
+  private final ImmutableList<SourcePath> inputs;
   @AddToRuleKey
   private final ImmutableList<String> prependFlags;
   private final Path output;
@@ -44,24 +42,14 @@ abstract class DLinkable extends AbstractBuildRule {
   DLinkable(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableSet<SourcePath> srcs,
+      ImmutableList<SourcePath> inputs,
       ImmutableList<String> prependFlags,
       Path output,
       Tool compiler) {
     super(params, resolver);
-
-    ImmutableSet.Builder<Path> pathBuilder = ImmutableSet.builder();
-    pathBuilder.addAll(getResolver().getAllPaths(srcs));
-    for (BuildRule dep : getDeps()) {
-      Path depPath = dep.getPathToOutputFile();
-      if (depPath != null) {
-        pathBuilder.add(depPath);
-      }
-    }
-
-    inputPaths = pathBuilder.build();
-    this.output = output;
+    this.inputs = inputs;
     this.prependFlags = prependFlags;
+    this.output = output;
     this.compiler = compiler;
   }
 
@@ -76,7 +64,7 @@ abstract class DLinkable extends AbstractBuildRule {
             compiler.getCommandPrefix(getResolver()),
             prependFlags,
             output,
-            inputPaths));
+            getResolver().getAllPaths(inputs)));
   }
 
   @Override

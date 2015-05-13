@@ -24,8 +24,11 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -57,7 +60,14 @@ public class DBinaryDescription implements Description<DBinaryDescription.Arg> {
     return new DBinary(
         params,
         new SourcePathResolver(resolver),
-        args.srcs,
+        ImmutableList.<SourcePath>builder()
+            .addAll(args.srcs)
+            .addAll(
+                FluentIterable.from(params.getDeps())
+                    .filter(DLibrary.class)
+                    .transform(
+                        SourcePaths.getToBuildTargetSourcePath(params.getProjectFilesystem())))
+            .build(),
         dBuckConfig.getDCompiler());
   }
 
