@@ -31,32 +31,56 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions> {
+public class AuditInputCommand extends AbstractCommand {
 
   private static final Logger LOG = Logger.get(AuditInputCommand.class);
 
-  @Override
-  AuditCommandOptions createOptions() {
-    return new AuditCommandOptions();
+  @Option(name = "--json",
+      usage = "Output in JSON format")
+  private boolean generateJsonOutput;
+
+  public boolean shouldGenerateJsonOutput() {
+    return generateJsonOutput;
+  }
+
+  @Argument
+  private List<String> arguments = Lists.newArrayList();
+
+  public List<String> getArguments() {
+    return arguments;
+  }
+
+  @VisibleForTesting
+  void setArguments(List<String> arguments) {
+    this.arguments = arguments;
+  }
+
+  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
+    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
   }
 
   @Override
-  int runCommandWithOptionsInternal(final CommandRunnerParams params, AuditCommandOptions options)
+  public int runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // TargetNodes for the specified BuildTargets.
     final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
-        options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
+        getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
       params.getConsole().printBuildFailure("Please specify at least one build target.");
@@ -64,7 +88,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
     }
 
     ImmutableSet<BuildTarget> targets = FluentIterable
-        .from(options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
+        .from(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
         .transform(new Function<String, BuildTarget>() {
                      @Override
                      public BuildTarget apply(String input) {
@@ -86,16 +110,21 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
           params.getBuckEventBus(),
           params.getConsole(),
           params.getEnvironment(),
-          options.getEnableProfiling());
+          getEnableProfiling());
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
 
-    if (options.shouldGenerateJsonOutput()) {
+    if (shouldGenerateJsonOutput()) {
       return printJsonInputs(params, graph);
     }
     return printInputs(params, graph);
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return true;
   }
 
   @VisibleForTesting
@@ -131,7 +160,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
 
       @Override
       public Void getResult() {
-       return null;
+        return null;
       }
 
     }.traverse();
@@ -191,7 +220,7 @@ public class AuditInputCommand extends AbstractCommandRunner<AuditCommandOptions
   }
 
   @Override
-  String getUsageIntro() {
+  public String getShortDescription() {
     return "provides facilities to audit build targets' input files";
   }
 

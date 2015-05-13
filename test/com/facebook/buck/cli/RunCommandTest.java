@@ -38,8 +38,7 @@ public class RunCommandTest extends EasyMockSupport {
         .build();
 
     RunCommand runCommand = new RunCommand();
-    RunCommandOptions options = new RunCommandOptions();
-    int exitCode = runCommand.runCommandWithOptionsInternal(commandRunnerParams, options);
+    int exitCode = runCommand.run(commandRunnerParams);
     assertEquals("buck run <target> <arg1> <arg2>...\n", console.getTextWrittenToStdOut());
     assertEquals("BUILD FAILED: No target given to run\n", console.getTextWrittenToStdErr());
     assertEquals(1, exitCode);
@@ -55,9 +54,8 @@ public class RunCommandTest extends EasyMockSupport {
         .build();
 
     RunCommand runCommand = new RunCommand();
-    RunCommandOptions options = new RunCommandOptions();
-    options.setArguments(ImmutableList.of("//does/not/exist"));
-    int exitCode = runCommand.runCommandWithOptionsInternal(commandRunnerParams, options);
+    runCommand.setArguments(ImmutableList.of("//does/not/exist"));
+    int exitCode = runCommand.run(commandRunnerParams);
     assertEquals("", console.getTextWrittenToStdOut());
     String stderrText = console.getTextWrittenToStdErr();
     assertEquals(

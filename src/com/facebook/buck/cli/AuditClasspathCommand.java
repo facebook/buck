@@ -38,29 +38,68 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
+
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.SortedSet;
 
 import javax.annotation.Nullable;
 
-public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOptions> {
+public class AuditClasspathCommand extends AbstractCommand {
 
-  @Override
-  AuditCommandOptions createOptions() {
-    return new AuditCommandOptions();
+  /**
+   * Expected usage:
+   * <pre>
+   * buck audit classpath --dot //java/com/facebook/pkg:pkg > /tmp/graph.dot
+   * dot -Tpng /tmp/graph.dot -o /tmp/graph.png
+   * </pre>
+   */
+  @Option(name = "--dot",
+      usage = "Print dependencies as Dot graph")
+  private boolean generateDotOutput;
+
+  public boolean shouldGenerateDotOutput() {
+    return generateDotOutput;
+  }
+
+  @Option(name = "--json",
+      usage = "Output in JSON format")
+  private boolean generateJsonOutput;
+
+  public boolean shouldGenerateJsonOutput() {
+    return generateJsonOutput;
+  }
+
+  @Argument
+  private List<String> arguments = Lists.newArrayList();
+
+  public List<String> getArguments() {
+    return arguments;
+  }
+
+  @VisibleForTesting
+  void setArguments(List<String> arguments) {
+    this.arguments = arguments;
+  }
+
+  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
+    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
   }
 
   @Override
-  int runCommandWithOptionsInternal(final CommandRunnerParams params, AuditCommandOptions options)
+  public int runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // BuildRules for the specified BuildTargets.
     final ImmutableSet<BuildTarget> targets = FluentIterable
-        .from(options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
+        .from(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
         .transform(new Function<String, BuildTarget>() {
                      @Override
                      public BuildTarget apply(String input) {
@@ -85,7 +124,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
           params.getBuckEventBus(),
           params.getConsole(),
           params.getEnvironment(),
-          options.getEnableProfiling());
+          getEnableProfiling());
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
@@ -95,13 +134,18 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
         params.getBuckEventBus(),
         new BuildTargetNodeToBuildRuleTransformer());
 
-    if (options.shouldGenerateDotOutput()) {
+    if (shouldGenerateDotOutput()) {
       return printDotOutput(params, targetGraph);
-    } else if (options.shouldGenerateJsonOutput()) {
+    } else if (shouldGenerateJsonOutput()) {
       return printJsonClasspath(params, targetGraph, targetGraphTransformer, targets);
     } else {
       return printClasspath(params, targetGraph, targetGraphTransformer, targets);
     }
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return true;
   }
 
   @VisibleForTesting
@@ -189,7 +233,7 @@ public class AuditClasspathCommand extends AbstractCommandRunner<AuditCommandOpt
   }
 
   @Override
-  String getUsageIntro() {
+  public String getShortDescription() {
     return "provides facilities to audit build targets' classpaths";
   }
 

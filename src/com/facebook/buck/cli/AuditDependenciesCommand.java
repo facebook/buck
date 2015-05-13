@@ -32,31 +32,72 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
+
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
 
-public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDependenciesOptions> {
+public class AuditDependenciesCommand extends AbstractCommand {
 
   private static final Logger LOG = Logger.get(AuditDependenciesCommand.class);
 
-  @Override
-  AuditDependenciesOptions createOptions() {
-    return new AuditDependenciesOptions();
+  @Option(name = "--json",
+      usage = "Output in JSON format")
+  private boolean generateJsonOutput;
+
+  public boolean shouldGenerateJsonOutput() {
+    return generateJsonOutput;
+  }
+
+  @Option(
+      name = "--include-tests",
+      usage = "Includes a target's tests with its dependencies. With the transitive flag, this " +
+          "prints the dependencies of the tests as well")
+  private boolean includeTests = false;
+
+  @Option(name = "--transitive",
+      aliases = { "-t" },
+      usage = "Whether to include transitive dependencies in the output")
+  private boolean transitive = false;
+
+  @Argument
+  private List<String> arguments = Lists.newArrayList();
+
+  public List<String> getArguments() {
+    return arguments;
+  }
+
+  @VisibleForTesting
+  void setArguments(List<String> arguments) {
+    this.arguments = arguments;
+  }
+
+  public boolean shouldShowTransitiveDependencies() {
+    return transitive;
+  }
+
+  public boolean shouldIncludeTests() {
+    return includeTests;
+  }
+
+  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
+    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
   }
 
   @Override
-  int runCommandWithOptionsInternal(
-      final CommandRunnerParams params,
-      AuditDependenciesOptions options)
+  public int runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
     final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
-        options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
+        getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");
@@ -64,7 +105,7 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
     }
 
     ImmutableSet<BuildTarget> targets = FluentIterable
-        .from(options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
+        .from(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
         .transform(
             new Function<String, BuildTarget>() {
               @Override
@@ -85,7 +126,7 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
           params.getBuckEventBus(),
           params.getConsole(),
           params.getEnvironment(),
-          options.getEnableProfiling());
+          getEnableProfiling());
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
@@ -93,12 +134,10 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
 
     TreeMultimap<BuildTarget, BuildTarget> targetsAndDependencies = TreeMultimap.create();
     for (BuildTarget target : targets) {
-      targetsAndDependencies.putAll(
-          target,
-          getDependenciesWithOptions(params, target, graph, options));
+      targetsAndDependencies.putAll(target, getDependenciesWithOptions(params, target, graph));
     }
 
-    if (options.shouldGenerateJsonOutput()) {
+    if (shouldGenerateJsonOutput()) {
       printJSON(params, targetsAndDependencies);
     } else {
       printToConsole(params, targetsAndDependencies);
@@ -107,20 +146,24 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
     return 0;
   }
 
+  @Override
+  public boolean isReadOnly() {
+    return true;
+  }
+
   ImmutableSet<BuildTarget> getDependenciesWithOptions(
       CommandRunnerParams params,
       BuildTarget target,
-      TargetGraph graph,
-      AuditDependenciesOptions options) throws IOException, InterruptedException {
-    ImmutableSet<BuildTarget> targetsToPrint = options.shouldShowTransitiveDependencies() ?
+      TargetGraph graph) throws IOException, InterruptedException {
+    ImmutableSet<BuildTarget> targetsToPrint = shouldShowTransitiveDependencies() ?
         getTransitiveDependencies(ImmutableSet.of(target), graph) :
         getImmediateDependencies(target, graph);
 
-    if (options.shouldIncludeTests()) {
+    if (shouldIncludeTests()) {
       ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
       targetsToPrint = builder
           .addAll(targetsToPrint)
-          .addAll(getTestTargetDependencies(params, target, graph, options))
+          .addAll(getTestTargetDependencies(params, target, graph))
           .build();
     }
     return targetsToPrint;
@@ -163,9 +206,8 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
   Collection<BuildTarget> getTestTargetDependencies(
       CommandRunnerParams params,
       BuildTarget target,
-      TargetGraph graph,
-      AuditDependenciesOptions options) throws IOException, InterruptedException {
-    if (!options.shouldShowTransitiveDependencies()) {
+      TargetGraph graph) throws IOException, InterruptedException {
+    if (!shouldShowTransitiveDependencies()) {
       return TargetNodes.getTestTargetsForNode(graph.get(target));
     }
 
@@ -175,7 +217,7 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
         params.getBuckEventBus(),
         params.getConsole(),
         params.getEnvironment(),
-        options.getEnableProfiling());
+        getEnableProfiling());
 
     TargetGraph graphWithTests = TargetGraphTestParsing.expandedTargetGraphToIncludeTestsForTargets(
         projectGraphParser,
@@ -221,7 +263,7 @@ public class AuditDependenciesCommand extends AbstractCommandRunner<AuditDepende
   }
 
   @Override
-  String getUsageIntro() {
+  public String getShortDescription() {
     return "provides facilities to audit build targets' dependencies";
   }
 

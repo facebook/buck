@@ -23,30 +23,53 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNodes;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.TreeMultimap;
 
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
+
 import java.io.IOException;
+import java.util.List;
 
-
-public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions> {
+public class AuditTestsCommand extends AbstractCommand {
 
   private static final Logger LOG = Logger.get(AuditTestsCommand.class);
 
-  @Override
-  AuditCommandOptions createOptions() {
-    return new AuditCommandOptions();
+  @Option(name = "--json",
+      usage = "Output in JSON format")
+  private boolean generateJsonOutput;
+
+  public boolean shouldGenerateJsonOutput() {
+    return generateJsonOutput;
+  }
+
+  @Argument
+  private List<String> arguments = Lists.newArrayList();
+
+  public List<String> getArguments() {
+    return arguments;
+  }
+
+  @VisibleForTesting
+  void setArguments(List<String> arguments) {
+    this.arguments = arguments;
+  }
+
+  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
+    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
   }
 
   @Override
-  int runCommandWithOptionsInternal(CommandRunnerParams params, AuditCommandOptions options)
-      throws IOException, InterruptedException {
+  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
-        options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
+        getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");
@@ -55,7 +78,7 @@ public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions
 
     ImmutableSet<BuildTarget> targets = getBuildTargets(
         params,
-        ImmutableSet.copyOf(options.getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
+        ImmutableSet.copyOf(getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
 
     TargetGraph graph;
     try {
@@ -65,7 +88,7 @@ public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions
           params.getBuckEventBus(),
           params.getConsole(),
           params.getEnvironment(),
-          options.getEnableProfiling());
+          getEnableProfiling());
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
@@ -75,13 +98,18 @@ public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions
         getTestsForTargets(targets, graph);
     LOG.debug("Printing out the following targets: " + targetsToPrint);
 
-    if (options.shouldGenerateJsonOutput()) {
+    if (shouldGenerateJsonOutput()) {
       printJSON(params, targetsToPrint);
     } else {
       printToConsole(params, targetsToPrint);
     }
 
     return 0;
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return true;
   }
 
   TreeMultimap<BuildTarget, BuildTarget> getTestsForTargets(
@@ -99,7 +127,8 @@ public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions
       Multimap<BuildTarget, BuildTarget> targetsAndTests)
       throws IOException {
     Multimap<BuildTarget, String> targetsAndTestNames =
-        Multimaps.transformValues(targetsAndTests, new Function<BuildTarget, String>() {
+        Multimaps.transformValues(
+            targetsAndTests, new Function<BuildTarget, String>() {
               @Override
               public String apply(BuildTarget input) {
                 return Preconditions.checkNotNull(input.getFullyQualifiedName());
@@ -119,7 +148,7 @@ public class AuditTestsCommand extends AbstractCommandRunner<AuditCommandOptions
   }
 
   @Override
-  String getUsageIntro() {
+  public String getShortDescription() {
     return "provides facilities to audit build targets' tests";
   }
 

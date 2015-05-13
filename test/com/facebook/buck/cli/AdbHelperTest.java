@@ -54,10 +54,10 @@ public class AdbHelperTest {
     basicAdbHelper = createAdbHelper();
   }
 
-  private InstallCommandOptions getOptions(String...args) throws CmdLineException {
-    InstallCommandOptions options = new InstallCommandOptions();
-    new AdditionalOptionsCmdLineParser(options).parseArgument(args);
-    return options;
+  private InstallCommand getCommand(String... args) throws CmdLineException {
+    InstallCommand command = new InstallCommand();
+    new AdditionalOptionsCmdLineParser(command).parseArgument(args);
+    return command;
   }
 
   private TestDevice createRealDevice(String serial, IDevice.DeviceState state) {
@@ -95,10 +95,10 @@ public class AdbHelperTest {
       throws CmdLineException {
     Console console = new TestConsole();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    InstallCommandOptions options = getOptions(args);
+    InstallCommand command = getCommand(args);
     return new AdbHelper(
-        options.adbOptions(),
-        options.targetDeviceOptions(),
+        command.adbOptions(),
+        command.targetDeviceOptions(),
         executionContext,
         console,
         eventBus,

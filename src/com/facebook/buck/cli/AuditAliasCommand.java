@@ -16,25 +16,29 @@
 
 package com.facebook.buck.cli;
 
+import org.kohsuke.args4j.Option;
+
 import java.io.IOException;
 
-public class AuditAliasCommand extends AbstractCommandRunner<AuditAliasCommandOptions> {
+public class AuditAliasCommand extends AbstractCommand {
 
-  @Override
-  String getUsageIntro() {
-    return "Query information about the [alias] list in .buckconfig.";
+  @Option(
+      name = "--list",
+      usage = "List known build target aliases.")
+  private boolean listAliases = false;
+
+  boolean isListAliases() {
+    return listAliases;
+  }
+
+  Iterable<String> getAliases(BuckConfig buckConfig) {
+    return buckConfig.getAliases();
   }
 
   @Override
-  AuditAliasCommandOptions createOptions() {
-    return new AuditAliasCommandOptions();
-  }
-
-  @Override
-  int runCommandWithOptionsInternal(CommandRunnerParams params, AuditAliasCommandOptions options)
-      throws IOException, InterruptedException {
-    if (options.isListAliases()) {
-      for (String alias : options.getAliases(params.getBuckConfig())) {
+  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+    if (isListAliases()) {
+      for (String alias : getAliases(params.getBuckConfig())) {
         params.getConsole().getStdOut().println(alias);
       }
       return 0;
@@ -42,5 +46,15 @@ public class AuditAliasCommand extends AbstractCommandRunner<AuditAliasCommandOp
 
     params.getConsole().getStdErr().println("No query supplied.");
     return 1;
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return true;
+  }
+
+  @Override
+  public String getShortDescription() {
+    return "Query information about the [alias] list in .buckconfig.";
   }
 }

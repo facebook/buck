@@ -179,7 +179,8 @@ public class BuckConfig {
    * @param projectFilesystem project for which the {@link BuckConfig} is being created.
    * @param files The sequence of {@code .buckconfig} files to load.
    */
-  public static BuckConfig createFromFiles(ProjectFilesystem projectFilesystem,
+  public static BuckConfig createFromFiles(
+      ProjectFilesystem projectFilesystem,
       Iterable<File> files,
       Platform platform,
       ImmutableMap<String, String> environment)

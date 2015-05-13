@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util;
 
-
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
@@ -55,8 +54,7 @@ public class BuckConstant {
   /**
    * An optional path-component for the directory where test-results are written.
    * <p>
-   * See the --one-time-directory command line option in
-   * {@link com.facebook.buck.cli.TestCommandOptions} and {@link com.facebook.buck.cli.TestCommand}
+   * See the --one-time-directory command line option in {@link com.facebook.buck.cli.TestCommand}
    * where this is used to give each parallel buck processes a unique test-results-directory
    * thereby stopping the parallel processes from interfering with each others results.
    * <p>

@@ -33,8 +33,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * {@link CommandRunnerParams} is the collection of parameters needed to create a
- * {@link CommandRunner}.
+ * {@link CommandRunnerParams} is the collection of parameters needed to run a {@link Command}.
  */
 class CommandRunnerParams {
 

@@ -28,22 +28,73 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.util.List;
 
-public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOptions> {
+public class UninstallCommand extends AbstractCommand {
 
-  @Override
-  UninstallCommandOptions createOptions() {
-    return new UninstallCommandOptions();
+  public static class UninstallOptions {
+    @VisibleForTesting static final String KEEP_LONG_ARG = "--keep";
+    @VisibleForTesting static final String KEEP_SHORT_ARG = "-k";
+    @Option(
+        name = KEEP_LONG_ARG,
+        aliases = { KEEP_SHORT_ARG },
+        usage = "Keep user data when uninstalling.")
+    private boolean keepData = false;
+
+    public boolean shouldKeepUserData() {
+      return keepData;
+    }
+  }
+
+  @AdditionalOptions
+  @SuppressFieldNotInitialized
+  private UninstallOptions uninstallOptions;
+
+  @AdditionalOptions
+  @SuppressFieldNotInitialized
+  private AdbOptions adbOptions;
+
+  @AdditionalOptions
+  @SuppressFieldNotInitialized
+  private TargetDeviceOptions deviceOptions;
+
+  @Argument
+  private List<String> arguments = Lists.newArrayList();
+
+  public List<String> getArguments() {
+    return arguments;
+  }
+
+  @VisibleForTesting
+  void setArguments(List<String> arguments) {
+    this.arguments = arguments;
+  }
+
+  public UninstallOptions uninstallOptions() {
+    return uninstallOptions;
+  }
+
+  public AdbOptions adbOptions() {
+    return adbOptions;
+  }
+
+  public TargetDeviceOptions targetDeviceOptions() {
+    return deviceOptions;
   }
 
   @Override
-  int runCommandWithOptionsInternal(CommandRunnerParams params, UninstallCommandOptions options)
-      throws IOException, InterruptedException {
+  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
 
     // Parse all of the build targets specified by the user.
     ActionGraph actionGraph;
@@ -51,15 +102,15 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
     try {
       Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
-              options.parseArgumentsAsTargetNodeSpecs(
+              parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
                   params.getRepository().getFilesystem().getIgnorePaths(),
-                  options.getArguments()),
+                  getArguments()),
               new ParserConfig(params.getBuckConfig()),
               params.getBuckEventBus(),
               params.getConsole(),
               params.getEnvironment(),
-              options.getEnableProfiling());
+              getEnableProfiling());
       buildTargets = result.getFirst();
       TargetGraphTransformer<ActionGraph> targetGraphTransformer = new TargetGraphToActionGraph(
           params.getBuckEventBus(),
@@ -93,8 +144,8 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
     // We need this in case adb isn't already running.
     try (ExecutionContext context = createExecutionContext(params)) {
       final AdbHelper adbHelper = new AdbHelper(
-          options.adbOptions(),
-          options.targetDeviceOptions(),
+          adbOptions(),
+          targetDeviceOptions(),
           context,
           params.getConsole(),
           params.getBuckEventBus(),
@@ -104,13 +155,19 @@ public class UninstallCommand extends AbstractCommandRunner<UninstallCommandOpti
       String appId = AdbHelper.tryToExtractPackageNameFromManifest(installableApk, context);
       return adbHelper.uninstallApp(
           appId,
-          options.uninstallOptions()
+          uninstallOptions()
       ) ? 0 : 1;
     }
   }
 
   @Override
-  String getUsageIntro() {
-    return "Specify an android_binary() rule whose APK should be uninstalled";
+  public String getShortDescription() {
+    return "uninstalls an APK";
   }
+
+  @Override
+  public boolean isReadOnly() {
+    return false;
+  }
+
 }

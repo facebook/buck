@@ -151,7 +151,7 @@ public class ProjectCommandIntellijTest {
   public void testCreateTargetGraphWithoutTests() {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
-        ProjectCommandOptions.Ide.INTELLIJ,
+        ProjectCommand.Ide.INTELLIJ,
         ImmutableSet.<BuildTarget>of(),
         /* withTests = */ false);
 
@@ -173,7 +173,7 @@ public class ProjectCommandIntellijTest {
   public void testCreateTargetGraphWithTests() {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
-        ProjectCommandOptions.Ide.INTELLIJ,
+        ProjectCommand.Ide.INTELLIJ,
         ImmutableSet.<BuildTarget>of(),
         /* withTests = */ true);
 
@@ -198,7 +198,7 @@ public class ProjectCommandIntellijTest {
   public void testCreateTargetGraphForSliceWithoutTests() {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
-        ProjectCommandOptions.Ide.INTELLIJ,
+        ProjectCommand.Ide.INTELLIJ,
         ImmutableSet.of(fooProjectNode.getBuildTarget()),
         /* withTests = */ false);
 
@@ -218,7 +218,7 @@ public class ProjectCommandIntellijTest {
   public void testCreateTargetGraphForSliceWithTests() {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
-        ProjectCommandOptions.Ide.INTELLIJ,
+        ProjectCommand.Ide.INTELLIJ,
         ImmutableSet.of(fooProjectNode.getBuildTarget()),
         /* withTests = */ true);
 
@@ -242,7 +242,7 @@ public class ProjectCommandIntellijTest {
   public void testCreateTargetGraphForSmallSliceWithoutTests() {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
-        ProjectCommandOptions.Ide.INTELLIJ,
+        ProjectCommand.Ide.INTELLIJ,
         ImmutableSet.of(bazProjectNode.getBuildTarget()),
         /* withTests = */ false);
 
@@ -260,7 +260,7 @@ public class ProjectCommandIntellijTest {
   public void testCreateTargetGraphForSmallSliceWithTests() {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
-        ProjectCommandOptions.Ide.INTELLIJ,
+        ProjectCommand.Ide.INTELLIJ,
         ImmutableSet.of(bazProjectNode.getBuildTarget()),
         /* withTests = */ true);
 

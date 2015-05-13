@@ -493,11 +493,11 @@ public class AdbHelper {
    */
   public boolean installApk(
       InstallableApk installableApk,
-      InstallCommandOptions options) throws InterruptedException {
+      InstallCommand command) throws InterruptedException {
     getBuckEventBus().post(InstallEvent.started(installableApk.getBuildTarget()));
 
     final File apk = installableApk.getApkPath().toFile();
-    final boolean installViaSd = options.shouldInstallViaSd();
+    final boolean installViaSd = command.shouldInstallViaSd();
     boolean success = adbCall(
         new AdbHelper.AdbCallable() {
           @Override
@@ -763,11 +763,11 @@ public class AdbHelper {
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(com.facebook.buck.rules.InstallableApk, InstallCommandOptions)
+   * @see #installApk(com.facebook.buck.rules.InstallableApk, InstallCommand)
    */
   public boolean uninstallApp(
       final String packageName,
-      final UninstallCommandOptions.UninstallOptions uninstallOptions) throws InterruptedException {
+      final UninstallCommand.UninstallOptions uninstallOptions) throws InterruptedException {
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
 
     getBuckEventBus().post(UninstallEvent.started(packageName));

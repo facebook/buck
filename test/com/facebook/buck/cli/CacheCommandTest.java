@@ -49,8 +49,7 @@ public class CacheCommandTest extends EasyMockSupport {
         .setConsole(console)
         .build();
     CacheCommand cacheCommand = new CacheCommand();
-    CacheCommandOptions options = new CacheCommandOptions();
-    int exitCode = cacheCommand.runCommandWithOptions(commandRunnerParams, options);
+    int exitCode = cacheCommand.run(commandRunnerParams);
     assertEquals(1, exitCode);
   }
 
@@ -76,13 +75,11 @@ public class CacheCommandTest extends EasyMockSupport {
         .setArtifactCacheFactory(artifactCacheFactory)
         .build();
 
-    CacheCommand cacheCommand = new CacheCommand();
-
     replayAll();
 
-    CacheCommandOptions options = new CacheCommandOptions();
-    options.setArguments(ImmutableList.of(ruleKeyHash));
-    int exitCode = cacheCommand.runCommandWithOptions(commandRunnerParams, options);
+    CacheCommand cacheCommand = new CacheCommand();
+    cacheCommand.setArguments(ImmutableList.of(ruleKeyHash));
+    int exitCode = cacheCommand.run(commandRunnerParams);
     assertEquals(0, exitCode);
     assertThat(
         successMessage.getValue(),
@@ -110,13 +107,11 @@ public class CacheCommandTest extends EasyMockSupport {
         .setArtifactCacheFactory(artifactCacheFactory)
         .build();
 
-    CacheCommand cacheCommand = new CacheCommand();
-
     replayAll();
 
-    CacheCommandOptions options = new CacheCommandOptions();
-    options.setArguments(ImmutableList.of(ruleKeyHash));
-    int exitCode = cacheCommand.runCommandWithOptions(commandRunnerParams, options);
+    CacheCommand cacheCommand = new CacheCommand();
+    cacheCommand.setArguments(ImmutableList.of(ruleKeyHash));
+    int exitCode = cacheCommand.run(commandRunnerParams);
     assertEquals(1, exitCode);
   }
 }

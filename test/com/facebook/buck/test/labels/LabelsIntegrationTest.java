@@ -92,7 +92,7 @@ public class LabelsIntegrationTest {
     // testy, so asking for all tests that match "testy OR lighty" will fail.
     //
     // NB: A bug in the way args are parsed means that even though "testy light" is a single arg
-    // here, it is split into multiple labels in by TestCommandOptions.
+    // here, it is split into multiple labels in by TestCommand.
     assertTestsFail("test", "--all", "--include", "testy", "lighty");
 
     // ...but "testy AND lighty" only matches the passing test.

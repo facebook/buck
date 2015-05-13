@@ -23,23 +23,74 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.util.List;
 
-public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
+public class RunCommand extends AbstractCommand {
 
-  @Override
-  String getUsageIntro() {
-    return "runs the specified target as a command, with provided args";
+  /**
+   * Expected usage:
+   * <pre>
+   *   buck run //java/com/facebook/tools/munge:munge --mungearg /tmp/input
+   * </pre>
+   */
+  @Argument
+  private List<String> noDashArguments = Lists.newArrayList();
+
+  @Option(name = "--", handler = ConsumeAllOptionsHandler.class)
+  private List<String> withDashArguments = Lists.newArrayList();
+
+  private Supplier<ImmutableList<String>> arguments = Suppliers.memoize(
+    new Supplier<ImmutableList<String>>() {
+      @Override
+      public ImmutableList<String> get() {
+        ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+        builder.addAll(noDashArguments);
+        builder.addAll(withDashArguments);
+        return builder.build();
+      }
+    });
+
+  public ImmutableList<String> getArguments() { return arguments.get(); }
+
+  /** @return the arguments (if any) to be passed to the target command. */
+  public ImmutableList<String> getTargetArguments() {
+    return arguments.get().subList(1, arguments.get().size());
+  }
+
+  public boolean hasTargetSpecified() {
+    return arguments.get().size() > 0;
+  }
+
+  /** @return the normalized target name for command to run. */
+  public String getTarget(BuckConfig buckConfig) {
+      return getCommandLineBuildTargetNormalizer(buckConfig).normalize(arguments.get().get(0));
+  }
+
+  @VisibleForTesting
+  void setArguments(ImmutableList<String> arguments) {
+    this.arguments = Suppliers.ofInstance(arguments);
   }
 
   @Override
-  int runCommandWithOptionsInternal(CommandRunnerParams params, RunCommandOptions options)
-      throws IOException, InterruptedException {
-    if (!options.hasTargetSpecified()) {
+  public String getShortDescription() {
+    return "runs a target as a command";
+  }
+
+  @Override
+  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+    if (!hasTargetSpecified()) {
       params.getConsole().printBuildFailure("No target given to run");
       params.getConsole().getStdOut().println("buck run <target> <arg1> <arg2>...");
       return 1;
@@ -47,14 +98,13 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
 
     // Make sure the target is built.
     BuildCommand buildCommand = new BuildCommand();
-    BuildCommandOptions buildCommandOptions = new BuildCommandOptions();
-    buildCommandOptions.setArguments(ImmutableList.of(options.getTarget(params.getBuckConfig())));
-    int exitCode = buildCommand.runCommandWithOptions(params, buildCommandOptions);
+    buildCommand.setArguments(ImmutableList.of(getTarget(params.getBuckConfig())));
+    int exitCode = buildCommand.runWithoutHelp(params);
     if (exitCode != 0) {
       return exitCode;
     }
 
-    String targetName = options.getTarget(params.getBuckConfig());
+    String targetName = getTarget(params.getBuckConfig());
     BuildTarget target = Iterables.getOnlyElement(
         getBuildTargets(params, ImmutableSet.of(targetName)));
 
@@ -81,7 +131,7 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
     // `buck run`, test server, hit ctrl-C, edit server code, repeat. This should not wedge buckd.
     ImmutableList<String> fullCommand = new ImmutableList.Builder<String>()
         .addAll(binaryBuildRule.getExecutableCommand(params.getRepository().getFilesystem()))
-        .addAll(options.getTargetArguments())
+        .addAll(getTargetArguments())
         .build();
 
     ShellStep step = new DefaultShellStep(fullCommand) {
@@ -97,7 +147,8 @@ public class RunCommand extends AbstractCommandRunner<RunCommandOptions> {
   }
 
   @Override
-  RunCommandOptions createOptions() {
-    return new RunCommandOptions();
+  public boolean isReadOnly() {
+    return false;
   }
+
 }

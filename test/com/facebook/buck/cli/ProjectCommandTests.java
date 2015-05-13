@@ -28,7 +28,7 @@ public class ProjectCommandTests {
 
   public static TargetGraphAndTargets createTargetGraph(
       TargetGraph projectGraph,
-      ProjectCommandOptions.Ide targetIde,
+      ProjectCommand.Ide targetIde,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       boolean withTests
   ) {

@@ -19,7 +19,11 @@ package com.facebook.buck.cli;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.MoreFiles;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,6 +32,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * This class creates a terminal command for Buck that creates a sample Buck project in the
@@ -36,16 +41,37 @@ import java.nio.file.Paths;
  * successfully build the quickstart project. It will fail if it cannot find the template directory,
  * or if it is unable to write to the destination directory.
  */
-public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOptions> {
+public class QuickstartCommand extends AbstractCommand {
 
   private static final Path PATH_TO_QUICKSTART_DIR = Paths.get(
       System.getProperty(
           "buck.quickstart_origin_dir",
           new File("src/com/facebook/buck/cli/quickstart/android").getAbsolutePath()));
 
-  @Override
-  QuickstartCommandOptions createOptions() {
-    return new QuickstartCommandOptions();
+  @Option(name = "--dest-dir", usage = "Destination project directory")
+  private String destDir = "";
+
+  @Option(name = "--android-sdk", usage = "Android SDK directory")
+  private String androidSdkDir = "";
+
+  @Argument
+  private List<String> arguments = Lists.newArrayList();
+
+  public List<String> getArguments() {
+    return arguments;
+  }
+
+  @VisibleForTesting
+  void setArguments(List<String> arguments) {
+    this.arguments = arguments;
+  }
+
+  public String getDestDir() {
+    return destDir;
+  }
+
+  public String getAndroidSdkDir() {
+    return androidSdkDir;
   }
 
   /**
@@ -56,15 +82,13 @@ public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOp
    * will fail if it cannot find the template directory or if it is unable to write to the
    * destination directory.
    *
-   * @param options an object representing command line options
    * @return status code - zero means no problem
    * @throws IOException if the command fails to read from the template project or write to the
    *     new project
    */
   @Override
-  int runCommandWithOptionsInternal(CommandRunnerParams params, QuickstartCommandOptions options)
-      throws IOException {
-    String projectDir = options.getDestDir().trim();
+  public int runWithoutHelp(CommandRunnerParams params) throws IOException {
+    String projectDir = getDestDir().trim();
     if (projectDir.isEmpty()) {
       projectDir = promptForPath(
           params,
@@ -86,7 +110,7 @@ public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOp
       return 1;
     }
 
-    String sdkLocation = options.getAndroidSdkDir();
+    String sdkLocation = getAndroidSdkDir();
     if (sdkLocation.isEmpty()) {
       sdkLocation = promptForPath(params, "Enter your Android SDK's location: ");
     }
@@ -120,6 +144,11 @@ public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOp
     params.getConsole().getStdOut().flush();
 
     return 0;
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return false;
   }
 
   private String promptForPath(CommandRunnerParams params, String prompt) throws IOException {
@@ -157,7 +186,8 @@ public class QuickstartCommand extends AbstractCommandRunner<QuickstartCommandOp
   }
 
   @Override
-  String getUsageIntro() {
+  public String getShortDescription() {
     return "generates a default project directory";
   }
+
 }

@@ -33,14 +33,12 @@ public class ServerStatusCommandTest extends EasyMockSupport {
 
   private TestConsole console;
   private WebServer webServer;
-  private ServerStatusCommand command;
   private CommandRunnerParams params;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     console = new TestConsole();
     webServer = createStrictMock(WebServer.class);
-    command = new ServerStatusCommand();
     params = CommandRunnerParamsForTesting.builder()
         .setWebserver(Optional.of(webServer))
         .setConsole(console)
@@ -52,9 +50,9 @@ public class ServerStatusCommandTest extends EasyMockSupport {
     expect(webServer.getPort()).andStubReturn(Optional.of(9000));
     replayAll();
 
-    ServerStatusCommandOptions options = new ServerStatusCommandOptions();
-    options.enableShowHttpserverPort();
-    command.runCommandWithOptionsInternal(params, options);
+    ServerStatusCommand command = new ServerStatusCommand();
+    command.enableShowHttpserverPort();
+    command.run(params);
     assertEquals("http.port=9000", console.getTextWrittenToStdOut().trim());
   }
 
@@ -63,9 +61,9 @@ public class ServerStatusCommandTest extends EasyMockSupport {
     expect(webServer.getPort()).andStubReturn(Optional.<Integer>absent());
     replayAll();
 
-    ServerStatusCommandOptions options = new ServerStatusCommandOptions();
-    options.enableShowHttpserverPort();
-    command.runCommandWithOptionsInternal(params, options);
+    ServerStatusCommand command = new ServerStatusCommand();
+    command.enableShowHttpserverPort();
+    command.run(params);
     assertEquals("http.port=-1", console.getTextWrittenToStdOut().trim());
   }
 
@@ -74,10 +72,10 @@ public class ServerStatusCommandTest extends EasyMockSupport {
     expect(webServer.getPort()).andStubReturn(Optional.of(9000));
     replayAll();
 
-    ServerStatusCommandOptions options = new ServerStatusCommandOptions();
-    options.enableShowHttpserverPort();
-    options.enablePrintJson();
-    command.runCommandWithOptionsInternal(params, options);
+    ServerStatusCommand command = new ServerStatusCommand();
+    command.enableShowHttpserverPort();
+    command.enablePrintJson();
+    command.run(params);
     assertEquals("{\"http.port\":9000}", console.getTextWrittenToStdOut().trim());
   }
 }

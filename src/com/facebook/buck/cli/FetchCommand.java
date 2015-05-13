@@ -38,18 +38,12 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.net.Proxy;
 
-public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
+public class FetchCommand extends BuildCommand {
 
   @Override
-  BuildCommandOptions createOptions() {
-    return new BuildCommandOptions();
-  }
+  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
 
-  @Override
-  int runCommandWithOptionsInternal(CommandRunnerParams params, BuildCommandOptions options)
-      throws IOException, InterruptedException {
-
-    if (options.getArguments().isEmpty()) {
+    if (getArguments().isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target to fetch.");
       return 1;
     }
@@ -57,10 +51,10 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
     if (params.getParser().getParseStartTime().isPresent()) {
       params.getBuckEventBus().post(
-          BuildEvent.started(options.getArguments()),
+          BuildEvent.started(getArguments()),
           params.getParser().getParseStartTime().get());
     } else {
-      params.getBuckEventBus().post(BuildEvent.started(options.getArguments()));
+      params.getBuckEventBus().post(BuildEvent.started(getArguments()));
     }
 
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
@@ -73,15 +67,15 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
     try {
       Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
-              options.parseArgumentsAsTargetNodeSpecs(
+              parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
                   params.getRepository().getFilesystem().getIgnorePaths(),
-                  options.getArguments()),
+                  getArguments()),
               new ParserConfig(params.getBuckConfig()),
               params.getBuckEventBus(),
               params.getConsole(),
               params.getEnvironment(),
-              options.getEnableProfiling());
+              getEnableProfiling());
       actionGraph = transformer.apply(result.getSecond());
       buildTargets = ruleGenerator.getDownloadableTargets();
     } catch (BuildTargetException | BuildFileParseException e) {
@@ -91,8 +85,8 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
 
     int exitCode;
     try (CommandThreadManager pool =
-        new CommandThreadManager("Fetch", options.getConcurrencyLimit(params.getBuckConfig()));
-         Build build = options.createBuild(
+             new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()));
+         Build build = createBuild(
              params.getBuckConfig(),
              actionGraph,
              params.getRepository().getFilesystem(),
@@ -100,7 +94,7 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
              new CachingBuildEngine(
                  pool.getExecutor(),
                  params.getBuckConfig().getSkipLocalBuildChainDepth().or(1L)),
-             getArtifactCache(params, options),
+             getArtifactCache(params),
              params.getConsole(),
              params.getBuckEventBus(),
              Optional.<TargetDevice>absent(),
@@ -110,14 +104,19 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
              params.getClock())) {
       exitCode = build.executeAndPrintFailuresToConsole(
           buildTargets,
-          options.isKeepGoing(),
+          isKeepGoing(),
           params.getConsole(),
-          options.getPathToBuildReport(params.getBuckConfig()));
+          getPathToBuildReport(params.getBuckConfig()));
     }
 
-    params.getBuckEventBus().post(BuildEvent.finished(options.getArguments(), exitCode));
+    params.getBuckEventBus().post(BuildEvent.finished(getArguments(), exitCode));
 
     return exitCode;
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return false;
   }
 
   private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
@@ -130,7 +129,8 @@ public class FetchCommand extends AbstractCommandRunner<BuildCommandOptions> {
   }
 
   @Override
-  String getUsageIntro() {
-    return "fetch remote resources";
+  public String getShortDescription() {
+    return "downloads remote resources to your local machine";
   }
+
 }

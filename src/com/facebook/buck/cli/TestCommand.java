@@ -43,6 +43,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.IndividualTestEvent;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -52,6 +53,7 @@ import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestCaseSummary;
@@ -59,11 +61,13 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.result.groups.TestResultsGrouper;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
@@ -85,6 +89,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 
+import org.kohsuke.args4j.Option;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -116,28 +121,192 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
+public class TestCommand extends BuildCommand {
+
+  public static final String USE_RESULTS_CACHE = "use_results_cache";
 
   public static final int TEST_FAILURES_EXIT_CODE = 42;
   private final AtomicInteger lastReportedTestSequenceNumber = new AtomicInteger();
   private int totalNumberOfTests;
 
-  @Override
-  TestCommandOptions createOptions() {
-    return new TestCommandOptions();
+  @Option(name = "--all",
+          usage =
+              "Whether all of the tests should be run. " +
+              "If no targets are given, --all is implied")
+  private boolean all = false;
+
+  @Option(name = "--code-coverage", usage = "Whether code coverage information will be generated.")
+  private boolean isCodeCoverageEnabled = false;
+
+  @Option(name = "--code-coverage-format", usage = "Format to be used for coverage")
+  private CoverageReportFormat coverageReportFormat = CoverageReportFormat.HTML;
+
+  @Option(name = "--debug",
+          usage = "Whether the test will start suspended with a JDWP debug port of 5005")
+  private boolean isDebugEnabled = false;
+
+  @Option(name = "--xml", usage = "Where to write test output as XML.")
+  @Nullable
+  private String pathToXmlTestOutput = null;
+
+  @Option(name = "--no-results-cache", usage = "Whether to use cached test results.")
+  @Nullable
+  private Boolean isResultsCacheDisabled = null;
+
+  @Option(name = "--build-filtered", usage = "Whether to build filtered out tests.")
+  @Nullable
+  private Boolean isBuildFiltered = null;
+
+  @Option(
+      name = "--ignore-when-dependencies-fail",
+      aliases = {"-i"},
+      usage =
+          "Ignore test failures for libraries if they depend on other libraries " +
+          "that aren't passing their tests.  " +
+          "For example, if java_library A depends on B, " +
+          "and they are tested respectively by T1 and T2 and both of those tests fail, " +
+          "only print the error for T2.")
+  private boolean isIgnoreFailingDependencies = false;
+
+  @Option(
+      name = "--dry-run",
+      usage = "Print tests that match the given command line options, but don't run them.")
+  private boolean isDryRun;
+
+  @Option(
+      name = "--one-time-output",
+      usage =
+          "Put test-results in a unique, one-time output directory.  " +
+          "This allows multiple tests to be run in parallel without interfering with each other, " +
+          "but at the expense of being unable to use cached results.  " +
+          "WARNING: this is experimental, and only works for Java tests!")
+  private boolean isUsingOneTimeOutput;
+
+  @Option(
+      name = "--shuffle",
+      usage =
+          "Randomize the order in which test classes are executed." +
+          "WARNING: only works for Java tests!")
+  private boolean isShufflingTests;
+
+  @Option(
+      name = "--exclude-transitive-tests",
+      usage =
+          "Only run the tests targets that were specified on the command line (without adding " +
+          "more tests by following dependencies).")
+  private boolean shouldExcludeTransitiveTests;
+
+  @AdditionalOptions
+  @SuppressFieldNotInitialized
+  private TargetDeviceOptions targetDeviceOptions;
+
+  @AdditionalOptions
+  @SuppressFieldNotInitialized
+  private TestSelectorOptions testSelectorOptions;
+
+  @AdditionalOptions
+  @SuppressFieldNotInitialized
+  private TestLabelOptions testLabelOptions;
+
+  public boolean isRunAllTests() {
+    return all || getArguments().isEmpty();
+  }
+
+  @Nullable
+  public String getPathToXmlTestOutput() {
+    return pathToXmlTestOutput;
+  }
+
+  public Optional<DefaultJavaPackageFinder> getJavaPackageFinder(BuckConfig buckConfig) {
+    return Optional.fromNullable(buckConfig.createDefaultJavaPackageFinder());
   }
 
   @Override
-  int runCommandWithOptionsInternal(CommandRunnerParams params, final TestCommandOptions options)
-      throws IOException, InterruptedException {
+  public boolean isCodeCoverageEnabled() {
+    return isCodeCoverageEnabled;
+  }
+
+  public CoverageReportFormat getCoverageReportFormat() {
+    return coverageReportFormat;
+  }
+
+  public boolean isResultsCacheEnabled(BuckConfig buckConfig) {
+    // The option is negative (--no-X) but we prefer to reason about positives, in the code.
+    if (isResultsCacheDisabled == null) {
+      boolean isUseResultsCache = buckConfig.getBooleanValue("test", USE_RESULTS_CACHE, true);
+      isResultsCacheDisabled = !isUseResultsCache;
+    }
+    return !isResultsCacheDisabled;
+  }
+
+  @Override
+  public boolean isDebugEnabled() {
+    return isDebugEnabled;
+  }
+
+  public boolean isUsingOneTimeOutputDirectories() {
+    return isUsingOneTimeOutput;
+  }
+
+  public boolean isIgnoreFailingDependencies() {
+    return isIgnoreFailingDependencies;
+  }
+
+  public Optional<TargetDevice> getTargetDeviceOptional() {
+    return targetDeviceOptions.getTargetDeviceOptional();
+  }
+
+  public TestSelectorList getTestSelectorList() {
+    return testSelectorOptions.getTestSelectorList();
+  }
+
+  public boolean shouldExplainTestSelectorList() {
+    return testSelectorOptions.shouldExplain();
+  }
+
+  public boolean isDryRun() {
+    return isDryRun;
+  }
+
+  public boolean isMatchedByLabelOptions(BuckConfig buckConfig, Set<Label> labels) {
+    return testLabelOptions.isMatchedByLabelOptions(buckConfig, labels);
+  }
+
+  public boolean isShufflingTests() {
+    return isShufflingTests;
+  }
+
+  public boolean shouldExcludeTransitiveTests() {
+    return shouldExcludeTransitiveTests;
+  }
+
+  public boolean shouldExcludeWin() {
+    return testLabelOptions.shouldExcludeWin();
+  }
+
+  public boolean isBuildFiltered(BuckConfig buckConfig) {
+    return isBuildFiltered != null ?
+        isBuildFiltered :
+        buckConfig.getBooleanValue("test", "build_filtered_tests", false);
+  }
+
+  public int getNumTestThreads(BuckConfig buckConfig) {
+    if (isDebugEnabled()) {
+      return 1;
+    }
+    return getNumThreads(buckConfig);
+  }
+
+  @Override
+  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
     if (params.getParser().getParseStartTime().isPresent()) {
       params.getBuckEventBus().post(
-          BuildEvent.started(options.getArguments()),
+          BuildEvent.started(getArguments()),
           params.getParser().getParseStartTime().get());
     } else {
-      params.getBuckEventBus().post(BuildEvent.started(options.getArguments()));
+      params.getBuckEventBus().post(BuildEvent.started(getArguments()));
     }
 
     // The first step is to parse all of the build files. This will populate the parser and find all
@@ -150,7 +319,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
       // If the user asked to run all of the tests, parse all of the build files looking for any
       // test rules.
-      if (options.isRunAllTests()) {
+      if (isRunAllTests()) {
         targetGraph = params.getParser().buildTargetGraphForTargetNodeSpecs(
             ImmutableList.of(
                 TargetNodePredicateSpec.of(
@@ -167,23 +336,23 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
             params.getBuckEventBus(),
             params.getConsole(),
             params.getEnvironment(),
-            options.getEnableProfiling()).getSecond();
+            getEnableProfiling()).getSecond();
         explicitBuildTargets = ImmutableSet.of();
 
-      // Otherwise, the user specified specific test targets to build and run, so build a graph
-      // around these.
+        // Otherwise, the user specified specific test targets to build and run, so build a graph
+        // around these.
       } else {
         Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
             .buildTargetGraphForTargetNodeSpecs(
-                options.parseArgumentsAsTargetNodeSpecs(
+                parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),
                     params.getRepository().getFilesystem().getIgnorePaths(),
-                    options.getArguments()),
+                    getArguments()),
                 parserConfig,
                 params.getBuckEventBus(),
                 params.getConsole(),
                 params.getEnvironment(),
-                options.getEnableProfiling());
+                getEnableProfiling());
         targetGraph = result.getSecond();
         explicitBuildTargets = result.getFirst();
       }
@@ -202,24 +371,24 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // Unless the user requests that we build filtered tests, filter them out here, before
     // the build.
-    if (!options.isBuildFiltered(params.getBuckConfig())) {
-      testRules = filterTestRules(params.getBuckConfig(), options, explicitBuildTargets, testRules);
+    if (!isBuildFiltered(params.getBuckConfig())) {
+      testRules = filterTestRules(params.getBuckConfig(), explicitBuildTargets, testRules);
     }
 
-    if (options.isDryRun()) {
+    if (isDryRun()) {
       printMatchingTestRules(params.getConsole(), testRules);
     }
 
     // Create artifact cache to initialize Cassandra connection, if appropriate.
-    ArtifactCache artifactCache = getArtifactCache(params, options);
+    ArtifactCache artifactCache = getArtifactCache(params);
 
     try (CommandThreadManager pool =
-        new CommandThreadManager("Test", options.getConcurrencyLimit(params.getBuckConfig()))) {
+             new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig()))) {
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
               pool.getExecutor(),
               params.getBuckConfig().getSkipLocalBuildChainDepth().or(1L));
-      try (Build build = options.createBuild(
+      try (Build build = createBuild(
           params.getBuckConfig(),
           graph,
           params.getRepository().getFilesystem(),
@@ -228,7 +397,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
           artifactCache,
           params.getConsole(),
           params.getBuckEventBus(),
-          options.getTargetDeviceOptional(),
+          getTargetDeviceOptional(),
           params.getPlatform(),
           params.getEnvironment(),
           params.getObjectMapper(),
@@ -237,33 +406,32 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         // Build all of the test rules.
         int exitCode = build.executeAndPrintFailuresToConsole(
             testRules,
-            options.isKeepGoing(),
+            isKeepGoing(),
             params.getConsole(),
-            options.getPathToBuildReport(params.getBuckConfig()));
-        params.getBuckEventBus().post(BuildEvent.finished(options.getArguments(), exitCode));
+            getPathToBuildReport(params.getBuckConfig()));
+        params.getBuckEventBus().post(BuildEvent.finished(getArguments(), exitCode));
         if (exitCode != 0) {
           return exitCode;
         }
 
         // If the user requests that we build tests that we filter out, then we perform
         // the filtering here, after we've done the build but before we run the tests.
-        if (options.isBuildFiltered(params.getBuckConfig())) {
+        if (isBuildFiltered(params.getBuckConfig())) {
           testRules =
-              filterTestRules(params.getBuckConfig(), options, explicitBuildTargets, testRules);
+              filterTestRules(params.getBuckConfig(), explicitBuildTargets, testRules);
         }
 
         // Once all of the rules are built, then run the tests.
         ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
-            options.getNumTestThreads(params.getBuckConfig()),
-            options.getLoadLimit(params.getBuckConfig()));
+            getNumTestThreads(params.getBuckConfig()),
+            getLoadLimit(params.getBuckConfig()));
         try (CommandThreadManager testPool =
-            new CommandThreadManager("Test-Run", concurrencyLimit)) {
+                 new CommandThreadManager("Test-Run", concurrencyLimit)) {
           return runTests(
               params,
               testRules,
               Preconditions.checkNotNull(build.getBuildContext()),
               build.getExecutionContext(),
-              options,
               testPool.getExecutor(),
               cachingBuildEngine);
         } catch (ExecutionException e) {
@@ -272,6 +440,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         }
       }
     }
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return false;
   }
 
   /**
@@ -399,32 +572,31 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     AbstractBottomUpTraversal<BuildRule, List<TestRule>> traversal =
         new AbstractBottomUpTraversal<BuildRule, List<TestRule>>(graph) {
 
-      private final List<TestRule> results = Lists.newArrayList();
+          private final List<TestRule> results = Lists.newArrayList();
 
-      @Override
-      public void visit(BuildRule buildRule) {
-        TestRule testRule = null;
-        if (buildRule instanceof TestRule) {
-          testRule = (TestRule) buildRule;
-        }
-        if (testRule != null) {
-          results.add(testRule);
-        }
-      }
+          @Override
+          public void visit(BuildRule buildRule) {
+            TestRule testRule = null;
+            if (buildRule instanceof TestRule) {
+              testRule = (TestRule) buildRule;
+            }
+            if (testRule != null) {
+              results.add(testRule);
+            }
+          }
 
-      @Override
-      public List<TestRule> getResult() {
-        return results;
-      }
-    };
+          @Override
+          public List<TestRule> getResult() {
+            return results;
+          }
+        };
     traversal.traverse();
     return traversal.getResult();
   }
 
   @VisibleForTesting
-  static Iterable<TestRule> filterTestRules(
+  Iterable<TestRule> filterTestRules(
       BuckConfig buckConfig,
-      final TestCommandOptions options,
       ImmutableSet<BuildTarget> explicitBuildTargets,
       Iterable<TestRule> testRules) {
 
@@ -440,17 +612,17 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     for (TestRule rule : testRules) {
       boolean explicitArgument = explicitBuildTargets.contains(rule.getBuildTarget());
-      boolean matchesLabel = options.isMatchedByLabelOptions(buckConfig, rule.getLabels());
+      boolean matchesLabel = isMatchedByLabelOptions(buckConfig, rule.getLabels());
 
       // We always want to run the rules that are given on the command line. Always. Unless we don't
       // want to.
-      if (options.shouldExcludeWin() && !matchesLabel) {
+      if (shouldExcludeWin() && !matchesLabel) {
         continue;
       }
 
       // The testRules Iterable contains transitive deps of the arguments given on the command line,
       // filter those out if such is the user's will.
-      if (options.shouldExcludeTransitiveTests() && !explicitArgument) {
+      if (shouldExcludeTransitiveTests() && !explicitArgument) {
         continue;
       }
 
@@ -470,20 +642,19 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       Iterable<TestRule> tests,
       BuildContext buildContext,
       ExecutionContext executionContext,
-      final TestCommandOptions options,
       ListeningExecutorService service,
       BuildEngine buildEngine)
       throws IOException, ExecutionException, InterruptedException {
 
     DefaultStepRunner stepRunner = new DefaultStepRunner(executionContext);
 
-    if (options.isUsingOneTimeOutputDirectories()) {
+    if (isUsingOneTimeOutputDirectories()) {
       BuckConstant.setOneTimeTestSubdirectory(UUID.randomUUID().toString());
     }
 
     ImmutableSet<JavaLibrary> rulesUnderTest;
     // If needed, we first run instrumentation on the class files.
-    if (options.isCodeCoverageEnabled()) {
+    if (isCodeCoverageEnabled()) {
       rulesUnderTest = getRulesUnderTest(tests);
       if (!rulesUnderTest.isEmpty()) {
         try {
@@ -508,9 +679,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     params.getBuckEventBus().post(
         TestRunEvent.started(
-            options.isRunAllTests(),
-            options.getTestSelectorList(),
-            options.shouldExplainTestSelectorList(),
+            isRunAllTests(),
+            getTestSelectorList(),
+            shouldExplainTestSelectorList(),
             testTargets));
 
     // Start running all of the tests. The result of each java_test() rule is represented as a
@@ -525,7 +696,7 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
 
     // For grouping results!
     TestResultsGrouper grouper = null;
-    if (options.isIgnoreFailingDependencies()) {
+    if (isIgnoreFailingDependencies()) {
       grouper = new TestResultsGrouper(tests);
     }
 
@@ -540,8 +711,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
           buildEngine,
           executionContext,
           testRuleKeyFileHelper,
-          options.isResultsCacheEnabled(params.getBuckConfig()),
-          !options.getTestSelectorList().isEmpty());
+          isResultsCacheEnabled(params.getBuckConfig()),
+          !getTestSelectorList().isEmpty());
 
 
       List<Step> steps;
@@ -552,9 +723,9 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
         List<Step> testSteps = test.runTests(
             buildContext,
             executionContext,
-            options.isDryRun(),
-            options.isShufflingTests(),
-            options.getTestSelectorList());
+            isDryRun(),
+            isShufflingTests(),
+            getTestSelectorList());
         if (!testSteps.isEmpty()) {
           stepsBuilder.addAll(testSteps);
           stepsBuilder.add(testRuleKeyFileHelper.createRuleKeyInDirStep(test));
@@ -571,12 +742,12 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
               getCachingStatusTransformingCallable(
                   isTestRunRequired,
                   test.interpretTestResults(executionContext,
-                      /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty(),
-                      /*isDryRun*/ options.isDryRun())),
+                      /*isUsingTestSelectors*/ !getTestSelectorList().isEmpty(),
+                      /*isDryRun*/ isDryRun())),
               test.getBuildTarget(),
               service);
       results.add(
-        transformTestResults(params, testResults, grouper, test, testTargets, printTestResults));
+          transformTestResults(params, testResults, grouper, test, testTargets, printTestResults));
     }
 
     // Block until all the tests have finished running.
@@ -600,26 +771,26 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     params.getBuckEventBus().post(TestRunEvent.finished(testTargets, completedResults));
 
     // Write out the results as XML, if requested.
-    String path = options.getPathToXmlTestOutput();
+    String path = getPathToXmlTestOutput();
     if (path != null) {
       try (Writer writer = Files.newWriter(
-        new File(path),
-        Charsets.UTF_8)) {
+          new File(path),
+          Charsets.UTF_8)) {
         writeXmlOutput(completedResults, writer);
       }
     }
 
     // Generate the code coverage report.
-    if (options.isCodeCoverageEnabled() && !rulesUnderTest.isEmpty()) {
+    if (isCodeCoverageEnabled() && !rulesUnderTest.isEmpty()) {
       try {
         Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional =
-            options.getJavaPackageFinder(params.getBuckConfig());
+            getJavaPackageFinder(params.getBuckConfig());
         stepRunner.runStep(
             getReportCommand(rulesUnderTest,
                 defaultJavaPackageFinderOptional,
                 params.getRepository().getFilesystem(),
                 JUnitStep.JACOCO_OUTPUT_DIR,
-                options.getCoverageReportFormat()));
+                getCoverageReportFormat()));
       } catch (StepFailedException e) {
         params.getConsole().printBuildFailureWithoutStacktrace(e);
         return 1;
@@ -627,11 +798,11 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
     }
 
     boolean failures = Iterables.any(completedResults, new Predicate<TestResults>() {
-      @Override
-      public boolean apply(TestResults results) {
-        return !results.isSuccess();
-      }
-    });
+          @Override
+          public boolean apply(TestResults results) {
+            return !results.isSuccess();
+          }
+        });
 
     return failures ? TEST_FAILURES_EXIT_CODE : 0;
   }
@@ -754,10 +925,10 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
       isTestRunRequired = true;
     } else if (((result = cachingBuildEngine.getBuildRuleResult(
         test.getBuildTarget())) != null) &&
-            result.getSuccess() == BuildRuleSuccessType.MATCHING_RULE_KEY &&
-            isResultsCacheEnabled &&
-            test.hasTestResultFiles(executionContext) &&
-            testRuleKeyFileHelper.isRuleKeyInDir(test)) {
+        result.getSuccess() == BuildRuleSuccessType.MATCHING_RULE_KEY &&
+        isResultsCacheEnabled &&
+        test.hasTestResultFiles(executionContext) &&
+        testRuleKeyFileHelper.isRuleKeyInDir(test)) {
       // If this build rule's artifacts (which includes the rule's output and its test result
       // files) are up to date, then no commands are necessary to run the tests. The test result
       // files will be read from the XML files in interpretTestResults().
@@ -786,8 +957,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
           } else {
             throw new HumanReadableException(
                 "Test '%s' is a java_test() " +
-                "but it is testing module '%s' " +
-                "which is not a java_library()!",
+                    "but it is testing module '%s' " +
+                    "which is not a java_library()!",
                 test.getBuildTarget(),
                 buildRule.getBuildTarget());
           }
@@ -889,7 +1060,8 @@ public class TestCommand extends AbstractCommandRunner<TestCommandOptions> {
   }
 
   @Override
-  String getUsageIntro() {
-    return "Specify build rules to test.";
+  public String getShortDescription() {
+    return "builds and runs the tests for the specified target";
   }
+
 }

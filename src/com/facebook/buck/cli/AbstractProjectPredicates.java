@@ -53,7 +53,7 @@ abstract class AbstractProjectPredicates {
    * Creates a {@link ProjectPredicates} value type configured for
    * the specified IDE.
    */
-  public static ProjectPredicates forIde(ProjectCommandOptions.Ide targetIde) {
+  public static ProjectPredicates forIde(ProjectCommand.Ide targetIde) {
     Predicate<TargetNode<?>> projectRootsPredicate;
     AssociatedTargetNodePredicate associatedProjectPredicate;
 

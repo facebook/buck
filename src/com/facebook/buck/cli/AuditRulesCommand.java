@@ -31,7 +31,11 @@ import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -49,7 +53,7 @@ import javax.annotation.Nullable;
  * expanded. When complex macros are in play, this helps clarify what the resulting build rule
  * definitions are.
  */
-public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> {
+public class AuditRulesCommand extends AbstractCommand {
 
   /** Indent to use in generated build file. */
   private static final String INDENT = "  ";
@@ -57,20 +61,35 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
   /** Properties that should be listed last in the declaration of a build rule. */
   private static final ImmutableSet<String> LAST_PROPERTIES = ImmutableSet.of("deps", "visibility");
 
-  @Override
-  AuditRulesOptions createOptions() {
-    return new AuditRulesOptions();
+  @Option(name = "--type",
+      aliases = { "-t" },
+      usage = "The types of rule to filter by")
+  @Nullable
+  private List<String> types = null;
+
+  @Argument
+  private List<String> arguments = Lists.newArrayList();
+
+  public List<String> getArguments() {
+    return arguments;
+  }
+
+  @VisibleForTesting
+  void setArguments(List<String> arguments) {
+    this.arguments = arguments;
+  }
+
+  public ImmutableSet<String> getTypes() {
+    return types == null ? ImmutableSet.<String>of() : ImmutableSet.copyOf(types);
   }
 
   @Override
-  String getUsageIntro() {
+  public String getShortDescription() {
     return "List build rule definitions resulting from expanding macros.";
   }
 
-  /** Prints the expanded build rules from the specified build files to the console. */
   @Override
-  int runCommandWithOptionsInternal(CommandRunnerParams params, AuditRulesOptions options)
-      throws IOException, InterruptedException {
+  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = params.getRepository().getFilesystem();
 
     ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
@@ -90,7 +109,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
         params.getEnvironment(),
         params.getBuckEventBus())) {
       PrintStream out = params.getConsole().getStdOut();
-      for (String pathToBuildFile : options.getArguments()) {
+      for (String pathToBuildFile : getArguments()) {
         // Print a comment with the path to the build file.
         out.printf("# %s\n\n", pathToBuildFile);
 
@@ -110,7 +129,7 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
         }
 
         // Format and print the rules from the raw data, filtered by type.
-        final ImmutableSet<String> types = options.getTypes();
+        final ImmutableSet<String> types = getTypes();
         Predicate<String> includeType = new Predicate<String>() {
           @Override
           public boolean apply(String type) {
@@ -124,6 +143,11 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
     }
 
     return 0;
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return true;
   }
 
   private void printRulesToStdout(
@@ -219,4 +243,5 @@ public class AuditRulesCommand extends AbstractCommandRunner<AuditRulesOptions> 
       throw new IllegalStateException();
     }
   }
+
 }

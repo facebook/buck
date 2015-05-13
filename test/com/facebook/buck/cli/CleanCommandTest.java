@@ -63,7 +63,6 @@ public class CleanCommandTest extends EasyMockSupport {
   public void testCleanCommandNoArguments()
       throws CmdLineException, IOException, InterruptedException {
     // Set up mocks.
-    CleanCommand cleanCommand = new CleanCommand();
     CommandRunnerParams params = createCommandRunnerParams();
     Capture<Path> binDir = newCapture();
     projectFilesystem.rmdir(capture(binDir));
@@ -73,8 +72,8 @@ public class CleanCommandTest extends EasyMockSupport {
     replayAll();
 
     // Simulate `buck clean`.
-    CleanCommandOptions options = createOptionsFromArgs();
-    int exitCode = cleanCommand.runCommandWithOptions(params, options);
+    CleanCommand cleanCommand = createCommandFromArgs();
+    int exitCode = cleanCommand.run(params);
     assertEquals(0, exitCode);
     assertEquals(BuckConstant.SCRATCH_PATH, binDir.getValue());
     assertEquals(BuckConstant.GEN_PATH, genDir.getValue());
@@ -86,7 +85,6 @@ public class CleanCommandTest extends EasyMockSupport {
   public void testCleanCommandWithProjectArgument()
       throws CmdLineException, IOException, InterruptedException {
     // Set up mocks.
-    CleanCommand cleanCommand = new CleanCommand();
     CommandRunnerParams params = createCommandRunnerParams();
     Capture<Path> androidGenDir = newCapture();
     projectFilesystem.rmdir(capture(androidGenDir));
@@ -96,8 +94,8 @@ public class CleanCommandTest extends EasyMockSupport {
     replayAll();
 
     // Simulate `buck clean --project`.
-    CleanCommandOptions options = createOptionsFromArgs("--project");
-    int exitCode = cleanCommand.runCommandWithOptions(params, options);
+    CleanCommand cleanCommand = createCommandFromArgs("--project");
+    int exitCode = cleanCommand.run(params);
     assertEquals(0, exitCode);
     assertEquals(Project.ANDROID_GEN_PATH, androidGenDir.getValue());
     assertEquals(BuckConstant.ANNOTATION_PATH, annotationDir.getValue());
@@ -105,10 +103,10 @@ public class CleanCommandTest extends EasyMockSupport {
     verifyAll();
   }
 
-  private CleanCommandOptions createOptionsFromArgs(String...args) throws CmdLineException {
-    CleanCommandOptions options = new CleanCommandOptions();
-    new AdditionalOptionsCmdLineParser(options).parseArgument(args);
-    return options;
+  private CleanCommand createCommandFromArgs(String... args) throws CmdLineException {
+    CleanCommand command = new CleanCommand();
+    new AdditionalOptionsCmdLineParser(command).parseArgument(args);
+    return command;
   }
 
   private CommandRunnerParams createCommandRunnerParams() throws InterruptedException, IOException {

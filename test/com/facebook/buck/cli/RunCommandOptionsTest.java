@@ -29,10 +29,10 @@ public class RunCommandOptionsTest {
   public ExpectedException expectedException = ExpectedException.none();
 
   private String[] testWithArgs(String[] args) throws CmdLineException {
-    RunCommandOptions options = new RunCommandOptions();
-    AdditionalOptionsCmdLineParser parser = new AdditionalOptionsCmdLineParser(options);
+    RunCommand command = new RunCommand();
+    AdditionalOptionsCmdLineParser parser = new AdditionalOptionsCmdLineParser(command);
     parser.parseArgument(args);
-    return options.getArguments().toArray(new String[options.getArguments().size()]);
+    return command.getArguments().toArray(new String[command.getArguments().size()]);
   }
 
   @Test

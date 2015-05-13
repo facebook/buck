@@ -26,56 +26,56 @@ import org.kohsuke.args4j.CmdLineException;
 
 public class InstallCommandOptionsTest {
 
-  private InstallCommandOptions getOptions(String...args) throws CmdLineException {
-    InstallCommandOptions options = new InstallCommandOptions();
-    new AdditionalOptionsCmdLineParser(options).parseArgument(args);
-    return options;
+  private InstallCommand getCommand(String... args) throws CmdLineException {
+    InstallCommand command = new InstallCommand();
+    new AdditionalOptionsCmdLineParser(command).parseArgument(args);
+    return command;
   }
 
   private AdbOptions getAdbOptions(String...args) throws CmdLineException {
-    return getOptions(args).adbOptions();
+    return getCommand(args).adbOptions();
   }
 
   private TargetDeviceOptions getTargetDeviceOptions(String... args) throws CmdLineException {
-    return getOptions(args).targetDeviceOptions();
+    return getCommand(args).targetDeviceOptions();
   }
 
   @Test
   public void testInstallCommandOptionsRun() throws CmdLineException {
-    InstallCommandOptions options = getOptions(
-        InstallCommandOptions.RUN_SHORT_ARG, "katana",
+    InstallCommand command = getCommand(
+        InstallCommand.RUN_SHORT_ARG, "katana",
         VerbosityParser.VERBOSE_SHORT_ARG, "10");
-    assertTrue(options.shouldStartActivity());
-    assertNull(options.getActivityToStart());
+    assertTrue(command.shouldStartActivity());
+    assertNull(command.getActivityToStart());
   }
 
   @Test
   public void testInstallCommandOptionsRunAndActivity() throws CmdLineException {
-    InstallCommandOptions options = getOptions(
-        InstallCommandOptions.RUN_SHORT_ARG,
+    InstallCommand command = getCommand(
+        InstallCommand.RUN_SHORT_ARG,
         VerbosityParser.VERBOSE_SHORT_ARG, "10",
         "wakizashi",
-        InstallCommandOptions.ACTIVITY_SHORT_ARG, "com.facebook.katana.LoginActivity");
-    assertTrue(options.shouldStartActivity());
-    assertEquals("com.facebook.katana.LoginActivity", options.getActivityToStart());
+        InstallCommand.ACTIVITY_SHORT_ARG, "com.facebook.katana.LoginActivity");
+    assertTrue(command.shouldStartActivity());
+    assertEquals("com.facebook.katana.LoginActivity", command.getActivityToStart());
   }
 
   @Test
   public void testInstallCommandOptionsActivity() throws CmdLineException {
-    InstallCommandOptions options = getOptions(
+    InstallCommand command = getCommand(
         "katana",
-        InstallCommandOptions.ACTIVITY_SHORT_ARG, ".LoginActivity");
-    assertTrue(options.shouldStartActivity());
-    assertEquals(".LoginActivity", options.getActivityToStart());
+        InstallCommand.ACTIVITY_SHORT_ARG, ".LoginActivity");
+    assertTrue(command.shouldStartActivity());
+    assertEquals(".LoginActivity", command.getActivityToStart());
   }
 
   @Test
   public void testInstallCommandOptionsNone() throws CmdLineException {
-    InstallCommandOptions options = getOptions(
+    InstallCommand command = getCommand(
         VerbosityParser.VERBOSE_SHORT_ARG, "10",
         "katana");
-    assertFalse(options.shouldStartActivity());
-    assertNull(options.getActivityToStart());
+    assertFalse(command.shouldStartActivity());
+    assertNull(command.getActivityToStart());
   }
 
   @Test

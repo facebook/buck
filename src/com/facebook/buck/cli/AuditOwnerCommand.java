@@ -40,6 +40,9 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -49,10 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Outputs targets that own a specified list of files.
- */
-public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> {
+public class AuditOwnerCommand extends AbstractCommand {
 
   private static final String FILE_INDENT = "    ";
   private static final int BUILD_TARGET_ERROR = 13;
@@ -65,9 +65,9 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     final ImmutableSet<String> nonFileInputs;
 
     public OwnersReport(SetMultimap<TargetNode<?>, Path> owners,
-                        Set<Path> inputsWithNoOwners,
-                        Set<String> nonExistentInputs,
-                        Set<String> nonFileInputs) {
+        Set<Path> inputsWithNoOwners,
+        Set<String> nonExistentInputs,
+        Set<String> nonFileInputs) {
       this.owners = ImmutableSetMultimap.copyOf(owners);
       this.inputsWithNoOwners = ImmutableSet.copyOf(inputsWithNoOwners);
       this.nonExistentInputs = ImmutableSet.copyOf(nonExistentInputs);
@@ -95,14 +95,54 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     }
   }
 
-  @Override
-  AuditOwnerOptions createOptions() {
-    return new AuditOwnerOptions();
+  @Option(name = "--full",
+      aliases = { "-f" },
+      usage = "Full report with all details about what targets own what files.")
+  private boolean fullReport;
+
+  @Option(name = "--guess-for-missing",
+      aliases = { "-g" },
+      usage = "Guess targets for deleted files by including all rules from guessed BUCK files.")
+  private boolean guessForDeleted;
+
+  public boolean isFullReportEnabled() {
+    return fullReport;
+  }
+
+  public boolean isGuessForDeletedEnabled() {
+    return guessForDeleted;
+  }
+
+  @Option(name = "--json",
+      usage = "Output in JSON format")
+  private boolean generateJsonOutput;
+
+  public boolean shouldGenerateJsonOutput() {
+    return generateJsonOutput;
+  }
+
+  @Argument
+  private List<String> arguments = Lists.newArrayList();
+
+  public List<String> getArguments() {
+    return arguments;
+  }
+
+  @VisibleForTesting
+  void setArguments(List<String> arguments) {
+    this.arguments = arguments;
+  }
+
+  /**
+   * @return relative paths under the project root
+   */
+  public Iterable<Path> getArgumentsAsPaths(Path projectRoot) throws IOException {
+    return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, getArguments())
+        .relativePathsUnderProjectRoot;
   }
 
   @Override
-  int runCommandWithOptionsInternal(CommandRunnerParams params, AuditOwnerOptions options)
-      throws IOException, InterruptedException {
+  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     OwnersReport report = OwnersReport.emptyReport();
     Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
     ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
@@ -110,16 +150,16 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
         params.getRepository().getFilesystem(),
         parserConfig.getBuildFileName());
 
-    for (Path filePath : options.getArgumentsAsPaths(
+    for (Path filePath : getArgumentsAsPaths(
         params.getRepository().getFilesystem().getRootPath())) {
       Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(filePath);
       if (!basePath.isPresent()) {
         report = report.updatedWith(
-          new OwnersReport(
-              ImmutableSetMultimap.<TargetNode<?>, Path>of(),
+            new OwnersReport(
+                ImmutableSetMultimap.<TargetNode<?>, Path>of(),
               /* inputWithNoOwners */ ImmutableSet.of(filePath),
-              Sets.<String>newHashSet(),
-              Sets.<String>newHashSet()));
+                Sets.<String>newHashSet(),
+                Sets.<String>newHashSet()));
         continue;
       }
 
@@ -174,12 +214,17 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
                 params,
                 targetNode,
                 ImmutableList.of(filePath.toString()),
-                options.isGuessForDeletedEnabled()));
+                isGuessForDeletedEnabled()));
       }
     }
 
-    printReport(params, options, report);
+    printReport(params, report);
     return 0;
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return true;
   }
 
   @VisibleForTesting
@@ -234,15 +279,11 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
     return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
   }
 
-  private void printReport(
-      CommandRunnerParams params,
-      AuditOwnerOptions options,
-      OwnersReport report)
-      throws IOException {
-    if (options.isFullReportEnabled()) {
+  private void printReport(CommandRunnerParams params, OwnersReport report) throws IOException {
+    if (isFullReportEnabled()) {
       printFullReport(params, report);
     } else {
-      if (options.shouldGenerateJsonOutput()) {
+      if (shouldGenerateJsonOutput()) {
         printOwnersOnlyJsonReport(params, report);
       } else {
         printOwnersOnlyReport(params, report);
@@ -261,8 +302,8 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   }
 
   /**
-  * Print only targets which were identified as owners in JSON.
-  */
+   * Print only targets which were identified as owners in JSON.
+   */
   @VisibleForTesting
   void printOwnersOnlyJsonReport(CommandRunnerParams params, OwnersReport report)
       throws IOException {
@@ -324,7 +365,7 @@ public class AuditOwnerCommand extends AbstractCommandRunner<AuditOwnerOptions> 
   }
 
   @Override
-  String getUsageIntro() {
+  public String getShortDescription() {
     return "prints targets that own specified files";
   }
 

@@ -18,41 +18,49 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.CacheResult;
-import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.RuleKey;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+
+import org.kohsuke.args4j.Argument;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 /**
- * A command for inspecting the artifact cache. For now, this is hardcoded to only query the
- * {@link CassandraArtifactCache}, assuming the user has one defined in {@code .buckconfig}.
+ * A command for inspecting the artifact cache.
  */
-public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
+public class CacheCommand extends AbstractCommand {
 
-  @Override
-  CacheCommandOptions createOptions() {
-    return new CacheCommandOptions();
+  @Argument
+  private List<String> arguments = Lists.newArrayList();
+
+  public List<String> getArguments() {
+    return arguments;
+  }
+
+  @VisibleForTesting
+  void setArguments(List<String> arguments) {
+    this.arguments = arguments;
   }
 
   @Override
-  int runCommandWithOptionsInternal(CommandRunnerParams params, CacheCommandOptions options)
-      throws IOException, InterruptedException {
+  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
 
-    if (options.isNoCache()) {
+    if (isNoCache()) {
       params.getConsole().printErrorText("Caching is disabled.");
       return 1;
     }
 
-    List<String> arguments = options.getArguments();
+    List<String> arguments = getArguments();
     if (arguments.isEmpty()) {
       params.getConsole().printErrorText("No cache keys specified.");
       return 1;
     }
 
-    ArtifactCache cache = getArtifactCache(params, options);
+    ArtifactCache cache = getArtifactCache(params);
 
     File tmpDir = Files.createTempDir();
     int exitCode = 0;
@@ -64,13 +72,15 @@ public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
 
       // Display the result.
       if (success.getType().isSuccess()) {
-        params.getConsole().printSuccess(String.format(
-            "Successfully downloaded artifact with id %s at %s.",
-            ruleKey,
-            artifact));
+        params.getConsole().printSuccess(
+            String.format(
+                "Successfully downloaded artifact with id %s at %s.",
+                ruleKey,
+                artifact));
       } else {
-        params.getConsole().printErrorText(String.format(
-            "Failed to retrieve an artifact with id %s.", ruleKey));
+        params.getConsole().printErrorText(
+            String.format(
+                "Failed to retrieve an artifact with id %s.", ruleKey));
         exitCode = 1;
       }
     }
@@ -79,8 +89,13 @@ public class CacheCommand extends AbstractCommandRunner<CacheCommandOptions> {
   }
 
   @Override
-  String getUsageIntro() {
-    return "Inspect the artifact cache.";
+  public String getShortDescription() {
+    return "makes calls to the artifact cache";
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return false;
   }
 
 }

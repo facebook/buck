@@ -18,25 +18,50 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.util.Console;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+
+import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.util.Map;
 
-public class ServerStatusCommand extends AbstractCommandRunner<ServerStatusCommandOptions> {
+public class ServerStatusCommand extends AbstractCommand {
 
-  @Override
-  ServerStatusCommandOptions createOptions() {
-    return new ServerStatusCommandOptions();
+  @Option(
+      name = "--http-port",
+      usage = "Print the port that the server is running on.")
+  private boolean showHttpserverPort = false;
+
+  @Option(
+      name = "--json",
+      usage = "Print the output in a json format.")
+  private boolean printJson = false;
+
+  public boolean isShowHttpserverPort() {
+    return showHttpserverPort;
+  }
+
+  public boolean isPrintJson() {
+    return printJson;
+  }
+
+  @VisibleForTesting
+  void enableShowHttpserverPort() {
+    showHttpserverPort = true;
+  }
+
+  @VisibleForTesting
+  void enablePrintJson() {
+    printJson = true;
   }
 
   @Override
-  int runCommandWithOptionsInternal(CommandRunnerParams params, ServerStatusCommandOptions options)
-      throws IOException, InterruptedException {
+  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
 
-    if (options.isShowHttpserverPort()) {
+    if (isShowHttpserverPort()) {
       int port = -1;
       Optional<WebServer> webServer = params.getWebServer();
       if (webServer.isPresent()) {
@@ -50,7 +75,7 @@ public class ServerStatusCommand extends AbstractCommandRunner<ServerStatusComma
 
     Console console = params.getConsole();
 
-    if (options.isPrintJson()) {
+    if (isPrintJson()) {
       console.getStdOut().println(params.getObjectMapper().writeValueAsString(values));
     } else {
       for (Map.Entry<String, Object> entry : values.entrySet()) {
@@ -62,7 +87,12 @@ public class ServerStatusCommand extends AbstractCommandRunner<ServerStatusComma
   }
 
   @Override
-  String getUsageIntro() {
+  public boolean isReadOnly() {
+    return true;
+  }
+
+  @Override
+  public String getShortDescription() {
     return "Specify options to print the server status.";
   }
 }

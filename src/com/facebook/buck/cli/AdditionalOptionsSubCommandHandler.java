@@ -16,20 +16,23 @@
 
 package com.facebook.buck.cli;
 
-import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.OptionDef;
+import org.kohsuke.args4j.spi.Setter;
+import org.kohsuke.args4j.spi.SubCommand;
+import org.kohsuke.args4j.spi.SubCommandHandler;
 
-public class AuditAliasCommandOptions extends AbstractCommandOptions {
+public class AdditionalOptionsSubCommandHandler extends SubCommandHandler {
 
-  @Option(
-      name = "--list",
-      usage = "List known build target aliases.")
-  private boolean listAliases = false;
-
-  boolean isListAliases() {
-    return listAliases;
+  public AdditionalOptionsSubCommandHandler(
+      CmdLineParser parser,
+      OptionDef option,
+      Setter<Object> setter) {
+    super(parser, option, setter);
   }
 
-  Iterable<String> getAliases(BuckConfig buckConfig) {
-    return buckConfig.getAliases();
+  @Override
+  protected CmdLineParser configureParser(Object subCmd, SubCommand c) {
+    return new AdditionalOptionsCmdLineParser(subCmd);
   }
 }

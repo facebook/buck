@@ -16,9 +16,13 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.step.ExecutionContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -26,12 +30,13 @@ import com.google.common.collect.ImmutableSet;
 
 import org.kohsuke.args4j.Option;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
-public abstract class AbstractCommandOptions {
+public abstract class AbstractCommand implements Command {
 
   @VisibleForTesting static final String HELP_LONG_ARG = "--help";
 
@@ -87,6 +92,18 @@ public abstract class AbstractCommandOptions {
     }
   }
 
+  @Override
+  public final int run(CommandRunnerParams params) throws IOException, InterruptedException {
+    if (showHelp()) {
+      new AdditionalOptionsCmdLineParser(this).printUsage(params.getConsole().getStdErr());
+      return 1;
+    }
+    return runWithoutHelp(params);
+  }
+
+  public abstract int runWithoutHelp(CommandRunnerParams params)
+      throws IOException, InterruptedException;
+
   protected CommandLineBuildTargetNormalizer getCommandLineBuildTargetNormalizer(
       BuckConfig buckConfig) {
     return new CommandLineBuildTargetNormalizer(buckConfig);
@@ -109,6 +126,44 @@ public abstract class AbstractCommandOptions {
       specs.add(parser.parse(arg));
     }
     return specs.build();
+  }
+
+  /**
+   * @return A set of {@link BuildTarget}s for the input buildTargetNames.
+   */
+  protected ImmutableSet<BuildTarget> getBuildTargets(
+      CommandRunnerParams params,
+      Iterable<String> buildTargetNames) {
+    ImmutableSet.Builder<BuildTarget> buildTargets = ImmutableSet.builder();
+
+    // Parse all of the build targets specified by the user.
+    BuildTargetParser buildTargetParser = params.getParser().getBuildTargetParser();
+
+    for (String buildTargetName : buildTargetNames) {
+      buildTargets.add(buildTargetParser.parse(
+              buildTargetName,
+              BuildTargetPatternParser.fullyQualified(buildTargetParser)));
+    }
+
+    return buildTargets.build();
+  }
+
+  public ArtifactCache getArtifactCache(CommandRunnerParams params)
+      throws InterruptedException {
+    return params.getArtifactCacheFactory().newInstance(params.getBuckConfig(), isNoCache());
+  }
+
+  protected ExecutionContext createExecutionContext(CommandRunnerParams params) {
+    return ExecutionContext.builder()
+        .setProjectFilesystem(params.getRepository().getFilesystem())
+        .setConsole(params.getConsole())
+        .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
+        .setEventBus(params.getBuckEventBus())
+        .setPlatform(params.getPlatform())
+        .setEnvironment(params.getEnvironment())
+        .setJavaPackageFinder(params.getJavaPackageFinder())
+        .setObjectMapper(params.getObjectMapper())
+        .build();
   }
 
 }

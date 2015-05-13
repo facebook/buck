@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
+import com.facebook.buck.event.listener.FileSerializationEventBusListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.event.listener.LoggingBuildListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
@@ -72,7 +73,6 @@ import com.fasterxml.jackson.datatype.jdk7.Jdk7Module;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -83,6 +83,8 @@ import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ServiceManager;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
+
+import org.kohsuke.args4j.CmdLineException;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -409,38 +411,6 @@ public final class Main {
     this.externalEventsListeners = ImmutableList.copyOf(externalEventsListeners);
   }
 
-  /** Prints the usage message to standard error. */
-  @VisibleForTesting
-  int usage() {
-    stdErr.println("buck build tool");
-
-    stdErr.println("usage:");
-    stdErr.println("  buck [options]");
-    stdErr.println("  buck command --help");
-    stdErr.println("  buck command [command-options]");
-    stdErr.println("available commands:");
-
-    int lengthOfLongestCommand = 0;
-    for (Command command : Command.values()) {
-      String name = command.name();
-      if (name.length() > lengthOfLongestCommand) {
-        lengthOfLongestCommand = name.length();
-      }
-    }
-
-    for (Command command : Command.values()) {
-      String name = command.name().toLowerCase();
-      stdErr.printf("  %s%s  %s\n",
-          name,
-          Strings.repeat(" ", lengthOfLongestCommand - name.length()),
-          command.getShortDescription());
-    }
-
-    stdErr.println("options:");
-    new GenericBuckOptions(stdOut, stdErr).printUsage();
-    return 1;
-  }
-
   /**
    *
    * @param buildId an identifier for this command execution.
@@ -455,42 +425,6 @@ public final class Main {
       ImmutableMap<String, String> clientEnvironment,
       String... args)
       throws IOException, InterruptedException {
-
-    // Find and execute command.
-    int exitCode;
-    Command.ParseResult command = parseCommandIfPresent(args);
-    if (command.getCommand().isPresent()) {
-      return executeCommand(buildId, projectRoot, command, context, clientEnvironment, args);
-    } else {
-      exitCode = new GenericBuckOptions(stdOut, stdErr).execute(args);
-      if (exitCode == GenericBuckOptions.SHOW_MAIN_HELP_SCREEN_EXIT_CODE) {
-        return usage();
-      } else {
-        return exitCode;
-      }
-    }
-  }
-
-  private Command.ParseResult parseCommandIfPresent(String... args) {
-    if (args.length == 0) {
-      return new Command.ParseResult(Optional.<Command>absent(), Optional.<String>absent());
-    }
-    return Command.parseCommandName(args[0]);
-  }
-
-  /**
-   * @param context an optional NGContext that is present if running inside a Nailgun server.
-   * @param args command line arguments
-   * @return an exit code or {@code null} if this is a process that should not exit
-   */
-  @SuppressWarnings({"PMD.EmptyCatchBlock", "PMD.PrematureDeclaration"})
-  public int executeCommand(
-      BuildId buildId,
-      Path projectRoot,
-      Command.ParseResult commandParseResult,
-      Optional<NGContext> context,
-      ImmutableMap<String, String> clientEnvironment,
-      String... args) throws IOException, InterruptedException {
 
     Verbosity verbosity = VerbosityParser.parse(args);
     Optional<String> color;
@@ -515,14 +449,26 @@ public final class Main {
         stdErr,
         bootstrapConfig.createAnsi(color));
 
-    Path canonicalRootPath = projectRoot.toRealPath();
-    RepositoryFactory repositoryFactory =
-        new RepositoryFactory(clientEnvironment, platform, console, canonicalRootPath);
+    BuckCommand command = new BuckCommand();
+    AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
 
-    Repository rootRepository = repositoryFactory.getRootRepository();
+    try {
+      cmdLineParser.parseArgument(args);
+    } catch (CmdLineException e) {
+      console.getStdErr().println(e.getLocalizedMessage());
+      return 1;
+    }
 
-    if (commandParseResult.getErrorText().isPresent()) {
-      console.getStdErr().println(commandParseResult.getErrorText().get());
+
+    // No more early outs: if this command is not read only, acquire the command semaphore to
+    // become the only executing read/write command.
+    // This must happen immediately before the try block to ensure that the semaphore is released.
+    boolean commandSemaphoreAcquired = false;
+    if (!command.isReadOnly()) {
+      commandSemaphoreAcquired = commandSemaphore.tryAcquire();
+      if (!commandSemaphoreAcquired) {
+        return BUSY_EXIT_CODE;
+      }
     }
 
     int exitCode;
@@ -542,16 +488,14 @@ public final class Main {
         // TODO(user): Thread through properties from client environment.
         System.getProperties());
 
-    // No more early outs: if this command is not read only, acquire the command semaphore to
-    // become the only executing read/write command.
-    // This must happen immediately before the try block to ensure that the semaphore is released.
-    boolean commandSemaphoreAcquired = false;
-    if (!commandParseResult.getCommand().get().isReadOnly()) {
-      commandSemaphoreAcquired = commandSemaphore.tryAcquire();
-      if (!commandSemaphoreAcquired) {
-        return BUSY_EXIT_CODE;
-      }
-    }
+    Path canonicalRootPath = projectRoot.toRealPath();
+    RepositoryFactory repositoryFactory = new RepositoryFactory(
+        clientEnvironment,
+        platform,
+        console,
+        canonicalRootPath);
+
+    Repository rootRepository = repositoryFactory.getRootRepository();
 
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(rootRepository.getFilesystem());
 
@@ -595,13 +539,14 @@ public final class Main {
           rootRepository.getKnownBuildRuleTypes(),
           clientEnvironment);
 
-      ImmutableList<String> remainingArgs = ImmutableList.copyOf(
-          Arrays.copyOfRange(args, 1, args.length));
+      ImmutableList<String> remainingArgs = args.length > 1
+          ? ImmutableList.copyOf(Arrays.copyOfRange(args, 1, args.length))
+          : ImmutableList.<String>of();
 
-      Command executingCommand = commandParseResult.getCommand().get();
-      String commandName = executingCommand.name().toLowerCase();
-
-      CommandEvent commandEvent = CommandEvent.started(commandName, remainingArgs, isDaemon);
+      CommandEvent commandEvent = CommandEvent.started(
+          args.length > 0 ? args[0] : "",
+          remainingArgs,
+          isDaemon);
       buildEventBus.post(commandEvent);
 
       // Create or get Parser and invalidate cached command parameters.
@@ -616,7 +561,8 @@ public final class Main {
               buildEventBus,
               clock);
         } catch (WatchmanWatcherException | IOException e) {
-          buildEventBus.post(ConsoleEvent.warning(
+          buildEventBus.post(
+              ConsoleEvent.warning(
                   "Watchman threw an exception while parsing file changes.\n%s",
                   e.getMessage()));
         }
@@ -652,8 +598,19 @@ public final class Main {
               buckConfig,
               buildEventBus);
 
-      exitCode = executingCommand.execute(
-          remainingArgs,
+      // At this point, we have parsed options but haven't started running the command yet.  This is
+      // a good opportunity to augment the event bus with our serialize-to-file event-listener.
+      if (command.subcommand instanceof AbstractCommand) {
+        AbstractCommand subcommand = (AbstractCommand) command.subcommand;
+        Optional<Path> eventsOutputPath = subcommand.getEventsOutputPath();
+        if (eventsOutputPath.isPresent()) {
+          BuckEventListener listener =
+              new FileSerializationEventBusListener(eventsOutputPath.get());
+          buildEventBus.register(listener);
+        }
+      }
+
+      exitCode = command.run(
           new CommandRunnerParams(
               console,
               rootRepository,
@@ -670,7 +627,12 @@ public final class Main {
               webServer,
               buckConfig));
       parser.cleanCache();
-      buildEventBus.post(CommandEvent.finished(commandName, remainingArgs, isDaemon, exitCode));
+      buildEventBus.post(
+          CommandEvent.finished(
+              args.length > 0 ? args[0] : "",
+              remainingArgs,
+              isDaemon,
+              exitCode));
     } catch (Throwable t) {
       LOG.debug(t, "Failing build on exception.");
       closeCreatedArtifactCaches(artifactCacheFactory); // Close cache before exit on exception.
