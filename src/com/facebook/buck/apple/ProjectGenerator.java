@@ -76,12 +76,16 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
@@ -1044,14 +1048,43 @@ public class ProjectGenerator {
         "Building header symlink tree at %s with contents %s",
         headerSymlinkTreeRoot,
         contents);
-    projectFilesystem.rmdir(headerSymlinkTreeRoot);
+    ImmutableSortedMap.Builder<Path, Path> resolvedContentsBuilder =
+        ImmutableSortedMap.naturalOrder();
     for (Map.Entry<String, SourcePath> entry : contents.entrySet()) {
       Path link = headerSymlinkTreeRoot.resolve(entry.getKey());
       Path existing = projectFilesystem.resolve(pathResolver.apply(entry.getValue()));
-      projectFilesystem.createParentDirs(link);
-      projectFilesystem.createSymLink(link, existing, /* force */ false);
+      resolvedContentsBuilder.put(link, existing);
+    }
+    ImmutableSortedMap<Path, Path> resolvedContents = resolvedContentsBuilder.build();
+
+    Path hashCodeFilePath = headerSymlinkTreeRoot.resolve(".contents-hash");
+    Optional<String> currentHashCode = projectFilesystem.readFileIfItExists(hashCodeFilePath);
+    String newHashCode = getHeaderSymlinkTreeHashCode(resolvedContents).toString();
+    if (!Optional.of(newHashCode).equals(currentHashCode)) {
+      projectFilesystem.rmdir(headerSymlinkTreeRoot);
+      projectFilesystem.mkdirs(headerSymlinkTreeRoot);
+      for (Map.Entry<Path, Path> entry : resolvedContents.entrySet()) {
+        Path link = entry.getKey();
+        Path existing = entry.getValue();
+        projectFilesystem.createParentDirs(link);
+        projectFilesystem.createSymLink(link, existing, /* force */ false);
+      }
+      projectFilesystem.writeContentsToPath(newHashCode, hashCodeFilePath);
     }
     headerSymlinkTrees.add(headerSymlinkTreeRoot);
+  }
+
+  private HashCode getHeaderSymlinkTreeHashCode(ImmutableSortedMap<Path, Path> contents) {
+    Hasher hasher = Hashing.sha1().newHasher();
+    for (Map.Entry<Path, Path> entry : contents.entrySet()) {
+      byte[] key = entry.getKey().toString().getBytes(Charsets.UTF_8);
+      byte[] value = entry.getKey().toString().getBytes(Charsets.UTF_8);
+      hasher.putInt(key.length);
+      hasher.putBytes(key);
+      hasher.putInt(value.length);
+      hasher.putBytes(value);
+    }
+    return hasher.hash();
   }
 
   private void addCoreDataModelBuildPhase(
