@@ -177,7 +177,7 @@ public class Project {
       boolean generateMinimalProject,
       PrintStream stdOut,
       PrintStream stdErr) throws IOException, InterruptedException {
-    List<Module> modules = createModulesForProjectConfigs();
+    List<SerializableModule> modules = createModulesForProjectConfigs();
     writeJsonConfig(jsonTempFile, modules);
 
     List<String> modifiedFiles = Lists.newArrayList();
@@ -234,16 +234,16 @@ public class Project {
   }
 
   @VisibleForTesting
-  Map<String, Module> buildNameToModuleMap(List<Module> modules) {
-    Map<String, Module> nameToModule = Maps.newHashMap();
-    for (Module module : modules) {
+  Map<String, SerializableModule> buildNameToModuleMap(List<SerializableModule> modules) {
+    Map<String, SerializableModule> nameToModule = Maps.newHashMap();
+    for (SerializableModule module : modules) {
       nameToModule.put(module.name, module);
     }
     return nameToModule;
   }
 
   @VisibleForTesting
-  static String createPathToProjectDotPropertiesFileFor(Module module) {
+  static String createPathToProjectDotPropertiesFileFor(SerializableModule module) {
     return module.getModuleDirectoryPath().resolve("project.properties").toString();
   }
 
@@ -261,8 +261,8 @@ public class Project {
   }
 
   @VisibleForTesting
-  List<Module> createModulesForProjectConfigs() throws IOException {
-    List<Module> modules = Lists.newArrayList();
+  List<SerializableModule> createModulesForProjectConfigs() throws IOException {
+    List<SerializableModule> modules = Lists.newArrayList();
 
     // Convert the project_config() targets into modules and find the union of all jars passed to
     // no_dx.
@@ -295,7 +295,7 @@ public class Project {
         rJava = Optional.absent();
       }
 
-      Module module = createModuleForProjectConfig(projectConfig, rJava);
+      SerializableModule module = createModuleForProjectConfig(projectConfig, rJava);
       modules.add(module);
     }
     ImmutableSet<Path> noDxJars = noDxJarsBuilder.build();
@@ -307,7 +307,7 @@ public class Project {
   }
 
   @SuppressWarnings("PMD.LooseCoupling")
-  private Module createModuleForProjectConfig(
+  private SerializableModule createModuleForProjectConfig(
       ProjectConfig projectConfig,
       Optional<Path> rJava) throws IOException {
     BuildRule projectRule = Preconditions.checkNotNull(projectConfig.getProjectRule());
@@ -322,9 +322,9 @@ public class Project {
         "project_config() does not know how to process a src_target of type %s.",
         projectRule.getType().getName());
 
-    LinkedHashSet<DependentModule> dependencies = Sets.newLinkedHashSet();
+    LinkedHashSet<SerializableDependentModule> dependencies = Sets.newLinkedHashSet();
     final BuildTarget target = projectConfig.getBuildTarget();
-    Module module = new Module(projectRule, target);
+    SerializableModule module = new SerializableModule(projectRule, target);
     module.name = getIntellijNameForRule(projectRule);
     module.isIntelliJPlugin = projectConfig.getIsIntelliJPlugin();
 
@@ -399,7 +399,7 @@ public class Project {
       module.moduleRJavaPath = basePath.relativize(Paths.get("")).resolve(rJava.get());
     }
 
-    DependentModule jdkDependency;
+    SerializableDependentModule jdkDependency;
     if (isAndroidRule) {
       // android details
       if (projectRule instanceof NdkLibrary) {
@@ -442,14 +442,14 @@ public class Project {
       module.proguardConfigPath = null;
       module.androidManifest = resolveAndroidManifestRelativePath(basePath);
       // List this last so that classes from modules can shadow classes in the JDK.
-      jdkDependency = DependentModule.newInheritedJdk();
+      jdkDependency = SerializableDependentModule.newInheritedJdk();
     } else {
       module.hasAndroidFacet = false;
 
       if (module.isIntelliJPlugin()) {
-        jdkDependency = DependentModule.newIntelliJPluginJdk();
+        jdkDependency = SerializableDependentModule.newIntelliJPluginJdk();
       } else {
-        jdkDependency = DependentModule.newStandardJdk();
+        jdkDependency = SerializableDependentModule.newStandardJdk();
       }
     }
 
@@ -510,20 +510,20 @@ public class Project {
   }
 
   @SuppressWarnings("PMD.LooseCoupling")
-  private List<DependentModule> createDependenciesInOrder(
+  private List<SerializableDependentModule> createDependenciesInOrder(
       boolean includeSourceFolder,
-      LinkedHashSet<DependentModule> dependencies,
-      DependentModule jdkDependency) {
-    List<DependentModule> dependenciesInOrder = Lists.newArrayList();
+      LinkedHashSet<SerializableDependentModule> dependencies,
+      SerializableDependentModule jdkDependency) {
+    List<SerializableDependentModule> dependenciesInOrder = Lists.newArrayList();
 
     // If the source folder module is present, add it to the front of the list.
     if (includeSourceFolder) {
-      dependenciesInOrder.add(DependentModule.newSourceFolder());
+      dependenciesInOrder.add(SerializableDependentModule.newSourceFolder());
     }
 
     // List the libraries before the non-libraries.
-    List<DependentModule> nonLibraries = Lists.newArrayList();
-    for (DependentModule dep : dependencies) {
+    List<SerializableDependentModule> nonLibraries = Lists.newArrayList();
+    for (SerializableDependentModule dep : dependencies) {
       if (dep.isLibrary()) {
         dependenciesInOrder.add(dep);
       } else {
@@ -565,7 +565,7 @@ public class Project {
   }
 
   private boolean addSourceFolders(
-      Module module,
+      SerializableModule module,
       @Nullable BuildRule buildRule,
       @Nullable ImmutableList<SourceRoot> sourceRoots,
       boolean isTestSource) {
@@ -644,7 +644,7 @@ public class Project {
 
   @VisibleForTesting
   static void addRootExcludes(
-      Module module,
+      SerializableModule module,
       @Nullable BuildRule buildRule,
       ProjectFilesystem projectFilesystem) {
     // If in the root of the project, specify ignored paths.
@@ -668,7 +668,7 @@ public class Project {
     }
   }
 
-  private static void addRootExclude(Module module, Path path) {
+  private static void addRootExclude(SerializableModule module, Path path) {
     module.excludeFolders.add(
         new SerializableModule.SourceFolder(
             String.format("file://$MODULE_DIR$/%s", path),
@@ -689,14 +689,14 @@ public class Project {
    * to the android_binary that <em>does not</em> list the library in its {@code no_dx} list.
    */
   @VisibleForTesting
-  static void markNoDxJarsAsProvided(List<Module> modules, Set<Path> noDxJars) {
+  static void markNoDxJarsAsProvided(List<SerializableModule> modules, Set<Path> noDxJars) {
     Map<String, Path> intelliJLibraryNameToJarPath = Maps.newHashMap();
     for (Path jarPath : noDxJars) {
       String libraryName = getIntellijNameForBinaryJar(jarPath);
       intelliJLibraryNameToJarPath.put(libraryName, jarPath);
     }
 
-    for (Module module : modules) {
+    for (SerializableModule module : modules) {
       // For an android_binary() rule, create a set of paths to JAR files (or directories) that
       // must be dex'ed. If a JAR file that is in the no_dx list for some android_binary rule, but
       // is in this set for this android_binary rule, then it should be scope="COMPILE" rather than
@@ -716,7 +716,8 @@ public class Project {
 
       // Inspect all of the library dependencies. If the corresponding JAR file is in the set of
       // noDxJars, then either change its scope to "COMPILE" or "PROVIDED", as appropriate.
-      for (DependentModule dependentModule : Preconditions.checkNotNull(module.getDependencies())) {
+      for (SerializableDependentModule dependentModule :
+          Preconditions.checkNotNull(module.getDependencies())) {
         if (!dependentModule.isLibrary()) {
           continue;
         }
@@ -739,7 +740,9 @@ public class Project {
       // if it has not already been added to the module.
       for (Path entry : classpathEntriesToDex) {
         String libraryName = getIntellijNameForBinaryJar(entry);
-        DependentModule dependency = DependentModule.newLibrary(null, libraryName);
+        SerializableDependentModule dependency = SerializableDependentModule.newLibrary(
+            null,
+            libraryName);
         Preconditions.checkNotNull(module.getDependencies()).add(dependency);
       }
     }
@@ -755,14 +758,16 @@ public class Project {
   private void walkRuleAndAdd(
       final BuildRule rule,
       final boolean isForTests,
-      final LinkedHashSet<DependentModule> dependencies,
+      final LinkedHashSet<SerializableDependentModule> dependencies,
       @Nullable final BuildRule srcTarget) {
 
     final Path basePathForRule = rule.getBuildTarget().getBasePath();
     new AbstractBreadthFirstTraversal<BuildRule>(rule.getDeps()) {
 
-      private final LinkedHashSet<DependentModule> librariesToAdd = Sets.newLinkedHashSet();
-      private final LinkedHashSet<DependentModule> modulesToAdd = Sets.newLinkedHashSet();
+      private final LinkedHashSet<SerializableDependentModule> librariesToAdd =
+          Sets.newLinkedHashSet();
+      private final LinkedHashSet<SerializableDependentModule> modulesToAdd =
+          Sets.newLinkedHashSet();
 
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule dep) {
@@ -812,28 +817,32 @@ public class Project {
           depsToVisit = dep.getDeps();
         }
 
-        DependentModule dependentModule;
+        SerializableDependentModule dependentModule;
 
         if (androidAars.contains(dep)) {
           AndroidPrebuiltAar aar = androidAars.getParentAar(dep);
-          dependentModule = DependentModule.newLibrary(
+          dependentModule = SerializableDependentModule.newLibrary(
               aar.getBuildTarget(),
               getIntellijNameForAar(aar));
         } else if (dep instanceof PrebuiltJar) {
           libraryJars.add(dep);
           String libraryName = getIntellijNameForRule(dep);
-          dependentModule = DependentModule.newLibrary(dep.getBuildTarget(), libraryName);
+          dependentModule = SerializableDependentModule.newLibrary(
+              dep.getBuildTarget(),
+              libraryName);
         } else if (dep instanceof AndroidPrebuiltAar) {
           androidAars.add((AndroidPrebuiltAar) dep);
           String libraryName = getIntellijNameForAar(dep);
-          dependentModule = DependentModule.newLibrary(dep.getBuildTarget(), libraryName);
+          dependentModule = SerializableDependentModule.newLibrary(
+              dep.getBuildTarget(),
+              libraryName);
         } else if (
             (dep instanceof CxxLibrary) ||
             (dep instanceof NdkLibrary) ||
             (dep instanceof JavaLibrary) ||
             (dep instanceof AndroidResource)) {
           String moduleName = getIntellijNameForRule(dep);
-          dependentModule = DependentModule.newModule(dep.getBuildTarget(), moduleName);
+          dependentModule = SerializableDependentModule.newModule(dep.getBuildTarget(), moduleName);
         } else {
           return depsToVisit;
         }
@@ -937,7 +946,9 @@ public class Project {
     return directoryPath.relativize(pathRelativeToProjectRoot);
   }
 
-  private void writeJsonConfig(File jsonTempFile, List<Module> modules) throws IOException {
+  private void writeJsonConfig(
+      File jsonTempFile,
+      List<SerializableModule> modules) throws IOException {
     List<SerializablePrebuiltJarRule> libraries = Lists.newArrayListWithCapacity(
         libraryJars.size());
     for (BuildRule libraryJar : libraryJars) {
@@ -968,7 +979,7 @@ public class Project {
 
   private void writeJsonConfig(
       File jsonTempFile,
-      List<Module> modules,
+      List<SerializableModule> modules,
       List<SerializablePrebuiltJarRule> libraries,
       List<SerializableAndroidAar> aars) throws IOException {
     Map<String, Object> config = ImmutableMap.of(

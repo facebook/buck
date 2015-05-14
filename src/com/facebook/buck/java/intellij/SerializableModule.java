@@ -17,6 +17,8 @@
 package com.facebook.buck.java.intellij;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,7 +37,8 @@ import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 @JsonInclude(Include.NON_NULL)
-public class SerializableModule {
+@VisibleForTesting
+final class SerializableModule {
   @VisibleForTesting
   static final Comparator<SourceFolder> ALPHABETIZER = new Comparator<SourceFolder>() {
 
@@ -46,13 +49,14 @@ public class SerializableModule {
 
   };
 
-  static final Comparator<SerializableModule> PATH_NAME_COMARATOR =
+  static final Comparator<SerializableModule> BUILDTARGET_NAME_COMARATOR =
       new Comparator<SerializableModule>() {
-    @Override
-    public int compare(SerializableModule a, SerializableModule b) {
-      return a.getModuleDirectoryPath().compareTo(b.getModuleDirectoryPath());
-    }
-  };
+        @Override
+        public int compare(SerializableModule a, SerializableModule b) {
+          return a.target.getFullyQualifiedName().compareTo(b.target.getFullyQualifiedName());
+        }
+      };
+
   /**
    * Let intellij generate the gen directory to specific path.
    */
@@ -118,6 +122,16 @@ public class SerializableModule {
   @Nullable
   @JsonProperty
   Path binaryPath;
+
+  // In IntelliJ, options in an .iml file that correspond to file paths should be relative to the
+  // location of the .iml file itself.
+  final BuildRule srcRule;
+  final BuildTarget target;  // For error reporting
+
+  SerializableModule(BuildRule srcRule, BuildTarget target) {
+    this.srcRule = srcRule;
+    this.target = target;
+  }
 
   Path getModuleDirectoryPath() {
     return MorePaths.getParentOrEmpty(Preconditions.checkNotNull(pathToImlFile));
@@ -194,5 +208,13 @@ public class SerializableModule {
           .add("packagePrefix", packagePrefix)
           .toString();
     }
+  }
+
+  @Nullable public List<SerializableDependentModule> getDependencies() {
+    return dependencies;
+  }
+
+  public void setModuleDependencies(List<SerializableDependentModule> moduleDependencies) {
+    this.dependencies = moduleDependencies;
   }
 }
