@@ -16,7 +16,11 @@
 
 package com.facebook.buck.event;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+
+import com.google.common.base.Throwables;
 
 import org.junit.Test;
 
@@ -32,4 +36,10 @@ public class ThrowableConsoleEventTest {
     assertTrue(event.getMessage().contains("AccessDeniedException"));
   }
 
+  @Test
+  public void throwableStackTraceIsIncludedInDescription() {
+    Throwable throwable = new AccessDeniedException("somefile");
+    ThrowableConsoleEvent event = new ThrowableConsoleEvent(throwable, "message");
+    assertThat(event.getMessage(), containsString(Throwables.getStackTraceAsString(throwable)));
+  }
 }

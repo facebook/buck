@@ -20,7 +20,10 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
@@ -156,8 +159,6 @@ public class BuildContextTest {
         .build();
 
     buildContext.logError(new RuntimeException(), "Error detail: %s", "BUILD_ID");
-    assertEquals(
-        ImmutableList.of("Error detail: BUILD_ID\njava.lang.RuntimeException"),
-        listener.getLogMessages());
+    assertThat(listener.getLogMessages(), contains(containsString("Error detail: BUILD_ID")));
   }
 }
