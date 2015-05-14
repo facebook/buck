@@ -16,19 +16,15 @@
 
 package com.facebook.buck.ocaml;
 
-import static com.facebook.buck.io.MorePaths.TO_PATH;
-
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 
@@ -73,9 +69,7 @@ public class OCamlLinkStep extends ShellStep {
           .setReflectively(key + ".ocamlCompiler", ocamlCompiler.toString())
           .setReflectively(key + ".output", output.toString())
           .setReflectively(key + ".depInput", depInput)
-          .setReflectively(
-              key + ".input",
-              FluentIterable.from(input).transform(TO_PATH).toSortedSet(Ordering.natural()))
+          .setReflectively(key + ".input", input)
           .setReflectively(key + ".flags", flags)
           .setReflectively(key + ".isLibrary", isLibrary)
           .setReflectively(key + ".isBytecode", isBytecode);
