@@ -51,4 +51,15 @@ abstract class AbstractIjLibrary implements IjProjectElement {
    * @return url to the javadoc.
    */
   public abstract Optional<String> getJavadocUrl();
+
+  @Override
+  public void addAsDependency(
+      IjModuleGraph.DependencyType dependencyType,
+      IjDependencyListBuilder dependencyListBuilder) {
+    IjDependencyListBuilder.Scope scope = IjDependencyListBuilder.Scope.COMPILE;
+    if (dependencyType.equals(IjModuleGraph.DependencyType.TEST)) {
+      scope = IjDependencyListBuilder.Scope.TEST;
+    }
+    dependencyListBuilder.addLibrary(getName(), scope, false /* exported */);
+  }
 }

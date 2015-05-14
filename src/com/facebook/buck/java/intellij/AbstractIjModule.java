@@ -18,7 +18,6 @@ package com.facebook.buck.java.intellij;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -28,7 +27,6 @@ import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Represents a single IntelliJ module.
@@ -36,15 +34,6 @@ import java.nio.file.Paths;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractIjModule implements IjProjectElement {
-
-  /**
-   * This directory is analogous to the gen/ directory that IntelliJ would produce when building an
-   * Android module. It contains files such as R.java, BuildConfig.java, and Manifest.java.
-   * <p>
-   * By default, IntelliJ generates its gen/ directories in our source tree, which would likely
-   * mess with the user's use of {@code glob(['**&#x2f;*.java'])}.
-   */
-  private static final Path ANDROID_GEN_PATH = BuckConstant.BUCK_OUTPUT_PATH.resolve("android");
 
   @Override
   @Value.Derived
@@ -82,20 +71,6 @@ abstract class AbstractIjModule implements IjProjectElement {
     return getModuleBasePath().resolve(getName() + ".iml");
   }
 
-  /**
-   * @return the relative path of gen from the base path of current module.  For example, for the
-   * build target in $PROJECT_DIR$/android_res/com/facebook/gifts/, this will return
-   * ../../../../buck-out/android/android_res/com/facebook/gifts/gen.
-   */
-  @Value.Derived
-  public Path getRelativeGenPath() {
-    Path pathBackUpToProjectRoot = getModuleBasePath().relativize(Paths.get(""));
-    return pathBackUpToProjectRoot
-        .resolve(ANDROID_GEN_PATH)
-        .resolve(getModuleBasePath())
-        .resolve("gen");
-  }
-
   @Value.Check
   protected void targetSetCantBeEmpty() {
     Preconditions.checkArgument(!getTargets().isEmpty());
@@ -118,5 +93,15 @@ abstract class AbstractIjModule implements IjProjectElement {
     for (TargetNode<?> targetNode : getTargets()) {
       Preconditions.checkArgument(!deps.contains(targetNode.getBuildTarget()));
     }
+  }
+
+  @Override
+  public void addAsDependency(
+      IjModuleGraph.DependencyType dependencyType, IjDependencyListBuilder dependencyListBuilder) {
+    IjDependencyListBuilder.Scope scope = IjDependencyListBuilder.Scope.COMPILE;
+    if (dependencyType.equals(IjModuleGraph.DependencyType.TEST)) {
+      scope = IjDependencyListBuilder.Scope.TEST;
+    }
+    dependencyListBuilder.addModule(getName(), scope, false /* exported */);
   }
 }

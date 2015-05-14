@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
@@ -222,6 +223,14 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     fileAttributes = new LinkedHashMap<>();
     symLinks = new LinkedHashMap<>();
     directories = new LinkedHashSet<>();
+    directories.add(Paths.get(""));
+    for (Path file : files) {
+      Path dir = file.getParent();
+      while (dir != null) {
+        directories.add(dir);
+        dir = dir.getParent();
+      }
+    }
     this.clock = Preconditions.checkNotNull(clock);
 
     // Generally, tests don't care whether files exist.
@@ -234,13 +243,13 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   private byte[] getFileBytes(Path path) {
-    return Preconditions.checkNotNull(fileContents.get(path.normalize()));
+    return Preconditions.checkNotNull(fileContents.get(MorePaths.normalize(path)));
   }
 
   private void rmFile(Path path) {
-    fileContents.remove(path.normalize());
-    fileAttributes.remove(path.normalize());
-    fileLastModifiedTimes.remove(path.normalize());
+    fileContents.remove(MorePaths.normalize(path));
+    fileAttributes.remove(MorePaths.normalize(path));
+    fileLastModifiedTimes.remove(MorePaths.normalize(path));
   }
 
   public ImmutableSet<FileAttribute<?>> getFileAttributesAtPath(Path path) {
@@ -285,7 +294,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public boolean isFile(Path path) {
-    return fileContents.containsKey(path.normalize());
+    return fileContents.containsKey(MorePaths.normalize(path));
   }
 
   @Override
@@ -295,7 +304,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public boolean isDirectory(Path path, LinkOption... linkOptions) {
-    return directories.contains(path.normalize());
+    return directories.contains(MorePaths.normalize(path));
   }
 
   @Override
@@ -317,8 +326,10 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
             new Predicate<Path>() {
               @Override
               public boolean apply(Path input) {
-                return input.getParent() != null &&
-                    input.getParent().equals(pathRelativeToProjectRoot);
+                if (input.equals(Paths.get(""))) {
+                  return false;
+                }
+                return MorePaths.getParentOrEmpty(input).equals(pathRelativeToProjectRoot);
               }
             })
         .toList();
@@ -339,20 +350,22 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
                 pathMatcher.matches(input.getFileName());
           }
         })
-        .toSortedSet(Ordering
-            .natural()
-            .onResultOf(new Function<Path, FileTime>() {
-                @Override
-                public FileTime apply(Path path) {
-                  try {
-                    return getLastModifiedTimeFetcher().getLastModifiedTime(path);
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
-                  }
-                }
-            })
-            .compound(Ordering.natural())
-            .reverse());
+        .toSortedSet(
+            Ordering
+                .natural()
+                .onResultOf(
+                    new Function<Path, FileTime>() {
+                      @Override
+                      public FileTime apply(Path path) {
+                        try {
+                          return getLastModifiedTimeFetcher().getLastModifiedTime(path);
+                        } catch (IOException e) {
+                          throw new RuntimeException(e);
+                        }
+                      }
+                    })
+                .compound(Ordering.natural())
+                .reverse());
   }
 
   @Override
@@ -362,7 +375,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public long getLastModifiedTime(Path path) throws IOException {
-    Path normalizedPath = path.normalize();
+    Path normalizedPath = MorePaths.normalize(path);
     if (!exists(normalizedPath)) {
       throw new NoSuchFileException(path.toString());
     }
@@ -371,7 +384,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public Path setLastModifiedTime(Path path, FileTime time) throws IOException {
-    Path normalizedPath = path.normalize();
+    Path normalizedPath = MorePaths.normalize(path);
     if (!exists(normalizedPath)) {
       throw new NoSuchFileException(path.toString());
     }
@@ -381,12 +394,12 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public void rmdir(Path path) throws IOException {
-    Path normalizedPath = path.normalize();
+    Path normalizedPath = MorePaths.normalize(path);
     for (Iterator<Path> iterator = fileContents.keySet().iterator(); iterator.hasNext();) {
       Path subPath = iterator.next();
       if (subPath.startsWith(normalizedPath)) {
-        fileAttributes.remove(subPath.normalize());
-        fileLastModifiedTimes.remove(subPath.normalize());
+        fileAttributes.remove(MorePaths.normalize(subPath));
+        fileLastModifiedTimes.remove(MorePaths.normalize(subPath));
         iterator.remove();
       }
     }
@@ -435,7 +448,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       byte[] bytes,
       Path path,
       FileAttribute<?>... attrs) throws IOException {
-    Path normalizedPath = path.normalize();
+    Path normalizedPath = MorePaths.normalize(path);
     fileContents.put(normalizedPath, Preconditions.checkNotNull(bytes));
     fileAttributes.put(normalizedPath, ImmutableSet.copyOf(attrs));
 
@@ -479,7 +492,8 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     if (!exists(pathRelativeToProjectRoot)) {
       throw new NoSuchFileException(pathRelativeToProjectRoot.toString());
     }
-    return new ByteArrayInputStream(fileContents.get(pathRelativeToProjectRoot.normalize()));
+    Path normalizedPathToProjectRoot = MorePaths.normalize(pathRelativeToProjectRoot);
+    return new ByteArrayInputStream(fileContents.get(normalizedPathToProjectRoot));
   }
 
   @Override
@@ -649,9 +663,11 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public void move(Path source, Path target, CopyOption... options) throws IOException {
-    fileContents.put(target.normalize(), fileContents.remove(source.normalize()));
-    fileAttributes.put(target.normalize(), fileAttributes.remove(source.normalize()));
-    fileLastModifiedTimes.put(target.normalize(), fileLastModifiedTimes.remove(source.normalize()));
+    fileContents.put(MorePaths.normalize(target), fileContents.remove(MorePaths.normalize(source)));
+    fileAttributes.put(MorePaths.normalize(target),
+        fileAttributes.remove(MorePaths.normalize(source)));
+    fileLastModifiedTimes.put(MorePaths.normalize(target),
+        fileLastModifiedTimes.remove(MorePaths.normalize(source)));
   }
 
 }

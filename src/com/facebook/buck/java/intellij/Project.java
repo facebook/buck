@@ -46,10 +46,8 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.ProjectConfig;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceRoot;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Ansi;
@@ -125,7 +123,6 @@ public class Project {
 
   private final SourcePathResolver resolver;
   private final ImmutableSortedSet<ProjectConfig> rules;
-  private final TargetGraph targetGraph;
   private final ActionGraph actionGraph;
   private final BuildFileTree buildFileTree;
   private final ImmutableMap<Path, String> basePathToAliasMap;
@@ -140,12 +137,10 @@ public class Project {
   private final String pythonInterpreter;
   private final ObjectMapper objectMapper;
   private final boolean turnOffAutoSourceGeneration;
-  private final boolean experimentalProjectGeneration;
 
   public Project(
       SourcePathResolver resolver,
       ImmutableSortedSet<ProjectConfig> rules,
-      TargetGraph targetGraph,
       ActionGraph actionGraph,
       Map<Path, String> basePathToAliasMap,
       JavaPackageFinder javaPackageFinder,
@@ -157,11 +152,9 @@ public class Project {
       Optional<String> pathToPostProcessScript,
       String pythonInterpreter,
       ObjectMapper objectMapper,
-      boolean turnOffAutoSourceGeneration,
-      boolean experimentalProjectGeneration) {
+      boolean turnOffAutoSourceGeneration) {
     this.resolver = resolver;
     this.rules = rules;
-    this.targetGraph = targetGraph;
     this.actionGraph = actionGraph;
     this.buildFileTree = buildFileTree;
     this.basePathToAliasMap = ImmutableMap.copyOf(basePathToAliasMap);
@@ -176,7 +169,6 @@ public class Project {
     this.pythonInterpreter = pythonInterpreter;
     this.objectMapper = objectMapper;
     this.turnOffAutoSourceGeneration = turnOffAutoSourceGeneration;
-    this.experimentalProjectGeneration = experimentalProjectGeneration;
   }
 
   public int createIntellijProject(
@@ -185,28 +177,8 @@ public class Project {
       boolean generateMinimalProject,
       PrintStream stdOut,
       PrintStream stdErr) throws IOException, InterruptedException {
-    List<SerializableModule> modules;
-    if (experimentalProjectGeneration) {
-      IjLibraryFactory.IjLibraryFactoryResolver moduleGraphResolver =
-          new IjLibraryFactory.IjLibraryFactoryResolver() {
-            @Override
-            public Path getPath(SourcePath path) {
-              return resolver.getPath(path);
-            }
-          };
-      IjProject ijProject = new IjProject(
-          IjModuleGraph.from(targetGraph, moduleGraphResolver),
-          javaPackageFinder);
-      modules = Lists.newArrayList(ijProject.getSerializedProjectDescription());
-      writeJsonConfig(
-          jsonTempFile,
-          modules,
-          ImmutableList.<SerializablePrebuiltJarRule>of(),
-          ijProject.getSerializedLibrariesDescription());
-    } else {
-      modules = Lists.<SerializableModule>newArrayList(createModulesForProjectConfigs());
-      writeJsonConfig(jsonTempFile, modules);
-    }
+    List<Module> modules = createModulesForProjectConfigs();
+    writeJsonConfig(jsonTempFile, modules);
 
     List<String> modifiedFiles = Lists.newArrayList();
 
@@ -965,8 +937,7 @@ public class Project {
     return directoryPath.relativize(pathRelativeToProjectRoot);
   }
 
-  private void writeJsonConfig(File jsonTempFile, List<SerializableModule> modules
-  ) throws IOException {
+  private void writeJsonConfig(File jsonTempFile, List<Module> modules) throws IOException {
     List<SerializablePrebuiltJarRule> libraries = Lists.newArrayListWithCapacity(
         libraryJars.size());
     for (BuildRule libraryJar : libraryJars) {
@@ -997,7 +968,7 @@ public class Project {
 
   private void writeJsonConfig(
       File jsonTempFile,
-      List<SerializableModule> modules,
+      List<Module> modules,
       List<SerializablePrebuiltJarRule> libraries,
       List<SerializableAndroidAar> aars) throws IOException {
     Map<String, Object> config = ImmutableMap.of(

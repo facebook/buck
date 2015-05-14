@@ -259,8 +259,9 @@ public class ProjectIntegrationTest {
     assertThat(
         "`buck project` should contain warning to synchronize IntelliJ.",
         result.getStderr(),
-        containsString("  ::  Please resynchronize IntelliJ via File->Synchronize " +
-            "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
+        containsString(
+            "  ::  Please resynchronize IntelliJ via File->Synchronize " +
+                "or Cmd-Opt-Y (Mac) or Ctrl-Alt-Y (PC/Linux)"));
   }
 
   /**
@@ -645,6 +646,18 @@ public class ProjectIntegrationTest {
         "project",
         "app");
     result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testExperimentalBuckProject() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "experimental_project1", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "--experimental-ij-generation");
+    result.assertSuccess("buck project should exit cleanly");
 
     workspace.verify();
   }

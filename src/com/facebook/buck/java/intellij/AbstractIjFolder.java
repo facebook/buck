@@ -32,13 +32,19 @@ abstract class AbstractIjFolder {
   public enum Type {
     EXCLUDE_FOLDER("excludeFolder"),
     SOURCE_FOLDER("sourceFolder"),
-    TEST_FOLDER("testFolder")
-    ;
+    TEST_FOLDER("sourceFolder"); // The test folder is a sourceFolder with a separate 'isTest' flag.
 
-    private final String value;
+    private final String ijName;
 
-    Type(String value) {
-      this.value = value;
+    Type(String ijName) {
+      this.ijName = ijName;
+    }
+
+    /**
+     * @return name IntelliJ would use to refer to this type of folder.
+     */
+    public String getIjName() {
+      return ijName;
     }
 
     /**
@@ -63,11 +69,6 @@ abstract class AbstractIjFolder {
       // Since left and right are not equal, and we've excluded EXCLUDE they have to be a mix of
       // SOURCE and TEST. A mix of SOURCE and TEST gets promoted to SOURCE.
       return SOURCE_FOLDER;
-    }
-
-    @Override
-    public String toString() {
-      return value;
     }
   }
 

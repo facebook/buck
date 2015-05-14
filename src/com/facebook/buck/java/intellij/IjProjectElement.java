@@ -33,4 +33,7 @@ public interface IjProjectElement {
    * @return set of targets this element corresponds to in the IntelliJ project.
    */
   ImmutableSet<TargetNode<?>> getTargets();
+
+  void addAsDependency(IjModuleGraph.DependencyType dependencyType,
+      IjDependencyListBuilder dependencyListBuilder);
 }

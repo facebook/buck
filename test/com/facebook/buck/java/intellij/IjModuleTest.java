@@ -31,18 +31,6 @@ import java.nio.file.Paths;
 public class IjModuleTest {
 
   @Test
-  public void testRelativeGenPath() {
-    TargetNode<?> javaLibrary = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook/foo:foo"))
-        .build();
-
-    IjModule javaLibraryModule = createModule(javaLibrary);
-
-    assertEquals(Paths.get("../../../../../buck-out/android/java/src/com/facebook/foo/gen"),
-        javaLibraryModule.getRelativeGenPath());
-  }
-
-  @Test
   public void testPathToModuleFile() {
     TargetNode<?> javaLibrary = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook/foo:foo"))

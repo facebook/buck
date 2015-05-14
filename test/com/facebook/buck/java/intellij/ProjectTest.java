@@ -737,7 +737,6 @@ public class ProjectTest {
     Project project = new Project(
         new SourcePathResolver(ruleResolver),
         projectConfigs,
-        null,
         actionGraph,
         basePathToAliasMap,
         javaPackageFinder,
@@ -752,8 +751,7 @@ public class ProjectTest {
         /* pathToPostProcessScript */ Optional.<String>absent(),
         BuckTestConstant.PYTHON_INTERPRETER,
         new ObjectMapper(),
-        true,
-        false);
+        true);
 
     // Execute Project's business logic.
     EasyMock.replay(executionContext, projectFilesystem);

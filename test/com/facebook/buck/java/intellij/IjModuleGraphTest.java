@@ -350,7 +350,7 @@ public class IjModuleGraphTest {
     assertEquals(2, moduleGraph.getModuleNodes().size());
   }
 
-  private IjModuleGraph createModuleGraph(ImmutableSet<TargetNode<?>> targets) {
+  public static IjModuleGraph createModuleGraph(ImmutableSet<TargetNode<?>> targets) {
     final SourcePathResolver sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
     IjLibraryFactory.IjLibraryFactoryResolver sourceOnlyResolver =
         new IjLibraryFactory.IjLibraryFactoryResolver() {
@@ -362,7 +362,7 @@ public class IjModuleGraphTest {
     return IjModuleGraph.from(TargetGraphFactory.newInstance(targets), sourceOnlyResolver);
   }
 
-  private IjProjectElement getProjectElementForTarget(
+  public static IjProjectElement getProjectElementForTarget(
       IjModuleGraph graph,
       final TargetNode<?> target) {
     return FluentIterable.from(graph.getNodes()).firstMatch(
@@ -380,11 +380,11 @@ public class IjModuleGraphTest {
         }).get();
   }
 
-  private IjModule getModuleForTarget(IjModuleGraph graph, final TargetNode<?> target) {
+  public static IjModule getModuleForTarget(IjModuleGraph graph, final TargetNode<?> target) {
     return (IjModule) getProjectElementForTarget(graph, target);
   }
 
-  private IjLibrary getLibraryForTarget(IjModuleGraph graph, final TargetNode<?> target) {
+  public static IjLibrary getLibraryForTarget(IjModuleGraph graph, final TargetNode<?> target) {
     return (IjLibrary) getProjectElementForTarget(graph, target);
   }
 }
