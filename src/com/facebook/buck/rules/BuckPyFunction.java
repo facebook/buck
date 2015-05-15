@@ -51,13 +51,20 @@ public class BuckPyFunction {
     this.argMarshaller = argMarshaller;
   }
 
-  public String toPythonFunction(BuildRuleType type, Object dto) {
-
+  public String toPythonPrototype(BuildRuleType type, Object dto) {
     StringBuilder builder = new StringBuilder();
-
     SortedSet<ParamInfo<?>> mandatory = Sets.newTreeSet();
     SortedSet<ParamInfo<?>> optional = Sets.newTreeSet();
 
+    getParams(dto, mandatory, optional);
+    appendPrototype(builder, type, dto, mandatory, optional);
+
+    return builder.toString();
+  }
+
+  private void getParams(Object dto,
+                         SortedSet<ParamInfo<?>> mandatory,
+                         SortedSet<ParamInfo<?>> optional) {
     for (ParamInfo<?> param : argMarshaller.getAllParamInfo(dto)) {
       if (isSkippable(param)) {
         continue;
@@ -69,11 +76,15 @@ public class BuckPyFunction {
         mandatory.add(param);
       }
     }
+  }
 
+  private void appendPrototype(StringBuilder builder,
+                               BuildRuleType type,
+                               Object dto,
+                               SortedSet<ParamInfo<?>> mandatory,
+                               SortedSet<ParamInfo<?>> optional) {
     @Nullable TargetName defaultName = dto.getClass().getAnnotation(TargetName.class);
-
-    builder.append("@provide_for_build\n")
-        .append("def ").append(type.getName()).append("(");
+    builder.append(type.getName()).append("(");
 
     if (defaultName == null) {
       builder.append("name, ");
@@ -83,8 +94,25 @@ public class BuckPyFunction {
     for (ParamInfo<?> param : Iterables.concat(mandatory, optional)) {
       appendPythonParameter(builder, param);
     }
-    builder.append("visibility=[], build_env=None):\n")
+    builder.append("visibility=[], build_env=None)");
+  }
 
+  public String toPythonFunction(BuildRuleType type, Object dto) {
+
+    StringBuilder builder = new StringBuilder();
+    SortedSet<ParamInfo<?>> mandatory = Sets.newTreeSet();
+    SortedSet<ParamInfo<?>> optional = Sets.newTreeSet();
+
+    getParams(dto, mandatory, optional);
+
+    @Nullable TargetName defaultName = dto.getClass().getAnnotation(TargetName.class);
+
+    builder.append("@provide_for_build\n")
+        .append("def ");
+
+    appendPrototype(builder, type, dto, mandatory, optional);
+
+    builder.append(":\n")
         // Define the rule.
         .append("  add_rule({\n")
         .append("    '" + TYPE_PROPERTY_NAME + "' : '").append(type.getName()).append("',\n");

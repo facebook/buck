@@ -59,6 +59,10 @@ public enum Command {
       "generates a default project directory",
       QuickstartCommand.class,
       false),
+  RULETYPES(
+      "list built-in rule types",
+      RuleTypesCommand.class,
+      true),
   RUN(
       "runs a target as a command",
       RunCommand.class,
