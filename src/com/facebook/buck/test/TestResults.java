@@ -138,5 +138,9 @@ public class TestResults {
   public int getTotalNumberOfTests() {
     return totalNumberOfTests;
   }
-}
 
+  @Override
+  public String toString() {
+    return String.format("%s (success=%s) %s", super.toString(), isSuccess(), testCases);
+  }
+}

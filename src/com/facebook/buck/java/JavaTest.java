@@ -95,6 +95,9 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
   @Nullable
   private JUnitStep junit;
 
+  @AddToRuleKey
+  private final boolean runTestSeparately;
+
   protected JavaTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -109,7 +112,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       List<String> vmArgs,
       ImmutableSet<BuildRule> sourceUnderTest,
       Optional<Path> resourcesRoot,
-      Optional<Long> testRuleTimeoutMs) {
+      Optional<Long> testRuleTimeoutMs,
+      boolean runTestSeparately) {
     super(
         params,
         resolver,
@@ -129,6 +133,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
     this.additionalClasspathEntries = addtionalClasspathEntries;
     this.testType = testType;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.runTestSeparately = runTestSeparately;
   }
 
   @Override
@@ -496,5 +501,10 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
 
       return testClassNames.build();
     }
+  }
+
+  @Override
+  public boolean runTestSeparately() {
+    return runTestSeparately;
   }
 }

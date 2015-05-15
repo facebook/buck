@@ -84,7 +84,8 @@ public class RobolectricTest extends JavaTest {
       ImmutableSet<BuildRule> sourceTargetsUnderTest,
       Optional<Path> resourcesRoot,
       Optional<DummyRDotJava> optionalDummyRDotJava,
-      Optional<Long> testRuleTimeoutMs) {
+      Optional<Long> testRuleTimeoutMs,
+      boolean runTestSeparately) {
     super(
         buildRuleParams,
         resolver,
@@ -99,7 +100,8 @@ public class RobolectricTest extends JavaTest {
         vmArgs,
         sourceTargetsUnderTest,
         resourcesRoot,
-        testRuleTimeoutMs);
+        testRuleTimeoutMs,
+        runTestSeparately);
     this.optionalDummyRDotJava = optionalDummyRDotJava;
   }
 

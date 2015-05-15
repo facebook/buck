@@ -220,4 +220,9 @@ public class DTest extends DLinkable implements TestRule {
               getPathToTestOutput()));
     }
   }
+
+  @Override
+  public boolean runTestSeparately() {
+    return false;
+  }
 }

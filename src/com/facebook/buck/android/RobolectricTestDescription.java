@@ -117,7 +117,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             resolver),
         args.resourcesRoot,
         dummyRDotJava,
-        testRuleTimeoutMs);
+        testRuleTimeoutMs,
+        args.getRunTestSeparately());
   }
 
   @SuppressFieldNotInitialized

@@ -104,7 +104,8 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
             params.getBuildTarget(),
             resolver),
         args.resourcesRoot,
-        testRuleTimeoutMs);
+        testRuleTimeoutMs,
+        args.getRunTestSeparately());
   }
 
   public static ImmutableSet<BuildRule> validateAndGetSourcesUnderTest(
@@ -136,10 +137,15 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<ImmutableList<String>> vmArgs;
     public Optional<TestType> testType;
+    public Optional<Boolean> runTestSeparately;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
       return sourceUnderTest.get();
+    }
+
+    public boolean getRunTestSeparately() {
+      return runTestSeparately.or(false);
     }
   }
 }

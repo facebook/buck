@@ -142,5 +142,4 @@ public final class DefaultStepRunner implements StepRunner {
     Preconditions.checkState(!listeningExecutorService.isShutdown());
     return MoreFutures.addListenableCallback(dependencies, callback, listeningExecutorService);
   }
-
 }

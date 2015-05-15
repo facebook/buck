@@ -173,4 +173,8 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
         "__test_%s_output__");
   }
 
+  @Override
+  public boolean runTestSeparately() {
+    return false;
+  }
 }

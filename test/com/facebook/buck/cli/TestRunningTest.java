@@ -25,27 +25,38 @@ import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaTestDescription;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.FakeBuildEngine;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.ExecutionOrderAwareFakeStep;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -54,8 +65,11 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -70,7 +84,10 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -79,6 +96,9 @@ public class TestRunningTest {
 
   private static ImmutableSortedSet<String> pathsFromRoot;
   private static ImmutableSet<String> pathElements;
+
+  private static final TestRunningOptions DEFAULT_OPTIONS = TestRunningOptions.builder().build();
+  private static final Logger LOG = Logger.get(TestRunningTest.class);
 
   @BeforeClass
   public static void setUp() {
@@ -454,5 +474,467 @@ public class TestRunningTest {
             /* running with test selectors */ false));
 
     verify(executionContext, cachingBuildEngine, testRuleKeyFileHelper);
+  }
+
+  @Test
+  public void whenAllTestsAreSeparateTestsRunInOrder() throws Exception {
+    CommandRunnerParams commandRunnerParams = CommandRunnerParamsForTesting
+        .builder()
+        .build();
+
+    AtomicInteger atomicExecutionOrder = new AtomicInteger(0);
+    ExecutionOrderAwareFakeStep separateTestStep1 =
+        new ExecutionOrderAwareFakeStep(
+            "teststep1",
+            "teststep1",
+            0,
+            atomicExecutionOrder);
+    final TestResults fakeTestResults =
+        new TestResults(
+            ImmutableList.of(
+                new TestCaseSummary(
+                    "TestCase",
+                    ImmutableList.of(
+                        new TestResultSummary(
+                            "TestCaseResult",
+                            "passTest",
+                            ResultType.SUCCESS,
+                            5000,
+                            null,
+                            null,
+                            null,
+                            null)))));
+    BuildTarget separateTest1Target = BuildTargetFactory.newInstance("//:test1");
+    FakeTestRule separateTest1 = new FakeTestRule(
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(separateTest1Target),
+        new SourcePathResolver(new BuildRuleResolver()),
+        ImmutableSet.<Label>of(),
+        Optional.of(Paths.get("separateTestStep1OutputDir")),
+        true, // runTestSeparately
+        ImmutableList.<Step>of(separateTestStep1),
+        new Callable<TestResults>() {
+          @Override
+          public TestResults call() {
+            return fakeTestResults;
+          }
+        });
+
+    ExecutionOrderAwareFakeStep separateTestStep2 =
+        new ExecutionOrderAwareFakeStep(
+            "teststep2",
+            "teststep2",
+            0,
+            atomicExecutionOrder);
+    BuildTarget separateTest2Target = BuildTargetFactory.newInstance("//:test2");
+    FakeTestRule separateTest2 = new FakeTestRule(
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(separateTest2Target),
+        new SourcePathResolver(new BuildRuleResolver()),
+        ImmutableSet.<Label>of(),
+        Optional.of(Paths.get("separateTestStep2OutputDir")),
+        true, // runTestSeparately
+        ImmutableList.<Step>of(separateTestStep2),
+        new Callable<TestResults>() {
+          @Override
+          public TestResults call() {
+            return fakeTestResults;
+          }
+        });
+
+    ExecutionOrderAwareFakeStep separateTestStep3 =
+        new ExecutionOrderAwareFakeStep(
+            "teststep3",
+            "teststep3",
+            0,
+            atomicExecutionOrder);
+    BuildTarget separateTest3Target = BuildTargetFactory.newInstance("//:test3");
+    FakeTestRule separateTest3 = new FakeTestRule(
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(separateTest3Target),
+        new SourcePathResolver(new BuildRuleResolver()),
+        ImmutableSet.<Label>of(),
+        Optional.of(Paths.get("separateTestStep3OutputDir")),
+        true, // runTestSeparately
+        ImmutableList.<Step>of(separateTestStep3),
+        new Callable<TestResults>() {
+          @Override
+          public TestResults call() {
+            return fakeTestResults;
+          }
+        });
+
+    // We explicitly use an actual thread pool here; the logic should ensure the
+    // separate tests are run in the correct order.
+    ListeningExecutorService service =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
+    FakeBuildEngine fakeBuildEngine = new FakeBuildEngine(
+        ImmutableMap.of(
+            separateTest1Target, new BuildResult(separateTest1, BUILT_LOCALLY, CacheResult.skip()),
+            separateTest2Target, new BuildResult(separateTest2, BUILT_LOCALLY, CacheResult.skip()),
+            separateTest3Target, new BuildResult(separateTest3, BUILT_LOCALLY, CacheResult.skip())
+        ),
+        ImmutableMap.of(
+            separateTest1Target, new RuleKey("00"),
+            separateTest2Target, new RuleKey("00"),
+            separateTest3Target, new RuleKey("00")
+        ));
+    ExecutionContext fakeExecutionContext = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(new FakeProjectFilesystem())
+        .build();
+    DefaultStepRunner stepRunner = new DefaultStepRunner(fakeExecutionContext);
+    int ret = TestRunning.runTests(
+        commandRunnerParams,
+        ImmutableList.<TestRule>of(separateTest1, separateTest2, separateTest3),
+        FakeBuildContext.NOOP_CONTEXT,
+        fakeExecutionContext,
+        DEFAULT_OPTIONS,
+        service,
+        fakeBuildEngine,
+        stepRunner);
+
+    assertThat(ret, equalTo(0));
+    assertThat(
+        separateTestStep1.getExecutionBeginOrder(),
+        equalTo(Optional.of(0)));
+    assertThat(
+        separateTestStep1.getExecutionEndOrder(),
+        equalTo(Optional.of(1)));
+    assertThat(
+        separateTestStep2.getExecutionBeginOrder(),
+        equalTo(Optional.of(2)));
+    assertThat(
+        separateTestStep2.getExecutionEndOrder(),
+        equalTo(Optional.of(3)));
+    assertThat(
+        separateTestStep3.getExecutionBeginOrder(),
+        equalTo(Optional.of(4)));
+    assertThat(
+        separateTestStep3.getExecutionEndOrder(),
+        equalTo(Optional.of(5)));
+  }
+
+  @Test
+  public void whenSomeTestsAreSeparateThenSeparateTestsRunAtEnd() throws Exception {
+    CommandRunnerParams commandRunnerParams = CommandRunnerParamsForTesting
+        .builder()
+        .build();
+
+    AtomicInteger atomicExecutionOrder = new AtomicInteger(0);
+    ExecutionOrderAwareFakeStep separateTestStep1 =
+        new ExecutionOrderAwareFakeStep(
+            "teststep1",
+            "teststep1",
+            0,
+            atomicExecutionOrder);
+    final TestResults fakeTestResults =
+        new TestResults(
+            ImmutableList.of(
+                new TestCaseSummary(
+                    "TestCase",
+                    ImmutableList.of(
+                        new TestResultSummary(
+                            "TestCaseResult",
+                            "passTest",
+                            ResultType.SUCCESS,
+                            5000,
+                            null,
+                            null,
+                            null,
+                            null)))));
+
+    BuildTarget separateTest1Target = BuildTargetFactory.newInstance("//:test1");
+    FakeTestRule separateTest1 = new FakeTestRule(
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(separateTest1Target),
+        new SourcePathResolver(new BuildRuleResolver()),
+        ImmutableSet.<Label>of(),
+        Optional.of(Paths.get("separateTestStep1OutputDir")),
+        true, // runTestSeparately
+        ImmutableList.<Step>of(separateTestStep1),
+        new Callable<TestResults>() {
+          @Override
+          public TestResults call() {
+            return fakeTestResults;
+          }
+        });
+
+    ExecutionOrderAwareFakeStep separateTestStep2 =
+        new ExecutionOrderAwareFakeStep(
+            "teststep2",
+            "teststep2",
+            0,
+            atomicExecutionOrder);
+    BuildTarget separateTest2Target = BuildTargetFactory.newInstance("//:test2");
+    FakeTestRule separateTest2 = new FakeTestRule(
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(separateTest2Target),
+        new SourcePathResolver(new BuildRuleResolver()),
+        ImmutableSet.<Label>of(),
+        Optional.of(Paths.get("separateTestStep2OutputDir")),
+        true, // runTestSeparately
+        ImmutableList.<Step>of(separateTestStep2),
+        new Callable<TestResults>() {
+          @Override
+          public TestResults call() {
+            return fakeTestResults;
+          }
+        });
+
+    ExecutionOrderAwareFakeStep separateTestStep3 =
+        new ExecutionOrderAwareFakeStep(
+            "teststep3",
+            "teststep3",
+            0,
+            atomicExecutionOrder);
+    BuildTarget separateTest3Target = BuildTargetFactory.newInstance("//:test3");
+    FakeTestRule separateTest3 = new FakeTestRule(
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(separateTest3Target),
+        new SourcePathResolver(new BuildRuleResolver()),
+        ImmutableSet.<Label>of(),
+        Optional.of(Paths.get("separateTestStep3OutputDir")),
+        true, // runTestSeparately
+        ImmutableList.<Step>of(separateTestStep3),
+        new Callable<TestResults>() {
+          @Override
+          public TestResults call() {
+            return fakeTestResults;
+          }
+        });
+
+    ExecutionOrderAwareFakeStep parallelTestStep1 =
+        new ExecutionOrderAwareFakeStep(
+            "parallelteststep1",
+            "parallelteststep1",
+            0,
+            atomicExecutionOrder);
+    BuildTarget parallelTest1Target = BuildTargetFactory.newInstance("//:paralleltest1");
+    FakeTestRule parallelTest1 = new FakeTestRule(
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(parallelTest1Target),
+        new SourcePathResolver(new BuildRuleResolver()),
+        ImmutableSet.<Label>of(),
+        Optional.of(Paths.get("parallelTestStep1OutputDir")),
+        false, // runTestSeparately
+        ImmutableList.<Step>of(parallelTestStep1),
+        new Callable<TestResults>() {
+          @Override
+          public TestResults call() {
+            return fakeTestResults;
+          }
+        });
+
+    ExecutionOrderAwareFakeStep parallelTestStep2 =
+        new ExecutionOrderAwareFakeStep(
+            "parallelteststep2",
+            "parallelteststep2",
+            0,
+            atomicExecutionOrder);
+    BuildTarget parallelTest2Target = BuildTargetFactory.newInstance("//:paralleltest2");
+    FakeTestRule parallelTest2 = new FakeTestRule(
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(parallelTest2Target),
+        new SourcePathResolver(new BuildRuleResolver()),
+        ImmutableSet.<Label>of(),
+        Optional.of(Paths.get("parallelTestStep2OutputDir")),
+        false, // runTestSeparately
+        ImmutableList.<Step>of(parallelTestStep2),
+        new Callable<TestResults>() {
+          @Override
+          public TestResults call() {
+            return fakeTestResults;
+          }
+        });
+
+    ExecutionOrderAwareFakeStep parallelTestStep3 =
+        new ExecutionOrderAwareFakeStep(
+            "parallelteststep3",
+            "parallelteststep3",
+            0,
+            atomicExecutionOrder);
+    BuildTarget parallelTest3Target = BuildTargetFactory.newInstance("//:paralleltest3");
+    FakeTestRule parallelTest3 = new FakeTestRule(
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(parallelTest3Target),
+        new SourcePathResolver(new BuildRuleResolver()),
+        ImmutableSet.<Label>of(),
+        Optional.of(Paths.get("parallelTestStep3OutputDir")),
+        false, // runTestSeparately
+        ImmutableList.<Step>of(parallelTestStep3),
+        new Callable<TestResults>() {
+          @Override
+          public TestResults call() {
+            return fakeTestResults;
+          }
+        });
+
+    // We explicitly use an actual thread pool here; the logic should ensure the
+    // separate tests are run in the correct order.
+    ListeningExecutorService service =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
+    FakeBuildEngine fakeBuildEngine = new FakeBuildEngine(
+        ImmutableMap.<BuildTarget, BuildResult>builder()
+            .put(
+                separateTest1Target,
+                new BuildResult(separateTest1, BUILT_LOCALLY, CacheResult.skip()))
+            .put(
+                separateTest2Target,
+                new BuildResult(separateTest2, BUILT_LOCALLY, CacheResult.skip()))
+            .put(
+                separateTest3Target,
+                new BuildResult(separateTest3, BUILT_LOCALLY, CacheResult.skip()))
+            .put(
+                parallelTest1Target,
+                new BuildResult(parallelTest1, BUILT_LOCALLY, CacheResult.skip()))
+            .put(
+                parallelTest2Target,
+                new BuildResult(parallelTest2, BUILT_LOCALLY, CacheResult.skip()))
+            .put(
+                parallelTest3Target,
+                new BuildResult(parallelTest3, BUILT_LOCALLY, CacheResult.skip()))
+            .build(),
+        ImmutableMap.<BuildTarget, RuleKey>builder()
+            .put(separateTest1Target, new RuleKey("00"))
+            .put(separateTest2Target, new RuleKey("00"))
+            .put(separateTest3Target, new RuleKey("00"))
+            .put(parallelTest1Target, new RuleKey("00"))
+            .put(parallelTest2Target, new RuleKey("00"))
+            .put(parallelTest3Target, new RuleKey("00"))
+            .build());
+    ExecutionContext fakeExecutionContext = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(new FakeProjectFilesystem())
+        .build();
+    DefaultStepRunner stepRunner = new DefaultStepRunner(fakeExecutionContext);
+    int ret = TestRunning.runTests(
+        commandRunnerParams,
+        ImmutableList.<TestRule>of(
+            separateTest1,
+            parallelTest1,
+            separateTest2,
+            parallelTest2,
+            separateTest3,
+            parallelTest3),
+        FakeBuildContext.NOOP_CONTEXT,
+        fakeExecutionContext,
+        DEFAULT_OPTIONS,
+        service,
+        fakeBuildEngine,
+        stepRunner);
+
+    assertThat(ret, equalTo(0));
+
+    // The tests not marked as separate could run in any order -- but they must run
+    // before the separate test steps.
+    ImmutableSet<Optional<Integer>> expectedParallelStepExecutionOrderSet =
+        ImmutableSet.<Optional<Integer>>builder()
+            .add(Optional.of(0))
+            .add(Optional.of(1))
+            .add(Optional.of(2))
+            .add(Optional.of(3))
+            .add(Optional.of(4))
+            .add(Optional.of(5))
+            .build();
+
+    ImmutableSet<Optional<Integer>> actualParallelStepExecutionOrderSet =
+        ImmutableSet.<Optional<Integer>>builder()
+            .add(parallelTestStep1.getExecutionBeginOrder())
+            .add(parallelTestStep1.getExecutionEndOrder())
+            .add(parallelTestStep2.getExecutionBeginOrder())
+            .add(parallelTestStep2.getExecutionEndOrder())
+            .add(parallelTestStep3.getExecutionBeginOrder())
+            .add(parallelTestStep3.getExecutionEndOrder())
+            .build();
+
+    LOG.debug(
+        "Expected parallel execution order: %s Actual parallel execution order: %s",
+        expectedParallelStepExecutionOrderSet,
+        actualParallelStepExecutionOrderSet);
+
+    // We allow the parallel steps to begin and end in any order (note the thread
+    // pool of size 3 above), so we use a set.
+    assertThat(actualParallelStepExecutionOrderSet, equalTo(expectedParallelStepExecutionOrderSet));
+
+    // The separate test steps must begin and end in a specific order, so we use a list.
+    ImmutableList<Optional<Integer>> expectedSeparateStepExecutionOrderList =
+        ImmutableList.<Optional<Integer>>builder()
+            .add(Optional.of(6))
+            .add(Optional.of(7))
+            .add(Optional.of(8))
+            .add(Optional.of(9))
+            .add(Optional.of(10))
+            .add(Optional.of(11))
+            .build();
+
+    ImmutableList<Optional<Integer>> actualSeparateStepExecutionOrderList =
+        ImmutableList.<Optional<Integer>>builder()
+            .add(separateTestStep1.getExecutionBeginOrder())
+            .add(separateTestStep1.getExecutionEndOrder())
+            .add(separateTestStep2.getExecutionBeginOrder())
+            .add(separateTestStep2.getExecutionEndOrder())
+            .add(separateTestStep3.getExecutionBeginOrder())
+            .add(separateTestStep3.getExecutionEndOrder())
+            .build();
+
+    LOG.debug(
+        "Expected separate execution order: %s Actual separate execution order: %s",
+        expectedSeparateStepExecutionOrderList,
+        actualSeparateStepExecutionOrderList);
+
+    assertThat(
+        actualSeparateStepExecutionOrderList,
+        equalTo(expectedSeparateStepExecutionOrderList));
+  }
+
+  @Test
+  public void whenSeparateTestFailsThenBuildFails() throws Exception {
+    CommandRunnerParams commandRunnerParams = CommandRunnerParamsForTesting
+        .builder()
+        .build();
+    final TestResults failingTestResults =
+        new TestResults(
+            ImmutableList.of(
+                new TestCaseSummary(
+                    "TestCase",
+                    ImmutableList.of(
+                        new TestResultSummary(
+                            "TestCaseResult",
+                            "failTest",
+                            ResultType.FAILURE,
+                            5000,
+                            null,
+                            null,
+                            null,
+                            null)))));
+    BuildTarget failingTestTarget = BuildTargetFactory.newInstance("//:failingtest");
+    FakeTestRule failingTest = new FakeTestRule(
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(failingTestTarget),
+        new SourcePathResolver(new BuildRuleResolver()),
+        ImmutableSet.<Label>of(),
+        Optional.of(Paths.get("failingTestStep1OutputDir")),
+        true, // runTestSeparately
+        ImmutableList.<Step>of(),
+        new Callable<TestResults>() {
+          @Override
+          public TestResults call() {
+            return failingTestResults;
+          }
+        });
+
+    ListeningExecutorService service =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
+    FakeBuildEngine fakeBuildEngine = new FakeBuildEngine(
+        ImmutableMap.of(
+            failingTestTarget, new BuildResult(failingTest, BUILT_LOCALLY, CacheResult.skip())
+        ),
+        ImmutableMap.of(
+            failingTestTarget, new RuleKey("00")
+        ));
+    ExecutionContext fakeExecutionContext = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(new FakeProjectFilesystem())
+        .build();
+    DefaultStepRunner stepRunner = new DefaultStepRunner(fakeExecutionContext);
+    int ret = TestRunning.runTests(
+        commandRunnerParams,
+        ImmutableList.<TestRule>of(failingTest),
+        FakeBuildContext.NOOP_CONTEXT,
+        fakeExecutionContext,
+        DEFAULT_OPTIONS,
+        service,
+        fakeBuildEngine,
+        stepRunner);
+
+    assertThat(ret, equalTo(TestRunning.TEST_FAILURES_EXIT_CODE));
   }
 }

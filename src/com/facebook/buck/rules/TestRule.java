@@ -90,4 +90,10 @@ public interface TestRule extends HasBuildTarget {
    * @return The relative path to the output directory of the test rule.
    */
   public Path getPathToTestOutputDirectory();
+
+  /**
+   * @return true if the test should run by itself when no other tests are run,
+   * false otherwise.
+   */
+  public boolean runTestSeparately();
 }

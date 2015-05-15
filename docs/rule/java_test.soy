@@ -116,6 +116,18 @@ A <code>java_test()</code> rule is used to define a set of
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'run_test_separately' /}
+  {param default : 'false' /}
+  {param desc}
+  If set to <code>true</code>, the test(s) in this rule are run separately
+  from all other tests. (This is useful
+  for integration tests which access a physical device or other limited
+  resource.)
+  <p>If unset, the test(s) in this rule in parallel with all other tests.</p>
+  {/param}
+{/call}
+
 {call buck.visibility_arg /}
 
 {/param} // close args

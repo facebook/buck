@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.java.JUnitStep;
@@ -33,10 +34,10 @@ import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.TestRunEvent;
-import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestCaseSummary;
@@ -66,6 +67,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import org.w3c.dom.Document;
@@ -103,21 +105,22 @@ public class TestRunning {
 
   public static final int TEST_FAILURES_EXIT_CODE = 42;
 
+  private static final Logger LOG = Logger.get(TestRunning.class);
+
   // Utility class; do not instantiate.
   private TestRunning() { }
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public static int runTests(
-      CommandRunnerParams params,
+      final CommandRunnerParams params,
       Iterable<TestRule> tests,
       BuildContext buildContext,
       ExecutionContext executionContext,
       final TestRunningOptions options,
       ListeningExecutorService service,
-      BuildEngine buildEngine)
+      BuildEngine buildEngine,
+      final StepRunner stepRunner)
       throws IOException, ExecutionException, InterruptedException {
-
-    DefaultStepRunner stepRunner = new DefaultStepRunner(executionContext);
 
     if (options.isUsingOneTimeOutputDirectories()) {
       BuckConstant.setOneTimeTestSubdirectory(UUID.randomUUID().toString());
@@ -141,13 +144,13 @@ public class TestRunning {
       rulesUnderTest = ImmutableSet.of();
     }
 
-    ImmutableSet<String> testTargets =
+    final ImmutableSet<String> testTargets =
         FluentIterable.from(tests)
             .transform(HasBuildTarget.TO_TARGET)
             .transform(Functions.toStringFunction())
             .toSet();
 
-    int totalNumberOfTests = Iterables.size(tests);
+    final int totalNumberOfTests = Iterables.size(tests);
 
     params.getBuckEventBus().post(
         TestRunEvent.started(
@@ -167,15 +170,19 @@ public class TestRunning {
     final boolean printTestResults = (verbosity != Verbosity.SILENT);
 
     // For grouping results!
-    TestResultsGrouper grouper = null;
+    final TestResultsGrouper grouper;
     if (options.isIgnoreFailingDependencies()) {
       grouper = new TestResultsGrouper(tests);
+    } else {
+      grouper = null;
     }
 
     TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(
         executionContext.getProjectFilesystem(),
         buildEngine);
-    AtomicInteger lastReportedTestSequenceNumber = new AtomicInteger();
+    final AtomicInteger lastReportedTestSequenceNumber = new AtomicInteger();
+    final List<TestRun> separateTestRuns = Lists.newArrayList();
+    List<TestRun> parallelTestRuns = Lists.newArrayList();
     for (TestRule test : tests) {
       // Determine whether the test needs to be executed.
       boolean isTestRunRequired;
@@ -208,34 +215,107 @@ public class TestRunning {
         steps = ImmutableList.of();
       }
 
-      // Always run the commands, even if the list of commands as empty. There may be zero commands
-      // because the rule is cached, but its results must still be processed.
-      ListenableFuture<TestResults> testResults =
-          stepRunner.runStepsAndYieldResult(steps,
-              getCachingStatusTransformingCallable(
-                  isTestRunRequired,
-                  test.interpretTestResults(executionContext,
-                      /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty(),
-                      /*isDryRun*/ options.isDryRun())),
-              Optional.of(test.getBuildTarget()),
-              service);
-      results.add(
-          transformTestResults(
-              params,
-              testResults,
-              grouper,
-              test,
-              testTargets,
-              printTestResults,
-              lastReportedTestSequenceNumber,
-              totalNumberOfTests));
+      TestRun testRun = TestRun.of(
+          test,
+          steps,
+          getCachingStatusTransformingCallable(
+              isTestRunRequired,
+              test.interpretTestResults(
+                  executionContext,
+                  /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty(),
+                  /*isDryRun*/ options.isDryRun())));
+
+
+      // Always run the commands, even if the list of commands as empty. There may be zero
+      // commands because the rule is cached, but its results must still be processed.
+      if (test.runTestSeparately()) {
+        LOG.debug("Running test %s in serial", test);
+        separateTestRuns.add(testRun);
+      } else {
+        LOG.debug("Running test %s in parallel", test);
+        parallelTestRuns.add(testRun);
+      }
     }
 
-    // Block until all the tests have finished running.
-    ListenableFuture<List<TestResults>> uberFuture = Futures.allAsList(results);
-    List<TestResults> completedResults;
+    for (TestRun testRun : parallelTestRuns) {
+      ListenableFuture<TestResults> testResults =
+          stepRunner.runStepsAndYieldResult(
+              testRun.getSteps(),
+              testRun.getTestResultsCallable(),
+              Optional.of(testRun.getTest().getBuildTarget()),
+              service);
+        results.add(
+            transformTestResults(
+                params,
+                testResults,
+                grouper,
+                testRun.getTest(),
+                testTargets,
+                printTestResults,
+                lastReportedTestSequenceNumber,
+                totalNumberOfTests));
+    }
+
+
+    ListenableFuture<List<TestResults>> parallelTestStepsFuture = Futures.allAsList(results);
+
+    final List<TestResults> completedResults = Lists.newArrayList();
+
+    final ListeningExecutorService directExecutorService = MoreExecutors.newDirectExecutorService();
+    ListenableFuture<Void> uberFuture = stepRunner.addCallback(
+        parallelTestStepsFuture,
+        new FutureCallback<List<TestResults>>() {
+          @Override
+          public void onSuccess(List<TestResults> parallelTestResults) {
+            LOG.debug("Parallel tests completed, running separate tests...");
+            completedResults.addAll(parallelTestResults);
+            List<ListenableFuture<TestResults>> separateResultsList = Lists.newArrayList();
+            for (TestRun testRun : separateTestRuns) {
+              separateResultsList.add(
+                  transformTestResults(
+                      params,
+                      stepRunner.runStepsAndYieldResult(
+                          testRun.getSteps(),
+                          testRun.getTestResultsCallable(),
+                          Optional.of(testRun.getTest().getBuildTarget()),
+                          directExecutorService),
+                      grouper,
+                      testRun.getTest(),
+                      testTargets,
+                      printTestResults,
+                      lastReportedTestSequenceNumber,
+                      totalNumberOfTests));
+            }
+            ListenableFuture<List<TestResults>> serialResults = Futures.allAsList(
+                separateResultsList);
+            try {
+              completedResults.addAll(serialResults.get());
+            } catch (ExecutionException e) {
+              LOG.error(e, "Error fetching serial test results");
+              throw new HumanReadableException(e, "Error fetching serial test results");
+            } catch (InterruptedException e) {
+              LOG.error(e, "Interrupted fetching serial test results");
+              try {
+                serialResults.cancel(true);
+              } catch (CancellationException ignored) {
+                // Rethrow original InterruptedException instead.
+              }
+              Thread.currentThread().interrupt();
+              throw new HumanReadableException(e, "Test cancelled");
+            }
+            LOG.debug("Done running serial tests.");
+          }
+          @Override
+          public void onFailure(Throwable e) {
+            LOG.error(e, "Parallel tests failed, not running serial tests");
+            throw new HumanReadableException(e, "Parallel tests failed");
+          }
+        },
+        directExecutorService);
+
     try {
-      completedResults = uberFuture.get();
+      // Block until all the tests have finished running.
+      uberFuture.get();
     } catch (ExecutionException e) {
       e.printStackTrace(params.getConsole().getStdErr());
       return 1;
@@ -283,6 +363,7 @@ public class TestRunning {
     boolean failures = Iterables.any(completedResults, new Predicate<TestResults>() {
       @Override
       public boolean apply(TestResults results) {
+        LOG.debug("Checking result %s for failure", results);
         return !results.isSuccess();
       }
     });
@@ -321,6 +402,7 @@ public class TestRunning {
 
       @Override
       public void onSuccess(TestResults testResults) {
+        LOG.debug("Transforming successful test results %s", testResults);
         if (printTestResults) {
           if (grouper == null) {
             postTestResults(testResults);
@@ -336,6 +418,7 @@ public class TestRunning {
 
       @Override
       public void onFailure(Throwable throwable) {
+        LOG.warn(throwable, "Test command step failed, marking %s as failed", testRule);
         // If the test command steps themselves fail, report this as special test result.
         TestResults testResults =
             new TestResults(

@@ -232,4 +232,12 @@ public class AppleTest extends NoopBuildRule implements TestRule {
     String[] pathsArray = pathsList.toArray(new String[pathsList.size()]);
     return Paths.get(BuckConstant.GEN_DIR, pathsArray);
   }
+
+  @Override
+  public boolean runTestSeparately() {
+    // Tests which run in the simulator must run separately from all other tests;
+    // there's a 20 second timeout hard-coded in the iOS Simulator SpringBoard which
+    // is hit any time the host is overloaded.
+    return testHostApp.isPresent();
+  }
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
+import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvent;
@@ -347,7 +348,8 @@ public class TestCommand extends BuildCommand {
               build.getExecutionContext(),
               options,
               testPool.getExecutor(),
-              cachingBuildEngine);
+              cachingBuildEngine,
+              new DefaultStepRunner(build.getExecutionContext()));
         } catch (ExecutionException e) {
           params.getConsole().printBuildFailureWithoutStacktrace(e);
           return 1;

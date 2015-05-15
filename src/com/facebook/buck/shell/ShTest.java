@@ -172,4 +172,8 @@ public class ShTest extends NoopBuildRule implements TestRule {
     }
   }
 
+  @Override
+  public boolean runTestSeparately() {
+    return false;
+  }
 }

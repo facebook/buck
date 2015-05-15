@@ -161,4 +161,8 @@ public class PythonTest extends NoopBuildRule implements TestRule {
     };
   }
 
+  @Override
+  public boolean runTestSeparately() {
+    return false;
+  }
 }
