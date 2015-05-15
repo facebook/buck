@@ -42,21 +42,10 @@ public final class DefaultStepRunner implements StepRunner {
 
   public DefaultStepRunner(ExecutionContext executionContext) {
     this.context = executionContext;
-
   }
 
   @Override
-  public void runStep(Step step) throws StepFailedException, InterruptedException {
-    runStepInternal(step, Optional.<BuildTarget>absent());
-  }
-
-  @Override
-  public void runStepForBuildTarget(Step step, BuildTarget buildTarget)
-      throws StepFailedException, InterruptedException {
-    runStepInternal(step, Optional.of(buildTarget));
-  }
-
-  protected void runStepInternal(final Step step, final Optional<BuildTarget> buildTarget)
+  public void runStepForBuildTarget(Step step, Optional<BuildTarget> buildTarget)
       throws StepFailedException, InterruptedException {
 
     if (context.getVerbosity().shouldPrintCommand()) {
@@ -89,7 +78,7 @@ public final class DefaultStepRunner implements StepRunner {
   public <T> ListenableFuture<T> runStepsAndYieldResult(
       final List<Step> steps,
       final Callable<T> interpretResults,
-      final BuildTarget buildTarget,
+      final Optional<BuildTarget> buildTarget,
       ListeningExecutorService listeningExecutorService) {
     Preconditions.checkState(!listeningExecutorService.isShutdown());
     Callable<T> callable = new Callable<T>() {
@@ -117,6 +106,7 @@ public final class DefaultStepRunner implements StepRunner {
   @Override
   public void runStepsInParallelAndWait(
       final List<Step> steps,
+      final Optional<BuildTarget> target,
       ListeningExecutorService listeningExecutorService)
       throws StepFailedException, InterruptedException {
     List<Callable<Void>> callables = Lists.transform(steps,
@@ -126,7 +116,7 @@ public final class DefaultStepRunner implements StepRunner {
         return new Callable<Void>() {
           @Override
           public Void call() throws Exception {
-            runStep(step);
+            runStepForBuildTarget(step, target);
             return null;
           }
         };

@@ -20,6 +20,7 @@ import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -29,8 +30,8 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
-import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipStep;
@@ -171,7 +172,10 @@ public class SmartDexingStep implements Step {
       // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
       // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
       List<Step> dxSteps = generateDxCommands(context.getProjectFilesystem(), outputToInputs);
-      stepRunner.runStepsInParallelAndWait(dxSteps, listeningDecorator(service));
+      stepRunner.runStepsInParallelAndWait(
+          dxSteps,
+          Optional.<BuildTarget>absent(),
+          listeningDecorator(service));
     } finally {
       // Wait for however long necessary for threads to finish.  This should be fine, since we'll
       // detect deadlocks at the top-level (since this thread won't return).

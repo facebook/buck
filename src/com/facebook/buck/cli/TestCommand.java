@@ -658,8 +658,9 @@ public class TestCommand extends BuildCommand {
       rulesUnderTest = getRulesUnderTest(tests);
       if (!rulesUnderTest.isEmpty()) {
         try {
-          stepRunner.runStep(
-              new MakeCleanDirectoryStep(JUnitStep.JACOCO_OUTPUT_DIR));
+          stepRunner.runStepForBuildTarget(
+              new MakeCleanDirectoryStep(JUnitStep.JACOCO_OUTPUT_DIR),
+              Optional.<BuildTarget>absent());
         } catch (StepFailedException e) {
           params.getConsole().printBuildFailureWithoutStacktrace(e);
           return 1;
@@ -744,7 +745,7 @@ public class TestCommand extends BuildCommand {
                   test.interpretTestResults(executionContext,
                       /*isUsingTestSelectors*/ !getTestSelectorList().isEmpty(),
                       /*isDryRun*/ isDryRun())),
-              test.getBuildTarget(),
+              Optional.of(test.getBuildTarget()),
               service);
       results.add(
           transformTestResults(params, testResults, grouper, test, testTargets, printTestResults));
@@ -785,12 +786,14 @@ public class TestCommand extends BuildCommand {
       try {
         Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional =
             getJavaPackageFinder(params.getBuckConfig());
-        stepRunner.runStep(
-            getReportCommand(rulesUnderTest,
+        stepRunner.runStepForBuildTarget(
+            getReportCommand(
+                rulesUnderTest,
                 defaultJavaPackageFinderOptional,
                 params.getRepository().getFilesystem(),
                 JUnitStep.JACOCO_OUTPUT_DIR,
-                getCoverageReportFormat()));
+                getCoverageReportFormat()),
+            Optional.<BuildTarget>absent());
       } catch (StepFailedException e) {
         params.getConsole().printBuildFailureWithoutStacktrace(e);
         return 1;

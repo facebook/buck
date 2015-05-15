@@ -611,8 +611,9 @@ public class CachingBuildEngine implements BuildEngine {
     }
 
     StepRunner stepRunner = context.getStepRunner();
+    Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
     for (Step step : steps) {
-      stepRunner.runStepForBuildTarget(step, rule.getBuildTarget());
+      stepRunner.runStepForBuildTarget(step, optionalTarget);
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {
@@ -637,8 +638,9 @@ public class CachingBuildEngine implements BuildEngine {
     LOG.debug("Running post-build steps for %s", rule);
 
     StepRunner stepRunner = context.getStepRunner();
+    Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
     for (Step step : postBuildSteps) {
-      stepRunner.runStepForBuildTarget(step, rule.getBuildTarget());
+      stepRunner.runStepForBuildTarget(step, optionalTarget);
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {

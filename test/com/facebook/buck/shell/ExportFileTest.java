@@ -53,6 +53,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.DefaultFileHashCache;
 import com.facebook.buck.util.FileHashCache;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.FutureCallback;
@@ -244,13 +245,9 @@ public class ExportFileTest {
         .setActionGraph(new ActionGraph(new MutableDirectedGraph<BuildRule>()))
         .setStepRunner(
             new StepRunner() {
-              @Override
-              public void runStep(Step step) throws StepFailedException {
-                // Do nothing.
-              }
 
               @Override
-              public void runStepForBuildTarget(Step step, BuildTarget buildTarget)
+              public void runStepForBuildTarget(Step step, Optional<BuildTarget> buildTarget)
                   throws StepFailedException {
                 // Do nothing.
               }
@@ -259,7 +256,7 @@ public class ExportFileTest {
               public <T> ListenableFuture<T> runStepsAndYieldResult(
                   List<Step> steps,
                   Callable<T> interpretResults,
-                  BuildTarget buildTarget,
+                  Optional<BuildTarget> buildTarget,
                   ListeningExecutorService service) {
                 return null;
               }
@@ -267,6 +264,7 @@ public class ExportFileTest {
               @Override
               public void runStepsInParallelAndWait(
                   List<Step> steps,
+                  Optional<BuildTarget> target,
                   ListeningExecutorService service)
                   throws StepFailedException {
                 // Do nothing.
