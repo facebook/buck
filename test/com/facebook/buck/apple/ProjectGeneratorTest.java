@@ -395,6 +395,114 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testHeaderSymlinkTreesAreRegeneratedWhenKeyChanges() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setSrcs(Optional.of(ImmutableList.<SourceWithFlags>of()))
+        .setHeaders(
+            ImmutableMap.<String, SourcePath>of(
+                "key.h", new TestSourcePath("value.h")))
+        .setUseBuckHeaderMaps(Optional.of(true))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node));
+
+    projectGenerator.createXcodeProjects();
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertEquals(
+        "buck-out/gen/foo/lib-private-header-symlink-tree",
+        headerSymlinkTrees.get(1).toString());
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-private-header-symlink-tree"),
+        ImmutableMap.of("key.h", "value.h"));
+
+    node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setSrcs(Optional.of(ImmutableList.<SourceWithFlags>of()))
+        .setHeaders(
+            ImmutableMap.<String, SourcePath>of(
+                "new-key.h", new TestSourcePath("value.h")))
+        .setUseBuckHeaderMaps(Optional.of(true))
+        .build();
+
+    projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node));
+
+    projectGenerator.createXcodeProjects();
+
+    headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertEquals(
+        "buck-out/gen/foo/lib-private-header-symlink-tree",
+        headerSymlinkTrees.get(1).toString());
+    assertFalse(
+        projectFilesystem.isSymLink(
+            Paths.get(
+                "buck-out/gen/foo/lib-private-header-symlink-tree/key.h")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-private-header-symlink-tree"),
+        ImmutableMap.of("new-key.h", "value.h"));
+  }
+
+  @Test
+  public void testHeaderSymlinkTreesAreRegeneratedWhenValueChanges() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setSrcs(Optional.of(ImmutableList.<SourceWithFlags>of()))
+        .setHeaders(
+            ImmutableMap.<String, SourcePath>of(
+                "key.h", new TestSourcePath("value.h")))
+        .setUseBuckHeaderMaps(Optional.of(true))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node));
+
+    projectGenerator.createXcodeProjects();
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertEquals(
+        "buck-out/gen/foo/lib-private-header-symlink-tree",
+        headerSymlinkTrees.get(1).toString());
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-private-header-symlink-tree"),
+        ImmutableMap.of("key.h", "value.h"));
+
+    node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setSrcs(Optional.of(ImmutableList.<SourceWithFlags>of()))
+        .setHeaders(
+            ImmutableMap.<String, SourcePath>of(
+                "key.h", new TestSourcePath("new-value.h")))
+        .setUseBuckHeaderMaps(Optional.of(true))
+        .build();
+
+    projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node));
+
+    projectGenerator.createXcodeProjects();
+
+    headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertEquals(
+        "buck-out/gen/foo/lib-private-header-symlink-tree",
+        headerSymlinkTrees.get(1).toString());
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/foo/lib-private-header-symlink-tree"),
+        ImmutableMap.of("key.h", "new-value.h"));
+  }
+
+  @Test
   public void testHeaderSymlinkTreesWithHeadersVisibleForTesting() throws IOException {
     BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
     BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();

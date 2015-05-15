@@ -1088,7 +1088,7 @@ public class ProjectGenerator {
     Hasher hasher = Hashing.sha1().newHasher();
     for (Map.Entry<Path, Path> entry : contents.entrySet()) {
       byte[] key = entry.getKey().toString().getBytes(Charsets.UTF_8);
-      byte[] value = entry.getKey().toString().getBytes(Charsets.UTF_8);
+      byte[] value = entry.getValue().toString().getBytes(Charsets.UTF_8);
       hasher.putInt(key.length);
       hasher.putBytes(key);
       hasher.putInt(value.length);

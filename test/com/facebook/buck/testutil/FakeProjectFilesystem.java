@@ -403,6 +403,12 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
         iterator.remove();
       }
     }
+    for (Iterator<Path> iterator = symLinks.keySet().iterator(); iterator.hasNext();) {
+      Path subPath = iterator.next();
+      if (subPath.startsWith(normalizedPath)) {
+        iterator.remove();
+      }
+    }
     fileLastModifiedTimes.remove(path);
     directories.remove(path);
   }
