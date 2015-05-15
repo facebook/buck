@@ -92,11 +92,15 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
       try {
         return Optional.of(Sha1HashCode.of(value));
       } catch (IllegalArgumentException e) {
-        LOG.error("DefaultOnDiskBuildInfo.getHash: Cannot transform " + value + " to SHA1", e);
+        LOG.error(
+            e,
+            "DefaultOnDiskBuildInfo.getHash(%s): Cannot transform %s to SHA1",
+            key,
+            value);
         return Optional.absent();
       }
     } else {
-      LOG.warn("DefaultOnDiskBuildInfo.getHash: Hash not found");
+      LOG.warn("DefaultOnDiskBuildInfo.getHash(%s): Hash not found", key);
       return Optional.absent();
     }
   }
