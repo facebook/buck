@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -128,6 +129,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(sourceZips)
                 .addAll(deps)
+                .addAll(BuildRules.getExportedRules(deps))
                 .build()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     return new DefaultJavaLibrary(

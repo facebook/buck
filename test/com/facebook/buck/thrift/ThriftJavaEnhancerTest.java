@@ -17,6 +17,7 @@
 package com.facebook.buck.thrift;
 
 import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -32,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeExportDependenciesRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -41,6 +43,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -196,6 +199,41 @@ public class ThriftJavaEnhancerTest {
             .add(srcZip2)
             .build(),
         library.getDeps());
+  }
+
+  @Test
+  public void exportedDeps() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRuleParams flavoredParams =
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(TARGET);
+
+    // Add a dummy dependency to the constructor arg to make sure it gets through.
+    ThriftConstructorArg arg = new ThriftConstructorArg();
+
+    // Setup up some thrift inputs to pass to the createBuildRule method.
+    ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
+        "test.thrift", new ThriftSource(
+            createFakeThriftCompiler("//:thrift_source", pathResolver),
+            ImmutableList.<String>of(),
+            Paths.get("output")));
+
+    // Create a dep chain with an exported dep.
+    FakeBuildRule exportedRule =
+        resolver.addToIndex(new FakeBuildRule("//:exported_rule", pathResolver));
+    FakeExportDependenciesRule exportingRule =
+        resolver.addToIndex(
+            new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
+
+    // Run the enhancer to create the language specific build rule.
+    DefaultJavaLibrary library = ENHANCER.createBuildRule(
+        flavoredParams,
+        resolver,
+        arg,
+        sources,
+        ImmutableSortedSet.<BuildRule>of(exportingRule));
+
+    assertThat(library.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
   }
 
 }
