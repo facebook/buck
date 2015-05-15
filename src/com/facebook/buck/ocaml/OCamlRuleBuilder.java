@@ -58,6 +58,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Compute transitive dependencies and generate ocaml build rules
@@ -211,15 +212,16 @@ public class OCamlRuleBuilder {
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
 
-    final OCamlBuildContext ocamlContext = OCamlBuildContext.builder(ocamlBuckConfig, pathResolver)
+    final OCamlBuildContext ocamlContext = OCamlBuildContext.builder(ocamlBuckConfig)
         .setFlags(flagsBuilder.build())
         .setIncludes(includes)
         .setBytecodeIncludes(bytecodeIncludes)
-        .setOcamlInput(ocamlInput)
+        .setOCamlInput(ocamlInput)
         .setLinkableInput(linkableInput)
-        .setUpDirectories(buildTarget, isLibrary)
+        .setBuildTarget(buildTarget)
+        .setLibrary(isLibrary)
         .setCxxPreprocessorInput(cxxPreprocessorInputFromDeps)
-        .setInput(getInput(srcs))
+        .setInput(pathResolver.getAllPaths(getInput(srcs)))
         .build();
 
     final OCamlBuild ocamlLibraryBuild = new OCamlBuild(
@@ -321,15 +323,16 @@ public class OCamlRuleBuilder {
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
 
-    final OCamlBuildContext ocamlContext = OCamlBuildContext.builder(ocamlBuckConfig, pathResolver)
+    final OCamlBuildContext ocamlContext = OCamlBuildContext.builder(ocamlBuckConfig)
         .setFlags(flagsBuilder.build())
         .setIncludes(includes)
         .setBytecodeIncludes(bytecodeIncludes)
-        .setOcamlInput(ocamlInput)
+        .setOCamlInput(ocamlInput)
         .setLinkableInput(linkableInput)
-        .setUpDirectories(buildTarget, isLibrary)
+        .setBuildTarget(buildTarget)
+        .setLibrary(isLibrary)
         .setCxxPreprocessorInput(cxxPreprocessorInputFromDeps)
-        .setInput(getInput(srcs))
+        .setInput(pathResolver.getAllPaths(getInput(srcs)))
         .build();
 
     File baseDir = params.getProjectFilesystem().getRootPath().toAbsolutePath().toFile();
@@ -393,7 +396,7 @@ public class OCamlRuleBuilder {
       File baseDir,
       OCamlBuildContext ocamlContext) {
     OCamlDepToolStep depToolStep = new OCamlDepToolStep(
-        ocamlContext.getOcamlDepTool(),
+        ocamlContext.getOcamlDepTool().get(),
         ocamlContext.getMLInput(),
         ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true));
     ImmutableList<String> cmd = depToolStep.getShellCommand(null);
@@ -421,7 +424,7 @@ public class OCamlRuleBuilder {
   }
 
   private static ImmutableMap<Path, ImmutableList<Path>> filterCurrentRuleInput(
-      final ImmutableList<Path> mlInput,
+      final List<Path> mlInput,
       ImmutableMap<Path, ImmutableList<Path>> deps) {
     ImmutableMap.Builder<Path, ImmutableList<Path>> builder = ImmutableMap.builder();
     for (ImmutableMap.Entry<Path, ImmutableList<Path>> entry : deps.entrySet()) {

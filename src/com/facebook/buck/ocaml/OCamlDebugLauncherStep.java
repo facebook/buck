@@ -33,6 +33,7 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * OCaml linking step. Dependencies and inputs should be topologically ordered
@@ -48,12 +49,12 @@ public class OCamlDebugLauncherStep implements Step {
     public Args(
         Path ocamlDebug,
         Path bytecodeOutput,
-        ImmutableList<OCamlLibrary> ocamlInput,
-        ImmutableList<String> bytecodeIncludeFlags) {
+        List<OCamlLibrary> ocamlInput,
+        List<String> bytecodeIncludeFlags) {
       this.ocamlDebug = ocamlDebug;
       this.bytecodeOutput = bytecodeOutput;
-      this.ocamlInput = ocamlInput;
-      this.bytecodeIncludeFlags = bytecodeIncludeFlags;
+      this.ocamlInput = ImmutableList.copyOf(ocamlInput);
+      this.bytecodeIncludeFlags = ImmutableList.copyOf(bytecodeIncludeFlags);
     }
 
     public Path getOutput() {

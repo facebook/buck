@@ -194,7 +194,7 @@ public class OCamlBuildRulesGenerator {
           pathResolver,
           new OCamlCCompileStep.Args(
             cCompiler.getCommandPrefix(pathResolver),
-            ocamlContext.getOcamlCompiler(),
+            ocamlContext.getOcamlCompiler().get(),
             outputPath,
             pathResolver.getPath(cSrc),
             cCompileFlags.build(),
@@ -223,7 +223,7 @@ public class OCamlBuildRulesGenerator {
         debugParams,
         pathResolver,
         new OCamlDebugLauncherStep.Args(
-            ocamlContext.getOcamlDebug(),
+            ocamlContext.getOcamlDebug().get(),
             ocamlContext.getBytecodeOutput(),
             ocamlContext.getOCamlInput(),
             ocamlContext.getBytecodeIncludeFlags()
@@ -257,7 +257,7 @@ public class OCamlBuildRulesGenerator {
         allInputs,
         new OCamlLinkStep.Args(
           cxxCompiler.getCommandPrefix(pathResolver),
-          ocamlContext.getOcamlCompiler(),
+          ocamlContext.getOcamlCompiler().get(),
           ocamlContext.getOutput(),
           ImmutableList.copyOf(ocamlContext.getLinkableInput().getArgs()),
           linkerInputs,
@@ -297,7 +297,7 @@ public class OCamlBuildRulesGenerator {
         allInputs,
         new OCamlLinkStep.Args(
             cxxCompiler.getCommandPrefix(pathResolver),
-            ocamlContext.getOcamlBytecodeCompiler(),
+            ocamlContext.getOcamlBytecodeCompiler().get(),
             ocamlContext.getBytecodeOutput(),
             ImmutableList.copyOf(ocamlContext.getLinkableInput().getArgs()),
             linkerInputs,
@@ -460,7 +460,7 @@ public class OCamlBuildRulesGenerator {
         pathResolver,
         new OCamlMLCompileStep.Args(
           cCompiler.getCommandPrefix(pathResolver),
-          ocamlContext.getOcamlCompiler(),
+          ocamlContext.getOcamlCompiler().get(),
           outputPath,
           mlSource,
           compileFlags));
@@ -549,7 +549,7 @@ public class OCamlBuildRulesGenerator {
         pathResolver,
         new OCamlMLCompileStep.Args(
           cCompiler.getCommandPrefix(pathResolver),
-          ocamlContext.getOcamlBytecodeCompiler(),
+          ocamlContext.getOcamlBytecodeCompiler().get(),
           outputPath,
           mlSource,
           compileFlags));

@@ -52,7 +52,7 @@ public class OCamlBuildStep implements Step {
         ocamlContext.getYaccInput().size() > 0;
 
     this.depToolStep = new OCamlDepToolStep(
-        this.ocamlContext.getOcamlDepTool(),
+        this.ocamlContext.getOcamlDepTool().get(),
         ocamlContext.getMLInput(),
         this.ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true)
     );
@@ -128,7 +128,7 @@ public class OCamlBuildStep implements Step {
     if (!ocamlContext.isLibrary()) {
       Step debugLauncher = new OCamlDebugLauncherStep(
           new OCamlDebugLauncherStep.Args(
-              ocamlContext.getOcamlDebug(),
+              ocamlContext.getOcamlDebug().get(),
               ocamlContext.getBytecodeOutput(),
               ocamlContext.getOCamlInput(),
               ocamlContext.getBytecodeIncludeFlags()
@@ -156,7 +156,7 @@ public class OCamlBuildStep implements Step {
       Step compileStep = new OCamlCCompileStep(
           new OCamlCCompileStep.Args(
             cCompiler,
-            ocamlContext.getOcamlCompiler(),
+            ocamlContext.getOcamlCompiler().get(),
             outputPath,
             cSrc,
             cCompileFlags.build(),
@@ -180,7 +180,7 @@ public class OCamlBuildStep implements Step {
     OCamlLinkStep linkStep = new OCamlLinkStep(
         new OCamlLinkStep.Args(
           cxxCompiler,
-          ocamlContext.getOcamlCompiler(),
+          ocamlContext.getOcamlCompiler().get(),
           ocamlContext.getOutput(),
           ImmutableList.copyOf(ocamlContext.getLinkableInput().getArgs()),
           linkerInputs,
@@ -201,7 +201,7 @@ public class OCamlBuildStep implements Step {
     OCamlLinkStep linkStep = new OCamlLinkStep(
         new OCamlLinkStep.Args(
           cxxCompiler,
-          ocamlContext.getOcamlBytecodeCompiler(),
+          ocamlContext.getOcamlBytecodeCompiler().get(),
           ocamlContext.getBytecodeOutput(),
           ImmutableList.copyOf(ocamlContext.getLinkableInput().getArgs()),
           linkerInputs,
@@ -248,7 +248,7 @@ public class OCamlBuildStep implements Step {
       Step compileStep = new OCamlMLCompileStep(
           new OCamlMLCompileStep.Args(
             cCompiler,
-            ocamlContext.getOcamlCompiler(),
+            ocamlContext.getOcamlCompiler().get(),
             outputPath,
             Paths.get(inputOutput),
             compileFlags));
@@ -285,7 +285,7 @@ public class OCamlBuildStep implements Step {
       Step compileBytecodeStep = new OCamlMLCompileStep(
           new OCamlMLCompileStep.Args(
             cCompiler,
-            ocamlContext.getOcamlBytecodeCompiler(),
+            ocamlContext.getOcamlBytecodeCompiler().get(),
             outputPath,
             Paths.get(inputOutput),
             compileFlags));
@@ -307,7 +307,7 @@ private int generateSources(ExecutionContext context) throws IOException, Interr
       Path output = ocamlContext.getYaccOutput(ImmutableSet.of(yaccSource)).get(0);
       OCamlYaccStep yaccStep = new OCamlYaccStep(
           new OCamlYaccStep.Args(
-            ocamlContext.getYaccCompiler(),
+            ocamlContext.getYaccCompiler().get(),
             output,
             yaccSource));
       int yaccExitCode = yaccStep.execute(context);
@@ -319,7 +319,7 @@ private int generateSources(ExecutionContext context) throws IOException, Interr
       Path output = ocamlContext.getLexOutput(ImmutableSet.of(lexSource)).get(0);
       OCamlLexStep lexStep = new OCamlLexStep(
           new OCamlLexStep.Args(
-            ocamlContext.getLexCompiler(),
+            ocamlContext.getLexCompiler().get(),
             output,
             lexSource));
       int lexExitCode = lexStep.execute(context);
