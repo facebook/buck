@@ -85,7 +85,7 @@ public class Jsr199Javac implements Javac {
     return VERSION;
   }
 
-  private Optional<Path> javacJar;
+  private final Optional<Path> javacJar;
 
   /**
    * @param javacJar If absent, use the system compiler.  Otherwise, load the compiler from this
