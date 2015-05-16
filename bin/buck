@@ -9,4 +9,9 @@ while [ -h "$BUCK_PATH" ]; do
 done
 BUCK_DIR=$(dirname "$BUCK_PATH")
 
-exec python "$BUCK_DIR"/../programs/buck.py "$@"
+PYTHON=python
+ret=`python -c 'import sys; print("%i" % (sys.hexversion<0x03000000))'`
+if [ $ret -eq 0 ]; then
+  PYTHON=python2
+fi
+exec $PYTHON "$BUCK_DIR"/../programs/buck.py "$@"
