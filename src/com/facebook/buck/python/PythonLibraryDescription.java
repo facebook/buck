@@ -48,6 +48,7 @@ public class PythonLibraryDescription implements Description<Arg> {
             resources;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<String> baseModule;
+    public Optional<Boolean> zipSafe;
   }
 
   @Override
@@ -79,7 +80,8 @@ public class PythonLibraryDescription implements Description<Arg> {
             params.getBuildTarget(),
             pathResolver,
             "resources",
-            baseModule, args.resources));
+            baseModule, args.resources),
+        args.zipSafe);
   }
 
 }

@@ -75,7 +75,8 @@ public class PythonBinaryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(
             Paths.get("hello"),
             new BuildTargetSourcePath(PROJECT_FILESYSTEM, genrule.getBuildTarget())),
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.<Path, SourcePath>of(),
+        Optional.<Boolean>absent());
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:bin"))
@@ -92,6 +93,7 @@ public class PythonBinaryDescriptionTest {
     arg.mainModule = Optional.absent();
     arg.main = Optional.<SourcePath>of(new TestSourcePath("blah.py"));
     arg.baseModule = Optional.absent();
+    arg.zipSafe = Optional.absent();
     BuildRule rule = desc.createBuildRule(params, resolver, arg);
 
     assertEquals(
@@ -122,6 +124,7 @@ public class PythonBinaryDescriptionTest {
         Optional.<SourcePath>of(
             new BuildTargetSourcePath(PROJECT_FILESYSTEM, genrule.getBuildTarget()));
     arg.baseModule = Optional.absent();
+    arg.zipSafe = Optional.absent();
     BuildRule rule = desc.createBuildRule(params, resolver, arg);
     assertEquals(
         ImmutableSortedSet.<BuildRule>of(genrule),
@@ -145,6 +148,7 @@ public class PythonBinaryDescriptionTest {
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.mainModule = Optional.absent();
     arg.main = Optional.<SourcePath>of(new TestSourcePath("foo/" + mainName));
+    arg.zipSafe = Optional.absent();
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.
@@ -181,6 +185,7 @@ public class PythonBinaryDescriptionTest {
     arg.mainModule = Optional.of(mainModule);
     arg.main = Optional.absent();
     arg.baseModule = Optional.absent();
+    arg.zipSafe = Optional.absent();
     PythonBinary rule = desc.createBuildRule(params, resolver, arg);
     assertEquals(mainModule, rule.getMainModule());
   }

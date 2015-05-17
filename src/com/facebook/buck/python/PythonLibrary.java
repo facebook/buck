@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
@@ -34,15 +35,18 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable {
 
   private final ImmutableMap<Path, SourcePath> srcs;
   private final ImmutableMap<Path, SourcePath> resources;
+  private final Optional<Boolean> zipSafe;
 
   public PythonLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
       ImmutableMap<Path, SourcePath> srcs,
-      ImmutableMap<Path, SourcePath> resources) {
+      ImmutableMap<Path, SourcePath> resources,
+      Optional<Boolean> zipSafe) {
     super(params, resolver);
     this.srcs = srcs;
     this.resources = resources;
+    this.zipSafe = zipSafe;
   }
 
   /**
@@ -53,7 +57,8 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable {
     return PythonPackageComponents.of(
         srcs,
         resources,
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.<Path, SourcePath>of(),
+        zipSafe);
   }
 
   @Override

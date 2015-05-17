@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -74,7 +75,8 @@ public class PythonBinaryTest {
                 Paths.get(mod1), new PathSourcePath(projectFilesystem, src1),
                 Paths.get(mod2), new PathSourcePath(projectFilesystem, src2)),
             ImmutableMap.<Path, SourcePath>of(),
-            ImmutableMap.<Path, SourcePath>of()));
+            ImmutableMap.<Path, SourcePath>of(),
+            Optional.<Boolean>absent()));
 
     // Calculate and return the rule key.
     RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(binary, resolver);
