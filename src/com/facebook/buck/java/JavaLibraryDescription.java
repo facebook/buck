@@ -42,6 +42,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
@@ -88,19 +89,22 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       return new JavaSourceJar(params, pathResolver, args.srcs.get());
     }
 
-    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
-        resolver,
-        args,
-        defaultOptions);
-
+    JavacOptions.Builder javacOptionsBuilder =
+        JavaLibraryDescription.getJavacOptions(
+            resolver,
+            args,
+            defaultOptions);
     AnnotationProcessingParams annotationParams =
         args.buildAnnotationProcessingParams(target, params.getProjectFilesystem(), resolver);
-    javacOptions.setAnnotationProcessingParams(annotationParams);
+    javacOptionsBuilder.setAnnotationProcessingParams(annotationParams);
+    JavacOptions javacOptions = javacOptionsBuilder.build();
 
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
     return new DefaultJavaLibrary(
         params.appendExtraDeps(
-            BuildRules.getExportedRules(Sets.union(params.getDeclaredDeps(), exportedDeps))),
+            Iterables.concat(
+                BuildRules.getExportedRules(Sets.union(params.getDeclaredDeps(), exportedDeps)),
+                pathResolver.filterBuildRuleInputs(javacOptions.getInputs()))),
         pathResolver,
         args.srcs.get(),
         validateResources(pathResolver, args, params.getProjectFilesystem()),
@@ -109,7 +113,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         exportedDeps,
         resolver.getAllRules(args.providedDeps.get()),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        javacOptions.build(),
+        javacOptions,
         args.resourcesRoot);
   }
 

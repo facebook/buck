@@ -20,8 +20,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProcessExecutor;
@@ -34,6 +37,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Test;
 
@@ -221,6 +225,22 @@ public class JavacOptionsTest {
 
     JavacVersion seen = javac.getVersion();
     assertEquals(JavacVersion.of("cover-version\n"), seen);
+  }
+
+  @Test
+  public void getInputs() {
+    Path javacPath = Paths.get("javac");
+    TestSourcePath javacJarPath = new TestSourcePath("javac_jar");
+
+    JavacOptions options = createStandardBuilder()
+        .setJavacPath(javacPath)
+        .setJavacJarPath(javacJarPath)
+        .setProcessExecutor(new ProcessExecutor(new TestConsole()))
+        .build();
+
+    assertThat(
+        options.getInputs(),
+        Matchers.<SourcePath>containsInAnyOrder(javacJarPath));
   }
 
   private void assertOptionsContains(JavacOptions options, String param) {

@@ -31,6 +31,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
@@ -187,6 +188,10 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     getJavac().appendToRuleKey(builder, "javac");
 
     return getAnnotationProcessingParams().appendToRuleKey(builder, key);
+  }
+
+  public ImmutableSet<SourcePath> getInputs() {
+    return ImmutableSet.copyOf(Optional.presentInstances(ImmutableList.of(getJavacJarPath())));
   }
 
   static JavacOptions.Builder builderForUseInJavaBuckConfig() {

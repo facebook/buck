@@ -37,6 +37,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
@@ -72,22 +73,25 @@ public class AndroidLibraryDescription
       return new JavaSourceJar(params, pathResolver, args.srcs.get());
     }
 
-    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
-        resolver,
-        args,
-        defaultOptions);
+    JavacOptions.Builder javacOptionsBuilder =
+        JavaLibraryDescription.getJavacOptions(
+            resolver,
+            args,
+            defaultOptions);
 
     AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
         params.getBuildTarget(),
         params.getProjectFilesystem(),
         resolver);
-    javacOptions.setAnnotationProcessingParams(annotationParams);
+    javacOptionsBuilder.setAnnotationProcessingParams(annotationParams);
+
+    JavacOptions javacOptions = javacOptionsBuilder.build();
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
         params.copyWithExtraDeps(
             Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
-        javacOptions.build(),
+        javacOptions,
         ResourceDependencyMode.FIRST_ORDER);
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
         resolver,
@@ -108,7 +112,9 @@ public class AndroidLibraryDescription
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
     return new AndroidLibrary(
         params.appendExtraDeps(
-            BuildRules.getExportedRules(Sets.union(params.getDeclaredDeps(), exportedDeps))),
+            Iterables.concat(
+                BuildRules.getExportedRules(Sets.union(params.getDeclaredDeps(), exportedDeps)),
+                pathResolver.filterBuildRuleInputs(javacOptions.getInputs()))),
         pathResolver,
         args.srcs.get(),
         JavaLibraryDescription.validateResources(
@@ -120,7 +126,7 @@ public class AndroidLibraryDescription
         exportedDeps,
         resolver.getAllRules(args.providedDeps.get()),
         additionalClasspathEntries,
-        javacOptions.build(),
+        javacOptions,
         args.resourcesRoot,
         args.manifest,
         /* isPrebuiltAar */ false);

@@ -94,6 +94,8 @@ public class AndroidLibraryGraphEnhancer {
       return Optional.absent();
     }
 
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+
     // The androidResourceDeps may contain Buildables, but we need the actual BuildRules. Since this
     // is going to be used to modify the build graph, we can't just wrap the buildables. Fortunately
     // we know that the buildables come from the originalDeps.
@@ -103,6 +105,9 @@ public class AndroidLibraryGraphEnhancer {
       actualDeps.add(ruleResolver.getRule(dep.getBuildTarget()));
     }
 
+    // Add dependencies from `SourcePaths` in `JavacOptions`.
+    actualDeps.addAll(pathResolver.filterBuildRuleInputs(javacOptions.getInputs()));
+
     BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams.copyWithChanges(
         BuildRuleType.DUMMY_R_DOT_JAVA,
         dummyRDotJavaBuildTarget,
@@ -111,7 +116,7 @@ public class AndroidLibraryGraphEnhancer {
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         dummyRDotJavaParams,
-        new SourcePathResolver(ruleResolver),
+        pathResolver,
         androidResourceDeps,
         javacOptions);
     ruleResolver.addToIndex(dummyRDotJava);

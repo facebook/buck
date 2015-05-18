@@ -33,6 +33,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
@@ -67,19 +68,24 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
-    JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
-        resolver,
-        args,
-        templateOptions);
-
-    AnnotationProcessingParams annotationParams = args.buildAnnotationProcessingParams(
-        params.getBuildTarget(),
-        params.getProjectFilesystem(),
-        resolver);
-    javacOptions.setAnnotationProcessingParams(annotationParams);
+    JavacOptions.Builder javacOptionsBuilder =
+        JavaLibraryDescription.getJavacOptions(
+            resolver,
+            args,
+            templateOptions);
+    AnnotationProcessingParams annotationParams =
+        args.buildAnnotationProcessingParams(
+            params.getBuildTarget(),
+            params.getProjectFilesystem(),
+            resolver);
+    javacOptionsBuilder.setAnnotationProcessingParams(annotationParams);
+    JavacOptions javacOptions = javacOptionsBuilder.build();
 
     return new JavaTest(
-        params.appendExtraDeps(BuildRules.getExportedRules(params.getDeclaredDeps())),
+        params.appendExtraDeps(
+            Iterables.concat(
+                BuildRules.getExportedRules(params.getDeclaredDeps()),
+                pathResolver.filterBuildRuleInputs(javacOptions.getInputs()))),
         pathResolver,
         args.srcs.get(),
         JavaLibraryDescription.validateResources(
@@ -90,7 +96,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         args.proguardConfig,
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         args.testType.or(TestType.JUNIT),
-        javacOptions.build(),
+        javacOptions,
         args.vmArgs.get(),
         validateAndGetSourcesUnderTest(
             args.sourceUnderTest.get(),
