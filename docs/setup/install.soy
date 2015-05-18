@@ -57,6 +57,14 @@ your <code>$PATH</code>, such as <code>/usr/bin/</code>:
 To verify that this worked, run <code>which buck</code> to confirm
 that it maps to <code>/usr/bin/buck</code>.
 
+<h2 id="install-watchman">Installing Watchman</h2>
+
+If you have <code>watchman</code> available, Buck will use <a href="{ROOT}command/buckd.html">a
+daemon</a> which will prevent Buck from parsing all of your <code>BUCK</code> files every time and
+cache some other things as well.  You'll want to follow the
+<a href="https://facebook.github.io/watchman/docs/install.html">installation instructions</a> for
+{sp}<code>watchman</code>.
+
 <h2 id="locate-android-sdk">Tell Buck where to find your Android SDK and NDK</h2>
 
 Assuming you are using Buck to build Android code, you need to tell Buck where to find your Android
