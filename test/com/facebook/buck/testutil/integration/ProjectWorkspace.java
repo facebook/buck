@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.Main;
-import com.facebook.buck.cli.TestCommand;
+import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.MoreFiles;
@@ -457,11 +457,11 @@ public class ProjectWorkspace {
     }
 
     public ProcessResult assertTestFailure() {
-      return assertExitCode(null, TestCommand.TEST_FAILURES_EXIT_CODE);
+      return assertExitCode(null, TestRunning.TEST_FAILURES_EXIT_CODE);
     }
 
     public ProcessResult assertTestFailure(String message) {
-      return assertExitCode(message, TestCommand.TEST_FAILURES_EXIT_CODE);
+      return assertExitCode(message, TestRunning.TEST_FAILURES_EXIT_CODE);
     }
 
     public ProcessResult assertFailure(String message) {
