@@ -8,7 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../buck-out/android/test/gen" isTestSource="false" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="lib_junit_4_11_jar" level="project" />
+    <orderEntry type="library" exported="" name="buck_out_gen_lib_junit_jar" level="project" />
     <orderEntry type="module" module-name="module_src" scope="TEST" />
     <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
   </component>

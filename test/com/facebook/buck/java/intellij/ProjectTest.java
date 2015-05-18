@@ -265,7 +265,7 @@ public class ProjectTest {
     // Check the dependencies.
     SerializableDependentModule inheritedJdk = SerializableDependentModule.newInheritedJdk();
     SerializableDependentModule guavaAsProvidedDep = SerializableDependentModule.newLibrary(
-        guava.getBuildTarget(), "third_party_guava_guava_10_0_1_jar");
+        guava.getBuildTarget(), "buck_out_gen_third_party_guava_guava_jar");
     guavaAsProvidedDep.scope = "PROVIDED";
 
     assertListEquals(
@@ -376,7 +376,7 @@ public class ProjectTest {
 
     // Check the moduleDependencies.
     SerializableDependentModule guavaAsCompiledDep = SerializableDependentModule.newLibrary(
-        guava.getBuildTarget(), "third_party_guava_guava_10_0_1_jar");
+        guava.getBuildTarget(), "buck_out_gen_third_party_guava_guava_jar");
     assertEquals("Important that Guava is listed as a 'COMPILED' dependency here because it is " +
         "only listed as a 'PROVIDED' dependency earlier.",
         ImmutableList.of(
@@ -474,13 +474,13 @@ public class ProjectTest {
             SerializableDependentModule.newSourceFolder(),
             SerializableDependentModule.newLibrary(
                 easymock.getBuildTarget(),
-                "third_party_java_easymock_easymock_jar"),
+                "buck_out_gen_third_party_java_easymock_easymock_jar"),
             SerializableDependentModule.newLibrary(
                 cglib.getBuildTarget(),
-                "third_party_java_easymock_cglib_jar"),
+                "buck_out_gen_third_party_java_easymock_cglib_jar"),
             SerializableDependentModule.newLibrary(
                 objenesis.getBuildTarget(),
-                "third_party_java_easymock_objenesis_jar"),
+                "buck_out_gen_third_party_java_easymock_objenesis_jar"),
             SerializableDependentModule.newInheritedJdk()));
   }
 
@@ -522,11 +522,12 @@ public class ProjectTest {
     assertEquals(1, modules.size());
     SerializableModule comExampleBaseModule = Iterables.getOnlyElement(modules);
 
-    assertListEquals(ImmutableList.of(
+    assertListEquals(
+        ImmutableList.of(
             SerializableDependentModule.newSourceFolder(),
             SerializableDependentModule.newLibrary(
                 guava.getBuildTarget(),
-                "third_party_java_guava_jar"),
+                "buck_out_gen_third_party_java_guava_guava_jar"),
             SerializableDependentModule.newStandardJdk()),
         comExampleBaseModule.getDependencies());
   }
@@ -589,7 +590,9 @@ public class ProjectTest {
         "httpcore-4.0.1.jar.",
         ImmutableList.of(
             SerializableDependentModule.newSourceFolder(),
-            SerializableDependentModule.newLibrary(httpCore.getBuildTarget(), "httpcore_4_0_1_jar"),
+            SerializableDependentModule.newLibrary(
+                httpCore.getBuildTarget(),
+                "buck_out_gen_third_party_java_httpcore_httpcore_jar"),
             SerializableDependentModule.newModule(
                 supportV4.getBuildTarget(), "module_java_com_android_support_v4"),
             SerializableDependentModule.newStandardJdk()),

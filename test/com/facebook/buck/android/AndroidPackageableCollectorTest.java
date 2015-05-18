@@ -132,7 +132,7 @@ public class AndroidPackageableCollectorTest {
     assertEquals(
         "Because guava was passed to no_dx, it should not be in the classpathEntriesToDex list",
         ImmutableSet.of(
-            Paths.get("third_party/jsr-305/jsr305.jar"),
+            Paths.get("buck-out/gen/third_party/jsr-305/jsr-305.jar"),
             BuckConstant.GEN_PATH.resolve(
                 "java/src/com/facebook/lib__example__output/example.jar")),
         packageableCollection.getClasspathEntriesToDex());
@@ -145,7 +145,7 @@ public class AndroidPackageableCollectorTest {
             "longer. Specifically, this was observed to take over one second longer to load " +
             "the resource in fb4a. Because the resource was loaded on startup, this introduced a " +
             "substantial regression in the startup time for the fb4a app.",
-        ImmutableSet.of(Paths.get("third_party/jsr-305/jsr305.jar")),
+        ImmutableSet.of(Paths.get("buck-out/gen/third_party/jsr-305/jsr-305.jar")),
         packageableCollection.getPathsToThirdPartyJars());
     assertEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the " +

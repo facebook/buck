@@ -79,6 +79,17 @@ public class PrebuiltJarIntegrationTest {
     assertNotEquals(originalHash, abiHash);
   }
 
+  @Test
+  public void testPrebuiltJarWrappingABinaryJarGeneratedByAGenrule() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "prebuilt",
+        temp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:jar_from_gen").assertSuccess();
+    assertTrue(java.nio.file.Files.exists(workspace.getPath("buck-out/gen/jar_from_gen.jar")));
+  }
+
   private BuildRuleEvent.Finished getRuleFinished(List<BuckEvent> capturedEvents) {
     BuildRuleEvent.Finished finished = null;
     for (BuckEvent capturedEvent : capturedEvents) {

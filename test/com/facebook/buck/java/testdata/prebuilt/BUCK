@@ -2,3 +2,17 @@ prebuilt_jar(
   name = 'jar',
   binary_jar = 'junit.jar',
 )
+
+genrule(
+  name = 'genjar',
+  out = 'junit2.jar',
+  cmd = 'cp junit.jar $OUT',
+  srcs = [
+    'junit.jar',
+  ],
+)
+
+prebuilt_jar(
+  name = 'jar_from_gen',
+  binary_jar = ':genjar',
+)

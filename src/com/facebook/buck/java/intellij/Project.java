@@ -887,21 +887,21 @@ public class Project {
    * Maps a BuildRule to the name of the equivalent IntelliJ library or module.
    */
   private String getIntellijNameForRule(BuildRule rule) {
-    return Project.getIntellijNameForRule(rule, basePathToAliasMap);
+    return getIntellijNameForRule(rule, basePathToAliasMap);
   }
 
   /**
    * @param rule whose corresponding IntelliJ module name will be returned
    * @param basePathToAliasMap may be null if rule is a {@link PrebuiltJar}
    */
-  private static String getIntellijNameForRule(
+  private String getIntellijNameForRule(
       BuildRule rule,
       @Nullable Map<Path, String> basePathToAliasMap) {
     // Get basis for the library/module name.
     String name;
     if (rule instanceof PrebuiltJar) {
       PrebuiltJar prebuiltJar = (PrebuiltJar) rule;
-      String binaryJar = prebuiltJar.getBinaryJar().toString();
+      String binaryJar = resolver.getPath(prebuiltJar.getBinaryJar()).toString();
       return getIntellijNameForBinaryJar(binaryJar);
     } else {
       Path basePath = rule.getBuildTarget().getBasePath();
