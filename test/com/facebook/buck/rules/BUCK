@@ -6,6 +6,7 @@ java_library(
     'DefaultKnownBuildRuleTypes.java',
     'FakeBuildableContext.java',
     'FakeBuildContext.java',
+    'FakeBuildEngine.java',
     'FakeBuildRule.java',
     'FakeBuildRuleParamsBuilder.java',
     'FakeExportDependenciesRule.java',
