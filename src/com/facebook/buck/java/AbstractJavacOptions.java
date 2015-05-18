@@ -191,7 +191,10 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   public ImmutableSet<SourcePath> getInputs() {
-    return ImmutableSet.copyOf(Optional.presentInstances(ImmutableList.of(getJavacJarPath())));
+    return ImmutableSet.<SourcePath>builder()
+        .addAll(Optional.presentInstances(ImmutableList.of(getJavacJarPath())))
+        .addAll(getAnnotationProcessingParams().getInputs())
+        .build();
   }
 
   static JavacOptions.Builder builderForUseInJavaBuckConfig() {

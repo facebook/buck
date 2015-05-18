@@ -18,19 +18,22 @@ package com.facebook.buck.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -45,13 +48,14 @@ import javax.annotation.Nullable;
  * the components separately.
  */
 public class AnnotationProcessingParams implements RuleKeyAppendable {
+
   public static final AnnotationProcessingParams EMPTY = new AnnotationProcessingParams(
       /* owner target */ null,
       /* project filesystem */ null,
       ImmutableSet.<Path>of(),
       ImmutableSet.<String>of(),
       ImmutableSet.<String>of(),
-      ImmutableSortedSet.<BuildRule>of(),
+      ImmutableSet.<SourcePath>of(),
       false);
 
   @Nullable
@@ -61,7 +65,7 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
   private final ImmutableSortedSet<Path> searchPathElements;
   private final ImmutableSortedSet<String> names;
   private final ImmutableSortedSet<String> parameters;
-  private final ImmutableSortedSet<BuildRule> rules;
+  private final ImmutableSet<SourcePath> inputs;
   private final boolean processOnly;
 
   private AnnotationProcessingParams(
@@ -70,14 +74,14 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
       Set<Path> searchPathElements,
       Set<String> names,
       Set<String> parameters,
-      Set<BuildRule> rules,
+      ImmutableSet<SourcePath> inputs,
       boolean processOnly) {
     this.ownerTarget = ownerTarget;
     this.filesystem = filesystem;
     this.searchPathElements = ImmutableSortedSet.copyOf(searchPathElements);
     this.names = ImmutableSortedSet.copyOf(names);
     this.parameters = ImmutableSortedSet.copyOf(parameters);
-    this.rules = ImmutableSortedSet.copyOf(rules);
+    this.inputs = inputs;
     this.processOnly = processOnly;
 
     if (!isEmpty() && ownerTarget != null) {
@@ -111,6 +115,10 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
     return parameters;
   }
 
+  public ImmutableSet<SourcePath> getInputs() {
+    return inputs;
+  }
+
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
     if (!isEmpty()) {
@@ -119,13 +127,8 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
       builder.setReflectively(key + ".owner", owner)
           .setReflectively(key + ".names", names)
           .setReflectively(key + ".parameters", parameters)
-          .setReflectively(key + ".processOnly", processOnly);
-
-      ImmutableList.Builder<String> ruleKeyStrings = ImmutableList.builder();
-      for (BuildRule rule : rules) {
-        ruleKeyStrings.add(rule.getRuleKey().toString());
-      }
-      builder.setReflectively(key + ".annotationProcessorRuleKeys", ruleKeyStrings.build());
+          .setReflectively(key + ".processOnly", processOnly)
+          .setReflectively(key + ".inputs", inputs);
     }
 
     return builder;
@@ -189,17 +192,28 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
         return EMPTY;
       }
 
+      ImmutableSet.Builder<SourcePath> inputs = ImmutableSet.builder();
       Set<Path> searchPathElements = Sets.newHashSet();
 
       for (BuildRule rule : this.rules) {
         if (rule.getClass().isAnnotationPresent(BuildsAnnotationProcessor.class)) {
           Path pathToOutput = rule.getPathToOutputFile();
           if (pathToOutput != null) {
+            inputs.add(new BuildTargetSourcePath(filesystem, rule.getBuildTarget()));
             searchPathElements.add(pathToOutput);
           }
         } else if (rule instanceof HasClasspathEntries) {
-          searchPathElements.addAll(
-              ((HasClasspathEntries) rule).getTransitiveClasspathEntries().values());
+          HasClasspathEntries hasClasspathEntries = (HasClasspathEntries) rule;
+          ImmutableSetMultimap<JavaLibrary, Path> entries =
+              hasClasspathEntries.getTransitiveClasspathEntries();
+          for (Map.Entry<JavaLibrary, Path> entry : entries.entries()) {
+            inputs.add(
+                new BuildTargetSourcePath(
+                    entry.getKey().getProjectFilesystem(),
+                    entry.getKey().getBuildTarget(),
+                    entry.getValue()));
+          }
+          searchPathElements.addAll(entries.values());
         } else {
           throw new HumanReadableException(
               "%1$s: Error adding '%2$s' to annotation_processing_deps: " +
@@ -215,7 +229,7 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
           searchPathElements,
           names,
           parameters,
-          ImmutableSortedSet.copyOf(this.rules),
+          inputs.build(),
           processOnly);
     }
   }
