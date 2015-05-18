@@ -55,6 +55,8 @@ public class PexStep extends ShellStep {
   // The map of native libraries to include in the PEX.
   private final ImmutableMap<Path, Path> nativeLibraries;
 
+  private final boolean zipSafe;
+
   public PexStep(
       Path pathToPex,
       Path pythonPath,
@@ -63,7 +65,8 @@ public class PexStep extends ShellStep {
       String entry,
       ImmutableMap<Path, Path> modules,
       ImmutableMap<Path, Path> resources,
-      ImmutableMap<Path, Path> nativeLibraries) {
+      ImmutableMap<Path, Path> nativeLibraries,
+      boolean zipSafe) {
     this.pathToPex = pathToPex;
     this.pythonPath = pythonPath;
     this.tempDir = tempDir;
@@ -72,6 +75,7 @@ public class PexStep extends ShellStep {
     this.modules = modules;
     this.resources = resources;
     this.nativeLibraries = nativeLibraries;
+    this.zipSafe = zipSafe;
   }
 
   @Override
@@ -118,12 +122,20 @@ public class PexStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    return ImmutableList.of(
-        pythonPath.toString(),
-        pathToPex.toString(),
-        "--python", pythonPath.toString(),
-        "--entry-point", entry,
-        destination.toString());
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    builder.add(pythonPath.toString());
+    builder.add(pathToPex.toString());
+    builder.add("--python");
+    builder.add(pythonPath.toString());
+    builder.add("--entry-point");
+    builder.add(entry);
+
+    if (!zipSafe) {
+      builder.add("--no-zip-safe");
+    }
+
+    builder.add(destination.toString());
+    return builder.build();
   }
 
   private ImmutableMap<Path, Path> getExpandedSourcePaths(

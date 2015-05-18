@@ -121,7 +121,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(
             Paths.get(getSharedLibrarySoname(arg)),
-            new PathSourcePath(filesystem, getSharedLibraryPath(arg))));
+            new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
+        Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
         lib.getPythonPackageComponents(CXX_PLATFORM));
@@ -166,7 +167,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.<Path, SourcePath>of(),
+        Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
         lib.getPythonPackageComponents(CXX_PLATFORM));
@@ -211,7 +213,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.<Path, SourcePath>of(),
+        Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
         lib.getPythonPackageComponents(CXX_PLATFORM));
@@ -258,7 +261,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(
             Paths.get(getSharedLibrarySoname(arg)),
-            new PathSourcePath(filesystem, getSharedLibraryPath(arg))));
+            new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
+        Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
         lib.getPythonPackageComponents(CXX_PLATFORM));

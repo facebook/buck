@@ -170,7 +170,8 @@ public class CxxPythonExtensionDescriptionTest {
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(sharedLibrarySoname),
-                new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput)));
+                new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput)),
+            Optional.<Boolean>absent());
       }
 
       @Override
@@ -234,7 +235,8 @@ public class CxxPythonExtensionDescriptionTest {
             target.getBasePath().resolve(desc.getExtensionName(target)),
             new BuildTargetSourcePath(projectFilesystem, rule.getBuildTarget())),
         ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.<Path, SourcePath>of(),
+        Optional.of(false));
     assertEquals(
         expectedComponents,
         actualComponent);

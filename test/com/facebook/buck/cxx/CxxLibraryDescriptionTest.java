@@ -157,7 +157,8 @@ public class CxxLibraryDescriptionTest {
         return PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
-            ImmutableMap.<Path, SourcePath>of());
+            ImmutableMap.<Path, SourcePath>of(),
+            Optional.<Boolean>absent());
       }
 
       @Override
@@ -551,7 +552,8 @@ public class CxxLibraryDescriptionTest {
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(sharedLibrarySoname),
-                new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput)));
+                new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput)),
+            Optional.<Boolean>absent());
       }
 
       @Override
@@ -837,7 +839,8 @@ public class CxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(
             Paths.get(CxxDescriptionEnhancer.getSharedLibrarySoname(target, cxxPlatform)),
-            new BuildTargetSourcePath(projectFilesystem, sharedRule.getBuildTarget())));
+            new BuildTargetSourcePath(projectFilesystem, sharedRule.getBuildTarget())),
+        Optional.<Boolean>absent());
     assertEquals(
         expectedPythonPackageComponents,
         rule.getPythonPackageComponents(cxxPlatform));

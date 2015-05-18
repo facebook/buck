@@ -82,6 +82,7 @@ public class PythonTestDescriptionTest {
     arg.contacts = Optional.absent();
     arg.labels = Optional.absent();
     arg.sourceUnderTest = Optional.absent();
+    arg.zipSafe = Optional.absent();
     PythonTest testRule = desc.createBuildRule(params, resolver, arg);
 
     PythonBinary binRule = (PythonBinary) resolver.getRule(
@@ -122,6 +123,7 @@ public class PythonTestDescriptionTest {
     arg.srcs = Optional.of(
         Either.<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
             ImmutableSortedSet.of(source)));
+    arg.zipSafe = Optional.absent();
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.

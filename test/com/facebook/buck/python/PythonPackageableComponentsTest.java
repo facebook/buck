@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -24,6 +25,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
@@ -32,6 +34,27 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PythonPackageableComponentsTest {
+
+  @Test
+  public void testMergeZipSafe() {
+    PythonPackageComponents compA = PythonPackageComponents.of(
+        ImmutableMap.<Path, SourcePath>of(Paths.get("test"), new TestSourcePath("sourceA")),
+        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableMap.<Path, SourcePath>of(),
+        Optional.of(true));
+    PythonPackageComponents compB = PythonPackageComponents.of(
+        ImmutableMap.<Path, SourcePath>of(Paths.get("test2"), new TestSourcePath("sourceB")),
+        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableMap.<Path, SourcePath>of(),
+        Optional.of(false));
+
+    BuildTarget me = BuildTargetFactory.newInstance("//:me");
+    BuildTarget them = BuildTargetFactory.newInstance("//:them");
+    PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
+    builder.addComponent(compB, them);
+    builder.addComponent(compA, them);
+    assertFalse(builder.build().isZipSafe().get());
+  }
 
   @Test
   public void testDuplicateSourcesThrowsException() {
@@ -56,11 +79,13 @@ public class PythonPackageableComponentsTest {
     PythonPackageComponents compA = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(dest, new TestSourcePath("sourceA")),
         ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.<Path, SourcePath>of(),
+        Optional.<Boolean>absent());
     PythonPackageComponents compB = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(dest, new TestSourcePath("sourceB")),
         ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.<Path, SourcePath>of(),
+        Optional.<Boolean>absent());
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
     builder.addComponent(compA, them);
     try {
