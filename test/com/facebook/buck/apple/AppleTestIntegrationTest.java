@@ -34,7 +34,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.ProcessExecutor;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -314,7 +313,6 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
-  @Ignore // TODO(user): Fix this test.
   public void successOnAppTestPassing() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -334,7 +332,6 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
-  @Ignore // TODO(user): Fix this test.
   public void exitCodeIsCorrectOnAppTestFailure() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
