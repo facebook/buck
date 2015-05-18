@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
@@ -23,15 +24,16 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.io.ByteSource;
-import com.google.common.io.Files;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.Path;
 
 public class WriteFileStep implements Step {
 
+  private static final Logger LOG = Logger.get(WriteFileStep.class);
   private final ByteSource source;
   private final Path outputPath;
 
@@ -58,11 +60,14 @@ public class WriteFileStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    try {
-      source.copyTo(
-          Files.asByteSink(context.getProjectFilesystem().resolve(outputPath).toFile()));
+    try (InputStream sourceStream = source.openStream()) {
+      context.getProjectFilesystem().copyToPath(
+          sourceStream,
+          outputPath,
+          StandardCopyOption.REPLACE_EXISTING);
       return 0;
     } catch (IOException e) {
+      LOG.error(e, "Couldn't copy bytes to %s", outputPath);
       e.printStackTrace(context.getStdErr());
       return 1;
     }
