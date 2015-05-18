@@ -18,7 +18,6 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -57,8 +56,6 @@ class ReflectiveAlterKeyLoader
         AlterRuleKey ark;
         if (annotation.stringify()) {
           ark = new StringifyAlterRuleKey(field);
-        } else if (RuleKeyAppendable.class.isAssignableFrom(field.getType())) {
-          ark = new AppendingAlterRuleKey(field);
         } else {
           ark = new DefaultAlterRuleKey(field);
         }

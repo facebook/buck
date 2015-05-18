@@ -170,6 +170,56 @@ public class DefaultRuleKeyBuilderFactoryTest {
   }
 
   @Test
+  public void annotatedAppendableBuildRulesIncludeTheirRuleKey() {
+    BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    BuildTarget depTarget = BuildTargetFactory.newInstance("//cheese:more-peas");
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildRule rule = new EmptyRule(target);
+
+    DefaultRuleKeyBuilderFactory factory =
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
+
+    class AppendableRule extends EmptyRule implements RuleKeyAppendable {
+      public AppendableRule(BuildTarget target) {
+        super(target);
+      }
+
+      @Override
+      public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+        return builder.setReflectively(key + ".cheese", "brie");
+      }
+
+      @Override
+      public RuleKey getRuleKey() {
+        return new RuleKey("abcd");
+      }
+    }
+
+    AppendableRule appendableRule = new AppendableRule(depTarget);
+
+    RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
+    builder.setReflectively("field.cheese", "brie");
+    builder.setReflectively("field", appendableRule.getRuleKey());
+    RuleKeyPair expected = builder.build();
+
+    class RuleContainingAppendableRule extends EmptyRule {
+      @AddToRuleKey
+      private final AppendableRule field;
+
+      public RuleContainingAppendableRule(BuildTarget target, AppendableRule appendableRule) {
+        super(target);
+        this.field = appendableRule;
+      }
+    }
+
+    RuleKey.Builder seen = factory.newInstance(
+        new RuleContainingAppendableRule(target, appendableRule),
+        pathResolver);
+
+    assertEquals(expected, seen.build());
+  }
+
+  @Test
   public void stringifiedRuleKeyAppendablesGetAddedToRuleKeyAsStrings() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());

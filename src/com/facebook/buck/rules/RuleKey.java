@@ -204,6 +204,16 @@ public class RuleKey {
     }
 
     public Builder setReflectively(String key, @Nullable Object val) {
+      if (val instanceof RuleKeyAppendable) {
+        ((RuleKeyAppendable) val).appendToRuleKey(this, key);
+        if (!(val instanceof BuildRule)) {
+          return this;
+        }
+
+        // Explicitly fall through for BuildRule objects so we include
+        // their cache keys (which may include more data than
+        // appendToRuleKey() does).
+      }
 
       // Optionals get special handling. Unwrap them if necessary and recurse.
       if (val instanceof Optional) {
@@ -255,17 +265,6 @@ public class RuleKey {
       if (val instanceof Supplier) {
         Object newVal = ((Supplier<?>) val).get();
         return setReflectively(key, newVal);
-      }
-
-      if (val instanceof RuleKeyAppendable) {
-        ((RuleKeyAppendable) val).appendToRuleKey(this, key);
-        if (!(val instanceof BuildRule)) {
-          return this;
-        }
-
-        // Explicitly fall through for BuildRule objects so we include
-        // their cache keys (which may include more data than
-        // appendToRuleKey() does).
       }
 
       return setSingleValue(val);
