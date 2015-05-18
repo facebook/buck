@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.google.common.base.Optional;
+
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.SubCommand;
@@ -92,4 +94,10 @@ public class BuckCommand extends AbstractContainerCommand {
   protected String getContainerCommandPrefix() {
     return "buck";
   }
+
+  @Override
+  public Optional<Command> getSubcommand() {
+    return Optional.fromNullable(subcommand);
+  }
+
 }

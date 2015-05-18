@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.io.IOException;
 
 public interface Command {
@@ -31,5 +33,7 @@ public interface Command {
   boolean isReadOnly();
 
   String getShortDescription();
+
+  ImmutableMap<String, ImmutableMap<String, String>> getConfigOverrides();
 
 }

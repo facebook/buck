@@ -31,6 +31,8 @@ import javax.annotation.Nullable;
 public class ParserConfig {
   public static final boolean DEFAULT_ALLOW_EMPTY_GLOBS = true;
   public static final String DEFAULT_BUILD_FILE_NAME = "BUCK";
+  public static final String BUILDFILE_SECTION_NAME = "buildfile";
+  public static final String INCLUDES_PROPERTY_NAME = "includes";
 
   private final BuckConfig delegate;
 
@@ -52,7 +54,7 @@ public class ParserConfig {
   }
 
   public String getBuildFileName() {
-    return delegate.getValue("buildfile", "name").or(DEFAULT_BUILD_FILE_NAME);
+    return delegate.getValue(BUILDFILE_SECTION_NAME, "name").or(DEFAULT_BUILD_FILE_NAME);
   }
 
   /**
@@ -60,7 +62,7 @@ public class ParserConfig {
    * evaluating a build file.
    */
   public Iterable<String> getDefaultIncludes() {
-    ImmutableMap<String, String> entries = delegate.getEntriesForSection("buildfile");
+    ImmutableMap<String, String> entries = delegate.getEntriesForSection(BUILDFILE_SECTION_NAME);
     String includes = Strings.nullToEmpty(entries.get("includes"));
     return Splitter.on(' ').trimResults().omitEmptyStrings().split(includes);
   }

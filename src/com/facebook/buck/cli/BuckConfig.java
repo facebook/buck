@@ -179,17 +179,19 @@ public class BuckConfig {
    * @param projectFilesystem project for which the {@link BuckConfig} is being created.
    * @param files The sequence of {@code .buckconfig} files to load.
    */
+  @SafeVarargs
   public static BuckConfig createFromFiles(
       ProjectFilesystem projectFilesystem,
       Iterable<File> files,
       Platform platform,
-      ImmutableMap<String, String> environment)
+      ImmutableMap<String, String> environment,
+      ImmutableMap<String, ImmutableMap<String, String>>... configOverrides)
       throws IOException {
     BuildTargetParser buildTargetParser = new BuildTargetParser();
 
     if (Iterables.isEmpty(files)) {
       return new BuckConfig(
-          new Config(),
+          new Config(configOverrides),
           projectFilesystem,
           buildTargetParser,
           platform,
@@ -207,7 +209,8 @@ public class BuckConfig {
         projectFilesystem,
         buildTargetParser,
         platform,
-        environment);
+        environment,
+        configOverrides);
   }
 
   /**
@@ -238,18 +241,23 @@ public class BuckConfig {
     throw new HumanReadableException("Not a valid %s: %s.", fieldName.toLowerCase(), aliasName);
   }
 
+  @SafeVarargs
   @VisibleForTesting
   static BuckConfig createFromReaders(
       Iterable<Reader> readers,
       ProjectFilesystem projectFilesystem,
       BuildTargetParser buildTargetParser,
       Platform platform,
-      ImmutableMap<String, String> environment)
-      throws IOException {
+      ImmutableMap<String, String> environment,
+      ImmutableMap<String, ImmutableMap<String, String>>... configOverrides)
+  throws IOException {
     ImmutableList.Builder<ImmutableMap<String, ImmutableMap<String, String>>> builder =
         ImmutableList.builder();
     for (Reader reader : readers) {
       builder.add(Inis.read(reader));
+    }
+    for (ImmutableMap<String, ImmutableMap<String, String>> configOverride : configOverrides) {
+      builder.add(configOverride);
     }
     Config config = new Config(builder.build());
     ImmutableMap<String, Path> repoNamesToPaths =
@@ -879,10 +887,12 @@ public class BuckConfig {
   /**
    * @param projectFilesystem The directory that is the root of the project being built.
    */
+  @SafeVarargs
   public static BuckConfig createDefaultBuckConfig(
       ProjectFilesystem projectFilesystem,
       Platform platform,
-      ImmutableMap<String, String> environment)
+      ImmutableMap<String, String> environment,
+      ImmutableMap<String, ImmutableMap<String, String>>... configOverrides)
       throws IOException {
     ImmutableList.Builder<File> configFileBuilder = ImmutableList.builder();
     File configFile = projectFilesystem.getFileForRelativePath(DEFAULT_BUCK_CONFIG_FILE_NAME);
@@ -900,6 +910,7 @@ public class BuckConfig {
         projectFilesystem,
         configFiles,
         platform,
-        environment);
+        environment,
+        configOverrides);
   }
 }

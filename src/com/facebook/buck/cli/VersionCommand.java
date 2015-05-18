@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.io.IOException;
 
 public class VersionCommand implements Command {
@@ -55,4 +57,10 @@ public class VersionCommand implements Command {
   public String getShortDescription() {
     return "shows the version number";
   }
+
+  @Override
+  public ImmutableMap<String, ImmutableMap<String, String>> getConfigOverrides() {
+    return ImmutableMap.of();
+  }
+
 }

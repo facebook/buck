@@ -1,0 +1,57 @@
+{namespace buck.commonparameters}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Common Parameters' /}
+    {param description}
+      Command line parameters that affect all commands.
+    {/param}
+    {param content}
+
+
+{call buck.command}
+{param overview}
+
+<p>Some command line parameters affect the operation of Buck itself, regardless
+of which subcommand is being run.
+
+<pre>buck targets --verbose 10</pre>
+
+{/param}
+
+{param params}
+
+{call buck.param}
+  {param name: 'verbose' /}
+  {param desc}
+Sets the verbosity level of the console output.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'no-cache' /}
+  {param desc}
+Disables the build artifact cache.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'buildfile:includes' /}
+  {param desc}
+Overrides the common includes specified in
+<a href="{ROOT}concept/buckconfig.html#buildfile">.buckconfig</a>.
+
+<p>Note that overriding values of <code>.buckconfig</code> from the command line
+makes reproducing the build very hard. The preferred method of overriding values
+of <code>.buckconfig</code> is via <code>.buckconfig.local</code>.
+  {/param}
+{/call}
+
+{/param}
+
+{/call}
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}

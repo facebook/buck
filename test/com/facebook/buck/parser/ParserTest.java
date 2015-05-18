@@ -1082,7 +1082,9 @@ public class ParserTest extends EasyMockSupport {
         filesystem,
         new ParserConfig(
             new FakeBuckConfig(
-                ImmutableMap.of("buildfile", ImmutableMap.of("includes", "//bar.py")))),
+                ImmutableMap.of(
+                    ParserConfig.BUILDFILE_SECTION_NAME,
+                    ImmutableMap.of(ParserConfig.INCLUDES_PROPERTY_NAME, "//bar.py")))),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         config.getEnvironment(),

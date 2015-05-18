@@ -41,7 +41,8 @@ public class FakeRepositoryFactory extends RepositoryFactory {
             ImmutableMap.copyOf(System.getenv()), Platform.detect()),
         Platform.detect(),
         new TestConsole(),
-        root);
+        root,
+        ImmutableMap.<String, ImmutableMap<String, String>>of());
   }
 
   public FakeRepositoryFactory setRootRepoForTesting(Repository repo) {

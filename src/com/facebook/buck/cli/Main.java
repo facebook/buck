@@ -488,12 +488,16 @@ public final class Main {
         // TODO(user): Thread through properties from client environment.
         System.getProperties());
 
+    ImmutableMap<String, ImmutableMap<String, String>> configOverrides =
+        command.getConfigOverrides();
+
     Path canonicalRootPath = projectRoot.toRealPath();
     RepositoryFactory repositoryFactory = new RepositoryFactory(
         clientEnvironment,
         platform,
         console,
-        canonicalRootPath);
+        canonicalRootPath,
+        configOverrides);
 
     Repository rootRepository = repositoryFactory.getRootRepository();
 

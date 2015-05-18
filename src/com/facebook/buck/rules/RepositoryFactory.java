@@ -58,11 +58,14 @@ public class RepositoryFactory {
   protected final BiMap<Path, Optional<String>> canonicalPathNames =
       Maps.synchronizedBiMap(HashBiMap.<Path, Optional<String>>create());
 
+  private final ImmutableMap<String, ImmutableMap<String, String>> configOverrides;
+
   public RepositoryFactory(
       ImmutableMap<String, String> clientEnvironment,
       Platform platform,
       Console console,
-      Path canonicalRootPath) {
+      Path canonicalRootPath,
+      ImmutableMap<String, ImmutableMap<String, String>> configOverrides) {
     this.clientEnvironment = clientEnvironment;
     this.platform = platform;
     this.console = console;
@@ -72,6 +75,7 @@ public class RepositoryFactory {
     Preconditions.checkArgument(canonicalRootPath.isAbsolute());
     // The root repo has no explicit name. All other repos will get a global, unique name.
     this.canonicalPathNames.put(canonicalRootPath, Optional.<String>absent());
+    this.configOverrides = configOverrides;
   }
 
   /**
@@ -121,7 +125,8 @@ public class RepositoryFactory {
     BuckConfig config = BuckConfig.createDefaultBuckConfig(
         projectFilesystem,
         platform,
-        clientEnvironment);
+        clientEnvironment,
+        configOverrides);
 
     // Configure the AndroidDirectoryResolver.
     PropertyFinder propertyFinder = new DefaultPropertyFinder(

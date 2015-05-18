@@ -17,15 +17,18 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.kohsuke.args4j.Option;
@@ -38,7 +41,8 @@ import javax.annotation.Nullable;
 
 public abstract class AbstractCommand implements Command {
 
-  @VisibleForTesting static final String HELP_LONG_ARG = "--help";
+  private static final String HELP_LONG_ARG = "--help";
+  private static final String BUILDFILE_INCLUDES_LONG_ARG = "--buildfile:includes";
 
   /**
    * This value should never be read. {@link VerbosityParser} should be used instead.
@@ -51,6 +55,31 @@ public abstract class AbstractCommand implements Command {
       usage = "Specify a number between 1 and 10.")
   @SuppressWarnings("PMD.UnusedPrivateField")
   private int verbosityLevel = -1;
+
+  @Option(
+      name = BUILDFILE_INCLUDES_LONG_ARG,
+      usage = "Specify the default includes file.")
+  @Nullable
+  private String buildFileIncludes = null;
+
+  @Override
+  public ImmutableMap<String, ImmutableMap<String, String>> getConfigOverrides() {
+    ImmutableMap.Builder<String, ImmutableMap<String, String>> builder = ImmutableMap.builder();
+    if (buildFileIncludes != null) {
+      String includes = MoreStrings
+          .stripPrefix(buildFileIncludes, BUILDFILE_INCLUDES_LONG_ARG + " ")
+          .or(buildFileIncludes);
+      includes = MoreStrings
+          .stripPrefix(includes, UnflavoredBuildTarget.BUILD_TARGET_PREFIX)
+          .or(includes);
+      builder.put(
+          ParserConfig.BUILDFILE_SECTION_NAME,
+          ImmutableMap.of(
+              ParserConfig.INCLUDES_PROPERTY_NAME,
+              UnflavoredBuildTarget.BUILD_TARGET_PREFIX + includes));
+    }
+    return builder.build();
+  }
 
   @Option(
       name = "--no-cache",

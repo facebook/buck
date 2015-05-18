@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Optional;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -63,4 +64,10 @@ public class ServerCommand extends AbstractContainerCommand {
   protected String getContainerCommandPrefix() {
     return "buck server";
   }
+
+  @Override
+  public Optional<Command> getSubcommand() {
+    return Optional.fromNullable(subcommand);
+  }
+
 }
