@@ -126,7 +126,8 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
             javacOptions,
             getBuildTarget(),
             BuildDependencies.FIRST_ORDER_ONLY,
-            Optional.<JavacStep.SuggestBuildRules>absent()));
+            Optional.<JavacStep.SuggestBuildRules>absent(),
+            getResolver()));
 
     // Symlink the inner JAR into it's place in the fat JAR.
     steps.add(new MkdirStep(fatJarDir.resolve(FAT_JAR_INNER_JAR).getParent()));

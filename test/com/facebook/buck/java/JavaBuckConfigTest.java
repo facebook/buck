@@ -115,7 +115,9 @@ public class JavaBuckConfigTest {
       config.getJavacJarPath();
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
-      assertEquals(e.getHumanReadableErrorMessage(), "Javac JAR does not exist: " + invalidPath);
+      assertEquals(
+          "Overridden tools:javac_jar path not found: " + invalidPath,
+          e.getHumanReadableErrorMessage());
     }
   }
 

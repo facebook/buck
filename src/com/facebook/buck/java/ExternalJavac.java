@@ -20,6 +20,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -98,6 +99,7 @@ public class ExternalJavac implements Javac {
   @Override
   public int buildWithClasspath(
       ExecutionContext context,
+      SourcePathResolver resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSet<Path> javaSourceFilePaths,

@@ -25,8 +25,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.MockClassLoader;
 import com.google.common.base.Charsets;
@@ -60,6 +62,9 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
 public class Jsr199JavacIntegrationTest {
+
+  private static final SourcePathResolver PATH_RESOLVER =
+      new SourcePathResolver(new BuildRuleResolver());
   public static final ImmutableSet<Path> SOURCE_PATHS = ImmutableSet.of(Paths.get("Example.java"));
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -109,6 +114,7 @@ public class Jsr199JavacIntegrationTest {
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.buildWithClasspath(
         executionContext,
+        PATH_RESOLVER,
         BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.<String>of(),
         SOURCE_PATHS,
@@ -139,6 +145,7 @@ public class Jsr199JavacIntegrationTest {
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.buildWithClasspath(
         executionContext,
+        PATH_RESOLVER,
         BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.<String>of(),
         SOURCE_PATHS,
@@ -225,6 +232,7 @@ public class Jsr199JavacIntegrationTest {
     try {
       javac.buildWithClasspath(
           executionContext,
+          PATH_RESOLVER,
           BuildTargetFactory.newInstance("//some:example"),
           ImmutableList.<String>of(),
           SOURCE_PATHS,
@@ -255,7 +263,8 @@ public class Jsr199JavacIntegrationTest {
 
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());
-    return new Jsr199Javac(javacJar);
+    return new Jsr199Javac(
+        javacJar.transform(SourcePaths.toSourcePath(new FakeProjectFilesystem())));
   }
 
   private Jsr199Javac createJavac(boolean withSyntaxError) throws IOException {

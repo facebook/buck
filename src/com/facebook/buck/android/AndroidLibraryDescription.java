@@ -74,7 +74,6 @@ public class AndroidLibraryDescription
 
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
         resolver,
-        pathResolver,
         args,
         defaultOptions);
 

@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -50,7 +51,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   protected abstract Optional<ProcessExecutor> getProcessExecutor();
 
   protected abstract Optional<Path> getJavacPath();
-  protected abstract Optional<Path> getJavacJarPath();
+  protected abstract Optional<SourcePath> getJavacJarPath();
 
   @Value.Default
   protected boolean isProductionBuild() {
@@ -97,7 +98,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
       } catch (InterruptedException | IOException e) {
         throw new RuntimeException(e);
       }
-
       Optional<JavacVersion> version;
       Optional<String> stderr = result.getStderr();
       if (Strings.isNullOrEmpty(stderr.orNull())) {

@@ -121,7 +121,8 @@ public class DummyRDotJava extends AbstractBuildRule
             javaSourceFilePaths,
             rDotJavaClassesFolder,
             javacOptions,
-            getBuildTarget());
+            getBuildTarget(),
+            getResolver());
     steps.add(javacStep);
     buildableContext.recordArtifactsInDirectory(rDotJavaClassesFolder);
 

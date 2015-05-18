@@ -107,7 +107,8 @@ public class BuckExtension extends AbstractBuildRule {
             javacOptions,
             getBuildTarget(),
             BuildDependencies.FIRST_ORDER_ONLY,
-            Optional.<JavacStep.SuggestBuildRules>absent()));
+            Optional.<JavacStep.SuggestBuildRules>absent(),
+            getResolver()));
     steps.add(new CopyResourcesStep(
             getResolver(),
             getBuildTarget(),

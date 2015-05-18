@@ -21,6 +21,7 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -29,6 +30,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -60,7 +62,6 @@ public class JavaLibraryDescriptionTest {
   private JavacOptions defaults;
   private JavaLibraryDescription.Arg arg;
   private BuildRuleResolver ruleResolver;
-  private SourcePathResolver resolver;
 
   @Before
   public void createHelpers() {
@@ -73,8 +74,6 @@ public class JavaLibraryDescriptionTest {
     populateWithDefaultValues(arg);
 
     ruleResolver = new BuildRuleResolver();
-
-    resolver = new SourcePathResolver(ruleResolver);
   }
 
   @Test
@@ -83,37 +82,37 @@ public class JavaLibraryDescriptionTest {
     arg.compiler = Optional.of(either);
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
         ruleResolver,
-        resolver,
         arg,
         defaults).build();
 
     Javac javac = options.getJavac();
 
-    assertEquals(Optional.<Path>absent(), options.getJavacJarPath());
+    assertEquals(Optional.<SourcePath>absent(), options.getJavacJarPath());
     assertEquals(Optional.<Path>absent(), options.getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
   }
 
   @Test
   public void compilerArgWithPrebuiltJarValueReturnsJsr199Javac() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
     PrebuiltJarBuilder.createBuilder(target)
         .setBinaryJar(javacJarPath)
         .build(ruleResolver);
+    SourcePath sourcePath = new BuildTargetSourcePath(filesystem, target);
     Either<BuiltInJavac, Either<BuildTarget, Path>> either =
         Either.ofRight(Either.<BuildTarget, Path>ofLeft(target));
 
     arg.compiler = Optional.of(either);
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
         ruleResolver,
-        resolver,
         arg,
         defaults).build();
 
     Javac javac = options.getJavac();
 
-    assertEquals(Optional.of(javacJarPath), options.getJavacJarPath());
+    assertEquals(Optional.of(sourcePath), options.getJavacJarPath());
     assertEquals(Optional.<Path>absent(), options.getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
   }
@@ -136,13 +135,12 @@ public class JavaLibraryDescriptionTest {
     arg.compiler = Optional.of(either);
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
         ruleResolver,
-        resolver,
         arg,
         newDefaults).build();
 
     Javac javac = options.getJavac();
 
-    assertEquals(Optional.<Path>absent(), options.getJavacJarPath());
+    assertEquals(Optional.<SourcePath>absent(), options.getJavacJarPath());
     assertEquals(Optional.of(externalJavac), options.getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof ExternalJavac);
   }
@@ -163,28 +161,28 @@ public class JavaLibraryDescriptionTest {
         .build();
 
     arg.compiler = Optional.of(either);
-    arg.javac = Optional.<SourcePath>of(
-        new PathSourcePath(new FakeProjectFilesystem(), Paths.get("does-not-exist")));
+    arg.javac = Optional.of(Paths.get("does-not-exist"));
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
         ruleResolver,
-        resolver,
         arg,
         newDefaults).build();
 
     Javac javac = options.getJavac();
 
-    assertEquals(Optional.<Path>absent(), options.getJavacJarPath());
+    assertEquals(Optional.<SourcePath>absent(), options.getJavacJarPath());
     assertEquals(Optional.of(externalJavac), options.getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof ExternalJavac);
   }
 
   @Test
   public void compilerArgTakesPrecedenceOverJavacJarArg() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
     PrebuiltJarBuilder.createBuilder(target)
         .setBinaryJar(javacJarPath)
         .build(ruleResolver);
+    SourcePath sourcePath = new BuildTargetSourcePath(filesystem, target);
     Either<BuiltInJavac, Either<BuildTarget, Path>> either =
         Either.ofRight(Either.<BuildTarget, Path>ofLeft(target));
 
@@ -193,19 +191,19 @@ public class JavaLibraryDescriptionTest {
         new PathSourcePath(new FakeProjectFilesystem(), Paths.get("does-not-exist")));
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
         ruleResolver,
-        resolver,
         arg,
         defaults).build();
 
     Javac javac = options.getJavac();
 
-    assertEquals(Optional.of(javacJarPath), options.getJavacJarPath());
+    assertEquals(Optional.of(sourcePath), options.getJavacJarPath());
     assertEquals(Optional.<Path>absent(), options.getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
   }
 
   @Test
   public void omittingTheCompilerArgMeansThatExistingBehaviourIsMaintained() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path expected = Paths.get("does-not-exist");
 
     arg.compiler = Optional.absent();
@@ -213,13 +211,12 @@ public class JavaLibraryDescriptionTest {
         new PathSourcePath(new FakeProjectFilesystem(), expected));
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
         ruleResolver,
-        resolver,
         arg,
         defaults).build();
 
     Javac javac = options.getJavac();
 
-    assertEquals(Optional.of(expected), options.getJavacJarPath());
+    assertEquals(Optional.of(new PathSourcePath(filesystem, expected)), options.getJavacJarPath());
     assertEquals(Optional.<Path>absent(), options.getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
   }

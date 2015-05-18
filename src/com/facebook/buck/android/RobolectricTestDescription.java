@@ -68,7 +68,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
         resolver,
-        pathResolver,
         args,
         templateOptions);
 

@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import static com.facebook.buck.java.JavaBuckConfig.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Optional;
@@ -71,7 +72,7 @@ public class Jsr199JavacTest extends EasyMockSupport {
   }
 
   private Jsr199Javac createTestStep() {
-    return new Jsr199Javac(Optional.<Path>absent());
+    return new Jsr199Javac(Optional.<SourcePath>absent());
   }
 
   private ImmutableList.Builder<String> getArgs() {

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FlavorableDescription;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -89,7 +90,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
         resolver,
-        pathResolver,
         args,
         defaultOptions);
 
@@ -133,7 +133,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
   public static JavacOptions.Builder getJavacOptions(
       BuildRuleResolver ruleResolver,
-      SourcePathResolver resolver,
       Arg args,
       JavacOptions defaultOptions) {
     JavacOptions.Builder builder = JavacOptions.builder(defaultOptions);
@@ -158,7 +157,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         if (right.isLeft()) {
           BuildRule rule = ruleResolver.getRule(right.getLeft());
           if (rule instanceof PrebuiltJar) {
-            builder.setJavacJarPath(rule.getPathToOutputFile());
+            builder.setJavacJarPath(
+                new BuildTargetSourcePath(rule.getProjectFilesystem(), rule.getBuildTarget()));
           } else {
             throw new HumanReadableException("Only prebuilt_jar targets can be used as a javac");
           }
@@ -171,8 +171,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         if (args.javac.isPresent() && args.javacJar.isPresent()) {
           throw new HumanReadableException("Cannot set both javac and javacjar");
         }
-        builder.setJavacPath(args.javac.transform(resolver.getPathFunction()));
-        builder.setJavacJarPath(args.javacJar.transform(resolver.getPathFunction()));
+        builder.setJavacPath(args.javac);
+        builder.setJavacJarPath(args.javacJar);
       }
     }
 
@@ -261,7 +261,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<ImmutableSortedSet<SourcePath>> resources;
     public Optional<String> source;
     public Optional<String> target;
-    public Optional<SourcePath> javac;
+    public Optional<Path> javac;
     public Optional<SourcePath> javacJar;
     // I am not proud of this.
     public Optional<Either<BuiltInJavac, Either<BuildTarget, Path>>> compiler;

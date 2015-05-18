@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
@@ -88,18 +89,7 @@ public class JavaBuckConfig {
     return Optional.absent();
   }
 
-  Optional<Path> getJavacJarPath() {
-    Optional<String> path = delegate.getValue("tools", "javac_jar");
-    if (path.isPresent()) {
-      File javacJar = new File(path.get());
-      if (!javacJar.exists()) {
-        throw new HumanReadableException(
-            "Javac JAR does not exist: " + javacJar.getPath());
-      }
-
-      return Optional.of(javacJar.toPath());
-    }
-
-    return Optional.absent();
+  Optional<SourcePath> getJavacJarPath() {
+    return delegate.getSourcePath("tools", "javac_jar");
   }
 }

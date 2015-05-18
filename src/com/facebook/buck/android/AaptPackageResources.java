@@ -357,7 +357,8 @@ public class AaptPackageResources extends AbstractBuildRule
         ImmutableSet.copyOf(mergeStep.getRDotJavaFiles()),
         rDotJavaBin,
         javacOptions,
-        getBuildTarget());
+        getBuildTarget(),
+        getResolver());
     steps.add(javacStep);
 
     Path rDotJavaClassesTxt = getPathToRDotJavaClassesTxt();

@@ -69,7 +69,6 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
 
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
         resolver,
-        pathResolver,
         args,
         templateOptions);
 

@@ -21,6 +21,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -45,19 +46,22 @@ public class RDotJava {
       Set<Path> javaSourceFilePaths,
       Path outputDirectory,
       JavacOptions javacOptions,
-      BuildTarget buildTarget) {
+      BuildTarget buildTarget,
+      SourcePathResolver resolver) {
     return createJavacStepForDummyRDotJavaFiles(
         javaSourceFilePaths,
         outputDirectory,
         javacOptions,
-        buildTarget);
+        buildTarget,
+        resolver);
   }
 
   static JavacStep createJavacStepForDummyRDotJavaFiles(
       Set<Path> javaSourceFilePaths,
       Path outputDirectory,
       JavacOptions javacOptions,
-      BuildTarget buildTarget) {
+      BuildTarget buildTarget,
+      SourcePathResolver resolver) {
 
     return new JavacStep(
         outputDirectory,
@@ -71,6 +75,7 @@ public class RDotJava {
             .build(),
         buildTarget,
         BuildDependencies.FIRST_ORDER_ONLY,
-        Optional.<JavacStep.SuggestBuildRules>absent());
+        Optional.<JavacStep.SuggestBuildRules>absent(),
+        resolver);
   }
 }

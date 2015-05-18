@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.CharMatcher;
@@ -43,6 +44,7 @@ public interface Javac extends RuleKeyAppendable {
 
   int buildWithClasspath(
       ExecutionContext context,
+      SourcePathResolver resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSet<Path> javaSourceFilePaths,

@@ -102,7 +102,7 @@ public class DummyRDotJavaTest {
                 (AndroidResource) resourceRule2)),
         makeCleanDirDescription(rDotJavaBinFolder),
         makeCleanDirDescription(rDotJavaAbiFolder),
-        javacInMemoryDescription(rDotJavaBinFolder),
+        javacInMemoryDescription(rDotJavaBinFolder, pathResolver),
         String.format("calculate_abi %s", rDotJavaBinFolder));
 
     MoreAsserts.assertSteps(
@@ -154,14 +154,17 @@ public class DummyRDotJavaTest {
     return String.format("rm -r -f %s && mkdir -p %s", dirname, dirname);
   }
 
-  private static String javacInMemoryDescription(String rDotJavaClassesFolder) {
+  private static String javacInMemoryDescription(
+      String rDotJavaClassesFolder,
+      SourcePathResolver resolver) {
     Set<Path> javaSourceFiles = ImmutableSet.of(
         Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__/com/facebook/R.java"));
     return RDotJava.createJavacStepForDummyRDotJavaFiles(
         javaSourceFiles,
         Paths.get(rDotJavaClassesFolder),
         ANDROID_JAVAC_OPTIONS,
-        /* buildTarget */ null)
+        /* buildTarget */ null,
+        resolver)
         .getDescription(TestExecutionContext.newInstance());
   }
 

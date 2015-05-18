@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildDependencies;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -75,9 +76,11 @@ public class JavacStep implements Step {
 
   private final Optional<SuggestBuildRules> suggestBuildRules;
 
+  private final SourcePathResolver resolver;
+
   /**
-   * Will be {@code true} once {@link Javac#buildWithClasspath(ExecutionContext, BuildTarget,
-   * ImmutableList, ImmutableSet, Optional, Optional)} has been invoked.
+   * Will be {@code true} once {@link Javac#buildWithClasspath(ExecutionContext, SourcePathResolver,
+   * BuildTarget, ImmutableList, ImmutableSet, Optional, Optional)} has been invoked.
    */
   private AtomicBoolean isExecuted = new AtomicBoolean(false);
 
@@ -121,7 +124,8 @@ public class JavacStep implements Step {
       JavacOptions javacOptions,
       BuildTarget invokingRule,
       BuildDependencies buildDependencies,
-      Optional<SuggestBuildRules> suggestBuildRules) {
+      Optional<SuggestBuildRules> suggestBuildRules,
+      SourcePathResolver resolver) {
     this.outputDirectory = outputDirectory;
     this.workingDirectory = workingDirectory;
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
@@ -133,6 +137,7 @@ public class JavacStep implements Step {
     this.invokingRule = invokingRule;
     this.buildDependencies = buildDependencies;
     this.suggestBuildRules = suggestBuildRules;
+    this.resolver = resolver;
   }
 
   @Override
@@ -149,6 +154,7 @@ public class JavacStep implements Step {
     if (buildDependencies == BuildDependencies.FIRST_ORDER_ONLY) {
       return getJavac().buildWithClasspath(
           context,
+          resolver,
           invokingRule,
           getOptions(context, declaredClasspathEntries),
           javaSourceFilePaths,
@@ -159,6 +165,7 @@ public class JavacStep implements Step {
     } else {
       return getJavac().buildWithClasspath(
           context,
+          resolver,
           invokingRule,
           getOptions(context, transitiveClasspathEntries),
           javaSourceFilePaths,
@@ -177,6 +184,7 @@ public class JavacStep implements Step {
 
       int declaredDepsResult = javac.buildWithClasspath(
           firstOrderContext,
+          resolver,
           invokingRule,
           getOptions(context, declaredClasspathEntries),
           javaSourceFilePaths,
@@ -189,6 +197,7 @@ public class JavacStep implements Step {
       if (declaredDepsResult != 0) {
         int transitiveResult = javac.buildWithClasspath(
             context,
+            resolver,
             invokingRule,
             getOptions(context, transitiveClasspathEntries),
             javaSourceFilePaths,

@@ -49,6 +49,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -1159,7 +1160,9 @@ public class DefaultJavaLibraryTest {
     assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
     Jsr199Javac jsrJavac = ((Jsr199Javac) (((JavacStep) steps.get(2)).getJavac()));
     assertTrue(jsrJavac.getJavacJar().isPresent());
-    assertEquals(jsrJavac.getJavacJar().get(), javac.getPathToOutputFile());
+    assertEquals(
+        jsrJavac.getJavacJar().get(),
+        new BuildTargetSourcePath(javac.getProjectFilesystem(), javac.getBuildTarget()));
   }
 
   @Test

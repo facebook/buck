@@ -290,7 +290,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           javacOptions,
           target,
           buildDependencies,
-          suggestBuildRules);
+          suggestBuildRules,
+          getResolver());
 
       commands.add(javacStep);
     }
