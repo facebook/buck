@@ -23,13 +23,17 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
@@ -49,6 +53,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -90,6 +95,13 @@ public class BuildCommand extends AbstractCommand {
       usage = "[Float] Do not start new jobs when system load is above this level." +
       " See uptime(1).")
   private Double loadLimit = null;
+
+  @Nullable
+  @Option(
+      name = "--just-build",
+      usage = "For debugging, limits the build to a specific target in the action graph.",
+      hidden = true)
+  private String justBuildTarget = null;
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -270,6 +282,22 @@ public class BuildCommand extends AbstractCommand {
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
+    }
+
+    // If the user specified an explicit build target, use that.
+    if (justBuildTarget != null) {
+      BuildTargetParser parser = new BuildTargetParser();
+      BuildTarget explicitTarget =
+          parser.parse(justBuildTarget, BuildTargetPatternParser.fullyQualified(parser));
+      ImmutableSet<BuildRule> actionGraphRules = Preconditions.checkNotNull(actionGraph.getNodes());
+      ImmutableSet<BuildTarget> actionGraphTargets =
+          ImmutableSet.copyOf(Iterables.transform(actionGraphRules, HasBuildTarget.TO_TARGET));
+      if (!actionGraphTargets.contains(explicitTarget)) {
+        params.getConsole().printBuildFailure(
+            "Targets specified via `--just-build` must be a subset of action graph.");
+        return 1;
+      }
+      buildTargets = ImmutableSet.of(explicitTarget);
     }
 
     try (CommandThreadManager pool = new CommandThreadManager(

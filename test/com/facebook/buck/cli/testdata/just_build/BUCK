@@ -1,0 +1,14 @@
+genrule(
+  name = 'bar',
+  out = 'bar',
+  cmd = 'touch $OUT',
+)
+
+genrule(
+  name = 'foo',
+  out = 'foo',
+  cmd = 'touch $OUT',
+  deps = [
+    ':bar',
+  ],
+)
