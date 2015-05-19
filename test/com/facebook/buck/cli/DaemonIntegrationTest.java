@@ -34,7 +34,6 @@ import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.testutil.TestConsole;
@@ -488,38 +487,35 @@ public class DaemonIntegrationTest {
     ObjectMapper objectMapper = new ObjectMapper();
 
     Object daemon = Main.getDaemon(
-        new FakeRepositoryFactory().setRootRepoForTesting(
-            new TestRepositoryBuilder().setBuckConfig(
-                new FakeBuckConfig(
-                    ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
-                .setFilesystem(filesystem)
-                .build()),
+        new TestRepositoryBuilder().setBuckConfig(
+            new FakeBuckConfig(
+                ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
+            .setFilesystem(filesystem)
+            .build(),
         new FakeClock(0),
         objectMapper);
 
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
         Main.getDaemon(
-            new FakeRepositoryFactory().setRootRepoForTesting(
-                new TestRepositoryBuilder().setBuckConfig(
-                    new FakeBuckConfig(
-                        ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
-                    .setFilesystem(filesystem)
-                    .build()),
+            new TestRepositoryBuilder().setBuckConfig(
+                new FakeBuckConfig(
+                    ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
+                .setFilesystem(filesystem)
+                .build(),
             new FakeClock(0),
             objectMapper));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
         Main.getDaemon(
-            new FakeRepositoryFactory().setRootRepoForTesting(
-                new TestRepositoryBuilder().setBuckConfig(
-                    new FakeBuckConfig(
-                        ImmutableMap.of(
-                            "somesection",
-                            ImmutableMap.of("somename", "someothervalue"))))
-                    .setFilesystem(filesystem)
-                    .build()),
+            new TestRepositoryBuilder().setBuckConfig(
+                new FakeBuckConfig(
+                    ImmutableMap.of(
+                        "somesection",
+                        ImmutableMap.of("somename", "someothervalue"))))
+                .setFilesystem(filesystem)
+                .build(),
             new FakeClock(0),
             objectMapper));
   }
@@ -554,30 +550,28 @@ public class DaemonIntegrationTest {
     ObjectMapper objectMapper = new ObjectMapper();
 
     Object daemon = Main.getDaemon(
-        new FakeRepositoryFactory().setRootRepoForTesting(
-            new TestRepositoryBuilder()
-                .setAndroidDirectoryResolver(
-                    new FakeAndroidDirectoryResolver(
-                        Optional.<Path>absent(),
-                        Optional.<Path>absent(),
-                        Optional.of("something")))
-                .setFilesystem(filesystem)
-                .build()),
+        new TestRepositoryBuilder()
+            .setAndroidDirectoryResolver(
+                new FakeAndroidDirectoryResolver(
+                    Optional.<Path>absent(),
+                    Optional.<Path>absent(),
+                    Optional.of("something")))
+            .setFilesystem(filesystem)
+            .build(),
         new FakeClock(0),
         objectMapper);
 
     assertNotEquals(
         "Daemon should be replaced when not equal.", daemon,
         Main.getDaemon(
-            new FakeRepositoryFactory().setRootRepoForTesting(
-                new TestRepositoryBuilder()
-                    .setAndroidDirectoryResolver(
-                        new FakeAndroidDirectoryResolver(
-                            Optional.<Path>absent(),
-                            Optional.<Path>absent(),
-                            Optional.of("different")))
-                    .setFilesystem(filesystem)
-                    .build()),
+            new TestRepositoryBuilder()
+                .setAndroidDirectoryResolver(
+                    new FakeAndroidDirectoryResolver(
+                        Optional.<Path>absent(),
+                        Optional.<Path>absent(),
+                        Optional.of("different")))
+                .setFilesystem(filesystem)
+                .build(),
             new FakeClock(0),
             objectMapper));
   }

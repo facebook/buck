@@ -27,7 +27,6 @@ import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TargetGraph;
@@ -78,7 +77,6 @@ public class AuditInputCommandTest {
     auditInputCommand = new AuditInputCommand();
     params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         console,
-        new FakeRepositoryFactory(),
         repository,
         new FakeAndroidDirectoryResolver(),
         new InstanceArtifactCacheFactory(artifactCache),

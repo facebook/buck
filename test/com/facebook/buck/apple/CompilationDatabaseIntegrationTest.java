@@ -166,18 +166,19 @@ public class CompilationDatabaseIntegrationTest {
       Map<String, CxxCompilationDatabaseEntry> fileToEntry,
       Iterable<String> additionalFrameworks,
       Iterable<String> includes) throws IOException {
-    String key = tmp.getRootPath().resolve(source).toRealPath().toString();
+    Path tmpRoot = tmp.getRootPath().toRealPath();
+    String key = tmpRoot.resolve(source).toString();
     CxxCompilationDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
 
-    String clang = tmp.getRootPath()
+    String clang = tmpRoot
         .resolve(XCODE_DEVELOPER_DIR)
         .resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang")
-        .toRealPath().toString();
-    String sdkRoot = tmp.getRootPath()
+        .toString();
+    String sdkRoot = tmpRoot
         .resolve(XCODE_DEVELOPER_DIR)
         .resolve("Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk")
-        .toRealPath().toString();
+        .toString();
     String language = "objective-c";
     String languageStandard = "-std=gnu11";
     if (source.endsWith(".mm")) {

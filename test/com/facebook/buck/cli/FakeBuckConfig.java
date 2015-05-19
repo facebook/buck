@@ -23,8 +23,6 @@ import com.facebook.buck.util.Config;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 
-import java.nio.file.Path;
-
 /**
  * Implementation of {@link BuckConfig} with no data, or only the data specified by
  * {@link FakeBuckConfig#FakeBuckConfig(ImmutableMap)}. This makes it possible to get an instance of
@@ -86,7 +84,6 @@ public class FakeBuckConfig extends BuckConfig {
         filesystem,
         new BuildTargetParser(),
         platform,
-        environment,
-        ImmutableMap.<String, Path>of());
+        environment);
   }
 }

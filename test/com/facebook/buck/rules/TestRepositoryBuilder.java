@@ -22,14 +22,9 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class TestRepositoryBuilder {
   private Optional<String> name;
@@ -37,7 +32,6 @@ public class TestRepositoryBuilder {
   private KnownBuildRuleTypes buildRuleTypes;
   private BuckConfig buckConfig;
   private AndroidDirectoryResolver androidDirectoryResolver;
-  private Path rootPath;
 
   public TestRepositoryBuilder() throws InterruptedException, IOException {
     name = Optional.absent();
@@ -45,7 +39,6 @@ public class TestRepositoryBuilder {
     buildRuleTypes = DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem);
     buckConfig = new FakeBuckConfig();
     androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-    rootPath = Paths.get(".");
   }
 
   public TestRepositoryBuilder setName(String name) {
@@ -58,18 +51,8 @@ public class TestRepositoryBuilder {
     return this;
   }
 
-  public TestRepositoryBuilder setBuildRuleTypes(KnownBuildRuleTypes buildRuleTypes) {
-    this.buildRuleTypes = buildRuleTypes;
-    return this;
-  }
-
   public TestRepositoryBuilder setBuckConfig(BuckConfig buckConfig) {
     this.buckConfig = buckConfig;
-    return this;
-  }
-
-  public TestRepositoryBuilder setRootPath(Path path) {
-    this.rootPath = path;
     return this;
   }
 
@@ -79,20 +62,11 @@ public class TestRepositoryBuilder {
   }
 
   public Repository build() {
-    RepositoryFactory fakeRepositoryFactory = new RepositoryFactory(
-        ImmutableMap.copyOf(System.getenv()),
-        Platform.detect(),
-        new TestConsole(),
-        // NOTE: In real code we should use toRealPath() instead of toAbsolutePath(), but for the
-        // fake we probably don't care about symlinks, and we'd rather not do IO.
-        rootPath.toAbsolutePath(),
-        ImmutableMap.<String, ImmutableMap<String, String>>of());
     return Repository.of(
         name,
         filesystem,
         buildRuleTypes,
         buckConfig,
-        fakeRepositoryFactory,
         androidDirectoryResolver);
   }
 }

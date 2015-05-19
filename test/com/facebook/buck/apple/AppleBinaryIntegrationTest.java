@@ -35,7 +35,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class AppleBinaryIntegrationTest {
 
@@ -113,7 +112,7 @@ public class AppleBinaryIntegrationTest {
         buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+    Path projectRoot = tmp.getRootPath().toRealPath();
 
     Path inputPath = projectRoot.resolve(
         buildTarget.getBasePath());

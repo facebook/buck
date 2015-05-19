@@ -28,10 +28,8 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -55,7 +53,6 @@ public class CommandRunnerParamsForTesting {
 
   public static CommandRunnerParams createCommandRunnerParamsForTesting(
       Console console,
-      RepositoryFactory repositoryFactory,
       Repository repository,
       AndroidDirectoryResolver androidDirectoryResolver,
       ArtifactCacheFactory artifactCacheFactory,
@@ -81,7 +78,7 @@ public class CommandRunnerParamsForTesting {
         artifactCacheFactory,
         eventBus,
         Parser.createParser(
-            repositoryFactory,
+            repository,
             pythonBuckConfig.getPythonInterpreter(),
             parserConfig.getAllowEmptyGlobs(),
             parserConfig.getEnforceBuckPackageBoundary(),
@@ -126,7 +123,6 @@ public class CommandRunnerParamsForTesting {
         throws IOException, InterruptedException{
       return createCommandRunnerParamsForTesting(
           console,
-          new FakeRepositoryFactory(),
           new TestRepositoryBuilder().build(),
           androidDirectoryResolver,
           artifactCacheFactory,

@@ -55,10 +55,6 @@ abstract class AbstractRepository {
   @Value.Parameter
   public abstract BuckConfig getBuckConfig();
 
-  @Value.Auxiliary
-  @Value.Parameter
-  public abstract RepositoryFactory getRepositoryFactory();
-
   // TODO(jacko): This is a hack to avoid breaking the build. Get rid of it.
   @Value.Parameter
   public abstract AndroidDirectoryResolver getAndroidDirectoryResolver();
@@ -85,16 +81,6 @@ abstract class AbstractRepository {
     // no-op.
     builder.put(Optional.<String>absent(), getName());
 
-    // Add mappings for repos listed in the [repositories] section of .buckconfig.
-    ImmutableMap<String, Path> localNamePaths = getBuckConfig().getRepositoryPaths();
-    ImmutableMap<Path, Optional<String>> canonicalPathNames =
-        getRepositoryFactory().getCanonicalPathNames();
-    for (String localName : localNamePaths.keySet()) {
-      Path canonicalPath = localNamePaths.get(localName);
-      Optional<String> canonicalName = canonicalPathNames.get(canonicalPath);
-      Preconditions.checkNotNull(canonicalName);
-      builder.put(Optional.of(localName), canonicalName);
-    }
     return builder.build();
   }
 

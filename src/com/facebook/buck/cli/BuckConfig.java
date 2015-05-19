@@ -120,8 +120,6 @@ public class BuckConfig {
 
   private final ImmutableMap<String, BuildTarget> aliasToBuildTargetMap;
 
-  private final ImmutableMap<String, Path> repoNamesToPaths;
-
   private final ProjectFilesystem projectFilesystem;
 
   private final BuildTargetParser buildTargetParser;
@@ -154,8 +152,7 @@ public class BuckConfig {
       ProjectFilesystem projectFilesystem,
       BuildTargetParser buildTargetParser,
       Platform platform,
-      ImmutableMap<String, String> environment,
-      ImmutableMap<String, Path> repoNamesToPaths) {
+      ImmutableMap<String, String> environment) {
     this.config = config;
     this.projectFilesystem = projectFilesystem;
     this.buildTargetParser = buildTargetParser;
@@ -165,8 +162,6 @@ public class BuckConfig {
     this.aliasToBuildTargetMap = createAliasToBuildTargetMap(
         this.getEntriesForSection(ALIAS_SECTION_HEADER),
         buildTargetParser);
-
-    this.repoNamesToPaths = repoNamesToPaths;
 
     this.platform = platform;
     this.environment = environment;
@@ -195,8 +190,7 @@ public class BuckConfig {
           projectFilesystem,
           buildTargetParser,
           platform,
-          environment,
-          ImmutableMap.<String, Path>of());
+          environment);
     }
 
     // Convert the Files to Readers.
@@ -260,15 +254,12 @@ public class BuckConfig {
       builder.add(configOverride);
     }
     Config config = new Config(builder.build());
-    ImmutableMap<String, Path> repoNamesToPaths =
-        createRepoNamesToPaths(projectFilesystem, config.getSectionToEntries());
     return new BuckConfig(
         config,
         projectFilesystem,
         buildTargetParser,
         platform,
-        environment,
-        repoNamesToPaths);
+        environment);
   }
 
   public ImmutableMap<String, String> getEntriesForSection(String section) {
@@ -861,27 +852,6 @@ public class BuckConfig {
       return Optional.of(projectFilesystem.getPathForRelativePath(path));
     }
     throw new HumanReadableException(errorMsg + path);
-  }
-
-  private static ImmutableMap<String, Path> createRepoNamesToPaths(
-      ProjectFilesystem filesystem,
-      ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries)
-      throws IOException {
-    @Nullable Map<String, String> repositoryConfigs = sectionsToEntries.get("repositories");
-    if (repositoryConfigs == null) {
-      return ImmutableMap.of();
-    }
-    ImmutableMap.Builder<String, Path> repositoryPaths = ImmutableMap.builder();
-    for (String name : repositoryConfigs.keySet()) {
-      String pathString = repositoryConfigs.get(name);
-      Path canonicalPath = filesystem.resolve(Paths.get(pathString)).toRealPath();
-      repositoryPaths.put(name, canonicalPath);
-    }
-    return repositoryPaths.build();
-  }
-
-  public ImmutableMap<String, Path> getRepositoryPaths() {
-    return repoNamesToPaths;
   }
 
   /**

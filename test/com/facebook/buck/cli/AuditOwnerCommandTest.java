@@ -39,7 +39,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
@@ -200,7 +199,6 @@ public class AuditOwnerCommandTest {
     Repository repository = new TestRepositoryBuilder().setFilesystem(filesystem).build();
     return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         console,
-        new FakeRepositoryFactory(),
         repository,
         androidDirectoryResolver,
         new InstanceArtifactCacheFactory(artifactCache),

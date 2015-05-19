@@ -51,14 +51,13 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.util.Console;
@@ -103,40 +102,40 @@ public class ParserTest extends EasyMockSupport {
   private Parser testParser;
   private KnownBuildRuleTypes buildRuleTypes;
   private ProjectFilesystem filesystem;
-  private RepositoryFactory repositoryFactory;
   private BuckEventBus eventBus;
 
   @Rule
   public TemporaryFolder tempDir = new TemporaryFolder();
   @Rule
   public ExpectedException thrown = ExpectedException.none();
+  private Repository repository;
 
   @Before
   public void setUp() throws IOException, InterruptedException  {
     tempDir.newFolder("java", "com", "facebook");
 
     defaultIncludeFile = tempDir.newFile(
-        "java/com/facebook/defaultIncludeFile").toPath();
+        "java/com/facebook/defaultIncludeFile").toPath().toRealPath();
     Files.write(
         "\n",
         defaultIncludeFile.toFile(),
         Charsets.UTF_8);
 
     includedByIncludeFile = tempDir.newFile(
-        "java/com/facebook/includedByIncludeFile").toPath();
+        "java/com/facebook/includedByIncludeFile").toPath().toRealPath();
     Files.write(
         "\n",
         includedByIncludeFile.toFile(),
         Charsets.UTF_8);
 
     includedByBuildFile = tempDir.newFile(
-        "java/com/facebook/includedByBuildFile").toPath();
+        "java/com/facebook/includedByBuildFile").toPath().toRealPath();
     Files.write(
         "include_defs('//java/com/facebook/includedByIncludeFile')\n",
         includedByBuildFile.toFile(),
         Charsets.UTF_8);
 
-    testBuildFile = tempDir.newFile("java/com/facebook/BUCK").toPath();
+    testBuildFile = tempDir.newFile("java/com/facebook/BUCK").toPath().toRealPath();
     Files.write(
         "include_defs('//java/com/facebook/includedByBuildFile')\n" +
         "java_library(name = 'foo')\n" +
@@ -149,14 +148,16 @@ public class ParserTest extends EasyMockSupport {
 
     // Create a temp directory with some build files.
     File root = tempDir.getRoot();
-    repositoryFactory = new FakeRepositoryFactory(root.toPath());
-    Repository repository = repositoryFactory.getRootRepository();
-    filesystem = repository.getFilesystem();
+    filesystem = new ProjectFilesystem(root.toPath().toRealPath());
+    BuckConfig config = new FakeBuckConfig();
+    repository = new TestRepositoryBuilder()
+        .setFilesystem(filesystem)
+        .setBuckConfig(config)
+        .build();
     eventBus = BuckEventBusFactory.newInstance();
 
     buildRuleTypes = repository.getKnownBuildRuleTypes();
 
-    BuckConfig config = new FakeBuckConfig();
     ParserConfig parserConfig = new ParserConfig(config);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
         config,
@@ -191,7 +192,8 @@ public class ParserTest extends EasyMockSupport {
             new FilesystemBackedBuildFileTree(filesystem, "BUCK")),
         rules,
         buildFileParserFactory,
-        new BuildTargetParser());
+        new BuildTargetParser(),
+        repository);
   }
 
   private Parser createParser(
@@ -205,7 +207,7 @@ public class ParserTest extends EasyMockSupport {
         rules,
         buildFileParserFactory,
         buildTargetParser,
-        repositoryFactory);
+        repository);
   }
 
     private Parser createParser(
@@ -213,14 +215,14 @@ public class ParserTest extends EasyMockSupport {
         Iterable<Map<String, Object>> rules,
         ProjectBuildFileParserFactory buildFileParserFactory,
         BuildTargetParser buildTargetParser,
-        RepositoryFactory repositoryFactory)
+        Repository repository)
         throws IOException, InterruptedException {
       ParserConfig parserConfig = new ParserConfig(
           new FakeBuckConfig(
               ImmutableMap.of(
                   "project", ImmutableMap.of("temp_files", ".*\\.swp$"))));
     Parser parser = new Parser(
-        repositoryFactory,
+        repository,
         parserConfig.getEnforceBuckPackageBoundary(),
         parserConfig.getTempFilePatterns(),
         parserConfig.getBuildFileName(),
@@ -558,7 +560,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Process event.
     WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toPath(), testBuildFile),
+        MorePaths.relativize(tempDir.getRoot().toPath().toRealPath(), testBuildFile),
         StandardWatchEventKinds.ENTRY_CREATE);
     parser.onFileSystemChange(event);
 
@@ -581,7 +583,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Process event.
     WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toPath(), testBuildFile),
+        MorePaths.relativize(tempDir.getRoot().toPath().toRealPath(), testBuildFile),
         StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(event);
 
@@ -604,7 +606,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Process event.
     WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toPath(), testBuildFile),
+        MorePaths.relativize(tempDir.getRoot().toPath().toRealPath(), testBuildFile),
         StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(event);
 
@@ -627,7 +629,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Process event.
     WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toPath(), includedByBuildFile),
+        MorePaths.relativize(tempDir.getRoot().toPath().toRealPath(), includedByBuildFile),
         StandardWatchEventKinds.ENTRY_CREATE);
     parser.onFileSystemChange(event);
 
@@ -650,7 +652,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Process event.
     WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toPath(), includedByBuildFile),
+        MorePaths.relativize(tempDir.getRoot().toPath().toRealPath(), includedByBuildFile),
         StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(event);
 
@@ -673,7 +675,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Process event.
     WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toPath(), includedByBuildFile),
+        MorePaths.relativize(tempDir.getRoot().toPath().toRealPath(), includedByBuildFile),
         StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(event);
 
@@ -696,7 +698,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Process event.
     WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toPath(), includedByIncludeFile),
+        MorePaths.relativize(tempDir.getRoot().toPath().toRealPath(), includedByIncludeFile),
         StandardWatchEventKinds.ENTRY_CREATE);
     parser.onFileSystemChange(event);
 
@@ -719,7 +721,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Process event.
     WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toPath(), includedByIncludeFile),
+        MorePaths.relativize(tempDir.getRoot().toPath().toRealPath(), includedByIncludeFile),
         StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(event);
 
@@ -742,7 +744,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Process event.
     WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toPath(), includedByIncludeFile),
+        MorePaths.relativize(tempDir.getRoot().toPath().toRealPath(), includedByIncludeFile),
         StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(event);
 
@@ -765,7 +767,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Process event.
     WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toPath(), defaultIncludeFile),
+        MorePaths.relativize(tempDir.getRoot().toPath().toRealPath(), defaultIncludeFile),
         StandardWatchEventKinds.ENTRY_CREATE);
     parser.onFileSystemChange(event);
 
@@ -788,7 +790,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Process event.
     WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toPath(), defaultIncludeFile),
+        MorePaths.relativize(tempDir.getRoot().toPath().toRealPath(), defaultIncludeFile),
         StandardWatchEventKinds.ENTRY_MODIFY);
     parser.onFileSystemChange(event);
 
@@ -812,7 +814,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Process event.
     WatchEvent<Path> event = createPathEvent(
-        MorePaths.relativize(tempDir.getRoot().toPath(), defaultIncludeFile),
+        MorePaths.relativize(tempDir.getRoot().toPath().toRealPath(), defaultIncludeFile),
         StandardWatchEventKinds.ENTRY_DELETE);
     parser.onFileSystemChange(event);
 
@@ -1296,7 +1298,7 @@ public class ParserTest extends EasyMockSupport {
     tempDir.newFolder("bar");
     tempDir.newFile("bar/Bar.java");
     tempDir.newFolder("foo");
-    Path rootPath = tempDir.getRoot().toPath();
+    Path rootPath = tempDir.getRoot().toPath().toRealPath();
     java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
     Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
@@ -1381,7 +1383,7 @@ public class ParserTest extends EasyMockSupport {
     tempDir.newFile("bar/Bar.java");
     tempDir.newFolder("foo");
     File bazSourceFile = tempDir.newFile("bar/Baz.java");
-    Path rootPath = tempDir.getRoot().toPath();
+    Path rootPath = tempDir.getRoot().toPath().toRealPath();
     java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
     Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");

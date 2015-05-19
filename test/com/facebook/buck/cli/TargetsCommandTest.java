@@ -41,7 +41,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.FakeRepositoryFactory;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Repository;
@@ -121,7 +120,6 @@ public class TargetsCommandTest {
     targetsCommand = new TargetsCommand();
     params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         console,
-        new FakeRepositoryFactory(),
         repository,
         androidDirectoryResolver,
         new InstanceArtifactCacheFactory(artifactCache),

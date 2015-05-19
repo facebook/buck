@@ -50,7 +50,6 @@ import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -110,8 +109,6 @@ public class Parser {
 
   private final ImmutableSet<Pattern> tempFilePatterns;
 
-  private final RepositoryFactory repositoryFactory;
-  // TODO(jacko): DELETE THESE!!!
   private final Repository repository;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
 
@@ -199,7 +196,7 @@ public class Parser {
   private final BuildFileTreeCache buildFileTreeCache;
 
   public static Parser createParser(
-      final RepositoryFactory repositoryFactory,
+      final Repository repository,
       String pythonInterpreter,
       boolean allowEmptyGlobs,
       boolean enforceBuckPackageBoundary,
@@ -208,9 +205,8 @@ public class Parser {
       Iterable<String> defaultIncludes,
       RuleKeyBuilderFactory ruleKeyBuilderFactory)
       throws IOException, InterruptedException {
-    final Repository rootRepository = repositoryFactory.getRootRepository();
     return new Parser(
-        repositoryFactory,
+        repository,
         enforceBuckPackageBoundary,
         tempFilePatterns,
         buildFileName,
@@ -220,19 +216,19 @@ public class Parser {
           @Override
           public BuildFileTree get() {
             return new FilesystemBackedBuildFileTree(
-                rootRepository.getFilesystem(),
+                repository.getFilesystem(),
                 buildFileName);
           }
         },
         // TODO(jacko): Get rid of this global BuildTargetParser completely.
-        rootRepository.getBuildTargetParser(),
+        repository.getBuildTargetParser(),
         new DefaultProjectBuildFileParserFactory(
-            rootRepository.getFilesystem().getRootPath(),
+            repository.getFilesystem().getRootPath(),
             pythonInterpreter,
             allowEmptyGlobs,
             buildFileName,
             defaultIncludes,
-            rootRepository.getAllDescriptions()),
+            repository.getAllDescriptions()),
         ruleKeyBuilderFactory);
   }
 
@@ -241,7 +237,7 @@ public class Parser {
    */
   @VisibleForTesting
   Parser(
-      RepositoryFactory repositoryFactory,
+      Repository repository,
       boolean enforceBuckPackageBoundary,
       ImmutableSet<Pattern> tempFilePatterns,
       String buildFileName,
@@ -250,8 +246,7 @@ public class Parser {
       ProjectBuildFileParserFactory buildFileParserFactory,
       RuleKeyBuilderFactory ruleKeyBuilderFactory)
       throws IOException, InterruptedException {
-    this.repositoryFactory = repositoryFactory;
-    this.repository = repositoryFactory.getRootRepository();
+    this.repository = repository;
     this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
     this.buildTargetParser = buildTargetParser;
     this.buildFileParserFactory = buildFileParserFactory;
@@ -555,8 +550,12 @@ public class Parser {
       ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
-    Repository targetRepo =
-        repositoryFactory.getRepositoryByCanonicalName(buildTarget.getRepository());
+    if (buildTarget.getRepository().isPresent()) {
+      throw new HumanReadableException(
+          "Buck does not currently support multiple repositories: %d",
+          buildTarget);
+    }
+    Repository targetRepo = repository;
     Path buildFile = targetRepo.getAbsolutePathToBuildFile(buildTarget);
     if (isCached(buildFile, parserConfig.getDefaultIncludes(), environment)) {
       throw new HumanReadableException(
@@ -1098,8 +1097,12 @@ public class Parser {
         return toReturn;
       }
 
-      Repository targetRepo =
-          repositoryFactory.getRepositoryByCanonicalName(buildTarget.getRepository());
+      if (buildTarget.getRepository().isPresent()) {
+        throw new HumanReadableException(
+            "Buck does not currently support multiple repos: %d",
+            buildTarget);
+      }
+      Repository targetRepo = repository;
       Path buildFilePath;
       try {
         buildFilePath = targetRepo.getAbsolutePathToBuildFile(buildTarget);

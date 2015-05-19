@@ -142,7 +142,7 @@ public class CxxCompilationDatabaseIntegrationTest {
       Map<String, CxxCompilationDatabaseEntry> fileToEntry,
       String fileName,
       List<String> command) throws IOException {
-    String key = tmp.getRootPath().resolve(fileName).toRealPath().toString();
+    String key = tmp.getRootPath().toRealPath().resolve(fileName).toString();
     CxxCompilationDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
     MoreAsserts.assertIterablesEquals(command, entry.args);

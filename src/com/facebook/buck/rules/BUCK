@@ -3,7 +3,6 @@ java_immutables_library(
   srcs = [
     'AbstractRepository.java',
     'KnownBuildRuleTypes.java',
-    'RepositoryFactory.java',
   ],
   deps = [
     ':build_rule',

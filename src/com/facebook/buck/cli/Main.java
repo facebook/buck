@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
@@ -43,7 +44,6 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.RepositoryFactory;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.timing.Clock;
@@ -53,6 +53,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultFileHashCache;
+import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
@@ -60,6 +61,7 @@ import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
+import com.facebook.buck.util.PropertyFinder;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
@@ -173,11 +175,11 @@ public final class Main {
     private final ObjectMapper objectMapper;
 
     public Daemon(
-        RepositoryFactory repositoryFactory,
+        Repository repository,
         Clock clock,
         ObjectMapper objectMapper)
         throws IOException, InterruptedException  {
-      this.repository = repositoryFactory.getRootRepository();
+      this.repository = repository;
       this.clock = clock;
       this.objectMapper = objectMapper;
       this.hashCache = new DefaultFileHashCache(repository.getFilesystem());
@@ -186,7 +188,7 @@ public final class Main {
           repository.getBuckConfig(),
           new ExecutableFinder());
       this.parser = Parser.createParser(
-          repositoryFactory,
+          repository,
           pythonBuckConfig.getPythonInterpreter(),
           parserConfig.getAllowEmptyGlobs(),
           parserConfig.getEnforceBuckPackageBoundary(),
@@ -335,14 +337,14 @@ public final class Main {
    */
   @VisibleForTesting
   static Daemon getDaemon(
-      RepositoryFactory repositoryFactory,
+      Repository repository,
       Clock clock,
       ObjectMapper objectMapper)
       throws IOException, InterruptedException  {
-    Path rootPath = repositoryFactory.getRootRepository().getFilesystem().getRootPath();
+    Path rootPath = repository.getFilesystem().getRootPath();
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootPath);
-      daemon = new Daemon(repositoryFactory, clock, objectMapper);
+      daemon = new Daemon(repository, clock, objectMapper);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -357,10 +359,10 @@ public final class Main {
 
       // If Buck config or the AndroidDirectoryResolver has changed, invalidate the cache and
       // create a new daemon.
-      if (!daemon.repository.equals(repositoryFactory.getRootRepository())) {
+      if (!daemon.repository.equals(repository)) {
         LOG.info("Shutting down and restarting daemon on config or directory resolver change.");
         daemon.close();
-        daemon = new Daemon(repositoryFactory, clock, objectMapper);
+        daemon = new Daemon(repository, clock, objectMapper);
       }
     }
     return daemon;
@@ -418,6 +420,7 @@ public final class Main {
    * @param args command line arguments
    * @return an exit code or {@code null} if this is a process that should not exit
    */
+  @SuppressWarnings("PMD.PrematureDeclaration")
   public int runMainWithExitCode(
       BuildId buildId,
       Path projectRoot,
@@ -435,30 +438,50 @@ public final class Main {
     } else {
       color = Optional.absent();
     }
+
     // We need a BuckConfig to create a Console, but we get BuckConfig from Repository, and we need
     // a Console to create a Repository. To break this bootstrapping loop, create a temporary
     // BuckConfig.
     // TODO(jacko): We probably shouldn't rely on BuckConfig to instantiate Console.
-    BuckConfig bootstrapConfig = BuckConfig.createDefaultBuckConfig(
-        new ProjectFilesystem(projectRoot),
+    // Begin ugly bootstrapping code
+
+    BuckCommand command = new BuckCommand();
+    AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
+    try {
+      cmdLineParser.parseArgument(args);
+    } catch (CmdLineException e) {
+      // Can't go through the console for prettification since that needs the BuckConfig, and that
+      // needs to be created with the overrides, which are parsed from the command line here, which
+      // required the console to print the message that parsing has failed. So just write to stderr
+      // and be done with it.
+      stdErr.println(e.getLocalizedMessage());
+      return 1;
+    }
+
+    ImmutableMap<String, ImmutableMap<String, String>> configOverrides =
+        command.getConfigOverrides();
+
+    Path canonicalRootPath = projectRoot.toRealPath().normalize();
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(
+        canonicalRootPath,
+        BuckConfig.createDefaultBuckConfig(
+            new ProjectFilesystem(canonicalRootPath),
+            platform,
+            clientEnvironment,
+            configOverrides).getIgnorePaths());
+    BuckConfig buckConfig = BuckConfig.createDefaultBuckConfig(
+        filesystem,
         platform,
-        clientEnvironment);
+        clientEnvironment,
+        configOverrides);
+    // End ugly bootstrapping code.
+
     final Console console = new Console(
         verbosity,
         stdOut,
         stdErr,
-        bootstrapConfig.createAnsi(color));
-
-    BuckCommand command = new BuckCommand();
-    AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
-
-    try {
-      cmdLineParser.parseArgument(args);
-    } catch (CmdLineException e) {
-      console.getStdErr().println(e.getLocalizedMessage());
-      return 1;
-    }
-
+        buckConfig.createAnsi(color));
 
     // No more early outs: if this command is not read only, acquire the command semaphore to
     // become the only executing read/write command.
@@ -471,6 +494,34 @@ public final class Main {
       }
     }
 
+    PropertyFinder propertyFinder = new DefaultPropertyFinder(
+        filesystem,
+        clientEnvironment);
+    AndroidDirectoryResolver androidDirectoryResolver =
+        new DefaultAndroidDirectoryResolver(
+            filesystem,
+            buckConfig.getNdkVersion(),
+            propertyFinder);
+
+    ProcessExecutor processExecutor = new ProcessExecutor(console);
+
+    KnownBuildRuleTypes buildRuleTypes =
+        KnownBuildRuleTypes.createInstance(
+            buckConfig,
+            filesystem,
+            processExecutor,
+            androidDirectoryResolver,
+            new PythonBuckConfig(buckConfig, new ExecutableFinder()).getPythonEnvironment(
+                processExecutor));
+
+    Repository rootRepository = Repository.builder()
+        .setName(Optional.<String>absent())
+        .setFilesystem(filesystem)
+        .setBuckConfig(buckConfig)
+        .setKnownBuildRuleTypes(buildRuleTypes)
+        .setAndroidDirectoryResolver(androidDirectoryResolver)
+        .build();
+
     int exitCode;
     ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
     Clock clock;
@@ -481,32 +532,18 @@ public final class Main {
     } else {
       clock = new DefaultClock();
     }
-    ProcessExecutor processExecutor = new ProcessExecutor(console);
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
         processExecutor,
         clientEnvironment,
         // TODO(user): Thread through properties from client environment.
         System.getProperties());
 
-    ImmutableMap<String, ImmutableMap<String, String>> configOverrides =
-        command.getConfigOverrides();
-
-    Path canonicalRootPath = projectRoot.toRealPath();
-    RepositoryFactory repositoryFactory = new RepositoryFactory(
-        clientEnvironment,
-        platform,
-        console,
-        canonicalRootPath,
-        configOverrides);
-
-    Repository rootRepository = repositoryFactory.getRootRepository();
-
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(rootRepository.getFilesystem());
 
     @Nullable ArtifactCacheFactory artifactCacheFactory = null;
     Optional<WebServer> webServer = getWebServerIfDaemon(
         context,
-        repositoryFactory,
+        rootRepository,
         clock);
 
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
@@ -560,7 +597,7 @@ public final class Main {
         try {
           parser = getParserFromDaemon(
               context,
-              repositoryFactory,
+              rootRepository,
               commandEvent,
               buildEventBus,
               clock);
@@ -578,7 +615,7 @@ public final class Main {
             rootRepository.getBuckConfig(),
             new ExecutableFinder());
         parser = Parser.createParser(
-            repositoryFactory,
+            rootRepository,
             pythonBuckConfig.getPythonInterpreter(),
             parserConfig.getAllowEmptyGlobs(),
             parserConfig.getEnforceBuckPackageBoundary(),
@@ -595,7 +632,6 @@ public final class Main {
       } else {
         processManager = Optional.<ProcessManager>of(new PkillProcessManager(processExecutor));
       }
-      BuckConfig buckConfig = rootRepository.getBuckConfig();
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
           createAndroidPlatformTargetSupplier(
               rootRepository.getAndroidDirectoryResolver(),
@@ -753,12 +789,12 @@ public final class Main {
 
   private Parser getParserFromDaemon(
       Optional<NGContext> context,
-      RepositoryFactory repositoryFactory,
+      Repository repository,
       CommandEvent commandEvent,
       BuckEventBus eventBus,
       Clock clock) throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
-    Daemon daemon = getDaemon(repositoryFactory, clock, objectMapper);
+    Daemon daemon = getDaemon(repository, clock, objectMapper);
     daemon.watchClient(context.get());
     daemon.watchFileSystem(commandEvent, eventBus);
     daemon.initWebServer();
@@ -767,11 +803,11 @@ public final class Main {
 
   private Optional<WebServer> getWebServerIfDaemon(
       Optional<NGContext> context,
-      RepositoryFactory repositoryFactory,
+      Repository repository,
       Clock clock)
       throws IOException, InterruptedException  {
     if (context.isPresent()) {
-      Daemon daemon = getDaemon(repositoryFactory, clock, objectMapper);
+      Daemon daemon = getDaemon(repository, clock, objectMapper);
       return daemon.getWebServer();
     }
     return Optional.absent();

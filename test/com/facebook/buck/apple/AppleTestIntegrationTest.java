@@ -69,7 +69,7 @@ public class AppleTestIntegrationTest {
         buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path projectRoot = Paths.get(tmp.getRootPath().toFile().getCanonicalPath());
+    Path projectRoot = tmp.getRootPath().toRealPath();
 
     Path inputPath = projectRoot.resolve(
         buildTarget.getBasePath());
@@ -360,8 +360,6 @@ public class AppleTestIntegrationTest {
       Path link,
       Path target) throws IOException {
     assertTrue(Files.isSymbolicLink(link));
-    assertEquals(
-        target,
-        Files.readSymbolicLink(link));
+    assertTrue(Files.isSameFile(target, Files.readSymbolicLink(link)));
   }
 }

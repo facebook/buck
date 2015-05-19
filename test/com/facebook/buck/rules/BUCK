@@ -10,7 +10,6 @@ java_library(
     'FakeBuildRuleParamsBuilder.java',
     'FakeExportDependenciesRule.java',
     'FakeOnDiskBuildInfo.java',
-    'FakeRepositoryFactory.java',
     'FakeRuleKeyBuilderFactory.java',
     'FakeTestRule.java',
     'NonCheckingBuildRuleFactoryParams.java',
