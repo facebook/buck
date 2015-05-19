@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -106,7 +107,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             args, params.getProjectFilesystem()),
         args.labels.get(),
         args.contacts.get(),
-        args.proguardConfig,
+        args.proguardConfig.transform(SourcePaths.toSourcePath(params.getProjectFilesystem())),
         additionalClasspathEntries,
         javacOptions.build(),
         args.vmArgs.get(),

@@ -55,7 +55,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       SourcePathResolver resolver,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
-      Optional<Path> proguardConfig,
+      Optional<SourcePath> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,

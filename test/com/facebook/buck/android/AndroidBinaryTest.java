@@ -112,7 +112,8 @@ public class AndroidBinaryTest {
     androidBinary.addProguardCommands(
         ImmutableSet.copyOf(
             pathResolver.getAllPaths(packageableCollection.getClasspathEntriesToDex())),
-        packageableCollection.getProguardConfigs(),
+        ImmutableSet.copyOf(
+            pathResolver.getAllPaths(packageableCollection.getProguardConfigs())),
         commands,
         buildableContext);
 
@@ -170,8 +171,8 @@ public class AndroidBinaryTest {
       BuildRule androidResourceRule = ruleResolver.addToIndex(
           AndroidResourceRuleBuilder.newBuilder()
               .setResolver(new SourcePathResolver(ruleResolver))
-              .setAssets(Paths.get(assetDirectory))
-              .setRes(resDirectory == null ? null : Paths.get(resDirectory))
+              .setAssets(new TestSourcePath(assetDirectory))
+              .setRes(resDirectory == null ? null : new TestSourcePath(resDirectory))
               .setBuildTarget(resourceOnebuildTarget)
               .build());
 

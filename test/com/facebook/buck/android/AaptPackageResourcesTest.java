@@ -30,6 +30,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
@@ -74,7 +75,7 @@ public class AaptPackageResourcesTest {
         /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         ImmutableList.<HasAndroidResourceDeps>of(),
-        ImmutableSet.<Path>of(),
+        ImmutableSet.<SourcePath>of(),
         PackageType.DEBUG,
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
@@ -106,6 +107,7 @@ public class AaptPackageResourcesTest {
   @Test
   public void testCreateAllAssetsDirectoryWithOneAssetsDirectory() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     // Two android_library deps, one of which has an assets directory.
     AndroidBinaryTest.createAndroidLibraryRule(
@@ -138,7 +140,7 @@ public class AaptPackageResourcesTest {
         /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         ImmutableList.<HasAndroidResourceDeps>of(),
-        ImmutableSet.<Path>of(),
+        ImmutableSet.<SourcePath>of(),
         PackageType.DEBUG,
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
@@ -147,7 +149,7 @@ public class AaptPackageResourcesTest {
         /* skipCrunchPngs */ false);
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
-    Set<Path> assetsDirectories = ImmutableSet.of(resourceOne.getAssets());
+    Set<SourcePath> assetsDirectories = ImmutableSet.of(resourceOne.getAssets());
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.touch(Paths.get("java/src/com/facebook/base/assets2/fonts/Theinhardt-Medium.otf"));
@@ -164,8 +166,11 @@ public class AaptPackageResourcesTest {
     filesystem.touch(Paths.get("facebook/base/assets2/fonts/something~"));
 
     // Invoke createAllAssetsDirectory(), the method under test.
-    Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
-        assetsDirectories, commands, filesystem);
+    Optional<Path> allAssetsDirectory =
+        aaptPackageResources.createAllAssetsDirectory(
+            ImmutableSet.copyOf(pathResolver.getAllPaths(assetsDirectories)),
+            commands,
+            filesystem);
     EasyMock.verify(resourcesFilter);
 
     // Verify that the existing assets/ directory will be passed to aapt.
@@ -185,6 +190,7 @@ public class AaptPackageResourcesTest {
   @Test
   public void testCreateAllAssetsDirectoryWithMultipleAssetsDirectories() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     // Two android_library deps, each with an assets directory.
     AndroidBinaryTest.createAndroidLibraryRule(
@@ -215,7 +221,7 @@ public class AaptPackageResourcesTest {
         /* manifest */ new TestSourcePath("facebook/base/AndroidManifest.xml"),
         resourcesFilter,
         ImmutableList.<HasAndroidResourceDeps>of(),
-        ImmutableSet.<Path>of(),
+        ImmutableSet.<SourcePath>of(),
         PackageType.DEBUG,
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
@@ -229,7 +235,7 @@ public class AaptPackageResourcesTest {
         BuildTargetFactory.newInstance("//facebook/base:libraryTwo_resources"));
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
-    Set<Path> assetsDirectories = ImmutableSet.of(
+    Set<SourcePath> assetsDirectories = ImmutableSet.of(
         resourceOne.getAssets(),
         resourceTwo.getAssets());
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
@@ -259,8 +265,11 @@ public class AaptPackageResourcesTest {
     filesystem.touch(Paths.get("facebook/base/assets2/fonts/something~"));
 
     // Invoke createAllAssetsDirectory(), the method under test.
-    Optional<Path> allAssetsDirectory = aaptPackageResources.createAllAssetsDirectory(
-        assetsDirectories, commands, filesystem);
+    Optional<Path> allAssetsDirectory =
+        aaptPackageResources.createAllAssetsDirectory(
+            ImmutableSet.copyOf(pathResolver.getAllPaths(assetsDirectories)),
+            commands,
+            filesystem);
     EasyMock.verify(resourcesFilter);
 
     // Verify that an assets/ directory will be created and passed to aapt.

@@ -103,7 +103,7 @@ public class ProjectTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(new SourcePathResolver(ruleResolver))
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/base:res"))
-            .setRes(Paths.get("android_res/base/res"))
+            .setRes(new TestSourcePath("android_res/base/res"))
             .setRDotJavaPackage("com.facebook")
             .build());
 

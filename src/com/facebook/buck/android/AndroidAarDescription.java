@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -29,7 +28,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -130,9 +128,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ASSEMBLE_ASSETS_FLAVOR),
         Suppliers.ofInstance(androidResourceDeclaredDeps),
         Suppliers.ofInstance(androidResourceExtraDeps));
-    ImmutableCollection<SourcePath> assetsDirectories = getSourcePathForDirectories(
-        assembleAssetsParams.getProjectFilesystem(),
-        packageableCollection.getAssetsDirectories());
+    ImmutableCollection<SourcePath> assetsDirectories =
+        packageableCollection.getAssetsDirectories();
     AssembleDirectories assembleAssetsDirectories = new AssembleDirectories(
         assembleAssetsParams,
         pathResolver,
@@ -144,9 +141,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ASSEMBLE_RESOURCE_FLAVOR),
         Suppliers.ofInstance(androidResourceDeclaredDeps),
         Suppliers.ofInstance(androidResourceExtraDeps));
-    ImmutableCollection<SourcePath> resDirectories = getSourcePathForDirectories(
-        assembleResourceParams.getProjectFilesystem(),
-        packageableCollection.getResourceDetails().getResourceDirectories());
+    ImmutableCollection<SourcePath> resDirectories =
+        packageableCollection.getResourceDetails().getResourceDirectories();
     AssembleDirectories assembleResourceDirectories = new AssembleDirectories(
         assembleResourceParams,
         pathResolver,
@@ -167,10 +163,14 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         androidResourceParams,
         pathResolver,
         /* deps */ ImmutableSortedSet.copyOf(depRules.build()),
-        assembleResourceDirectories.getPathToOutputFile(),
+        new BuildTargetSourcePath(
+            assembleResourceDirectories.getProjectFilesystem(),
+            assembleResourceDirectories.getBuildTarget()),
         /* resSrcs */ ImmutableSortedSet.<Path>of(),
         /* rDotJavaPackage */ null,
-        assembleAssetsDirectories.getPathToOutputFile(),
+        new BuildTargetSourcePath(
+            assembleAssetsDirectories.getProjectFilesystem(),
+            assembleAssetsDirectories.getBuildTarget()),
         /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
         new BuildTargetSourcePath(manifest.getProjectFilesystem(), manifest.getBuildTarget()),
         /* hasWhitelistedStrings */ false);
@@ -208,16 +208,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         originalBuildTarget,
         ruleResolver,
         buildTargets);
-  }
-
-  private ImmutableList<SourcePath> getSourcePathForDirectories(
-      ProjectFilesystem projectFilesystem,
-      ImmutableCollection<Path> directories) {
-    ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
-    for (Path directory : directories) {
-      builder.add(new PathSourcePath(projectFilesystem, directory));
-    }
-    return builder.build();
   }
 
   @SuppressFieldNotInitialized

@@ -49,7 +49,7 @@ public class AndroidPackageableCollector {
   private final ImmutableList.Builder<BuildTarget> resourcesWithNonEmptyResDir =
       ImmutableList.builder();
   private final ImmutableList.Builder<BuildTarget> resourcesWithAssets = ImmutableList.builder();
-  private final ImmutableList.Builder<Path> resourceDirectories = ImmutableList.builder();
+  private final ImmutableList.Builder<SourcePath> resourceDirectories = ImmutableList.builder();
 
   // Map is used instead of ImmutableMap.Builder for its containsKey() method.
   private final Map<String, BuildConfigFields> buildConfigs = Maps.newHashMap();
@@ -115,7 +115,7 @@ public class AndroidPackageableCollector {
 
   public AndroidPackageableCollector addStringWhitelistedResourceDirectory(
       BuildTarget owner,
-      Path resourceDir) {
+      SourcePath resourceDir) {
     if (resourcesToExclude.contains(owner)) {
       return this;
     }
@@ -125,7 +125,9 @@ public class AndroidPackageableCollector {
     return this;
   }
 
-  public AndroidPackageableCollector addResourceDirectory(BuildTarget owner, Path resourceDir) {
+  public AndroidPackageableCollector addResourceDirectory(
+      BuildTarget owner,
+      SourcePath resourceDir) {
     if (resourcesToExclude.contains(owner)) {
       return this;
     }
@@ -134,7 +136,7 @@ public class AndroidPackageableCollector {
     return this;
   }
 
-  private void doAddResourceDirectory(BuildTarget owner, Path resourceDir) {
+  private void doAddResourceDirectory(BuildTarget owner, SourcePath resourceDir) {
     resourcesWithNonEmptyResDir.add(owner);
     resourceDirectories.add(resourceDir);
   }
@@ -161,7 +163,9 @@ public class AndroidPackageableCollector {
     return this;
   }
 
-  public AndroidPackageableCollector addAssetsDirectory(BuildTarget owner, Path assetsDirectory) {
+  public AndroidPackageableCollector addAssetsDirectory(
+      BuildTarget owner,
+      SourcePath assetsDirectory) {
     if (resourcesToExclude.contains(owner)) {
       return this;
     }
@@ -171,7 +175,9 @@ public class AndroidPackageableCollector {
     return this;
   }
 
-  public AndroidPackageableCollector addProguardConfig(BuildTarget owner, Path proguardConfig) {
+  public AndroidPackageableCollector addProguardConfig(
+      BuildTarget owner,
+      SourcePath proguardConfig) {
     if (!buildTargetsToExcludeFromDex.contains(owner)) {
       collectionBuilder.addProguardConfigs(proguardConfig);
     }

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -74,13 +75,15 @@ public class AndroidResourceTest {
     AndroidResource androidResource1 = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(pathResolver)
         .setBuildRuleParams(params)
-        .setRes(Paths.get("java/src/com/facebook/base/res"))
-        .setResSrcs(ImmutableSortedSet.of(
-            Paths.get("java/src/com/facebook/base/res/drawable/A.xml")))
+        .setRes(new TestSourcePath("java/src/com/facebook/base/res"))
+        .setResSrcs(
+            ImmutableSortedSet.of(
+                Paths.get("java/src/com/facebook/base/res/drawable/A.xml")))
         .setRDotJavaPackage("com.facebook")
-        .setAssets(Paths.get("java/src/com/facebook/base/assets"))
-        .setAssetsSrcs(ImmutableSortedSet.of(
-            Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
+        .setAssets(new TestSourcePath("java/src/com/facebook/base/assets"))
+        .setAssetsSrcs(
+            ImmutableSortedSet.of(
+                Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
         .setManifest(
             new PathSourcePath(
                 projectFilesystem,
@@ -90,12 +93,14 @@ public class AndroidResourceTest {
     AndroidResource androidResource2 = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(pathResolver)
         .setBuildRuleParams(params)
-        .setRes(Paths.get("java/src/com/facebook/base/res"))
-        .setResSrcs(ImmutableSortedSet.of(
+        .setRes(new TestSourcePath("java/src/com/facebook/base/res"))
+        .setResSrcs(
+            ImmutableSortedSet.of(
                 Paths.get("java/src/com/facebook/base/res/drawable/C.xml")))
         .setRDotJavaPackage("com.facebook")
-        .setAssets(Paths.get("java/src/com/facebook/base/assets"))
-        .setAssetsSrcs(ImmutableSortedSet.of(
+        .setAssets(new TestSourcePath("java/src/com/facebook/base/assets"))
+        .setAssetsSrcs(
+            ImmutableSortedSet.of(
                 Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
         .setManifest(
             new PathSourcePath(
@@ -132,7 +137,7 @@ public class AndroidResourceTest {
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(Paths.get("android_res/com/example/res1"))
+            .setRes(new TestSourcePath("android_res/com/example/res1"))
             .build());
     setAndroidResourceBuildOutput(resourceRule1, "a");
     BuildRule resourceRule2 = ruleResolver.addToIndex(
@@ -176,7 +181,7 @@ public class AndroidResourceTest {
         new FakeBuildRuleParamsBuilder("//foo:bar").build(),
         new SourcePathResolver(new BuildRuleResolver()),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        Paths.get("foo/res"),
+        new TestSourcePath("foo/res"),
         ImmutableSortedSet.of(Paths.get("foo/res/values/strings.xml")),
         /* rDotJavaPackage */ "com.example.android",
         /* assets */ null,
@@ -193,7 +198,7 @@ public class AndroidResourceTest {
         new FakeBuildRuleParamsBuilder("//foo:bar").build(),
         new SourcePathResolver(new BuildRuleResolver()),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        Paths.get("foo/res"),
+        new TestSourcePath("foo/res"),
         ImmutableSortedSet.of(Paths.get("foo/res/values/strings.xml")),
         /* rDotJavaPackage */ null,
         /* assets */ null,

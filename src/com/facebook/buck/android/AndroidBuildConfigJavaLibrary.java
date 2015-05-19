@@ -56,7 +56,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
                 androidBuildConfig.getProjectFilesystem(),
                 androidBuildConfig.getBuildTarget())),
         /* resources */ ImmutableSortedSet.<SourcePath>of(),
-        /* proguardConfig */ Optional.<Path>absent(),
+        /* proguardConfig */ Optional.<SourcePath>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),

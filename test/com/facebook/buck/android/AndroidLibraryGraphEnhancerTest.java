@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -45,8 +46,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.nio.file.Paths;
 
 public class AndroidLibraryGraphEnhancerTest {
 
@@ -74,14 +73,14 @@ public class AndroidLibraryGraphEnhancerTest {
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(Paths.get("android_res/com/example/res1"))
+            .setRes(new TestSourcePath("android_res/com/example/res1"))
             .build());
     BuildRule resourceRule2 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(Paths.get("android_res/com/example/res2"))
+            .setRes(new TestSourcePath("android_res/com/example/res2"))
             .build());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
@@ -123,14 +122,14 @@ public class AndroidLibraryGraphEnhancerTest {
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(Paths.get("android_res/com/example/res1"))
+            .setRes(new TestSourcePath("android_res/com/example/res1"))
             .build());
     BuildRule resourceRule2 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
             .setRDotJavaPackage("com.facebook")
-            .setRes(Paths.get("android_res/com/example/res2"))
+            .setRes(new TestSourcePath("android_res/com/example/res2"))
             .build());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)

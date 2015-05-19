@@ -20,10 +20,15 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -36,9 +41,9 @@ import java.nio.file.Paths;
 public class RobolectricTestRuleTest {
 
   private class ResourceRule implements HasAndroidResourceDeps {
-    private final Path resourceDirectory;
+    private final SourcePath resourceDirectory;
 
-    public ResourceRule(Path resourceDirectory) {
+    public ResourceRule(SourcePath resourceDirectory) {
       this.resourceDirectory = resourceDirectory;
     }
 
@@ -58,12 +63,12 @@ public class RobolectricTestRuleTest {
     }
 
     @Override
-    public Path getRes() {
+    public SourcePath getRes() {
       return resourceDirectory;
     }
 
     @Override
-    public Path getAssets() {
+    public SourcePath getAssets() {
       return null;
     }
 
@@ -79,7 +84,8 @@ public class RobolectricTestRuleTest {
     ImmutableList.Builder<HasAndroidResourceDeps> resDepsBuilder =
         ImmutableList.builder();
     for (int i = 0; i < 10; i++) {
-      resDepsBuilder.add(new ResourceRule(Paths.get("java/src/com/facebook/base/" + i + "/res")));
+      resDepsBuilder.add(
+          new ResourceRule(new TestSourcePath("java/src/com/facebook/base/" + i + "/res")));
     }
     ImmutableList<HasAndroidResourceDeps> resDeps = resDepsBuilder.build();
 
@@ -99,6 +105,7 @@ public class RobolectricTestRuleTest {
   @Test
   public void testRobolectricResourceDependenciesVmArgHasCorrectFormat() throws IOException {
     BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path resDep1 = Paths.get("res1");
     Path resDep2 = Paths.get("res2");
     Path resDep3 = Paths.get("res3");
@@ -121,9 +128,9 @@ public class RobolectricTestRuleTest {
 
     String result = robolectricTest.getRobolectricResourceDirectories(
         ImmutableList.<HasAndroidResourceDeps>of(
-            new ResourceRule(resDep1),
-            new ResourceRule(resDep2),
-            new ResourceRule(resDep3)));
+            new ResourceRule(new PathSourcePath(filesystem, resDep1)),
+            new ResourceRule(new PathSourcePath(filesystem, resDep2)),
+            new ResourceRule(new PathSourcePath(filesystem, resDep3))));
 
     assertEquals(expectedVmArgBuilder.toString(), result);
   }
