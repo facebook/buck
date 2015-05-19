@@ -145,10 +145,16 @@ class AndroidPrebuiltAarGraphEnhancer {
         androidResourceParams,
         pathResolver,
         /* deps */ ImmutableSortedSet.<BuildRule>of(unzipAar),
-        unzipAar.getResDirectory(),
+        new BuildTargetSourcePath(
+            unzipAar.getProjectFilesystem(),
+            unzipAar.getBuildTarget(),
+            unzipAar.getResDirectory()),
         resSrcs,
         /* rDotJavaPackage */ null,
-        /* assets */ unzipAar.getAssetsDirectory(),
+        /* assets */ new BuildTargetSourcePath(
+            unzipAar.getProjectFilesystem(),
+            unzipAar.getBuildTarget(),
+            unzipAar.getAssetsDirectory()),
         assetsSrcs,
         manifest,
         /* hasWhitelistedStrings */ false);
@@ -167,7 +173,10 @@ class AndroidPrebuiltAarGraphEnhancer {
     return new AndroidPrebuiltAar(
         androidLibraryParams,
         pathResolver,
-        unzipAar.getProguardConfig(),
+        new BuildTargetSourcePath(
+            unzipAar.getProjectFilesystem(),
+            unzipAar.getBuildTarget(),
+            unzipAar.getProguardConfig()),
         unzipAar.getNativeLibsDirectory(),
         prebuiltJar,
         androidResource,

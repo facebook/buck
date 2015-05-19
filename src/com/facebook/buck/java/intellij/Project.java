@@ -416,7 +416,12 @@ public class Project {
         module.assetFolder = intellijConfig.getAndroidAssets().orNull();
       } else if (projectRule instanceof AndroidResource) {
         AndroidResource androidResource = (AndroidResource) projectRule;
-        module.resFolder = createRelativePath(androidResource.getRes(), target);
+        module.resFolder =
+            createRelativePath(
+                Optional.fromNullable(androidResource.getRes())
+                    .transform(resolver.getPathFunction())
+                    .orNull(),
+                target);
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;
       } else if (projectRule instanceof AndroidBinary) {

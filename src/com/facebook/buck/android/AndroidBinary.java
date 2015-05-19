@@ -499,7 +499,8 @@ public class AndroidBinary extends AbstractBuildRule implements
     if (packageType.isBuildWithObfuscation()) {
       classpathEntriesToDex = addProguardCommands(
           classpathEntriesToDex,
-          packageableCollection.getProguardConfigs(),
+          ImmutableSet.copyOf(
+              getResolver().getAllPaths(packageableCollection.getProguardConfigs())),
           steps,
           buildableContext);
     }

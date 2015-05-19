@@ -104,7 +104,7 @@ public class AndroidPackageableCollectorTest {
             new PathSourcePath(
                 projectFilesystem,
                 Paths.get("java/src/com/facebook/module/AndroidManifest.xml")))
-        .setAssets(Paths.get("assets"))
+        .setAssets(new TestSourcePath("assets"))
         .build();
     ruleResolver.addToIndex(manifestRule);
 
@@ -154,7 +154,7 @@ public class AndroidPackageableCollectorTest {
     assertEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",
-        ImmutableSet.of(Paths.get("assets")),
+        ImmutableSet.of(new TestSourcePath("assets")),
         packageableCollection.getAssetsDirectories());
     assertEquals(
         "Because a native library was declared as a dependency, it should be added to the " +
@@ -168,7 +168,7 @@ public class AndroidPackageableCollectorTest {
             .getLibraryPath()),
         packageableCollection.getNativeLibAssetsDirectories());
     assertEquals(
-        ImmutableSet.of(Paths.get("debug.pro")),
+        ImmutableSet.of(new TestSourcePath("debug.pro")),
         packageableCollection.getProguardConfigs());
   }
 
@@ -199,7 +199,7 @@ public class AndroidPackageableCollectorTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
-            .setRes(Paths.get("res_c"))
+            .setRes(new TestSourcePath("res_c"))
             .setRDotJavaPackage("com.facebook")
             .build());
 
@@ -207,7 +207,7 @@ public class AndroidPackageableCollectorTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
-            .setRes(Paths.get("res_b"))
+            .setRes(new TestSourcePath("res_b"))
             .setRDotJavaPackage("com.facebook")
             .setDeps(ImmutableSortedSet.of(c))
             .build());
@@ -216,7 +216,7 @@ public class AndroidPackageableCollectorTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
-            .setRes(Paths.get("res_d"))
+            .setRes(new TestSourcePath("res_d"))
             .setRDotJavaPackage("com.facebook")
             .setDeps(ImmutableSortedSet.of(c))
             .build());
@@ -225,7 +225,7 @@ public class AndroidPackageableCollectorTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
             .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
-            .setRes(Paths.get("res_a"))
+            .setRes(new TestSourcePath("res_a"))
             .setRDotJavaPackage("com.facebook")
             .setDeps(ImmutableSortedSet.of(b, c, d))
             .build());

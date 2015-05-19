@@ -49,13 +49,13 @@ interface AbstractAndroidPackageableCollection {
      * A list of "res" directories that should be passed to the aapt command to build the APK,
      * sorted topologically.
      */
-    public abstract ImmutableList<Path> getResourceDirectories();
+    public abstract ImmutableList<SourcePath> getResourceDirectories();
 
     /**
      * A set of "res" directories that contain "whitelisted" strings, i.e. the strings-as-assets
      * resource filter does not affect these directories.
      */
-    public abstract Set<Path> getWhitelistedStringDirectories();
+    public abstract ImmutableSet<SourcePath> getWhitelistedStringDirectories();
 
     /**
      * A list of build targets belonging to {@link com.facebook.buck.android.AndroidResource}s with
@@ -101,12 +101,12 @@ interface AbstractAndroidPackageableCollection {
    * Directories containing assets to be included directly in the apk,
    * under the "assets" directory.
    */
-  Set<Path> getAssetsDirectories();
+  ImmutableSet<SourcePath> getAssetsDirectories();
 
   /**
    * Proguard configurations to include when running release builds.
    */
-  Set<Path> getProguardConfigs();
+  ImmutableSet<SourcePath> getProguardConfigs();
 
   /**
    * Java classes (jars) to include in the package.

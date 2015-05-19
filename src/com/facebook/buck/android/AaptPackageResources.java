@@ -88,7 +88,7 @@ public class AaptPackageResources extends AbstractBuildRule
   @AddToRuleKey
   private final SourcePath manifest;
   private final FilteredResourcesProvider filteredResourcesProvider;
-  private final ImmutableSet<Path> assetsDirectories;
+  private final ImmutableSet<SourcePath> assetsDirectories;
   @AddToRuleKey
   private final PackageType packageType;
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
@@ -108,7 +108,7 @@ public class AaptPackageResources extends AbstractBuildRule
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
-      ImmutableSet<Path> assetsDirectories,
+      ImmutableSet<SourcePath> assetsDirectories,
       PackageType packageType,
       JavacOptions javacOptions,
       boolean rDotJavaNeedsDexing,
@@ -212,7 +212,7 @@ public class AaptPackageResources extends AbstractBuildRule
         ImmutableList.Builder<Step> commands = ImmutableList.builder();
         try {
           createAllAssetsDirectory(
-              assetsDirectories,
+              ImmutableSet.copyOf(getResolver().getAllPaths(assetsDirectories)),
               commands,
               context.getProjectFilesystem());
         } catch (IOException e) {
@@ -265,7 +265,7 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(
         new AaptStep(
             getAndroidManifestXml(),
-            filteredResourcesProvider.getResDirectories(),
+            getResolver().getAllPaths(filteredResourcesProvider.getResDirectories()),
             assetsDirectory,
             getResourceApkPath(),
             rDotTxtDir,
@@ -353,7 +353,7 @@ public class AaptPackageResources extends AbstractBuildRule
       // produces a JSON with android resource id's and xml paths for each string resource.
       GenStringSourceMapStep genNativeStringInfo = new GenStringSourceMapStep(
           rDotTxtDir,
-          filteredResourcesProvider.getResDirectories(),
+          getResolver().getAllPaths(filteredResourcesProvider.getResDirectories()),
           outputDirPath);
       steps.add(genNativeStringInfo);
 

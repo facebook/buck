@@ -41,7 +41,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
   public AndroidPrebuiltAar(
       BuildRuleParams androidLibraryParams,
       SourcePathResolver resolver,
-      Path proguardConfig,
+      SourcePath proguardConfig,
       Path nativeLibsDirectory,
       PrebuiltJar prebuiltJar,
       AndroidResource androidResource,
@@ -83,13 +83,13 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
 
   @Nullable
   @Override
-  public Path getRes() {
+  public SourcePath getRes() {
     return androidResource.getRes();
   }
 
   @Nullable
   @Override
-  public Path getAssets() {
+  public SourcePath getAssets() {
     return androidResource.getAssets();
   }
 
