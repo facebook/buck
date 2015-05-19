@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -66,6 +67,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       BuildRuleResolver resolver,
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    ImmutableList<String> vmArgs = args.vmArgs.get();
 
     JavacOptions.Builder javacOptions = JavaLibraryDescription.getJavacOptions(
         resolver,
@@ -110,7 +112,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         args.proguardConfig.transform(SourcePaths.toSourcePath(params.getProjectFilesystem())),
         additionalClasspathEntries,
         javacOptions.build(),
-        args.vmArgs.get(),
+        vmArgs,
         JavaTestDescription.validateAndGetSourcesUnderTest(
             args.sourceUnderTest.get(),
             params.getBuildTarget(),
