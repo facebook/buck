@@ -412,16 +412,26 @@ public class ProjectCommand extends BuildCommand {
     ActionGraph actionGraph = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
         new BuildTargetNodeToBuildRuleTransformer()).apply(targetGraphAndTargets.getTargetGraph());
-    SourcePathResolver resolver =
-        new SourcePathResolver(new BuildRuleResolver(actionGraph.getNodes()));
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(actionGraph.getNodes());
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
 
     IjProject project = new IjProject(
         targetGraphAndTargets,
         getJavaPackageFinder(params.getBuckConfig()),
-        resolver,
+        buildRuleResolver,
+        sourcePathResolver,
         params.getRepository().getFilesystem());
 
-    project.write();
+    ImmutableSet<BuildTarget> requiredBuildTargets = project.write();
+
+    if (!requiredBuildTargets.isEmpty()) {
+      BuildCommand buildCommand = new BuildCommand();
+      buildCommand.setArguments(
+          FluentIterable.from(requiredBuildTargets)
+              .transform(Functions.toStringFunction())
+              .toList());
+      return buildCommand.run(params);
+    }
 
     return 0;
   }

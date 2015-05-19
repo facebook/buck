@@ -40,14 +40,15 @@
 }%
     </content>
 %dependencies:{dep |
-  %if(dep.isModule)%
-    <orderEntry type="module" module-name="%dep.name%" %\\%
-  %else%
-    <orderEntry type="%dep.type%" name="%dep.name%" level="project" %\\%
+  %if(dep.module)%
+    <orderEntry type="%dep.type%" module-name="%dep.module.name%" scope="%dep.module.scope%" %\\%
+      %if(dep.module.isExported)% exported="" %endif% />
+  %elseif(dep.library)%
+    <orderEntry type="%dep.type%" name="%dep.library.name%" scope="%dep.library.scope%" level="project" />
+  %elseif(dep.sourceFolder)%
+    <orderEntry type="%dep.type%" forTests="false" />
   %endif%
-      scope="%dep.scope%" %if(dep.isExported)% exported="" %endif% />
 }%
-    <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
   </component>
 </module>

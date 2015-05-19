@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -652,6 +653,8 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testExperimentalBuckProject() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "experimental_project1", temporaryFolder);
     workspace.setUp();

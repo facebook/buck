@@ -21,12 +21,14 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 /**
  * Represents a single IntelliJ module.
@@ -88,16 +90,40 @@ abstract class AbstractIjModule implements IjProjectElement {
   }
 
   @Value.Check
-  protected void moduleDoesntDependOnItself() {
-    ImmutableSet<BuildTarget> deps = getDependencies().keySet();
-    for (TargetNode<?> targetNode : getTargets()) {
-      Preconditions.checkArgument(!deps.contains(targetNode.getBuildTarget()));
+  protected void checkDependencyConsistency() {
+    ImmutableSet<BuildTarget> buildTargets = FluentIterable.from(getTargets())
+        .transform(TargetNode.TO_TARGET)
+        .toSet();
+
+    for (Map.Entry<BuildTarget, IjModuleGraph.DependencyType> entry :
+        getDependencies().entrySet()) {
+      BuildTarget depBuildTarget = entry.getKey();
+      IjModuleGraph.DependencyType dependencyType = entry.getValue();
+      boolean isSelfDependency = buildTargets.contains(depBuildTarget);
+
+      if (dependencyType.equals(IjModuleGraph.DependencyType.COMPILED_SHADOW)) {
+        Preconditions.checkArgument(
+            isSelfDependency,
+            "Target %s is a COMPILED_SHADOW dependency of module %s and therefore should be part" +
+                "of its target set.",
+            depBuildTarget,
+            getName());
+      } else {
+        Preconditions.checkArgument(
+            !isSelfDependency,
+            "Target %s is a regular dependency of module %s and therefore should not be part of " +
+                "its target set.",
+            depBuildTarget,
+            getName());
+      }
     }
   }
 
   @Override
   public void addAsDependency(
       IjModuleGraph.DependencyType dependencyType, IjDependencyListBuilder dependencyListBuilder) {
+    Preconditions.checkArgument(
+        !dependencyType.equals(IjModuleGraph.DependencyType.COMPILED_SHADOW));
     IjDependencyListBuilder.Scope scope = IjDependencyListBuilder.Scope.COMPILE;
     if (dependencyType.equals(IjModuleGraph.DependencyType.TEST)) {
       scope = IjDependencyListBuilder.Scope.TEST;

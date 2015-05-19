@@ -53,12 +53,21 @@ public class IjModuleGraph {
      * code.
      */
     PROD,
+    /**
+     * This dependency means that the other element contains a compiled counterpart to this element.
+     * This is used when the current element uses BUCK features which cannot be expressed in
+     * IntelliJ.
+     */
+    COMPILED_SHADOW,
     ;
 
     public static DependencyType merge(DependencyType left, DependencyType right) {
       if (left.equals(right)) {
         return left;
       }
+      Preconditions.checkArgument(
+          !left.equals(COMPILED_SHADOW) && !right.equals(COMPILED_SHADOW),
+          "The COMPILED_SHADOW type cannot be merged with other types.");
       return DependencyType.PROD;
     }
 
@@ -79,8 +88,9 @@ public class IjModuleGraph {
    * BuildTarget can point to one IjModule (many:one mapping), the BuildTargets which
    * can't be prepresented in IntelliJ are missing from this mapping.
    */
-  public static ImmutableMap<BuildTarget, IjModule> createModules(TargetGraph targetGraph) {
-    IjModuleFactory moduleFactory = new IjModuleFactory();
+  public static ImmutableMap<BuildTarget, IjModule> createModules(
+      TargetGraph targetGraph,
+      IjModuleFactory moduleFactory) {
     ImmutableSet<TargetNode<?>> supportedTargets = FluentIterable.from(targetGraph.getNodes())
         .filter(IjModuleFactory.SUPPORTED_MODULE_TYPES_PREDICATE)
         .toSet();
@@ -117,13 +127,11 @@ public class IjModuleGraph {
    * nodes (Ta, Tb) and Ma contains Ta and Mb contains Tb.
    */
   public static IjModuleGraph from(
-      TargetGraph targetGraph,
-      IjLibraryFactory.IjLibraryFactoryResolver libraryFactoryResolver) {
-    final IjLibraryFactory libraryFactory = IjLibraryFactory.create(
-        targetGraph.getNodes(),
-        libraryFactoryResolver);
+      final TargetGraph targetGraph,
+      final IjLibraryFactory libraryFactory,
+      final IjModuleFactory moduleFactory) {
     final ImmutableMap<BuildTarget, IjModule> rulesToModules =
-        createModules(targetGraph);
+        createModules(targetGraph, moduleFactory);
     final ExportedDepsClosureResolver exportedDepsClosureResolver =
         new ExportedDepsClosureResolver(targetGraph);
     ImmutableMap.Builder<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>>
@@ -136,28 +144,42 @@ public class IjModuleGraph {
       for (Map.Entry<BuildTarget, DependencyType> entry : module.getDependencies().entrySet()) {
         BuildTarget depBuildTarget = entry.getKey();
         DependencyType depType = entry.getValue();
+        ImmutableSet<IjProjectElement> depElements;
 
-        ImmutableSet<IjProjectElement> depElements = FluentIterable.from(
-            exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget))
-            .append(depBuildTarget)
-            .transform(
-                new Function<BuildTarget, IjProjectElement>() {
-                  @Nullable
-                  @Override
-                  public IjProjectElement apply(BuildTarget depTarget) {
-                    IjModule depModule = rulesToModules.get(depTarget);
-                    if (depModule != null) {
-                      return depModule;
+        if (depType.equals(DependencyType.COMPILED_SHADOW)) {
+          TargetNode<?> targetNode = Preconditions.checkNotNull(targetGraph.get(depBuildTarget));
+          Optional<IjLibrary> library = libraryFactory.getLibrary(targetNode);
+          if (library.isPresent()) {
+            referencedLibraries.add(library.get());
+            depElements = ImmutableSet.<IjProjectElement>of(library.get());
+          } else {
+            depElements = ImmutableSet.of();
+          }
+        } else {
+          depElements = FluentIterable.from(
+              exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget))
+              .append(depBuildTarget)
+              .transform(
+                  new Function<BuildTarget, IjProjectElement>() {
+                    @Nullable
+                    @Override
+                    public IjProjectElement apply(BuildTarget depTarget) {
+                      IjModule depModule = rulesToModules.get(depTarget);
+                      if (depModule != null) {
+                        return depModule;
+                      }
+                      TargetNode<?> targetNode =
+                          Preconditions.checkNotNull(targetGraph.get(depTarget));
+                      IjLibrary library = libraryFactory.getLibrary(targetNode).orNull();
+                      if (library != null) {
+                        referencedLibraries.add(library);
+                      }
+                      return library;
                     }
-                    IjLibrary library = libraryFactory.getLibrary(depTarget).orNull();
-                    if (library != null) {
-                      referencedLibraries.add(library);
-                    }
-                    return library;
-                  }
-                })
-            .filter(Predicates.notNull())
-            .toSet();
+                  })
+              .filter(Predicates.notNull())
+              .toSet();
+        }
 
         for (IjProjectElement depElement : depElements) {
           Preconditions.checkState(!depElement.equals(module));

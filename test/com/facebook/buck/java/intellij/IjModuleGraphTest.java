@@ -29,7 +29,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -350,41 +352,96 @@ public class IjModuleGraphTest {
     assertEquals(2, moduleGraph.getModuleNodes().size());
   }
 
+  @Test
+  public void testCompiledShadow() {
+    TargetNode<?> productGenruleTarget = GenruleBuilder
+        .newGenruleBuilder(
+            BuildTargetFactory.newInstance("//java/src/com/facebook/product:genrule"))
+        .build();
+
+    TargetNode<?> libraryJavaTarget = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook/library:library"))
+        .build();
+
+    TargetNode<?> productTarget = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook/product:product"))
+        .addSrc(Paths.get("java/src/com/facebook/File.java"))
+        .addSrcTarget(productGenruleTarget.getBuildTarget())
+        .addDep(libraryJavaTarget.getBuildTarget())
+        .build();
+
+    IjModuleGraph moduleGraph = createModuleGraph(
+        ImmutableSet.of(
+            productGenruleTarget,
+            libraryJavaTarget,
+            productTarget),
+        ImmutableMap.<TargetNode<?>, Path>of(productTarget, Paths.get("buck-out/product.jar")));
+
+    IjModule libraryModule = getModuleForTarget(moduleGraph, libraryJavaTarget);
+    IjModule productModule = getModuleForTarget(moduleGraph, productTarget);
+    IjLibrary productLibrary = getLibraryForTarget(moduleGraph, productTarget);
+
+    assertEquals(
+        ImmutableMap.of(
+            libraryModule, IjModuleGraph.DependencyType.PROD,
+            productLibrary, IjModuleGraph.DependencyType.COMPILED_SHADOW),
+        moduleGraph.getDepsFor(productModule));
+  }
+
   public static IjModuleGraph createModuleGraph(ImmutableSet<TargetNode<?>> targets) {
+    return createModuleGraph(targets, ImmutableMap.<TargetNode<?>, Path>of());
+  }
+
+  public static IjModuleGraph createModuleGraph(
+      ImmutableSet<TargetNode<?>> targets,
+      final ImmutableMap<TargetNode<?>, Path> javaLibraryPaths) {
     final SourcePathResolver sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
-    IjLibraryFactory.IjLibraryFactoryResolver sourceOnlyResolver =
-        new IjLibraryFactory.IjLibraryFactoryResolver() {
+    DefaultIjLibraryFactory.IjLibraryFactoryResolver sourceOnlyResolver =
+        new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
             return sourcePathResolver.getPath(path);
           }
+
+          @Override
+          public Optional<Path> getPathIfJavaLibrary(TargetNode<?> targetNode) {
+            return Optional.fromNullable(javaLibraryPaths.get(targetNode));
+          }
         };
-    return IjModuleGraph.from(TargetGraphFactory.newInstance(targets), sourceOnlyResolver);
+    IjModuleFactory moduleFactory = new IjModuleFactory();
+    IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
+    return IjModuleGraph.from(
+        TargetGraphFactory.newInstance(targets),
+        libraryFactory,
+        moduleFactory);
   }
 
   public static IjProjectElement getProjectElementForTarget(
       IjModuleGraph graph,
+      Class<? extends IjProjectElement> type,
       final TargetNode<?> target) {
-    return FluentIterable.from(graph.getNodes()).firstMatch(
-        new Predicate<IjProjectElement>() {
-          @Override
-          public boolean apply(IjProjectElement input) {
-            return FluentIterable.from(input.getTargets()).anyMatch(
-                new Predicate<TargetNode<?>>() {
-                  @Override
-                  public boolean apply(TargetNode<?> input) {
-                    return input.getBuildTarget().equals(target.getBuildTarget());
-                  }
-                });
-          }
-        }).get();
+    return FluentIterable.from(graph.getNodes())
+        .filter(type)
+        .firstMatch(
+            new Predicate<IjProjectElement>() {
+              @Override
+              public boolean apply(IjProjectElement input) {
+                return FluentIterable.from(input.getTargets()).anyMatch(
+                    new Predicate<TargetNode<?>>() {
+                      @Override
+                      public boolean apply(TargetNode<?> input) {
+                        return input.getBuildTarget().equals(target.getBuildTarget());
+                      }
+                    });
+              }
+            }).get();
   }
 
   public static IjModule getModuleForTarget(IjModuleGraph graph, final TargetNode<?> target) {
-    return (IjModule) getProjectElementForTarget(graph, target);
+    return (IjModule) getProjectElementForTarget(graph, IjModule.class, target);
   }
 
   public static IjLibrary getLibraryForTarget(IjModuleGraph graph, final TargetNode<?> target) {
-    return (IjLibrary) getProjectElementForTarget(graph, target);
+    return (IjLibrary) getProjectElementForTarget(graph, IjLibrary.class, target);
   }
 }

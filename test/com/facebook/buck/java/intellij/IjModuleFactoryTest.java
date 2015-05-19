@@ -230,6 +230,45 @@ public class IjModuleFactoryTest {
   }
 
   @Test
+  public void testCompiledShadowDep() {
+    IjModuleFactory factory = new IjModuleFactory();
+
+    Path moduleBasePath = Paths.get("java/com/example");
+    BuildTarget genruleBuildTarget =
+        BuildTargetFactory.newInstance("//java/com/example/base:genrule");
+
+    TargetNode<?> javaLibWithGenrule = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base_genrule"))
+        .addSrcTarget(genruleBuildTarget)
+        .build();
+
+    TargetNode<?> javaLibWithAnnotationProcessor = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base_annotation"))
+        .addSrc(Paths.get("java/com/example/base/Base.java"))
+        .setAnnotationProcessors(ImmutableSet.of(":annotation_processor"))
+        .build();
+
+
+    IjModule moduleJavaLibWithGenrule = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.<TargetNode<?>>of(javaLibWithGenrule));
+
+    IjModule moduleJavaLibWithAnnotationProcessor = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.<TargetNode<?>>of(javaLibWithAnnotationProcessor));
+
+    assertEquals(ImmutableMap.of(
+            genruleBuildTarget, IjModuleGraph.DependencyType.PROD,
+            javaLibWithGenrule.getBuildTarget(), IjModuleGraph.DependencyType.COMPILED_SHADOW),
+        moduleJavaLibWithGenrule.getDependencies());
+
+    assertEquals(ImmutableMap.of(
+            javaLibWithAnnotationProcessor.getBuildTarget(),
+            IjModuleGraph.DependencyType.COMPILED_SHADOW),
+        moduleJavaLibWithAnnotationProcessor.getDependencies());
+  }
+
+  @Test
   public void testJavaLibrary() {
     IjModuleFactory factory = new IjModuleFactory();
 

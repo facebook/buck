@@ -1,0 +1,7 @@
+<component name="libraryTable">
+  <library name="library_modules_dep1_generated">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/buck-out/gen/modules/dep1/lib__generated__output/generated.jar!/" />
+    </CLASSES>
+  </library>
+</component>

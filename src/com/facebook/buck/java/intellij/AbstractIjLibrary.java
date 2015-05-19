@@ -56,10 +56,14 @@ abstract class AbstractIjLibrary implements IjProjectElement {
   public void addAsDependency(
       IjModuleGraph.DependencyType dependencyType,
       IjDependencyListBuilder dependencyListBuilder) {
-    IjDependencyListBuilder.Scope scope = IjDependencyListBuilder.Scope.COMPILE;
-    if (dependencyType.equals(IjModuleGraph.DependencyType.TEST)) {
-      scope = IjDependencyListBuilder.Scope.TEST;
+    if (dependencyType.equals(IjModuleGraph.DependencyType.COMPILED_SHADOW)) {
+      dependencyListBuilder.addCompiledShadow(getName());
+    } else {
+      IjDependencyListBuilder.Scope scope = IjDependencyListBuilder.Scope.COMPILE;
+      if (dependencyType.equals(IjModuleGraph.DependencyType.TEST)) {
+        scope = IjDependencyListBuilder.Scope.TEST;
+      }
+      dependencyListBuilder.addLibrary(getName(), scope, false /* exported */);
     }
-    dependencyListBuilder.addLibrary(getName(), scope, false /* exported */);
   }
 }

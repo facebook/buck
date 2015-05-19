@@ -16,9 +16,13 @@
 
 package com.facebook.buck.java.intellij;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryBuilder;
@@ -27,12 +31,15 @@ import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
@@ -55,6 +62,7 @@ public class IjProjectDataPreparerTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void testWriteModule() throws Exception {
     TargetNode<?> guavaTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/guava:guava"))
@@ -71,10 +79,10 @@ public class IjProjectDataPreparerTest {
         IjModuleGraphTest.createModuleGraph(ImmutableSet.of(guavaTargetNode, baseTargetNode));
     IjModule baseModule = IjModuleGraphTest.getModuleForTarget(moduleGraph, baseTargetNode);
 
-    IjProjectTemplateDataPreparer writer =
+    IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(javaPackageFinder, moduleGraph, filesystem);
 
-    ContentRoot contentRoot = writer.getContentRoot(baseModule);
+    ContentRoot contentRoot = dataPreparer.getContentRoot(baseModule);
     assertEquals("file://$MODULE_DIR$/../../java/com/example/base", contentRoot.getUrl());
 
     IjSourceFolder baseSourceFolder = contentRoot.getFolders().first();
@@ -83,17 +91,27 @@ public class IjProjectDataPreparerTest {
     assertEquals("com.example.base", baseSourceFolder.getPackagePrefix());
     assertEquals("file://$MODULE_DIR$/../../java/com/example/base", baseSourceFolder.getUrl());
 
-    ImmutableSet<DependencyEntry> dependencyEntries = writer.getDependencies(baseModule);
-    assertEquals(1, dependencyEntries.size());
-    DependencyEntry baseDepdendencyOnGuava = dependencyEntries.asList().get(0);
-    assertEquals("third_party_guava", baseDepdendencyOnGuava.getName());
-    assertEquals(IjDependencyListBuilder.Type.MODULE, baseDepdendencyOnGuava.getType());
-    assertTrue(baseDepdendencyOnGuava.getIsModule());
-    assertFalse(baseDepdendencyOnGuava.isExported());
-    assertEquals(IjDependencyListBuilder.Scope.COMPILE, baseDepdendencyOnGuava.getScope());
+    assertThat(
+        dataPreparer.getDependencies(baseModule),
+        contains(
+            allOf(
+                hasProperty("type", equalTo(IjDependencyListBuilder.Type.MODULE)),
+                hasProperty("data", equalTo(Optional.of(
+                            DependencyEntryData.builder()
+                                .setName("third_party_guava")
+                                .setScope(IjDependencyListBuilder.Scope.COMPILE)
+                                .setExported(false)
+                                .build()
+                        )))
+            ),
+            allOf(
+                hasProperty("type", equalTo(IjDependencyListBuilder.Type.SOURCE_FOLDER))
+            )
+        ));
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void testDependencies() throws Exception {
     TargetNode<?> hamcrestTargetNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third-party/hamcrest:hamcrest"))
@@ -111,10 +129,15 @@ public class IjProjectDataPreparerTest {
         .addSrc(Paths.get("java/com/example/base/Base.java"))
         .build();
 
+    TargetNode<?> baseGenruleTarget = GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//java/com/example/base:genrule"))
+        .build();
+
     TargetNode<?> baseInlineTestsTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:tests"))
         .addDep(hamcrestTargetNode.getBuildTarget())
         .addSrc(Paths.get("java/com/example/base/TestBase.java"))
+        .addSrcTarget(baseGenruleTarget.getBuildTarget())
         .build();
 
     TargetNode<?> baseTestsTargetNode = JavaTestBuilder
@@ -129,8 +152,11 @@ public class IjProjectDataPreparerTest {
             hamcrestTargetNode,
             guavaTargetNode,
             baseTargetNode,
+            baseGenruleTarget,
             baseInlineTestsTargetNode,
-            baseTestsTargetNode));
+            baseTestsTargetNode),
+        ImmutableMap.<TargetNode<?>, Path>of(
+            baseInlineTestsTargetNode, Paths.get("buck-out/baseInlineTests.jar")));
     IjLibrary hamcrestLibrary =
         IjModuleGraphTest.getLibraryForTarget(moduleGraph, hamcrestTargetNode);
     IjLibrary guavaLibrary = IjModuleGraphTest.getLibraryForTarget(moduleGraph, guavaTargetNode);
@@ -138,45 +164,76 @@ public class IjProjectDataPreparerTest {
     IjModule baseTestModule =
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseTestsTargetNode);
 
-    IjProjectTemplateDataPreparer writer =
+    IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(javaPackageFinder, moduleGraph, filesystem);
 
     assertEquals(
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseInlineTestsTargetNode),
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseTargetNode));
 
-    DependencyEntry.Builder dependencyEntryBuilder = DependencyEntry.builder()
+    DependencyEntryData.Builder dependencyEntryBuilder = DependencyEntryData.builder()
         .setExported(false);
 
-    assertEquals(
-        ImmutableSet.of(
-            dependencyEntryBuilder
-                .setName(hamcrestLibrary.getName())
-                .setType(IjDependencyListBuilder.Type.LIBRARY)
-                .setScope(IjDependencyListBuilder.Scope.COMPILE)
-                .build(),
-            dependencyEntryBuilder
-                .setName(guavaLibrary.getName())
-                .setType(IjDependencyListBuilder.Type.LIBRARY)
-                .setScope(IjDependencyListBuilder.Scope.COMPILE)
-                .build()
-        ),
-        writer.getDependencies(baseModule));
+    assertThat(
+        dataPreparer.getDependencies(baseModule),
+        contains(
+            allOf(
+                hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
+                hasProperty("data", equalTo(Optional.of(
+                            dependencyEntryBuilder
+                                .setName(guavaLibrary.getName())
+                                .setScope(IjDependencyListBuilder.Scope.COMPILE)
+                                .build()
+                        )))
+            ),
+            allOf(
+                hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
+                hasProperty("data", equalTo(Optional.of(
+                            dependencyEntryBuilder
+                                .setName(hamcrestLibrary.getName())
+                                .setScope(IjDependencyListBuilder.Scope.COMPILE)
+                                .build()
+                        )))
+            ),
+            allOf(
+                hasProperty("type", equalTo(IjDependencyListBuilder.Type.SOURCE_FOLDER))
+            ),
+            allOf(
+                hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
+                hasProperty("data", equalTo(Optional.of(
+                            dependencyEntryBuilder
+                                .setName("library_java_com_example_base_tests")
+                                .setScope(IjDependencyListBuilder.Scope.PROVIDED)
+                                .build()
+                        )))
+            )
+        ));
 
-    assertEquals(
-        ImmutableSet.of(
-            dependencyEntryBuilder
-                .setName(baseModule.getName())
-                .setType(IjDependencyListBuilder.Type.MODULE)
-                .setScope(IjDependencyListBuilder.Scope.TEST)
-                .build(),
-            dependencyEntryBuilder
-                .setName(hamcrestLibrary.getName())
-                .setType(IjDependencyListBuilder.Type.LIBRARY)
-                .setScope(IjDependencyListBuilder.Scope.TEST)
-                .build()
-        ),
-        writer.getDependencies(baseTestModule));
+    assertThat(
+        dataPreparer.getDependencies(baseTestModule),
+        contains(
+            allOf(
+                hasProperty("type", equalTo(IjDependencyListBuilder.Type.MODULE)),
+                hasProperty("data", equalTo(Optional.of(
+                            dependencyEntryBuilder
+                                .setName(baseModule.getName())
+                                .setScope(IjDependencyListBuilder.Scope.TEST)
+                                .build()
+                        )))
+            ),
+            allOf(
+                hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
+                hasProperty("data", equalTo(Optional.of(
+                            dependencyEntryBuilder
+                                .setName(hamcrestLibrary.getName())
+                                .setScope(IjDependencyListBuilder.Scope.TEST)
+                                .build()
+                        )))
+            ),
+            allOf(
+                hasProperty("type", equalTo(IjDependencyListBuilder.Type.SOURCE_FOLDER))
+            )
+        ));
   }
 
   @Test
@@ -203,11 +260,12 @@ public class IjProjectDataPreparerTest {
             guavaTargetNode,
             baseTargetNode,
             baseTestsTargetNode));
-    IjProjectTemplateDataPreparer writer =
+    IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(javaPackageFinder, moduleGraph, filesystem);
 
     // Libraries don't go into the index.
-    assertEquals(ImmutableSet.of(
+    assertEquals(
+        ImmutableSet.of(
             ModuleIndexEntry.builder()
                 .setGroup("modules")
                 .setFileUrl("file://$PROJECT_DIR$/.idea/modules/java_com_example_base.iml")
@@ -219,7 +277,7 @@ public class IjProjectDataPreparerTest {
                 .setFilePath(Paths.get(".idea/modules/javatests_com_example_base.iml"))
                 .build()
         ),
-        writer.getModuleIndexEntries());
+        dataPreparer.getModuleIndexEntries());
   }
 
   @Test
@@ -291,20 +349,20 @@ public class IjProjectDataPreparerTest {
     IjModule src2Module = IjModuleGraphTest.getModuleForTarget(moduleGraph, src2TargetNode);
     IjModule rootModule = IjModuleGraphTest.getModuleForTarget(moduleGraph, rootTargetNode);
 
-    IjProjectTemplateDataPreparer writer = new IjProjectTemplateDataPreparer(
+    IjProjectTemplateDataPreparer dataPreparer = new IjProjectTemplateDataPreparer(
         javaPackageFinder,
         moduleGraph,
         filesystemForExcludesTest);
 
     assertEquals(ImmutableSet.of(Paths.get("java/com/src/foo")),
-        distillExcludeFolders(writer.createExcludes(srcModule)));
+        distillExcludeFolders(dataPreparer.createExcludes(srcModule)));
 
     assertEquals(ImmutableSet.of(Paths.get("java/com/data")),
-        distillExcludeFolders(writer.createExcludes(src2Module)));
+        distillExcludeFolders(dataPreparer.createExcludes(src2Module)));
 
     // In this case it's fine to exclude "lib" as there is no source code there.
     assertEquals(ImmutableSet.of(Paths.get(".git"), Paths.get("java/org"), Paths.get("lib")),
-        distillExcludeFolders(writer.createExcludes(rootModule)));
+        distillExcludeFolders(dataPreparer.createExcludes(rootModule)));
   }
 
   private static ImmutableSet<Path> distillExcludeFolders(ImmutableSet<IjFolder> folders) {

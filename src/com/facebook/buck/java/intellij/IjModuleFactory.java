@@ -22,12 +22,15 @@ import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.NdkLibraryDescription;
+import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -61,7 +64,8 @@ public class IjModuleFactory {
       JavaBinaryDescription.TYPE,
       JavaLibraryDescription.TYPE,
       JavaTestDescription.TYPE,
-      NdkLibraryDescription.TYPE);
+      NdkLibraryDescription.TYPE,
+      RobolectricTestDescription.TYPE);
 
   public static final Predicate<TargetNode<?>> SUPPORTED_MODULE_TYPES_PREDICATE =
       new Predicate<TargetNode<?>>() {
@@ -137,6 +141,13 @@ public class IjModuleFactory {
       addDeps(ImmutableSet.<Path>of(), buildTargets, dependencyType);
     }
 
+    public void addCompileShadowDep(BuildTarget buildTarget) {
+      IjModuleGraph.DependencyType.putWithMerge(
+          dependencyTypeMap,
+          buildTarget,
+          IjModuleGraph.DependencyType.COMPILED_SHADOW);
+    }
+
     /**
      * Record a dependency on a {@link BuildTarget}. The dependency's type will be merged if
      * multiple {@link TargetNode}s refer to it or if multiple TargetNodes include sources from
@@ -209,6 +220,7 @@ public class IjModuleFactory {
     addToIndex(new AndroidResourceModuleRule());
     addToIndex(new JavaLibraryModuleRule());
     addToIndex(new JavaTestModuleRule());
+    addToIndex(new RobolectricTestModuleRule());
   }
 
   private void addToIndex(IjModuleRule<?> rule) {
@@ -277,6 +289,24 @@ public class IjModuleFactory {
   }
 
   /**
+   * @param paths paths to check
+   * @return whether any of the paths pointed to something not in the source tree.
+   */
+  private static boolean containsNonSourcePath(Optional<? extends Iterable<SourcePath>> paths) {
+    if (!paths.isPresent()) {
+      return false;
+    }
+    return FluentIterable.from(paths.get())
+        .anyMatch(
+            new Predicate<SourcePath>() {
+              @Override
+              public boolean apply(SourcePath input) {
+                return !(input instanceof PathSourcePath);
+              }
+            });
+  }
+
+  /**
    * Add the set of input paths to the {@link IjModule.Builder} as source folders.
    *
    * @param sourceFolders paths to add to the module as source folders.
@@ -317,6 +347,17 @@ public class IjModuleFactory {
         isTest ? IjModuleGraph.DependencyType.TEST : IjModuleGraph.DependencyType.PROD);
   }
 
+  private static <T extends JavaLibraryDescription.Arg> void addCompiledShadowIfNeeded(
+      TargetNode<T> targetNode,
+      ModuleBuildContext context) {
+    T arg = targetNode.getConstructorArg();
+    // TODO(mkosiba): investigate supporting annotation processors without resorting to this.
+    boolean hasAnnotationProcessors = !arg.annotationProcessors.get().isEmpty();
+    if (containsNonSourcePath(arg.srcs) || hasAnnotationProcessors) {
+      context.addCompileShadowDep(targetNode.getBuildTarget());
+    }
+  }
+
   private static class AndroidBinaryModuleRule
       implements IjModuleRule<AndroidBinaryDescription.Arg> {
 
@@ -354,6 +395,7 @@ public class IjModuleFactory {
           false /* isTest */,
           true /* wantsPackagePrefix */,
           context);
+      addCompiledShadowIfNeeded(target, context);
       context.ensureAndroidFacetBuilder();
     }
   }
@@ -399,6 +441,7 @@ public class IjModuleFactory {
           false /* isTest */,
           true /* wantsPackagePrefix */,
           context);
+      addCompiledShadowIfNeeded(target, context);
     }
   }
 
@@ -416,6 +459,15 @@ public class IjModuleFactory {
           true /* isTest */,
           true /* wantsPackagePrefix */,
           context);
+      addCompiledShadowIfNeeded(target, context);
+    }
+  }
+
+  private static class RobolectricTestModuleRule extends JavaTestModuleRule {
+
+    @Override
+    public BuildRuleType getType() {
+      return RobolectricTestDescription.TYPE;
     }
   }
 }

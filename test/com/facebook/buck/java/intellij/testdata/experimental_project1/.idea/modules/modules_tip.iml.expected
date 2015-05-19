@@ -4,12 +4,12 @@
     <content url="file://$MODULE_DIR$/../../modules/tip">
     </content>
     <orderEntry type="module" module-name="modules_dep1" scope="COMPILE"  />
-    <orderEntry type="library" name="library_libs_generated" level="project" scope="TEST"  />
-    <orderEntry type="library" name="library_libs_guava" level="project" scope="COMPILE"  />
-    <orderEntry type="library" name="library_libs_jsr305" level="project" scope="COMPILE"  />
-    <orderEntry type="library" name="library_libs_junit" level="project" scope="TEST"  />
-
+    <orderEntry type="library" name="library_libs_generated" scope="TEST" level="project" />
+    <orderEntry type="library" name="library_libs_guava" scope="COMPILE" level="project" />
+    <orderEntry type="library" name="library_libs_jsr305" scope="COMPILE" level="project" />
+    <orderEntry type="library" name="library_libs_junit" scope="TEST" level="project" />
     <orderEntry type="sourceFolder" forTests="false" />
+
     <orderEntry type="inheritedJdk" />
   </component>
 </module>
