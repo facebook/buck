@@ -18,11 +18,13 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavaNativeLinkable;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
 import org.immutables.value.Value;
@@ -109,22 +111,22 @@ interface AbstractAndroidPackageableCollection {
   /**
    * Java classes (jars) to include in the package.
    */
-  Set<Path> getClasspathEntriesToDex();
+  ImmutableSet<SourcePath> getClasspathEntriesToDex();
 
   /**
    * Java classes that were used during compilation, but don't got into the package.
    * This is only used by "buck project".  (It's existence is kind of contrary to
    * the purpose of this class, but we make exceptions for "buck project".)
    */
-  Set<Path> getNoDxClasspathEntries();
+  ImmutableSet<SourcePath> getNoDxClasspathEntries();
 
   ImmutableMap<String, BuildConfigFields> getBuildConfigs();
 
   /**
-   * Prebuild/third-party jars to be included in the package.  For apks, their resources will
+   * Prebuilt/third-party jars to be included in the package.  For apks, their resources will
    * be placed directly in the apk.
    */
-  Set<Path> getPathsToThirdPartyJars();
+  ImmutableSet<SourcePath> getPathsToThirdPartyJars();
 
   /**
    * {@link com.facebook.buck.java.JavaLibrary} rules whose output will be dexed and included in

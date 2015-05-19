@@ -376,7 +376,9 @@ public class AndroidBinary extends AbstractBuildRule implements
         allAssetDirectories,
         nativeLibraryDirectories,
         zipFiles.build(),
-        ImmutableSortedSet.copyOf(packageableCollection.getPathsToThirdPartyJars()),
+        FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
+            .transform(getResolver().getPathFunction())
+            .toSet(),
         keystore.getPathToStore(),
         keystore.getPathToPropertiesFile(),
         /* debugMode */ false);

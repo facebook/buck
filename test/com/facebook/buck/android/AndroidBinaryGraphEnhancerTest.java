@@ -157,11 +157,11 @@ public class AndroidBinaryGraphEnhancerTest {
         ImmutableSet.of(javaDep2BuildTarget),
             /* resourcesToExclude */ ImmutableSet.<BuildTarget>of())
         .addClasspathEntry(
-            ((HasJavaClassHashes) javaDep1), Paths.get("ignored"))
+            ((HasJavaClassHashes) javaDep1), new TestSourcePath("ignored"))
         .addClasspathEntry(
-            ((HasJavaClassHashes) javaDep2), Paths.get("ignored"))
+            ((HasJavaClassHashes) javaDep2), new TestSourcePath("ignored"))
         .addClasspathEntry(
-            ((HasJavaClassHashes) javaLib), Paths.get("ignored"))
+            ((HasJavaClassHashes) javaLib), new TestSourcePath("ignored"))
         .build();
 
 

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
@@ -745,7 +746,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
     if (outputJar.isPresent()) {
-      collector.addClasspathEntry(this, outputJar.get());
+      collector.addClasspathEntry(
+          this,
+          new BuildTargetSourcePath(getProjectFilesystem(), getBuildTarget(), outputJar.get()));
     }
     if (proguardConfig.isPresent()) {
       collector.addProguardConfig(getBuildTarget(), proguardConfig.get());

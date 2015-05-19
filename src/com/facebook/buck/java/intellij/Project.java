@@ -68,6 +68,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -273,7 +274,8 @@ public class Project {
         AndroidBinary androidBinary = (AndroidBinary) srcRule;
         AndroidPackageableCollection packageableCollection =
             androidBinary.getAndroidPackageableCollection();
-        noDxJarsBuilder.addAll(packageableCollection.getNoDxClasspathEntries());
+        noDxJarsBuilder.addAll(
+            resolver.getAllPaths(packageableCollection.getNoDxClasspathEntries()));
       }
 
       final Optional<Path> rJava;
@@ -301,7 +303,7 @@ public class Project {
     ImmutableSet<Path> noDxJars = noDxJarsBuilder.build();
 
     // Update module dependencies to apply scope="PROVIDED", where appropriate.
-    markNoDxJarsAsProvided(modules, noDxJars);
+    markNoDxJarsAsProvided(modules, noDxJars, resolver);
 
     return modules;
   }
@@ -689,7 +691,11 @@ public class Project {
    * to the android_binary that <em>does not</em> list the library in its {@code no_dx} list.
    */
   @VisibleForTesting
-  static void markNoDxJarsAsProvided(List<SerializableModule> modules, Set<Path> noDxJars) {
+  static void markNoDxJarsAsProvided(
+      List<SerializableModule> modules,
+      Set<Path> noDxJars,
+      SourcePathResolver resolver) {
+
     Map<String, Path> intelliJLibraryNameToJarPath = Maps.newHashMap();
     for (Path jarPath : noDxJars) {
       String libraryName = getIntellijNameForBinaryJar(jarPath);
@@ -709,7 +715,9 @@ public class Project {
         classpathEntriesToDex = new HashSet<>(
             Sets.intersection(
                 noDxJars,
-                packageableCollection.getClasspathEntriesToDex()));
+                FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
+                    .transform(resolver.getPathFunction())
+                    .toSet()));
       } else {
         classpathEntriesToDex = ImmutableSet.of();
       }

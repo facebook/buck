@@ -219,8 +219,8 @@ public class PrebuiltJar extends AbstractBuildRule
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    collector.addClasspathEntry(this, getResolver().getPath(getBinaryJar()));
-    collector.addPathToThirdPartyJar(getBuildTarget(), copiedBinaryJar);
+    collector.addClasspathEntry(this, getBinaryJar());
+    collector.addPathToThirdPartyJar(getBuildTarget(), getBinaryJar());
   }
 
   @Override

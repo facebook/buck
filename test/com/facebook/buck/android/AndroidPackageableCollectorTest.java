@@ -135,7 +135,9 @@ public class AndroidPackageableCollectorTest {
             Paths.get("buck-out/gen/third_party/jsr-305/jsr-305.jar"),
             BuckConstant.GEN_PATH.resolve(
                 "java/src/com/facebook/lib__example__output/example.jar")),
-        packageableCollection.getClasspathEntriesToDex());
+        FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
+            .transform(pathResolver.getPathFunction())
+            .toSet());
     assertEquals(
         "Because guava was passed to no_dx, it should not be treated as a third-party JAR whose " +
             "resources need to be extracted and repacked in the APK. If this is done, then code " +
@@ -146,7 +148,9 @@ public class AndroidPackageableCollectorTest {
             "the resource in fb4a. Because the resource was loaded on startup, this introduced a " +
             "substantial regression in the startup time for the fb4a app.",
         ImmutableSet.of(Paths.get("buck-out/gen/third_party/jsr-305/jsr-305.jar")),
-        packageableCollection.getPathsToThirdPartyJars());
+        FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
+            .transform(pathResolver.getPathFunction())
+            .toSet());
     assertEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the " +
             "transitive dependencies",
@@ -274,6 +278,7 @@ public class AndroidPackageableCollectorTest {
   @Test
   public void testGraphForAndroidBinaryExcludesKeystoreDeps() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     BuildTarget androidLibraryKeystoreTarget =
         BuildTarget.builder("//java/com/keystore/base", "base").build();
@@ -310,6 +315,8 @@ public class AndroidPackageableCollectorTest {
         "Classpath entries should include facebook/base but not keystore/base.",
         ImmutableSet.of(
             BuckConstant.GEN_PATH.resolve("java/com/facebook/base/lib__base__output/base.jar")),
-        packageableCollection.getClasspathEntriesToDex());
+        FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
+            .transform(pathResolver.getPathFunction())
+            .toSet());
   }
 }

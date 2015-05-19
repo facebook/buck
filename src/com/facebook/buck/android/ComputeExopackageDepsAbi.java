@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -155,8 +156,8 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               }
 
               // Resources get copied from third-party JARs, so hash them.
-              for (Path jar : packageableCollection.getPathsToThirdPartyJars()) {
-                filesToHash.put(jar, "third-party jar");
+              for (SourcePath jar : packageableCollection.getPathsToThirdPartyJars()) {
+                filesToHash.put(getResolver().getPath(jar), "third-party jar");
               }
 
               // The last input is the keystore.

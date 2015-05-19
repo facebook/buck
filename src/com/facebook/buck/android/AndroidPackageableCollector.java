@@ -21,6 +21,7 @@ import com.facebook.buck.java.HasJavaClassHashes;
 import com.facebook.buck.java.JavaNativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -179,7 +180,7 @@ public class AndroidPackageableCollector {
 
   public AndroidPackageableCollector addClasspathEntry(
       HasJavaClassHashes hasJavaClassHashes,
-      Path classpathEntry) {
+      SourcePath classpathEntry) {
     if (buildTargetsToExcludeFromDex.contains(hasJavaClassHashes.getBuildTarget())) {
       collectionBuilder.addNoDxClasspathEntries(classpathEntry);
     } else {
@@ -191,7 +192,7 @@ public class AndroidPackageableCollector {
 
   public AndroidPackageableCollector addPathToThirdPartyJar(
       BuildTarget owner,
-      Path pathToThirdPartyJar) {
+      SourcePath pathToThirdPartyJar) {
     if (buildTargetsToExcludeFromDex.contains(owner)) {
       collectionBuilder.addNoDxClasspathEntries(pathToThirdPartyJar);
     } else {

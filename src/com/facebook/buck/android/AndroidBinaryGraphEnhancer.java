@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -238,7 +239,10 @@ public class AndroidBinaryGraphEnhancer {
     if (packageableCollection.getResourceDetails().hasResources()) {
       collector.addClasspathEntry(
           aaptPackageResources,
-          aaptPackageResources.getPathToCompiledRDotJavaFiles());
+          new BuildTargetSourcePath(
+              aaptPackageResources.getProjectFilesystem(),
+              aaptPackageResources.getBuildTarget(),
+              aaptPackageResources.getPathToCompiledRDotJavaFiles()));
     }
 
     // BuildConfig deps should not be added for instrumented APKs because BuildConfig.class has
@@ -274,6 +278,11 @@ public class AndroidBinaryGraphEnhancer {
     } else {
       enhancedDeps.addAll(getTargetsAsRules(packageableCollection.getJavaLibrariesToDex()));
     }
+
+    // Add dependencies on all the build rules generating third-party JARs.  This is mainly to
+    // correctly capture deps when a prebuilt_jar forwards the output from another build rule.
+    enhancedDeps.addAll(
+        pathResolver.filterBuildRuleInputs(packageableCollection.getPathsToThirdPartyJars()));
 
     // Iterate over all the {@link AndroidNativeLinkable}s from the collector and grab the shared
     // libraries for all the {@link TargetCpuType}s that we care about.  We deposit them into a map
@@ -369,10 +378,11 @@ public class AndroidBinaryGraphEnhancer {
         .setPackageStringAssets(packageStringAssets)
         .setPreDexMerge(preDexMerge)
         .setComputeExopackageDepsAbi(computeExopackageDepsAbi)
-        .setClasspathEntriesToDex(ImmutableSet.<Path>builder()
-            .addAll(packageableCollection.getClasspathEntriesToDex())
-            .addAll(buildConfigJarFiles)
-            .build())
+        .setClasspathEntriesToDex(
+            ImmutableSet.<Path>builder()
+                .addAll(pathResolver.getAllPaths(packageableCollection.getClasspathEntriesToDex()))
+                .addAll(buildConfigJarFiles)
+                .build())
         .setFinalDeps(enhancedDeps.build())
         .build();
   }
