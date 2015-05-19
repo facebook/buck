@@ -115,4 +115,9 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
     return this;
   }
 
+  public AndroidBinaryBuilder setNoDx(Set<BuildTarget> noDx) {
+    arg.noDx = Optional.of(noDx);
+    return this;
+  }
+
 }

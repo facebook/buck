@@ -36,7 +36,11 @@ public class Keystore extends AbstractBuildRule {
   @AddToRuleKey
   private final Path pathToProperties;
 
-  Keystore(BuildRuleParams params, SourcePathResolver resolver, Path store, Path properties) {
+  public Keystore(
+      BuildRuleParams params,
+      SourcePathResolver resolver,
+      Path store,
+      Path properties) {
     super(params, resolver);
     this.pathToStore = store;
     this.pathToProperties = properties;

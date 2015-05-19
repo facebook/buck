@@ -219,7 +219,9 @@ public class AndroidBinaryDescription
             .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
 
     return new AndroidBinary(
-        params.copyWithExtraDeps(Suppliers.ofInstance(result.getFinalDeps())),
+        params
+            .copyWithExtraDeps(Suppliers.ofInstance(result.getFinalDeps()))
+            .appendExtraDeps(rulesToExcludeFromDex),
         new SourcePathResolver(resolver),
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),
