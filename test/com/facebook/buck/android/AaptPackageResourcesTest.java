@@ -30,6 +30,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -302,4 +303,51 @@ public class AaptPackageResourcesTest {
                     "facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Regular.otf"))),
         remainingCommands);
   }
+
+  @Test
+  public void initializeFromDiskDoesNotAccessOutputFromDeps() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+
+    FilteredResourcesProvider resourcesProvider =
+        new FilteredResourcesProvider() {
+          @Override
+          public ImmutableList<SourcePath> getResDirectories() {
+            throw new AssertionError("unexpected call to getResDirectories");
+          }
+          @Override
+          public ImmutableSet<SourcePath> getNonEnglishStringFiles() {
+            throw new AssertionError("unexpected call to getNonEnglishStringFiles");
+          }
+        };
+
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:target"))
+            .build();
+    AaptPackageResources aaptPackageResources =
+        new AaptPackageResources(
+            params,
+            pathResolver,
+            /* manifest */ new TestSourcePath("facebook/base/AndroidManifest.xml"),
+            resourcesProvider,
+            ImmutableList.<HasAndroidResourceDeps>of(),
+            ImmutableSet.<SourcePath>of(),
+            PackageType.DEBUG,
+            DEFAULT_JAVAC_OPTIONS,
+            /* rDotJavaNeedsDexing */ false,
+            /* shouldBuildStringSourceMap */ false,
+            /* shouldWarnIfMissingResources */ false,
+            /* skipCrunchPngs */ false);
+
+    FakeOnDiskBuildInfo onDiskBuildInfo =
+        new FakeOnDiskBuildInfo()
+            .putMetadata(
+                AaptPackageResources.RESOURCE_PACKAGE_HASH_KEY,
+                "0123456789012345678901234567890123456789")
+            .putMetadata(
+                AaptPackageResources.FILTERED_RESOURCE_DIRS_KEY,
+                ImmutableList.<String>of());
+    aaptPackageResources.initializeFromDisk(onDiskBuildInfo);
+  }
+
 }

@@ -46,12 +46,15 @@ import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
@@ -74,6 +77,7 @@ public class AaptPackageResources extends AbstractBuildRule
 
   public static final String RESOURCE_PACKAGE_HASH_KEY = "resource_package_hash";
   public static final String R_DOT_JAVA_LINEAR_ALLOC_SIZE = "r_dot_java_linear_alloc_size";
+  public static final String FILTERED_RESOURCE_DIRS_KEY = "filtered_resource_dirs";
 
   /** Options to use with {@link com.facebook.buck.android.DxStep} when dexing R.java. */
   public static final EnumSet<DxStep.Option> DX_OPTIONS = EnumSet.of(
@@ -305,6 +309,15 @@ public class AaptPackageResources extends AbstractBuildRule
       }
     }
 
+    // Record the filtered resources dirs, since when we initialize ourselves from disk, we'll
+    // need to test whether this is empty or not without requiring the `ResourcesFilter` rule to
+    // be available.
+    buildableContext.addMetadata(
+        FILTERED_RESOURCE_DIRS_KEY,
+        FluentIterable.from(filteredResourcesProvider.getResDirectories())
+            .transform(getResolver().getPathFunction())
+            .transform(Functions.toStringFunction())
+            .toSortedList(Ordering.natural()));
 
     buildableContext.recordArtifact(getAndroidManifestXml());
     buildableContext.recordArtifact(getResourceApkPath());
@@ -472,8 +485,15 @@ public class AaptPackageResources extends AbstractBuildRule
         "Should not be initializing %s from disk if the resource hash is not written.",
         getBuildTarget());
 
+    Optional<ImmutableList<String>> filteredResourceDirs =
+        onDiskBuildInfo.getValues(FILTERED_RESOURCE_DIRS_KEY);
+    Preconditions.checkState(
+        filteredResourceDirs.isPresent(),
+        "Should not be initializing %s from disk if the filtered resources dirs are not written.",
+        getBuildTarget());
+
     ImmutableSortedMap<String, HashCode> classesHash = ImmutableSortedMap.of();
-    if (!filteredResourcesProvider.getResDirectories().isEmpty()) {
+    if (!filteredResourceDirs.get().isEmpty()) {
       List<String> lines;
       try {
         lines = onDiskBuildInfo.getOutputFileContentsByLine(getPathToRDotJavaClassesTxt());

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
@@ -325,13 +326,106 @@ public class AndroidBinaryGraphEnhancerTest {
     verify(keystore);
   }
 
-  private BuildRule findRuleOfType(BuildRuleResolver ruleResolver, Class<?> ruleClass) {
+  @Test
+  public void testResourceRulesBecomeDepsOfAaptPackageResources() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    AndroidResource resource =
+        (AndroidResource) AndroidResourceBuilder
+            .createBuilder(BuildTargetFactory.newInstance("//:resource"))
+            .setRDotJavaPackage("package")
+            .setRes(Paths.get("res"))
+            .build(ruleResolver);
+
+    // set it up.
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    BuildRuleParams originalParams =
+        new FakeBuildRuleParamsBuilder(target)
+            .setDeps(ImmutableSortedSet.<BuildRule>of(resource))
+            .build();
+    AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+        originalParams,
+        ruleResolver,
+        ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
+        FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        /* locales */ ImmutableSet.<String>of(),
+        new TestSourcePath("AndroidManifest.xml"),
+        AndroidBinary.PackageType.DEBUG,
+        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
+        /* shouldBuildStringSourceMap */ false,
+        /* shouldPreDex */ false,
+        BuildTargets.getScratchPath(target, "%s/classes.dex"),
+        DexSplitMode.NO_SPLIT,
+        /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
+        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        /* skipCrunchPngs */ false,
+        ANDROID_JAVAC_OPTIONS,
+        EnumSet.of(ExopackageMode.SECONDARY_DEX),
+        createNiceMock(Keystore.class),
+        /* buildConfigValues */ BuildConfigFields.empty(),
+        /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
+        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of());
+    graphEnhancer.createAdditionalBuildables();
+
+    BuildRule aaptPackageResourcesRule = findRuleOfType(ruleResolver, AaptPackageResources.class);
+    MoreAsserts.assertDepends(
+        "AaptPackageResources must depend on resource rules",
+        aaptPackageResourcesRule,
+        resource);
+  }
+
+  @Test
+  public void testPackageStringsDependsOnResourcesFilter() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    // set it up.
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    BuildRuleParams originalParams =
+        new FakeBuildRuleParamsBuilder(target)
+            .build();
+    AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+        originalParams,
+        ruleResolver,
+        ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
+        FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        /* locales */ ImmutableSet.<String>of(),
+        new TestSourcePath("AndroidManifest.xml"),
+        AndroidBinary.PackageType.DEBUG,
+        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
+        /* shouldBuildStringSourceMap */ false,
+        /* shouldPreDex */ false,
+        BuildTargets.getScratchPath(target, "%s/classes.dex"),
+        DexSplitMode.NO_SPLIT,
+        /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
+        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        /* skipCrunchPngs */ false,
+        ANDROID_JAVAC_OPTIONS,
+        EnumSet.of(ExopackageMode.SECONDARY_DEX),
+        createNiceMock(Keystore.class),
+        /* buildConfigValues */ BuildConfigFields.empty(),
+        /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
+        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of());
+    graphEnhancer.createAdditionalBuildables();
+
+    ResourcesFilter resourcesFilter = findRuleOfType(ruleResolver, ResourcesFilter.class);
+    PackageStringAssets packageStringAssetsRule =
+        findRuleOfType(ruleResolver, PackageStringAssets.class);
+    MoreAsserts.assertDepends(
+        "PackageStringAssets must depend on AaptPackageResources",
+        packageStringAssetsRule,
+        resourcesFilter);
+  }
+
+  private <T extends BuildRule> T findRuleOfType(
+      BuildRuleResolver ruleResolver,
+      Class<T> ruleClass) {
     for (BuildRule rule : ruleResolver.getBuildRules()) {
       if (ruleClass.isAssignableFrom(rule.getClass())) {
-        return rule;
+        return ruleClass.cast(rule);
       }
     }
     fail("Could not find build rule of type " + ruleClass.getCanonicalName());
     return null;
   }
+
 }

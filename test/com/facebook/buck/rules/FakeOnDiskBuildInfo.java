@@ -32,6 +32,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   @Nullable private RuleKey ruleKey;
   @Nullable private RuleKey ruleKeyWithoutDeps;
   private Map<String, String> metadata = Maps.newHashMap();
+  private Map<String, ImmutableList<String>> metadataValues = Maps.newHashMap();
   private Map<Path, ImmutableList<String>> pathsToContents = Maps.newHashMap();
 
   /** @return this */
@@ -62,6 +63,11 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
     return this;
   }
 
+  public FakeOnDiskBuildInfo putMetadata(String key, ImmutableList<String> value) {
+    this.metadataValues.put(key, value);
+    return this;
+  }
+
   @Override
   public Optional<String> getValue(String key) {
     return Optional.fromNullable(metadata.get(key));
@@ -69,8 +75,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public Optional<ImmutableList<String>> getValues(String key) {
-    // TODO(mbolin): Implement.
-    throw new UnsupportedOperationException();
+    return Optional.fromNullable(metadataValues.get(key));
   }
 
   @Override

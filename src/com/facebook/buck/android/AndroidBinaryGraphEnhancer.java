@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -198,7 +199,12 @@ public class AndroidBinaryGraphEnhancer {
         BuildRuleType.AAPT_PACKAGE,
         buildTargetForAapt,
         Suppliers.ofInstance(
-            getAdditionalAaptDeps(pathResolver, resourceRules, packageableCollection)),
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                // Add all deps with non-empty res dirs, since we at least need the R.txt file
+                // (even if we're filtering).
+                .addAll(getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir()))
+                .addAll(getAdditionalAaptDeps(pathResolver, resourceRules, packageableCollection))
+                .build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         paramsForAaptPackageResources,
@@ -223,7 +229,16 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleParams paramsForPackageStringAssets = buildRuleParams.copyWithChanges(
           BuildRuleType.PACKAGE_STRING_ASSETS,
           buildTargetForPackageStringAssets,
-          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(aaptPackageResources)),
+          Suppliers.ofInstance(
+              ImmutableSortedSet.<BuildRule>naturalOrder()
+                  .add(aaptPackageResources)
+                  // Model the dependency on the presence of res directories, which, in the case
+                  // of resource filtering, is cached by the `ResourcesFilter` rule.
+                  .addAll(
+                      Iterables.filter(
+                          ImmutableList.of(filteredResourcesProvider),
+                          BuildRule.class))
+                  .build()),
           /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
       packageStringAssets = Optional.of(
           new PackageStringAssets(
