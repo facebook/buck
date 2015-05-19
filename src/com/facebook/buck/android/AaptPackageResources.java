@@ -478,7 +478,7 @@ public class AaptPackageResources extends AbstractBuildRule
   }
 
   @Override
-  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
     Optional<Sha1HashCode> resourcePackageHash = onDiskBuildInfo.getHash(RESOURCE_PACKAGE_HASH_KEY);
     Preconditions.checkState(
         resourcePackageHash.isPresent(),
@@ -494,12 +494,8 @@ public class AaptPackageResources extends AbstractBuildRule
 
     ImmutableSortedMap<String, HashCode> classesHash = ImmutableSortedMap.of();
     if (!filteredResourceDirs.get().isEmpty()) {
-      List<String> lines;
-      try {
-        lines = onDiskBuildInfo.getOutputFileContentsByLine(getPathToRDotJavaClassesTxt());
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+      List<String> lines =
+          onDiskBuildInfo.getOutputFileContentsByLine(getPathToRDotJavaClassesTxt());
       classesHash = AccumulateClassNamesStep.parseClassHashes(lines);
     }
 

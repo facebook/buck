@@ -19,6 +19,8 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Preconditions;
 
+import java.io.IOException;
+
 import javax.annotation.Nullable;
 
 /**
@@ -40,7 +42,7 @@ public class BuildOutputInitializer<T> {
     this.initializableFromDisk = initializableFromDisk;
   }
 
-  public T initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+  public T initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
     return initializableFromDisk.initializeFromDisk(onDiskBuildInfo);
   }
 

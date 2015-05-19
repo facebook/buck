@@ -142,12 +142,8 @@ public class ShBinary extends AbstractBuildRule
    * TODO(task #3321496): Delete this entire interface implementation after we fix zipping exe's.
    */
   @Override
-  public Object initializeFromDisk(OnDiskBuildInfo info) {
-    try {
-      info.makeOutputFileExecutable(this);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  public Object initializeFromDisk(OnDiskBuildInfo info) throws IOException {
+    info.makeOutputFileExecutable(this);
     return new Object();
   }
 

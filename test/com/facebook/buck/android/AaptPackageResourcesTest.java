@@ -305,7 +305,7 @@ public class AaptPackageResourcesTest {
   }
 
   @Test
-  public void initializeFromDiskDoesNotAccessOutputFromDeps() {
+  public void initializeFromDiskDoesNotAccessOutputFromDeps() throws IOException {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 

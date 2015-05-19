@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import java.io.IOException;
+
 /**
  * Object that has in-memory data structures that need to be populated as a result of executing its
  * steps. An object that implements this interface will <em>always</em> have its internal data
@@ -37,7 +39,7 @@ public interface InitializableFromDisk<T> {
    * @return an object that has the in-memory data structures that need to be populated as a result
    *     of executing this object's steps.
    */
-  public T initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo);
+  T initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException;
 
-  public BuildOutputInitializer<T> getBuildOutputInitializer();
+  BuildOutputInitializer<T> getBuildOutputInitializer();
 }

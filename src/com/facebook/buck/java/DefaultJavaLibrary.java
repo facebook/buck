@@ -679,7 +679,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    * Instructs this rule to report the ABI it has on disk as its current ABI.
    */
   @Override
-  public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+  public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
     return JavaLibraryRules.initializeFromDisk(getBuildTarget(), onDiskBuildInfo);
   }
 

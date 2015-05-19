@@ -56,7 +56,8 @@ public class JavaLibraryRules {
 
   static JavaLibrary.Data initializeFromDisk(
       BuildTarget buildTarget,
-      OnDiskBuildInfo onDiskBuildInfo) {
+      OnDiskBuildInfo onDiskBuildInfo)
+      throws IOException {
     Optional<Sha1HashCode> abiKeyHash = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA);
     if (!abiKeyHash.isPresent()) {
       throw new IllegalStateException(String.format(
@@ -64,12 +65,8 @@ public class JavaLibraryRules {
           buildTarget));
     }
 
-    List<String> lines;
-    try {
-      lines = onDiskBuildInfo.getOutputFileContentsByLine(getPathToClassHashes(buildTarget));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    List<String> lines =
+        onDiskBuildInfo.getOutputFileContentsByLine(getPathToClassHashes(buildTarget));
     ImmutableSortedMap<String, HashCode> classHashes = AccumulateClassNamesStep.parseClassHashes(
         lines);
 

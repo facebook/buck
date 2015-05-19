@@ -690,8 +690,10 @@ public class CachingBuildEngine implements BuildEngine {
     return null;
   }
 
-  private <T> void doInitializeFromDisk(InitializableFromDisk<T> initializable,
-                                        OnDiskBuildInfo onDiskBuildInfo) {
+  private <T> void doInitializeFromDisk(
+      InitializableFromDisk<T> initializable,
+      OnDiskBuildInfo onDiskBuildInfo)
+      throws IOException {
     BuildOutputInitializer<T> buildOutputInitializer = initializable.getBuildOutputInitializer();
     T buildOutput = buildOutputInitializer.initializeFromDisk(onDiskBuildInfo);
     buildOutputInitializer.setBuildOutput(buildOutput);
