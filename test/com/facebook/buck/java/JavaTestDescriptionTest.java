@@ -50,4 +50,23 @@ public class JavaTestDescriptionTest {
     assertThat(javaTest.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
   }
 
+  @Test
+  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    FakeBuildRule exportedRule =
+        resolver.addToIndex(new FakeBuildRule("//:exported_rule", pathResolver));
+    FakeExportDependenciesRule exportingRule =
+        resolver.addToIndex(
+            new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRule javaTest = JavaTestBuilder.createBuilder(target)
+        .addProvidedDep(exportingRule.getBuildTarget())
+        .build(resolver);
+
+    assertThat(javaTest.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+  }
+
 }

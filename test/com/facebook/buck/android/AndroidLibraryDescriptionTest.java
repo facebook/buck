@@ -60,4 +60,33 @@ public class AndroidLibraryDescriptionTest {
             Matchers.hasItem(transitiveExportedRule)));
   }
 
+  @Test
+  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    FakeBuildRule transitiveExportedRule =
+        resolver.addToIndex(new FakeBuildRule("//:transitive_exported_rule", pathResolver));
+    FakeExportDependenciesRule exportedRule =
+        resolver.addToIndex(
+            new FakeExportDependenciesRule(
+                "//:exported_rule",
+                pathResolver,
+                transitiveExportedRule));
+    FakeExportDependenciesRule exportingRule =
+        resolver.addToIndex(
+            new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRule javaLibrary = AndroidLibraryBuilder.createBuilder(target)
+        .addProvidedDep(exportingRule.getBuildTarget())
+        .build(resolver);
+
+    assertThat(
+        javaLibrary.getDeps(),
+        Matchers.allOf(
+            Matchers.hasItem(exportedRule),
+            Matchers.hasItem(transitiveExportedRule)));
+  }
+
 }

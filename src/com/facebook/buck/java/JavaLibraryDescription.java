@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 
@@ -104,7 +103,11 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     return new DefaultJavaLibrary(
         params.appendExtraDeps(
             Iterables.concat(
-                BuildRules.getExportedRules(Sets.union(params.getDeclaredDeps(), exportedDeps)),
+                BuildRules.getExportedRules(
+                    Iterables.concat(
+                        params.getDeclaredDeps(),
+                        exportedDeps,
+                        resolver.getAllRules(args.providedDeps.get()))),
                 pathResolver.filterBuildRuleInputs(javacOptions.getInputs()))),
         pathResolver,
         args.srcs.get(),

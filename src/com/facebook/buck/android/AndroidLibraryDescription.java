@@ -39,7 +39,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 
@@ -114,7 +113,11 @@ public class AndroidLibraryDescription
     return new AndroidLibrary(
         params.appendExtraDeps(
             Iterables.concat(
-                BuildRules.getExportedRules(Sets.union(params.getDeclaredDeps(), exportedDeps)),
+                BuildRules.getExportedRules(
+                    Iterables.concat(
+                        params.getDeclaredDeps(),
+                        exportedDeps,
+                        resolver.getAllRules(args.providedDeps.get()))),
                 pathResolver.filterBuildRuleInputs(javacOptions.getInputs()))),
         pathResolver,
         args.srcs.get(),

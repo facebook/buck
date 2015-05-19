@@ -85,7 +85,10 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     return new JavaTest(
         params.appendExtraDeps(
             Iterables.concat(
-                BuildRules.getExportedRules(params.getDeclaredDeps()),
+                BuildRules.getExportedRules(
+                    Iterables.concat(
+                        params.getDeclaredDeps(),
+                        resolver.getAllRules(args.providedDeps.get()))),
                 pathResolver.filterBuildRuleInputs(javacOptions.getInputs()))),
         pathResolver,
         args.srcs.get(),

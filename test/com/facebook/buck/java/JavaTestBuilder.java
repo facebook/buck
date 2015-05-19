@@ -48,6 +48,11 @@ public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg
     return this;
   }
 
+  public JavaTestBuilder addProvidedDep(BuildTarget rule) {
+    arg.providedDeps = amend(arg.providedDeps, rule);
+    return this;
+  }
+
   public JavaTestBuilder addSrc(Path path) {
     arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
     return this;

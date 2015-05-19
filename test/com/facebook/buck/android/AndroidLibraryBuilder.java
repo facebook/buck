@@ -62,6 +62,11 @@ public class AndroidLibraryBuilder extends AbstractNodeBuilder<AndroidLibraryDes
     return this;
   }
 
+  public AndroidLibraryBuilder addProvidedDep(BuildTarget rule) {
+    arg.providedDeps = amend(arg.providedDeps, rule);
+    return this;
+  }
+
   public AndroidLibraryBuilder addSrc(Path path) {
     arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
     return this;

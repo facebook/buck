@@ -51,6 +51,11 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
     return this;
   }
 
+  public JavaLibraryBuilder addProvidedDep(BuildTarget rule) {
+    arg.providedDeps = amend(arg.providedDeps, rule);
+    return this;
+  }
+
   public JavaLibraryBuilder addResource(SourcePath sourcePath) {
     arg.resources = amend(arg.resources, sourcePath);
     return this;
