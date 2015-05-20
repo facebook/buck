@@ -34,6 +34,7 @@ import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
 import com.facebook.buck.android.ProGuardConfig;
 import com.facebook.buck.android.RobolectricTestDescription;
+import com.facebook.buck.android.SmartDexingStep;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
@@ -81,6 +82,7 @@ import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.KeystoreDescription;
 import com.facebook.buck.java.PrebuiltJarDescription;
+import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -113,12 +115,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.IOException;
 import java.net.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.Executors;
 
 /**
  * A registry of all the build rules types understood by Buck.
@@ -436,17 +441,26 @@ public class KnownBuildRuleTypes {
         platformFlavorsToAppleCxxPlatforms);
     builder.register(appleBinaryDescription);
 
+    // Create an executor service exclusively for the smart dexing step.
+    ListeningExecutorService dxExecutorService =
+        MoreExecutors.listeningDecorator(
+            Executors.newFixedThreadPool(
+                SmartDexingStep.determineOptimalThreadCount(),
+                new CommandThreadFactory("SmartDexing")));
+
     builder.register(new AndroidAarDescription(new AndroidManifestDescription()));
     builder.register(
         new AndroidBinaryDescription(
             androidBinaryOptions,
             proGuardConfig,
-            ndkCxxPlatforms));
+            ndkCxxPlatforms,
+            dxExecutorService));
     builder.register(new AndroidBuildConfigDescription(androidBinaryOptions));
     builder.register(new AndroidInstrumentationApkDescription(
             proGuardConfig,
             androidBinaryOptions,
-            ndkCxxPlatforms));
+            ndkCxxPlatforms,
+            dxExecutorService));
     builder.register(new AndroidLibraryDescription(androidBinaryOptions));
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidPrebuiltAarDescription(androidBinaryOptions));

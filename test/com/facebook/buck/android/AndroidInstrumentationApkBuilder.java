@@ -25,6 +25,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.MoreExecutors;
 
 public class AndroidInstrumentationApkBuilder
     extends AbstractNodeBuilder<AndroidInstrumentationApkDescription.Arg> {
@@ -34,7 +35,8 @@ public class AndroidInstrumentationApkBuilder
         new AndroidInstrumentationApkDescription(
             new ProGuardConfig(new FakeBuckConfig()),
             ANDROID_JAVAC_OPTIONS,
-            ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>of()),
+            ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>of(),
+            MoreExecutors.newDirectExecutorService()),
         target);
   }
 

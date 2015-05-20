@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -56,14 +57,17 @@ public class AndroidInstrumentationApkDescription
   private final ProGuardConfig proGuardConfig;
   private final JavacOptions javacOptions;
   private final ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> nativePlatforms;
+  private final ListeningExecutorService dxExecutorService;
 
   public AndroidInstrumentationApkDescription(
       ProGuardConfig proGuardConfig,
       JavacOptions androidJavacOptions,
-      ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> nativePlatforms) {
+      ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> nativePlatforms,
+      ListeningExecutorService dxExecutorService) {
     this.proGuardConfig = proGuardConfig;
     this.javacOptions = androidJavacOptions;
     this.nativePlatforms = nativePlatforms;
+    this.dxExecutorService = dxExecutorService;
   }
 
   @Override
@@ -129,7 +133,8 @@ public class AndroidInstrumentationApkDescription
         apkUnderTest.getKeystore(),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
-        nativePlatforms);
+        nativePlatforms,
+        dxExecutorService);
 
     AndroidGraphEnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();
@@ -143,7 +148,8 @@ public class AndroidInstrumentationApkDescription
         proGuardConfig.getProguardMaxHeapSize(),
         apkUnderTest,
         rulesToExcludeFromDex,
-        enhancementResult);
+        enhancementResult,
+        dxExecutorService);
 
   }
 

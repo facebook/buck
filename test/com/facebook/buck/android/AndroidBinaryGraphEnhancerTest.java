@@ -60,6 +60,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -129,7 +130,8 @@ public class AndroidBinaryGraphEnhancerTest {
         createStrictMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
-        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of());
+        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        MoreExecutors.newDirectExecutorService());
 
     BuildTarget aaptPackageResourcesTarget = BuildTarget
         .builder("//java/com/example", "apk")
@@ -248,7 +250,8 @@ public class AndroidBinaryGraphEnhancerTest {
         keystore,
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
-        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of());
+        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        MoreExecutors.newDirectExecutorService());
     replay(keystore);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
@@ -274,7 +277,7 @@ public class AndroidBinaryGraphEnhancerTest {
     assertTrue(androidBuildConfig.isUseConstantExpressions());
     assertEquals(
         "IS_EXOPACKAGE defaults to false, but should now be true. DEBUG should still be true.",
-        BuildConfigFields.fromFields(ImmutableList.<BuildConfigFields.Field>of(
+        BuildConfigFields.fromFields(ImmutableList.of(
             BuildConfigFields.Field.of("boolean", "DEBUG", "true"),
             BuildConfigFields.Field.of("boolean", "IS_EXOPACKAGE", "true"),
             BuildConfigFields.Field.of("int", "EXOPACKAGE_FLAGS", "1"))),
@@ -364,7 +367,8 @@ public class AndroidBinaryGraphEnhancerTest {
         createNiceMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
-        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of());
+        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        MoreExecutors.newDirectExecutorService());
     graphEnhancer.createAdditionalBuildables();
 
     BuildRule aaptPackageResourcesRule = findRuleOfType(ruleResolver, AaptPackageResources.class);
@@ -404,7 +408,8 @@ public class AndroidBinaryGraphEnhancerTest {
         createNiceMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
-        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of());
+        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        MoreExecutors.newDirectExecutorService());
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(ruleResolver, ResourcesFilter.class);

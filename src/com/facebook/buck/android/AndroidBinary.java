@@ -68,6 +68,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -192,6 +193,7 @@ public class AndroidBinary extends AbstractBuildRule implements
   @AddToRuleKey
   protected final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
   protected final AndroidGraphEnhancementResult enhancementResult;
+  private final ListeningExecutorService dxExecutorService;
 
   AndroidBinary(
       BuildRuleParams params,
@@ -215,7 +217,8 @@ public class AndroidBinary extends AbstractBuildRule implements
       AndroidGraphEnhancementResult enhancementResult,
       Optional<Boolean> reorderClassesIntraDex,
       Optional<SourcePath> dexReorderToolFile,
-      Optional<SourcePath> dexReorderDataDumpFile) {
+      Optional<SourcePath> dexReorderDataDumpFile,
+      ListeningExecutorService dxExecutorService) {
     super(params, resolver);
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
@@ -238,6 +241,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     this.reorderClassesIntraDex = reorderClassesIntraDex;
     this.dexReorderToolFile = dexReorderToolFile;
     this.dexReorderDataDumpFile = dexReorderDataDumpFile;
+    this.dxExecutorService = dxExecutorService;
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(enhancementResult.getPreDexMerge().isPresent(),
@@ -840,8 +844,8 @@ public class AndroidBinary extends AbstractBuildRule implements
         secondaryOutputToInputs,
         hashInputJarsToDexStep,
         successDir,
-        Optional.<Integer>absent(),
-        dxOptions);
+        dxOptions,
+        dxExecutorService);
     steps.add(smartDexingCommand);
 
     if (isReorderingClasses()) {

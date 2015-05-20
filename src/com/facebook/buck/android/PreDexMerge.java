@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -90,6 +91,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
   private final DexSplitMode dexSplitMode;
   private final ImmutableSet<DexProducedFromJavaLibrary> preDexDeps;
   private final AaptPackageResources aaptPackageResources;
+  private final ListeningExecutorService dxExecutorService;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public PreDexMerge(
@@ -98,12 +100,14 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
       Path primaryDexPath,
       DexSplitMode dexSplitMode,
       ImmutableSet<DexProducedFromJavaLibrary> preDexDeps,
-      AaptPackageResources aaptPackageResources) {
+      AaptPackageResources aaptPackageResources,
+      ListeningExecutorService dxExecutorService) {
     super(params, resolver);
     this.primaryDexPath = primaryDexPath;
     this.dexSplitMode = dexSplitMode;
     this.preDexDeps = preDexDeps;
     this.aaptPackageResources = aaptPackageResources;
+    this.dxExecutorService = dxExecutorService;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
@@ -207,8 +211,8 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
         Optional.of(Suppliers.ofInstance(sortResult.secondaryOutputToInputs)),
         sortResult.dexInputHashesProvider,
         paths.successDir,
-        /* numThreads */ Optional.<Integer>absent(),
-        DX_MERGE_OPTIONS));
+        DX_MERGE_OPTIONS,
+        dxExecutorService));
 
     // Record the primary dex SHA1 so exopackage apks can use it to compute their ABI keys.
     // Single dex apks cannot be exopackages, so they will never need ABI keys.

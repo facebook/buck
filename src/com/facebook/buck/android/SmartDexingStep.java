@@ -15,11 +15,8 @@
  */
 package com.facebook.buck.android;
 
-import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
-
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.CompositeStep;
@@ -30,9 +27,6 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
-import com.facebook.buck.util.concurrent.ConcurrencyLimit;
-import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
-import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -53,6 +47,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -62,7 +57,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Nullable;
 
@@ -87,8 +81,8 @@ public class SmartDexingStep implements Step {
   private final Optional<Path> secondaryOutputDir;
   private final DexInputHashesProvider dexInputHashesProvider;
   private final Path successDir;
-  private final Optional<Integer> numThreads;
   private final EnumSet<DxStep.Option> dxOptions;
+  private final ListeningExecutorService executorService;
 
   /**
    * @param primaryOutputPath Path for the primary dex artifact.
@@ -101,8 +95,7 @@ public class SmartDexingStep implements Step {
    *     Note that for each output file (key), a separate dx invocation will be started with the
    *     corresponding jar files (value) as the input.
    * @param successDir Directory where success artifacts are written.
-   * @param numThreads Number of threads to use when invoking dx commands.  If absent, a
-   *     reasonable default will be selected based on the number of available processors.
+   * @param executorService The thread pool to execute the dx command on.
    */
   public SmartDexingStep(
       final Path primaryOutputPath,
@@ -111,8 +104,8 @@ public class SmartDexingStep implements Step {
       final Optional<Supplier<Multimap<Path, Path>>> secondaryInputsToDex,
       DexInputHashesProvider dexInputHashesProvider,
       Path successDir,
-      Optional<Integer> numThreads,
-      EnumSet<Option> dxOptions) {
+      EnumSet<Option> dxOptions,
+      ListeningExecutorService executorService) {
     this.outputToInputsSupplier = Suppliers.memoize(
         new Supplier<Multimap<Path, Path>>() {
           @Override
@@ -128,11 +121,11 @@ public class SmartDexingStep implements Step {
     this.secondaryOutputDir = secondaryOutputDir;
     this.dexInputHashesProvider = dexInputHashesProvider;
     this.successDir = successDir;
-    this.numThreads = numThreads;
     this.dxOptions = dxOptions;
+    this.executorService = executorService;
   }
 
-  static int determineOptimalThreadCount() {
+  public static int determineOptimalThreadCount() {
     return (int) (1.25 * Runtime.getRuntime().availableProcessors());
   }
 
@@ -158,29 +151,11 @@ public class SmartDexingStep implements Step {
 
   private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)
       throws StepFailedException, IOException, InterruptedException {
-
-    ExecutorService service =
-        new LimitedThreadPoolExecutor(
-            new CommandThreadFactory("SmartDexing"),
-            new ConcurrencyLimit(
-                Math.min(
-                    numThreads.or(determineOptimalThreadCount()),
-                    context.getConcurrencyLimit().threadLimit),
-                context.getConcurrencyLimit().loadLimit));
-    try {
-      DefaultStepRunner stepRunner = new DefaultStepRunner(context);
-      // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
-      // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
-      List<Step> dxSteps = generateDxCommands(context.getProjectFilesystem(), outputToInputs);
-      stepRunner.runStepsInParallelAndWait(
-          dxSteps,
-          Optional.<BuildTarget>absent(),
-          listeningDecorator(service));
-    } finally {
-      // Wait for however long necessary for threads to finish.  This should be fine, since we'll
-      // detect deadlocks at the top-level (since this thread won't return).
-      MoreExecutors.shutdown(service);
-    }
+    DefaultStepRunner stepRunner = new DefaultStepRunner(context);
+    // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
+    // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
+    List<Step> dxSteps = generateDxCommands(context.getProjectFilesystem(), outputToInputs);
+    stepRunner.runStepsInParallelAndWait(dxSteps, Optional.<BuildTarget>absent(), executorService);
   }
 
   /**

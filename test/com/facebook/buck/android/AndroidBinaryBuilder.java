@@ -28,6 +28,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.List;
 import java.util.Set;
@@ -39,7 +40,8 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
         new AndroidBinaryDescription(
             ANDROID_JAVAC_OPTIONS,
             new ProGuardConfig(new FakeBuckConfig()),
-            ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>of()),
+            ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>of(),
+            MoreExecutors.newDirectExecutorService()),
         target);
   }
 

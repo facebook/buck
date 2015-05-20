@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -99,6 +100,8 @@ public class AndroidBinaryGraphEnhancer {
    */
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
+  private final ListeningExecutorService dxExecutorService;
+
   AndroidBinaryGraphEnhancer(
       BuildRuleParams originalParams,
       BuildRuleResolver ruleResolver,
@@ -120,7 +123,8 @@ public class AndroidBinaryGraphEnhancer {
       Keystore keystore,
       BuildConfigFields buildConfigValues,
       Optional<SourcePath> buildConfigValuesFile,
-      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms) {
+      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
+      ListeningExecutorService dxExecutorService) {
     this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
@@ -145,6 +149,7 @@ public class AndroidBinaryGraphEnhancer {
     this.buildConfigValues = buildConfigValues;
     this.buildConfigValuesFile = buildConfigValuesFile;
     this.nativePlatforms = nativePlatforms;
+    this.dxExecutorService = dxExecutorService;
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() {
@@ -562,7 +567,8 @@ public class AndroidBinaryGraphEnhancer {
         primaryDexPath,
         dexSplitMode,
         allPreDexDeps,
-        aaptPackageResources);
+        aaptPackageResources,
+        dxExecutorService);
     ruleResolver.addToIndex(preDexMerge);
 
     return preDexMerge;

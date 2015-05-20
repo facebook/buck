@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -90,14 +91,17 @@ public class AndroidBinaryDescription
   private final JavacOptions javacOptions;
   private final ProGuardConfig proGuardConfig;
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
+  private final ListeningExecutorService dxExecutorService;
 
   public AndroidBinaryDescription(
       JavacOptions javacOptions,
       ProGuardConfig proGuardConfig,
-      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms) {
+      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
+      ListeningExecutorService dxExecutorService) {
     this.javacOptions = javacOptions;
     this.proGuardConfig = proGuardConfig;
     this.nativePlatforms = nativePlatforms;
+    this.dxExecutorService = dxExecutorService;
   }
 
   @Override
@@ -191,7 +195,8 @@ public class AndroidBinaryDescription
         (Keystore) keystore,
         args.buildConfigValues.get(),
         args.buildConfigValuesFile,
-        nativePlatforms);
+        nativePlatforms,
+        dxExecutorService);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     if (target.getFlavors().contains(PACKAGE_STRING_ASSETS_FLAVOR)) {
@@ -245,7 +250,8 @@ public class AndroidBinaryDescription
         result,
         args.reorderClassesIntraDex,
         args.dexReorderToolFile,
-        args.dexReorderDataDumpFile);
+        args.dexReorderDataDumpFile,
+        dxExecutorService);
   }
 
   private DexSplitMode createDexSplitMode(Arg args, EnumSet<ExopackageMode> exopackageModes) {

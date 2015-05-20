@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Test;
 
@@ -123,7 +124,8 @@ public class AndroidInstrumentationApkTest {
         new AndroidInstrumentationApkDescription(
             new ProGuardConfig(new FakeBuckConfig()),
             DEFAULT_JAVAC_OPTIONS,
-            ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>of())
+            ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>of(),
+            MoreExecutors.newDirectExecutorService())
                 .createBuildRule(params, ruleResolver, arg);
 
     assertEquals(

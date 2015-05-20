@@ -22,6 +22,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -49,7 +50,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       String proGuardMaxHeapSize,
       AndroidBinary apkUnderTest,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
-      AndroidGraphEnhancementResult enhancementResult) {
+      AndroidGraphEnhancementResult enhancementResult,
+      ListeningExecutorService dxExecutorService) {
     super(
         buildRuleParams,
         resolver,
@@ -75,6 +77,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         // reordering is not supported in instrumentation. TODO(user): add support
         Optional.<Boolean>absent(),
         Optional.<SourcePath>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        dxExecutorService);
   }
 }
