@@ -19,6 +19,7 @@ package com.facebook.buck.java.intellij;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
@@ -40,7 +41,12 @@ abstract class AbstractIjLibrary implements IjProjectElement {
   /**
    * @return path to the binary (.jar or .aar) the library represents.
    */
-  public abstract Path getBinaryJar();
+  public abstract Optional<Path> getBinaryJar();
+
+  /**
+   * @return classPath paths
+   */
+  public abstract ImmutableSet<Path> getClassPaths();
 
   /**
    * @return path to the jar containing sources for the library.
@@ -51,6 +57,11 @@ abstract class AbstractIjLibrary implements IjProjectElement {
    * @return url to the javadoc.
    */
   public abstract Optional<String> getJavadocUrl();
+
+  @Value.Check
+  protected void eitherBinaryJarOrClassPathPresent() {
+    Preconditions.checkArgument(getBinaryJar().isPresent() ^ !getClassPaths().isEmpty());
+  }
 
   @Override
   public void addAsDependency(

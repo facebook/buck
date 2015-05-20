@@ -57,10 +57,28 @@ public class AndroidLibraryGraphEnhancerTest {
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         DEFAULT_JAVAC_OPTIONS,
         ResourceDependencyMode.FIRST_ORDER);
-    Optional<DummyRDotJava> result = graphEnhancer.createBuildableForAndroidResources(
+    Optional<DummyRDotJava> result = graphEnhancer.getBuildableForAndroidResources(
         new BuildRuleResolver(),
         /* createdBuildableIfEmptyDeps */ false);
     assertFalse(result.isPresent());
+  }
+
+  @Test
+  public void testBuildRuleResolverCaching() {
+    BuildTarget buildTarget = BuildTarget.builder("//java/com/example", "library").build();
+    AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
+        buildTarget,
+        new FakeBuildRuleParamsBuilder(buildTarget).build(),
+        DEFAULT_JAVAC_OPTIONS,
+        ResourceDependencyMode.FIRST_ORDER);
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    Optional<DummyRDotJava> result = graphEnhancer.getBuildableForAndroidResources(
+        buildRuleResolver,
+        /* createdBuildableIfEmptyDeps */ true);
+    Optional<DummyRDotJava> secondResult = graphEnhancer.getBuildableForAndroidResources(
+        buildRuleResolver,
+        /* createdBuildableIfEmptyDeps */ true);
+    assertThat(result.get(), Matchers.sameInstance(secondResult.get()));
   }
 
   @Test
@@ -92,7 +110,7 @@ public class AndroidLibraryGraphEnhancerTest {
         buildRuleParams,
         DEFAULT_JAVAC_OPTIONS,
         ResourceDependencyMode.FIRST_ORDER);
-    Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
+    Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
 
@@ -144,7 +162,7 @@ public class AndroidLibraryGraphEnhancerTest {
             .setTargetLevel("7")
                     .build(),
                 ResourceDependencyMode.FIRST_ORDER);
-    Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.createBuildableForAndroidResources(
+    Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
 
@@ -174,7 +192,7 @@ public class AndroidLibraryGraphEnhancerTest {
             options,
             ResourceDependencyMode.FIRST_ORDER);
     Optional<DummyRDotJava> result =
-        graphEnhancer.createBuildableForAndroidResources(
+        graphEnhancer.getBuildableForAndroidResources(
             resolver,
             /* createdBuildableIfEmptyDeps */ true);
     assertTrue(result.isPresent());

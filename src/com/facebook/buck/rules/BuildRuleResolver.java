@@ -118,7 +118,9 @@ public class BuildRuleResolver {
   @VisibleForTesting
   public <T extends BuildRule> T addToIndex(T buildRule) {
     BuildRule oldValue = buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
-    if (oldValue != null) {
+    // Yuck! This is here to make it possible for a rule to depend on a flavor of itself but it
+    // would be much much better if we just got rid of the BuildRuleResolver entirely.
+    if (oldValue != null && oldValue != buildRule) {
       throw new IllegalStateException("A build rule for this target has already been created: " +
           oldValue.getBuildTarget());
     }

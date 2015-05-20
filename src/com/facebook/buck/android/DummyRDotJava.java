@@ -140,7 +140,7 @@ public class DummyRDotJava extends AbstractBuildRule
     return BuildTargets.getScratchPath(buildTarget, "__%s_rdotjava_src__");
   }
 
-  private static Path getRDotJavaBinFolder(BuildTarget buildTarget) {
+  public static Path getRDotJavaBinFolder(BuildTarget buildTarget) {
     return BuildTargets.getScratchPath(buildTarget, "__%s_rdotjava_bin__");
   }
 

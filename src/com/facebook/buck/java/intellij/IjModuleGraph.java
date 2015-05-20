@@ -150,7 +150,6 @@ public class IjModuleGraph {
           TargetNode<?> targetNode = Preconditions.checkNotNull(targetGraph.get(depBuildTarget));
           Optional<IjLibrary> library = libraryFactory.getLibrary(targetNode);
           if (library.isPresent()) {
-            referencedLibraries.add(library.get());
             depElements = ImmutableSet.<IjProjectElement>of(library.get());
           } else {
             depElements = ImmutableSet.of();
@@ -171,9 +170,6 @@ public class IjModuleGraph {
                       TargetNode<?> targetNode =
                           Preconditions.checkNotNull(targetGraph.get(depTarget));
                       IjLibrary library = libraryFactory.getLibrary(targetNode).orNull();
-                      if (library != null) {
-                        referencedLibraries.add(library);
-                      }
                       return library;
                     }
                   })
@@ -186,6 +182,20 @@ public class IjModuleGraph {
           DependencyType.putWithMerge(moduleDeps, depElement, depType);
         }
       }
+
+      if (!module.getExtraClassPathDependencies().isEmpty()) {
+        IjLibrary extraClassPathLibrary = IjLibrary.builder()
+            .setClassPaths(module.getExtraClassPathDependencies())
+            .setTargets(ImmutableSet.<TargetNode<?>>of())
+            .setName("library_" + module.getName() + "_extra_classpath")
+            .build();
+        moduleDeps.put(extraClassPathLibrary, DependencyType.PROD);
+      }
+
+      referencedLibraries.addAll(
+          FluentIterable.from(moduleDeps.keySet())
+              .filter(IjLibrary.class)
+              .toSet());
 
       depsBuilder.put(module, ImmutableMap.copyOf(moduleDeps));
     }
@@ -234,10 +244,21 @@ public class IjModuleGraph {
             });
   }
 
+  private static void checkNamesAreUnique(
+      ImmutableMap<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>> deps) {
+    Set<String> names = new HashSet<>();
+    for (IjProjectElement element : deps.keySet()) {
+      String name = element.getName();
+      Preconditions.checkArgument(!names.contains(name));
+      names.add(name);
+    }
+  }
+
   private ImmutableMap<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>> deps;
 
   public IjModuleGraph(
       ImmutableMap<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>> deps) {
     this.deps = deps;
+    checkNamesAreUnique(deps);
   }
 }

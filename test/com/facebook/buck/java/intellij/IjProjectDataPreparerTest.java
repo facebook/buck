@@ -35,6 +35,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -156,7 +157,8 @@ public class IjProjectDataPreparerTest {
             baseInlineTestsTargetNode,
             baseTestsTargetNode),
         ImmutableMap.<TargetNode<?>, Path>of(
-            baseInlineTestsTargetNode, Paths.get("buck-out/baseInlineTests.jar")));
+            baseInlineTestsTargetNode, Paths.get("buck-out/baseInlineTests.jar")),
+        Functions.constant(Optional.<Path>absent()));
     IjLibrary hamcrestLibrary =
         IjModuleGraphTest.getLibraryForTarget(moduleGraph, hamcrestTargetNode);
     IjLibrary guavaLibrary = IjModuleGraphTest.getLibraryForTarget(moduleGraph, guavaTargetNode);

@@ -66,6 +66,11 @@ abstract class AbstractIjModule implements IjProjectElement {
   public abstract Optional<IjModuleAndroidFacet> getAndroidFacet();
 
   /**
+   * @return a set of classpaths that the module requires to index correctly.
+   */
+  public abstract ImmutableSet<Path> getExtraClassPathDependencies();
+
+  /**
    * @return path where the XML describing the module to IntelliJ will be written to.
    */
   @Value.Derived

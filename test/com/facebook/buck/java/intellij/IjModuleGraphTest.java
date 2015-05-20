@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.KeystoreBuilder;
@@ -31,6 +32,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -375,7 +378,8 @@ public class IjModuleGraphTest {
             productGenruleTarget,
             libraryJavaTarget,
             productTarget),
-        ImmutableMap.<TargetNode<?>, Path>of(productTarget, Paths.get("buck-out/product.jar")));
+        ImmutableMap.<TargetNode<?>, Path>of(productTarget, Paths.get("buck-out/product.jar")),
+        Functions.constant(Optional.<Path>absent()));
 
     IjModule libraryModule = getModuleForTarget(moduleGraph, libraryJavaTarget);
     IjModule productModule = getModuleForTarget(moduleGraph, productTarget);
@@ -388,13 +392,48 @@ public class IjModuleGraphTest {
         moduleGraph.getDepsFor(productModule));
   }
 
+  @Test
+  public void testExtraClassPath() {
+    final Path rDotJavaClassPath = Paths.get("buck-out/product/rdotjava_classpath");
+    final TargetNode<?> productTarget = AndroidLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook/product:product"))
+        .addSrc(Paths.get("java/src/com/facebook/File.java"))
+        .build();
+
+    IjModuleGraph moduleGraph = createModuleGraph(
+        ImmutableSet.<TargetNode<?>>of(productTarget),
+        ImmutableMap.<TargetNode<?>, Path>of(productTarget, Paths.get("buck-out/product.jar")),
+        new Function<TargetNode<?>, Optional<Path>>() {
+          @Override
+          public Optional<Path> apply(TargetNode<?> input) {
+            if (input == productTarget) {
+              return Optional.of(rDotJavaClassPath);
+            }
+            return Optional.absent();
+          }
+        });
+
+    IjModule productModule = getModuleForTarget(moduleGraph, productTarget);
+    IjLibrary rDotJavaLibrary = FluentIterable.from(moduleGraph.getNodes())
+        .filter(IjLibrary.class)
+        .first()
+        .get();
+
+    assertEquals(ImmutableSet.of(rDotJavaClassPath), productModule.getExtraClassPathDependencies());
+    assertEquals(ImmutableSet.of(rDotJavaClassPath), rDotJavaLibrary.getClassPaths());
+    assertEquals(moduleGraph.getDependentLibrariesFor(productModule),
+        ImmutableMap.of(rDotJavaLibrary, IjModuleGraph.DependencyType.PROD));
+  }
+
   public static IjModuleGraph createModuleGraph(ImmutableSet<TargetNode<?>> targets) {
-    return createModuleGraph(targets, ImmutableMap.<TargetNode<?>, Path>of());
+    return createModuleGraph(targets, ImmutableMap.<TargetNode<?>, Path>of(),
+        Functions.constant(Optional.<Path>absent()));
   }
 
   public static IjModuleGraph createModuleGraph(
       ImmutableSet<TargetNode<?>> targets,
-      final ImmutableMap<TargetNode<?>, Path> javaLibraryPaths) {
+      final ImmutableMap<TargetNode<?>, Path> javaLibraryPaths,
+      Function<? super TargetNode<?>, Optional<Path>> rDotJavaClassPathResolver) {
     final SourcePathResolver sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
     DefaultIjLibraryFactory.IjLibraryFactoryResolver sourceOnlyResolver =
         new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
@@ -408,7 +447,7 @@ public class IjModuleGraphTest {
             return Optional.fromNullable(javaLibraryPaths.get(targetNode));
           }
         };
-    IjModuleFactory moduleFactory = new IjModuleFactory();
+    IjModuleFactory moduleFactory = new IjModuleFactory(rDotJavaClassPathResolver);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraph.from(
         TargetGraphFactory.newInstance(targets),

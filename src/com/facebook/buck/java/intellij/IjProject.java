@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java.intellij;
 
+import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
+import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaPackageFinder;
@@ -26,13 +28,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Top-level class for IntelliJ project generation.
@@ -44,7 +45,6 @@ public class IjProject {
   private final BuildRuleResolver buildRuleResolver;
   private final SourcePathResolver sourcePathResolver;
   private final ProjectFilesystem projectFilesystem;
-  private final Set<BuildTarget> requiredBuildTargets;
 
   public IjProject(
       TargetGraphAndTargets targetGraphAndTargets,
@@ -57,7 +57,6 @@ public class IjProject {
     this.buildRuleResolver = buildRuleResolver;
     this.sourcePathResolver = sourcePathResolver;
     this.projectFilesystem = projectFilesystem;
-    this.requiredBuildTargets = new HashSet<>();
   }
 
   /**
@@ -68,6 +67,7 @@ public class IjProject {
    * @throws IOException
    */
   public ImmutableSet<BuildTarget> write() throws IOException {
+    final ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(
         new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
           @Override
@@ -89,7 +89,21 @@ public class IjProject {
             return Optional.fromNullable(rule.getPathToOutputFile());
           }
         });
-    IjModuleFactory moduleFactory = new IjModuleFactory();
+    IjModuleFactory moduleFactory = new IjModuleFactory(
+        new Function<TargetNode<?>, Optional<Path>>() {
+          @Override
+          public Optional<Path> apply(TargetNode<?> targetNode) {
+            BuildTarget dummyRDotJavaTarget = AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(
+                targetNode.getBuildTarget());
+            Optional<BuildRule> dummyRDotJavaRule =
+                buildRuleResolver.getRuleOptional(dummyRDotJavaTarget);
+            if (dummyRDotJavaRule.isPresent()) {
+              requiredBuildTargets.add(dummyRDotJavaTarget);
+              return Optional.of(DummyRDotJava.getRDotJavaBinFolder(dummyRDotJavaTarget));
+            }
+            return Optional.absent();
+          }
+        });
     IjModuleGraph moduleGraph = IjModuleGraph.from(
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,
@@ -99,7 +113,7 @@ public class IjProject {
         moduleGraph,
         projectFilesystem);
     writer.write();
-
-    return ImmutableSet.copyOf(requiredBuildTargets);
+    return requiredBuildTargets.build();
   }
+
 }

@@ -82,6 +82,7 @@ public class IjModuleFactory {
     private final ImmutableSet<BuildTarget> circularDependencyInducingTargets;
 
     private Optional<IjModuleAndroidFacet.Builder> androidFacetBuilder;
+    private ImmutableSet.Builder<Path> extraClassPathDependenciesBuilder;
     private Map<Path, IjFolder> sourceFoldersMergeMap;
     // See comment in getDependencies for these two member variables.
     private Map<BuildTarget, IjModuleGraph.DependencyType> dependencyTypeMap;
@@ -90,6 +91,7 @@ public class IjModuleFactory {
     public ModuleBuildContext(ImmutableSet<BuildTarget> circularDependencyInducingTargets) {
       this.circularDependencyInducingTargets = circularDependencyInducingTargets;
       this.androidFacetBuilder = Optional.absent();
+      this.extraClassPathDependenciesBuilder = new ImmutableSet.Builder<>();
       this.sourceFoldersMergeMap = new HashMap<>();
       this.dependencyTypeMap = new HashMap<>();
       this.dependencyOriginMap = HashMultimap.create();
@@ -118,6 +120,14 @@ public class IjModuleFactory {
 
     public ImmutableSet<IjFolder> getSourceFolders() {
       return ImmutableSet.copyOf(sourceFoldersMergeMap.values());
+    }
+
+    public void addExtraClassPathDependency(Path path) {
+      extraClassPathDependenciesBuilder.add(path);
+    }
+
+    public ImmutableSet<Path> getExtraClassPathDependencies() {
+      return extraClassPathDependenciesBuilder.build();
     }
 
     /**
@@ -213,14 +223,25 @@ public class IjModuleFactory {
   }
 
   private final Map<BuildRuleType, IjModuleRule<?>> moduleRuleIndex = new HashMap<>();
+  private final Function<? super TargetNode<?>, Optional<Path>> dummyRDotJavaClassPathResolver;
 
-  public IjModuleFactory() {
+  /**
+   * @param dummyRDotJavaClassPathResolver function to find the project-relative path to a
+   *                                       directory structure under which the R.class file can be
+   *                                       found (the structure will be the same as the package path
+   *                                       of the R class). A path should be returned only if the
+   *                                       given TargetNode requires the R.class to compile.
+   */
+  public IjModuleFactory(
+      Function<? super TargetNode<?>, Optional<Path>> dummyRDotJavaClassPathResolver) {
     addToIndex(new AndroidBinaryModuleRule());
     addToIndex(new AndroidLibraryModuleRule());
     addToIndex(new AndroidResourceModuleRule());
     addToIndex(new JavaLibraryModuleRule());
     addToIndex(new JavaTestModuleRule());
     addToIndex(new RobolectricTestModuleRule());
+
+    this.dummyRDotJavaClassPathResolver = dummyRDotJavaClassPathResolver;
   }
 
   private void addToIndex(IjModuleRule<?> rule) {
@@ -262,6 +283,7 @@ public class IjModuleFactory {
         .addAllFolders(context.getSourceFolders())
         .putAllDependencies(context.getDependencies())
         .setAndroidFacet(context.getAndroidFacet())
+        .addAllExtraClassPathDependencies(context.getExtraClassPathDependencies())
         .build();
   }
 
@@ -379,7 +401,7 @@ public class IjModuleFactory {
     }
   }
 
-  private static class AndroidLibraryModuleRule
+  private class AndroidLibraryModuleRule
       implements IjModuleRule<AndroidLibraryDescription.Arg> {
 
     @Override
@@ -396,6 +418,11 @@ public class IjModuleFactory {
           true /* wantsPackagePrefix */,
           context);
       addCompiledShadowIfNeeded(target, context);
+      Optional<Path> dummyRDotJavaClassPath =
+          dummyRDotJavaClassPathResolver.apply(target);
+      if (dummyRDotJavaClassPath.isPresent()) {
+        context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
+      }
       context.ensureAndroidFacetBuilder();
     }
   }

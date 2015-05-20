@@ -104,7 +104,8 @@ public class IjProjectWriter {
 
     ST contents = getST(StringTemplateFile.LIBRARY_TEMPLATE);
     contents.add("name", library.getName());
-    contents.add("binaryJar", library.getBinaryJar());
+    contents.add("binaryJar", library.getBinaryJar().orNull());
+    contents.add("classPaths", library.getClassPaths());
     contents.add("sourceJar", library.getSourceJar().orNull());
     contents.add("javadocUrl", library.getJavadocUrl().orNull());
     //TODO(mkosiba): support res and assets for aar.

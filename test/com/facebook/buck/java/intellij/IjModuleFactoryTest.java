@@ -30,6 +30,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +46,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testModuleDep() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     Path moduleBasePath = Paths.get("java/com/example/base");
     BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party/guava:guava");
@@ -65,7 +67,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testModuleDepMerge() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     Path moduleBasePath = Paths.get("test/com/example/base");
     BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party/guava:guava");
@@ -96,7 +98,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testModuleTestDep() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     Path moduleBasePath = Paths.get("test/com/example/base");
     BuildTarget buildTargetJunit = BuildTargetFactory.newInstance("//third-party/junit:junit");
@@ -117,7 +119,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testModuleDepTypeResolution() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     Path moduleBasePath = Paths.get("java/com/example");
     BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party:guava");
@@ -150,7 +152,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testModuleDepTypePromotion() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     Path moduleBasePath = Paths.get("java/com/example");
     BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party:guava");
@@ -196,7 +198,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testDepWhenNoSources() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     Path moduleBasePath = Paths.get("java/com/example");
     BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party:guava");
@@ -231,7 +233,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testCompiledShadowDep() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     Path moduleBasePath = Paths.get("java/com/example");
     BuildTarget genruleBuildTarget =
@@ -270,7 +272,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testJavaLibrary() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     TargetNode<?> javaLib = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
@@ -295,7 +297,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testJavaLibraryInRoot() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     TargetNode<?> javaLib = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//:base"))
@@ -328,7 +330,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testJavaLibrariesWithParentBasePath() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     TargetNode<?> javaLib1 = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:core"))
@@ -355,7 +357,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testJavaLibraryAndTestLibraryResultInOnlyOneFolder() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     TargetNode<?> javaLib = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third-party/example:core"))
@@ -378,7 +380,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testAndroidLibrary() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     TargetNode<?> androidLib = AndroidLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
@@ -396,7 +398,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testAndroidLibraries() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     TargetNode<?> javaLib = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
@@ -416,7 +418,7 @@ public class IjModuleFactoryTest {
 
   @Test
   public void testAndroidBinary() {
-    IjModuleFactory factory = new IjModuleFactory();
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
 
     SourcePath manifestPath = new TestSourcePath("AndroidManifest.xml");
     TargetNode<?> androidBinary = AndroidBinaryBuilder
