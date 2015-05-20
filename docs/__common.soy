@@ -134,10 +134,66 @@ ga('send', 'pageview');
 {/template}
 
 /**
+ * @param platform
+ * @param rules
+ */
+{template .platformBuildRuleLink}
+    <li><strong>{$platform}</strong></li>
+    {foreach $rule in $rules}
+        <li><a href="{ROOT}rule/{$rule}.html">{$rule}()</a>
+    {/foreach}
+{/template}
+
+/**
  * Consider passing in the path to the URL of the page that the user
  * is currently on and not hyperlinking that item in the table of contents.
  */
 {template .tableOfContents}
+    {let $platformRulesMap: [
+        'android': [
+            'android_aar',
+            'android_binary',
+            'android_build_config',
+            'android_library',
+            'android_prebuilt_aar',
+            'android_resource',
+            'apk_genrule',
+            'cxx_library',
+            'gen_aidl',
+            'keystore',
+            'ndk_library',
+            'prebuilt_jar',
+            'prebuilt_native_library',
+            'project_config',
+        ],
+        'core': [
+            'genrule',
+        ],
+        'cxx': [
+            'cxx_binary',
+            'cxx_library',
+            'cxx_test',
+            'prebuilt_native_library',
+        ],
+        'd': [
+            'd_binary',
+            'd_library',
+            'd_test',
+        ],
+        'java': [
+            'cxx_library',
+            'java_binary',
+            'java_library',
+            'java_test',
+            'prebuilt_jar',
+            'prebuilt_native_library',
+        ],
+        'python': [
+            'python_binary',
+            'python_library',
+            'python_test',
+        ],
+    ] /}
   <h3>Getting Started</h3>
   <ul>
     <li><a href="{ROOT}">Overview</a>
@@ -167,38 +223,32 @@ ga('send', 'pageview');
   </ul>
   <h3>Build Rules</h3>
   <ul>
-    // TODO(mbolin): document android_instrumentation_apk
-    // TODO(mbolin): document robolectric_test
-    {foreach $rule in [
-        'android_aar',
-        'android_binary',
-        'android_build_config',
-        'android_library',
-        'android_prebuilt_aar',
-        'android_resource',
-        'apk_genrule',
-        'cxx_binary',
-        'cxx_library',
-        'cxx_test',
-        'd_binary',
-        'd_library',
-        'd_test',
-        'gen_aidl',
-        'genrule',
-        'java_binary',
-        'java_library',
-        'java_test',
-        'keystore',
-        'ndk_library',
-        'prebuilt_jar',
-        'prebuilt_native_library',
-        'project_config',
-        'python_binary',
-        'python_library',
-        'python_test',
-        ]}
-      <li><a href="{ROOT}rule/{$rule}.html">{$rule}()</a>
-    {/foreach}
+    // Ugh, closure doesn't have the concept of sorting, so we cannot control the order without
+    // listing it ourselves.
+    {call .platformBuildRuleLink}
+        {param platform: 'Core' /}
+        {param rules: $platformRulesMap['core'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Android' /}
+        {param rules: $platformRulesMap['android'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'CXX' /}
+        {param rules: $platformRulesMap['cxx'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'D' /}
+        {param rules: $platformRulesMap['d'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Java' /}
+        {param rules: $platformRulesMap['java'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Python' /}
+        {param rules: $platformRulesMap['python'] /}
+    {/call}
   </ul>
   <h3>Functions</h3>
   <ul>
