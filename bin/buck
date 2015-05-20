@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Resolve symlinks if necessary, otherwise madness will follow.
 # On a GNU system, we could use "-f" to follow all symlinks. BSD based
