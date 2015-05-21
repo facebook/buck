@@ -45,4 +45,15 @@ public class RobolectricTestBuilder
     arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
     return this;
   }
+
+  public RobolectricTestBuilder addDep(BuildTarget rule) {
+    arg.deps = amend(arg.deps, rule);
+    return this;
+  }
+
+  public RobolectricTestBuilder addProvidedDep(BuildTarget rule) {
+    arg.providedDeps = amend(arg.providedDeps, rule);
+    return this;
+  }
+
 }
