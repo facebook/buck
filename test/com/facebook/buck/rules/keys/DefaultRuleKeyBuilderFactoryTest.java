@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AppendableRuleKeyCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -150,10 +151,15 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     FileHashCache fileHashCache = new NullFileHashCache();
+    AppendableRuleKeyCache appendableRuleKeyCache =
+        new AppendableRuleKeyCache(pathResolver, fileHashCache);
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
-    RuleKey subKey = EmptyRuleKeyBuilder.newInstance(pathResolver, fileHashCache)
+    RuleKey subKey = EmptyRuleKeyBuilder.newInstance(
+        pathResolver,
+        fileHashCache,
+        appendableRuleKeyCache)
         .setReflectively("cheese", "brie")
         .build()
         .getRuleKeyWithoutDeps();
@@ -185,6 +191,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     FileHashCache fileHashCache = new NullFileHashCache();
+    AppendableRuleKeyCache appendableRuleKeyCache =
+        new AppendableRuleKeyCache(pathResolver, fileHashCache);
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
@@ -206,7 +214,10 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     AppendableRule appendableRule = new AppendableRule(depTarget);
 
-    RuleKey subKey = EmptyRuleKeyBuilder.newInstance(pathResolver, fileHashCache)
+    RuleKey subKey = EmptyRuleKeyBuilder.newInstance(
+        pathResolver,
+        fileHashCache,
+        appendableRuleKeyCache)
         .setReflectively("cheese", "brie")
         .build()
         .getRuleKeyWithoutDeps();

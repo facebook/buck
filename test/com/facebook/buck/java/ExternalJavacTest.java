@@ -23,10 +23,12 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.EmptyRuleKeyBuilder;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.AppendableRuleKeyCache;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -98,24 +100,25 @@ public class ExternalJavacTest extends EasyMockSupport {
     Map<Path, HashCode> hashCodes = ImmutableMap.of(javac, Hashing.sha1().hashInt(42));
     FakeFileHashCache fileHashCache = new FakeFileHashCache(hashCodes);
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    AppendableRuleKeyCache appendableRuleKeyCache =
+        new AppendableRuleKeyCache(pathResolver, fileHashCache);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
     BuildRule buildRule = new NoopBuildRule(params, pathResolver);
+    FakeRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
+        new FakeRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
-    RuleKey javacKey = EmptyRuleKeyBuilder.newInstance(pathResolver, fileHashCache)
+    RuleKey javacKey = EmptyRuleKeyBuilder.newInstance(
+        pathResolver,
+        fileHashCache,
+        appendableRuleKeyCache)
         .setReflectively("javac", javac)
         .build()
         .getRuleKeyWithoutDeps();
-    RuleKey.Builder builder = RuleKey.builder(
-        buildRule,
-        pathResolver,
-        fileHashCache);
+    RuleKey.Builder builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
     builder.setReflectively("key.appendableSubKey", javacKey);
     RuleKeyPair expected = builder.build();
 
-    builder = RuleKey.builder(
-        buildRule,
-        pathResolver,
-        fileHashCache);
+    builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
     ExternalJavac compiler = new ExternalJavac(javac, Optional.<JavacVersion>absent());
     builder.setReflectively("key", compiler);
     RuleKeyPair seen = builder.build();
@@ -133,24 +136,25 @@ public class ExternalJavacTest extends EasyMockSupport {
     Map<Path, HashCode> hashCodes = ImmutableMap.of(javac, Hashing.sha1().hashInt(42));
     FakeFileHashCache fileHashCache = new FakeFileHashCache(hashCodes);
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    AppendableRuleKeyCache appendableRuleKeyCache =
+        new AppendableRuleKeyCache(pathResolver, fileHashCache);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
     BuildRule buildRule = new NoopBuildRule(params, pathResolver);
+    FakeRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
+        new FakeRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
-    RuleKey javacKey = EmptyRuleKeyBuilder.newInstance(pathResolver, fileHashCache)
+    RuleKey javacKey = EmptyRuleKeyBuilder.newInstance(
+        pathResolver,
+        fileHashCache,
+        appendableRuleKeyCache)
         .setReflectively("javac.version", javacVersion.toString())
         .build()
         .getRuleKeyWithoutDeps();
-    RuleKey.Builder builder = RuleKey.builder(
-        buildRule,
-        pathResolver,
-        fileHashCache);
+    RuleKey.Builder builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
     builder.setReflectively("key.appendableSubKey", javacKey);
     RuleKeyPair expected = builder.build();
 
-    builder = RuleKey.builder(
-        buildRule,
-        pathResolver,
-        fileHashCache);
+    builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
     ExternalJavac compiler = new ExternalJavac(javac, Optional.of(javacVersion));
     builder.setReflectively("key", compiler);
     RuleKeyPair seen = builder.build();

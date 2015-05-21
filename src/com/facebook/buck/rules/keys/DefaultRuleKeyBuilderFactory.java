@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.model.BuckVersion;
+import com.facebook.buck.rules.AppendableRuleKeyCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -35,17 +36,23 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
   private final SourcePathResolver pathResolver;
   private final LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>>
       knownFields;
+  private final AppendableRuleKeyCache appendableRuleKeyCache;
 
   public DefaultRuleKeyBuilderFactory(FileHashCache hashCache, SourcePathResolver pathResolver) {
     this.hashCache = hashCache;
     this.pathResolver = pathResolver;
 
     knownFields = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
+    appendableRuleKeyCache = new AppendableRuleKeyCache(pathResolver, hashCache);
   }
 
   @Override
   public RuleKey.Builder newInstance(BuildRule buildRule) {
-    RuleKey.Builder builder = RuleKey.builder(buildRule, pathResolver, hashCache);
+    RuleKey.Builder builder = RuleKey.builder(
+        buildRule,
+        pathResolver,
+        hashCache,
+        appendableRuleKeyCache);
     builder.setReflectively("buckVersionUid", BuckVersion.getVersion());
 
     if (buildRule instanceof RuleKeyAppendable) {
@@ -53,10 +60,7 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
       // reflective rule key setting.
       builder.setReflectively(
           ".buck",
-          RuleKey.getAppendableRuleKey(
-              pathResolver,
-              hashCache,
-              (RuleKeyAppendable) buildRule));
+          appendableRuleKeyCache.get((RuleKeyAppendable) buildRule));
     }
 
     try {

@@ -118,22 +118,14 @@ public class RuleKey {
     return this.getHashCode().hashCode();
   }
 
-  public static RuleKey getAppendableRuleKey(
-      SourcePathResolver resolver,
-      FileHashCache hashCache,
-      RuleKeyAppendable appendable) {
-    Builder subKeyBuilder = emptyBuilder(resolver, hashCache);
-    appendable.appendToRuleKey(subKeyBuilder);
-    return subKeyBuilder.build().getRuleKeyWithoutDeps();
-  }
-
   /**
    * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s inputs.
    */
   public static Builder builder(
       BuildRule rule,
       SourcePathResolver resolver,
-      FileHashCache hashCache) {
+      FileHashCache hashCache,
+      AppendableRuleKeyCache appendableRuleKeyCache) {
     ImmutableSortedSet<BuildRule> exportedDeps;
     if (rule instanceof ExportDependencies) {
       exportedDeps = ((ExportDependencies) rule).getExportedDeps();
@@ -146,7 +138,8 @@ public class RuleKey {
         resolver,
         rule.getDeps(),
         exportedDeps,
-        hashCache);
+        hashCache,
+        appendableRuleKeyCache);
   }
 
   /**
@@ -158,17 +151,21 @@ public class RuleKey {
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<BuildRule> exportedDeps,
-      FileHashCache hashCache) {
-    return new Builder(resolver, deps, exportedDeps, hashCache)
+      FileHashCache hashCache,
+      AppendableRuleKeyCache appendableRuleKeyCache) {
+    return new Builder(resolver, deps, exportedDeps, hashCache, appendableRuleKeyCache)
         .setReflectively("name", name.getFullyQualifiedName())
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
         .setReflectively("buck.type", type.getName());
   }
 
   @VisibleForTesting
-  static Builder emptyBuilder(SourcePathResolver resolver, FileHashCache hashCache) {
+  static Builder emptyBuilder(
+      SourcePathResolver resolver,
+      FileHashCache hashCache,
+      AppendableRuleKeyCache appendableRuleKeyCache) {
     ImmutableSortedSet<BuildRule> noDeps = ImmutableSortedSet.of();
-    return new Builder(resolver, noDeps, noDeps, hashCache);
+    return new Builder(resolver, noDeps, noDeps, hashCache, appendableRuleKeyCache);
   }
 
   public static class Builder {
@@ -183,6 +180,7 @@ public class RuleKey {
     private final ImmutableSortedSet<BuildRule> exportedDeps;
     private final Hasher hasher;
     private final FileHashCache hashCache;
+    private final AppendableRuleKeyCache appendableRuleKeyCache;
 
     @Nullable private List<String> logElms;
 
@@ -190,12 +188,14 @@ public class RuleKey {
         SourcePathResolver resolver,
         ImmutableSortedSet<BuildRule> deps,
         ImmutableSortedSet<BuildRule> exportedDeps,
-        FileHashCache hashCache) {
+        FileHashCache hashCache,
+        AppendableRuleKeyCache appendableRuleKeyCache) {
       this.resolver = resolver;
       this.deps = deps;
       this.exportedDeps = exportedDeps;
       this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
       this.hashCache = hashCache;
+      this.appendableRuleKeyCache = appendableRuleKeyCache;
       if (logger.isVerboseEnabled()) {
         this.logElms = Lists.newArrayList();
       }
@@ -222,10 +222,7 @@ public class RuleKey {
       if (val instanceof RuleKeyAppendable) {
         setReflectively(
             key + ".appendableSubKey",
-            getAppendableRuleKey(
-                resolver,
-                hashCache,
-                (RuleKeyAppendable) val));
+            appendableRuleKeyCache.get((RuleKeyAppendable) val));
         if (!(val instanceof BuildRule)) {
           return this;
         }

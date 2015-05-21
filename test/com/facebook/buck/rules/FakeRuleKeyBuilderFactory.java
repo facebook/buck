@@ -33,6 +33,7 @@ public class FakeRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
 
   private final FileHashCache fileHashCache;
   private final SourcePathResolver resolver;
+  private final AppendableRuleKeyCache appendableRuleKeyCache;
 
   public FakeRuleKeyBuilderFactory(SourcePathResolver resolver) {
     this(new NullFileHashCache(), resolver);
@@ -41,11 +42,12 @@ public class FakeRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
   public FakeRuleKeyBuilderFactory(FileHashCache fileHashCache, SourcePathResolver resolver) {
     this.fileHashCache = fileHashCache;
     this.resolver = resolver;
+    this.appendableRuleKeyCache = new AppendableRuleKeyCache(resolver, fileHashCache);
   }
 
   @Override
   public Builder newInstance(BuildRule buildRule) {
-    return RuleKey.builder(buildRule, resolver, fileHashCache);
+    return RuleKey.builder(buildRule, resolver, fileHashCache, appendableRuleKeyCache);
   }
 
 }

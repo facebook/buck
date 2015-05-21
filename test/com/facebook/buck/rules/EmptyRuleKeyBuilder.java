@@ -24,8 +24,9 @@ public class EmptyRuleKeyBuilder {
 
   public static RuleKey.Builder newInstance(
       SourcePathResolver resolver,
-      FileHashCache fileHashCache) {
-    return RuleKey.emptyBuilder(resolver, fileHashCache);
+      FileHashCache fileHashCache,
+      AppendableRuleKeyCache appendableRuleKeyCache) {
+    return RuleKey.emptyBuilder(resolver, fileHashCache, appendableRuleKeyCache);
   }
 
 }

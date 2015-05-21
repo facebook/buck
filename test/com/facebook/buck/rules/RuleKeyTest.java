@@ -512,12 +512,7 @@ public class RuleKeyTest {
   }
 
   private RuleKey.Builder createEmptyRuleKey(SourcePathResolver resolver) {
-    return RuleKey.builder(
-        BuildTargetFactory.newInstance("//some:example"),
-        BuildRuleType.of("example"),
-        resolver,
-        ImmutableSortedSet.<BuildRule>of(),
-        ImmutableSortedSet.<BuildRule>of(), new FileHashCache() {
+    FileHashCache fileHashCache = new FileHashCache() {
           @Override
           public boolean contains(Path path) {
             return true;
@@ -527,6 +522,9 @@ public class RuleKeyTest {
           public HashCode get(Path path) {
             return HashCode.fromString("deadbeef");
           }
-        });
+        };
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
+    BuildRule buildRule = new FakeBuildRule(BuildRuleType.of("example"), buildTarget, resolver);
+    return new FakeRuleKeyBuilderFactory(fileHashCache, resolver).newInstance(buildRule);
   }
 }
