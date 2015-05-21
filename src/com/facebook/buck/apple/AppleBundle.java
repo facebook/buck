@@ -143,12 +143,6 @@ public class AppleBundle extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    // EXECUTABLE_NAME and PRODUCT_NAME default to the binary name, but can be overridden.
-    ImmutableMap<String, String> plistVariables = ImmutableMap.<String, String>builder()
-        .put("EXECUTABLE_NAME", binaryName)
-        .put("PRODUCT_NAME", binaryName)
-        .putAll(infoPlistSubstitutions)
-        .build();
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
     Path productsPath = bundleRoot.resolve(
@@ -163,7 +157,12 @@ public class AppleBundle extends AbstractBuildRule {
             getResolver().getPath(infoPlist.get()),
             productsPath.resolve("Info.plist"),
             InfoPlistSubstitution.createVariableExpansionFunction(
-                plistVariables
+                withDefaults(
+                    infoPlistSubstitutions,
+                    ImmutableMap.of(
+                        "EXECUTABLE_NAME", binaryName,
+                        "PRODUCT_NAME", binaryName
+                    ))
             )));
 
     if (binary.isPresent()) {
@@ -234,6 +233,19 @@ public class AppleBundle extends AbstractBuildRule {
             ZipStep.MIN_COMPRESSION_LEVEL,
             bundleRoot));
     return stepsBuilder.build();
+  }
+
+  ImmutableMap<String, String> withDefaults(
+      ImmutableMap<String, String> map,
+      ImmutableMap<String, String> defaults) {
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder()
+        .putAll(map);
+    for (ImmutableMap.Entry<String, String> entry : defaults.entrySet()) {
+      if (!map.containsKey(entry.getKey())) {
+        builder = builder.put(entry.getKey(), entry.getValue());
+      }
+    }
+    return builder.build();
   }
 
   private static Path getBundleDestinationPath(

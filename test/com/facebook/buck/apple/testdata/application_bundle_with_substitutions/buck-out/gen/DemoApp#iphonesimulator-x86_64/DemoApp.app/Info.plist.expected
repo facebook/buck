@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
-	<string>DemoApp</string>
+	<string>OverrideExecutableName</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.example.DemoApp</string>
 	<key>CFBundleInfoDictionaryVersion</key>
