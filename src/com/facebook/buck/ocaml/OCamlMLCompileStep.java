@@ -55,13 +55,13 @@ public class OCamlMLCompileStep extends ShellStep {
     }
 
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-      return builder.setReflectively(key + ".cCompiler", cCompiler)
-          .setReflectively(key + ".ocamlCompiler", ocamlCompiler)
-          .setReflectively(key + ".output", output.toString())
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+      return builder.setReflectively("cCompiler", cCompiler)
+          .setReflectively("ocamlCompiler", ocamlCompiler)
+          .setReflectively("output", output.toString())
           // TODO(user): I suspect this is going to mean absolute paths in rule keys
-          .setReflectively(key + ".input", input)
-          .setReflectively(key + ".flags", flags);
+          .setReflectively("input", input)
+          .setReflectively("flags", flags);
     }
 
     public ImmutableSet<Path> getAllOutputs() {

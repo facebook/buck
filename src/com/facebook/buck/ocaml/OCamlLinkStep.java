@@ -63,16 +63,16 @@ public class OCamlLinkStep extends ShellStep {
     }
 
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
       return builder
-          .setReflectively(key + ".cxxCompiler", cxxCompiler.toString())
-          .setReflectively(key + ".ocamlCompiler", ocamlCompiler.toString())
-          .setReflectively(key + ".output", output.toString())
-          .setReflectively(key + ".depInput", depInput)
-          .setReflectively(key + ".input", input)
-          .setReflectively(key + ".flags", flags)
-          .setReflectively(key + ".isLibrary", isLibrary)
-          .setReflectively(key + ".isBytecode", isBytecode);
+          .setReflectively("cxxCompiler", cxxCompiler.toString())
+          .setReflectively("ocamlCompiler", ocamlCompiler.toString())
+          .setReflectively("output", output.toString())
+          .setReflectively("depInput", depInput)
+          .setReflectively("input", input)
+          .setReflectively("flags", flags)
+          .setReflectively("isLibrary", isLibrary)
+          .setReflectively("isBytecode", isBytecode);
     }
 
     public ImmutableSet<Path> getAllOutputs() {

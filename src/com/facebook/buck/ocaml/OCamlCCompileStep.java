@@ -57,14 +57,14 @@ public class OCamlCCompileStep extends ShellStep {
     }
 
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-      builder.setReflectively(key + ".cCompiler", cCompiler);
-      builder.setReflectively(key + ".ocamlCompiler", ocamlCompiler);
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+      builder.setReflectively("cCompiler", cCompiler);
+      builder.setReflectively("ocamlCompiler", ocamlCompiler);
       // TODO(user): Ensure that this is not an absolute path.
-      builder.setReflectively(key + ".output", output.toString());
-      builder.setReflectively(key + ".input", input);
-      builder.setReflectively(key + ".flags", flags);
-      builder.setReflectively(key + ".includes", includes);
+      builder.setReflectively("output", output.toString());
+      builder.setReflectively("input", input);
+      builder.setReflectively("flags", flags);
+      builder.setReflectively("includes", includes);
       return builder;
     }
   }

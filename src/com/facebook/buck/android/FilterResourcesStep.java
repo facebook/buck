@@ -435,8 +435,8 @@ public class FilterResourcesStep implements Step {
     }
 
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-      return builder.setReflectively(key + ".filter", getDescription());
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+      return builder.setReflectively("filter", getDescription());
     }
 
     @VisibleForTesting

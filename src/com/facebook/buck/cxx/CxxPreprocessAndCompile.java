@@ -176,7 +176,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
     // from contributing to the rule key.
     ImmutableList<String> flags = this.flags;
@@ -185,14 +185,12 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
           .transform(sanitizer.get().sanitize(Optional.<Path>absent(), /* expandPaths */ false))
           .toList();
     }
-    builder.setReflectively(key + ".flags", flags);
+    builder.setReflectively("flags", flags);
 
     // If a sanitizer is being used for compilation, we need to record the working directory in
     // the rule key, as changing this changes the generated object file.
     if (sanitizer.isPresent() && operation == CxxPreprocessAndCompileStep.Operation.COMPILE) {
-      builder.setReflectively(
-          key + ".compilationDirectory",
-          sanitizer.get().getCompilationDirectory());
+      builder.setReflectively("compilationDirectory", sanitizer.get().getCompilationDirectory());
     }
 
     return builder;

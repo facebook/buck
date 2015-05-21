@@ -178,16 +178,16 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // TODO(simons): Include bootclasspath params.
-    builder.setReflectively(key + ".sourceLevel", getSourceLevel())
-        .setReflectively(key + ".targetLevel", getTargetLevel())
-        .setReflectively(key + ".extraArguments", Joiner.on(',').join(getExtraArguments()))
-        .setReflectively(key + ".debug", isDebug());
+    builder.setReflectively("sourceLevel", getSourceLevel())
+        .setReflectively("targetLevel", getTargetLevel())
+        .setReflectively("extraArguments", Joiner.on(',').join(getExtraArguments()))
+        .setReflectively("debug", isDebug())
+        .setReflectively("javac", getJavac())
+        .setReflectively("annotationProcessingParams", getAnnotationProcessingParams());
 
-    getJavac().appendToRuleKey(builder, "javac");
-
-    return getAnnotationProcessingParams().appendToRuleKey(builder, key);
+    return builder;
   }
 
   public ImmutableSet<SourcePath> getInputs() {

@@ -30,12 +30,14 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.EmptyRuleKeyBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -147,11 +149,17 @@ public class DefaultRuleKeyBuilderFactoryTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildRule rule = new EmptyRule(target);
 
+    FileHashCache fileHashCache = new NullFileHashCache();
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
-    RuleKey.Builder builder = factory.newInstance(rule);
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
-    builder.setReflectively("field.cheese", "brie");
+    RuleKey subKey = EmptyRuleKeyBuilder.newInstance(pathResolver, fileHashCache)
+        .setReflectively("cheese", "brie")
+        .build()
+        .getRuleKeyWithoutDeps();
+
+    RuleKey.Builder builder = factory.newInstance(rule);
+    builder.setReflectively("field.appendableSubKey", subKey);
     RuleKeyPair expected = builder.build();
 
     class AppendingField extends EmptyRule {
@@ -176,8 +184,9 @@ public class DefaultRuleKeyBuilderFactoryTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildRule rule = new EmptyRule(target);
 
+    FileHashCache fileHashCache = new NullFileHashCache();
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     class AppendableRule extends EmptyRule implements RuleKeyAppendable {
       public AppendableRule(BuildTarget target) {
@@ -185,8 +194,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
 
       @Override
-      public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-        return builder.setReflectively(key + ".cheese", "brie");
+      public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+        return builder.setReflectively("cheese", "brie");
       }
 
       @Override
@@ -197,8 +206,13 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     AppendableRule appendableRule = new AppendableRule(depTarget);
 
+    RuleKey subKey = EmptyRuleKeyBuilder.newInstance(pathResolver, fileHashCache)
+        .setReflectively("cheese", "brie")
+        .build()
+        .getRuleKeyWithoutDeps();
+
     RuleKey.Builder builder = factory.newInstance(rule);
-    builder.setReflectively("field.cheese", "brie");
+    builder.setReflectively("field.appendableSubKey", subKey);
     builder.setReflectively("field", appendableRule.getRuleKey());
     RuleKeyPair expected = builder.build();
 
@@ -359,8 +373,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
   private static class Appender implements RuleKeyAppendable {
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-      return builder.setReflectively(key + ".cheese", "brie");
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+      return builder.setReflectively("cheese", "brie");
     }
 
     @Override

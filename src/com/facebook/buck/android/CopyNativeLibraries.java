@@ -106,7 +106,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // Hash in the pre-filtered native libraries we're pulling in.
     ImmutableSortedMap<Pair<TargetCpuType, String>, SourcePath> sortedLibs =
         ImmutableSortedMap.<Pair<TargetCpuType, String>, SourcePath>orderedBy(
@@ -116,7 +116,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
     for (Map.Entry<Pair<TargetCpuType, String>, SourcePath> entry : sortedLibs.entrySet()) {
       Pair<TargetCpuType, String> entryKey = entry.getKey();
       builder.setReflectively(
-          String.format(key + ".lib(%s, %s)", entryKey.getFirst(), entryKey.getSecond()),
+          String.format("lib(%s, %s)", entryKey.getFirst(), entryKey.getSecond()),
           entry.getValue());
     }
 

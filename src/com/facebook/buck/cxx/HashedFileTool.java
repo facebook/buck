@@ -41,8 +41,8 @@ public class HashedFileTool implements Tool {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-    return builder.setReflectively(key, path);
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return builder.setReflectively("path", path);
   }
 
   @Override

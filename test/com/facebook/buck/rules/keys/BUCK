@@ -11,6 +11,7 @@ java_test(
     '//src/com/facebook/buck/util:util',
     '//test/com/facebook/buck/io:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/rules:testutil',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',

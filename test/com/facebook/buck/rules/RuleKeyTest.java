@@ -478,11 +478,11 @@ public class RuleKeyTest {
     }
 
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
       return builder
-          .setReflectively(key + ".value", value)
-          .setReflectively(key + ".foo", "foo")
-          .setReflectively(key + ".bar", "bar");
+          .setReflectively("value", value)
+          .setReflectively("foo", "foo")
+          .setReflectively("bar", "bar");
     }
   }
 
@@ -505,9 +505,9 @@ public class RuleKeyTest {
     }
 
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
       return builder
-          .setReflectively(key + ".foo", foo);
+          .setReflectively("foo", foo);
     }
   }
 

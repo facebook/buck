@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,9 +16,16 @@
 
 package com.facebook.buck.rules;
 
-// TODO(user): Delete this class once we can use reflection for all rulekeys
-public interface RuleKeyAppendable {
+import com.facebook.buck.util.FileHashCache;
 
-  RuleKey.Builder appendToRuleKey(RuleKey.Builder builder);
+public class EmptyRuleKeyBuilder {
+
+  private EmptyRuleKeyBuilder() {}
+
+  public static RuleKey.Builder newInstance(
+      SourcePathResolver resolver,
+      FileHashCache fileHashCache) {
+    return RuleKey.emptyBuilder(resolver, fileHashCache);
+  }
 
 }

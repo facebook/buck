@@ -85,11 +85,11 @@ public class ExternalJavac implements Javac {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     if (version.isPresent()) {
-      return builder.setReflectively(key + ".javac.version", version.get().toString());
+      return builder.setReflectively("javac.version", version.get().toString());
     }
-    return builder.setReflectively(key + ".javac", pathToJavac);
+    return builder.setReflectively("javac", pathToJavac);
   }
 
   public Path getPath() {

@@ -52,7 +52,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
   public abstract Optional<Boolean> isZipSafe();
 
   @Override
-  public final RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+  public final RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // Hash all the input components here so we can detect changes in both input file content
     // and module name mappings.
     // TODO(agallagher): Change the types of these fields from Map to SortedMap so that we don't

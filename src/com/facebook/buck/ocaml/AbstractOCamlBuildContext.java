@@ -245,16 +245,16 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return builder
-        .setReflectively(key + ".flags", getFlags())
-        .setReflectively(key + ".input", getInput())
-        .setReflectively(key + ".lexCompiler", getLexCompiler())
-        .setReflectively(key + ".ocamlBytecodeCompiler", getOcamlBytecodeCompiler())
-        .setReflectively(key + ".ocamlCompiler", getOcamlCompiler())
-        .setReflectively(key + ".ocamlDebug", getOcamlDebug())
-        .setReflectively(key + ".ocamlDepTool", getOcamlDepTool())
-        .setReflectively(key + ".yaccCompiler", getYaccCompiler());
+        .setReflectively("flags", getFlags())
+        .setReflectively("input", getInput())
+        .setReflectively("lexCompiler", getLexCompiler())
+        .setReflectively("ocamlBytecodeCompiler", getOcamlBytecodeCompiler())
+        .setReflectively("ocamlCompiler", getOcamlCompiler())
+        .setReflectively("ocamlDebug", getOcamlDebug())
+        .setReflectively("ocamlDepTool", getOcamlDepTool())
+        .setReflectively("yaccCompiler", getYaccCompiler());
   }
 
   public ImmutableList<String> getCCompileFlags() {

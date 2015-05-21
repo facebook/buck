@@ -62,11 +62,11 @@ public class OCamlDebugLauncherStep implements Step {
     }
 
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
       return builder
-          .setReflectively(key + ".ocamlDebug", ocamlDebug.toString())
-          .setReflectively(key + ".bytecodeOutput", bytecodeOutput.toString())
-          .setReflectively(key + ".flags", bytecodeIncludeFlags);
+          .setReflectively("ocamlDebug", ocamlDebug.toString())
+          .setReflectively("bytecodeOutput", bytecodeOutput.toString())
+          .setReflectively("flags", bytecodeIncludeFlags);
     }
   }
 

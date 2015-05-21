@@ -97,12 +97,12 @@ public class JavaBinary extends AbstractBuildRule
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // Build a sorted set so that metaInfDirectory contents are listed in a canonical order.
     ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
     BuildRules.addInputsToSortedSet(metaInfDirectory, paths, directoryTraverser);
 
-    return builder.setReflectively(key + ".metaInfDirectory", paths.build());
+    return builder.setReflectively("metaInfDirectory", paths.build());
   }
 
   @Override

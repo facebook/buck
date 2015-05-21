@@ -39,7 +39,7 @@ public class PythonEnvironment implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-    return builder.setReflectively(key + ".python-version", getPythonVersion().getVersionString());
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return builder.setReflectively("python-version", getPythonVersion().getVersionString());
   }
 }

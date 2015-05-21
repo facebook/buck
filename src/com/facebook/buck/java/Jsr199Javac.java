@@ -133,10 +133,10 @@ public class Jsr199Javac implements Javac {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-    return builder.setReflectively(key + ".javac", "jsr199")
-        .setReflectively(key + ".javac.version", "in-memory")
-        .setReflectively(key + ".javacjar", javacJar);
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return builder.setReflectively("javac", "jsr199")
+        .setReflectively("javac.version", "in-memory")
+        .setReflectively("javacjar", javacJar);
   }
 
   @Override

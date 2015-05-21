@@ -73,8 +73,10 @@ public class VersionedTool implements Tool {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-    return builder.setReflectively(key, String.format("%s (%s)", name, version));
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return builder
+        .setReflectively("name", name)
+        .setReflectively("version", version);
   }
 
   public static Function<Path, VersionedTool> fromPath(final String name, final String version) {

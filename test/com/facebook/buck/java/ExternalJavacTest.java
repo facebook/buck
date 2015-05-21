@@ -18,8 +18,10 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.EmptyRuleKeyBuilder;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -97,19 +99,25 @@ public class ExternalJavacTest extends EasyMockSupport {
     FakeFileHashCache fileHashCache = new FakeFileHashCache(hashCodes);
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
+    BuildRule buildRule = new NoopBuildRule(params, pathResolver);
+
+    RuleKey javacKey = EmptyRuleKeyBuilder.newInstance(pathResolver, fileHashCache)
+        .setReflectively("javac", javac)
+        .build()
+        .getRuleKeyWithoutDeps();
     RuleKey.Builder builder = RuleKey.builder(
-        new NoopBuildRule(params, pathResolver),
+        buildRule,
         pathResolver,
         fileHashCache);
-    builder.setReflectively("key.javac", javac);
+    builder.setReflectively("key.appendableSubKey", javacKey);
     RuleKeyPair expected = builder.build();
 
     builder = RuleKey.builder(
-        new NoopBuildRule(params, pathResolver),
+        buildRule,
         pathResolver,
         fileHashCache);
     ExternalJavac compiler = new ExternalJavac(javac, Optional.<JavacVersion>absent());
-    compiler.appendToRuleKey(builder, "key");
+    builder.setReflectively("key", compiler);
     RuleKeyPair seen = builder.build();
 
     assertEquals(expected, seen);
@@ -126,19 +134,25 @@ public class ExternalJavacTest extends EasyMockSupport {
     FakeFileHashCache fileHashCache = new FakeFileHashCache(hashCodes);
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
+    BuildRule buildRule = new NoopBuildRule(params, pathResolver);
+
+    RuleKey javacKey = EmptyRuleKeyBuilder.newInstance(pathResolver, fileHashCache)
+        .setReflectively("javac.version", javacVersion.toString())
+        .build()
+        .getRuleKeyWithoutDeps();
     RuleKey.Builder builder = RuleKey.builder(
-        new NoopBuildRule(params, pathResolver),
+        buildRule,
         pathResolver,
         fileHashCache);
-    builder.setReflectively("key.javac.version", javacVersion.toString());
+    builder.setReflectively("key.appendableSubKey", javacKey);
     RuleKeyPair expected = builder.build();
 
     builder = RuleKey.builder(
-        new NoopBuildRule(params, pathResolver),
+        buildRule,
         pathResolver,
         fileHashCache);
     ExternalJavac compiler = new ExternalJavac(javac, Optional.of(javacVersion));
-    compiler.appendToRuleKey(builder, "key");
+    builder.setReflectively("key", compiler);
     RuleKeyPair seen = builder.build();
 
     assertEquals(expected, seen);

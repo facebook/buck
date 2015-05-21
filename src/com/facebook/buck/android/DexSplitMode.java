@@ -206,19 +206,19 @@ class DexSplitMode implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
-    builder.setReflectively(key + ".dexStore", dexStore.name());
-    builder.setReflectively(key + ".dexSplitStrategy", dexSplitStrategy.name());
-    builder.setReflectively(key + ".isPrimaryDexScenarioOverflowAllowed",
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    builder.setReflectively("dexStore", dexStore.name());
+    builder.setReflectively("dexSplitStrategy", dexSplitStrategy.name());
+    builder.setReflectively("isPrimaryDexScenarioOverflowAllowed",
         isPrimaryDexScenarioOverflowAllowed);
-    builder.setReflectively(key + ".linearAllocHardLimit", linearAllocHardLimit);
-    builder.setReflectively(key + ".primaryDexPatterns", primaryDexPatterns);
-    builder.setReflectively(key + ".primaryDexClassesFile", primaryDexClassesFile);
-    builder.setReflectively(key + ".primaryDexScenarioFile", primaryDexScenarioFile);
-    builder.setReflectively(key + ".secondaryDexHeadClassesFile", secondaryDexHeadClassesFile);
-    builder.setReflectively(key + ".secondaryDexTailClassesFile", secondaryDexTailClassesFile);
-    builder.setReflectively(key + ".shouldSplitDex", shouldSplitDex);
-    builder.setReflectively(key + ".useLinearAllocSplitDex", useLinearAllocSplitDex);
+    builder.setReflectively("linearAllocHardLimit", linearAllocHardLimit);
+    builder.setReflectively("primaryDexPatterns", primaryDexPatterns);
+    builder.setReflectively("primaryDexClassesFile", primaryDexClassesFile);
+    builder.setReflectively("primaryDexScenarioFile", primaryDexScenarioFile);
+    builder.setReflectively("secondaryDexHeadClassesFile", secondaryDexHeadClassesFile);
+    builder.setReflectively("secondaryDexTailClassesFile", secondaryDexTailClassesFile);
+    builder.setReflectively("shouldSplitDex", shouldSplitDex);
+    builder.setReflectively("useLinearAllocSplitDex", useLinearAllocSplitDex);
     return builder;
   }
 }

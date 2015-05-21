@@ -85,10 +85,10 @@ public class SymlinkTree
   // re-run it.
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     for (Map.Entry<Path, SourcePath> entry : links.entrySet()) {
       builder.setReflectively(
-          key + ".link(" + entry.getKey().toString() + ")",
+          "link(" + entry.getKey().toString() + ")",
           getResolver().getPath(entry.getValue()).toString());
     }
 

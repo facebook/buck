@@ -46,9 +46,9 @@ abstract class AbstractAppleBundleDestination implements RuleKeyAppendable {
   public abstract Optional<String> getSubpath();
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder, String key) {
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return builder
-        .setReflectively(key + ".subfolder_spec", getSubfolderSpec())
-        .setReflectively(key + ".subpath", getSubpath());
+        .setReflectively("subfolder_spec", getSubfolderSpec())
+        .setReflectively("subpath", getSubpath());
   }
 }

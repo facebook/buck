@@ -50,8 +50,13 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
 
     if (buildRule instanceof RuleKeyAppendable) {
       // "." is not a valid first character for a field name, and so will never be seen in the
-      // reflective rule key setting
-      ((RuleKeyAppendable) buildRule).appendToRuleKey(builder, ".buck");
+      // reflective rule key setting.
+      builder.setReflectively(
+          ".buck",
+          RuleKey.getAppendableRuleKey(
+              pathResolver,
+              hashCache,
+              (RuleKeyAppendable) buildRule));
     }
 
     try {

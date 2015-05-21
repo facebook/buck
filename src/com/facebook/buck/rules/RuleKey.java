@@ -118,6 +118,15 @@ public class RuleKey {
     return this.getHashCode().hashCode();
   }
 
+  public static RuleKey getAppendableRuleKey(
+      SourcePathResolver resolver,
+      FileHashCache hashCache,
+      RuleKeyAppendable appendable) {
+    Builder subKeyBuilder = emptyBuilder(resolver, hashCache);
+    appendable.appendToRuleKey(subKeyBuilder);
+    return subKeyBuilder.build().getRuleKeyWithoutDeps();
+  }
+
   /**
    * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s inputs.
    */
@@ -154,6 +163,12 @@ public class RuleKey {
         .setReflectively("name", name.getFullyQualifiedName())
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
         .setReflectively("buck.type", type.getName());
+  }
+
+  @VisibleForTesting
+  static Builder emptyBuilder(SourcePathResolver resolver, FileHashCache hashCache) {
+    ImmutableSortedSet<BuildRule> noDeps = ImmutableSortedSet.of();
+    return new Builder(resolver, noDeps, noDeps, hashCache);
   }
 
   public static class Builder {
@@ -205,7 +220,12 @@ public class RuleKey {
 
     public Builder setReflectively(String key, @Nullable Object val) {
       if (val instanceof RuleKeyAppendable) {
-        ((RuleKeyAppendable) val).appendToRuleKey(this, key);
+        setReflectively(
+            key + ".appendableSubKey",
+            getAppendableRuleKey(
+                resolver,
+                hashCache,
+                (RuleKeyAppendable) val));
         if (!(val instanceof BuildRule)) {
           return this;
         }
