@@ -161,11 +161,11 @@ public class OCamlRuleBuilder {
       final ImmutableList<String> linkerFlags) {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps;
     try {
-      cxxPreprocessorInputFromDeps =
+      cxxPreprocessorInputFromDeps = CxxPreprocessorInput.concat(
           CxxPreprocessables.getTransitiveCxxPreprocessorInput(
               ocamlBuckConfig.getCxxPlatform(),
               FluentIterable.from(params.getDeps())
-                  .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
+                  .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
     } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
       throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
     }
@@ -272,11 +272,11 @@ public class OCamlRuleBuilder {
       final ImmutableList<String> linkerFlags) {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps;
     try {
-      cxxPreprocessorInputFromDeps =
+      cxxPreprocessorInputFromDeps = CxxPreprocessorInput.concat(
           CxxPreprocessables.getTransitiveCxxPreprocessorInput(
               ocamlBuckConfig.getCxxPlatform(),
               FluentIterable.from(params.getDeps())
-                  .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
+                  .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
     } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
       throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
     }

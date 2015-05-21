@@ -180,13 +180,13 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       try {
         // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
         // NDK library rules.
-        cxxPreprocessorInput =
+        cxxPreprocessorInput = CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 cxxPlatform,
                 params.getDeps(),
                 Predicates.or(
                     Predicates.instanceOf(CxxPreprocessorDep.class),
-                    Predicates.instanceOf(NdkLibrary.class)));
+                    Predicates.instanceOf(NdkLibrary.class))));
       } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
         throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
       }

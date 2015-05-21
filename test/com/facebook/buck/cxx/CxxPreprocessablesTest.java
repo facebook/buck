@@ -167,11 +167,11 @@ public class CxxPreprocessablesTest {
 
     // Verify that getTransitiveCxxPreprocessorInput gets all CxxPreprocessorInput objects
     // from the relevant rules above.
-    CxxPreprocessorInput expected = CxxPreprocessorInput.concat(
-        ImmutableList.of(input1, input2));
-    CxxPreprocessorInput actual = CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-        cxxPlatform,
-        ImmutableList.<BuildRule>of(dep3));
+    ImmutableList<CxxPreprocessorInput> expected = ImmutableList.of(input1, input2, nothing);
+    ImmutableList<CxxPreprocessorInput> actual = ImmutableList.copyOf(
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            cxxPlatform,
+            ImmutableList.<BuildRule>of(dep3)));
     assertEquals(expected, actual);
   }
 
@@ -242,16 +242,16 @@ public class CxxPreprocessablesTest {
 
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling
     // in the bottom input.
-    CxxPreprocessorInput totalInput =
+    CxxPreprocessorInput totalInput = CxxPreprocessorInput.concat(
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
             cxxPlatform,
-            ImmutableList.of(top));
+            ImmutableList.of(top)));
     assertTrue(bottomInput.getPreprocessorFlags().get(CxxSource.Type.C).contains(sentinal));
     assertFalse(totalInput.getPreprocessorFlags().get(CxxSource.Type.C).contains(sentinal));
   }
 
   @Test
-  public void getTransitiveDependenciesThrowsForConflictingHeaders()
+  public void combiningTransitiveDependenciesThrowsForConflictingHeaders()
       throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
@@ -289,13 +289,14 @@ public class CxxPreprocessablesTest {
             Paths.get("bottom/file.h"),
             Paths.get("top/file.h")));
 
-    CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-        cxxPlatform,
-        ImmutableList.of(top));
+    CxxPreprocessorInput.concat(
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            cxxPlatform,
+            ImmutableList.of(top)));
   }
 
   @Test
-  public void getTransitiveDependenciesDoesNotThrowsForCompatibleHeaders()
+  public void combiningTransitiveDependenciesDoesNotThrowForCompatibleHeaders()
       throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
@@ -343,9 +344,10 @@ public class CxxPreprocessablesTest {
 
     assertEquals(
         expected,
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-            cxxPlatform,
-            ImmutableList.of(top)));
+        CxxPreprocessorInput.concat(
+            CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                cxxPlatform,
+                ImmutableList.of(top))));
   }
 
 }

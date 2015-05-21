@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 
 public class CxxPreprocessables {
@@ -67,11 +68,10 @@ public class CxxPreprocessables {
    * Find and return the {@link CxxPreprocessorInput} objects from {@link CxxPreprocessorDep}
    * found while traversing the dependencies starting from the {@link BuildRule} objects given.
    */
-  public static CxxPreprocessorInput getTransitiveCxxPreprocessorInput(
+  public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       final CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
-      final Predicate<Object> traverse)
-      throws CxxPreprocessorInput.ConflictingHeadersException {
+      final Predicate<Object> traverse) {
 
     // We don't really care about the order we get back here, since headers shouldn't
     // conflict.  However, we want something that's deterministic, so sort by build
@@ -98,13 +98,12 @@ public class CxxPreprocessables {
     visitor.start();
 
     // Grab the cxx preprocessor inputs and return them.
-    return CxxPreprocessorInput.concat(deps.values());
+    return deps.values();
   }
 
-  public static CxxPreprocessorInput getTransitiveCxxPreprocessorInput(
+  public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       final CxxPlatform cxxPlatform,
-      Iterable<? extends BuildRule> inputs)
-      throws CxxPreprocessorInput.ConflictingHeadersException {
+      Iterable<? extends BuildRule> inputs) {
     return getTransitiveCxxPreprocessorInput(
         cxxPlatform,
         inputs,

@@ -54,6 +54,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -534,38 +536,31 @@ public class CxxDescriptionEnhancer {
       ImmutableList<SymlinkTree> headerSymlinkTrees,
       ImmutableList<Path> frameworkSearchPaths) {
 
-    CxxPreprocessorInput cxxPreprocessorInputFromDeps;
-    try {
-      // Write the compile rules for all C/C++ sources in this rule.
-      cxxPreprocessorInputFromDeps =
-          CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-              cxxPlatform,
-              FluentIterable.from(params.getDeps())
-                  .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
+    // Write the compile rules for all C/C++ sources in this rule.
+    Collection<CxxPreprocessorInput> cxxPreprocessorInputFromDeps =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            cxxPlatform,
+            FluentIterable.from(params.getDeps())
+                .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
 
-      // Add the private includes of any libraries which list this
-      // rule as a test.
-      BuildTarget targetWithoutFlavor = BuildTarget.of(
-          params.getBuildTarget().getUnflavoredBuildTarget());
-      ImmutableSet.Builder<AbstractCxxLibrary> librariesTestedByTargetBuilder =
-          ImmutableSet.builder();
-      for (BuildRule rule : params.getDeps()) {
-        if (rule instanceof AbstractCxxLibrary) {
-          AbstractCxxLibrary libraryRule = (AbstractCxxLibrary) rule;
-          if (libraryRule.getTests().contains(targetWithoutFlavor)) {
-            librariesTestedByTargetBuilder.add(libraryRule);
-          }
+    // Add the private includes of any libraries which list this
+    // rule as a test.
+    BuildTarget targetWithoutFlavor = BuildTarget.of(
+        params.getBuildTarget().getUnflavoredBuildTarget());
+    ImmutableSet.Builder<AbstractCxxLibrary> librariesTestedByTargetBuilder =
+        ImmutableSet.builder();
+    for (BuildRule rule : params.getDeps()) {
+      if (rule instanceof AbstractCxxLibrary) {
+        AbstractCxxLibrary libraryRule = (AbstractCxxLibrary) rule;
+        if (libraryRule.getTests().contains(targetWithoutFlavor)) {
+          librariesTestedByTargetBuilder.add(libraryRule);
         }
       }
-      cxxPreprocessorInputFromDeps = CxxPreprocessorInput.concat(
-          ImmutableList.of(
-              cxxPreprocessorInputFromDeps,
-              getPrivateCxxPreprocessorInputFromLibraries(
-                  cxxPlatform,
-                  librariesTestedByTargetBuilder.build())));
-    } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
     }
+    ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputFromTestedLibraries =
+        getPrivateCxxPreprocessorInputFromLibraries(
+            cxxPlatform,
+            librariesTestedByTargetBuilder.build());
 
     ImmutableMap.Builder<Path, SourcePath> allLinks = ImmutableMap.builder();
     ImmutableMap.Builder<Path, SourcePath> allFullLinks = ImmutableMap.builder();
@@ -592,9 +587,10 @@ public class CxxDescriptionEnhancer {
 
     try {
       return CxxPreprocessorInput.concat(
-          ImmutableList.of(
-              localPreprocessorInput,
-              cxxPreprocessorInputFromDeps));
+          Iterables.concat(
+              Collections.singleton(localPreprocessorInput),
+              cxxPreprocessorInputFromDeps,
+              cxxPreprocessorInputFromTestedLibraries));
     } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
       throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
     }
@@ -861,10 +857,9 @@ public class CxxDescriptionEnhancer {
     return platformFlagsBuilder.build();
   }
 
-  private static CxxPreprocessorInput getPrivateCxxPreprocessorInputFromLibraries(
+  private static ImmutableList<CxxPreprocessorInput> getPrivateCxxPreprocessorInputFromLibraries(
       CxxPlatform cxxPlatform,
-      Iterable<? extends AbstractCxxLibrary> libraries)
-    throws CxxPreprocessorInput.ConflictingHeadersException {
+      Iterable<? extends AbstractCxxLibrary> libraries) {
     ImmutableList.Builder<CxxPreprocessorInput> libraryInputsBuilder = ImmutableList.builder();
 
     for (AbstractCxxLibrary library : libraries) {
@@ -874,6 +869,6 @@ public class CxxDescriptionEnhancer {
               HeaderVisibility.PRIVATE));
     }
 
-    return CxxPreprocessorInput.concat(libraryInputsBuilder.build());
+    return libraryInputsBuilder.build();
   }
 }
