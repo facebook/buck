@@ -27,7 +27,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -94,10 +93,10 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
             Suppliers.ofInstance(AndroidResourceHelper.androidResOnly(params.getExtraDeps()))),
         new SourcePathResolver(resolver),
         resolver.getAllRules(args.deps.get()),
-        args.res.transform(SourcePaths.toSourcePath(params.getProjectFilesystem())).orNull(),
+        args.res.orNull(),
         collectInputFiles(filesystem, args.res),
         args.rDotJavaPackage.orNull(),
-        args.assets.transform(SourcePaths.toSourcePath(params.getProjectFilesystem())).orNull(),
+        args.assets.orNull(),
         collectInputFiles(filesystem, args.assets),
         args.manifest.orNull(),
         args.hasWhitelistedStrings.or(false));

@@ -26,9 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -93,8 +91,8 @@ public class ResourcesFilter extends AbstractBuildRule
 
   // Rule key correctness is ensured by depping on all android_resource rules in
   // Builder.setAndroidResourceDepsFinder()
-  private final ImmutableList<SourcePath> resDirectories;
-  private final ImmutableSet<SourcePath> whitelistedStringDirs;
+  private final ImmutableList<Path> resDirectories;
+  private final ImmutableSet<Path> whitelistedStringDirs;
   @AddToRuleKey
   private final ImmutableSet<String> locales;
   @AddToRuleKey
@@ -106,8 +104,8 @@ public class ResourcesFilter extends AbstractBuildRule
   public ResourcesFilter(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableList<SourcePath> resDirectories,
-      ImmutableSet<SourcePath> whitelistedStringDirs,
+      ImmutableList<Path> resDirectories,
+      ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesStep.ResourceFilter resourceFilter) {
@@ -121,12 +119,12 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableList<SourcePath> getResDirectories() {
+  public ImmutableList<Path> getResDirectories() {
     return buildOutputInitializer.getBuildOutput().resDirectories;
   }
 
   @Override
-  public ImmutableSet<SourcePath> getNonEnglishStringFiles() {
+  public ImmutableSet<Path> getNonEnglishStringFiles() {
     return buildOutputInitializer.getBuildOutput().nonEnglishStringFiles;
   }
 
@@ -138,8 +136,8 @@ public class ResourcesFilter extends AbstractBuildRule
 
     final ImmutableList.Builder<Path> filteredResDirectoriesBuilder = ImmutableList.builder();
     final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
-        getResolver().getAllPaths(resDirectories),
-        ImmutableSet.copyOf(getResolver().getAllPaths(whitelistedStringDirs)),
+        resDirectories,
+        whitelistedStringDirs,
         locales,
         filteredResDirectoriesBuilder);
     steps.add(filterResourcesStep);
@@ -223,17 +221,13 @@ public class ResourcesFilter extends AbstractBuildRule
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    ImmutableList<SourcePath> resDirectories =
+    ImmutableList<Path> resDirectories =
         FluentIterable.from(onDiskBuildInfo.getValues(RES_DIRECTORIES_KEY).get())
             .transform(MorePaths.TO_PATH)
-            .transform(
-                SourcePaths.getToBuildTargetSourcePath(getProjectFilesystem(), getBuildTarget()))
             .toList();
-    ImmutableSet<SourcePath> nonEnglishStringFiles =
+    ImmutableSet<Path> nonEnglishStringFiles =
         FluentIterable.from(onDiskBuildInfo.getValues(NON_ENGLISH_STRING_FILES_KEY).get())
             .transform(MorePaths.TO_PATH)
-            .transform(
-                SourcePaths.getToBuildTargetSourcePath(getProjectFilesystem(), getBuildTarget()))
             .toSet();
 
     return new BuildOutput(resDirectories, nonEnglishStringFiles);
@@ -245,12 +239,12 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   public static class BuildOutput {
-    private final ImmutableList<SourcePath> resDirectories;
-    private final ImmutableSet<SourcePath> nonEnglishStringFiles;
+    private final ImmutableList<Path> resDirectories;
+    private final ImmutableSet<Path> nonEnglishStringFiles;
 
     public BuildOutput(
-        ImmutableList<SourcePath> resDirectories,
-        ImmutableSet<SourcePath> nonEnglishStringFiles) {
+        ImmutableList<Path> resDirectories,
+        ImmutableSet<Path> nonEnglishStringFiles) {
       this.resDirectories = resDirectories;
       this.nonEnglishStringFiles = nonEnglishStringFiles;
     }

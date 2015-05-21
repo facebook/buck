@@ -61,11 +61,11 @@ public class RobolectricTest extends JavaTest {
   static final String LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME =
       "buck.robolectric_res_directories";
 
-  private static final Function<HasAndroidResourceDeps, SourcePath> RESOURCE_DIRECTORY_FUNCTION =
-      new Function<HasAndroidResourceDeps, SourcePath>() {
+  private static final Function<HasAndroidResourceDeps, Path> RESOURCE_DIRECTORY_FUNCTION =
+      new Function<HasAndroidResourceDeps, Path>() {
     @Override
     @Nullable
-    public SourcePath apply(HasAndroidResourceDeps input) {
+    public Path apply(HasAndroidResourceDeps input) {
       return input.getRes();
     }
   };
@@ -77,7 +77,7 @@ public class RobolectricTest extends JavaTest {
       Set<SourcePath> resources,
       Set<Label> labels,
       Set<String> contacts,
-      Optional<SourcePath> proguardConfig,
+      Optional<Path> proguardConfig,
       ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
       List<String> vmArgs,

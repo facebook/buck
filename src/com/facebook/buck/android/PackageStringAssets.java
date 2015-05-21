@@ -88,8 +88,7 @@ public class PackageStringAssets extends AbstractBuildRule
     Path pathToStringAssetsZip = getPathToStringAssetsZip();
     steps.add(new MakeCleanDirectoryStep(pathToStrings));
     steps.add(new CompileStringsStep(
-            ImmutableSet.copyOf(
-                getResolver().getAllPaths(filteredResourcesProvider.getNonEnglishStringFiles())),
+            filteredResourcesProvider.getNonEnglishStringFiles(),
             aaptPackageResources.getPathToRDotTxtDir(),
             pathToStrings));
     steps.add(new ZipStep(

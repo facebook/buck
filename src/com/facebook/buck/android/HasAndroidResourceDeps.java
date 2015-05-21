@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.hash.Hasher;
@@ -96,12 +95,12 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
    * @return path to a directory containing Android resources.
    */
   @Nullable
-  SourcePath getRes();
+  Path getRes();
 
   /**
    * @return path to a directory containing Android assets.
    */
   @Nullable
-  SourcePath getAssets();
+  Path getAssets();
 
 }

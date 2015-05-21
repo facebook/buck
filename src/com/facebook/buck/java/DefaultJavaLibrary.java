@@ -113,7 +113,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final Optional<Path> resourcesRoot;
   private final Optional<Path> outputJar;
   @AddToRuleKey
-  private final Optional<SourcePath> proguardConfig;
+  private final Optional<Path> proguardConfig;
   @AddToRuleKey
   private final ImmutableList<String> postprocessClassesCommands;
   @AddToRuleKey
@@ -177,7 +177,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       SourcePathResolver resolver,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
-      Optional<SourcePath> proguardConfig,
+      Optional<Path> proguardConfig,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,

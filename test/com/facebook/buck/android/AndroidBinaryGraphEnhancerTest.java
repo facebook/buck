@@ -65,6 +65,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 
@@ -146,7 +147,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* manifest */ new TestSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         createMock(FilteredResourcesProvider.class),
         ImmutableList.<HasAndroidResourceDeps>of(),
-        ImmutableSet.<SourcePath>of(),
+        ImmutableSet.<Path>of(),
         AndroidBinary.PackageType.DEBUG,
         ANDROID_JAVAC_OPTIONS,
         false,

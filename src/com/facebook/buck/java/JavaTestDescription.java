@@ -27,7 +27,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -97,7 +96,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
             args, params.getProjectFilesystem()),
         args.labels.get(),
         args.contacts.get(),
-        args.proguardConfig.transform(SourcePaths.toSourcePath(params.getProjectFilesystem())),
+        args.proguardConfig,
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         args.testType.or(TestType.JUNIT),
         javacOptions,

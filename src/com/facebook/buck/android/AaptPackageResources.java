@@ -88,7 +88,7 @@ public class AaptPackageResources extends AbstractBuildRule
   @AddToRuleKey
   private final SourcePath manifest;
   private final FilteredResourcesProvider filteredResourcesProvider;
-  private final ImmutableSet<SourcePath> assetsDirectories;
+  private final ImmutableSet<Path> assetsDirectories;
   @AddToRuleKey
   private final PackageType packageType;
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
@@ -108,7 +108,7 @@ public class AaptPackageResources extends AbstractBuildRule
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
-      ImmutableSet<SourcePath> assetsDirectories,
+      ImmutableSet<Path> assetsDirectories,
       PackageType packageType,
       JavacOptions javacOptions,
       boolean rDotJavaNeedsDexing,
@@ -212,7 +212,7 @@ public class AaptPackageResources extends AbstractBuildRule
         ImmutableList.Builder<Step> commands = ImmutableList.builder();
         try {
           createAllAssetsDirectory(
-              ImmutableSet.copyOf(getResolver().getAllPaths(assetsDirectories)),
+              assetsDirectories,
               commands,
               context.getProjectFilesystem());
         } catch (IOException e) {
@@ -265,7 +265,7 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(
         new AaptStep(
             getAndroidManifestXml(),
-            getResolver().getAllPaths(filteredResourcesProvider.getResDirectories()),
+            filteredResourcesProvider.getResDirectories(),
             assetsDirectory,
             getResourceApkPath(),
             rDotTxtDir,
@@ -315,7 +315,6 @@ public class AaptPackageResources extends AbstractBuildRule
     buildableContext.addMetadata(
         FILTERED_RESOURCE_DIRS_KEY,
         FluentIterable.from(filteredResourcesProvider.getResDirectories())
-            .transform(getResolver().getPathFunction())
             .transform(Functions.toStringFunction())
             .toSortedList(Ordering.natural()));
 
@@ -354,7 +353,7 @@ public class AaptPackageResources extends AbstractBuildRule
       // produces a JSON with android resource id's and xml paths for each string resource.
       GenStringSourceMapStep genNativeStringInfo = new GenStringSourceMapStep(
           rDotTxtDir,
-          getResolver().getAllPaths(filteredResourcesProvider.getResDirectories()),
+          filteredResourcesProvider.getResDirectories(),
           outputDirPath);
       steps.add(genNativeStringInfo);
 

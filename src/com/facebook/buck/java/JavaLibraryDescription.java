@@ -32,7 +32,6 @@ import com.facebook.buck.rules.FlavorableDescription;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
@@ -112,7 +111,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         pathResolver,
         args.srcs.get(),
         validateResources(pathResolver, args, params.getProjectFilesystem()),
-        args.proguardConfig.transform(SourcePaths.toSourcePath(params.getProjectFilesystem())),
+        args.proguardConfig,
         args.postprocessClassesCommands.get(),
         exportedDeps,
         resolver.getAllRules(args.providedDeps.get()),

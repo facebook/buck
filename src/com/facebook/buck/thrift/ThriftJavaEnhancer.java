@@ -140,7 +140,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
             .transform(SourcePaths.getToBuildTargetSourcePath(params.getProjectFilesystem()))
             .toSortedSet(Ordering.natural()),
         /* resources */ ImmutableSet.<SourcePath>of(),
-        /* proguardConfig */ Optional.<SourcePath>absent(),
+        /* proguardConfig */ Optional.<Path>absent(),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),

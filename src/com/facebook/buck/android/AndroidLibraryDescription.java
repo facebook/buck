@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -134,7 +133,7 @@ public class AndroidLibraryDescription
               pathResolver,
               args,
               params.getProjectFilesystem()),
-          args.proguardConfig.transform(SourcePaths.toSourcePath(params.getProjectFilesystem())),
+          args.proguardConfig,
           args.postprocessClassesCommands.get(),
           exportedDeps,
           resolver.getAllRules(args.providedDeps.get()),

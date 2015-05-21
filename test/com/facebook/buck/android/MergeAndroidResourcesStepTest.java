@@ -23,7 +23,6 @@ import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -124,7 +123,7 @@ public class MergeAndroidResourcesStepTest {
     HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(new SourcePathResolver(new BuildRuleResolver()))
         .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/facebook/http:res"))
-        .setRes(new TestSourcePath("res"))
+        .setRes(Paths.get("res"))
         .setRDotJavaPackage("com.facebook")
         .build();
 

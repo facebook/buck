@@ -105,7 +105,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
       Set<SourcePath> resources,
       Set<Label> labels,
       Set<String> contacts,
-      Optional<SourcePath> proguardConfig,
+      Optional<Path> proguardConfig,
       ImmutableSet<Path> addtionalClasspathEntries,
       TestType testType,
       JavacOptions javacOptions,

@@ -41,10 +41,10 @@ public class AndroidResourceRuleBuilder {
     private SourcePathResolver resolver;
     private BuildRuleParams buildRuleParams;
     private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
-    private SourcePath res;
+    private Path res;
     private ImmutableSortedSet<Path> resSrcs = ImmutableSortedSet.of();
     private String rDotJavaPackage;
-    private SourcePath assets;
+    private Path assets;
     private ImmutableSortedSet<Path> assetsSrcs = ImmutableSortedSet.of();
     private SourcePath manifest;
     private boolean hasWhitelistedStrings = false;
@@ -83,7 +83,7 @@ public class AndroidResourceRuleBuilder {
       return this;
     }
 
-    public Builder setRes(SourcePath res) {
+    public Builder setRes(Path res) {
       this.res = res;
       return this;
     }
@@ -98,7 +98,7 @@ public class AndroidResourceRuleBuilder {
       return this;
     }
 
-    public Builder setAssets(SourcePath assets) {
+    public Builder setAssets(Path assets) {
       this.assets = assets;
       return this;
     }
