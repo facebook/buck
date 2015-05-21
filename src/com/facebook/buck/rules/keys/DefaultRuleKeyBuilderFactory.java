@@ -32,17 +32,20 @@ import java.util.concurrent.ExecutionException;
 
 public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
   private final FileHashCache hashCache;
-  private LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>> knownFields;
+  private final SourcePathResolver pathResolver;
+  private final LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>>
+      knownFields;
 
-  public DefaultRuleKeyBuilderFactory(FileHashCache hashCache) {
+  public DefaultRuleKeyBuilderFactory(FileHashCache hashCache, SourcePathResolver pathResolver) {
     this.hashCache = hashCache;
+    this.pathResolver = pathResolver;
 
     knownFields = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
   }
 
   @Override
-  public RuleKey.Builder newInstance(BuildRule buildRule, SourcePathResolver resolver) {
-    RuleKey.Builder builder = RuleKey.builder(buildRule, resolver, hashCache);
+  public RuleKey.Builder newInstance(BuildRule buildRule) {
+    RuleKey.Builder builder = RuleKey.builder(buildRule, pathResolver, hashCache);
     builder.setReflectively("buckVersionUid", BuckVersion.getVersion());
 
     if (buildRule instanceof RuleKeyAppendable) {

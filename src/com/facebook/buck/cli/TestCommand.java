@@ -265,7 +265,8 @@ public class TestCommand extends BuildCommand {
 
     ActionGraph graph = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer()).apply(targetGraph);
+        new BuildTargetNodeToBuildRuleTransformer(),
+        params.getFileHashCache()).apply(targetGraph);
 
     // Look up all of the test rules in the action graph.
     Iterable<TestRule> testRules = Iterables.filter(graph.getNodes(), TestRule.class);

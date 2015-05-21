@@ -48,7 +48,8 @@ public class ToolTest {
                     .put("path", Strings.repeat("a", 40))
                     .put("other-path", Strings.repeat("b", 40))
                     .put("same", Strings.repeat("a", 40))
-                    .build()));
+                    .build()),
+            pathResolver);
 
     Path path = Paths.get("path");
     Path otherPath = Paths.get("other-path");
@@ -94,7 +95,8 @@ public class ToolTest {
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new FakeRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
-                ImmutableMap.<String, String>of()));
+                ImmutableMap.<String, String>of()),
+            pathResolver);
 
     String tool = "tool";
     String version = "version";
@@ -138,7 +140,8 @@ public class ToolTest {
                     // Note: the hashes of both files are the same
                     .put("/usr/local/bin/python2.7", Strings.repeat("a", 40))
                     .put("/opt/bin/python2.7", Strings.repeat("a", 40))
-                    .build()));
+                    .build()),
+            pathResolver);
 
     RuleKeyPair tool1RuleKey =
         createRuleKeyBuilder(ruleKeyBuilderFactory, pathResolver)
@@ -156,6 +159,6 @@ public class ToolTest {
   private RuleKey.Builder createRuleKeyBuilder(
       RuleKeyBuilderFactory factory,
       SourcePathResolver resolver) {
-    return factory.newInstance(new FakeBuildRule("//:test", resolver), resolver);
+    return factory.newInstance(new FakeBuildRule("//:test", resolver));
   }
 }

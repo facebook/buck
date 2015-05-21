@@ -51,10 +51,9 @@ public class LexTest {
 
   private RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
-      SourcePathResolver resolver,
       AbstractBuildRule rule) {
 
-    RuleKey.Builder builder = factory.newInstance(rule, resolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
     return builder.build();
   }
 
@@ -69,12 +68,12 @@ public class LexTest {
                 ImmutableMap.of(
                     "lex", Strings.repeat("a", 40),
                     "input", Strings.repeat("b", 40),
-                    "different", Strings.repeat("c", 40))));
+                    "different", Strings.repeat("c", 40))),
+            pathResolver);
 
     // Generate a rule key for the defaults.
     RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new Lex(
             params,
             pathResolver,
@@ -87,7 +86,6 @@ public class LexTest {
     // Verify that changing the archiver causes a rulekey change.
     RuleKeyPair lexChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new Lex(
             params,
             pathResolver,
@@ -101,7 +99,6 @@ public class LexTest {
     // Verify that changing the flags causes a rulekey change.
     RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new Lex(
             params,
             pathResolver,
@@ -115,7 +112,6 @@ public class LexTest {
     // Verify that changing the output source causes a rulekey change.
     RuleKeyPair outputSourceChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new Lex(
             params,
             pathResolver,
@@ -129,7 +125,6 @@ public class LexTest {
     // Verify that changing the output header causes a rulekey change.
     RuleKeyPair outputHeaderChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new Lex(
             params,
             pathResolver,
@@ -143,7 +138,6 @@ public class LexTest {
     // Verify that changing the inputs causes a rulekey change.
     RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new Lex(
             params,
             pathResolver,

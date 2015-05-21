@@ -50,10 +50,9 @@ public class YaccTest {
 
   private RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
-      SourcePathResolver resolver,
       AbstractBuildRule rule) {
 
-    RuleKey.Builder builder = factory.newInstance(rule, resolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
     return builder.build();
   }
 
@@ -68,12 +67,12 @@ public class YaccTest {
                 ImmutableMap.of(
                     "yacc", Strings.repeat("a", 40),
                     "input", Strings.repeat("b", 40),
-                    "different", Strings.repeat("c", 40))));
+                    "different", Strings.repeat("c", 40))),
+            pathResolver);
 
     // Generate a rule key for the defaults.
     RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new Yacc(
             params,
             pathResolver,
@@ -85,7 +84,6 @@ public class YaccTest {
     // Verify that changing the archiver causes a rulekey change.
     RuleKeyPair yaccChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new Yacc(
             params,
             pathResolver,
@@ -98,7 +96,6 @@ public class YaccTest {
     // Verify that changing the flags causes a rulekey change.
     RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new Yacc(
             params,
             pathResolver,
@@ -111,7 +108,6 @@ public class YaccTest {
     // Verify that changing the output prefix causes a rulekey change.
     RuleKeyPair outputPrefixChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new Yacc(
             params,
             pathResolver,
@@ -124,7 +120,6 @@ public class YaccTest {
     // Verify that changing the inputs causes a rulekey change.
     RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new Yacc(
             params,
             pathResolver,

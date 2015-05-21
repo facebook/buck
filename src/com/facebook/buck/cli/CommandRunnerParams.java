@@ -25,6 +25,7 @@ import com.facebook.buck.rules.Repository;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,6 +52,7 @@ class CommandRunnerParams {
   private final Optional<ProcessManager> processManager;
   private final Optional<WebServer> webServer;
   private final BuckConfig buckConfig;
+  private final FileHashCache fileHashCache;
 
   public CommandRunnerParams(
       Console console,
@@ -66,7 +68,8 @@ class CommandRunnerParams {
       Clock clock,
       Optional<ProcessManager> processManager,
       Optional<WebServer> webServer,
-      BuckConfig buckConfig) {
+      BuckConfig buckConfig,
+      FileHashCache fileHashCache) {
     this.console = console;
     this.repository = repository;
     this.artifactCacheFactory = artifactCacheFactory;
@@ -81,6 +84,7 @@ class CommandRunnerParams {
     this.processManager = processManager;
     this.webServer = webServer;
     this.buckConfig = buckConfig;
+    this.fileHashCache = fileHashCache;
   }
 
   public Console getConsole() {
@@ -137,6 +141,10 @@ class CommandRunnerParams {
 
   public BuckConfig getBuckConfig() {
     return buckConfig;
+  }
+
+  public FileHashCache getFileHashCache() {
+    return fileHashCache;
   }
 
   protected ExecutionContext createExecutionContext() {

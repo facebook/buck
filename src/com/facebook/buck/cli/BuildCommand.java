@@ -278,7 +278,8 @@ public class BuildCommand extends AbstractCommand {
       buildTargets = result.getFirst();
       actionGraph = new TargetGraphToActionGraph(
           params.getBuckEventBus(),
-          new BuildTargetNodeToBuildRuleTransformer()).apply(result.getSecond());
+          new BuildTargetNodeToBuildRuleTransformer(),
+          params.getFileHashCache()).apply(result.getSecond());
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;

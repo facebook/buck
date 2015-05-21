@@ -428,9 +428,9 @@ public class RuleKeyTest {
         "xyzzy");
 
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
-    RuleKeyPair ruleKey1 = factory.newInstance(buildRule1, pathResolver).build();
-    RuleKeyPair ruleKey2 = factory.newInstance(buildRule2, pathResolver).build();
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
+    RuleKeyPair ruleKey1 = factory.newInstance(buildRule1).build();
+    RuleKeyPair ruleKey2 = factory.newInstance(buildRule2).build();
 
     assertNotEquals(ruleKey1, ruleKey2);
   }
@@ -463,9 +463,9 @@ public class RuleKeyTest {
     BuildRule parentRule2 = new NoopBuildRule(parentParams2, pathResolver);
 
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
-    RuleKeyPair ruleKey1 = factory.newInstance(parentRule1, pathResolver).build();
-    RuleKeyPair ruleKey2 = factory.newInstance(parentRule2, pathResolver).build();
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
+    RuleKeyPair ruleKey1 = factory.newInstance(parentRule1).build();
+    RuleKeyPair ruleKey2 = factory.newInstance(parentRule2).build();
 
     assertNotEquals(ruleKey1, ruleKey2);
   }

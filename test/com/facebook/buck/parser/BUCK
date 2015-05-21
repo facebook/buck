@@ -23,6 +23,7 @@ java_test(
     '//src/com/facebook/buck/python:config',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules:target_graph_to_action_graph',
     '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:constants',

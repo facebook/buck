@@ -56,10 +56,9 @@ public class CxxLinkTest {
 
   private RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
-      SourcePathResolver resolver,
       AbstractBuildRule rule) {
 
-    RuleKey.Builder builder = factory.newInstance(rule, resolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
     return builder.build();
   }
 
@@ -76,12 +75,12 @@ public class CxxLinkTest {
                     "a.o", Strings.repeat("a", 40),
                     "b.o", Strings.repeat("b", 40),
                     "libc.a", Strings.repeat("c", 40),
-                    "different", Strings.repeat("d", 40))));
+                    "different", Strings.repeat("d", 40))),
+            pathResolver);
 
     // Generate a rule key for the defaults.
     RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxLink(
             params,
             pathResolver,
@@ -93,7 +92,6 @@ public class CxxLinkTest {
     // Verify that changing the archiver causes a rulekey change.
     RuleKeyPair linkerChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxLink(
             params,
             pathResolver,
@@ -106,7 +104,6 @@ public class CxxLinkTest {
     // Verify that changing the output path causes a rulekey change.
     RuleKeyPair outputChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxLink(
             params,
             pathResolver,
@@ -119,7 +116,6 @@ public class CxxLinkTest {
     // Verify that changing the inputs causes a rulekey change.
     RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxLink(
             params,
             pathResolver,
@@ -132,7 +128,6 @@ public class CxxLinkTest {
     // Verify that changing the flags causes a rulekey change.
     RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxLink(
             params,
             pathResolver,

@@ -89,7 +89,9 @@ public class FakeBuildRuleParamsBuilder {
         Suppliers.ofInstance(deps),
         Suppliers.ofInstance(extraDeps),
         filesystem,
-        new DefaultRuleKeyBuilderFactory(hashCache),
+        new DefaultRuleKeyBuilderFactory(
+            hashCache,
+            new SourcePathResolver(new BuildRuleResolver())),
         buildRuleType,
         targetGraph);
   }

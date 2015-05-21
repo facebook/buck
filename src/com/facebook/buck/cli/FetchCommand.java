@@ -60,7 +60,8 @@ public class FetchCommand extends BuildCommand {
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
     TargetGraphToActionGraph transformer = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
-        ruleGenerator);
+        ruleGenerator,
+        params.getFileHashCache());
 
     ActionGraph actionGraph;
     ImmutableSet<BuildTarget> buildTargets;

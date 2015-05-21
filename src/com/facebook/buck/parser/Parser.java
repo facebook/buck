@@ -50,7 +50,6 @@ import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Console;
@@ -111,8 +110,6 @@ public class Parser {
 
   private final Repository repository;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
-
-  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
 
   /**
    * Key of the meta-rule that lists the build files executed while reading rules.
@@ -202,8 +199,7 @@ public class Parser {
       boolean enforceBuckPackageBoundary,
       ImmutableSet<Pattern> tempFilePatterns,
       final String buildFileName,
-      Iterable<String> defaultIncludes,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory)
+      Iterable<String> defaultIncludes)
       throws IOException, InterruptedException {
     return new Parser(
         repository,
@@ -228,8 +224,7 @@ public class Parser {
             allowEmptyGlobs,
             buildFileName,
             defaultIncludes,
-            repository.getAllDescriptions()),
-        ruleKeyBuilderFactory);
+            repository.getAllDescriptions()));
   }
 
   /**
@@ -243,14 +238,12 @@ public class Parser {
       String buildFileName,
       Supplier<BuildFileTree> buildFileTreeSupplier,
       BuildTargetParser buildTargetParser,
-      ProjectBuildFileParserFactory buildFileParserFactory,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory)
+      ProjectBuildFileParserFactory buildFileParserFactory)
       throws IOException, InterruptedException {
     this.repository = repository;
     this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
     this.buildTargetParser = buildTargetParser;
     this.buildFileParserFactory = buildFileParserFactory;
-    this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
     this.enforceBuckPackageBoundary = enforceBuckPackageBoundary;
     this.buildFileDependents = ArrayListMultimap.create();
     this.tempFilePatterns = tempFilePatterns;
@@ -1165,7 +1158,6 @@ public class Parser {
             // Although we store the rule by its unflavoured name, when we construct it, we need the
             // flavour.
             buildTarget,
-            ruleKeyBuilderFactory,
             buildFileTreeCache.get(),
             enforceBuckPackageBoundary);
         Object constructorArg = description.createUnpopulatedConstructorArg();

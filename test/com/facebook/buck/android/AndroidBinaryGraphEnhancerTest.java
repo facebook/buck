@@ -73,7 +73,8 @@ public class AndroidBinaryGraphEnhancerTest {
   @Test
   public void testCreateDepsForPreDexing() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory();
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new FakeRuleKeyBuilderFactory(new SourcePathResolver(ruleResolver));
 
     // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1 and :dep2.
     BuildTarget javaDep1BuildTarget = BuildTarget.builder("//java/com/example", "dep1").build();

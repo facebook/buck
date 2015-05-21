@@ -21,6 +21,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
@@ -45,9 +46,10 @@ class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTran
   public <T> BuildRule transform(
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
-      TargetNode<T> targetNode) throws NoSuchBuildTargetException {
+      TargetNode<T> targetNode,
+      RuleKeyBuilderFactory ruleKeyBuilderFactory) throws NoSuchBuildTargetException {
     TargetNode<?> node = substituteTargetNodeIfNecessary(targetNode);
-    return delegate.transform(targetGraph, ruleResolver, node);
+    return delegate.transform(targetGraph, ruleResolver, node, ruleKeyBuilderFactory);
   }
 
   public ImmutableSet<BuildTarget> getDownloadableTargets() {

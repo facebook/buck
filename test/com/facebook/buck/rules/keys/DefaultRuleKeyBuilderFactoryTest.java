@@ -57,8 +57,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
-    RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
 
     RuleKeyPair expected = builder.build();
 
@@ -71,7 +71,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKey.Builder seen = factory.newInstance(new UndecoratedFields(target), pathResolver);
+    RuleKey.Builder seen = factory.newInstance(new UndecoratedFields(target));
 
     assertEquals(expected, seen.build());
   }
@@ -83,8 +83,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
-    RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
 
     builder.setReflectively("field", "cake-walk");
     RuleKeyPair expected = builder.build();
@@ -99,7 +99,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKey.Builder seen = factory.newInstance(new DecoratedFields(target), pathResolver);
+    RuleKey.Builder seen = factory.newInstance(new DecoratedFields(target));
 
     assertEquals(expected, seen.build());
   }
@@ -113,8 +113,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
-    RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
 
     builder.setReflectively("field", "sausages");
     RuleKeyPair expected = builder.build();
@@ -136,7 +136,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKey.Builder seen = factory.newInstance(new StringifiedField(target), pathResolver);
+    RuleKey.Builder seen = factory.newInstance(new StringifiedField(target));
 
     assertEquals(expected, seen.build());
   }
@@ -148,8 +148,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
-    RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
 
     builder.setReflectively("field.cheese", "brie");
     RuleKeyPair expected = builder.build();
@@ -164,7 +164,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKey.Builder seen = factory.newInstance(new AppendingField(target), pathResolver);
+    RuleKey.Builder seen = factory.newInstance(new AppendingField(target));
 
     assertEquals(expected, seen.build());
   }
@@ -177,7 +177,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
 
     class AppendableRule extends EmptyRule implements RuleKeyAppendable {
       public AppendableRule(BuildTarget target) {
@@ -197,7 +197,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     AppendableRule appendableRule = new AppendableRule(depTarget);
 
-    RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
     builder.setReflectively("field.cheese", "brie");
     builder.setReflectively("field", appendableRule.getRuleKey());
     RuleKeyPair expected = builder.build();
@@ -213,8 +213,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
     }
 
     RuleKey.Builder seen = factory.newInstance(
-        new RuleContainingAppendableRule(target, appendableRule),
-        pathResolver);
+        new RuleContainingAppendableRule(target, appendableRule));
 
     assertEquals(expected, seen.build());
   }
@@ -226,8 +225,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
-    RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
 
     builder.setReflectively("field", "cheddar");
     RuleKeyPair expected = builder.build();
@@ -242,7 +241,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKey.Builder seen = factory.newInstance(new AppendingField(target), pathResolver);
+    RuleKey.Builder seen = factory.newInstance(new AppendingField(target));
 
     assertEquals(expected, seen.build());
   }
@@ -254,8 +253,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
-    RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
 
     builder.setReflectively("alpha", "stilton");
     builder.setReflectively("beta", 1);
@@ -276,7 +275,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKey.Builder seen = factory.newInstance(new UnsortedFields(target), pathResolver);
+    RuleKey.Builder seen = factory.newInstance(new UnsortedFields(target));
 
     assertEquals(expected, seen.build());
   }
@@ -288,8 +287,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(topLevelTarget);
 
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
-    RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
 
     builder.setReflectively("exoticCheese", "bavarian smoked");
     builder.setReflectively("target", topLevelTarget.getFullyQualifiedName());
@@ -316,7 +315,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKey.Builder seen = factory.newInstance(new Child(topLevelTarget), pathResolver);
+    RuleKey.Builder seen = factory.newInstance(new Child(topLevelTarget));
 
     assertEquals(expected, seen.build());
   }
@@ -328,8 +327,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
-    RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
 
     builder.setReflectively("key", "child");
     builder.setReflectively("key", "parent");
@@ -353,7 +352,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKey.Builder seen = factory.newInstance(new Child(target), pathResolver);
+    RuleKey.Builder seen = factory.newInstance(new Child(target));
 
     assertEquals(expected, seen.build());
   }

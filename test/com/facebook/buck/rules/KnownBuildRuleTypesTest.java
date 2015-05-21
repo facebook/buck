@@ -215,11 +215,11 @@ public class KnownBuildRuleTypesTest {
         .build();
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache());
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
-    RuleKey configuredKey = factory.newInstance(configuredRule, resolver).build().getTotalRuleKey();
-    RuleKey libraryKey = factory.newInstance(libraryRule, resolver).build().getTotalRuleKey();
+    DefaultRuleKeyBuilderFactory factory =
+        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), resolver);
+    RuleKey configuredKey = factory.newInstance(configuredRule).build().getTotalRuleKey();
+    RuleKey libraryKey = factory.newInstance(libraryRule).build().getTotalRuleKey();
 
     assertNotEquals(libraryKey, configuredKey);
   }

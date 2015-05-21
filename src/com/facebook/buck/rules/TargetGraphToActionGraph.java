@@ -22,6 +22,8 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -35,15 +37,18 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer<ActionGr
 
   private final BuckEventBus eventBus;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
+  private final FileHashCache fileHashCache;
   @Nullable
   private volatile ActionGraph actionGraph;
   private volatile int hashOfTargetGraph;
 
   public TargetGraphToActionGraph(
       BuckEventBus eventBus,
-      TargetNodeToBuildRuleTransformer buildRuleGenerator) {
+      TargetNodeToBuildRuleTransformer buildRuleGenerator,
+      FileHashCache fileHashCache) {
     this.eventBus = eventBus;
     this.buildRuleGenerator = buildRuleGenerator;
+    this.fileHashCache = fileHashCache;
   }
 
   @Override
@@ -65,7 +70,11 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer<ActionGr
     eventBus.post(ActionGraphEvent.started());
 
     final BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     final MutableDirectedGraph<BuildRule> actionGraph = new MutableDirectedGraph<>();
+    final RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+        fileHashCache,
+        pathResolver);
 
     AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(targetGraph) {
@@ -74,7 +83,11 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer<ActionGr
           public void visit(TargetNode<?> node) {
             BuildRule rule;
             try {
-              rule = buildRuleGenerator.transform(targetGraph, ruleResolver, node);
+              rule = buildRuleGenerator.transform(
+                  targetGraph,
+                  ruleResolver,
+                  node,
+                  ruleKeyBuilderFactory);
             } catch (NoSuchBuildTargetException e) {
               throw new HumanReadableException(e);
             }

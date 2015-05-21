@@ -27,12 +27,8 @@ import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
@@ -84,13 +80,7 @@ public class CommandRunnerParamsForTesting {
             parserConfig.getEnforceBuckPackageBoundary(),
             parserConfig.getTempFilePatterns(),
             parserConfig.getBuildFileName(),
-            parserConfig.getDefaultIncludes(),
-            new RuleKeyBuilderFactory() {
-              @Override
-              public RuleKey.Builder newInstance(BuildRule buildRule, SourcePathResolver resolver) {
-                return RuleKey.builder(buildRule, resolver, new NullFileHashCache());
-              }
-            }),
+            parserConfig.getDefaultIncludes()),
         platform,
         environment,
         javaPackageFinder,
@@ -98,7 +88,8 @@ public class CommandRunnerParamsForTesting {
         new DefaultClock(),
         Optional.<ProcessManager>absent(),
         webServer,
-        config);
+        config,
+        new NullFileHashCache());
   }
 
   public static Builder builder() {

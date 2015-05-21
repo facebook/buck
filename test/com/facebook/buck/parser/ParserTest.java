@@ -51,7 +51,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TargetGraph;
@@ -62,6 +61,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.NullFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
@@ -228,8 +228,7 @@ public class ParserTest extends EasyMockSupport {
         parserConfig.getBuildFileName(),
         buildFileTreeSupplier,
         buildTargetParser,
-        buildFileParserFactory,
-        new FakeRuleKeyBuilderFactory());
+        buildFileParserFactory);
 
     try {
       parser.parseRawRulesInternal(rules);
@@ -1671,7 +1670,10 @@ public class ParserTest extends EasyMockSupport {
   }
 
   private ActionGraph buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
-    return new TargetGraphToActionGraph(eventBus, new BuildTargetNodeToBuildRuleTransformer())
+    return new TargetGraphToActionGraph(
+        eventBus,
+        new BuildTargetNodeToBuildRuleTransformer(),
+        new NullFileHashCache())
         .apply(targetGraph);
   }
 

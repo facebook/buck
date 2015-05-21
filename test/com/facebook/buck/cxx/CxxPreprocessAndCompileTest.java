@@ -68,10 +68,9 @@ public class CxxPreprocessAndCompileTest {
 
   private RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
-      SourcePathResolver pathResolver,
       AbstractBuildRule rule) {
 
-    RuleKey.Builder builder = factory.newInstance(rule, pathResolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
     return builder.build();
   }
 
@@ -91,12 +90,12 @@ public class CxxPreprocessAndCompileTest {
                     .put("foo/test.h", Strings.repeat("e", 40))
                     .put("path/to/a/plugin.so", Strings.repeat("f", 40))
                     .put("path/to/a/different/plugin.so", Strings.repeat("a0", 40))
-                    .build()));
+                    .build()),
+            pathResolver);
 
     // Generate a rule key for the defaults.
     RuleKeyPair defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxPreprocessAndCompile(
             params,
             pathResolver,
@@ -114,7 +113,6 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the compiler causes a rulekey change.
     RuleKeyPair compilerChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxPreprocessAndCompile(
             params,
             pathResolver,
@@ -133,7 +131,6 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the operation causes a rulekey change.
     RuleKeyPair operationChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxPreprocessAndCompile(
             params,
             pathResolver,
@@ -152,7 +149,6 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the flags causes a rulekey change.
     RuleKeyPair flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxPreprocessAndCompile(
             params,
             pathResolver,
@@ -171,7 +167,6 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the input causes a rulekey change.
     RuleKeyPair inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxPreprocessAndCompile(
             params,
             pathResolver,
@@ -191,7 +186,6 @@ public class CxxPreprocessAndCompileTest {
     // different mechanism to track header changes.
     RuleKeyPair includesChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxPreprocessAndCompile(
             params,
             pathResolver,
@@ -211,7 +205,6 @@ public class CxxPreprocessAndCompileTest {
     // different mechanism to track header changes.
     RuleKeyPair systemIncludesChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxPreprocessAndCompile(
             params,
             pathResolver,
@@ -230,7 +223,6 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the framework roots causes a rulekey change.
     RuleKeyPair frameworkRootsChange = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxPreprocessAndCompile(
             params,
             pathResolver,
@@ -263,7 +255,8 @@ public class CxxPreprocessAndCompileTest {
                     .put("foo/test.h", Strings.repeat("e", 40))
                     .put("path/to/a/plugin.so", Strings.repeat("f", 40))
                     .put("path/to/a/different/plugin.so", Strings.repeat("a0", 40))
-                    .build()));
+                    .build()),
+            pathResolver);
 
     // Set up a map to sanitize the differences in the flags.
     int pathSize = 10;
@@ -282,7 +275,6 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> flags1 = ImmutableList.of("-Isomething/foo");
     RuleKeyPair ruleKey1 = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxPreprocessAndCompile(
             params,
             pathResolver,
@@ -301,7 +293,6 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> flags2 = ImmutableList.of("-Idifferent/foo");
     RuleKeyPair ruleKey2 = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         new CxxPreprocessAndCompile(
             params,
             pathResolver,

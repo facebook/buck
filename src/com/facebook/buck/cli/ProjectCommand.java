@@ -411,7 +411,8 @@ public class ProjectCommand extends BuildCommand {
       final TargetGraphAndTargets targetGraphAndTargets) throws IOException, InterruptedException {
     ActionGraph actionGraph = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer()).apply(targetGraphAndTargets.getTargetGraph());
+        new BuildTargetNodeToBuildRuleTransformer(),
+        params.getFileHashCache()).apply(targetGraphAndTargets.getTargetGraph());
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver(actionGraph.getNodes());
     SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
 
@@ -452,7 +453,8 @@ public class ProjectCommand extends BuildCommand {
     // configuration files.
     ActionGraph actionGraph = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer()).apply(targetGraphAndTargets.getTargetGraph());
+        new BuildTargetNodeToBuildRuleTransformer(),
+        params.getFileHashCache()).apply(targetGraphAndTargets.getTargetGraph());
 
     try (ExecutionContext executionContext = createExecutionContext(params)) {
       Project project = new Project(
@@ -630,7 +632,8 @@ public class ProjectCommand extends BuildCommand {
             public Path apply(TargetNode<?> input) {
               TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
                   params.getBuckEventBus(),
-                  new BuildTargetNodeToBuildRuleTransformer());
+                  new BuildTargetNodeToBuildRuleTransformer(),
+                  params.getFileHashCache());
               TargetGraph subgraph = targetGraphAndTargets.getTargetGraph().getSubgraph(
                   ImmutableSet.of(
                       input));

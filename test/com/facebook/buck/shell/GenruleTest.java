@@ -91,10 +91,9 @@ public class GenruleTest {
 
   private RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
-      SourcePathResolver resolver,
       AbstractBuildRule rule) {
 
-    RuleKey.Builder builder = factory.newInstance(rule, resolver);
+    RuleKey.Builder builder = factory.newInstance(rule);
     return builder.build();
   }
 
@@ -473,20 +472,18 @@ public class GenruleTest {
   public void thatChangingOutChangesRuleKey() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory();
+    RuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory(pathResolver);
 
     // Get a rule key for two genrules using two different output names, but are otherwise the
     // same.
     RuleKeyPair key1 = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         (Genrule) GenruleBuilder
             .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule1"))
             .setOut("foo")
             .build(resolver));
     RuleKeyPair key2 = generateRuleKey(
         ruleKeyBuilderFactory,
-        pathResolver,
         (Genrule) GenruleBuilder
             .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule2"))
             .setOut("bar")

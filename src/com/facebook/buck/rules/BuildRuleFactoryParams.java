@@ -26,7 +26,6 @@ public final class BuildRuleFactoryParams {
   private final ProjectFilesystem filesystem;
   public final BuildTargetParser buildTargetParser;
   public final BuildTarget target;
-  private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final BuildFileTree buildFileTree;
   private final boolean enforceBuckPackageBoundary;
 
@@ -34,23 +33,17 @@ public final class BuildRuleFactoryParams {
       ProjectFilesystem filesystem,
       BuildTargetParser buildTargetParser,
       BuildTarget target,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory,
       BuildFileTree buildFileTree,
       boolean enforceBuckPackageBoundary) {
     this.filesystem = filesystem;
     this.buildTargetParser = buildTargetParser;
     this.target = target;
-    this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
     this.buildFileTree = buildFileTree;
     this.enforceBuckPackageBoundary = enforceBuckPackageBoundary;
   }
 
   public ProjectFilesystem getProjectFilesystem() {
     return filesystem;
-  }
-
-  public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
-    return ruleKeyBuilderFactory;
   }
 
   public BuildFileTree getBuildFileTree() {
@@ -66,7 +59,6 @@ public final class BuildRuleFactoryParams {
         filesystem,
         buildTargetParser,
         buildTarget,
-        ruleKeyBuilderFactory,
         buildFileTree,
         enforceBuckPackageBoundary);
   }

@@ -1090,11 +1090,17 @@ public class DefaultJavaLibraryTest {
         "becgkaifhjd.txt", "bkhajdifcge.txt", "cabfghjekid.txt", "chkdbafijge.txt")) {
       fileHashes.put(filename, Hashing.sha1().hashString(filename, Charsets.UTF_8).toString());
     }
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(FakeFileHashCache.createFromStrings(fileHashes.build()));
+    RuleKeyBuilderFactory ruleKeyBuilderFactory1 =
+        new FakeRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(fileHashes.build()),
+            pathResolver1);
+    RuleKeyBuilderFactory ruleKeyBuilderFactory2 =
+        new FakeRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(fileHashes.build()),
+            pathResolver2);
 
-    RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(rule1, pathResolver1);
-    RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(rule2, pathResolver2);
+    RuleKey.Builder builder1 = ruleKeyBuilderFactory1.newInstance(rule1);
+    RuleKey.Builder builder2 = ruleKeyBuilderFactory2.newInstance(rule2);
     RuleKeyPair pair1 = builder1.build();
     RuleKeyPair pair2 = builder2.build();
     assertEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());

@@ -54,11 +54,11 @@ public class PythonBinaryTest {
 
   private RuleKeyPair getRuleKeyForModuleLayout(
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
+      SourcePathResolver resolver,
       String main, Path mainSrc,
       String mod1, Path src1,
       String mod2, Path src2) throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
 
     // The top-level python binary that lists the above libraries as deps.
     PythonBinary binary = new PythonBinary(
@@ -79,12 +79,13 @@ public class PythonBinaryTest {
             Optional.<Boolean>absent()));
 
     // Calculate and return the rule key.
-    RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(binary, resolver);
+    RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(binary);
     return builder.build();
   }
 
   @Test
   public void testRuleKeysFromModuleLayouts() throws IOException {
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
 
     // Create two different sources, which we'll swap in as different modules.
     Path main = tmpDir.newFile().toPath();
@@ -105,27 +106,32 @@ public class PythonBinaryTest {
                 ImmutableMap.of(
                     mainRelative.toString(), Strings.repeat("a", 40),
                     source1Relative.toString(), Strings.repeat("b", 40),
-                    source2Relative.toString(), Strings.repeat("c", 40))));
+                    source2Relative.toString(), Strings.repeat("c", 40))),
+            resolver);
 
     // Calculate the rule keys for the various ways we can layout the source and modules
     // across different python libraries.
     RuleKeyPair pair1 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
+        resolver,
         "main.py", mainRelative,
         "module/one.py", source1Relative,
         "module/two.py", source2Relative);
     RuleKeyPair pair2 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
+        resolver,
         "main.py", mainRelative,
         "module/two.py", source2Relative,
         "module/one.py", source1Relative);
     RuleKeyPair pair3 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
+        resolver,
         "main.py", mainRelative,
         "module/one.py", source2Relative,
         "module/two.py", source1Relative);
     RuleKeyPair pair4 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
+        resolver,
         "main.py", mainRelative,
         "module/two.py", source1Relative,
         "module/one.py", source2Relative);

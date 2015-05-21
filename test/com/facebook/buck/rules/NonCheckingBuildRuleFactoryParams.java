@@ -37,7 +37,6 @@ public final class NonCheckingBuildRuleFactoryParams {
         new FakeProjectFilesystem(),
         buildTargetParser,
         target,
-        new FakeRuleKeyBuilderFactory(),
         new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
         /* enforceBuckPackageBoundary */ false);
   }

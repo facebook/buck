@@ -160,14 +160,13 @@ public class SymlinkTreeTest {
 
     // Calculate their rule keys and verify they're different.
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(FakeFileHashCache.createFromStrings(
-            ImmutableMap.<String, String>of()));
+        new DefaultRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(ImmutableMap.<String, String>of()),
+            resolver);
     RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(
-        symlinkTreeBuildRule,
-        resolver);
+        symlinkTreeBuildRule);
     RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(
-        modifiedSymlinkTreeBuildRule,
-        resolver);
+        modifiedSymlinkTreeBuildRule);
     RuleKeyPair pair1 = builder1.build();
     RuleKeyPair pair2 = builder2.build();
     assertNotEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());
@@ -178,17 +177,16 @@ public class SymlinkTreeTest {
   @Test
   public void testSymlinkTreeRuleKeyDoesNotChangeIfLinkTargetsChangeOnUnix() throws IOException {
 
-    RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(FakeFileHashCache.createFromStrings(
-            ImmutableMap.<String, String>of()));
-
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
         symlinkTreeBuildRule)));
 
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new FakeRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(ImmutableMap.<String, String>of()),
+            resolver);
+
     // Calculate the rule key
-    RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(
-        symlinkTreeBuildRule,
-        resolver);
+    RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
     RuleKeyPair pair1 = builder1.build();
 
     // Change the contents of the target of the link.
@@ -199,9 +197,7 @@ public class SymlinkTreeTest {
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
 
     // Re-calculate the rule key
-    RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(
-        symlinkTreeBuildRule,
-        resolver);
+    RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
     RuleKeyPair pair2 = builder2.build();
 
     // Verify that the rules keys are the same.

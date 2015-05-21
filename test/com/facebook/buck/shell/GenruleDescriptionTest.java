@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.google.common.base.Functions;
@@ -64,7 +63,6 @@ public class GenruleDescriptionTest {
         projectFilesystem,
         new BuildTargetParser(),
         BuildTargetFactory.newInstance("//foo:bar"),
-        new FakeRuleKeyBuilderFactory(),
         new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
         /* enforeBuckBoundaryCheck */ true);
     ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller();

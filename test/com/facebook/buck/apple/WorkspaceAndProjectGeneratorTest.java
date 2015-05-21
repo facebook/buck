@@ -48,6 +48,7 @@ import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -1148,7 +1149,8 @@ public class WorkspaceAndProjectGeneratorTest {
       public Path apply(TargetNode<?> input) {
         TargetGraphToActionGraph targetGraphToActionGraph = new TargetGraphToActionGraph(
             BuckEventBusFactory.newInstance(),
-            new BuildTargetNodeToBuildRuleTransformer());
+            new BuildTargetNodeToBuildRuleTransformer(),
+            new NullFileHashCache());
         TargetGraph subgraph = targetGraph.getSubgraph(
             ImmutableSet.of(
                 input));

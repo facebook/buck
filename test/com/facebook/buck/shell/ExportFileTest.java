@@ -187,7 +187,8 @@ public class ExportFileTest {
     temp.toFile().deleteOnExit();
 
     FileHashCache hashCache = new DefaultFileHashCache(filesystem);
-    RuleKeyBuilderFactory ruleKeyFactory = new DefaultRuleKeyBuilderFactory(hashCache);
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    RuleKeyBuilderFactory ruleKeyFactory = new DefaultRuleKeyBuilderFactory(hashCache, resolver);
 
     Files.write(temp, "I like cheese".getBytes(UTF_8));
 
@@ -198,7 +199,7 @@ public class ExportFileTest {
     ExportFile rule = (ExportFile) builder.build(new BuildRuleResolver(), filesystem);
 
     RuleKey original = ruleKeyFactory
-            .newInstance(rule, new SourcePathResolver(new BuildRuleResolver()))
+            .newInstance(rule)
             .build()
             .getTotalRuleKey();
 
@@ -209,9 +210,10 @@ public class ExportFileTest {
     rule = (ExportFile) builder.build(new BuildRuleResolver(), filesystem);
 
     hashCache = new DefaultFileHashCache(filesystem);
-    ruleKeyFactory = new DefaultRuleKeyBuilderFactory(hashCache);
+    resolver = new SourcePathResolver(new BuildRuleResolver());
+    ruleKeyFactory = new DefaultRuleKeyBuilderFactory(hashCache, resolver);
     RuleKey refreshed = ruleKeyFactory
-        .newInstance(rule, new SourcePathResolver(new BuildRuleResolver()))
+        .newInstance(rule)
         .build()
         .getTotalRuleKey();
 
