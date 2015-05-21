@@ -343,7 +343,7 @@ public class CachingBuildEngine implements BuildEngine {
    * that end, this method should never throw an exception, or else Buck will hang waiting for
    * {@link #results} to be resolved.
    *
-   * @param shouldTryToFetchFromCache Making requests to Cassandra can be expensive, so we do not
+   * @param shouldTryToFetchFromCache Making requests to the cache can be expensive, so we do not
    *      attempt to fetch from the cache if any of the transitive dependencies gets rebuilt.
    */
   private BuildResult buildOnceDepsAreBuilt(BuildRule rule,
@@ -529,8 +529,8 @@ public class CachingBuildEngine implements BuildEngine {
     }
 
     // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
-    // Then we could download directly from Cassandra into the on-disk cache and unzip it from
-    // there.
+    // Then we could download directly from the remote cache into the on-disk cache and unzip it
+    // from there.
     CacheResult cacheResult = buildInfoRecorder.fetchArtifactForBuildable(zipFile, artifactCache);
     if (!cacheResult.getType().isSuccess()) {
       try {

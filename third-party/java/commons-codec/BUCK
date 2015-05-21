@@ -3,7 +3,6 @@ prebuilt_jar(
   binary_jar = 'commons-codec-1.6.jar',
   source_jar = 'commons-codec-1.6-sources.jar',
   visibility = [
-    '//third-party/java/astyanax:cassandra',
     '//third-party/java/httpcomponents:httpclient',
   ],
 )

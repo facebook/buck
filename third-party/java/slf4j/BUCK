@@ -17,7 +17,6 @@ prebuilt_jar(
   ],
   visibility = [
     '//third-party/java/aether:aether-transport-http',
-    '//third-party/java/astyanax:cassandra',
   ],
 )
 

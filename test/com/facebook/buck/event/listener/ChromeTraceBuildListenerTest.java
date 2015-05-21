@@ -175,7 +175,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.FETCH, ruleKey));
     eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.FETCH,
         ruleKey,
-        CacheResult.hit("cassandra")));
+        CacheResult.hit("http")));
     eventBus.post(BuildRuleEvent.started(rule));
     eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
 

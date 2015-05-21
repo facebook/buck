@@ -37,7 +37,6 @@ class Resource(object):
 
 
 CLIENT = Resource("buck_client", executable=True, basename='ng')
-LOG4J_CONFIG = Resource("log4j_config_file")
 
 # Resource that get propagated to buck via system properties.
 EXPORTED_RESOURCES = [
@@ -357,8 +356,6 @@ class BuckTool(object):
             "-Dbuck.test_util_no_tests_dir=true",
             "-Dbuck.version_uid={0}".format(version_uid),
             "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
-            "-Dlog4j.configuration=file:{0}".format(
-                self._get_resource(LOG4J_CONFIG)),
             "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
         ])
         for resource in EXPORTED_RESOURCES:

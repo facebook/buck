@@ -1,9 +1,0 @@
-thrift_library(
-  name = 'thrifty',
-  srcs = glob(['*.thrift']),
-  deps = [
-    '//third-party/java/astyanax:libthrift',
-    '//third-party/java/astyanax:slf4j-api',
-    '//third-party/java/astyanax:slf4j-log4j12',
-  ]
-)

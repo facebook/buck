@@ -24,9 +24,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
-import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Label;
@@ -34,6 +32,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.util.Console;
@@ -281,9 +280,6 @@ public class TestCommand extends BuildCommand {
       printMatchingTestRules(params.getConsole(), testRules);
     }
 
-    // Create artifact cache to initialize Cassandra connection, if appropriate.
-    ArtifactCache artifactCache = getArtifactCache(params);
-
     try (CommandThreadManager pool =
              new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig()))) {
       CachingBuildEngine cachingBuildEngine =
@@ -296,7 +292,7 @@ public class TestCommand extends BuildCommand {
           params.getRepository().getFilesystem(),
           params.getAndroidPlatformTargetSupplier(),
           cachingBuildEngine,
-          artifactCache,
+          getArtifactCache(params),
           params.getConsole(),
           params.getBuckEventBus(),
           getTargetDeviceOptional(),

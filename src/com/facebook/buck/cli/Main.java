@@ -568,12 +568,7 @@ public final class Main {
                  executionEnvironment,
                  webServer);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
-      // The ArtifactCache is constructed lazily so that we do not try to connect to Cassandra when
-      // running commands such as `buck clean`.
-      artifactCacheFactory = new LoggingArtifactCacheFactory(
-          executionEnvironment,
-          buildEventBus,
-          fileHashCache);
+      artifactCacheFactory = new LoggingArtifactCacheFactory(executionEnvironment, buildEventBus);
 
       eventListeners = addEventListeners(buildEventBus,
           rootRepository.getFilesystem(),

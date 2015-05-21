@@ -89,7 +89,7 @@ public class MultiArtifactCache implements ArtifactCache {
   public void close() throws IOException {
     // TODO(natthu): It's possible for this to be interrupted before it gets to call close() on all
     // the individual caches. This is acceptable for now since every ArtifactCache.close() is a
-    // no-op in every cache except CassandraArtifactCache.
+    // no-op.
     for (ArtifactCache artifactCache : artifactCaches) {
       artifactCache.close();
     }

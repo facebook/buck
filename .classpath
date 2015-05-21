@@ -16,12 +16,6 @@
 	<classpathentry kind="lib" path="third-party/java/aopalliance/aopalliance.jar"/>
 	<classpathentry kind="lib" path="third-party/java/args4j/args4j-2.0.30.jar" sourcepath="third-party/java/args4j/args4j-2.0.30-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/asm/asm-debug-all-5.0.3.jar" sourcepath="third-party/java/asm/asm-5.0.3-src.zip"/>
-	<classpathentry kind="lib" path="third-party/java/astyanax/astyanax-cassandra-1.56.38.jar"/>
-	<classpathentry kind="lib" path="third-party/java/astyanax/astyanax-core-1.56.38.jar"/>
-	<classpathentry kind="lib" path="third-party/java/astyanax/astyanax-thrift-1.56.38.jar"/>
-	<classpathentry kind="lib" path="third-party/java/astyanax/cassandra-1.2.3.jar"/>
-	<classpathentry kind="lib" path="third-party/java/astyanax/cassandra-thrift-1.2.3.jar"/>
-	<classpathentry kind="lib" path="third-party/java/thrift/libthrift-0.7.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/cglib/cglib-nodep-2.2.jar"/>
 	<classpathentry kind="lib" path="third-party/java/closure-templates/soy-excluding-deps.jar"/>
 	<classpathentry kind="lib" path="third-party/java/commons-compress/commons-compress-1.8.1.jar"/>

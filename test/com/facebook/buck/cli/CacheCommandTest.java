@@ -63,7 +63,7 @@ public class CacheCommandTest extends EasyMockSupport {
         cache.fetch(
             eq(new RuleKey(ruleKeyHash)),
             isA(File.class)))
-        .andReturn(CacheResult.hit("cassandra"));
+        .andReturn(CacheResult.hit("http"));
     ArtifactCacheFactory artifactCacheFactory = new InstanceArtifactCacheFactory(cache);
 
     Console console = createMock(Console.class);

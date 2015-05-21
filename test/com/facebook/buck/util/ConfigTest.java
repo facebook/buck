@@ -89,7 +89,7 @@ public class ConfigTest {
   public void testOverride() throws IOException {
     Reader readerA = new StringReader(Joiner.on('\n').join(
         "[cache]",
-        "    mode = dir,cassandra"));
+        "    mode = dir,http"));
     Reader readerB = new StringReader(Joiner.on('\n').join(
         "[cache]",
         "    mode ="));

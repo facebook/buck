@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
@@ -28,7 +27,6 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.CassandraArtifactCache;
 import com.facebook.buck.rules.DirArtifactCache;
 import com.facebook.buck.rules.HttpArtifactCache;
 import com.facebook.buck.rules.MultiArtifactCache;
@@ -39,7 +37,6 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Config;
-import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Inis;
 import com.facebook.buck.util.environment.Platform;
@@ -60,7 +57,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.OkHttpClient;
@@ -107,9 +103,6 @@ public class BuckConfig {
 
   private static final String DEFAULT_CACHE_DIR = "buck-cache";
   private static final String DEFAULT_DIR_CACHE_MODE = CacheMode.readwrite.name();
-  private static final String DEFAULT_CASSANDRA_PORT = "9160";
-  private static final String DEFAULT_CASSANDRA_MODE = CacheMode.readwrite.name();
-  private static final String DEFAULT_CASSANDRA_TIMEOUT_SECONDS = "10";
   private static final String DEFAULT_MAX_TRACES = "25";
 
   private static final String DEFAULT_HTTP_URL = "http://localhost:8080";
@@ -130,7 +123,6 @@ public class BuckConfig {
 
   private enum ArtifactCacheNames {
     dir,
-    cassandra,
     http
   }
 
@@ -522,8 +514,7 @@ public class BuckConfig {
 
   public ArtifactCache createArtifactCache(
       Optional<String> currentWifiSsid,
-      BuckEventBus buckEventBus,
-      FileHashCache fileHashCache) {
+      BuckEventBus buckEventBus) {
     ImmutableList<String> modes = getArtifactCacheModes();
     if (modes.isEmpty()) {
       return new NoopArtifactCache();
@@ -537,16 +528,6 @@ public class BuckConfig {
           ArtifactCache dirArtifactCache = createDirArtifactCache();
           buckEventBus.register(dirArtifactCache);
           builder.add(dirArtifactCache);
-          break;
-        case cassandra:
-          if (useDistributedCache) {
-            ArtifactCache cassandraArtifactCache = createCassandraArtifactCache(
-                buckEventBus,
-                fileHashCache);
-            if (cassandraArtifactCache != null) {
-              builder.add(cassandraArtifactCache);
-            }
-          }
           break;
         case http:
           if (useDistributedCache) {
@@ -618,40 +599,6 @@ public class BuckConfig {
       return new DirArtifactCache("dir", dir, doStore, getCacheDirMaxSizeBytes());
     } catch (IOException e) {
       throw new HumanReadableException("Failure initializing artifact cache directory: %s", dir);
-    }
-  }
-
-  /**
-   * Clients should use {@link #createArtifactCache(Optional, BuckEventBus, FileHashCache)} unless
-   * it is expected that the user has defined a {@code cassandra} cache, and that it should be used
-   * exclusively.
-   */
-  @Nullable
-  CassandraArtifactCache createCassandraArtifactCache(
-      BuckEventBus buckEventBus,
-      FileHashCache fileHashCache) {
-    // cache.cassandra_mode
-    final boolean doStore = readCacheMode("cassandra_mode", DEFAULT_CASSANDRA_MODE);
-    // cache.hosts
-    String cacheHosts = getValue("cache", "hosts").or("");
-    // cache.port
-    int port = Integer.parseInt(getValue("cache", "port").or(DEFAULT_CASSANDRA_PORT));
-    // cache.connection_timeout_seconds
-    int timeoutSeconds = Integer.parseInt(
-        getValue("cache", "connection_timeout_seconds").or(DEFAULT_CASSANDRA_TIMEOUT_SECONDS));
-
-    try {
-      return new CassandraArtifactCache(
-          "cassandra",
-          cacheHosts,
-          port,
-          timeoutSeconds,
-          doStore,
-          buckEventBus,
-          fileHashCache);
-    } catch (ConnectionException e) {
-      buckEventBus.post(ThrowableConsoleEvent.create(e, "Cassandra cache connection failure."));
-      return null;
     }
   }
 

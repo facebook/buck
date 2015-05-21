@@ -182,7 +182,6 @@ java_immutables_library(
     'BuildRuleParams.java',
     'BuildRuleResolver.java',
     'CachingBuildEngine.java',
-    'CassandraArtifactCache.java',
     'DefaultBuildableContext.java',
     'DirArtifactCache.java',
     'HttpArtifactCache.java',
@@ -227,7 +226,6 @@ java_immutables_library(
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/zip:steps',
     '//src/com/facebook/buck/zip:unzip',
-    '//third-party/java/astyanax:cassandra',
     '//third-party/java/commons-compress:commons-compress',
     '//third-party/java/infer-annotations:infer-annotations',
     '//third-party/java/guava:guava',
@@ -237,7 +235,6 @@ java_immutables_library(
     '//third-party/java/jsr:jsr305',
     '//third-party/java/okhttp:okhttp',
     '//third-party/java/okio:okio',
-    '//third-party/java/thrift:thrift',
   ],
   visibility = ['PUBLIC'],
 )
