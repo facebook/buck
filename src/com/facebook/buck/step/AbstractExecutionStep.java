@@ -16,6 +16,8 @@
 
 package com.facebook.buck.step;
 
+import java.io.IOException;
+
 /**
  * Abstract implementation of {@link Step} that takes the description as a constructor parameter
  * and requires only the implementation of {@link #execute(ExecutionContext)}. This facilitates the
@@ -30,7 +32,7 @@ public abstract class AbstractExecutionStep implements Step {
   }
 
   @Override
-  public abstract int execute(ExecutionContext context);
+  public abstract int execute(ExecutionContext context) throws IOException;
 
   @Override
   public String getShortName() {

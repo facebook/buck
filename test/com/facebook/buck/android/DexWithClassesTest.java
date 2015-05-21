@@ -41,12 +41,7 @@ public class DexWithClassesTest {
   public void testIntermediateDexRuleToDexWithClasses() {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget javaLibraryTarget = BuildTarget.builder("//java/com/example", "lib").build();
-    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver) {
-      @Override
-      public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
-        return ImmutableSortedMap.of("com/example/Main", HashCode.fromString("cafebabe"));
-      }
-    };
+    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver);
 
     BuildTarget buildTarget = BuildTarget
         .builder("//java/com/example", "lib")
@@ -54,12 +49,13 @@ public class DexWithClassesTest {
         .build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(params, resolver, javaLibrary) {
-      @Override
-      public int getLinearAllocEstimate() {
-        return 1600;
-      }
-    };
+        new DexProducedFromJavaLibrary(params, resolver, javaLibrary);
+    dexFromJavaLibrary.getBuildOutputInitializer().setBuildOutput(
+        new DexProducedFromJavaLibrary.BuildOutput(
+            /* linearAllocEstimate */ 1600,
+            /* classNamesToHashes */ ImmutableSortedMap.of(
+                "com/example/Main",
+                HashCode.fromString("cafebabe"))));
 
     DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertEquals(Paths.get("buck-out/gen/java/com/example/lib#dex.dex.jar"),
@@ -72,12 +68,7 @@ public class DexWithClassesTest {
   public void testIntermediateDexRuleToDexWithClassesWhenIntermediateDexHasNoClasses() {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget javaLibraryTarget = BuildTarget.builder("//java/com/example", "lib").build();
-    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver) {
-      @Override
-      public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
-        return ImmutableSortedMap.of();
-      }
-    };
+    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver);
 
     BuildTarget buildTarget = BuildTarget
         .builder("//java/com/example", "lib")
@@ -85,12 +76,11 @@ public class DexWithClassesTest {
         .build();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(params, resolver, javaLibrary) {
-      @Override
-      public int getLinearAllocEstimate() {
-        return 1600;
-      }
-    };
+        new DexProducedFromJavaLibrary(params, resolver, javaLibrary);
+    dexFromJavaLibrary.getBuildOutputInitializer().setBuildOutput(
+        new DexProducedFromJavaLibrary.BuildOutput(
+            /* linearAllocEstimate */ 1600,
+            /* classNamesToHashes */ ImmutableSortedMap.<String, HashCode>of()));
 
     DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertNull(

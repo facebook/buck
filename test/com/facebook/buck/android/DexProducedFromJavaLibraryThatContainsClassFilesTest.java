@@ -19,29 +19,37 @@ package com.facebook.buck.android;
 import static org.easymock.EasyMock.expect;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.FakeOnDiskBuildInfo;
+import com.facebook.buck.rules.InitializableFromDisk;
+import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
@@ -217,9 +225,46 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
             accumulateClassNames);
     assertNull(preDexWithClasses.getPathToOutputFile());
     assertEquals(Paths.get("buck-out/gen/foo/bar.dex.jar"), preDexWithClasses.getPathToDex());
-    assertTrue(preDexWithClasses.hasOutput());
 
     verifyAll();
+  }
+
+  private static <T> void initialize(
+      InitializableFromDisk<T> initializableFromDisk,
+      OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+    BuildOutputInitializer<T> buildOutputInitializer =
+        initializableFromDisk.getBuildOutputInitializer();
+    buildOutputInitializer.setBuildOutput(
+        initializableFromDisk.initializeFromDisk(onDiskBuildInfo));
+  }
+
+  @Test
+  public void getOutputDoesNotAccessWrappedJavaLibrary() throws IOException {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+
+    JavaLibrary javaLibrary =
+        (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .build(ruleResolver);
+
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:target"))
+            .build();
+    DexProducedFromJavaLibrary dexProducedFromJavaLibrary =
+        new DexProducedFromJavaLibrary(params, pathResolver, javaLibrary);
+
+    ObjectMapper mapper = new ObjectMapper();
+    FakeOnDiskBuildInfo onDiskBuildInfo =
+        new FakeOnDiskBuildInfo()
+            .putMetadata(
+                DexProducedFromJavaLibrary.LINEAR_ALLOC_KEY_ON_DISK_METADATA,
+                "0")
+            .putMetadata(
+                DexProducedFromJavaLibrary.CLASSNAMES_TO_HASHES,
+                mapper.writeValueAsString(ImmutableMap.<String, String>of()));
+    initialize(dexProducedFromJavaLibrary, onDiskBuildInfo);
+
+    assertFalse(dexProducedFromJavaLibrary.hasOutput());
   }
 
   @Test
