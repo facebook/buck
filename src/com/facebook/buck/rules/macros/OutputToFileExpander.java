@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
@@ -54,9 +55,18 @@ public class OutputToFileExpander implements MacroExpander {
   }
 
   @Override
-  public ImmutableList<BuildTarget> extractTargets(BuildTarget target, String input)
+  public ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      String input)
       throws MacroException {
-    return delegate.extractTargets(target, input);
+    return delegate.extractAdditionalBuildTimeDeps(target, resolver, input);
+  }
+
+  @Override
+  public ImmutableList<BuildTarget> extractParseTimeDeps(BuildTarget target, String input)
+      throws MacroException {
+    return delegate.extractParseTimeDeps(target, input);
   }
 
   /**

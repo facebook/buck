@@ -57,7 +57,7 @@ public class MacroHandlerTest {
       assertTrue(e.getMessage().contains("no such macro \"badmacro\""));
     }
     try {
-      handler.extractTargets(target, "$(badmacro hello)");
+      handler.extractParseTimeDeps(target, "$(badmacro hello)");
     } catch (MacroException e) {
       assertTrue(e.getMessage().contains("no such macro \"badmacro\""));
     }

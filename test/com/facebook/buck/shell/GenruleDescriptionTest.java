@@ -17,16 +17,20 @@
 package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
@@ -39,8 +43,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.nio.file.Paths;
 import java.util.Map;
 
 public class GenruleDescriptionTest {
@@ -93,4 +99,25 @@ public class GenruleDescriptionTest {
             .transform(Functions.toStringFunction())
             .toSet());
   }
+
+  @Test
+  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRule transitiveDep =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
+            .addSrc(Paths.get("Dep.java"))
+            .build(ruleResolver);
+    BuildRule dep =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
+            .addSrc(Paths.get("Other.java"))
+            .addDep(transitiveDep.getBuildTarget())
+            .build(ruleResolver);
+    Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setOut("out")
+            .setCmd("$(classpath //exciting:target)")
+            .build(ruleResolver);
+    assertThat(genrule.getDeps(), Matchers.containsInAnyOrder(dep, transitiveDep));
+  }
+
 }

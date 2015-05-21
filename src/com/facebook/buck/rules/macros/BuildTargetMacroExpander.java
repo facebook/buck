@@ -43,12 +43,11 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
   protected abstract String expand(ProjectFilesystem filesystem, BuildRule rule)
       throws MacroException;
 
-  @Override
-  public String expand(
+  protected BuildRule resolve(
       BuildTarget target,
       BuildRuleResolver resolver,
-      ProjectFilesystem filesystem,
-      String input) throws MacroException {
+      String input)
+      throws MacroException {
 
     BuildTarget other;
     try {
@@ -62,11 +61,30 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
     if (!rule.isPresent()) {
       throw new MacroException(String.format("no rule %s", other));
     }
-    return expand(filesystem, rule.get());
+    return rule.get();
   }
 
   @Override
-  public ImmutableList<BuildTarget> extractTargets(
+  public String expand(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      ProjectFilesystem filesystem,
+      String input)
+      throws MacroException {
+    return expand(filesystem, resolve(target, resolver, input));
+  }
+
+  @Override
+  public ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      String input)
+      throws MacroException {
+    return ImmutableList.of(resolve(target, resolver, input));
+  }
+
+  @Override
+  public ImmutableList<BuildTarget> extractParseTimeDeps(
       BuildTarget target,
       String input) {
     return ImmutableList.of(

@@ -17,6 +17,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -51,8 +52,18 @@ public class EnvironmentVariableMacroExpander implements MacroExpander {
   }
 
   @Override
-  public ImmutableList<BuildTarget> extractTargets(
+  public ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      String input)
+      throws MacroException {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public ImmutableList<BuildTarget> extractParseTimeDeps(
       BuildTarget target, String input) throws MacroException {
     return ImmutableList.of();
   }
+
 }

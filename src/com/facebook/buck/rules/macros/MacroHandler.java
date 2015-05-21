@@ -19,6 +19,7 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
@@ -102,7 +103,26 @@ public class MacroHandler {
     return MACRO_FINDER.replace(replacers.build(), blob);
   }
 
-  public ImmutableList<BuildTarget> extractTargets(
+  public ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      String blob)
+      throws MacroException {
+    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
+
+    // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
+    // extract for their respective macros.
+    for (Pair<String, String> match : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
+      deps.addAll(getExpander(match.getFirst()).extractAdditionalBuildTimeDeps(
+              target,
+              resolver,
+              match.getSecond()));
+    }
+
+    return deps.build();
+  }
+
+  public ImmutableList<BuildTarget> extractParseTimeDeps(
       BuildTarget target,
       String blob)
       throws MacroException {
@@ -112,7 +132,7 @@ public class MacroHandler {
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
     for (Pair<String, String> match : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
-      targets.addAll(getExpander(match.getFirst()).extractTargets(target, match.getSecond()));
+      targets.addAll(getExpander(match.getFirst()).extractParseTimeDeps(target, match.getSecond()));
     }
 
     return targets.build();

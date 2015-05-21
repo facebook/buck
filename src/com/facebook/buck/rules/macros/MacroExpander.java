@@ -18,6 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.collect.ImmutableList;
 
@@ -34,11 +35,24 @@ public interface MacroExpander {
       throws MacroException;
 
   /**
-   * @return any build targets references by this macro.  To be used in
-   *     {@link com.facebook.buck.rules.ImplicitDepsInferringDescription#findDepsForTargetFromConstructorArgs}
-   *     to extract implicit deps hidden behind macros.
+   * @return additional {@link BuildRule}s which provide output which is consumed by the expanded
+   *     form of this macro.  These are intended to become dependencies of {@code BuildRule}s that
+   *     use this macro.  In many cases, this may just be the {@link BuildRule}s resolved from the
+   *     {@link BuildTarget}s returned by {@link #extractParseTimeDeps}.
    */
-  ImmutableList<BuildTarget> extractTargets(BuildTarget target, String input)
+  ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      String input)
+      throws MacroException;
+
+  /**
+   * @return names of additional {@link com.facebook.buck.rules.TargetNode}s which must be followed
+   *     by the parser to support this macro when constructing the target graph.  To be used by
+   *     {@link com.facebook.buck.rules.ImplicitDepsInferringDescription#findDepsForTargetFromConstructorArgs}
+   *     to extract implicit dependencies hidden behind macros.
+   */
+  ImmutableList<BuildTarget> extractParseTimeDeps(BuildTarget target, String input)
       throws MacroException;
 
 }

@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
@@ -84,7 +85,10 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
         .build();
 
     return new ApkGenrule(
-        params.copyWithExtraDeps(Suppliers.ofInstance(extraDeps)),
+        params
+            .copyWithExtraDeps(Suppliers.ofInstance(extraDeps))
+            // Attach any extra dependencies found from macro expansion.
+            .appendExtraDeps(findExtraDepsFromArgs(params.getBuildTarget(), resolver, args)),
         pathResolver,
         srcs,
         MACRO_HANDLER.getExpander(
@@ -96,6 +100,22 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
         args.cmdExe,
         params.getPathAbsolutifier(),
         (InstallableApk) installableApk);
+  }
+
+  private ImmutableList<BuildRule> findExtraDepsFromArgs(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      Arg arg) {
+    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
+    try {
+      for (String val :
+            Optional.presentInstances(ImmutableList.of(arg.bash, arg.cmd, arg.cmdExe))) {
+        deps.addAll(MACRO_HANDLER.extractAdditionalBuildTimeDeps(target, resolver, val));
+      }
+    } catch (MacroException e) {
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    }
+    return deps.build();
   }
 
   @SuppressFieldNotInitialized

@@ -18,6 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.collect.ImmutableList;
 
@@ -34,14 +35,26 @@ class StringExpander implements MacroExpander {
       BuildTarget target,
       BuildRuleResolver resolver,
       ProjectFilesystem filesystem,
-      String input) throws MacroException {
+      String input)
+      throws MacroException {
     return toReturn;
   }
 
   @Override
-  public ImmutableList<BuildTarget> extractTargets(
+  public ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
       BuildTarget target,
-      String input) throws MacroException {
+      BuildRuleResolver resolver,
+      String input)
+      throws MacroException {
     return ImmutableList.of();
   }
+
+  @Override
+  public ImmutableList<BuildTarget> extractParseTimeDeps(
+      BuildTarget target,
+      String input)
+      throws MacroException {
+    return ImmutableList.of();
+  }
+
 }

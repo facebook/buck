@@ -17,9 +17,11 @@
 package com.facebook.buck.rules.macros;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
@@ -27,7 +29,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -101,4 +105,28 @@ public class ClasspathMacroExpanderTest {
 
     expander.expand(filesystem, rule);
   }
+
+  @Test
+  public void shouldExpandTransitiveDependencies() throws MacroException {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRule dep =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
+            .addSrc(Paths.get("Dep.java"))
+            .build(ruleResolver);
+    BuildRule rule =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
+            .addSrc(Paths.get("Other.java"))
+            .addDep(dep.getBuildTarget())
+            .build(ruleResolver);
+
+    BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
+    ImmutableList<BuildRule> deps =
+        expander.extractAdditionalBuildTimeDeps(
+            forTarget,
+            ruleResolver,
+            rule.getBuildTarget().toString());
+
+    assertThat(deps, Matchers.containsInAnyOrder(rule, dep));
+  }
+
 }

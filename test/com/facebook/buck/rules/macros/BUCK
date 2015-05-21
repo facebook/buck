@@ -20,6 +20,7 @@ java_test(
     '//test/com/facebook/buck/shell:testutil',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/junit:junit',
   ],
 )
