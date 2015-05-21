@@ -68,7 +68,6 @@
     <include name="astyanax/high-scale-lib-1.1.2.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-cli/commons-cli-1.1.jar" />
-    <include name="commons-codec/commons-codec-1.2.jar" />
     <include name="commons-compress/commons-compress-1.8.1.jar" />
     <include name="commons-lang/commons-lang-2.6.jar" />
     <include name="dd-plist/dd-plist.jar" />

@@ -30,7 +30,6 @@ JAVA_CLASSPATHS = [
     "third-party/java/astyanax/high-scale-lib-1.1.2.jar",
     "third-party/java/closure-templates/soy-excluding-deps.jar",
     "third-party/java/commons-cli/commons-cli-1.1.jar",
-    "third-party/java/commons-codec/commons-codec-1.2.jar",
     "third-party/java/commons-compress/commons-compress-1.8.1.jar",
     "third-party/java/commons-lang/commons-lang-2.6.jar",
     "third-party/java/dd-plist/dd-plist.jar",
