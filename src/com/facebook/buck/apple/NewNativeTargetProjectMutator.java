@@ -201,12 +201,9 @@ public class NewNativeTargetProjectMutator {
 
   public Result buildTargetAndAddToProject(PBXProject project)
       throws NoSuchBuildTargetException {
-    PBXNativeTarget target = new PBXNativeTarget(targetName, productType);
+    PBXNativeTarget target = new PBXNativeTarget(targetName);
 
-    PBXGroup targetGroup = project.getMainGroup();
-    for (String groupPathPart : targetGroupPath) {
-      targetGroup = targetGroup.getOrCreateChildGroupByName(groupPathPart);
-    }
+    PBXGroup targetGroup = project.getMainGroup().getOrCreateDescendantGroupByPath(targetGroupPath);
     targetGroup = targetGroup.getOrCreateChildGroupByName(targetName);
 
     if (gid.isPresent()) {
@@ -228,6 +225,7 @@ public class NewNativeTargetProjectMutator {
         new SourceTreePath(PBXReference.SourceTree.BUILT_PRODUCTS_DIR, productOutputPath));
     target.setProductName(productName);
     target.setProductReference(productReference);
+    target.setProductType(productType);
 
     project.getTargets().add(target);
     return new Result(target, targetGroup);

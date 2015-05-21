@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -31,7 +32,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -45,10 +45,12 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -62,6 +64,7 @@ public class WorkspaceAndProjectGenerator {
   private final BuildTarget workspaceBuildTarget;
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
   private final boolean combinedProject;
+  private final boolean buildWithBuck;
   private ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = ImmutableSet.of();
 
   private Optional<ProjectGenerator> combinedProjectGenerator;
@@ -80,6 +83,7 @@ public class WorkspaceAndProjectGenerator {
       BuildTarget workspaceBuildTarget,
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       boolean combinedProject,
+      boolean buildWithBuck,
       String buildFileName,
       Function<TargetNode<?>, Path> outputPathOfNode) {
     this.projectFilesystem = projectFilesystem;
@@ -88,6 +92,7 @@ public class WorkspaceAndProjectGenerator {
     this.workspaceBuildTarget = workspaceBuildTarget;
     this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
     this.combinedProject = combinedProject;
+    this.buildWithBuck = buildWithBuck;
     this.buildFileName = buildFileName;
     this.outputPathOfNode = outputPathOfNode;
     this.combinedProjectGenerator = Optional.absent();
@@ -191,10 +196,11 @@ public class WorkspaceAndProjectGenerator {
         .append(buildForTestNodes.values())
         .transform(HasBuildTarget.TO_TARGET)
         .toSet();
-    ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder =
-        ImmutableMap.builder();
+    ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder =
+        ImmutableMultimap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
         ImmutableMap.builder();
+    Optional<BuildTarget> targetToBuildWithBuck = getTargetToBuildWithBuck();
 
     if (combinedProject) {
       LOG.debug("Generating a combined project");
@@ -206,6 +212,7 @@ public class WorkspaceAndProjectGenerator {
           workspaceName,
           buildFileName,
           projectGeneratorOptions,
+          targetToBuildWithBuck,
           outputPathOfNode)
           .setAdditionalCombinedTestTargets(groupedTests)
           .setTestsToGenerateAsStaticLibraries(groupableTests);
@@ -233,7 +240,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
           projectDirectoryToBuildTargetsBuilder.build();
       for (Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
-        ImmutableSet<BuildTarget> rules = filterRulesForProjectDirectory(
+        final ImmutableSet<BuildTarget> rules = filterRulesForProjectDirectory(
             projectGraph,
             ImmutableSet.copyOf(projectDirectoryToBuildTargets.get(projectDirectory)));
         if (Sets.intersection(targetsInRequiredProjects, rules).isEmpty()) {
@@ -259,6 +266,16 @@ public class WorkspaceAndProjectGenerator {
               projectName,
               buildFileName,
               projectGeneratorOptions,
+              Optionals.bind(
+                  targetToBuildWithBuck,
+                  new Function<BuildTarget, Optional<BuildTarget>>() {
+                    @Override
+                    public Optional<BuildTarget> apply(BuildTarget input) {
+                      return rules.contains(input)
+                          ? Optional.of(input)
+                          : Optional.<BuildTarget>absent();
+                    }
+                  }),
               outputPathOfNode)
               .setTestsToGenerateAsStaticLibraries(groupableTests);
 
@@ -286,6 +303,7 @@ public class WorkspaceAndProjectGenerator {
             "_CombinedTestBundles",
             buildFileName,
             projectGeneratorOptions,
+            Optional.<BuildTarget>absent(),
             outputPathOfNode);
         combinedTestsProjectGenerator
             .setAdditionalCombinedTestTargets(groupedTests)
@@ -307,13 +325,34 @@ public class WorkspaceAndProjectGenerator {
 
     Path workspacePath = workspaceGenerator.writeWorkspace();
 
-    final Map<BuildTarget, PBXTarget> buildTargetToTarget =
+    final Multimap<BuildTarget, PBXTarget> buildTargetToTarget =
         buildTargetToPbxTargetMapBuilder.build();
-    Function<TargetNode<?>, PBXTarget> targetNodeToPBXTargetTransformer =
-        new Function<TargetNode<?>, PBXTarget>() {
+    final Function<BuildTarget, PBXTarget> targetNodeToPBXTargetTransformer =
+        new Function<BuildTarget, PBXTarget>() {
           @Override
-          public PBXTarget apply(TargetNode<?> input) {
-            return Preconditions.checkNotNull(buildTargetToTarget.get(input.getBuildTarget()));
+          public PBXTarget apply(BuildTarget input) {
+            ImmutableList<PBXTarget> targets = ImmutableList.copyOf(buildTargetToTarget.get(input));
+            if (targets.size() == 1) {
+              return targets.get(0);
+            }
+            // The only reason why a build target would map to more than one project target is if
+            // there are two project targets: one is the usual one, the other is a target that just
+            // shells out to Buck.
+            Preconditions.checkState(targets.size() == 2);
+            PBXTarget first = targets.get(0);
+            PBXTarget second = targets.get(1);
+            Preconditions.checkState(
+                first instanceof PBXAggregateTarget ^ second instanceof PBXAggregateTarget);
+            PBXTarget buildWithBuckTarget;
+            PBXTarget buildWithXcodeTarget;
+            if (first instanceof PBXAggregateTarget) {
+              buildWithBuckTarget = first;
+              buildWithXcodeTarget = second;
+            } else {
+              buildWithXcodeTarget = first;
+              buildWithBuckTarget = second;
+            }
+            return buildWithBuck ? buildWithBuckTarget : buildWithXcodeTarget;
           }
         };
 
@@ -326,10 +365,23 @@ public class WorkspaceAndProjectGenerator {
         ungroupedTests,
         targetToProjectPathMapBuilder.build(),
         synthesizedCombinedTestTargets,
-        targetNodeToPBXTargetTransformer,
-        Functions.forMap(buildTargetToTarget));
+        new Function<TargetNode<?>, Collection<PBXTarget>>() {
+          @Override
+          public Collection<PBXTarget> apply(TargetNode<?> input) {
+            return buildTargetToTarget.get(input.getBuildTarget());
+          }
+        },
+        targetNodeToPBXTargetTransformer);
 
     return workspacePath;
+  }
+
+  private Optional<BuildTarget> getTargetToBuildWithBuck() {
+    if (buildWithBuck) {
+      return workspaceArguments.srcTarget;
+    } else {
+      return Optional.absent();
+    }
   }
 
   private static void buildWorkspaceSchemes(
@@ -662,7 +714,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg>> ungroupedTests,
       ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
       Iterable<PBXTarget> synthesizedCombinedTestTargets,
-      Function<TargetNode<?>, PBXTarget> targetNodeToPBXTargetTransformer,
+      Function<TargetNode<?>, Collection<PBXTarget>> targetNodeToPBXTargetTransformer,
       Function<BuildTarget, PBXTarget> buildTargetToPBXTargetTransformer) throws IOException {
     for (Map.Entry<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigEntry :
              schemeConfigs.entrySet()) {
@@ -673,19 +725,29 @@ public class WorkspaceAndProjectGenerator {
           .from(
               ImmutableSet.copyOf(
                   Optional.presentInstances(schemeNameToSrcTargetNode.get(schemeName))))
-          .transform(targetNodeToPBXTargetTransformer)
+          .transformAndConcat(targetNodeToPBXTargetTransformer)
           .toSet();
       FluentIterable<PBXTarget> orderedBuildTestTargets = FluentIterable
           .from(buildForTestNodes.get(schemeName))
-          .transform(targetNodeToPBXTargetTransformer);
+          .transformAndConcat(targetNodeToPBXTargetTransformer);
       if (isMainScheme) {
         orderedBuildTestTargets = orderedBuildTestTargets.append(synthesizedCombinedTestTargets);
       }
       FluentIterable<PBXTarget> orderedRunTestTargets = FluentIterable
           .from(ungroupedTests.get(schemeName))
-          .transform(targetNodeToPBXTargetTransformer);
+          .transformAndConcat(targetNodeToPBXTargetTransformer);
       if (isMainScheme) {
         orderedRunTestTargets = orderedRunTestTargets.append(synthesizedCombinedTestTargets);
+      }
+      Optional<String> runnablePath;
+      Optional<BuildTarget> targetToBuildWithBuck = getTargetToBuildWithBuck();
+      if (buildWithBuck && targetToBuildWithBuck.isPresent()) {
+        runnablePath = Optional.of(
+            projectFilesystem
+                .resolve(AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), "app"))
+                .toString());
+      } else {
+        runnablePath = Optional.absent();
       }
       Optional<String> remoteRunnablePath;
       if (schemeConfigArg.isRemoteRunnable.or(false)) {
@@ -702,9 +764,10 @@ public class WorkspaceAndProjectGenerator {
           orderedRunTestTargets,
           schemeName,
           outputDirectory.resolve(workspaceName + ".xcworkspace"),
+          buildWithBuck,
+          runnablePath,
           remoteRunnablePath,
-          XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(
-              workspaceArguments),
+          XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),
           targetToProjectPathMap);
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);

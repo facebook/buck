@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -111,12 +112,21 @@ public class AppleBundle extends AbstractBuildRule {
         "%s.zip");
     this.bundledAssetCatalogs = ImmutableSet.copyOf(bundledAssetCatalogs);
     this.mergedAssetCatalog = mergedAssetCatalog;
-    this.binaryName = getBuildTarget().getShortName();
-    this.bundleRoot = BuildTargets.getGenPath(getBuildTarget(), "%s")
-        .resolve(binaryName + "." + this.extension);
+    this.binaryName = getBinaryName(getBuildTarget());
+    this.bundleRoot = getBundleRoot(getBuildTarget(), this.extension);
     this.executablesPath =
         Paths.get(this.bundleSubfolders.get(AppleBundleDestination.SubfolderSpec.EXECUTABLES));
     this.binaryPath = this.executablesPath.resolve(this.binaryName);
+  }
+
+  private static String getBinaryName(BuildTarget buildTarget) {
+    return buildTarget.getShortName();
+  }
+
+  public static Path getBundleRoot(BuildTarget buildTarget, String extension) {
+    return BuildTargets
+        .getGenPath(buildTarget, "%s")
+        .resolve(getBinaryName(buildTarget) + "." + extension);
   }
 
   @Override

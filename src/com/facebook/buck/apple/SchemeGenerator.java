@@ -24,7 +24,6 @@ import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -73,6 +72,8 @@ class SchemeGenerator {
   private final ImmutableSet<PBXTarget> orderedRunTestTargets;
   private final String schemeName;
   private final Path outputDirectory;
+  private final boolean primaryTargetIsBuildWithBuck;
+  private final Optional<String> runnablePath;
   private final Optional<String> remoteRunnablePath;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
   private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
@@ -86,6 +87,8 @@ class SchemeGenerator {
       Iterable<PBXTarget> orderedRunTestTargets,
       String schemeName,
       Path outputDirectory,
+      boolean primaryTargetIsBuildWithBuck,
+      Optional<String> runnablePath,
       Optional<String> remoteRunnablePath,
       Map<SchemeActionType, String> actionConfigNames,
       Map<PBXTarget, Path> targetToProjectPathMap) {
@@ -96,6 +99,8 @@ class SchemeGenerator {
     this.orderedRunTestTargets = ImmutableSet.copyOf(orderedRunTestTargets);
     this.schemeName = schemeName;
     this.outputDirectory = outputDirectory;
+    this.primaryTargetIsBuildWithBuck = primaryTargetIsBuildWithBuck;
+    this.runnablePath = runnablePath;
     this.remoteRunnablePath = remoteRunnablePath;
     this.actionConfigNames = ImmutableMap.copyOf(actionConfigNames);
     this.targetToProjectPathMap = ImmutableMap.copyOf(targetToProjectPathMap);
@@ -126,7 +131,9 @@ class SchemeGenerator {
               targetToProjectPathMap.get(target)
           ).toString(),
           target.getGlobalID(),
-          Preconditions.checkNotNull(target.getProductReference()).getName(),
+          target.getProductReference() != null
+              ? target.getProductReference().getName()
+              : target.getProductName(),
           blueprintName);
       buildTargetToBuildableReferenceMap.put(target , buildableReference);
     }
@@ -137,7 +144,11 @@ class SchemeGenerator {
     for (PBXTarget target : orderedBuildTargets) {
       addBuildActionForBuildTarget(
           buildTargetToBuildableReferenceMap.get(target),
-          XCScheme.BuildActionEntry.BuildFor.DEFAULT,
+          !primaryTargetIsBuildWithBuck ||
+              !primaryTarget.isPresent() ||
+              target.equals(primaryTarget.get())
+              ? XCScheme.BuildActionEntry.BuildFor.DEFAULT
+              : XCScheme.BuildActionEntry.BuildFor.INDEXING,
           buildAction);
     }
 
@@ -165,10 +176,12 @@ class SchemeGenerator {
       XCScheme.BuildableReference primaryBuildableReference =
         buildTargetToBuildableReferenceMap.get(primaryTarget.get());
       if (primaryBuildableReference != null) {
-        launchAction = Optional.of(new XCScheme.LaunchAction(
-            primaryBuildableReference,
-            actionConfigNames.get(SchemeActionType.LAUNCH),
-            remoteRunnablePath));
+        launchAction = Optional.of(
+            new XCScheme.LaunchAction(
+                primaryBuildableReference,
+                actionConfigNames.get(SchemeActionType.LAUNCH),
+                runnablePath,
+                remoteRunnablePath));
         profileAction = Optional.of(new XCScheme.ProfileAction(
             primaryBuildableReference,
             actionConfigNames.get(SchemeActionType.PROFILE)));
@@ -282,6 +295,7 @@ class SchemeGenerator {
   public static Element serializeLaunchAction(Document doc, XCScheme.LaunchAction launchAction) {
     Element launchActionElem = doc.createElement("LaunchAction");
 
+    Optional<String> runnablePath = launchAction.getRunnablePath();
     Optional<String> remoteRunnablePath = launchAction.getRemoteRunnablePath();
     if (remoteRunnablePath.isPresent()) {
       Element remoteRunnableElem = doc.createElement("RemoteRunnable");
@@ -295,6 +309,10 @@ class SchemeGenerator {
       // Yes, this appears to be duplicated in Xcode as well..
       Element refElem2 = serializeBuildableReference(doc, launchAction.getBuildableReference());
       launchActionElem.appendChild(refElem2);
+    } else if (runnablePath.isPresent()) {
+      Element pathRunnableElem = doc.createElement("PathRunnable");
+      launchActionElem.appendChild(pathRunnableElem);
+      pathRunnableElem.setAttribute("FilePath", runnablePath.get());
     } else {
       Element productRunnableElem = doc.createElement("BuildableProductRunnable");
       launchActionElem.appendChild(productRunnableElem);

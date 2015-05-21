@@ -20,6 +20,7 @@ import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.util.Collections;
@@ -114,6 +115,14 @@ public class PBXGroup extends PBXReference {
 
   public PBXGroup getOrCreateChildGroupByName(String name) {
     return childGroupsByName.getUnchecked(name);
+  }
+
+  public PBXGroup getOrCreateDescendantGroupByPath(ImmutableList<String> path) {
+    PBXGroup targetGroup = this;
+    for (String part : path) {
+      targetGroup = targetGroup.getOrCreateChildGroupByName(part);
+    }
+    return targetGroup;
   }
 
   public PBXVariantGroup getOrCreateChildVariantGroupByName(String name) {

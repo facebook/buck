@@ -143,6 +143,11 @@ public class ProjectCommand extends BuildCommand {
       usage = "Generate an xcode project of a target and its dependencies.")
   private boolean combinedProject;
 
+  @Option(
+      name = "--build-with-buck",
+      usage = "Use Buck to build the generated project instead of delegating the build to the IDE.")
+  private boolean buildWithBuck;
+
   @Option(name = "--process-annotations", usage = "Enable annotation processing")
   private boolean processAnnotations;
 
@@ -625,6 +630,7 @@ public class ProjectCommand extends BuildCommand {
           inputTarget,
           optionsBuilder.build(),
           combinedProject,
+          buildWithBuck,
           new ParserConfig(params.getBuckConfig()).getBuildFileName(),
           new Function<TargetNode<?>, Path>() {
             @Nullable

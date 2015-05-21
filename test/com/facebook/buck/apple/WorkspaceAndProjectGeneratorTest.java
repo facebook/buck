@@ -18,7 +18,10 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -29,6 +32,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.xcode.XCScheme;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
@@ -59,6 +63,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import org.hamcrest.FeatureMatcher;
@@ -221,6 +226,7 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false /* combinedProject */,
+        false /* buildWithBuck */,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -280,6 +286,7 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         true /* combinedProject */,
+        false /* buildWithBuck */,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -324,6 +331,7 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.<ProjectGenerator.Option>of(),
         false /* combinedProject */,
+        false /* buildWithBuck */,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -397,6 +405,7 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.<ProjectGenerator.Option>of(),
         false /* combinedProject */,
+        false /* buildWithBuck */,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -439,6 +448,7 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.<ProjectGenerator.Option>of(),
         true /* combinedProject */,
+        false /* buildWithBuck */,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -447,6 +457,55 @@ public class WorkspaceAndProjectGeneratorTest {
     assertEquals(
         generator.getRequiredBuildTargets(),
         ImmutableSet.of(genruleTarget));
+  }
+
+  @Test
+  public void buildWithBuck() throws IOException {
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        targetGraph,
+        workspaceNode.getConstructorArg(),
+        workspaceNode.getBuildTarget(),
+        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
+        false /* combinedProject */,
+        true /* buildWithBuck */,
+        "BUCK",
+        getOutputPathOfNodeFunction(targetGraph));
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    ProjectGenerator fooProjectGenerator = projectGenerators.get(Paths.get("foo"));
+    assertThat(fooProjectGenerator, is(notNullValue()));
+
+    PBXTarget buildWithBuckTarget = null;
+    for (PBXTarget target : fooProjectGenerator.getGeneratedProject().getTargets()) {
+      if (target.getProductName() != null && target.getProductName().endsWith("-Buck")) {
+        buildWithBuckTarget = target;
+        break;
+      }
+    }
+    assertThat(buildWithBuckTarget, is(notNullValue()));
+    assertThat(buildWithBuckTarget, is(instanceOf(PBXAggregateTarget.class)));
+
+    String gid = buildWithBuckTarget.getGlobalID();
+
+    Optional<XCScheme> scheme = Iterables
+        .getOnlyElement(generator.getSchemeGenerators().values())
+        .getOutputScheme();
+
+    assertThat(scheme.isPresent(), is(true));
+
+    XCScheme.BuildableReference buildWithBuckBuildableReference = null;
+    for (XCScheme.BuildActionEntry buildActionEntry :
+        scheme.get().getBuildAction().get().getBuildActionEntries()) {
+      XCScheme.BuildableReference buildableReference = buildActionEntry.getBuildableReference();
+      if (buildableReference.getBlueprintIdentifier().equals(gid)) {
+        buildWithBuckBuildableReference = buildableReference;
+      }
+    }
+    assertThat(buildWithBuckBuildableReference, is(notNullValue()));
+
+    assertThat(buildWithBuckBuildableReference.getBuildableName(), equalTo("//foo:bin-Buck"));
   }
 
   @Test
@@ -502,7 +561,8 @@ public class WorkspaceAndProjectGeneratorTest {
         workspace.getConstructorArg(),
         workspaceNode.getBuildTarget(),
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
-        false,
+        false /* combinedProject */,
+        false /* buildWithBuck */,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
@@ -906,6 +966,7 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceWithExtraSchemeNode.getBuildTarget(),
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false /* combinedProject */,
+        false /* buildWithBuck */,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -1048,6 +1109,7 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode.getBuildTarget(),
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false /* combinedProject */,
+        false /* buildWithBuck */,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();

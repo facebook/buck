@@ -22,6 +22,7 @@ import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
@@ -29,10 +30,12 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
+import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.HeaderVisibility;
@@ -189,7 +192,9 @@ public class ProjectGenerator {
   private final Path placedAssetCatalogBuildPhaseScript;
   private final PathRelativizer pathRelativizer;
 
+  private final String buildFileName;
   private final ImmutableSet<Option> options;
+  private final Optional<BuildTarget> targetToBuildWithBuck;
 
   private ImmutableSet<TargetNode<AppleTestDescription.Arg>> testsToGenerateAsStaticLibraries =
       ImmutableSet.of();
@@ -200,7 +205,7 @@ public class ProjectGenerator {
   private final PBXProject project;
   private final LoadingCache<TargetNode<?>, Optional<PBXTarget>> targetNodeToProjectTarget;
   private boolean shouldPlaceAssetCatalogCompiler = false;
-  private final ImmutableMap.Builder<TargetNode<?>, PBXTarget>
+  private final ImmutableMultimap.Builder<TargetNode<?>, PBXTarget>
       targetNodeToGeneratedProjectTargetBuilder;
   private boolean projectGenerated;
   private List<Path> headerSymlinkTrees;
@@ -208,7 +213,7 @@ public class ProjectGenerator {
       ImmutableSet.builder();
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
-  private final Function<TargetNode<?>, Path> outputPathOfNode;
+  private final Function<? super TargetNode<?>, Path> outputPathOfNode;
 
   /**
    * Populated while generating project configurations, in order to collect the possible
@@ -216,8 +221,7 @@ public class ProjectGenerator {
    */
   private final ImmutableSet.Builder<String> targetConfigNamesBuilder;
 
-  private Map<String, String> gidsToTargetNames;
-  private String buildFileName;
+  private final Map<String, String> gidsToTargetNames;
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -227,7 +231,8 @@ public class ProjectGenerator {
       String projectName,
       String buildFileName,
       Set<Option> options,
-      Function<TargetNode<?>, Path> outputPathOfNode) {
+      Optional<BuildTarget> targetToBuildWithBuck,
+      Function<? super TargetNode<?>, Path> outputPathOfNode) {
     this.sourcePathResolver = new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath input) {
@@ -242,6 +247,7 @@ public class ProjectGenerator {
     this.projectName = projectName;
     this.buildFileName = buildFileName;
     this.options = ImmutableSet.copyOf(options);
+    this.targetToBuildWithBuck = targetToBuildWithBuck;
     this.outputPathOfNode = outputPathOfNode;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -261,7 +267,7 @@ public class ProjectGenerator {
     this.project = new PBXProject(projectName);
     this.headerSymlinkTrees = new ArrayList<>();
 
-    this.targetNodeToGeneratedProjectTargetBuilder = ImmutableMap.builder();
+    this.targetNodeToGeneratedProjectTargetBuilder = ImmutableMultimap.builder();
     this.targetNodeToProjectTarget = CacheBuilder.newBuilder().build(
         new CacheLoader<TargetNode<?>, Optional<PBXTarget>>() {
           @Override
@@ -308,11 +314,12 @@ public class ProjectGenerator {
     return projectPath;
   }
 
-  public ImmutableMap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap() {
+  public ImmutableMultimap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap() {
     Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
-    ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMap = ImmutableMap.builder();
+    ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMap =
+        ImmutableMultimap.builder();
     for (Map.Entry<TargetNode<?>, PBXTarget> entry :
-        targetNodeToGeneratedProjectTargetBuilder.build().entrySet()) {
+        targetNodeToGeneratedProjectTargetBuilder.build().entries()) {
       buildTargetToPbxTargetMap.put(entry.getKey().getBuildTarget(), entry.getValue());
     }
     return buildTargetToPbxTargetMap.build();
@@ -343,6 +350,11 @@ public class ProjectGenerator {
         } else {
           LOG.verbose("Excluding rule %s (not built by current project)", targetNode);
         }
+      }
+
+      if (targetToBuildWithBuck.isPresent()) {
+        generateAggregateTarget(
+            Preconditions.checkNotNull(targetGraph.get(targetToBuildWithBuck.get())));
       }
 
       int combinedTestIndex = 0;
@@ -391,6 +403,43 @@ public class ProjectGenerator {
         throw originalException;
       }
     }
+  }
+
+  private void generateAggregateTarget(TargetNode<?> targetNode) {
+    final BuildTarget buildTarget = targetNode.getBuildTarget();
+    ImmutableMap<String, ImmutableMap<String, String>> configs =
+        getAppleNativeNode(targetGraph, targetNode).get().getConstructorArg().configs.get();
+    String productName = getXcodeTargetName(buildTarget) + "-Buck";
+
+    PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
+    shellScriptBuildPhase.setShellScript("buck build " + buildTarget.getFullyQualifiedName());
+
+    XCConfigurationList configurationList = new XCConfigurationList();
+    PBXGroup group = project
+        .getMainGroup()
+        .getOrCreateDescendantGroupByPath(
+            FluentIterable
+                .from(buildTarget.getBasePath())
+                .transform(Functions.toStringFunction())
+                .toList())
+        .getOrCreateChildGroupByName(getXcodeTargetName(buildTarget));
+    for (String configurationName : configs.keySet()) {
+      configurationList
+          .getBuildConfigurationsByName()
+          .getUnchecked(configurationName)
+          .setBaseConfigurationReference(
+              getConfigurationFileReference(
+                  group,
+                  getConfigurationNameToXcconfigPath(buildTarget).apply(configurationName)));
+    }
+
+    PBXAggregateTarget aggregateTarget = new PBXAggregateTarget(productName);
+    aggregateTarget.setProductName(productName);
+    aggregateTarget.getBuildPhases().add(shellScriptBuildPhase);
+    aggregateTarget.setBuildConfigurationList(configurationList);
+    project.getTargets().add(aggregateTarget);
+
+    targetNodeToGeneratedProjectTargetBuilder.put(targetNode, aggregateTarget);
   }
 
   @SuppressWarnings("unchecked")
@@ -622,11 +671,11 @@ public class ProjectGenerator {
         .setResources(resources);
 
     if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE)) {
-      ImmutableList.Builder<String> targetGroupPathBuilder = ImmutableList.builder();
-      for (Path pathPart : buildTarget.getBasePath()) {
-        targetGroupPathBuilder.add(pathPart.toString());
-      }
-      mutator.setTargetGroupPath(targetGroupPathBuilder.build());
+      mutator.setTargetGroupPath(
+          FluentIterable
+              .from(buildTarget.getBasePath())
+              .transform(Functions.toStringFunction())
+              .toList());
     }
 
     if (!assetCatalogs.isEmpty()) {
@@ -773,12 +822,7 @@ public class ProjectGenerator {
                             collectRecursiveExportedLinkerFlags(ImmutableList.of(targetNode))))));
 
     setTargetBuildConfigurations(
-        new Function<String, Path>() {
-          @Override
-          public Path apply(String input) {
-            return BuildTargets.getGenPath(buildTarget, "%s-" + input + ".xcconfig");
-          }
-        },
+        getConfigurationNameToXcconfigPath(buildTarget),
         target,
         targetGroup,
         targetNode.getConstructorArg().configs.get(),
@@ -835,6 +879,15 @@ public class ProjectGenerator {
             .toSet());
 
     return target;
+  }
+
+  private Function<String, Path> getConfigurationNameToXcconfigPath(final BuildTarget buildTarget) {
+    return new Function<String, Path>() {
+      @Override
+      public Path apply(String input) {
+        return BuildTargets.getGenPath(buildTarget, "%s-" + input + ".xcconfig");
+      }
+    };
   }
 
   private Iterable<SourcePath> getHeaderSourcePaths(
@@ -962,8 +1015,6 @@ public class ProjectGenerator {
       ImmutableMap<String, String> appendBuildSettings)
       throws IOException {
 
-    PBXGroup configurationsGroup = targetGroup.getOrCreateChildGroupByName("Configurations");
-
     for (Map.Entry<String, ImmutableMap<String, String>> configurationEntry :
         configurations.entrySet()) {
       targetConfigNamesBuilder.add(configurationEntry.getKey());
@@ -1022,13 +1073,18 @@ public class ProjectGenerator {
         }
       }
 
-      PBXFileReference fileReference =
-          configurationsGroup.getOrCreateFileReferenceBySourceTreePath(
-              new SourceTreePath(
-                  PBXReference.SourceTree.SOURCE_ROOT,
-                  pathRelativizer.outputDirToRootRelative(xcconfigPath)));
+      PBXFileReference fileReference = getConfigurationFileReference(targetGroup, xcconfigPath);
       outputConfiguration.setBaseConfigurationReference(fileReference);
     }
+  }
+
+  private PBXFileReference getConfigurationFileReference(PBXGroup targetGroup, Path xcconfigPath) {
+    return targetGroup
+        .getOrCreateChildGroupByName("Configurations")
+        .getOrCreateFileReferenceBySourceTreePath(
+            new SourceTreePath(
+                PBXReference.SourceTree.SOURCE_ROOT,
+                pathRelativizer.outputDirToRootRelative(xcconfigPath)));
   }
 
   private void collectBuildScriptDependencies(

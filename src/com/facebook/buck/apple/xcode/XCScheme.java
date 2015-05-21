@@ -135,6 +135,7 @@ public class XCScheme {
       ANALYZING;
 
       public static final EnumSet<BuildFor> DEFAULT = EnumSet.allOf(BuildFor.class);
+      public static final EnumSet<BuildFor> INDEXING = EnumSet.of(TESTING, ANALYZING, ARCHIVING);
       public static final EnumSet<BuildFor> TEST_ONLY = EnumSet.of(TESTING, ANALYZING);
     }
 
@@ -161,15 +162,17 @@ public class XCScheme {
   public static class LaunchAction {
     BuildableReference buildableReference;
     private final String buildConfiguration;
+    private final Optional<String> runnablePath;
     private final Optional<String> remoteRunnablePath;
 
     public LaunchAction(
         BuildableReference buildableReference,
         String buildConfiguration,
-        Optional<String> remoteRunnablePath
-    ) {
+        Optional<String> runnablePath,
+        Optional<String> remoteRunnablePath) {
       this.buildableReference = buildableReference;
       this.buildConfiguration = buildConfiguration;
+      this.runnablePath = runnablePath;
       this.remoteRunnablePath = remoteRunnablePath;
     }
 
@@ -179,6 +182,10 @@ public class XCScheme {
 
     public String getBuildConfiguration() {
       return buildConfiguration;
+    }
+
+    public Optional<String> getRunnablePath() {
+      return runnablePath;
     }
 
     public Optional<String> getRemoteRunnablePath() {
