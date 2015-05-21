@@ -98,6 +98,21 @@ public class HttpArtifactCache implements ArtifactCache {
     return fetchClient.newCall(request).execute();
   }
 
+  // In order for connections to get reused, we need to reach EOF on their input streams.
+  // This is a convenience method to consume all remaining bytes from the given input stream
+  // for this purpose.
+  private long readTillEnd(InputStream input) throws IOException {
+    try (OutputStream oblivion = ByteStreams.nullOutputStream()) {
+      return ByteStreams.copy(input, oblivion);
+    }
+  }
+
+  private long readTillEnd(Response response) throws IOException {
+    try (InputStream input = response.body().byteStream()) {
+      return readTillEnd(input);
+    }
+  }
+
   public CacheResult fetchImpl(RuleKey ruleKey, File file) throws IOException {
     Request request =
         createRequestBuilder(ruleKey.toString())
@@ -106,11 +121,13 @@ public class HttpArtifactCache implements ArtifactCache {
     Response response = fetchCall(request);
 
     if (response.code() == HttpURLConnection.HTTP_NOT_FOUND) {
+      readTillEnd(response);
       LOGGER.info("fetch(%s, %s): cache miss", url, ruleKey);
       return CacheResult.miss();
     }
 
     if (response.code() != HttpURLConnection.HTTP_OK) {
+      readTillEnd(response);
       String msg = String.format("unexpected response: %d", response.code());
       reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
       return CacheResult.error(name, msg);
@@ -165,12 +182,10 @@ public class HttpArtifactCache implements ArtifactCache {
       // single byte here, instead of all remaining input, but some network stack
       // implementations require that we exhaust the input stream before the connection can be
       // reusable.
-      try (OutputStream theVoid = ByteStreams.nullOutputStream()) {
-        if (ByteStreams.copy(input, theVoid) != 0) {
-          String msg = "unexpected end of input";
-          reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
-          return CacheResult.error(name, msg);
-        }
+      if (readTillEnd(input) != 0) {
+        String msg = "unexpected end of input";
+        reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
+        return CacheResult.error(name, msg);
       }
     }
 

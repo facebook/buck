@@ -134,6 +134,7 @@ public class HttpArtifactCacheTest {
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()
                 .code(HttpURLConnection.HTTP_NOT_FOUND)
+                .body(ResponseBody.create(MediaType.parse("application/octet-stream"), ""))
                 .protocol(Protocol.HTTP_1_1)
                 .request(request)
                 .build();
