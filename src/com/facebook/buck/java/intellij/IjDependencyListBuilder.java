@@ -143,7 +143,7 @@ public class IjDependencyListBuilder {
   public abstract static class AbstractDependencyEntryData {
     public abstract String getName();
     public abstract Scope getScope();
-    public abstract boolean isExported();
+    public abstract boolean getExported();
   }
 
   private ImmutableSet.Builder<DependencyEntry> builder;
@@ -179,7 +179,7 @@ public class IjDependencyListBuilder {
             .setData(DependencyEntryData.builder()
                     .setName(name)
                     .setScope(Scope.PROVIDED)
-                    .setExported(false)
+                    .setExported(true)
                     .build())
             .build());
   }

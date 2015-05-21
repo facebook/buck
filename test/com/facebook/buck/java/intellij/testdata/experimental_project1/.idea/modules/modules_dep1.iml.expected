@@ -5,11 +5,11 @@
       <sourceFolder url="file://$MODULE_DIR$/../../modules/dep1/src" isTestSource="false"  packagePrefix="modules.dep1.src"  />
 
     </content>
-    <orderEntry type="library" name="library_libs_guava" scope="COMPILE" level="project" />
-    <orderEntry type="library" name="library_libs_jsr305" scope="COMPILE" level="project" />
-    <orderEntry type="library" name="library_libs_junit" scope="TEST" level="project" />
+    <orderEntry type="library" name="library_libs_guava" scope="COMPILE" level="project"  />
+    <orderEntry type="library" name="library_libs_jsr305" scope="COMPILE" level="project"  />
+    <orderEntry type="library" name="library_libs_junit" scope="TEST" level="project"  />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="library_modules_dep1_generated" scope="PROVIDED" level="project" />
+    <orderEntry type="library" name="library_modules_dep1_generated" scope="PROVIDED" level="project"  exported=""  />
 
     <orderEntry type="inheritedJdk" />
   </component>

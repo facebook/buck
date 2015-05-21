@@ -42,9 +42,10 @@
 %dependencies:{dep |
   %if(dep.module)%
     <orderEntry type="%dep.type%" module-name="%dep.module.name%" scope="%dep.module.scope%" %\\%
-      %if(dep.module.isExported)% exported="" %endif% />
+      %if(dep.module.exported)% exported="" %endif% />
   %elseif(dep.library)%
-    <orderEntry type="%dep.type%" name="%dep.library.name%" scope="%dep.library.scope%" level="project" />
+    <orderEntry type="%dep.type%" name="%dep.library.name%" scope="%dep.library.scope%" %\\%
+      level="project" %if(dep.library.exported)% exported="" %endif% />
   %elseif(dep.sourceFolder)%
     <orderEntry type="%dep.type%" forTests="false" />
   %endif%

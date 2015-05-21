@@ -203,7 +203,8 @@ public class IjProjectDataPreparerTest {
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
                 hasProperty("data", equalTo(Optional.of(
-                            dependencyEntryBuilder
+                            DependencyEntryData.builder()
+                                .setExported(true)
                                 .setName("library_java_com_example_base_tests")
                                 .setScope(IjDependencyListBuilder.Scope.PROVIDED)
                                 .build()
