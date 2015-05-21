@@ -318,6 +318,7 @@ public class AndroidBinaryGraphEnhancer {
         cpuFilters.isEmpty() ? nativePlatforms.keySet() : cpuFilters;
     for (TargetCpuType targetCpuType : filters) {
       NdkCxxPlatform platform = Preconditions.checkNotNull(nativePlatforms.get(targetCpuType));
+      boolean hasNativeLibs = false;
 
       for (JavaNativeLinkable nativeLinkable : packageableCollection.getNativeLinkables()) {
         ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(
@@ -326,13 +327,13 @@ public class AndroidBinaryGraphEnhancer {
           nativeLinkableLibsBuilder.put(
               new Pair<>(targetCpuType, entry.getKey()),
               entry.getValue());
+          hasNativeLibs = true;
         }
       }
 
       // If we're using a C/C++ runtime other than the system one, add it to the APK.
       NdkCxxPlatforms.CxxRuntime cxxRuntime = platform.getCxxRuntime();
-      if (!packageableCollection.getNativeLinkables().isEmpty() &&
-          !cxxRuntime.equals(NdkCxxPlatforms.CxxRuntime.SYSTEM)) {
+      if (hasNativeLibs && !cxxRuntime.equals(NdkCxxPlatforms.CxxRuntime.SYSTEM)) {
         nativeLinkableLibsBuilder.put(
             new Pair<>(
                 targetCpuType,

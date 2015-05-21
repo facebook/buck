@@ -237,10 +237,12 @@ public class AndroidBinaryIntegrationTest {
     ZipInspector zipInspector = new ZipInspector(
         workspace.getFile(
             "buck-out/gen/apps/sample/app_with_x86_lib.apk"));
-    zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
-    zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_x86-only.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi/libnative_cxx_x86-only.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_x86-only.so");
+    zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
   }
 
 }
