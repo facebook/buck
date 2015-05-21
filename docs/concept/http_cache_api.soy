@@ -15,17 +15,22 @@ Buck makes two types of requests to the cache:
 
 <h3><code>GET /artifact/key/[key]</code></h3>
 
-Fetch an artifact from the cache. If the artifact is cached, the response will have status 200,
-content-type <code>application/octet-stream</code>, and the artifact data as the response body.
-If the artifact is not cached, the response will have status 404.
+<p>Fetch an artifact from the cache.</p>
 
-<h3><code>POST /artifact/</code></h3>
+<p>If the artifact is cached, the response should have status 200, content-type
+{sp}<code>application/octet-stream</code>, and the artifact data as the response
+body.</p>
 
-Store one or more artifacts in the cache. The request must have content-type
-{sp}<code>multipart/form-data</code>, include a <code>Buck-Artifact-Count</code> header
-that specifies the number of artifacts being sent, and contain data sections with
-{sp}<code>name="key[n]"</code> and <code>name="data[n]"</code>, where <code>[n]</code> is an
-integer between 0 and <code>Buck-Artifact-Count</code>. The response will have status 202.
+<p>If the artifact is not cached, the response should have status 404.</p>
+
+<h3><code>PUT /artifact/key/[key]</code></h3>
+
+<p>Store one or more artifacts in the cache.</p>
+
+<p>The request will have content-type {sp}<code>application/octet-stream</code>
+{sp}and the artifact data as the request body.</p>
+
+<p>The response should have status 202.</p>
     {/param}
   {/call}
 {/template}
