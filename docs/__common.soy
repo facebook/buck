@@ -42,6 +42,12 @@
 <!doctype html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns#">
+<script>
+  var loc = new String(window.location);
+  if (loc.indexOf('facebook.github.com') != -1) {lb}
+    window.location.replace(loc.replace('facebook.github.io/buck', 'buckbuild.com'));
+  {rb}
+</script>
   <title>{$fullTitle}</title>
   <link type="image/png" rel="shortcut icon" href="{ROOT}static/favicon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
