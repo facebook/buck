@@ -11,7 +11,7 @@
   // The value must always end with a forward slash.
   "GEN_DIR" : "buck-out/gen/",
 
-  // Normally this should be set to "/buck/", but if you want to generate a version
+  // Normally this should be set to "/", but if you want to generate a version
   // of the docs that can be hosted from your public directory, then you
   // probably want to set this to something like "/~username/buck/".
   //
@@ -19,5 +19,5 @@
   // which is why we use a shorter, potentially less-descriptive variable name.
   //
   // The value must always end with a forward slash.
-  "ROOT" : "/buck/"
+  "ROOT" : "/"
 }
