@@ -319,6 +319,13 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
         .build();
   }
 
+  @Override
+  public ThriftLibraryDescription.CompilerType getCompilerType() {
+    return cpp2 ?
+        ThriftLibraryDescription.CompilerType.THRIFT2 :
+        ThriftLibraryDescription.CompilerType.THRIFT;
+  }
+
   private static class CxxHeadersAndSources {
 
     private final ImmutableMap<String, SourcePath> headers;

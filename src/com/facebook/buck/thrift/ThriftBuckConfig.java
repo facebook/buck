@@ -19,6 +19,7 @@ package com.facebook.buck.thrift;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Optional;
 
 public class ThriftBuckConfig {
 
@@ -32,7 +33,12 @@ public class ThriftBuckConfig {
    * Return the {@link SourcePath} object representing the thrift compiler.  This either wraps
    * a hard-coded path or a {@link BuildTarget} which builds the compiler.
    */
-  public SourcePath getCompiler() {
+  public SourcePath getCompiler(ThriftLibraryDescription.CompilerType compilerType) {
+    Optional<SourcePath> thrift2 = delegate.getSourcePath("thrift", "compiler2");
+    // If the thrift2 compiler option isn't set, fallback to the thrift1 compiler.
+    if (compilerType == ThriftLibraryDescription.CompilerType.THRIFT2 && thrift2.isPresent()) {
+      return thrift2.get();
+    }
     return delegate.getRequiredSourcePath("thrift", "compiler");
   }
 

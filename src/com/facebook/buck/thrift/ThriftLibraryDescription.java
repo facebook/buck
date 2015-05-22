@@ -159,13 +159,14 @@ public class ThriftLibraryDescription
   protected ImmutableMap<String, ThriftCompiler> createThriftCompilerBuildRules(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      CompilerType compilerType,
       ImmutableList<String> flags,
       String language,
       ImmutableSet<String> options,
       ImmutableMap<String, SourcePath> srcs,
       ImmutableSortedSet<ThriftLibrary> deps) {
 
-    SourcePath compiler = thriftBuckConfig.getCompiler();
+    SourcePath compiler = thriftBuckConfig.getCompiler(compilerType);
 
     // Build up the include roots to find thrift file deps and also the build rules that
     // generate them.
@@ -342,6 +343,7 @@ public class ThriftLibraryDescription
     ImmutableMap<String, ThriftCompiler> compilerRules = createThriftCompilerBuildRules(
         params,
         resolver,
+        enhancer.getCompilerType(),
         args.flags.or(ImmutableList.<String>of()),
         language,
         options,
@@ -425,7 +427,8 @@ public class ThriftLibraryDescription
             arg.deps.get()));
 
     // Add the compiler target, if there is one.
-    SourcePath compiler = thriftBuckConfig.getCompiler();
+    SourcePath compiler =
+        thriftBuckConfig.getCompiler(enhancerFlavor.get().getValue().getCompilerType());
     if (compiler instanceof BuildTargetSourcePath) {
       deps.add(((BuildTargetSourcePath) compiler).getTarget());
     }
@@ -439,6 +442,12 @@ public class ThriftLibraryDescription
     deps.addAll(implicitDeps);
 
     return deps;
+  }
+
+  // The version of thrift compiler to use.
+  public enum CompilerType {
+    THRIFT,
+    THRIFT2
   }
 
 }

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -31,6 +32,8 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
@@ -63,7 +66,7 @@ public class ThriftBuckConfigTest {
 
     // Now try to lookup the compiler, which should fail since nothing was set.
     try {
-      thriftBuckConfig.getCompiler();
+      thriftBuckConfig.getCompiler(ThriftLibraryDescription.CompilerType.THRIFT);
       fail("expected to throw");
     } catch (HumanReadableException e) {
       assertTrue(
@@ -87,7 +90,8 @@ public class ThriftBuckConfigTest {
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Now try to lookup the compiler, which should succeed.
-    SourcePath compiler = thriftBuckConfig.getCompiler();
+    SourcePath compiler =
+        thriftBuckConfig.getCompiler(ThriftLibraryDescription.CompilerType.THRIFT);
 
     // Verify that the returned SourcePath wraps the compiler path correctly.
     assertTrue(compiler instanceof PathSourcePath);
@@ -113,13 +117,55 @@ public class ThriftBuckConfigTest {
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Now try to lookup the compiler, which should succeed.
-    SourcePath compiler = thriftBuckConfig.getCompiler();
+    SourcePath compiler =
+        thriftBuckConfig.getCompiler(ThriftLibraryDescription.CompilerType.THRIFT);
 
     // Verify that the returned SourcePath wraps the compiler path correctly.
     assertTrue(compiler instanceof BuildTargetSourcePath);
     assertEquals(
         BuildTargetFactory.newInstance("//thrift:target"),
         ((BuildTargetSourcePath) compiler).getTarget());
+  }
+
+  @Test
+  public void getCompilerThriftVsThrift2() throws IOException {
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+
+    // Setup an empty thrift buck config with thrift and thrift2 set..
+    FakeBuckConfig buckConfig = new FakeBuckConfig(
+        ImmutableMap.of(
+            "thrift",
+            ImmutableMap.of(
+                "compiler", "thrift1",
+                "compiler2", "thrift2")),
+        filesystem);
+    ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
+
+    // Verify that thrift1 and thrift2 are selected correctly.
+    assertEquals(
+        new TestSourcePath("thrift1"),
+        thriftBuckConfig.getCompiler(ThriftLibraryDescription.CompilerType.THRIFT));
+    assertEquals(
+        new TestSourcePath("thrift2"),
+        thriftBuckConfig.getCompiler(ThriftLibraryDescription.CompilerType.THRIFT2));
+  }
+
+  @Test
+  public void getCompilerThrift2FallsbackToThrift() throws IOException {
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+
+    // Setup an empty thrift buck config with thrift and thrift2 set..
+    FakeBuckConfig buckConfig = new FakeBuckConfig(
+        ImmutableMap.of(
+            "thrift",
+            ImmutableMap.of("compiler", "thrift1")),
+        filesystem);
+    ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
+
+    // Verify that thrift2 falls back to the setting of thrift1.
+    assertEquals(
+        new TestSourcePath("thrift1"),
+        thriftBuckConfig.getCompiler(ThriftLibraryDescription.CompilerType.THRIFT2));
   }
 
 }

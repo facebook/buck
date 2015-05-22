@@ -191,4 +191,9 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
     return options.build();
   }
 
+  @Override
+  public ThriftLibraryDescription.CompilerType getCompilerType() {
+    return ThriftLibraryDescription.CompilerType.THRIFT;
+  }
+
 }

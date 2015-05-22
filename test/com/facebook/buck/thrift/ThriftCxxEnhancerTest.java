@@ -129,6 +129,16 @@ public class ThriftCxxEnhancerTest {
         ENHANCER_CPP2.getFlavor());
   }
 
+  @Test
+  public void getCompiler() {
+    assertEquals(
+        ThriftLibraryDescription.CompilerType.THRIFT,
+        ENHANCER_CPP.getCompilerType());
+    assertEquals(
+        ThriftLibraryDescription.CompilerType.THRIFT2,
+        ENHANCER_CPP2.getCompilerType());
+  }
+
   private ImmutableSet<String> getExpectedOptions(BuildTarget target, ImmutableSet<String> opts) {
     return ImmutableSet.<String>builder()
         .addAll(opts)

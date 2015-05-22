@@ -153,6 +153,11 @@ public class ThriftLibraryDescriptionTest {
       return options;
     }
 
+    @Override
+    public ThriftLibraryDescription.CompilerType getCompilerType() {
+      return ThriftLibraryDescription.CompilerType.THRIFT;
+    }
+
   }
 
   @Test
@@ -203,6 +208,7 @@ public class ThriftLibraryDescriptionTest {
     ImmutableMap<String, ThriftCompiler> rules = desc.createThriftCompilerBuildRules(
         flavoredParams,
         resolver,
+        ThriftLibraryDescription.CompilerType.THRIFT,
         ImmutableList.<String>of(),
         language,
         options,
@@ -234,6 +240,7 @@ public class ThriftLibraryDescriptionTest {
     rules = desc.createThriftCompilerBuildRules(
         flavoredParams,
         resolver,
+        ThriftLibraryDescription.CompilerType.THRIFT,
         ImmutableList.<String>of(),
         language,
         options,
@@ -259,6 +266,7 @@ public class ThriftLibraryDescriptionTest {
     rules = desc.createThriftCompilerBuildRules(
         flavoredParams,
         resolver,
+        ThriftLibraryDescription.CompilerType.THRIFT,
         ImmutableList.<String>of(),
         language,
         options,
@@ -293,6 +301,7 @@ public class ThriftLibraryDescriptionTest {
     rules = desc.createThriftCompilerBuildRules(
         flavoredParams,
         resolver,
+        ThriftLibraryDescription.CompilerType.THRIFT,
         ImmutableList.<String>of(),
         language,
         options,

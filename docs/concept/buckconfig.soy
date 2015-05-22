@@ -55,6 +55,7 @@ The following sections are recognized by Buck:
     'ndk',
     'project',
     'test',
+    'thrift',
     'tools',
     ]}
   <a href="#{$name}"><code>[{$name}]</code></a><br>
@@ -461,6 +462,23 @@ The value given is in milliseconds.
   # milliseconds) per test. A JUnit test can override this
   # via its `@Test` annotation.
   timeout = 300000
+</pre>{/literal}
+
+{call .section}{param title: 'thrift' /}{/call}
+
+This section provides settings to locate required thrift components.
+
+{literal}<pre class="prettyprint lang-ini">
+[thrift]
+  # The thrift compiler (https://thrift.apache.org).  Can be either a path
+  # or a build target that builds it.
+  compiler = /usr/local/bin/thrift
+
+  # The thrift2 compiler (https://github.com/facebook/fbthrift).  Can be
+  # either a path or a build target that builds it.
+  #
+  # If unset, defaults to the value in compiler, above.
+  compiler2 = //thrift2:compiler
 </pre>{/literal}
 
 {call .section}{param title: 'tools' /}{/call}

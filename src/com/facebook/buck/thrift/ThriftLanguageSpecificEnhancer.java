@@ -66,4 +66,9 @@ public interface ThriftLanguageSpecificEnhancer {
    */
   ImmutableSet<String> getOptions(BuildTarget target, ThriftConstructorArg arg);
 
+  /**
+   * @return which thrift compiler to use.
+   */
+  ThriftLibraryDescription.CompilerType getCompilerType();
+
 }

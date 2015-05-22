@@ -165,4 +165,9 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
     return arg.javaOptions.or(ImmutableSet.<String>of());
   }
 
+  @Override
+  public ThriftLibraryDescription.CompilerType getCompilerType() {
+    return ThriftLibraryDescription.CompilerType.THRIFT;
+  }
+
 }
