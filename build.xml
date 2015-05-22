@@ -218,11 +218,6 @@
     </javac>
   </target>
 
-  <target name="ide"
-          description="generate files needed to import Buck codebase into an IDE"
-          depends="generate-immutables, generate-test-immutables"
-  />
-
   <macrodef name="ecj" description="Compile Java using the ecj compiler with strict checks.">
     <attribute name="srcdir" default="${src.dir}" />
     <attribute name="classpathref" default="classpath-no-src" />
