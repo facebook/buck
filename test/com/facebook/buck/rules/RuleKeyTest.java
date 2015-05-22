@@ -284,8 +284,29 @@ public class RuleKeyTest {
     resolver.addToIndex(fake1);
     resolver.addToIndex(fake2);
 
-    // Verify that just changing the path of the build rule doesn't affect the rule key.
+    // Verify that two BuildTargetSourcePaths with the same rule and path are equal.
     assertEquals(
+        createEmptyRuleKey(
+            pathResolver)
+            .setReflectively(
+                "key",
+                new BuildTargetSourcePath(
+                    projectFilesystem,
+                    fake1.getBuildTarget(),
+                    Paths.get("location")))
+            .build(),
+        createEmptyRuleKey(
+            pathResolver)
+            .setReflectively(
+                "key",
+                new BuildTargetSourcePath(
+                    projectFilesystem,
+                    fake1.getBuildTarget(),
+                    Paths.get("location")))
+            .build());
+
+    // Verify that just changing the path of the build rule changes the rule key.
+    assertNotEquals(
         createEmptyRuleKey(
             pathResolver)
             .setReflectively(

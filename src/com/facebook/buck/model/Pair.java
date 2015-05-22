@@ -58,6 +58,11 @@ public class Pair<FIRST, SECOND> {
     return Objects.hash(first, second);
   }
 
+  @Override
+  public String toString() {
+    return String.format("Pair(%s, %s)", first, second);
+  }
+
   /**
    * Provides a comparison using the natural ordering of contained types (which my be comparable).
    */

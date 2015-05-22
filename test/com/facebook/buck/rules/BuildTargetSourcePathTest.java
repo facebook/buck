@@ -16,6 +16,7 @@
 package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -99,6 +100,29 @@ public class BuildTargetSourcePathTest {
         path);
     assertEquals(target, buildTargetSourcePath.getTarget());
     assertEquals(path, pathResolver.getPath(buildTargetSourcePath));
+  }
+
+  @Test
+  public void sameBuildTargetsWithDifferentPathsAreDifferent() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
+    FakeBuildRule rule = new FakeBuildRule(
+        BuildRuleType.of("example"),
+        target,
+        pathResolver);
+    BuildTargetSourcePath path1 =
+        new BuildTargetSourcePath(
+            projectFilesystem,
+            rule.getBuildTarget(),
+            Paths.get("something"));
+    BuildTargetSourcePath path2 =
+        new BuildTargetSourcePath(
+            projectFilesystem,
+            rule.getBuildTarget(),
+            Paths.get("something else"));
+    assertNotEquals(path1, path2);
+    assertNotEquals(path1.hashCode(), path2.hashCode());
   }
 
 }

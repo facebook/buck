@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.io.Files;
 
 import org.junit.Test;
 
@@ -118,26 +119,30 @@ public class CxxDescriptionEnhancerTest {
     // Check the header/source spec is correct.
     Path lexOutputSource = CxxDescriptionEnhancer.getLexSourceOutputPath(target, lexSourceName);
     Path lexOutputHeader = CxxDescriptionEnhancer.getLexHeaderOutputPath(target, lexSourceName);
-    Path yaccOutputPrefix = CxxDescriptionEnhancer.getYaccOutputPrefix(target, yaccSourceName);
+    Path yaccOutputPrefix =
+        CxxDescriptionEnhancer.getYaccOutputPrefix(
+            target,
+            Files.getNameWithoutExtension(yaccSourceName));
     Path yaccOutputSource = Yacc.getSourceOutputPath(yaccOutputPrefix);
     Path yaccOutputHeader = Yacc.getHeaderOutputPath(yaccOutputPrefix);
-    CxxHeaderSourceSpec expected = CxxHeaderSourceSpec.of(
-        ImmutableMap.<Path, SourcePath>of(
-            target.getBasePath().resolve(lexSourceName + ".h"),
-            new BuildTargetSourcePath(filesystem, lex.getBuildTarget(), lexOutputHeader),
-            target.getBasePath().resolve(yaccSourceName + ".h"),
-            new BuildTargetSourcePath(filesystem, yacc.getBuildTarget(), yaccOutputHeader)),
-        ImmutableMap.<String, CxxSource>of(
-            lexSourceName + ".cc",
-            CxxSource.of(
-                CxxSource.Type.CXX,
-                new BuildTargetSourcePath(filesystem, lex.getBuildTarget(), lexOutputSource),
-                ImmutableList.<String>of()),
-            yaccSourceName + ".cc",
-            CxxSource.of(
-                CxxSource.Type.CXX,
-                new BuildTargetSourcePath(filesystem, yacc.getBuildTarget(), yaccOutputSource),
-                ImmutableList.<String>of())));
+    CxxHeaderSourceSpec expected =
+        CxxHeaderSourceSpec.of(
+            ImmutableMap.<Path, SourcePath>of(
+                target.getBasePath().resolve(lexSourceName + ".h"),
+                new BuildTargetSourcePath(filesystem, lex.getBuildTarget(), lexOutputHeader),
+                target.getBasePath().resolve(yaccSourceName + ".h"),
+                new BuildTargetSourcePath(filesystem, yacc.getBuildTarget(), yaccOutputHeader)),
+            ImmutableMap.of(
+                lexSourceName + ".cc",
+                CxxSource.of(
+                    CxxSource.Type.CXX,
+                    new BuildTargetSourcePath(filesystem, lex.getBuildTarget(), lexOutputSource),
+                    ImmutableList.<String>of()),
+                yaccSourceName + ".cc",
+                CxxSource.of(
+                    CxxSource.Type.CXX,
+                    new BuildTargetSourcePath(filesystem, yacc.getBuildTarget(), yaccOutputSource),
+                    ImmutableList.<String>of())));
     assertEquals(expected, actual);
   }
 

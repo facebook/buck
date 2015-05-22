@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -55,7 +56,7 @@ public class BuildTargetSourcePath extends AbstractSourcePath {
 
   @Override
   protected Object asReference() {
-    return target;
+    return new Pair<>(target, resolvedPath);
   }
 
   public BuildTarget getTarget() {
