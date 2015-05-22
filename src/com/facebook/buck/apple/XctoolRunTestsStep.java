@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.step.ExecutionContext;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,18 +40,16 @@ import java.nio.file.Path;
 public class XctoolRunTestsStep extends ShellStep {
 
   private final Path xctoolPath;
-  private final String architecture;
   private final String sdkName;
-  private final String simulatorName;
+  private final Optional<String> simulatorName;
   private final ImmutableSet<Path> logicTestBundlePaths;
   private final ImmutableMap<Path, Path> appTestBundleToHostAppPaths;
   private final Path outputPath;
 
   public XctoolRunTestsStep(
       Path xctoolPath,
-      String architecture,
       String sdkName,
-      String simulatorName,
+      Optional<String> simulatorName,
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
       Path outputPath) {
@@ -75,7 +74,6 @@ public class XctoolRunTestsStep extends ShellStep {
         appTestBundleToHostAppPaths.keySet());
 
     this.xctoolPath = xctoolPath;
-    this.architecture = architecture;
     this.sdkName = sdkName;
     this.simulatorName = simulatorName;
     this.logicTestBundlePaths = ImmutableSet.copyOf(logicTestBundlePaths);
@@ -95,8 +93,11 @@ public class XctoolRunTestsStep extends ShellStep {
     args.add("-reporter");
     args.add("json-stream:" + outputPath.toString());
     args.add("-sdk", sdkName);
-    args.add("-destination");
-    args.add(String.format("arch=%s,name=%s", architecture, simulatorName));
+    if (simulatorName.isPresent()) {
+      args.add("-destination");
+      args.add("name=" + simulatorName.get());
+    }
+    args.add("run-tests");
     for (Path logicTestBundlePath : logicTestBundlePaths) {
       args.add("-logicTest");
       args.add(logicTestBundlePath.toString());
@@ -105,7 +106,6 @@ public class XctoolRunTestsStep extends ShellStep {
       args.add("-appTest");
       args.add(appTestBundleAndHostApp.getKey() + ":" + appTestBundleAndHostApp.getValue());
     }
-    args.add("run-tests");
 
     return args.build();
   }

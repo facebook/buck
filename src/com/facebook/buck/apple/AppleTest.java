@@ -59,10 +59,7 @@ public class AppleTest extends NoopBuildRule implements TestRule {
   private final String sdkName;
 
   @AddToRuleKey
-  private final String simulatorName;
-
-  @AddToRuleKey
-  private final String arch;
+  private final Optional<String> simulatorName;
 
   @AddToRuleKey
   private final BuildRule testBundle;
@@ -80,8 +77,7 @@ public class AppleTest extends NoopBuildRule implements TestRule {
   AppleTest(
       Optional<Path> xctoolPath,
       String sdkName,
-      String arch,
-      String simulatorName,
+      Optional<String> simulatorName,
       BuildRuleParams params,
       SourcePathResolver resolver,
       BuildRule testBundle,
@@ -93,7 +89,6 @@ public class AppleTest extends NoopBuildRule implements TestRule {
     this.xctoolPath = xctoolPath;
     this.sdkName = sdkName;
     this.simulatorName = simulatorName;
-    this.arch = arch;
     this.testBundle = testBundle;
     this.testHostApp = testHostApp;
     this.contacts = contacts;
@@ -182,7 +177,6 @@ public class AppleTest extends NoopBuildRule implements TestRule {
     steps.add(
         new XctoolRunTestsStep(
             xctoolPath.get(),
-            arch,
             sdkName,
             simulatorName,
             logicTestPathsBuilder.build(),
