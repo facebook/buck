@@ -14,11 +14,12 @@ if platform.system() == 'Windows':
 
 
 def create_symlink(original, symlink):
+    assert os.path.isfile(original)
     if os.path.lexists(symlink):
         os.remove(symlink)
     if platform.system() == 'Windows':
         k32 = ctypes.windll.LoadLibrary("kernel32.dll")
-        k32.CreateSymbolicLinkA(symlink, original, 1)
+        k32.CreateSymbolicLinkA(symlink, original, 0)
     else:
         os.symlink(original, symlink)
 
