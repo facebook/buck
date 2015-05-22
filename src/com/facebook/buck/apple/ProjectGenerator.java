@@ -58,6 +58,7 @@ import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
@@ -195,6 +196,7 @@ public class ProjectGenerator {
   private final String buildFileName;
   private final ImmutableSet<Option> options;
   private final Optional<BuildTarget> targetToBuildWithBuck;
+  private final ImmutableList<String> buildWithBuckFlags;
 
   private ImmutableSet<TargetNode<AppleTestDescription.Arg>> testsToGenerateAsStaticLibraries =
       ImmutableSet.of();
@@ -232,6 +234,7 @@ public class ProjectGenerator {
       String buildFileName,
       Set<Option> options,
       Optional<BuildTarget> targetToBuildWithBuck,
+      ImmutableList<String> buildWithBuckFlags,
       Function<? super TargetNode<?>, Path> outputPathOfNode) {
     this.sourcePathResolver = new Function<SourcePath, Path>() {
       @Override
@@ -248,6 +251,7 @@ public class ProjectGenerator {
     this.buildFileName = buildFileName;
     this.options = ImmutableSet.copyOf(options);
     this.targetToBuildWithBuck = targetToBuildWithBuck;
+    this.buildWithBuckFlags = buildWithBuckFlags;
     this.outputPathOfNode = outputPathOfNode;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -412,7 +416,15 @@ public class ProjectGenerator {
     String productName = getXcodeTargetName(buildTarget) + "-Buck";
 
     PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
-    shellScriptBuildPhase.setShellScript("buck build " + buildTarget.getFullyQualifiedName());
+    ImmutableList<String> command = ImmutableList
+        .<String>builder()
+        .add("buck")
+        .add("build")
+        .addAll(Iterables.transform(buildWithBuckFlags, Escaper.BASH_ESCAPER))
+        .add(Escaper.escapeAsBashString(buildTarget.getFullyQualifiedName()))
+        .build();
+
+    shellScriptBuildPhase.setShellScript(Joiner.on(' ').join(command));
 
     XCConfigurationList configurationList = new XCConfigurationList();
     PBXGroup group = project

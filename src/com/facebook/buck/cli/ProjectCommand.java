@@ -631,6 +631,7 @@ public class ProjectCommand extends BuildCommand {
           optionsBuilder.build(),
           combinedProject,
           buildWithBuck,
+          super.getOptions(),
           new ParserConfig(params.getBuckConfig()).getBuildFileName(),
           new Function<TargetNode<?>, Path>() {
             @Nullable

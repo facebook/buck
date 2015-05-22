@@ -227,6 +227,7 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false /* combinedProject */,
         false /* buildWithBuck */,
+        ImmutableList.<String>of(),
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -287,6 +288,7 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         true /* combinedProject */,
         false /* buildWithBuck */,
+        ImmutableList.<String>of(),
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -332,6 +334,7 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.<ProjectGenerator.Option>of(),
         false /* combinedProject */,
         false /* buildWithBuck */,
+        ImmutableList.<String>of(),
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -406,6 +409,7 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.<ProjectGenerator.Option>of(),
         false /* combinedProject */,
         false /* buildWithBuck */,
+        ImmutableList.<String>of(),
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -449,6 +453,7 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.<ProjectGenerator.Option>of(),
         true /* combinedProject */,
         false /* buildWithBuck */,
+        ImmutableList.<String>of(),
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -469,6 +474,7 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false /* combinedProject */,
         true /* buildWithBuck */,
+        ImmutableList.<String>of(),
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -563,6 +569,7 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false /* combinedProject */,
         false /* buildWithBuck */,
+        ImmutableList.<String>of(),
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
@@ -967,6 +974,7 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false /* combinedProject */,
         false /* buildWithBuck */,
+        ImmutableList.<String>of(),
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -1110,6 +1118,7 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false /* combinedProject */,
         false /* buildWithBuck */,
+        ImmutableList.<String>of(),
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();

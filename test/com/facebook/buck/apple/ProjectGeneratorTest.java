@@ -2649,6 +2649,7 @@ public class ProjectGeneratorTest {
         "BUCK",
         ProjectGenerator.SEPARATED_PROJECT_OPTIONS,
         Optional.<BuildTarget>absent(),
+        ImmutableList.<String>of(),
         new Function<TargetNode<?>, Path>() {
           @Nullable
           @Override
@@ -2838,6 +2839,7 @@ public class ProjectGeneratorTest {
         "BUCK",
         ImmutableSet.<ProjectGenerator.Option>of(),
         Optional.of(binaryTarget),
+        ImmutableList.of("--flag", "value with spaces"),
         Functions.<Path>constant(null));
     projectGenerator.createXcodeProjects();
 
@@ -2860,7 +2862,7 @@ public class ProjectGeneratorTest {
     PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) buildPhase;
     assertThat(
         shellScriptBuildPhase.getShellScript(),
-        equalTo("buck build " + binaryTarget.getFullyQualifiedName()));
+        equalTo("buck build --flag 'value with spaces' " + binaryTarget.getFullyQualifiedName()));
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
@@ -2887,6 +2889,7 @@ public class ProjectGeneratorTest {
         "BUCK",
         projectGeneratorOptions,
         Optional.<BuildTarget>absent(),
+        ImmutableList.<String>of(),
         Functions.<Path>constant(null));
   }
 

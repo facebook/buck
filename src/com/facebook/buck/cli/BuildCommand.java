@@ -68,29 +68,36 @@ import javax.annotation.Nullable;
 
 public class BuildCommand extends AbstractCommand {
 
-  @Option(name = "--num-threads", aliases = "-j", usage = "Default is 1.25 * num processors.")
+  private static final String NUM_THREADS_LONG_ARG = "--num-threads";
+  private static final String KEEP_GOING_LONG_ARG = "--keep-going";
+  private static final String BUILD_REPORT_LONG_ARG = "--build-report";
+  private static final String BUILD_DEPENDENCIES_LONG_ARG = "--build-dependencies";
+  private static final String LOAD_LIMIT_LONG_ARG = "--load-limit";
+  private static final String JUST_BUILD_LONG_ARG = "--just-build";
+
+  @Option(name = NUM_THREADS_LONG_ARG, aliases = "-j", usage = "Default is 1.25 * num processors.")
   @Nullable
   private Integer numThreads = null;
 
   @Option(
-      name = "--keep-going",
+      name = KEEP_GOING_LONG_ARG,
       usage = "Keep going when some targets can't be made.")
   private boolean keepGoing = false;
 
   @Option(
-      name = "--build-report",
+      name = BUILD_REPORT_LONG_ARG,
       usage = "File where build report will be written.")
   @Nullable
   private Path buildReport = null;
 
-  @Option(name = "--build-dependencies",
+  @Option(name = BUILD_DEPENDENCIES_LONG_ARG,
       aliases = "-b",
       usage = "How to handle including dependencies")
   @Nullable
   private BuildDependencies buildDependencies = null;
 
   @Nullable
-  @Option(name = "--load-limit",
+  @Option(name = LOAD_LIMIT_LONG_ARG,
       aliases = "-L",
       usage = "[Float] Do not start new jobs when system load is above this level." +
       " See uptime(1).")
@@ -98,7 +105,7 @@ public class BuildCommand extends AbstractCommand {
 
   @Nullable
   @Option(
-      name = "--just-build",
+      name = JUST_BUILD_LONG_ARG,
       usage = "For debugging, limits the build to a specific target in the action graph.",
       hidden = true)
   private String justBuildTarget = null;
@@ -348,4 +355,33 @@ public class BuildCommand extends AbstractCommand {
     return "builds the specified target";
   }
 
+  @Override
+  protected ImmutableList<String> getOptions() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    builder.addAll(super.getOptions());
+    if (numThreads != null) {
+      builder.add(NUM_THREADS_LONG_ARG);
+      builder.add(numThreads.toString());
+    }
+    if (keepGoing) {
+      builder.add(KEEP_GOING_LONG_ARG);
+    }
+    if (buildReport != null) {
+      builder.add(BUILD_REPORT_LONG_ARG);
+      builder.add(buildReport.toString());
+    }
+    if (buildDependencies != null) {
+      builder.add(BUILD_DEPENDENCIES_LONG_ARG);
+      builder.add(buildDependencies.toString());
+    }
+    if (loadLimit != null) {
+      builder.add(LOAD_LIMIT_LONG_ARG);
+      builder.add(loadLimit.toString());
+    }
+    if (justBuildTarget != null) {
+      builder.add(JUST_BUILD_LONG_ARG);
+      builder.add(justBuildTarget);
+    }
+    return builder.build();
+  }
 }

@@ -25,6 +25,7 @@ java_immutables_library(
     '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/util:constants',
+    '//src/com/facebook/buck/util:escaper',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',

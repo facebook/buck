@@ -65,6 +65,7 @@ public class WorkspaceAndProjectGenerator {
   private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
   private final boolean combinedProject;
   private final boolean buildWithBuck;
+  private final ImmutableList<String> buildWithBuckFlags;
   private ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = ImmutableSet.of();
 
   private Optional<ProjectGenerator> combinedProjectGenerator;
@@ -84,6 +85,7 @@ public class WorkspaceAndProjectGenerator {
       Set<ProjectGenerator.Option> projectGeneratorOptions,
       boolean combinedProject,
       boolean buildWithBuck,
+      ImmutableList<String> buildWithBuckFlags,
       String buildFileName,
       Function<TargetNode<?>, Path> outputPathOfNode) {
     this.projectFilesystem = projectFilesystem;
@@ -93,6 +95,7 @@ public class WorkspaceAndProjectGenerator {
     this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
     this.combinedProject = combinedProject;
     this.buildWithBuck = buildWithBuck;
+    this.buildWithBuckFlags = buildWithBuckFlags;
     this.buildFileName = buildFileName;
     this.outputPathOfNode = outputPathOfNode;
     this.combinedProjectGenerator = Optional.absent();
@@ -213,6 +216,7 @@ public class WorkspaceAndProjectGenerator {
           buildFileName,
           projectGeneratorOptions,
           targetToBuildWithBuck,
+          buildWithBuckFlags,
           outputPathOfNode)
           .setAdditionalCombinedTestTargets(groupedTests)
           .setTestsToGenerateAsStaticLibraries(groupableTests);
@@ -276,6 +280,7 @@ public class WorkspaceAndProjectGenerator {
                           : Optional.<BuildTarget>absent();
                     }
                   }),
+              buildWithBuckFlags,
               outputPathOfNode)
               .setTestsToGenerateAsStaticLibraries(groupableTests);
 
@@ -304,6 +309,7 @@ public class WorkspaceAndProjectGenerator {
             buildFileName,
             projectGeneratorOptions,
             Optional.<BuildTarget>absent(),
+            buildWithBuckFlags,
             outputPathOfNode);
         combinedTestsProjectGenerator
             .setAdditionalCombinedTestTargets(groupedTests)

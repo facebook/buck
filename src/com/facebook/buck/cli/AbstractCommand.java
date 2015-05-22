@@ -43,6 +43,9 @@ public abstract class AbstractCommand implements Command {
 
   private static final String HELP_LONG_ARG = "--help";
   private static final String BUILDFILE_INCLUDES_LONG_ARG = "--buildfile:includes";
+  private static final String NO_CACHE_LONG_ARG = "--no-cache";
+  private static final String OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG = "--output-test-events-to-file";
+  private static final String PROFILE_LONG_ARG = "--profile";
 
   /**
    * This value should never be read. {@link VerbosityParser} should be used instead.
@@ -82,20 +85,20 @@ public abstract class AbstractCommand implements Command {
   }
 
   @Option(
-      name = "--no-cache",
+      name = NO_CACHE_LONG_ARG,
       usage = "Whether to ignore the [cache] declared in .buckconfig.")
   private boolean noCache = false;
 
   @Nullable
   @Option(
-      name = "--output-test-events-to-file",
+      name = OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG,
       aliases = { "--output-events-to-file" },
       usage = "Serialize test-related event-bus events to the given file " +
           "as line-oriented JSON objects.")
   private String eventsOutputPath = null;
 
   @Option(
-      name = "--profile",
+      name = PROFILE_LONG_ARG,
       usage = "Enable profiling of buck.py in debug log")
   private boolean enableProfiling = false;
 
@@ -193,6 +196,29 @@ public abstract class AbstractCommand implements Command {
         .setJavaPackageFinder(params.getJavaPackageFinder())
         .setObjectMapper(params.getObjectMapper())
         .build();
+  }
+
+  protected ImmutableList<String> getOptions() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    if (verbosityLevel != -1) {
+      builder.add(VerbosityParser.VERBOSE_LONG_ARG);
+      builder.add(String.valueOf(verbosityLevel));
+    }
+    if (buildFileIncludes != null) {
+      builder.add(BUILDFILE_INCLUDES_LONG_ARG);
+      builder.add(buildFileIncludes);
+    }
+    if (noCache) {
+      builder.add(NO_CACHE_LONG_ARG);
+    }
+    if (eventsOutputPath != null) {
+      builder.add(OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG);
+      builder.add(eventsOutputPath);
+    }
+    if (enableProfiling) {
+      builder.add(PROFILE_LONG_ARG);
+    }
+    return builder.build();
   }
 
 }
