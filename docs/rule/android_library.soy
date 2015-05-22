@@ -54,6 +54,17 @@ compiled class files and resources.
 {/call}
 
 {call buck.arg}
+  {param name: 'manifest' /}
+  {param default: 'None' /}
+  {param desc}
+  An optional
+  {sp}<a href="http://developer.android.com/guide/topics/manifest/manifest-intro.html">Android
+  Manifest</a> for the library to declare any permissions or intents it may need or want to handle.
+  May either be a file or a {call buck.android_manifest /} target.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'deps' /}
   {param default : '[]' /}
   {param desc}
