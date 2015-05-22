@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
@@ -33,6 +34,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -135,6 +137,24 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
   @Override
   public Iterable<String> getBytecodeIncludeDirs() {
     return ImmutableList.of(includeDir.toString());
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getCompileDeps() {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getBytecodeCompileDeps() {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getBytecodeLinkDeps() {
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(getResolver().filterBuildRuleInputs(ImmutableList.of(bytecodeLibraryPath)))
+        .addAll(getResolver().filterBuildRuleInputs(staticNativeLibraryPath))
+        .build();
   }
 
   @Override

@@ -20,37 +20,40 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
 public class OCamlBinary extends AbstractBuildRule implements BinaryBuildRule {
 
-  private final Path output;
+  private final BuildRule binary;
 
-  public OCamlBinary(BuildRuleParams params, SourcePathResolver resolver, Path output) {
+  public OCamlBinary(BuildRuleParams params, SourcePathResolver resolver, BuildRule binary) {
     super(params, resolver);
-    this.output = output;
+    this.binary = binary;
   }
 
   @Override
   public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
-    return ImmutableList.of(projectFilesystem.resolve(output).toString());
+    return ImmutableList.of(projectFilesystem.resolve(getPathToOutputFile()).toString());
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
+      BuildContext context,
+      BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 
   @Override
   public Path getPathToOutputFile() {
-    return output;
+    return Preconditions.checkNotNull(binary.getPathToOutputFile());
   }
 }
 

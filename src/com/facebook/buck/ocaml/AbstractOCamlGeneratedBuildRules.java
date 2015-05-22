@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,23 +16,20 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
+import org.immutables.value.Value;
 
-/**
- * An action graph representation of an OCaml library.
- */
-public interface OCamlLibrary extends NativeLinkable, BuildRule {
-
-  Path getIncludeLibDir();
-
-  Iterable<String> getBytecodeIncludeDirs();
-
-  ImmutableSortedSet<BuildRule> getCompileDeps();
-  ImmutableSortedSet<BuildRule> getBytecodeCompileDeps();
-  ImmutableSortedSet<BuildRule> getBytecodeLinkDeps();
-
+@Value.Immutable
+@BuckStyleImmutable
+abstract class AbstractOCamlGeneratedBuildRules {
+  public abstract ImmutableList<BuildRule> getRules();
+  public abstract ImmutableSortedSet<BuildRule> getCompileDeps();
+  public abstract ImmutableSortedSet<BuildRule> getBytecodeCompileDeps();
+  public abstract ImmutableList<SourcePath> getObjectFiles();
+  public abstract BuildRule getBytecodeLink();
 }

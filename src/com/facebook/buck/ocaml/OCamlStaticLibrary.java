@@ -29,31 +29,41 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
 class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
   private final BuildTarget staticLibraryTarget;
   private final ImmutableList<String> linkerFlags;
-  private final FluentIterable<Path> srcPaths;
+  private final ImmutableList<SourcePath> objFiles;
   private final OCamlBuildContext ocamlContext;
   private final BuildRule ocamlLibraryBuild;
+  private final ImmutableSortedSet<BuildRule> compileDeps;
+  private final ImmutableSortedSet<BuildRule> bytecodeCompileDeps;
+  private final ImmutableSortedSet<BuildRule> bytecodeLinkDeps;
 
   public OCamlStaticLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
       BuildRuleParams compileParams,
       ImmutableList<String> linkerFlags,
-      FluentIterable<Path> srcPaths,
+      ImmutableList<SourcePath> objFiles,
       OCamlBuildContext ocamlContext,
-      BuildRule ocamlLibraryBuild) {
+      BuildRule ocamlLibraryBuild,
+      ImmutableSortedSet<BuildRule> compileDeps,
+      ImmutableSortedSet<BuildRule> bytecodeCompileDeps,
+      ImmutableSortedSet<BuildRule> bytecodeLinkDeps) {
     super(params, resolver);
     this.linkerFlags = linkerFlags;
-    this.srcPaths = srcPaths;
+    this.objFiles = objFiles;
     this.ocamlContext = ocamlContext;
     this.ocamlLibraryBuild = ocamlLibraryBuild;
+    this.compileDeps = compileDeps;
+    this.bytecodeCompileDeps = bytecodeCompileDeps;
+    this.bytecodeLinkDeps = bytecodeLinkDeps;
     staticLibraryTarget = OCamlRuleBuilder.createStaticLibraryBuildTarget(
         compileParams.getBuildTarget());
   }
@@ -67,29 +77,30 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
         type == Linker.LinkableDepType.STATIC,
         "Only supporting static linking in OCaml");
 
-    final Path staticLibraryPath = OCamlBuildContext.getOutputPath(
-        staticLibraryTarget,
-        /* isLibrary */ true);
+    NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 
-    ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.addAll(linkerFlags);
+    // Add linker flags.
+    inputBuilder.addAllArgs(linkerFlags);
 
-    FluentIterable<String> cObjs = srcPaths.filter(OCamlUtil.ext(OCamlCompilables.OCAML_C))
-        .transform(ocamlContext.toCOutput())
-        .transform(Functions.toStringFunction());
+    // Add arg and input for static library.
+    final Path staticLibraryPath =
+        OCamlBuildContext.getOutputPath(
+            staticLibraryTarget,
+            /* isLibrary */ true);
+    inputBuilder.addInputs(
+        new BuildTargetSourcePath(
+            ocamlLibraryBuild.getProjectFilesystem(),
+            ocamlLibraryBuild.getBuildTarget()));
+    inputBuilder.addArgs(staticLibraryPath.toString());
 
-    linkerArgsBuilder.add(staticLibraryPath.toString());
+    // Add args and inputs for C object files.
+    inputBuilder.addAllInputs(objFiles);
+    inputBuilder.addAllArgs(
+        Iterables.transform(
+            getResolver().getAllPaths(objFiles),
+            Functions.toStringFunction()));
 
-    linkerArgsBuilder.addAll(cObjs);
-
-    final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
-
-    return NativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(
-            new BuildTargetSourcePath(
-                ocamlLibraryBuild.getProjectFilesystem(),
-                ocamlLibraryBuild.getBuildTarget())),
-        linkerArgs);
+    return inputBuilder.build();
   }
 
   @Override
@@ -105,6 +116,21 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
   @Override
   public Iterable<String> getBytecodeIncludeDirs() {
     return ocamlContext.getBytecodeIncludeDirectories();
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getCompileDeps() {
+    return compileDeps;
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getBytecodeCompileDeps() {
+    return bytecodeCompileDeps;
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getBytecodeLinkDeps() {
+    return bytecodeLinkDeps;
   }
 
 }

@@ -81,4 +81,16 @@ public class SourcePaths {
       }
     };
   }
+
+  public static Function<Path, SourcePath> getToBuildTargetSourcePath(
+      final ProjectFilesystem projectFilesystem,
+      final BuildTarget target) {
+    return new Function<Path, SourcePath>() {
+      @Override
+      public SourcePath apply(Path input) {
+        return new BuildTargetSourcePath(projectFilesystem, target, input);
+      }
+    };
+  }
+
 }
