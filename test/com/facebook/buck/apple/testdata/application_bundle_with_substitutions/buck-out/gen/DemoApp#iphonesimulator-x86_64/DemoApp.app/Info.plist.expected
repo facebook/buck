@@ -6,6 +6,8 @@
 	<string>en</string>
 	<key>CFBundleExecutable</key>
 	<string>OverrideExecutableName</string>
+	<key>TestKeyForIndirectReferenceToExecutableName</key>
+	<string>ex name: OverrideExecutableName</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.example.DemoApp</string>
 	<key>CFBundleInfoDictionaryVersion</key>

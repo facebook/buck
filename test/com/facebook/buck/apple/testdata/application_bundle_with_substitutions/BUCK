@@ -6,6 +6,7 @@ apple_bundle(
   info_plist_substitutions = {
     'SHORT_VERSION_STRING': '1.0',
     'EXECUTABLE_NAME': 'OverrideExecutableName',
+    'VARIABLE_THAT_REFERENCES_EXECUTABLE_NAME': 'ex name: $(EXECUTABLE_NAME)',
   },
 )
 

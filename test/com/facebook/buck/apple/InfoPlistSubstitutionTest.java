@@ -102,6 +102,18 @@ public class InfoPlistSubstitutionTest {
   }
 
   @Test
+  public void recursiveVariableThrows() {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("Recursive plist variable: FOO -> BAR -> BAZ -> FOO");
+    InfoPlistSubstitution.replaceVariablesInString(
+        "Hello ${FOO}",
+        ImmutableMap.<String, String>of(
+            "FOO", "${BAR}",
+            "BAR", "${BAZ}",
+            "BAZ", "${FOO}"));
+  }
+
+  @Test
   public void mismatchedParenIgnored() {
     assertThat(
         InfoPlistSubstitution.replaceVariablesInString(
@@ -125,7 +137,8 @@ public class InfoPlistSubstitutionTest {
         InfoPlistSubstitution.replaceVariablesInString(
             "Hello ${FOO} world",
             ImmutableMap.of(
-                "FOO", "${BAZ}")),
-        equalTo("Hello ${BAZ} world"));
+                "FOO", "${BAZ}",
+                "BAZ", "$BAR")),
+        equalTo("Hello $BAR world"));
   }
 }

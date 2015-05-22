@@ -6,6 +6,8 @@
 	<string>en</string>
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
+	<key>TestKeyForIndirectReferenceToExecutableName</key>
+	<string>${VARIABLE_THAT_REFERENCES_EXECUTABLE_NAME}</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.example.${PRODUCT_NAME:rfc1034identifier}</string>
 	<key>CFBundleInfoDictionaryVersion</key>
