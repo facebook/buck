@@ -413,6 +413,13 @@ public class RuleKey {
     public RuleKeyPair build() {
       RuleKey ruleKeyWithoutDeps = new RuleKey(hasher.hash());
 
+      if (logElms != null) {
+        logger.verbose(
+            "RuleKey (without deps) %s=%s",
+            ruleKeyWithoutDeps,
+            Joiner.on("").join(logElms));
+      }
+
       // Now introduce the deps into the RuleKey.
       setReflectively("deps", deps);
 
