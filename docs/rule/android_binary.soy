@@ -32,7 +32,8 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
   Relative path to the Android manifest for the APK.
   The common case is that the manifest will be in the same directory
   as the <code>android_binary()</code>, in which case this will
-  simply be <code>'AndroidManifest.xml'</code>.
+  simply be <code>'AndroidManifest.xml'</code>, but it can also reference an
+  {sp}{call buck.android_manifest /} rule.
   {/param}
 {/call}
 

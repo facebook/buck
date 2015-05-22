@@ -155,6 +155,7 @@ ga('send', 'pageview');
             'android_binary',
             'android_build_config',
             'android_library',
+            'android_manifest',
             'android_prebuilt_aar',
             'android_resource',
             'apk_genrule',
@@ -479,6 +480,11 @@ ga('send', 'pageview');
 
 
 /***/
+{template .android_aar}
+{call .ruleLink}{param name : 'android_aar' /}{/call}
+{/template}
+
+/***/
 {template .android_binary}
 {call .ruleLink}{param name : 'android_binary' /}{/call}
 {/template}
@@ -491,6 +497,11 @@ ga('send', 'pageview');
 /***/
 {template .android_library}
 {call .ruleLink}{param name : 'android_library' /}{/call}
+{/template}
+
+/***/
+{template .android_manifest}
+{call .ruleLink}{param name : 'android_manifest' /}{/call}
 {/template}
 
 /***/
@@ -556,6 +567,19 @@ ga('send', 'pageview');
 /***/
 {template .string_parameter_macros}
 <a href="{ROOT}function/string_parameter_macros.html">string parameter macros</a>
+{/template}
+
+/**
+ * @param page
+ * @param name
+ */
+{template .concept_link}
+<a href="{ROOT}concept/{$page}.html">{$name}</a>
+{/template}
+
+/***/
+{template .build_target}
+{call .concept_link}{param page: 'build_target' /}{param name: 'build target' /}{/call}
 {/template}
 
 /**
