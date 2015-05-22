@@ -67,6 +67,7 @@ RESOURCES = {
     "dx": "third-party/java/dx-from-kitkat/etc/dx",
     "jacoco_agent_jar": "third-party/java/jacoco/jacocoagent.jar",
     "logging_config_file": "config/logging.properties",
+    "native_exopackage_fake_path": "assets/android/native-exopackage-fakes.apk",
     "path_to_asm_jar": "third-party/java/asm/asm-debug-all-5.0.3.jar",
     "path_to_buck_py": "src/com/facebook/buck/parser/buck.py",
     "path_to_compile_asset_catalogs_build_phase_sh": (

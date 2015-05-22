@@ -57,6 +57,7 @@ EXPORTED_RESOURCES = [
     Resource("quickstart_origin_dir"),
     Resource("dx"),
     Resource("android_agent_path"),
+    Resource("native_exopackage_fake_path"),
 ]
 
 

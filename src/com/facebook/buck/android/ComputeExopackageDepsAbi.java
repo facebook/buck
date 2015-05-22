@@ -43,6 +43,7 @@ import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Map;
 
@@ -146,6 +147,20 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
                   copyNativeLibraries.isPresent()) {
                 filesToHash.put(copyNativeLibraries.get().getPathToMetadataTxt(), "native_libs");
+              }
+
+              // In native exopackage mode, we include a bundle of fake
+              // libraries that makes multi-arch Android always put our application
+              // in 32-bit mode.
+              if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
+                String fakeNativeLibraryBundle =
+                    System.getProperty("buck.native_exopackage_fake_path");
+
+                Preconditions.checkNotNull(
+                    fakeNativeLibraryBundle,
+                    "fake native bundle not specified in properties.");
+
+                filesToHash.put(Paths.get(fakeNativeLibraryBundle), "fake_native_libs");
               }
 
               // Same deal for native libs as assets.

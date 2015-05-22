@@ -4,3 +4,10 @@ export_file(
     'PUBLIC',
   ],
 )
+
+export_file(
+  name = 'native-exopackage-fakes.apk',
+  visibility = [
+    'PUBLIC',
+  ],
+)

@@ -39,6 +39,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 public class AndroidExopackageBinaryIntegrationTest {
 
@@ -65,6 +66,11 @@ public class AndroidExopackageBinaryIntegrationTest {
         "android_project",
         projectFolderWithPrebuiltTargets);
     workspace.setUp();
+
+    Properties properties = System.getProperties();
+    properties.setProperty("buck.native_exopackage_fake_path",
+        Paths.get("assets/android/native-exopackage-fakes.apk").toAbsolutePath().toString());
+
     workspace.runBuckBuild(
         DEX_EXOPACKAGE_TARGET,
         NATIVE_EXOPACKAGE_TARGET,

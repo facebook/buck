@@ -321,6 +321,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     return getApkPath();
   }
 
+  @SuppressWarnings("PMD.PrematureDeclaration")
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
@@ -366,6 +367,20 @@ public class AndroidBinary extends AbstractBuildRule implements
     if (packageStringAssets.isPresent()) {
       final Path pathToStringAssetsZip = packageStringAssets.get().getPathToStringAssetsZip();
       zipFiles.add(pathToStringAssetsZip);
+    }
+
+    if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
+      // We need to include a few dummy native libraries with our application so that Android knows
+      // to run it as 32-bit.  Android defaults to 64-bit when no libraries are provided at all,
+      // causing us to fail to load our 32-bit exopackage native libraries later.
+      String fakeNativeLibraryBundle =
+          System.getProperty("buck.native_exopackage_fake_path");
+
+      if (fakeNativeLibraryBundle == null) {
+        throw new RuntimeException("fake native bundle not specified in properties");
+      }
+
+      zipFiles.add(Paths.get(fakeNativeLibraryBundle));
     }
 
     ImmutableSet<Path> allAssetDirectories = ImmutableSet.<Path>builder()

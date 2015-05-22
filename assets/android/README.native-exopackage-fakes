@@ -1,0 +1,17 @@
+This apk (really, zip) contains dummy x86 and armeabi shared
+libraries.  We include its contents in APKs compiled with support for
+native exopackage; these APKs would otherwise contain no shared
+libraries at all.  When an package contains no shared libraries at
+all, Lollipop on an Aarch64 machine runs it in the 64-bit runtime (as
+opposed to the 32-bit runtime), which is wrong because the libraries
+we want to load later via native exopackage are all (at the time of
+this writing) 32-bit libraries that cannot be loaded into a
+64-bit process.
+
+By including a few dummy 32-bit shared libraries, we convince the
+system to run the program in 32-bit mode, allowing us to load our real
+32-bit libraries later.
+
+The libraries themselves are empty C files compiled with the Android
+NDK gcc in -shared mode.  We've assembled them into the checked-in zip
+file manually.
