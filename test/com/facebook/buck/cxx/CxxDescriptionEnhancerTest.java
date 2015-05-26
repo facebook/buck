@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
@@ -236,6 +237,15 @@ public class CxxDescriptionEnhancerTest {
         allOf(
             hasItem(Paths.get("symlink/tree/lib")),
             not(hasItem(Paths.get("private/symlink/tree/lib")))));
+  }
+
+  @Test
+  public void buildTargetsWithDifferentFlavorsProduceDifferentDefaultSonames() {
+    BuildTarget target1 = BuildTargetFactory.newInstance("//:rule#one");
+    BuildTarget target2 = BuildTargetFactory.newInstance("//:rule#two");
+    assertNotEquals(
+        CxxDescriptionEnhancer.getSharedLibrarySoname(target1, CxxPlatformUtils.DEFAULT_PLATFORM),
+        CxxDescriptionEnhancer.getSharedLibrarySoname(target2, CxxPlatformUtils.DEFAULT_PLATFORM));
   }
 
 }

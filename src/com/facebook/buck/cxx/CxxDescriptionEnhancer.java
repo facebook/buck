@@ -49,6 +49,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -640,7 +641,10 @@ public class CxxDescriptionEnhancer {
                     FluentIterable.from(target.getBasePath())
                         .transform(Functions.toStringFunction())
                         .filter(Predicates.not(Predicates.equalTo(""))))
-                .add(target.getShortName())
+                .add(
+                    target
+                        .withoutFlavors(ImmutableSet.of(platform.getFlavor()))
+                        .getShortNameAndFlavorPostfix())
                 .build());
     String extension = platform.getSharedLibraryExtension();
     return String.format("lib%s.%s", libName, extension);
