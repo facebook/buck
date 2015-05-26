@@ -217,4 +217,34 @@ public class AppleDescriptionsTest {
         searchPaths);
   }
 
+  @Test
+  public void expandSdkVariableReferences() {
+    Path appleSdkRoot = Paths.get("Root");
+    AppleSdkPaths appleSdkPaths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(appleSdkRoot)
+            .addToolchainPaths(appleSdkRoot.resolve("Toolchain"))
+            .setPlatformPath(appleSdkRoot.resolve("Platform"))
+            .setSdkPath(appleSdkRoot.resolve("SDK"))
+            .build();
+
+    Function<ImmutableList<String>, ImmutableList<String>> expandSdkVariableRefs =
+        AppleDescriptions.expandSdkVariableReferencesFunction(appleSdkPaths);
+
+    ImmutableList<String> expandedRefs = expandSdkVariableRefs.apply(
+        ImmutableList.of(
+            "-Ifoo/bar/baz",
+            "-L$DEVELOPER_DIR/blech",
+            "-I$SDKROOT/quux",
+            "-F$PLATFORM_DIR/xyzzy"));
+
+    assertEquals(
+        ImmutableList.of(
+            "-Ifoo/bar/baz",
+            "-LRoot/blech",
+            "-IRoot/SDK/quux",
+            "-FRoot/Platform/xyzzy"),
+        expandedRefs);
+  }
+
 }

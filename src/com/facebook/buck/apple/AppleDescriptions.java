@@ -34,6 +34,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -181,6 +182,12 @@ public class AppleDescriptions {
                 headerPathPrefix,
                 arg))
         .build();
+    Function<ImmutableList<String>, ImmutableList<String>> expandSdkVariableRefs;
+    if (appleSdkPaths.isPresent()) {
+      expandSdkVariableRefs = expandSdkVariableReferencesFunction(appleSdkPaths.get());
+    } else {
+      expandSdkVariableRefs = Functions.identity();
+    }
 
     output.srcs = Optional.of(
         Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofLeft(
@@ -189,17 +196,18 @@ public class AppleDescriptions {
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
             headerMap));
     output.prefixHeaders = Optional.of(ImmutableList.copyOf(arg.prefixHeader.asSet()));
-    output.compilerFlags = arg.compilerFlags;
+    output.compilerFlags = arg.compilerFlags.transform(expandSdkVariableRefs);
+
     output.platformCompilerFlags =
         Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     output.linkerFlags = Optional.of(
         FluentIterable
             .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
-            .append(arg.linkerFlags.get())
+            .append(arg.linkerFlags.transform(expandSdkVariableRefs).get())
             .toList());
     output.platformLinkerFlags = Optional.of(
         ImmutableList.<Pair<String, ImmutableList<String>>>of());
-    output.preprocessorFlags = arg.preprocessorFlags;
+    output.preprocessorFlags = arg.preprocessorFlags.transform(expandSdkVariableRefs);
     output.platformPreprocessorFlags =
         Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     output.langPreprocessorFlags = Optional.of(
@@ -235,13 +243,21 @@ public class AppleDescriptions {
         appleSdkPaths);
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(arg, buildTarget);
 
+    Function<ImmutableList<String>, ImmutableList<String>> expandSdkVariableRefs;
+    if (appleSdkPaths.isPresent()) {
+      expandSdkVariableRefs = expandSdkVariableReferencesFunction(appleSdkPaths.get());
+    } else {
+      expandSdkVariableRefs = Functions.identity();
+    }
+
     output.headers = Optional.of(
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
             convertAppleHeadersToPrivateCxxHeaders(
                 resolver.getPathFunction(),
                 headerPathPrefix,
                 arg)));
-    output.exportedPreprocessorFlags = arg.exportedPreprocessorFlags;
+    output.exportedPreprocessorFlags = arg.exportedPreprocessorFlags.transform(
+        expandSdkVariableRefs);
     output.exportedHeaders = Optional.of(
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
             convertAppleHeadersToPublicCxxHeaders(
@@ -256,7 +272,7 @@ public class AppleDescriptions {
     output.exportedLinkerFlags = Optional.of(
         FluentIterable
             .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
-            .append(arg.exportedLinkerFlags.get())
+            .append(arg.exportedLinkerFlags.transform(expandSdkVariableRefs).get())
             .toList());
     output.exportedPlatformLinkerFlags =
         Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
@@ -295,6 +311,22 @@ public class AppleDescriptions {
                 FrameworkPath.getExpandedSearchPathFunction(
                     resolver.getPathFunction(),
                     appleSdkPaths.resolveFunction()))
+            .toList();
+      }
+    };
+  }
+
+  @VisibleForTesting
+  static Function<
+      ImmutableList<String>,
+      ImmutableList<String>> expandSdkVariableReferencesFunction(
+      final AppleSdkPaths appleSdkPaths) {
+    return new Function<ImmutableList<String>, ImmutableList<String>>() {
+      @Override
+      public ImmutableList<String> apply(ImmutableList<String> flags) {
+        return FluentIterable
+            .from(flags)
+            .transform(appleSdkPaths.replaceSourceTreeReferencesFunction())
             .toList();
       }
     };
