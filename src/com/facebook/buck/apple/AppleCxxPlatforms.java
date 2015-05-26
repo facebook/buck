@@ -135,6 +135,12 @@ public class AppleCxxPlatforms {
         "apple-actool",
         version);
 
+    Tool ibtool = new VersionedTool(
+        getToolPath("ibtool", toolSearchPaths, executableFinder),
+        ImmutableList.<String>of(),
+        "apple-ibtool",
+        version);
+
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 
     ImmutableFlavor targetFlavor = ImmutableFlavor.of(
@@ -164,6 +170,7 @@ public class AppleCxxPlatforms {
         .setApplePlatform(targetSdk.getApplePlatform())
         .setAppleSdkPaths(sdkPaths)
         .setActool(actool)
+        .setIbtool(ibtool)
         .build();
   }
 

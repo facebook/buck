@@ -70,7 +70,8 @@ public class FakeAppleRuleDescriptions {
               Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
               Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
               Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),
-              Paths.get("usr/bin/actool"))));
+              Paths.get("usr/bin/actool"),
+              Paths.get("usr/bin/ibtool"))));
 
   private static final BuckConfig DEFAULT_BUCK_CONFIG = new FakeBuckConfig();
 

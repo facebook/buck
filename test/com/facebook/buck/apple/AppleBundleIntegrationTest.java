@@ -217,4 +217,22 @@ public class AppleBundleIntegrationTest {
 
     workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertFailure();
   }
+
+  @Test
+  public void xibIsCompiledToNib() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "app_bundle_with_xib",
+        tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
+
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/AppViewController.nib")));
+  }
+
 }

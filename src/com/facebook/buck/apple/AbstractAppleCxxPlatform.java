@@ -45,5 +45,6 @@ abstract class AbstractAppleCxxPlatform {
   public abstract AppleSdkPaths getAppleSdkPaths();
 
   public abstract Tool getActool();
+  public abstract Tool getIbtool();
 
 }

@@ -353,6 +353,26 @@ public class AppleTestIntegrationTest {
         containsString("FAILURE -[AppTest testMagicValueShouldFail]: AppTest.m:13"));
   }
 
+  @Test
+  public void successForAppTestWithXib() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "app_bundle_with_xib", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    workspace.writeContentsToPath(
+         "[apple]\n  xctool_path = xctool/bin/xctool\n",
+         ".buckconfig.local");
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:AppTest");
+    result.assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.Tool;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -40,9 +42,11 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Files;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,6 +56,7 @@ import javax.annotation.Nullable;
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
  */
 public class AppleBundle extends AbstractBuildRule {
+  private static final Logger LOG = Logger.get(AppleBundle.class);
 
   @AddToRuleKey
   private final String extension;
@@ -74,6 +79,9 @@ public class AppleBundle extends AbstractBuildRule {
   @AddToRuleKey
   private final ImmutableMap<SourcePath, AppleBundleDestination> files;
 
+  @AddToRuleKey
+  private final Tool ibtool;
+
   private final ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs;
 
   private final Optional<AppleAssetCatalog> mergedAssetCatalog;
@@ -95,6 +103,7 @@ public class AppleBundle extends AbstractBuildRule {
       Map<AppleBundleDestination.SubfolderSpec, String> bundleSubfolders,
       Map<Path, AppleBundleDestination> dirs,
       Map<SourcePath, AppleBundleDestination> files,
+      Tool ibtool,
       Set<AppleAssetCatalog> bundledAssetCatalogs,
       Optional<AppleAssetCatalog> mergedAssetCatalog) {
     super(params, resolver);
@@ -107,6 +116,7 @@ public class AppleBundle extends AbstractBuildRule {
     this.bundleSubfolders = ImmutableMap.copyOf(bundleSubfolders);
     this.dirs = ImmutableMap.copyOf(dirs);
     this.files = ImmutableMap.copyOf(files);
+    this.ibtool = ibtool;
     this.outputZipPath = BuildTargets.getGenPath(
         params.getBuildTarget(),
         "%s.zip");
@@ -192,10 +202,8 @@ public class AppleBundle extends AbstractBuildRule {
           fileEntry.getValue());
       stepsBuilder.add(new MkdirStep(bundleDestinationPath));
       Path resolvedFilePath = getResolver().getPath(fileEntry.getKey());
-      stepsBuilder.add(
-          CopyStep.forFile(
-              resolvedFilePath,
-              bundleDestinationPath.resolve(resolvedFilePath.getFileName())));
+      Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
+      addResourceProcessingSteps(resolvedFilePath, destinationPath, stepsBuilder);
     }
 
     for (AppleAssetCatalog bundledAssetCatalog : bundledAssetCatalogs) {
@@ -257,4 +265,27 @@ public class AppleBundle extends AbstractBuildRule {
         .resolve(dest.getSubpath().or(""));
   }
 
+  private void addResourceProcessingSteps(
+      Path sourcePath,
+      Path destinationPath,
+      ImmutableList.Builder<Step> stepsBuilder) {
+    String sourcePathExtension = Files.getFileExtension(sourcePath.toString())
+        .toLowerCase(Locale.US);
+    switch (sourcePathExtension) {
+      case "xib":
+        String compiledNibFilename = Files.getNameWithoutExtension(destinationPath.toString()) +
+            ".nib";
+        Path compiledNibPath = destinationPath.getParent().resolve(compiledNibFilename);
+        LOG.debug("Compiling XIB %s to NIB %s", sourcePath, destinationPath);
+        stepsBuilder.add(
+            new IbtoolStep(
+                ibtool.getCommandPrefix(getResolver()),
+                sourcePath,
+                compiledNibPath));
+        break;
+      default:
+        stepsBuilder.add(CopyStep.forFile(sourcePath, destinationPath));
+        break;
+    }
+  }
 }

@@ -182,6 +182,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         IOS_APP_SUBFOLDER_SPEC_MAP,
         bundleDirs,
         bundleFiles,
+        appleCxxPlatform.getIbtool(),
         bundledAssetCatalogs,
         mergedAssetCatalog);
   }

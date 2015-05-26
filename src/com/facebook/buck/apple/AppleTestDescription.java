@@ -283,6 +283,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         AppleBundleDescription.IOS_APP_SUBFOLDER_SPEC_MAP,
         resourceDirs,
         resourceFiles,
+        appleCxxPlatform.getIbtool(),
         bundledAssetCatalogs,
         mergedAssetCatalog);
 
