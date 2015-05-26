@@ -126,18 +126,11 @@ public class RuleKey {
       SourcePathResolver resolver,
       FileHashCache hashCache,
       AppendableRuleKeyCache appendableRuleKeyCache) {
-    ImmutableSortedSet<BuildRule> exportedDeps;
-    if (rule instanceof ExportDependencies) {
-      exportedDeps = ((ExportDependencies) rule).getExportedDeps();
-    } else {
-      exportedDeps = ImmutableSortedSet.of();
-    }
     return builder(
         rule.getBuildTarget(),
         rule.getType(),
         resolver,
         rule.getDeps(),
-        exportedDeps,
         hashCache,
         appendableRuleKeyCache);
   }
@@ -150,10 +143,9 @@ public class RuleKey {
       BuildRuleType type,
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps,
-      ImmutableSortedSet<BuildRule> exportedDeps,
       FileHashCache hashCache,
       AppendableRuleKeyCache appendableRuleKeyCache) {
-    return new Builder(resolver, deps, exportedDeps, hashCache, appendableRuleKeyCache)
+    return new Builder(resolver, deps, hashCache, appendableRuleKeyCache)
         .setReflectively("name", name.getFullyQualifiedName())
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
         .setReflectively("buck.type", type.getName());
@@ -165,7 +157,7 @@ public class RuleKey {
       FileHashCache hashCache,
       AppendableRuleKeyCache appendableRuleKeyCache) {
     ImmutableSortedSet<BuildRule> noDeps = ImmutableSortedSet.of();
-    return new Builder(resolver, noDeps, noDeps, hashCache, appendableRuleKeyCache);
+    return new Builder(resolver, noDeps, hashCache, appendableRuleKeyCache);
   }
 
   public static class Builder {
@@ -177,7 +169,6 @@ public class RuleKey {
 
     private final SourcePathResolver resolver;
     private final ImmutableSortedSet<BuildRule> deps;
-    private final ImmutableSortedSet<BuildRule> exportedDeps;
     private final Hasher hasher;
     private final FileHashCache hashCache;
     private final AppendableRuleKeyCache appendableRuleKeyCache;
@@ -187,12 +178,10 @@ public class RuleKey {
     private Builder(
         SourcePathResolver resolver,
         ImmutableSortedSet<BuildRule> deps,
-        ImmutableSortedSet<BuildRule> exportedDeps,
         FileHashCache hashCache,
         AppendableRuleKeyCache appendableRuleKeyCache) {
       this.resolver = resolver;
       this.deps = deps;
-      this.exportedDeps = exportedDeps;
       this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
       this.hashCache = hashCache;
       this.appendableRuleKeyCache = appendableRuleKeyCache;
@@ -403,10 +392,10 @@ public class RuleKey {
     interface AbstractRuleKeyPair {
 
       @Value.Parameter
-      public RuleKey getTotalRuleKey();
+      RuleKey getTotalRuleKey();
 
       @Value.Parameter
-      public RuleKey getRuleKeyWithoutDeps();
+      RuleKey getRuleKeyWithoutDeps();
 
     }
 
@@ -423,9 +412,6 @@ public class RuleKey {
       // Now introduce the deps into the RuleKey.
       setReflectively("deps", deps);
 
-      if (!exportedDeps.isEmpty()) {
-        setReflectively("exported_deps", exportedDeps);
-      }
       RuleKey totalRuleKey = new RuleKey(hasher.hash());
 
       if (logElms != null) {
