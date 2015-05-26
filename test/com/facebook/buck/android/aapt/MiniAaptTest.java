@@ -170,6 +170,21 @@ public class MiniAaptTest {
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
   }
 
+  @Test(expected = ResourceParseException.class)
+  public void testInvalidItemResource() throws IOException, ResourceParseException {
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<resources>",
+        "<item name=\"number\">100</item>",
+        "</resources>")
+        .build();
+
+    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+
+    MiniAapt aapt = new MiniAapt(Paths.get("res"), Paths.get("R.txt"), ImmutableSet.<Path>of());
+    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+  }
+
   @Test
   public void testInvalidDefinition() throws XPathExpressionException, IOException {
     ImmutableList<String> lines = ImmutableList.<String>builder().add(

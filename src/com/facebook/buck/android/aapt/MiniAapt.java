@@ -302,7 +302,14 @@ public class MiniAapt implements Step {
 
         String resourceType = node.getNodeName();
         if (resourceType.equals(ITEM_TAG)) {
-          resourceType = node.getAttributes().getNamedItem("type").getNodeValue();
+          Node typeNode = node.getAttributes().getNamedItem("type");
+          if (typeNode == null) {
+            throw new ResourceParseException(
+                "Error parsing file '%s', expected a 'type' attribute in: \n'%s'\n",
+                valuesFile,
+                node.toString());
+          }
+          resourceType = typeNode.getNodeValue();
         }
 
         if (IGNORED_TAGS.contains(resourceType)) {
