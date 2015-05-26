@@ -174,6 +174,10 @@ public class CxxLibraryDescriptionTest {
         return ImmutableMap.of();
       }
 
+      @Override
+      public boolean isTestedBy(BuildTarget buildTarget) {
+        return false;
+      }
     };
     resolver.addAllToIndex(
         ImmutableList.of(
@@ -569,6 +573,10 @@ public class CxxLibraryDescriptionTest {
         return ImmutableMap.of();
       }
 
+      @Override
+      public boolean isTestedBy(BuildTarget buildTarget) {
+        return false;
+      }
     };
     resolver.addAllToIndex(
         ImmutableList.of(

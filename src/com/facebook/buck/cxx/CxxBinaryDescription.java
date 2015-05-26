@@ -172,9 +172,12 @@ public class CxxBinaryDescription implements
                     .add(cxxLink)
                     .build()),
             Suppliers.ofInstance(params.getExtraDeps())),
+        resolver,
         new SourcePathResolver(resolver),
         cxxLink.getOutput(),
-        cxxLink);
+        cxxLink,
+        args.frameworkSearchPaths.get(),
+        args.tests.get());
   }
 
   @Override

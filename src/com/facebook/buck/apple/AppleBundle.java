@@ -16,6 +16,10 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.NativeTestable;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -42,6 +46,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
@@ -55,7 +60,7 @@ import javax.annotation.Nullable;
 /**
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
  */
-public class AppleBundle extends AbstractBuildRule {
+public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   private static final Logger LOG = Logger.get(AppleBundle.class);
 
   @AddToRuleKey
@@ -82,6 +87,9 @@ public class AppleBundle extends AbstractBuildRule {
   @AddToRuleKey
   private final Tool ibtool;
 
+  @AddToRuleKey
+  private final ImmutableSortedSet<BuildTarget> tests;
+
   private final ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs;
 
   private final Optional<AppleAssetCatalog> mergedAssetCatalog;
@@ -105,7 +113,8 @@ public class AppleBundle extends AbstractBuildRule {
       Map<SourcePath, AppleBundleDestination> files,
       Tool ibtool,
       Set<AppleAssetCatalog> bundledAssetCatalogs,
-      Optional<AppleAssetCatalog> mergedAssetCatalog) {
+      Optional<AppleAssetCatalog> mergedAssetCatalog,
+      Set<BuildTarget> tests) {
     super(params, resolver);
     this.extension = extension.isLeft() ?
         extension.getLeft().toFileExtension() :
@@ -127,6 +136,7 @@ public class AppleBundle extends AbstractBuildRule {
     this.executablesPath =
         Paths.get(this.bundleSubfolders.get(AppleBundleDestination.SubfolderSpec.EXECUTABLES));
     this.binaryPath = this.executablesPath.resolve(this.binaryName);
+    this.tests = ImmutableSortedSet.copyOf(tests);
   }
 
   private static String getBinaryName(BuildTarget buildTarget) {
@@ -287,5 +297,34 @@ public class AppleBundle extends AbstractBuildRule {
         stepsBuilder.add(CopyStep.forFile(sourcePath, destinationPath));
         break;
     }
+  }
+
+  @Override
+  public boolean isTestedBy(BuildTarget testRule) {
+    if (tests.contains(testRule)) {
+      return true;
+    }
+
+    if (binary.isPresent()) {
+      BuildRule binaryRule = binary.get();
+      if (binaryRule instanceof NativeTestable) {
+        return ((NativeTestable) binaryRule).isTestedBy(testRule);
+      }
+    }
+
+    return false;
+  }
+
+  @Override
+  public CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility) {
+    if (binary.isPresent()) {
+      BuildRule binaryRule = binary.get();
+      if (binaryRule instanceof NativeTestable) {
+        return ((NativeTestable) binaryRule).getCxxPreprocessorInput(cxxPlatform, headerVisibility);
+      }
+    }
+    return CxxPreprocessorInput.EMPTY;
   }
 }

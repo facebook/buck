@@ -184,7 +184,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         bundleFiles,
         appleCxxPlatform.getIbtool(),
         bundledAssetCatalogs,
-        mergedAssetCatalog);
+        mergedAssetCatalog,
+        args.getTests());
   }
 
   private static <A extends Arg> BuildRule getFlavoredBinaryRule(

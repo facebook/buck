@@ -18,8 +18,10 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -32,6 +34,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -134,4 +137,33 @@ public class CxxPreprocessables {
         links);
   }
 
+  /**
+   * Builds a {@link CxxPreprocessorInput} for a rule.
+   */
+  public static CxxPreprocessorInput getCxxPreprocessorInput(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      Flavor flavor,
+      HeaderVisibility headerVisibility,
+      Multimap<CxxSource.Type, String> exportedPreprocessorFlags,
+      Iterable<Path> frameworkSearchPaths) {
+    BuildRule rule = CxxDescriptionEnhancer.requireBuildRule(
+        params,
+        ruleResolver,
+        flavor,
+        CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility));
+    Preconditions.checkState(rule instanceof SymlinkTree);
+    SymlinkTree symlinkTree = (SymlinkTree) rule;
+    return CxxPreprocessorInput.builder()
+        .addRules(symlinkTree.getBuildTarget())
+        .putAllPreprocessorFlags(exportedPreprocessorFlags)
+        .setIncludes(
+            CxxHeaders.builder()
+                .putAllNameToPathMap(symlinkTree.getLinks())
+                .putAllFullNameToPathMap(symlinkTree.getFullLinks())
+                .build())
+        .addIncludeRoots(symlinkTree.getRoot())
+        .addAllFrameworkRoots(frameworkSearchPaths)
+        .build();
+  }
 }

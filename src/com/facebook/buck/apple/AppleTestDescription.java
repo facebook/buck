@@ -285,7 +285,8 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         resourceFiles,
         appleCxxPlatform.getIbtool(),
         bundledAssetCatalogs,
-        mergedAssetCatalog);
+        mergedAssetCatalog,
+        ImmutableSortedSet.<BuildTarget>of());
 
     return new AppleTest(
         appleConfig.getXctoolPath(),

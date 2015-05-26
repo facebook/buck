@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -48,7 +49,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -60,6 +60,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CxxDescriptionEnhancer {
+
+  private static final Logger LOG = Logger.get(CxxDescriptionEnhancer.class);
 
   public static final Flavor HEADER_SYMLINK_TREE_FLAVOR = ImmutableFlavor.of("header-symlink-tree");
   public static final Flavor EXPORTED_HEADER_SYMLINK_TREE_FLAVOR =
@@ -543,24 +545,33 @@ public class CxxDescriptionEnhancer {
             FluentIterable.from(params.getDeps())
                 .filter(Predicates.instanceOf(CxxPreprocessorDep.class)));
 
-    // Add the private includes of any libraries which list this
-    // rule as a test.
+    // Add the private includes of any rules which list this rule as a test.
     BuildTarget targetWithoutFlavor = BuildTarget.of(
         params.getBuildTarget().getUnflavoredBuildTarget());
-    ImmutableSet.Builder<AbstractCxxLibrary> librariesTestedByTargetBuilder =
-        ImmutableSet.builder();
+    ImmutableList.Builder<CxxPreprocessorInput> cxxPreprocessorInputFromTestedRulesBuilder =
+        ImmutableList.builder();
     for (BuildRule rule : params.getDeps()) {
-      if (rule instanceof AbstractCxxLibrary) {
-        AbstractCxxLibrary libraryRule = (AbstractCxxLibrary) rule;
-        if (libraryRule.getTests().contains(targetWithoutFlavor)) {
-          librariesTestedByTargetBuilder.add(libraryRule);
+      if (rule instanceof NativeTestable) {
+        NativeTestable testable = (NativeTestable) rule;
+        if (testable.isTestedBy(targetWithoutFlavor)) {
+          LOG.debug(
+              "Adding private includes of tested rule %s to testing rule %s",
+              rule.getBuildTarget(),
+              params.getBuildTarget());
+          cxxPreprocessorInputFromTestedRulesBuilder.add(
+              testable.getCxxPreprocessorInput(
+                  cxxPlatform,
+                  HeaderVisibility.PRIVATE));
         }
       }
     }
-    ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputFromTestedLibraries =
-        getPrivateCxxPreprocessorInputFromLibraries(
-            cxxPlatform,
-            librariesTestedByTargetBuilder.build());
+
+    ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputFromTestedRules =
+        cxxPreprocessorInputFromTestedRulesBuilder.build();
+    LOG.verbose(
+        "Rules tested by target %s added private includes %s",
+        params.getBuildTarget(),
+        cxxPreprocessorInputFromTestedRules);
 
     ImmutableMap.Builder<Path, SourcePath> allLinks = ImmutableMap.builder();
     ImmutableMap.Builder<Path, SourcePath> allFullLinks = ImmutableMap.builder();
@@ -590,7 +601,7 @@ public class CxxDescriptionEnhancer {
           Iterables.concat(
               Collections.singleton(localPreprocessorInput),
               cxxPreprocessorInputFromDeps,
-              cxxPreprocessorInputFromTestedLibraries));
+              cxxPreprocessorInputFromTestedRules));
     } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
       throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
     }
@@ -855,20 +866,5 @@ public class CxxDescriptionEnhancer {
     }
 
     return platformFlagsBuilder.build();
-  }
-
-  private static ImmutableList<CxxPreprocessorInput> getPrivateCxxPreprocessorInputFromLibraries(
-      CxxPlatform cxxPlatform,
-      Iterable<? extends AbstractCxxLibrary> libraries) {
-    ImmutableList.Builder<CxxPreprocessorInput> libraryInputsBuilder = ImmutableList.builder();
-
-    for (AbstractCxxLibrary library : libraries) {
-      libraryInputsBuilder.add(
-          library.getCxxPreprocessorInput(
-              cxxPlatform,
-              HeaderVisibility.PRIVATE));
-    }
-
-    return libraryInputsBuilder.build();
   }
 }

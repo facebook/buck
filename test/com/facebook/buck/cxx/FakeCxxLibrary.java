@@ -147,7 +147,7 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public ImmutableSortedSet<BuildTarget> getTests() {
-    return tests;
+  public boolean isTestedBy(BuildTarget testTarget) {
+    return tests.contains(testTarget);
   }
 }

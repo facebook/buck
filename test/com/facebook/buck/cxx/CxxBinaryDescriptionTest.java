@@ -149,6 +149,10 @@ public class CxxBinaryDescriptionTest {
         return ImmutableMap.of();
       }
 
+      @Override
+      public boolean isTestedBy(BuildTarget buildTarget) {
+        return false;
+      }
     };
     resolver.addAllToIndex(ImmutableList.of(header, headerSymlinkTree, archive, dep));
 

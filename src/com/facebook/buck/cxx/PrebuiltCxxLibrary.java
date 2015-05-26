@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
@@ -218,4 +219,8 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     return solibs.build();
   }
 
+  @Override
+  public boolean isTestedBy(BuildTarget buildTarget) {
+    return false;
+  }
 }

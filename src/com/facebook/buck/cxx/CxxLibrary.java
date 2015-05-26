@@ -26,10 +26,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SymlinkTree;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -90,24 +88,13 @@ public class CxxLibrary extends AbstractCxxLibrary {
   public CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
-    BuildRule rule = CxxDescriptionEnhancer.requireBuildRule(
+    return CxxPreprocessables.getCxxPreprocessorInput(
         params,
         ruleResolver,
         cxxPlatform.getFlavor(),
-        CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility));
-    Preconditions.checkState(rule instanceof SymlinkTree);
-    SymlinkTree symlinkTree = (SymlinkTree) rule;
-    return CxxPreprocessorInput.builder()
-        .addRules(symlinkTree.getBuildTarget())
-        .putAllPreprocessorFlags(exportedPreprocessorFlags.apply(cxxPlatform))
-        .setIncludes(
-            CxxHeaders.builder()
-                .putAllNameToPathMap(symlinkTree.getLinks())
-                .putAllFullNameToPathMap(symlinkTree.getFullLinks())
-                .build())
-        .addIncludeRoots(symlinkTree.getRoot())
-        .addAllFrameworkRoots(frameworkSearchPaths)
-        .build();
+        headerVisibility,
+        exportedPreprocessorFlags.apply(cxxPlatform),
+        frameworkSearchPaths);
   }
 
   @Override
@@ -240,8 +227,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public ImmutableSortedSet<BuildTarget> getTests() {
-    return tests;
+  public boolean isTestedBy(BuildTarget testTarget) {
+    return tests.contains(testTarget);
   }
 
   public enum Linkage {
