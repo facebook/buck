@@ -5,4 +5,4 @@ cd $(git rev-parse --show-toplevel)
 
 cd docs
 
-java -jar plovr-81ed862.jar soyweb --dir . --globals $TMP_DIR/globals.json
+java -jar plovr-81ed862.jar soyweb --dir . --globals globals.json
