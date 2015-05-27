@@ -281,7 +281,7 @@ public class FilterResourcesStepTest {
         /* inResDirToOutResDirMap */ ImmutableBiMap.<Path, Path>of(),
         /* filterDrawables */ false,
         /* filterStrings */ false,
-        /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
+        /* whitelistedStringDirs */ ImmutableSet.<Path>of(Paths.get("com/whitelisted/res")),
         ImmutableSet.of("es", "es_US"),
         copier,
         /* targetDensities */ null,
@@ -295,6 +295,7 @@ public class FilterResourcesStepTest {
     assertTrue(filePredicate.apply(Paths.get("com/example/res/values/strings.xml")));
     assertTrue(filePredicate.apply(Paths.get("com/example/res/values-es/strings.xml")));
     assertTrue(filePredicate.apply(Paths.get("com/example/res/values-es-rUS/strings.xml")));
+    assertTrue(filePredicate.apply(Paths.get("com/whitelisted/res/values-es-rES/strings.xml")));
 
     assertFalse(filePredicate.apply(Paths.get("com/example/res/values-en/strings.xml")));
     assertFalse(filePredicate.apply(Paths.get("com/example/res/values-es-rES/strings.xml")));

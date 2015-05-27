@@ -170,7 +170,7 @@ public class FilterResourcesStep implements Step {
             @Override
             public boolean apply(Path input) {
               Matcher matcher = VALUES_DIR_PATTERN.matcher(MorePaths.pathWithUnixSeparators(input));
-              if (!matcher.matches()) {
+              if (!matcher.matches() || isPathWhitelisted(input)) {
                 return true;
               }
               String locale = matcher.group(1);
