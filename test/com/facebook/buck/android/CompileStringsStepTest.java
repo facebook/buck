@@ -60,6 +60,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
   private Path secondFile;
   private Path thirdFile;
   private Path fourthFile;
+  private Path fifthFile;
 
   @Before
   public void findTestData() {
@@ -69,6 +70,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     secondFile = testdataDir.resolve("second/res/values-es/strings.xml");
     thirdFile = testdataDir.resolve("third/res/values-pt/strings.xml");
     fourthFile = testdataDir.resolve("third/res/values-pt-rBR/strings.xml");
+    fifthFile = testdataDir.resolve("third/res/values/strings.xml");
   }
 
   @Test
@@ -88,7 +90,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
   }
 
   private void testStringPathRegex(String input, boolean matches, String locale, String country) {
-    Matcher matcher = CompileStringsStep.STRING_FILE_PATTERN.matcher(input);
+    Matcher matcher = CompileStringsStep.NON_ENGLISH_STRING_FILE_PATTERN.matcher(input);
     assertEquals(matches, matcher.matches());
     if (!matches) {
       return;
@@ -131,7 +133,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
   public void testGroupFilesByLocale() {
     Path path0 = Paths.get("project/dir/res/values-da/strings.xml");
     Path path1 = Paths.get("project/dir/res/values-da-rAB/strings.xml");
-    Path path2 = Paths.get("project/dir/dontmatch/res/values/strings.xml");
+    Path path2 = Paths.get("project/dir/res/values/strings.xml");
     Path path3 = Paths.get("project/groupme/res/values-da/strings.xml");
     Path path4 = Paths.get("project/groupmetoo/res/values-da-rAB/strings.xml");
     Path path5 = Paths.get("project/foreveralone/res/values-es/strings.xml");
@@ -145,6 +147,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
           .putAll("da", ImmutableSet.of(path0, path3))
           .putAll("da_AB", ImmutableSet.of(path1, path4))
           .putAll("es", ImmutableSet.of(path5))
+          .putAll("en", ImmutableSet.of(path2))
           .build();
 
     assertEquals(
@@ -289,7 +292,8 @@ public class CompileStringsStepTest extends EasyMockSupport {
         firstFile,
         secondFile,
         thirdFile,
-        fourthFile);
+        fourthFile,
+        fifthFile);
 
     replayAll();
     CompileStringsStep step = new CompileStringsStep(
@@ -303,7 +307,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
         });
     assertEquals(0, step.execute(context));
     Map<String, byte[]> fileContentsMap = fileSystem.getFileContents();
-    assertEquals("Incorrect number of string files written.", 3, fileContentsMap.size());
+    assertEquals("Incorrect number of string files written.", 4, fileContentsMap.size());
     for (Map.Entry<String, byte[]> entry : fileContentsMap.entrySet()) {
       File expectedFile = testdataDir.resolve(entry.getKey()).toFile();
       assertArrayEquals(createBinaryStream(expectedFile), fileContentsMap.get(entry.getKey()));

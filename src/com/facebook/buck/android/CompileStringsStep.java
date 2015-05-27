@@ -47,6 +47,7 @@ import java.util.regex.Pattern;
 /**
  * This {@link Step} takes a list of string resource files (strings.xml), groups them by locales,
  * and for each locale generates a file with all the string resources for that locale.
+ * Strings.xml files without a resource qualifier are mapped to the "en" locale.
  *
  * <p>A typical strings.xml file looks like:
  * <pre>
@@ -83,8 +84,12 @@ import java.util.regex.Pattern;
  * and dumps this map into the output file. See {@link StringResources} for the file format.</p>
  */
 public class CompileStringsStep implements Step {
+
+  private static final String ENGLISH_STRING_PATH_SUFFIX = "res/values/strings.xml";
+  private static final String ENGLISH_LOCALE = "en";
+
   @VisibleForTesting
-  static final Pattern STRING_FILE_PATTERN = Pattern.compile(
+  static final Pattern NON_ENGLISH_STRING_FILE_PATTERN = Pattern.compile(
       ".*res/values-([a-z]{2})(?:-r([A-Z]{2}))*/strings.xml");
 
   @VisibleForTesting
@@ -174,7 +179,8 @@ public class CompileStringsStep implements Step {
   }
 
   /**
-   * Groups a list of file paths matching STRING_FILE_PATTERN by the locale.
+   * Groups a list of strings.xml files by locale.
+   * String files with no resource qualifier (eg. values/strings.xml) are mapped to the "en" locale
    *
    * eg. given the following list:
    *
@@ -182,7 +188,8 @@ public class CompileStringsStep implements Step {
    *   Paths.get("one/res/values-es/strings.xml"),
    *   Paths.get("two/res/values-es/strings.xml"),
    *   Paths.get("three/res/values-pt-rBR/strings.xml"),
-   *   Paths.get("four/res/values/-pt-rPT/strings.xml"));
+   *   Paths.get("four/res/values-pt-rPT/strings.xml"),
+   *   Paths.get("five/res/values/strings.xml"));
    *
    * returns:
    *
@@ -190,26 +197,33 @@ public class CompileStringsStep implements Step {
    *   "es", ImmutableList.of(Paths.get("one/res/values-es/strings.xml"),
    *        Paths.get("two/res/values-es/strings.xml")),
    *   "pt_BR", ImmutableList.of(Paths.get("three/res/values-pt-rBR/strings.xml'),
-   *   "pt_PT", ImmutableList.of(Paths.get("four/res/values-pt-rPT/strings.xml")));
+   *   "pt_PT", ImmutableList.of(Paths.get("four/res/values-pt-rPT/strings.xml"),
+   *   "en", ImmutableList.of(Paths.get("five/res/values/strings.xml")));
    */
   @VisibleForTesting
   ImmutableMultimap<String, Path> groupFilesByLocale(ImmutableList<Path> files) {
     ImmutableMultimap.Builder<String, Path> localeToFiles = ImmutableMultimap.builder();
 
     for (Path filepath : files) {
-      Matcher matcher = STRING_FILE_PATTERN.matcher(MorePaths.pathWithUnixSeparators(filepath));
-      if (!matcher.matches()) {
-        continue;
-      }
+      String path = MorePaths.pathWithUnixSeparators(filepath);
+      Matcher matcher = NON_ENGLISH_STRING_FILE_PATTERN.matcher(path);
 
-      String baseLocale = matcher.group(1);
-      String country = matcher.group(2);
-      String locale = country == null ? baseLocale : baseLocale + "_" + country;
-      if (country != null && !regionSpecificToBaseLocaleMap.containsKey(locale)) {
-        regionSpecificToBaseLocaleMap.put(locale, baseLocale);
-      }
+      if (matcher.matches()) {
+        String baseLocale = matcher.group(1);
+        String country = matcher.group(2);
+        String locale = country == null ? baseLocale : baseLocale + "_" + country;
+        if (country != null && !regionSpecificToBaseLocaleMap.containsKey(locale)) {
+          regionSpecificToBaseLocaleMap.put(locale, baseLocale);
+        }
 
-      localeToFiles.put(locale, filepath);
+        localeToFiles.put(locale, filepath);
+      } else {
+        Preconditions.checkState(
+            path.endsWith(ENGLISH_STRING_PATH_SUFFIX),
+            "Invalid path passed to compile strings: " + path);
+
+        localeToFiles.put(ENGLISH_LOCALE, filepath);
+      }
     }
 
     return localeToFiles.build();
