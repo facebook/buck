@@ -680,6 +680,7 @@ public class ProjectGenerator {
         .setExtraXcodeSources(ImmutableSet.copyOf(arg.extraXcodeSources.get()))
         .setPublicHeaders(exportedHeaders)
         .setPrivateHeaders(headers)
+        .setPrefixHeader(arg.prefixHeader)
         .setResources(resources);
 
     if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE)) {

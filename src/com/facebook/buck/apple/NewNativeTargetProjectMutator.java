@@ -85,6 +85,7 @@ public class NewNativeTargetProjectMutator {
   private ImmutableSet<SourcePath> extraXcodeSources = ImmutableSet.of();
   private ImmutableSet<SourcePath> publicHeaders = ImmutableSet.of();
   private ImmutableSet<SourcePath> privateHeaders = ImmutableSet.of();
+  private Optional<SourcePath> prefixHeader = Optional.absent();
   private boolean shouldGenerateCopyHeadersPhase = true;
   private ImmutableSet<FrameworkPath> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
@@ -154,6 +155,11 @@ public class NewNativeTargetProjectMutator {
   public NewNativeTargetProjectMutator setPrivateHeaders(
       Set<SourcePath> privateHeaders) {
     this.privateHeaders = ImmutableSet.copyOf(privateHeaders);
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setPrefixHeader(Optional<SourcePath> prefixHeader) {
+    this.prefixHeader = prefixHeader;
     return this;
   }
 
@@ -257,6 +263,14 @@ public class NewNativeTargetProjectMutator {
             extraXcodeSources,
             publicHeaders,
             privateHeaders));
+
+    if (prefixHeader.isPresent()) {
+      SourceTreePath prefixHeaderSourceTreePath = new SourceTreePath(
+          PBXReference.SourceTree.GROUP,
+          pathRelativizer.outputPathToSourcePath(prefixHeader.get())
+      );
+      sourcesGroup.getOrCreateFileReferenceBySourceTreePath(prefixHeaderSourceTreePath);
+    }
 
     if (!sourcesBuildPhase.getFiles().isEmpty()) {
       target.getBuildPhases().add(sourcesBuildPhase);

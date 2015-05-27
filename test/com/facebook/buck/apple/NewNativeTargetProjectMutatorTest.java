@@ -216,6 +216,23 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
+  public void testPrefixHeaderInSourceGroup() throws NoSuchBuildTargetException {
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
+    SourcePath prefixHeader = new TestSourcePath("Group1/prefix.pch");
+    mutator.setPrefixHeader(Optional.of(prefixHeader));
+
+    NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
+        generatedProject);
+
+    // No matter where the prefixHeader file is it should always be directly inside Sources
+    PBXGroup sourcesGroup = result.targetGroup.getOrCreateChildGroupByName("Sources");
+
+    assertThat(sourcesGroup.getChildren(), hasSize(1));
+    PBXFileReference fileRef = (PBXFileReference) Iterables.get(sourcesGroup.getChildren(), 0);
+    assertEquals("prefix.pch", fileRef.getName());
+  }
+
+  @Test
   public void testSuppressCopyHeaderOption() throws NoSuchBuildTargetException {
     Set<SourcePath> privateHeaders = ImmutableSet.<SourcePath>of(new TestSourcePath("foo"));
 
