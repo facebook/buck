@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.AppleBundleDestination;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -50,7 +49,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -76,13 +74,13 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   private final Optional<BuildRule> binary;
 
   @AddToRuleKey
-  private final ImmutableMap<AppleBundleDestination.SubfolderSpec, String> bundleSubfolders;
+  private final AppleBundleDestinations destinations;
 
   @AddToRuleKey
-  private final ImmutableMap<Path, AppleBundleDestination> dirs;
+  private final Set<Path> resourceDirs;
 
   @AddToRuleKey
-  private final ImmutableMap<SourcePath, AppleBundleDestination> files;
+  private final Set<SourcePath> resourceFiles;
 
   @AddToRuleKey
   private final Tool ibtool;
@@ -98,7 +96,6 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
 
   private final String binaryName;
   private final Path bundleRoot;
-  private final Path executablesPath;
   private final Path binaryPath;
 
   AppleBundle(
@@ -108,9 +105,9 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       Optional<SourcePath> infoPlist,
       Map<String, String> infoPlistSubstitutions,
       Optional<BuildRule> binary,
-      Map<AppleBundleDestination.SubfolderSpec, String> bundleSubfolders,
-      Map<Path, AppleBundleDestination> dirs,
-      Map<SourcePath, AppleBundleDestination> files,
+      AppleBundleDestinations destinations,
+      Set<Path> resourceDirs,
+      Set<SourcePath> resourceFiles,
       Tool ibtool,
       Set<AppleAssetCatalog> bundledAssetCatalogs,
       Optional<AppleAssetCatalog> mergedAssetCatalog,
@@ -122,9 +119,9 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     this.infoPlist = infoPlist;
     this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
     this.binary = binary;
-    this.bundleSubfolders = ImmutableMap.copyOf(bundleSubfolders);
-    this.dirs = ImmutableMap.copyOf(dirs);
-    this.files = ImmutableMap.copyOf(files);
+    this.destinations = destinations;
+    this.resourceDirs = resourceDirs;
+    this.resourceFiles = resourceFiles;
     this.ibtool = ibtool;
     this.outputZipPath = BuildTargets.getGenPath(
         params.getBuildTarget(),
@@ -133,9 +130,8 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     this.mergedAssetCatalog = mergedAssetCatalog;
     this.binaryName = getBinaryName(getBuildTarget());
     this.bundleRoot = getBundleRoot(getBuildTarget(), this.extension);
-    this.executablesPath =
-        Paths.get(this.bundleSubfolders.get(AppleBundleDestination.SubfolderSpec.EXECUTABLES));
-    this.binaryPath = this.executablesPath.resolve(this.binaryName);
+    this.binaryPath = this.destinations.getExecutablesPath()
+        .resolve(this.binaryName);
     this.tests = ImmutableSortedSet.copyOf(tests);
   }
 
@@ -165,17 +161,16 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
-    Path productsPath = bundleRoot.resolve(
-        bundleSubfolders.get(AppleBundleDestination.SubfolderSpec.PRODUCTS));
+    Path metadataPath = bundleRoot.resolve(this.destinations.getMetadataPath());
 
     stepsBuilder.add(
         new MakeCleanDirectoryStep(bundleRoot),
+        new MkdirStep(metadataPath),
         // TODO(user): This is only appropriate for .app bundles.
-        new WriteFileStep("APPLWRUN", bundleRoot.resolve("PkgInfo")),
-        new MkdirStep(productsPath),
+        new WriteFileStep("APPLWRUN", metadataPath.resolve("PkgInfo")),
         new FindAndReplaceStep(
             getResolver().getPath(infoPlist.get()),
-            productsPath.resolve("Info.plist"),
+            metadataPath.resolve("Info.plist"),
             InfoPlistSubstitution.createVariableExpansionFunction(
                 withDefaults(
                     infoPlistSubstitutions,
@@ -186,32 +181,27 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
             )));
 
     if (binary.isPresent()) {
-      stepsBuilder.add(new MkdirStep(bundleRoot.resolve(executablesPath)));
+      stepsBuilder.add(
+          new MkdirStep(bundleRoot.resolve(this.destinations.getExecutablesPath())));
       stepsBuilder.add(
           CopyStep.forFile(
               binary.get().getPathToOutputFile(),
               bundleRoot.resolve(binaryPath)));
     }
 
-    for (Map.Entry<Path, AppleBundleDestination> dirEntry : dirs.entrySet()) {
-      Path bundleDestinationPath = getBundleDestinationPath(
-          bundleRoot,
-          bundleSubfolders,
-          dirEntry.getValue());
+    for (Path dir : resourceDirs) {
+      Path bundleDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
       stepsBuilder.add(new MkdirStep(bundleDestinationPath));
       stepsBuilder.add(
           CopyStep.forDirectory(
-              dirEntry.getKey(),
+              dir,
               bundleDestinationPath,
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
     }
-    for (Map.Entry<SourcePath, AppleBundleDestination> fileEntry : files.entrySet()) {
-      Path bundleDestinationPath = getBundleDestinationPath(
-          bundleRoot,
-          bundleSubfolders,
-          fileEntry.getValue());
+    for (SourcePath file : resourceFiles) {
+      Path bundleDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
       stepsBuilder.add(new MkdirStep(bundleDestinationPath));
-      Path resolvedFilePath = getResolver().getPath(fileEntry.getKey());
+      Path resolvedFilePath = getResolver().getPath(file);
       Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
       addResourceProcessingSteps(resolvedFilePath, destinationPath, stepsBuilder);
     }
@@ -264,15 +254,6 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       }
     }
     return builder.build();
-  }
-
-  private static Path getBundleDestinationPath(
-      Path bundleRoot,
-      ImmutableMap<AppleBundleDestination.SubfolderSpec, String> bundleSubfolders,
-      AppleBundleDestination dest) {
-    return bundleRoot
-        .resolve(bundleSubfolders.get(dest.getSubfolderSpec()))
-        .resolve(dest.getSubpath().or(""));
   }
 
   private void addResourceProcessingSteps(

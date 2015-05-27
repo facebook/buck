@@ -100,7 +100,6 @@ public class TypeCoercerFactory {
         // other simple
         sourceWithFlagsTypeCoercer,
         ocamlSourceTypeCoercer,
-        new AppleBundleDestinationTypeCoercer(stringTypeCoercer),
         new BuildConfigFieldsTypeCoercer(),
         new UriTypeCoercer(),
         new FrameworkPathTypeCoercer(sourcePathTypeCoercer),

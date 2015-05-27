@@ -34,7 +34,6 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.coercer.AppleBundleDestination;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -46,7 +45,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
@@ -55,25 +53,6 @@ import java.util.Set;
 
 public class AppleBundleDescription implements Description<AppleBundleDescription.Arg>, Flavored {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_bundle");
-
-  public static final ImmutableMap<AppleBundleDestination.SubfolderSpec, String>
-      IOS_APP_SUBFOLDER_SPEC_MAP = Maps.immutableEnumMap(
-          ImmutableMap.<AppleBundleDestination.SubfolderSpec, String>builder()
-              .put(AppleBundleDestination.SubfolderSpec.ABSOLUTE, "")
-              .put(AppleBundleDestination.SubfolderSpec.WRAPPER, "")
-              .put(AppleBundleDestination.SubfolderSpec.EXECUTABLES, "")
-              .put(AppleBundleDestination.SubfolderSpec.RESOURCES, "")
-              .put(AppleBundleDestination.SubfolderSpec.FRAMEWORKS, "Frameworks")
-              .put(
-                  AppleBundleDestination.SubfolderSpec.SHARED_FRAMEWORKS,
-                  "SharedFrameworks")
-              .put(AppleBundleDestination.SubfolderSpec.SHARED_SUPPORT, "")
-              .put(AppleBundleDestination.SubfolderSpec.PLUGINS, "PlugIns")
-              .put(AppleBundleDestination.SubfolderSpec.JAVA_RESOURCES, "")
-              .put(AppleBundleDestination.SubfolderSpec.PRODUCTS, "")
-              .build());
-
-  // TODO(user): Add OSX_APP_SUBFOLDER_SPEC_MAP etc.
 
   private final AppleBinaryDescription appleBinaryDescription;
   private final AppleLibraryDescription appleLibraryDescription;
@@ -134,17 +113,19 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
           cxxPlatform.getFlavor().getName());
     }
 
-    ImmutableMap.Builder<Path, AppleBundleDestination> bundleDirsBuilder =
-        ImmutableMap.builder();
-    ImmutableMap.Builder<SourcePath, AppleBundleDestination> bundleFilesBuilder =
-        ImmutableMap.builder();
-    collectBundleDirsAndFiles(
-        params,
-        args,
-        bundleDirsBuilder,
-        bundleFilesBuilder);
-    ImmutableMap<Path, AppleBundleDestination> bundleDirs = bundleDirsBuilder.build();
-    ImmutableMap<SourcePath, AppleBundleDestination> bundleFiles = bundleFilesBuilder.build();
+    AppleBundleDestinations destinations =
+        AppleBundleDestinations.platformDestinations(appleCxxPlatform.getApplePlatform());
+
+    ImmutableSet.Builder<Path> bundleDirsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> bundleFilesBuilder = ImmutableSet.builder();
+    ImmutableSet<AppleResourceDescription.Arg> resourceDescriptions =
+        AppleResources.collectRecursiveResources(
+            params.getTargetGraph(),
+            ImmutableSet.of(params.getTargetGraph().get(params.getBuildTarget())));
+    AppleResources.addResourceDirsToBuilder(bundleDirsBuilder, resourceDescriptions);
+    AppleResources.addResourceFilesToBuilder(bundleFilesBuilder, resourceDescriptions);
+    ImmutableSet<Path> bundleDirs = bundleDirsBuilder.build();
+    ImmutableSet<SourcePath> bundleFiles = bundleFilesBuilder.build();
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 
@@ -178,8 +159,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.infoPlist,
         args.infoPlistSubstitutions.get(),
         Optional.of(flavoredBinaryRule),
-        // TODO(user): Check the flavor and decide whether to lay out with iOS or OS X style.
-        IOS_APP_SUBFOLDER_SPEC_MAP,
+        destinations,
         bundleDirs,
         bundleFiles,
         appleCxxPlatform.getIbtool(),
@@ -236,22 +216,6 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
                 .toSortedSet(Ordering.natural())));
   }
 
-  private static <A extends Arg> void collectBundleDirsAndFiles(
-      BuildRuleParams params,
-      A args,
-      ImmutableMap.Builder<Path, AppleBundleDestination> bundleDirsBuilder,
-      ImmutableMap.Builder<SourcePath, AppleBundleDestination> bundleFilesBuilder) {
-    bundleDirsBuilder.putAll(args.dirs.get());
-    bundleFilesBuilder.putAll(args.files.get());
-
-    ImmutableSet<AppleResourceDescription.Arg> resourceDescriptions =
-        AppleResources.collectRecursiveResources(
-            params.getTargetGraph(),
-            ImmutableSet.of(params.getTargetGraph().get(params.getBuildTarget())));
-    AppleResources.addResourceDirsToBuilder(bundleDirsBuilder, resourceDescriptions);
-    AppleResources.addResourceFilesToBuilder(bundleFilesBuilder, resourceDescriptions);
-  }
-
   @SuppressFieldNotInitialized
   public static class Arg implements HasAppleBundleFields, HasTests {
     public Either<AppleBundleExtension, String> extension;
@@ -259,8 +223,6 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public Optional<SourcePath> infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<ImmutableMap<String, SourcePath>> headers;
-    public Optional<ImmutableMap<Path, AppleBundleDestination>> dirs;
-    public Optional<ImmutableMap<SourcePath, AppleBundleDestination>> files;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
     public Optional<String> xcodeProductType;
@@ -283,16 +245,6 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     @Override
     public Optional<String> getXcodeProductType() {
       return xcodeProductType;
-    }
-
-    @Override
-    public ImmutableMap<Path, AppleBundleDestination> getDirs() {
-      return dirs.get();
-    }
-
-    @Override
-    public ImmutableMap<SourcePath, AppleBundleDestination> getFiles() {
-      return files.get();
     }
   }
 }

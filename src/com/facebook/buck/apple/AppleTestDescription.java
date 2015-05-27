@@ -38,7 +38,6 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.coercer.AppleBundleDestination;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -231,23 +230,22 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
           cxxPlatform.getFlavor().getName());
     }
 
+    AppleBundleDestinations destinations =
+        AppleBundleDestinations.platformDestinations(appleCxxPlatform.getApplePlatform());
+
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     ImmutableSet<AppleResourceDescription.Arg> resourceDescriptions =
         AppleResources.collectRecursiveResources(
             params.getTargetGraph(),
             ImmutableSet.of(params.getTargetGraph().get(params.getBuildTarget())));
     LOG.debug("Got resource nodes %s", resourceDescriptions);
-    ImmutableMap.Builder<Path, AppleBundleDestination> resourceDirsBuilder =
-        ImmutableMap.builder();
-    resourceDirsBuilder.putAll(args.dirs.get());
+    ImmutableSet.Builder<Path> resourceDirsBuilder = ImmutableSet.builder();
     AppleResources.addResourceDirsToBuilder(resourceDirsBuilder, resourceDescriptions);
-    ImmutableMap<Path, AppleBundleDestination> resourceDirs = resourceDirsBuilder.build();
+    ImmutableSet<Path> resourceDirs = resourceDirsBuilder.build();
 
-    ImmutableMap.Builder<SourcePath, AppleBundleDestination> resourceFilesBuilder =
-        ImmutableMap.builder();
-    resourceFilesBuilder.putAll(args.files.get());
+    ImmutableSet.Builder<SourcePath> resourceFilesBuilder = ImmutableSet.builder();
     AppleResources.addResourceFilesToBuilder(resourceFilesBuilder, resourceDescriptions);
-    ImmutableMap<SourcePath, AppleBundleDestination> resourceFiles = resourceFilesBuilder.build();
+    ImmutableSet<SourcePath> resourceFiles = resourceFilesBuilder.build();
 
     CollectedAssetCatalogs collectedAssetCatalogs =
         AppleDescriptions.createBuildRulesForTransitiveAssetCatalogDependencies(
@@ -279,8 +277,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         args.infoPlist,
         args.infoPlistSubstitutions.get(),
         Optional.of(library),
-        // TODO(user): Use flavors to switch between iOS and OSX layout
-        AppleBundleDescription.IOS_APP_SUBFOLDER_SPEC_MAP,
+        destinations,
         resourceDirs,
         resourceFiles,
         appleCxxPlatform.getIbtool(),
@@ -316,8 +313,6 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<String> xcodeProductType;
     public Optional<String> resourcePrefixDir;
-    public Optional<ImmutableMap<Path, AppleBundleDestination>> dirs;
-    public Optional<ImmutableMap<SourcePath, AppleBundleDestination>> files;
 
     @Override
     public Either<AppleBundleExtension, String> getExtension() {
@@ -336,16 +331,6 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
 
     public boolean canGroup() {
       return canGroup.or(false);
-    }
-
-    @Override
-    public ImmutableMap<Path, AppleBundleDestination> getDirs() {
-      return dirs.get();
-    }
-
-    @Override
-    public ImmutableMap<SourcePath, AppleBundleDestination> getFiles() {
-      return files.get();
     }
   }
 }

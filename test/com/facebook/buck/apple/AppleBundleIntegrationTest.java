@@ -74,26 +74,6 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void appBundleWithDirsAndFiles() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "app_bundle_with_dirs_and_files",
-        tmp);
-    workspace.setUp();
-
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
-
-    workspace.verify();
-
-    assertTrue(
-        Files.exists(
-            tmp.getRootPath()
-                .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
-  }
-
-  @Test
   public void appBundleWithResources() throws IOException{
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(

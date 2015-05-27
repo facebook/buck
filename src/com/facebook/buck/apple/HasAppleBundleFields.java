@@ -17,17 +17,11 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.AppleBundleDestination;
 import com.facebook.buck.rules.coercer.Either;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-
-import java.nio.file.Path;
 
 public interface HasAppleBundleFields {
   public Either<AppleBundleExtension, String> getExtension();
   public Optional<SourcePath> getInfoPlist();
   public Optional<String> getXcodeProductType();
-  public ImmutableMap<Path, AppleBundleDestination> getDirs();
-  public ImmutableMap<SourcePath, AppleBundleDestination> getFiles();
 }
