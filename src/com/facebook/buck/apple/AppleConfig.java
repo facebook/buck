@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
@@ -159,5 +160,9 @@ public class AppleConfig {
     } else {
       return Optional.absent();
     }
+  }
+
+  public Optional<BuildTarget> getXctoolZipTarget() {
+    return delegate.getBuildTarget("apple", "xctool_zip_target");
   }
 }

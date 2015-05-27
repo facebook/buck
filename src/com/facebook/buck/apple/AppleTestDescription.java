@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -57,7 +58,10 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
-public class AppleTestDescription implements Description<AppleTestDescription.Arg>, Flavored {
+public class AppleTestDescription implements
+    Description<AppleTestDescription.Arg>,
+    Flavored,
+    ImplicitDepsInferringDescription<AppleTestDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_test");
 
@@ -287,9 +291,21 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         mergedAssetCatalog,
         ImmutableSortedSet.<BuildTarget>of());
 
+
+    Optional<SourcePath> xctoolZipPath;
+    if (appleConfig.getXctoolZipTarget().isPresent()) {
+      xctoolZipPath = Optional.<SourcePath>of(
+          new BuildTargetSourcePath(
+              params.getProjectFilesystem(),
+              appleConfig.getXctoolZipTarget().get()));
+    } else {
+      xctoolZipPath = Optional.absent();
+    }
+
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
     return new AppleTest(
         appleConfig.getXctoolPath(),
+        xctoolZipPath,
         appleCxxPlatform.getXctest(),
         appleCxxPlatform.getOtest(),
         appleConfig.getXctestPlatformNames().contains(platformName),
@@ -304,6 +320,18 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         extension,
         args.contacts.get(),
         args.labels.get());
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      AppleTestDescription.Arg constructorArg) {
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+    Optional<BuildTarget> xctoolZipTarget = appleConfig.getXctoolZipTarget();
+    if (xctoolZipTarget.isPresent()) {
+      deps.add(xctoolZipTarget.get());
+    }
+    return deps.build();
   }
 
   @SuppressFieldNotInitialized

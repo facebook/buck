@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -71,6 +72,9 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   private final String platformName;
 
   @AddToRuleKey
+  private final Optional<SourcePath> xctoolZipPath;
+
+  @AddToRuleKey
   private final Optional<String> simulatorName;
 
   @AddToRuleKey
@@ -84,12 +88,14 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
 
   private final Path testBundleDirectory;
   private final Path testHostAppDirectory;
+  private final Path xctoolUnzipDirectory;
   private final Path testOutputPath;
 
   private final String testBundleExtension;
 
   AppleTest(
       Optional<Path> xctoolPath,
+      Optional<SourcePath> xctoolZipPath,
       Tool xctest,
       Tool otest,
       Boolean useXctest,
@@ -104,6 +110,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       ImmutableSet<Label> labels) {
     super(params, resolver);
     this.xctoolPath = xctoolPath;
+    this.xctoolZipPath = xctoolZipPath;
     this.useXctest = useXctest;
     this.xctest = xctest;
     this.otest = otest;
@@ -121,6 +128,9 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     this.testHostAppDirectory = BuildTargets.getScratchPath(
         params.getBuildTarget(),
         "__test_host_app_%s__.app");
+    this.xctoolUnzipDirectory = BuildTargets.getScratchPath(
+        params.getBuildTarget(),
+        "__xctool_%s__");
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
   }
 
@@ -186,10 +196,10 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     }
 
     if (!useXctest) {
-      if (!xctoolPath.isPresent()) {
+      if (!xctoolPath.isPresent() && !xctoolZipPath.isPresent()) {
         throw new HumanReadableException(
-            "Set xctool_path = /path/to/xctool in the [apple] section of .buckconfig " +
-            "to run this test");
+            "Set xctool_path = /path/to/xctool or xctool_zip_target = //path/to:xctool-zip " +
+            "in the [apple] section of .buckconfig to run this test");
       }
 
       ImmutableSet.Builder<Path> logicTestPathsBuilder = ImmutableSet.builder();
@@ -203,9 +213,23 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
         logicTestPathsBuilder.add(resolvedTestBundleDirectory);
       }
 
+      Path xctoolBinaryPath;
+      if (xctoolZipPath.isPresent()) {
+        Path resolvedXctoolUnzipDirectory = executionContext.getProjectFilesystem().resolve(
+            xctoolUnzipDirectory);
+        steps.add(new MakeCleanDirectoryStep(resolvedXctoolUnzipDirectory));
+        steps.add(
+            new UnzipStep(
+                getResolver().getPath(xctoolZipPath.get()),
+                resolvedXctoolUnzipDirectory));
+        xctoolBinaryPath = resolvedXctoolUnzipDirectory.resolve("bin/xctool");
+      } else {
+        xctoolBinaryPath = xctoolPath.get();
+      }
+
       steps.add(
           new XctoolRunTestsStep(
-              xctoolPath.get(),
+              xctoolBinaryPath,
               platformName,
               simulatorName,
               logicTestPathsBuilder.build(),

@@ -1,0 +1,5 @@
+[cxx]
+  default_platform = iphonesimulator-x86_64
+
+[apple]
+  xctool_zip_target = //:xctool-zip

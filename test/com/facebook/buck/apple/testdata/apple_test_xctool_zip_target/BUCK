@@ -1,0 +1,17 @@
+apple_test(
+    name = 'foo',
+    extension = 'xctest',
+    srcs = ['FooXCTest.m'],
+    info_plist = 'Test.plist',
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework'
+    ],
+)
+
+genrule(
+    name = 'xctool-zip',
+    srcs = glob(['xctool/**/*']),
+    out = 'xctool.zip',
+    cmd = 'cd xctool && zip -r -0 $OUT bin lib libexec reporters',
+)

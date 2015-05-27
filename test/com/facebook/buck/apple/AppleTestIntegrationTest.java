@@ -266,8 +266,8 @@ public class AppleTestIntegrationTest {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(containsString(
-        "Set xctool_path = /path/to/xctool in the [apple] section of .buckconfig " +
-        "to run this test"));
+        "Set xctool_path = /path/to/xctool or xctool_zip_target = //path/to:xctool-zip in the " +
+        "[apple] section of .buckconfig to run this test"));
     workspace.runBuckCommand("test", "//:foo");
   }
 
@@ -403,6 +403,22 @@ public class AppleTestIntegrationTest {
     assertThat(
         result.getStderr(),
         containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
+  }
+
+  @Test
+  public void successOnTestPassingWithXctoolZipTarget() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_xctool_zip_target", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:foo");
+    result.assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
   }
 
   private static void assertIsSymbolicLink(
