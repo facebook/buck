@@ -56,6 +56,9 @@ import com.facebook.buck.testutil.FakeOutputStream;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -71,6 +74,7 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
@@ -105,6 +109,9 @@ public class TargetsCommandTest {
         .resolve(fileName)
         .toString();
   }
+
+  @Rule
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -150,13 +157,48 @@ public class TargetsCommandTest {
     // parse the expected JSON.
     String expectedJson = Files.toString(new File(testBuckFileJson1), Charsets.UTF_8);
     JsonNode expected = objectMapper.readTree(
-        objectMapper.getJsonFactory().createJsonParser(expectedJson)
-            .enable(Feature.ALLOW_COMMENTS));
+      objectMapper.getJsonFactory().createJsonParser(expectedJson)
+        .enable(Feature.ALLOW_COMMENTS)
+    );
 
     assertEquals("Output from targets command should match expected JSON.", expected, observed);
-    assertEquals("Nothing should be printed to stderr.",
+    assertEquals(
+      "Nothing should be printed to stderr.",
         "",
         console.getTextWrittenToStdErr());
+  }
+
+  @Test
+  public void testJsonOutputWithDirectDependencies() throws IOException {
+    final String testBuckFileJson2 = testDataPath("TargetsCommandTestBuckJson2.js");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+      this, "target_command", tmp
+    );
+    workspace.setUp();
+
+    // Run Buck targets command on a case where the deps and direct_dependencies differ
+    ProcessResult result = workspace.runBuckCommand(
+      "targets", "--json", "//:B");
+
+    // Parse the observed JSON.
+    JsonNode observed = objectMapper.readTree(
+      objectMapper.getJsonFactory().createJsonParser(result.getStdout())
+        .enable(Feature.ALLOW_COMMENTS)
+    );
+
+    // Parse the expected JSON.
+    String expectedJson = Files.toString(new File(testBuckFileJson2), Charsets.UTF_8);
+    JsonNode expected = objectMapper.readTree(
+      objectMapper.getJsonFactory().createJsonParser(expectedJson)
+        .enable(Feature.ALLOW_COMMENTS)
+    );
+
+    assertEquals("Output from targets command should match expected JSON.", expected, observed);
+    assertEquals(
+      "Nothing should be printed to stderr.",
+      "",
+      console.getTextWrittenToStdErr()
+    );
   }
 
   @Test

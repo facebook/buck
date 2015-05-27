@@ -5,6 +5,7 @@
   "annotationProcessorParams" : [ ],
   "annotationProcessors" : [ ],
   "buck.base_path" : "test/com/facebook/buck/cli/testdata/target_command",
+  "buck.direct_dependencies" : [ ],
   "buck.type" : "java_library",
   "compiler": null,
   "deps" : [ ],

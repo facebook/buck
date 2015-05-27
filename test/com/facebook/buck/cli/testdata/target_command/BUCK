@@ -8,3 +8,17 @@ java_library(
     'PUBLIC',
   ],
 )
+
+genrule(
+  name = 'A',
+  out = 'A.txt',
+)
+
+genrule(
+  name = 'B',
+  cmd = '$(classpath :test-library)',
+  out = 'B.txt',
+  deps = [
+    ':A'
+  ],
+)
