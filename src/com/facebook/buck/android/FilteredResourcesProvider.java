@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public interface FilteredResourcesProvider {
 
@@ -28,8 +27,8 @@ public interface FilteredResourcesProvider {
   public ImmutableList<SourcePath> getResDirectories();
 
   /**
-   * @return The set of non-english {@code strings.xml} files identified by the resource filter.
+   * @return The list of {@code strings.xml} files excluding whitelisted strings.
+   *     Empty unless {@code ResourceCompressionMode.isStoreStringsAsAssets} is true.
    */
-  public ImmutableSet<SourcePath> getNonEnglishStringFiles();
-
+  ImmutableList<SourcePath> getStringFiles();
 }

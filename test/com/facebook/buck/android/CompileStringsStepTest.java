@@ -24,6 +24,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.XmlDomParser;
+import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -134,10 +135,10 @@ public class CompileStringsStepTest extends EasyMockSupport {
     Path path3 = Paths.get("project/groupme/res/values-da/strings.xml");
     Path path4 = Paths.get("project/groupmetoo/res/values-da-rAB/strings.xml");
     Path path5 = Paths.get("project/foreveralone/res/values-es/strings.xml");
-    ImmutableSet<Path> files = ImmutableSet.of(path0, path1, path2, path3, path4, path5);
+    ImmutableList<Path> files = ImmutableList.of(path0, path1, path2, path3, path4, path5);
 
     ImmutableMultimap<String, Path> groupedByLocale =
-        createNonExecutingStep().groupFilesByLocale(ImmutableSet.copyOf(files));
+        createNonExecutingStep().groupFilesByLocale(ImmutableList.copyOf(files));
 
     ImmutableMultimap<String, Path> expectedMap =
         ImmutableMultimap.<String, Path>builder()
@@ -261,9 +262,14 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
   private CompileStringsStep createNonExecutingStep() {
     return new CompileStringsStep(
-        ImmutableSet.<Path>of(),
+        ImmutableList.<Path>of(),
         createMock(Path.class),
-        createMock(Path.class));
+        new Function<String, Path>() {
+          @Override
+          public Path apply(String locale) {
+            throw new UnsupportedOperationException();
+          }
+        });
   }
 
   private String createResourcesXml(String contents) {
@@ -272,14 +278,14 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
   @Test
   public void testSuccessfulStepExecution() throws IOException {
-    Path destinationDir = Paths.get("");
+    final Path destinationDir = Paths.get("");
     Path rDotJavaSrcDir = Paths.get("");
 
     ExecutionContext context = createMock(ExecutionContext.class);
     FakeProjectFileSystem fileSystem = new FakeProjectFileSystem();
     expect(context.getProjectFilesystem()).andStubReturn(fileSystem);
 
-    ImmutableSet<Path> filteredStringFiles = ImmutableSet.of(
+    ImmutableList<Path> stringFiles = ImmutableList.of(
         firstFile,
         secondFile,
         thirdFile,
@@ -287,9 +293,14 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
     replayAll();
     CompileStringsStep step = new CompileStringsStep(
-        filteredStringFiles,
+        stringFiles,
         rDotJavaSrcDir,
-        destinationDir);
+        new Function<String, Path>() {
+          @Override
+          public Path apply(String input) {
+            return destinationDir.resolve(input + PackageStringAssets.STRING_ASSET_FILE_EXTENSION);
+          }
+        });
     assertEquals(0, step.execute(context));
     Map<String, byte[]> fileContentsMap = fileSystem.getFileContents();
     assertEquals("Incorrect number of string files written.", 3, fileContentsMap.size());

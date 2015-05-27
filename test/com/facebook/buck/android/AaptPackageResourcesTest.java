@@ -316,8 +316,8 @@ public class AaptPackageResourcesTest {
             throw new AssertionError("unexpected call to getResDirectories");
           }
           @Override
-          public ImmutableSet<SourcePath> getNonEnglishStringFiles() {
-            throw new AssertionError("unexpected call to getNonEnglishStringFiles");
+          public ImmutableList<SourcePath> getStringFiles() {
+            throw new AssertionError("unexpected call to getStringFiles");
           }
         };
 

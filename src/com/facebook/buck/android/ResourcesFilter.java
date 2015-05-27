@@ -34,8 +34,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -64,7 +62,7 @@ public class ResourcesFilter extends AbstractBuildRule
     implements FilteredResourcesProvider, InitializableFromDisk<ResourcesFilter.BuildOutput> {
 
   private static final String RES_DIRECTORIES_KEY = "res_directories";
-  private static final String NON_ENGLISH_STRING_FILES_KEY = "non_english_string_files";
+  private static final String STRING_FILES_KEY = "string_files";
 
   static enum ResourceCompressionMode {
     DISABLED(/* isCompressResources */ false, /* isStoreStringsAsAssets */ false),
@@ -126,8 +124,8 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableSet<SourcePath> getNonEnglishStringFiles() {
-    return buildOutputInitializer.getBuildOutput().nonEnglishStringFiles;
+  public ImmutableList<SourcePath> getStringFiles() {
+    return buildOutputInitializer.getBuildOutput().stringFiles;
   }
 
   @Override
@@ -137,22 +135,27 @@ public class ResourcesFilter extends AbstractBuildRule
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     final ImmutableList.Builder<Path> filteredResDirectoriesBuilder = ImmutableList.builder();
+    ImmutableSet<Path> whitelistedStringPaths =
+        ImmutableSet.copyOf(getResolver().getAllPaths(whitelistedStringDirs));
+    ImmutableList<Path> resPaths = getResolver().getAllPaths(resDirectories);
     final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
-        getResolver().getAllPaths(resDirectories),
-        ImmutableSet.copyOf(getResolver().getAllPaths(whitelistedStringDirs)),
+        resPaths,
+        whitelistedStringPaths,
         locales,
         filteredResDirectoriesBuilder);
     steps.add(filterResourcesStep);
 
-    final ImmutableList<Path> filteredResDirectories = filteredResDirectoriesBuilder.build();
-    final Supplier<ImmutableSet<Path>> nonEnglishStringFiles = Suppliers.memoize(
-        new Supplier<ImmutableSet<Path>>() {
-          @Override
-          public ImmutableSet<Path> get() {
-            return filterResourcesStep.getNonEnglishStringFiles();
-          }
-        });
+    final ImmutableList.Builder<Path> stringFilesBuilder = ImmutableList.builder();
+    // The list of strings.xml files is only needed to build string assets
+    if (resourceCompressionMode.isStoreStringsAsAssets()) {
+      GetStringsFilesStep getStringsFilesStep = new GetStringsFilesStep(
+          resPaths,
+          stringFilesBuilder,
+          whitelistedStringPaths);
+      steps.add(getStringsFilesStep);
+    }
 
+    final ImmutableList<Path> filteredResDirectories = filteredResDirectoriesBuilder.build();
     for (Path outputResourceDir : filteredResDirectories) {
       buildableContext.recordArtifactsInDirectory(outputResourceDir);
     }
@@ -164,8 +167,8 @@ public class ResourcesFilter extends AbstractBuildRule
             RES_DIRECTORIES_KEY,
             Iterables.transform(filteredResDirectories, Functions.toStringFunction()));
         buildableContext.addMetadata(
-            NON_ENGLISH_STRING_FILES_KEY,
-            Iterables.transform(nonEnglishStringFiles.get(), Functions.toStringFunction()));
+            STRING_FILES_KEY,
+            Iterables.transform(stringFilesBuilder.build(), Functions.toStringFunction()));
         return 0;
       }
     });
@@ -229,14 +232,14 @@ public class ResourcesFilter extends AbstractBuildRule
             .transform(
                 SourcePaths.getToBuildTargetSourcePath(getProjectFilesystem(), getBuildTarget()))
             .toList();
-    ImmutableSet<SourcePath> nonEnglishStringFiles =
-        FluentIterable.from(onDiskBuildInfo.getValues(NON_ENGLISH_STRING_FILES_KEY).get())
+    ImmutableList<SourcePath> stringFiles =
+        FluentIterable.from(onDiskBuildInfo.getValues(STRING_FILES_KEY).get())
             .transform(MorePaths.TO_PATH)
             .transform(
                 SourcePaths.getToBuildTargetSourcePath(getProjectFilesystem(), getBuildTarget()))
-            .toSet();
+            .toList();
 
-    return new BuildOutput(resDirectories, nonEnglishStringFiles);
+    return new BuildOutput(resDirectories, stringFiles);
   }
 
   @Override
@@ -246,13 +249,13 @@ public class ResourcesFilter extends AbstractBuildRule
 
   public static class BuildOutput {
     private final ImmutableList<SourcePath> resDirectories;
-    private final ImmutableSet<SourcePath> nonEnglishStringFiles;
+    private final ImmutableList<SourcePath> stringFiles;
 
     public BuildOutput(
         ImmutableList<SourcePath> resDirectories,
-        ImmutableSet<SourcePath> nonEnglishStringFiles) {
+        ImmutableList<SourcePath> stringFiles) {
       this.resDirectories = resDirectories;
-      this.nonEnglishStringFiles = nonEnglishStringFiles;
+      this.stringFiles = stringFiles;
     }
   }
 

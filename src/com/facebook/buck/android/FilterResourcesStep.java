@@ -71,7 +71,7 @@ public class FilterResourcesStep implements Step {
   private static final Logger LOG = Logger.get(FilterResourcesStep.class);
 
   @VisibleForTesting
-  static final Pattern NON_ENGLISH_STRING_PATH = Pattern.compile(
+  static final Pattern NON_ENGLISH_STRINGS_FILE_PATH = Pattern.compile(
       "(\\b|.*/)res/values-.+/strings.xml", Pattern.CASE_INSENSITIVE);
 
   @VisibleForTesting
@@ -90,7 +90,6 @@ public class FilterResourcesStep implements Step {
   private final DrawableFinder drawableFinder;
   @Nullable
   private final ImageScaler imageScaler;
-  private final ImmutableSet.Builder<Path> nonEnglishStringFilesBuilder;
 
   /**
    * Creates a command that filters a specified set of directories.
@@ -131,7 +130,6 @@ public class FilterResourcesStep implements Step {
     this.targetDensities = targetDensities;
     this.drawableFinder = drawableFinder;
     this.imageScaler = imageScaler;
-    this.nonEnglishStringFilesBuilder = ImmutableSet.builder();
     LOG.info(
         "FilterResourcesStep: filterDrawables: %s; filterStrings: %s",
         filterDrawables,
@@ -146,14 +144,6 @@ public class FilterResourcesStep implements Step {
       context.logError(e, "There was an error filtering resources.");
       return 1;
     }
-  }
-
-  /**
-   * @return If {@code filterStrings} is true, set containing absolute file paths to non-english
-   * string files, matching NON_ENGLISH_STRING_PATH regex; else empty set.
-   */
-  public ImmutableSet<Path> getNonEnglishStringFiles() {
-    return nonEnglishStringFilesBuilder.build();
   }
 
   private int doExecute(ExecutionContext context) throws IOException, InterruptedException {
@@ -197,17 +187,18 @@ public class FilterResourcesStep implements Step {
           new Predicate<Path>() {
             @Override
             public boolean apply(Path pathRelativeToProjectRoot) {
-              if (!NON_ENGLISH_STRING_PATH.matcher(MorePaths.pathWithUnixSeparators(
+              if (!NON_ENGLISH_STRINGS_FILE_PATH.matcher(MorePaths.pathWithUnixSeparators(
                       pathRelativeToProjectRoot))
                   .matches()) {
                 return true;
               }
+
               for (Path whitelistedStringDir : whitelistedStringDirs) {
                 if (pathRelativeToProjectRoot.startsWith(whitelistedStringDir)) {
                   return true;
                 }
               }
-              nonEnglishStringFilesBuilder.add(pathRelativeToProjectRoot);
+
               return false;
             }
           });

@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class IdentityResourcesProvider implements FilteredResourcesProvider {
 
@@ -34,7 +33,7 @@ public class IdentityResourcesProvider implements FilteredResourcesProvider {
   }
 
   @Override
-  public ImmutableSet<SourcePath> getNonEnglishStringFiles() {
-    return ImmutableSet.of();
+  public ImmutableList<SourcePath> getStringFiles() {
+    return ImmutableList.of();
   }
 }

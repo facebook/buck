@@ -30,6 +30,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.zip.ZipStep;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
@@ -43,27 +46,38 @@ import javax.annotation.Nullable;
  * as assets. Only applicable for {@code android_binary} rules with {@code resource_compression}
  * parameter set to {@link com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode
  * #ENABLED_WITH_STRINGS_AS_ASSETS}.
+ *
+ * Produces an all_locales_string_assets.zip containing .fbstr files for all locales the app has
+ * strings for, and a string_assets.zip file that contains the .fbstr files filtered by the set
+ * of locales provided. The contents of string_assets.zip is built into the assets of the APK.
+ * all_locales_string_assets.zip is used for debugging purposes.
  */
 public class PackageStringAssets extends AbstractBuildRule
     implements InitializableFromDisk<PackageStringAssets.BuildOutput> {
 
   private static final String STRING_ASSETS_ZIP_HASH = "STRING_ASSETS_ZIP_HASH";
+  @VisibleForTesting
+  static final String STRING_ASSET_FILE_EXTENSION = ".fbstr";
 
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final AaptPackageResources aaptPackageResources;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
+  private final ImmutableSet<String> locales;
 
   public PackageStringAssets(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      ImmutableSet<String> locales,
       FilteredResourcesProvider filteredResourcesProvider,
       AaptPackageResources aaptPackageResources) {
     super(params, resolver);
+    this.locales = locales;
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.aaptPackageResources = aaptPackageResources;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
+  // TODO(user): Add an integration test for packaging string assets
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
@@ -84,28 +98,46 @@ public class PackageStringAssets extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(pathToBaseDir));
     Path pathToDirContainingAssetsDir = pathToBaseDir.resolve("string_assets");
     steps.add(new MakeCleanDirectoryStep(pathToDirContainingAssetsDir));
-    Path pathToStrings = pathToDirContainingAssetsDir.resolve("assets").resolve("strings");
+    final Path pathToStrings = pathToDirContainingAssetsDir.resolve("assets").resolve("strings");
+    Function<String, Path> assetPathBuilder = new Function<String, Path>() {
+      @Override
+      public Path apply(String locale) {
+        return pathToStrings.resolve(locale + STRING_ASSET_FILE_EXTENSION);
+      }
+    };
     Path pathToStringAssetsZip = getPathToStringAssetsZip();
+    Path pathToAllLocalesStringAssetsZip = getPathToAllLocalesStringAssetsZip();
     steps.add(new MakeCleanDirectoryStep(pathToStrings));
     steps.add(new CompileStringsStep(
-            ImmutableSet.copyOf(
-                getResolver().getAllPaths(filteredResourcesProvider.getNonEnglishStringFiles())),
+            getResolver().getAllPaths(filteredResourcesProvider.getStringFiles()),
             aaptPackageResources.getPathToRDotTxtDir(),
-            pathToStrings));
+            assetPathBuilder));
+    steps.add(new ZipStep(
+            pathToAllLocalesStringAssetsZip,
+            ImmutableSet.<Path>of(),
+            false,
+            ZipStep.MAX_COMPRESSION_LEVEL,
+            pathToDirContainingAssetsDir));
     steps.add(new ZipStep(
             pathToStringAssetsZip,
-            ImmutableSet.<Path>of(),
+            FluentIterable.from(locales).transform(assetPathBuilder).toSet(),
             false,
             ZipStep.MAX_COMPRESSION_LEVEL,
             pathToDirContainingAssetsDir));
     steps.add(
         new RecordFileSha1Step(pathToStringAssetsZip, STRING_ASSETS_ZIP_HASH, buildableContext));
+
+    buildableContext.recordArtifact(pathToAllLocalesStringAssetsZip);
     buildableContext.recordArtifact(pathToStringAssetsZip);
     return steps.build();
   }
 
   public Path getPathToStringAssetsZip() {
     return getPathToStringAssetsDir().resolve("string_assets.zip");
+  }
+
+  private Path getPathToAllLocalesStringAssetsZip() {
+    return getPathToStringAssetsDir().resolve("all_locales_string_assets.zip");
   }
 
   public Sha1HashCode getStringAssetsZipHash() {

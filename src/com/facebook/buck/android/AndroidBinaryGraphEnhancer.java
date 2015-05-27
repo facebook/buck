@@ -249,6 +249,7 @@ public class AndroidBinaryGraphEnhancer {
           new PackageStringAssets(
               paramsForPackageStringAssets,
               pathResolver,
+              locales,
               filteredResourcesProvider,
               aaptPackageResources));
       ruleResolver.addToIndex(packageStringAssets.get());

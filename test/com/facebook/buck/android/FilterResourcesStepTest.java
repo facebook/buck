@@ -237,6 +237,38 @@ public class FilterResourcesStepTest {
   }
 
   @Test
+  public void testFilterStringsIncludingEnglishStrings() throws IOException {
+    FilteredDirectoryCopier copier = EasyMock.createMock(FilteredDirectoryCopier.class);
+    Capture<Predicate<Path>> capturedPredicate = newCapture();
+    copier.copyDirs(EasyMock.<ProjectFilesystem>anyObject(),
+        EasyMock.<Map<Path, Path>>anyObject(),
+        EasyMock.capture(capturedPredicate));
+    EasyMock.replay(copier);
+
+    FilterResourcesStep step = new FilterResourcesStep(
+        /* inResDirToOutResDirMap */ ImmutableBiMap.<Path, Path>of(),
+        /* filterDrawables */ false,
+        /* filterStrings */ true,
+        /* whitelistedStringDirs */ ImmutableSet.of(Paths.get("com/whitelisted/res")),
+        /* locales */ ImmutableSet.<String>of(),
+        copier,
+        /* targetDensities */ null,
+        /* drawableFinder */ null,
+        /* imageScaler */ null);
+
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()));
+    Predicate<Path> filePredicate = capturedPredicate.getValue();
+
+    assertTrue(filePredicate.apply(Paths.get("com/example/res/drawables/image.png")));
+    assertTrue(filePredicate.apply(Paths.get("com/example/res/values/strings.xml")));
+    assertTrue(filePredicate.apply(Paths.get("com/whitelisted/res/values-af/strings.xml")));
+
+    assertFalse(filePredicate.apply(Paths.get("com/example/res/values-af/strings.xml")));
+
+    EasyMock.verify(copier);
+  }
+
+  @Test
   public void testFilterLocales() throws IOException {
     FilteredDirectoryCopier copier = EasyMock.createMock(FilteredDirectoryCopier.class);
     Capture<Predicate<Path>> capturedPredicate = newCapture();
@@ -273,6 +305,7 @@ public class FilterResourcesStepTest {
   @Test
   public void testNonEnglishStringsPathRegex() {
     assertTrue(matchesRegex("res/values-es/strings.xml"));
+    assertFalse(matchesRegex("res/values/strings.xml"));
     assertFalse(matchesRegex("res/values-/strings.xml"));
     assertTrue(matchesRegex("/res/values-es/strings.xml"));
     assertFalse(matchesRegex("rootres/values-es/strings.xml"));
@@ -280,6 +313,6 @@ public class FilterResourcesStepTest {
   }
 
   private static boolean matchesRegex(String input) {
-    return FilterResourcesStep.NON_ENGLISH_STRING_PATH.matcher(input).matches();
+    return FilterResourcesStep.NON_ENGLISH_STRINGS_FILE_PATH.matcher(input).matches();
   }
 }
