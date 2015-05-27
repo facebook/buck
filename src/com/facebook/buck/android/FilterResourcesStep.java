@@ -193,13 +193,7 @@ public class FilterResourcesStep implements Step {
                 return true;
               }
 
-              for (Path whitelistedStringDir : whitelistedStringDirs) {
-                if (pathRelativeToProjectRoot.startsWith(whitelistedStringDir)) {
-                  return true;
-                }
-              }
-
-              return false;
+              return isPathWhitelisted(pathRelativeToProjectRoot);
             }
           });
     }
@@ -216,6 +210,16 @@ public class FilterResourcesStep implements Step {
     }
 
     return 0;
+  }
+
+  private boolean isPathWhitelisted(Path path) {
+    for (Path whitelistedStringDir : whitelistedStringDirs) {
+      if (path.startsWith(whitelistedStringDir)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @Override
