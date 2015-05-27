@@ -21,6 +21,12 @@ Buck. To build a rule, pass its target to buck build:
 
 <pre>buck build /&#x2F;java/com/example/app:amazing</pre>
 
+<p>
+  Note that any {call buck.remote_file /} rules referenced by your build rules must be downloaded
+  with {call buck.cmd_fetch /} prior to calling this command if you don't set <code>in_build = true
+  </code> in the <code>[download]</code> section of your <code>.buckconfig</code>.
+</p>
+
 {/param}
 {param params}
 

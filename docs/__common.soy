@@ -164,6 +164,7 @@
         ],
         'core': [
             'genrule',
+            'remote_file',
         ],
         'cxx': [
             'cxx_binary',
@@ -263,6 +264,7 @@
         'audit',
         'build',
         'clean',
+        'fetch',
         'install',
         'project',
         'quickstart',
@@ -555,6 +557,11 @@
 {/template}
 
 /***/
+{template .remote_file}
+{call .ruleLink}{param name : 'remote_file' /}{/call}
+{/template}
+
+/***/
 {template .fn_glob}
 <a href="{ROOT}function/glob.html"><code>glob()</code></a>
 {/template}
@@ -592,6 +599,11 @@
 /***/
 {template .cmd_clean}
 {call .cmd_link}{param name : 'clean' /}{/call}
+{/template}
+
+/***/
+{template .cmd_fetch}
+{call .cmd_link}{param name : 'fetch' /}{/call}
 {/template}
 
 /***/

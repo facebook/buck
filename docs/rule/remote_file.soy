@@ -1,0 +1,103 @@
+{namespace remote_file}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'remote_file()' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to download files from the Internet to be used as dependencies of other
+      rules.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>remote_file()</code> rule is used to download files from the Internet to be used as
+dependencies for other rules. These rules are downloaded by running {call buck.cmd_fetch /}, or can
+be downloaded as part of {call buck.cmd_build /}. See the note there about the
+<code>.buckconfig</code> setting to configure that.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'url' /}
+  {param desc}
+  You can specify an <code>http</code>, <code>https</code>, or a <code>mvn</code> URL. If you
+  specify a <code>mvn</code> URL, it will be decoded as described in the
+  {sp}<a href="{ROOT}javadoc/com/facebook/buck/file/MavenUrlDecoder.html">javadocs for
+  MavenUrlDecoder</a>. See the example section below.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'sha1' /}
+  {param desc}
+  The <a href="//wikipedia.org/wiki/SHA-1"><code>SHA-1</code></a> hash of the downloaded artifact.
+  Buck verifies this is correct and fails the fetch command if it doesn't match in order to
+  guarantee repeatable builds.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'out' /}
+  {param default: 'None' /}
+  {param desc}
+  An optional name to call the downloaded artifact. Buck will generate a default name if one is not
+  provided that uses the <code>name</code> of the rule.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+<p>
+  Here's an example of a <code>remote_file()</code> using an <code>https</code> URL.
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+remote_file(
+  name = 'android-ndk-r10e-darwin-x86_64',
+  url = 'https://dl.google.com/android/ndk/android-ndk-r10e-darwin-x86_64.bin',
+  sha1 = 'b57c2b9213251180dcab794352bfc9a241bf2557',
+)
+</pre>{/literal}
+
+<p>
+  Here's an example of a <code>remote_file()</code> using a <code>mvn</code> URL being referenced
+  by a {call buck.prebuilt_jar /}.
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_jar(
+  name = 'jetty-all',
+  binary_jar = 'jetty-all-9.2.10.v20150310.jar',
+  source_jar = ':jetty-source',
+)
+
+remote_file(
+  name = 'jetty-source',
+  out = 'jetty-all-9.2.10.v20150310-sources.jar',
+  url = 'mvn:org.eclipse.jetty.aggregate:jetty-all:src:9.2.10.v20150310',
+  sha1 = '311da310416d2feb3de227081d7c3f48742d7075',
+)
+</pre>{/literal}
+
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
