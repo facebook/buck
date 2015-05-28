@@ -21024,7 +21024,7 @@ base.exportTo('tracing.analysis', function() {
         view_guid: this.guid_,
         selection_guid: selection.guid
       };
-      window.history.pushState(state);
+      window.history.pushState(state, null, window.location.href);
 
       this.processSelection(selection);
     },
