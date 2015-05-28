@@ -53,6 +53,8 @@ public class LoggingBuildListener implements BuckEventListener {
               .add(BuildEvent.Finished.class)
               .add(BuildRuleEvent.Started.class)
               .add(BuildRuleEvent.Finished.class)
+              .add(BuildRuleEvent.Suspended.class)
+              .add(BuildRuleEvent.Resumed.class)
               .add(StepEvent.Started.class)
               .add(StepEvent.Finished.class)
               .build();
