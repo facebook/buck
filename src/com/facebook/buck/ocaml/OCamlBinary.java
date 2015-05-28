@@ -23,14 +23,16 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class OCamlBinary extends AbstractBuildRule implements BinaryBuildRule {
+public class OCamlBinary extends AbstractBuildRule implements BinaryBuildRule, HasRuntimeDeps {
 
   private final BuildRule binary;
 
@@ -55,5 +57,13 @@ public class OCamlBinary extends AbstractBuildRule implements BinaryBuildRule {
   public Path getPathToOutputFile() {
     return Preconditions.checkNotNull(binary.getPathToOutputFile());
   }
+
+  // Since this rule doesn't actual generate the binary it references, and is just a wrapper for
+  // the real binary rule, mark that rule as a runtime dep.
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return ImmutableSortedSet.of(binary);
+  }
+
 }
 

@@ -23,6 +23,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -43,12 +44,14 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -66,7 +69,7 @@ import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class JavaTest extends DefaultJavaLibrary implements TestRule {
+public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntimeDeps {
 
   @AddToRuleKey
   private final ImmutableList<String> vmArgs;
@@ -507,4 +510,15 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule {
   public boolean runTestSeparately() {
     return runTestSeparately;
   }
+
+  // By the end of the build, all the transitive Java library dependencies *must* be available on
+  // disk, so signal this requirement via the {@link HasRuntimeDeps} interface.
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return FluentIterable.from(getTransitiveClasspathEntries().keySet())
+        .filter(BuildRule.class)
+        .filter(Predicates.not(Predicates.<BuildRule>equalTo(this)))
+        .toSortedSet(Ordering.natural());
+  }
+
 }

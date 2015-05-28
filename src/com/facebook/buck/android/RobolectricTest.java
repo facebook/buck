@@ -40,6 +40,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.io.File;
@@ -138,4 +139,15 @@ public class RobolectricTest extends JavaTest {
         LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME,
         resourceDirectories);
   }
+
+  // On top of the runtime dependencies of a normal {@link JavaTest}, we need to make the
+  // {@link DummyRDotJava} is available locally, if it exists, to run this test.
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(super.getRuntimeDeps())
+        .addAll(Optional.presentInstances(ImmutableList.of(optionalDummyRDotJava)))
+        .build();
+  }
+
 }

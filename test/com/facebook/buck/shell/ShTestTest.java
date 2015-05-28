@@ -16,11 +16,15 @@
 
 package com.facebook.buck.shell;
 
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -28,9 +32,11 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.EasyMock;
 import org.easymock.EasyMockSupport;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
 
@@ -60,7 +66,33 @@ public class ShTestTest extends EasyMockSupport {
 
     replayAll();
 
-    assertTrue("hasTestResultFiles() should return true if result.json exists.",
+    assertTrue(
+        "hasTestResultFiles() should return true if result.json exists.",
         shTest.hasTestResultFiles(executionContext));
   }
+
+  @Test
+  public void depsAreRuntimeDeps() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    BuildRule extraDep = new FakeBuildRule("//:extra_dep", pathResolver);
+    BuildRule dep = new FakeBuildRule("//:dep", pathResolver);
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    ShTest shTest = new ShTest(
+        new FakeBuildRuleParamsBuilder(target)
+            .setDeps(ImmutableSortedSet.of(dep))
+            .setExtraDeps(ImmutableSortedSet.of(extraDep))
+            .build(),
+        new SourcePathResolver(new BuildRuleResolver()),
+        new TestSourcePath("run_test.sh"),
+        /* args */ ImmutableList.<String>of(),
+        /* labels */ ImmutableSet.<Label>of());
+
+    assertThat(
+        shTest.getRuntimeDeps(),
+        Matchers.containsInAnyOrder(dep, extraDep));
+  }
+
 }

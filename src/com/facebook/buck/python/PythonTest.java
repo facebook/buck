@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -39,12 +40,13 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class PythonTest extends NoopBuildRule implements TestRule {
+public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
 
   private final PythonBinary binary;
   private final ImmutableSet<Label> labels;
@@ -165,4 +167,13 @@ public class PythonTest extends NoopBuildRule implements TestRule {
   public boolean runTestSeparately() {
     return false;
   }
+
+  // A python test rule is actually just a {@link NoopBuildRule} which contains a references to
+  // a {@link PythonBinary} rule, which is the actual test binary.  Therefore, we *need* this
+  // rule around to run this test, so model this via the {@link HasRuntimeDeps} interface.
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return ImmutableSortedSet.<BuildRule>of(binary);
+  }
+
 }

@@ -23,8 +23,10 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
@@ -38,6 +40,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.stringtemplate.v4.ST;
 
@@ -45,7 +48,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 
-public class ShBinary extends AbstractBuildRule implements BinaryBuildRule {
+public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasRuntimeDeps {
 
   private static final Path TEMPLATE = Paths.get(
       System.getProperty(
@@ -122,6 +125,13 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule {
   @Override
   public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
     return ImmutableList.of(projectFilesystem.resolve(output).toAbsolutePath().toString());
+  }
+
+  // If the script is generated from another build rule, it needs to be available on disk
+  // for this rule to be usable.
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return ImmutableSortedSet.copyOf(getResolver().filterBuildRuleInputs(main));
   }
 
 }

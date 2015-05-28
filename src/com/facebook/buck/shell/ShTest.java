@@ -22,6 +22,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
@@ -41,6 +42,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Set;
@@ -51,7 +53,7 @@ import java.util.concurrent.Callable;
  * script returns a non-zero error code, the test is considered a failure.
  */
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class ShTest extends NoopBuildRule implements TestRule {
+public class ShTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
 
   @AddToRuleKey
   private final SourcePath test;
@@ -176,4 +178,12 @@ public class ShTest extends NoopBuildRule implements TestRule {
   public boolean runTestSeparately() {
     return false;
   }
+
+  // A shell test has no real build dependencies.  Instead interpret the dependencies as runtime
+  // dependencies, as these are always components that the shell test needs available to run.
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return getDeps();
+  }
+
 }

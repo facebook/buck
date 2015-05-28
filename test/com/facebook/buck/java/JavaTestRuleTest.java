@@ -17,14 +17,19 @@
 package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
@@ -77,6 +82,35 @@ public class JavaTestRuleTest {
     List<String> expected = ImmutableList.of(
         "--one", "-Dbuck.device=emulator", "-Dbuck.device.id=123");
     assertEquals(expected, amended);
+  }
+
+  @Test
+  public void transitiveLibraryDependenciesAreRuntimeDeps() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    FakeJavaLibrary transitiveDep =
+        resolver.addToIndex(
+            new FakeJavaLibrary(
+                BuildTargetFactory.newInstance("//:transitive_dep"),
+                pathResolver));
+
+    FakeJavaLibrary firstOrderDep =
+        resolver.addToIndex(
+            new FakeJavaLibrary(
+                BuildTargetFactory.newInstance("//:first_order_dep"),
+                pathResolver,
+                ImmutableSortedSet.<BuildRule>of(transitiveDep)));
+
+    JavaTest rule =
+        (JavaTest) JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .addSrc(Paths.get("ExampleTest.java"))
+            .addDep(firstOrderDep.getBuildTarget())
+            .build(resolver);
+
+    assertThat(
+        rule.getRuntimeDeps(),
+        Matchers.<BuildRule>contains(firstOrderDep, transitiveDep));
   }
 
   private JavaTest newRule(ImmutableList<String> vmArgs) {
