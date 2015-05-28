@@ -23,7 +23,7 @@ import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
-import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -48,7 +48,7 @@ public class BuckEventBus implements Closeable {
 
   private final Clock clock;
   private final ExecutorService executorService;
-  private final AsyncEventBus eventBus;
+  private final EventBus eventBus;
   private final Supplier<Long> threadIdSupplier;
   private final BuildId buildId;
   private final int shutdownTimeoutMillis;
@@ -69,15 +69,25 @@ public class BuckEventBus implements Closeable {
       int shutdownTimeoutMillis) {
     this.clock = clock;
     this.executorService = executorService;
-    this.eventBus = new AsyncEventBus("buck-build-events", executorService);
+    this.eventBus = new EventBus("buck-build-events");
     this.threadIdSupplier = DEFAULT_THREAD_ID_SUPPLIER;
     this.buildId = buildId;
     this.shutdownTimeoutMillis = shutdownTimeoutMillis;
   }
 
+  private void dispatch(final BuckEvent event) {
+    executorService.submit(
+        new Runnable() {
+          @Override
+          public void run() {
+            eventBus.post(event);
+          }
+        });
+  }
+
   public void post(BuckEvent event) {
     timestamp(event);
-    eventBus.post(event);
+    dispatch(event);
   }
 
   public void logVerboseAndPost(Logger logger, BuckEvent event) {
@@ -95,7 +105,7 @@ public class BuckEventBus implements Closeable {
    */
   public void post(BuckEvent event, BuckEvent atTime) {
     event.configure(atTime.getTimestamp(), atTime.getNanoTime(), threadIdSupplier.get(), buildId);
-    eventBus.post(event);
+    dispatch(event);
   }
 
   public void register(Object object) {
@@ -107,7 +117,7 @@ public class BuckEventBus implements Closeable {
   }
 
   @VisibleForTesting
-  AsyncEventBus getEventBus() {
+  EventBus getEventBus() {
     return eventBus;
   }
 
@@ -135,7 +145,7 @@ public class BuckEventBus implements Closeable {
   /**
    * {@link ExecutorService#awaitTermination(long, java.util.concurrent.TimeUnit)} is called
    * to wait for events which have been posted, but which have been queued by the
-   * {@link AsyncEventBus}, to be delivered. This allows listeners to record or report as much
+   * {@link EventBus}, to be delivered. This allows listeners to record or report as much
    * information as possible. This aids debugging when close is called during exception processing.
    */
   @Override
