@@ -139,10 +139,6 @@ public class DebugPathSanitizer {
     };
   }
 
-  public Function<String, String> sanitize(Optional<Path> workingDir) {
-    return sanitize(workingDir, /* expandPaths */ true);
-  }
-
   /**
    * @param workingDir the current working directory, if applicable.
    * @param contents the string to sanitize.
@@ -151,7 +147,13 @@ public class DebugPathSanitizer {
    */
   public String sanitize(Optional<Path> workingDir, String contents, boolean expandPaths) {
     for (Map.Entry<Path, Path> entry : getAllPaths(workingDir).entrySet()) {
-      contents = contents.replace(entry.getKey().toString(), getExpandedPath(entry.getValue()));
+      String replacement;
+      if (expandPaths) {
+        replacement = getExpandedPath(entry.getValue());
+      } else {
+        replacement = entry.getValue().toString();
+      }
+      contents = contents.replace(entry.getKey().toString(), replacement);
     }
     return contents;
   }
