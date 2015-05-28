@@ -67,9 +67,15 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
    */
   private static final String XPATH_VERSION_CODE = "/manifest/@android:versionCode";
 
+  /**
+   * XPath expression to get the instrumentation test runner.
+   */
+  private static final String XPATH_INSTRUMENTATION_TEST_RUNNER =
+      "/manifest/instrumentation/@android:name";
 
   private final XPathExpression packageExpression;
   private final XPathExpression versionCodeExpression;
+  private final XPathExpression instrumentationTestRunnerExpression;
   private final XPathExpression launchableActivitiesExpression;
   private final Document doc;
 
@@ -84,6 +90,7 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
       launchableActivitiesExpression = xPath.compile(XPATH_LAUNCHER_ACTIVITIES);
       packageExpression = xPath.compile(XPATH_PACKAGE);
       versionCodeExpression = xPath.compile(XPATH_VERSION_CODE);
+      instrumentationTestRunnerExpression = xPath.compile(XPATH_INSTRUMENTATION_TEST_RUNNER);
     } catch (XPathExpressionException | SAXException e) {
       throw Throwables.propagate(e);
     }
@@ -119,6 +126,15 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
   public String getVersionCode() {
     try {
       return (String) versionCodeExpression.evaluate(doc, XPathConstants.STRING);
+    } catch (XPathExpressionException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  @Override
+  public String getInstrumentationTestRunner() {
+    try {
+      return (String) instrumentationTestRunnerExpression.evaluate(doc, XPathConstants.STRING);
     } catch (XPathExpressionException e) {
       throw Throwables.propagate(e);
     }

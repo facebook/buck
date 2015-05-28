@@ -43,6 +43,8 @@ import java.util.EnumSet;
  */
 public class AndroidInstrumentationApk extends AndroidBinary {
 
+  private AndroidBinary apkUnderTest;
+
   AndroidInstrumentationApk(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
@@ -80,5 +82,10 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         Optional.<SourcePath>absent(),
         Optional.<Integer>absent(),
         dxExecutorService);
+    this.apkUnderTest = apkUnderTest;
+  }
+
+  public AndroidBinary getApkUnderTest() {
+    return apkUnderTest;
   }
 }

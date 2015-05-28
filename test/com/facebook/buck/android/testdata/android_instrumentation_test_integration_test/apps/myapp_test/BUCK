@@ -1,0 +1,13 @@
+android_instrumentation_apk(
+  name = 'app_test',
+  manifest = 'AndroidManifest.xml',
+  apk = '//apps/myapp:app-exo',
+  deps = [
+    '//test/com/example/activity:activity_test',
+  ],
+)
+
+android_instrumentation_test(
+  name = 'test',
+  apk = ':app_test',
+)

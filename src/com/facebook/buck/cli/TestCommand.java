@@ -36,8 +36,10 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
+import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
@@ -140,6 +142,10 @@ public class TestCommand extends BuildCommand {
 
   @AdditionalOptions
   @SuppressFieldNotInitialized
+  private AdbCommandLineOptions adbOptions;
+
+  @AdditionalOptions
+  @SuppressFieldNotInitialized
   private TargetDeviceCommandLineOptions targetDeviceOptions;
 
   @AdditionalOptions
@@ -175,6 +181,14 @@ public class TestCommand extends BuildCommand {
 
   public Optional<TargetDevice> getTargetDeviceOptional() {
     return targetDeviceOptions.getTargetDeviceOptional();
+  }
+
+  public AdbOptions getAdbOptions() {
+    return adbOptions.getAdbOptions();
+  }
+
+  public TargetDeviceOptions getTargetDeviceOptions() {
+    return targetDeviceOptions.getTargetDeviceOptions();
   }
 
   public boolean isDryRun() {
@@ -340,7 +354,9 @@ public class TestCommand extends BuildCommand {
           params.getPlatform(),
           params.getEnvironment(),
           params.getObjectMapper(),
-          params.getClock())) {
+          params.getClock(),
+          Optional.of(getAdbOptions()),
+          Optional.of(getTargetDeviceOptions()))) {
 
         // Build all of the test rules.
         int exitCode = build.executeAndPrintFailuresToConsole(
