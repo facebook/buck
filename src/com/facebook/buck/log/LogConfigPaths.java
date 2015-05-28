@@ -17,7 +17,6 @@
 package com.facebook.buck.log;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,11 +45,6 @@ public class LogConfigPaths {
    */
   public static final Path LOCAL_PATH = Paths.get(".bucklogging.local.properties");
 
-  /**
-   * All logging properties paths.
-   */
-  public static final ImmutableSet<Path> ALL_PATHS;
-
   static {
     String buckConfigFileProperty = System.getProperty(BUCK_CONFIG_FILE_PROPERTY);
     if (buckConfigFileProperty == null) {
@@ -58,13 +52,6 @@ public class LogConfigPaths {
     } else {
       MAIN_PATH = Optional.of(Paths.get(buckConfigFileProperty));
     }
-
-    ImmutableSet.Builder<Path> allPathsBuilder = ImmutableSet.builder();
-    if (MAIN_PATH.isPresent()) {
-      allPathsBuilder.add(MAIN_PATH.get());
-    }
-    allPathsBuilder.add(PROJECT_PATH, LOCAL_PATH);
-    ALL_PATHS = allPathsBuilder.build();
   }
 
   // Utility class. Do not instantiate.
