@@ -226,6 +226,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
 
     // Ensure the bundle directory is archived so we can fetch it later.
     buildableContext.recordArtifactsInDirectory(bundleRoot);
+    buildableContext.recordArtifact(outputZipPath);
 
     // A bundle is a directory by definition, but a BuildRule has to
     // output a single file.

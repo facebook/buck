@@ -21,6 +21,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -39,6 +40,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.BufferedReader;
 import java.nio.charset.StandardCharsets;
@@ -50,7 +52,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class AppleTest extends NoopBuildRule implements TestRule {
+public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
 
   @AddToRuleKey
   private final Optional<Path> xctoolPath;
@@ -234,4 +236,14 @@ public class AppleTest extends NoopBuildRule implements TestRule {
     // is hit any time the host is overloaded.
     return testHostApp.isPresent();
   }
+
+  // This test rule just executes the test bundle, so we need it available locally.
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .add(testBundle)
+        .addAll(testHostApp.asSet())
+        .build();
+  }
+
 }
