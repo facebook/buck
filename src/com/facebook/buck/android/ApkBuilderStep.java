@@ -178,7 +178,11 @@ public class ApkBuilderStep implements Step {
     KeyStore keystore = KeyStore.getInstance(JARSIGNER_KEY_STORE_TYPE);
     InputStream inputStream = projectFilesystem.getInputStreamForRelativePath(pathToKeystore);
     char[] keystorePassword = keystoreProperties.getStorepass().toCharArray();
-    keystore.load(inputStream, keystorePassword);
+    try {
+      keystore.load(inputStream, keystorePassword);
+    } catch (IOException | NoSuchAlgorithmException | CertificateException e) {
+      throw new HumanReadableException(e, "%s is an invalid keystore.", pathToKeystore);
+    }
 
     String alias = keystoreProperties.getAlias();
     char[] keyPassword = keystoreProperties.getKeypass().toCharArray();
