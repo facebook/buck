@@ -8,10 +8,9 @@ import textwrap
 
 from timing import monotonic_time_nanos
 from tracing import Tracing
-from buck_tool import BuckTool, which, check_output
+from buck_tool import BuckTool, which, check_output, JAVA_MAX_HEAP_SIZE_MB
 from buck_tool import BuckToolException, RestartBuck
 import buck_version
-
 
 JAVA_CLASSPATHS = [
     "build/abi_processor/classes",
@@ -84,6 +83,19 @@ RESOURCES = {
     "report_generator_jar": "build/report-generator.jar",
     "testrunner_classes": "build/testrunner/classes",
 }
+
+
+def get_ant_env(max_heap_size_mb):
+    ant_env = os.environ.copy()
+    ant_opts = ant_env.get('ANT_OPTS', '')
+    if ant_opts.find('-Xmx') == -1:
+        # Adjust the max heap size if it's not already specified.
+        ant_max_heap_arg = '-Xmx{0}m'.format(max_heap_size_mb)
+        if ant_opts:
+            ant_opts += ' '
+        ant_opts += ant_max_heap_arg
+        ant_env['ANT_OPTS'] = ant_opts
+    return ant_env
 
 
 class BuckRepo(BuckTool):
@@ -223,7 +235,7 @@ class BuckRepo(BuckTool):
         clean_log_path = os.path.join(self._buck_project.get_buck_out_log_dir(), 'ant-clean.log')
         with open(clean_log_path, 'w') as clean_log:
             exitcode = subprocess.call([ant, 'clean'], stdout=clean_log,
-                                       cwd=self._buck_dir)
+                                       cwd=self._buck_dir, env=get_ant_env(JAVA_MAX_HEAP_SIZE_MB))
             if exitcode is not 0:
                 self._print_ant_failure_and_exit(clean_log_path)
 
@@ -231,7 +243,7 @@ class BuckRepo(BuckTool):
         ant_log_path = os.path.join(self._buck_project.get_buck_out_log_dir(), 'ant.log')
         with open(ant_log_path, 'w') as ant_log:
             exitcode = subprocess.call([ant], stdout=ant_log,
-                                       cwd=self._buck_dir)
+                                       cwd=self._buck_dir, env=get_ant_env(JAVA_MAX_HEAP_SIZE_MB))
             if exitcode is not 0:
                 self._print_ant_failure_and_exit(ant_log_path)
 
