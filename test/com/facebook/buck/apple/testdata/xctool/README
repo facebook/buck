@@ -9,7 +9,7 @@ or Buck, but it would add a few minutes to every build.)
 
 Project URL: https://github.com/facebook/xctool/
 License: Apache 2.0
-Upstream Revision: 296eb9e5a184cb692d8f7d8f1d59ffbbeea104a8
+Upstream Revision: 2473d403c914605b397e55df82e419ab35d8b625
 Built with Xcode 6.3 (6D570)
 Built With: ./scripts/make_release.sh && cp -a $TMPDIR/xctool-release.*/release/ ~/devtools/buck/test/com/facebook/buck/apple/testdata/xctool
 

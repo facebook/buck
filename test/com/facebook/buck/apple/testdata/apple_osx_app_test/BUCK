@@ -1,0 +1,30 @@
+apple_binary(
+    name = 'AppBinary',
+    srcs = ['App/App.m'],
+    headers = ['App/App.h'],
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+        '$SDKROOT/System/Library/Frameworks/AppKit.framework',
+    ],
+)
+
+apple_bundle(
+    name = 'App',
+    extension = 'app',
+    binary = ':AppBinary',
+    info_plist = 'App/App.plist',
+    tests = [':AppTest'],
+)
+
+apple_test(
+    name = 'AppTest',
+    extension = 'xctest',
+    srcs = ['Test/AppTest.m'],
+    test_host_app = ':App',
+    info_plist = 'Test/AppTest.plist',
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+        '$SDKROOT/System/Library/Frameworks/AppKit.framework',
+        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
+    ],
+)

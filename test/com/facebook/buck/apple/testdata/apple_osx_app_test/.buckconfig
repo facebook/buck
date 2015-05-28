@@ -1,0 +1,6 @@
+[apple]
+    xctool_path = xctool/bin/xctool
+
+[cxx]
+    default_platform = macosx-x86_64
+    combined_preprocess_and_compile = true

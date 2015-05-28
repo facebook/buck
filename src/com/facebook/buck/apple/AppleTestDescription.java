@@ -287,7 +287,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
 
     return new AppleTest(
         appleConfig.getXctoolPath(),
-        "iphonesimulator", // TODO(user): Get this from the CxxPlatform.
+        appleCxxPlatform.getApplePlatform().getName(),
         Optional.<String>absent(),
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)),
