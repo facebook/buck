@@ -78,7 +78,7 @@ public class QuickstartCommand extends AbstractCommand {
    * Runs the command "buck quickstart", which copies a template project into a new directory to
    * give the user a functional buck project. It copies from
    * src/com/facebook/buck/cli/quickstart/android to the directory specified. It then asks the user
-   * for the location of the Android SDK so Buck cansuccessfully build the quickstart project. It
+   * for the location of the Android SDK so Buck can successfully build the quickstart project. It
    * will fail if it cannot find the template directory or if it is unable to write to the
    * destination directory.
    *
