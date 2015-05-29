@@ -68,6 +68,7 @@ public class FakeAppleRuleDescriptions {
           new FakeExecutableFinder(ImmutableSet.of(
               Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"),
               Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
+              Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
               Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
               Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),
               Paths.get("usr/bin/actool"),

@@ -282,6 +282,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         resourceDirs,
         resourceFiles,
         appleCxxPlatform.getIbtool(),
+        appleCxxPlatform.getDsymutil(),
         bundledAssetCatalogs,
         mergedAssetCatalog,
         ImmutableSortedSet.<BuildTarget>of());

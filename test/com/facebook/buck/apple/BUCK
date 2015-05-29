@@ -1,4 +1,7 @@
-APPLE_TEST_INTEGRATION_TEST_SRCS = ['AppleTestIntegrationTest.java']
+APPLE_TEST_INTEGRATION_TEST_SRCS = [
+  'AppleTestIntegrationTest.java',
+  'AppleBundleIntegrationTest.java',
+]
 
 java_test(
   name = 'apple',
@@ -67,6 +70,7 @@ java_test(
   deps = [
     ':testutil',
     '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util/environment:platform',

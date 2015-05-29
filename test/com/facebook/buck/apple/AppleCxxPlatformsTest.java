@@ -76,6 +76,7 @@ public class AppleCxxPlatformsTest {
     ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
@@ -103,6 +104,9 @@ public class AppleCxxPlatformsTest {
     assertEquals(
         ImmutableList.of("usr/bin/ibtool"),
         appleCxxPlatform.getIbtool().getCommandPrefix(resolver));
+    assertEquals(
+        ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
+        appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
 
     assertEquals(
         ImmutableList.of("usr/bin/xctest"),
@@ -151,6 +155,7 @@ public class AppleCxxPlatformsTest {
     ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
@@ -200,6 +205,7 @@ public class AppleCxxPlatformsTest {
     ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
@@ -300,6 +306,7 @@ public class AppleCxxPlatformsTest {
     ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"))
         .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))

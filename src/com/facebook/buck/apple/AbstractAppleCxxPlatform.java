@@ -48,5 +48,5 @@ abstract class AbstractAppleCxxPlatform {
   public abstract Tool getIbtool();
   public abstract Tool getXctest();
   public abstract Tool getOtest();
-
+  public abstract Tool getDsymutil();
 }

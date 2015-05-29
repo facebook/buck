@@ -16,9 +16,9 @@
 
 package com.facebook.buck.apple;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class AppleBundleIntegrationTest {
 
@@ -71,6 +72,31 @@ public class AppleBundleIntegrationTest {
         .runBuckCommand("targets", "--show-output", "//:DemoApp");
     result.assertSuccess();
     assertEquals("//:DemoApp buck-out/gen/DemoApp.zip", result.getStdout().trim());
+  }
+
+  @Test
+  public void bundleBinaryHasDsymBundle() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_application_bundle",
+        tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
+
+    workspace.verify();
+
+    Path dwarfPath = tmp.getRootPath()
+        .resolve(BuckConstant.GEN_DIR)
+        .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app")
+        .resolve("DemoApp.dSYM/Contents/Resources/DWARF/DemoApp");
+    assertTrue(Files.exists(dwarfPath));
+    String dwarfdumpMainStdout =
+        workspace.runCommand("dwarfdump", "-n", "main", dwarfPath.toString()).getStdout().or("");
+    assertTrue(dwarfdumpMainStdout.contains("AT_name"));
+    assertTrue(dwarfdumpMainStdout.contains("AT_decl_file"));
+    assertTrue(dwarfdumpMainStdout.contains("AT_decl_line"));
   }
 
   @Test

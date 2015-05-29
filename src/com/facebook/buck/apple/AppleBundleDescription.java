@@ -164,6 +164,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         bundleDirs,
         bundleFiles,
         appleCxxPlatform.getIbtool(),
+        appleCxxPlatform.getDsymutil(),
         bundledAssetCatalogs,
         mergedAssetCatalog,
         args.getTests());

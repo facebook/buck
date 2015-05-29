@@ -16,10 +16,10 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.NativeTestable;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.NativeTestable;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -86,6 +86,9 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   private final Tool ibtool;
 
   @AddToRuleKey
+  private final Tool dsymutil;
+
+  @AddToRuleKey
   private final ImmutableSortedSet<BuildTarget> tests;
 
   private final ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs;
@@ -109,6 +112,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       Set<Path> resourceDirs,
       Set<SourcePath> resourceFiles,
       Tool ibtool,
+      Tool dsymutil,
       Set<AppleAssetCatalog> bundledAssetCatalogs,
       Optional<AppleAssetCatalog> mergedAssetCatalog,
       Set<BuildTarget> tests) {
@@ -123,6 +127,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     this.resourceDirs = resourceDirs;
     this.resourceFiles = resourceFiles;
     this.ibtool = ibtool;
+    this.dsymutil = dsymutil;
     this.outputZipPath = BuildTargets.getGenPath(
         params.getBuildTarget(),
         "%s.zip");
@@ -183,10 +188,17 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     if (binary.isPresent()) {
       stepsBuilder.add(
           new MkdirStep(bundleRoot.resolve(this.destinations.getExecutablesPath())));
+      Path bundleBinaryPath = bundleRoot.resolve(binaryPath);
       stepsBuilder.add(
           CopyStep.forFile(
               binary.get().getPathToOutputFile(),
-              bundleRoot.resolve(binaryPath)));
+              bundleBinaryPath));
+      stepsBuilder.add(
+          new DsymStep(
+              dsymutil.getCommandPrefix(getResolver()),
+              bundleBinaryPath,
+              bundleBinaryPath.resolveSibling(
+                  bundleBinaryPath.getFileName().toString() + ".dSYM")));
     }
 
     for (Path dir : resourceDirs) {

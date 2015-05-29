@@ -158,6 +158,12 @@ public class AppleCxxPlatforms {
         "apple-otest",
         version);
 
+    Tool dsymutil = new VersionedTool(
+        getToolPath("dsymutil", toolSearchPaths, executableFinder),
+        ImmutableList.<String>of(),
+        "apple-dsymutil",
+        version);
+
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 
     ImmutableFlavor targetFlavor = ImmutableFlavor.of(
@@ -204,6 +210,7 @@ public class AppleCxxPlatforms {
         .setIbtool(ibtool)
         .setXctest(xctest)
         .setOtest(otest)
+        .setDsymutil(dsymutil)
         .build();
   }
 
