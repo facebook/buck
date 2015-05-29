@@ -40,7 +40,7 @@ abstract class AbstractAppleCxxPlatform {
 
   public abstract CxxPlatform getCxxPlatform();
 
-  public abstract ApplePlatform getApplePlatform();
+  public abstract AppleSdk getAppleSdk();
 
   public abstract AppleSdkPaths getAppleSdkPaths();
 

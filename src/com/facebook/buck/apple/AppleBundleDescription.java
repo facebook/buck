@@ -114,7 +114,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     }
 
     AppleBundleDestinations destinations =
-        AppleBundleDestinations.platformDestinations(appleCxxPlatform.getApplePlatform());
+        AppleBundleDestinations.platformDestinations(
+            appleCxxPlatform.getAppleSdk().getApplePlatform());
 
     ImmutableSet.Builder<Path> bundleDirsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<SourcePath> bundleFilesBuilder = ImmutableSet.builder();
@@ -133,7 +134,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         AppleDescriptions.createBuildRulesForTransitiveAssetCatalogDependencies(
             params,
             sourcePathResolver,
-            appleCxxPlatform.getApplePlatform(),
+            appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getActool());
 
     Optional<AppleAssetCatalog> mergedAssetCatalog = collectedAssetCatalogs.getMergedAssetCatalog();

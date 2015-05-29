@@ -231,7 +231,8 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
     }
 
     AppleBundleDestinations destinations =
-        AppleBundleDestinations.platformDestinations(appleCxxPlatform.getApplePlatform());
+        AppleBundleDestinations.platformDestinations(
+            appleCxxPlatform.getAppleSdk().getApplePlatform());
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     ImmutableSet<AppleResourceDescription.Arg> resourceDescriptions =
@@ -251,7 +252,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         AppleDescriptions.createBuildRulesForTransitiveAssetCatalogDependencies(
             params,
             sourcePathResolver,
-            appleCxxPlatform.getApplePlatform(),
+            appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getActool());
 
     Optional<AppleAssetCatalog> mergedAssetCatalog = collectedAssetCatalogs.getMergedAssetCatalog();
@@ -285,7 +286,7 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         mergedAssetCatalog,
         ImmutableSortedSet.<BuildTarget>of());
 
-    String platformName = appleCxxPlatform.getApplePlatform().getName();
+    String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
     return new AppleTest(
         appleConfig.getXctoolPath(),
         appleCxxPlatform.getXctest(),
