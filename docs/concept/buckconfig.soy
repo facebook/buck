@@ -344,9 +344,15 @@ inspection.
   max_traces = 25
 </pre>{/literal}
 
-Will limit Buck to creating, at most, 25{sp}
-<a href="{ROOT}about/performance_tuning.html">Chrome Traces</a>.
+<p>Will limit Buck to creating, at most, 25{sp}
+<a href="{ROOT}about/performance_tuning.html">Chrome Traces</a>.</p>
 
+{literal}<pre class="prettyprint lang-ini">
+[log]
+  compress_traces = true
+</pre>{/literal}
+
+<p>Will compress the traces with GZIP.</p>
 
 {call .section}{param title: 'ndk' /}{/call}
 

@@ -442,6 +442,10 @@ public class BuckConfig {
     return Integer.parseInt(getValue("log", "max_traces").or(DEFAULT_MAX_TRACES));
   }
 
+  public boolean getCompressTraces() {
+    return getBooleanValue("log", "compress_traces", false);
+  }
+
   public boolean getRestartAdbOnFailure() {
     return Boolean.parseBoolean(getValue("adb", "adb_restart_on_failure").or("true"));
   }

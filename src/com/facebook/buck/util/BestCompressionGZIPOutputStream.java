@@ -14,30 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.log;
-
-import com.facebook.buck.util.BestCompressionGZIPOutputStream;
-import com.google.common.base.Throwables;
+package com.facebook.buck.util;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.logging.FileHandler;
+import java.util.zip.GZIPOutputStream;
 
-public class CompressingFileHandler extends FileHandler {
+public class BestCompressionGZIPOutputStream extends GZIPOutputStream {
 
-  public CompressingFileHandler() throws IOException, SecurityException {
-    super();
-  }
-
-  @Override
-  protected synchronized void setOutputStream(OutputStream out) throws SecurityException {
-    OutputStream stream;
-    try {
-      stream = new BestCompressionGZIPOutputStream(out, true);
-    } catch (IOException e) {
-      Throwables.propagate(e);
-      return;
-    }
-    super.setOutputStream(stream);
+  public BestCompressionGZIPOutputStream(OutputStream out, boolean syncFlush)
+      throws IOException {
+    super(out, syncFlush);
+    def.setLevel(9);
   }
 }

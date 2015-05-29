@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
@@ -48,10 +49,9 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -68,6 +68,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final ProjectFilesystem projectFilesystem;
   private final Clock clock;
   private final int tracesToKeep;
+  private final boolean compressTraces;
   private final ObjectMapper mapper;
   private final ThreadLocal<SimpleDateFormat> dateFormat;
   private ConcurrentLinkedQueue<ChromeTraceEvent> eventList =
@@ -77,8 +78,16 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       ProjectFilesystem projectFilesystem,
       Clock clock,
       ObjectMapper objectMapper,
-      int tracesToKeep) {
-    this(projectFilesystem, clock, objectMapper, Locale.US, TimeZone.getDefault(), tracesToKeep);
+      int tracesToKeep,
+      boolean compressTraces) {
+    this(
+        projectFilesystem,
+        clock,
+        objectMapper,
+        Locale.US,
+        TimeZone.getDefault(),
+        tracesToKeep,
+        compressTraces);
   }
 
   @VisibleForTesting
@@ -88,7 +97,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       ObjectMapper objectMapper,
       final Locale locale,
       final TimeZone timeZone,
-      int tracesToKeep) {
+      int tracesToKeep,
+      boolean compressTraces) {
     this.projectFilesystem = projectFilesystem;
     this.clock = clock;
     this.mapper = objectMapper;
@@ -101,6 +111,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       }
     };
     this.tracesToKeep = tracesToKeep;
+    this.compressTraces = compressTraces;
     addProcessMetadataEvent();
   }
 
@@ -143,22 +154,25 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   public void outputTrace(BuildId buildId) {
     try {
       String filenameTime = dateFormat.get().format(new Date(clock.currentTimeMillis()));
-      String tracePath = String.format("%s/build.%s.%s.trace",
-          BuckConstant.BUCK_TRACE_DIR,
-          filenameTime,
-          buildId);
-      File traceOutput = projectFilesystem.getFileForRelativePath(tracePath);
+      String traceName = String.format("build.%s.%s.trace", filenameTime, buildId);
+      if (compressTraces) {
+        traceName = traceName + ".gz";
+      }
+      Path tracePath = BuckConstant.BUCK_TRACE_DIR.resolve(traceName);
       projectFilesystem.createParentDirs(tracePath);
+      OutputStream stream = projectFilesystem.newFileOutputStream(tracePath);
+      if (compressTraces) {
+        stream = new BestCompressionGZIPOutputStream(stream, true);
+      }
 
       LOG.debug("Writing Chrome trace to %s", tracePath);
-      mapper.writeValue(traceOutput, eventList);
+      mapper.writeValue(stream, eventList);
 
-      String symlinkPath = String.format("%s/build.trace",
-          BuckConstant.BUCK_TRACE_DIR);
-      File symlinkFile = projectFilesystem.getFileForRelativePath(symlinkPath);
+      String symlinkName = compressTraces ? "build.trace.gz" : "build.trace";
+      Path symlinkPath = BuckConstant.BUCK_TRACE_DIR.resolve(symlinkName);
       projectFilesystem.createSymLink(
-          Paths.get(symlinkFile.toURI()),
-          Paths.get(traceOutput.toURI()),
+          projectFilesystem.resolve(symlinkPath),
+          projectFilesystem.resolve(tracePath),
           true);
 
       deleteOldTraces();

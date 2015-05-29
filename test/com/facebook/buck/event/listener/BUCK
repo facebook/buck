@@ -40,6 +40,7 @@ java_test(
     '//test/com/facebook/buck/timing:testutil',
     '//test/com/facebook/buck/util:testutil',
     '//third-party/java/easymock:easymock',
+    '//third-party/java/gson:gson',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/jackson:jackson-annotations',

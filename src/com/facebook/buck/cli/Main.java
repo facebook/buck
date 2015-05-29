@@ -886,11 +886,13 @@ public final class Main {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
-            .add(new ChromeTraceBuildListener(
-                projectFilesystem,
-                clock,
-                objectMapper,
-                config.getMaxTraces()))
+            .add(
+                new ChromeTraceBuildListener(
+                    projectFilesystem,
+                    clock,
+                    objectMapper,
+                    config.getMaxTraces(),
+                    config.getCompressTraces()))
             .add(consoleEventBusListener)
             .add(new LoggingBuildListener());
 

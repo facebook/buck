@@ -32,6 +32,7 @@ IO_SRCS = [
   'AbstractProcessExecutorParams.java',
   'Ansi.java',
   'AnsiEnvironmentChecking.java',
+  'BestCompressionGZIPOutputStream.java',
   'Console.java',
   'CapturingPrintStream.java',
   'DirtyPrintStreamDecorator.java',

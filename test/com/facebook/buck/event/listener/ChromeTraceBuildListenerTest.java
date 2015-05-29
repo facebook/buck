@@ -19,7 +19,9 @@ package com.facebook.buck.event.listener;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -65,13 +67,17 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.gson.Gson;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -79,6 +85,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
 
 
 public class ChromeTraceBuildListenerTest {
@@ -108,7 +115,8 @@ public class ChromeTraceBuildListenerTest {
         new ObjectMapper(),
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
-        /* tracesToKeep */ 3);
+        /* tracesToKeep */ 3,
+        false);
 
     listener.deleteOldTraces();
 
@@ -140,7 +148,8 @@ public class ChromeTraceBuildListenerTest {
         mapper,
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
-        /* tracesToKeep */ 42);
+        /* tracesToKeep */ 42,
+        false);
 
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
 
@@ -306,7 +315,8 @@ public class ChromeTraceBuildListenerTest {
         new ObjectMapper(),
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
-        /* tracesToKeep */ 3);
+        /* tracesToKeep */ 3,
+        false);
     try {
       assumeTrue("Can make the root directory read-only", tmpDir.getRoot().setReadOnly());
       listener.outputTrace(new BuildId("BUILD_ID"));
@@ -331,10 +341,37 @@ public class ChromeTraceBuildListenerTest {
         new ObjectMapper(),
         Locale.US,
         TimeZone.getTimeZone("America/Los_Angeles"),
-        /* tracesToKeep */ 1);
+        /* tracesToKeep */ 1,
+        false);
     listener.outputTrace(new BuildId("BUILD_ID"));
     assertTrue(
         projectFilesystem.exists(
             Paths.get("buck-out/log/traces/build.2014-09-02.16-55-51.BUILD_ID.trace")));
+  }
+
+  @Test
+  public void canCompressTraces() throws IOException {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+
+    ChromeTraceBuildListener listener = new ChromeTraceBuildListener(
+        projectFilesystem,
+        new FakeClock(1409702151000000000L),
+        new ObjectMapper(),
+        Locale.US,
+        TimeZone.getTimeZone("America/Los_Angeles"),
+        /* tracesToKeep */ 1,
+        true);
+    listener.outputTrace(new BuildId("BUILD_ID"));
+
+    Path tracePath = Paths.get("buck-out/log/traces/build.2014-09-02.16-55-51.BUILD_ID.trace.gz");
+
+    assertTrue(projectFilesystem.exists(tracePath));
+
+    BufferedReader reader = new BufferedReader(
+        new InputStreamReader(
+            new GZIPInputStream(projectFilesystem.newFileInputStream(tracePath))));
+
+    List<?> elements = new Gson().fromJson(reader, List.class);
+    assertThat(elements, notNullValue());
   }
 }
