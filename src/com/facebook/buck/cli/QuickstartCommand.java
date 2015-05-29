@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.MoreFiles;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
@@ -33,6 +34,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 /**
  * This class creates a terminal command for Buck that creates a sample Buck project in the
@@ -51,8 +54,9 @@ public class QuickstartCommand extends AbstractCommand {
   @Option(name = "--dest-dir", usage = "Destination project directory")
   private String destDir = "";
 
+  @Nullable
   @Option(name = "--android-sdk", usage = "Android SDK directory")
-  private String androidSdkDir = "";
+  private String androidSdkDir;
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -70,7 +74,14 @@ public class QuickstartCommand extends AbstractCommand {
     return destDir;
   }
 
-  public String getAndroidSdkDir() {
+  public String getAndroidSdkDir(CommandRunnerParams params) {
+    if (androidSdkDir == null) {
+      Optional<Path> androidSdkDir = params.getRepository().getAndroidDirectoryResolver()
+          .findAndroidSdkDirSafe();
+      this.androidSdkDir = androidSdkDir.isPresent() ?
+          androidSdkDir.get().toAbsolutePath().toString() : "";
+    }
+
     return androidSdkDir;
   }
 
@@ -110,7 +121,7 @@ public class QuickstartCommand extends AbstractCommand {
       return 1;
     }
 
-    String sdkLocation = getAndroidSdkDir();
+    String sdkLocation = getAndroidSdkDir(params);
     if (sdkLocation.isEmpty()) {
       sdkLocation = promptForPath(params, "Enter your Android SDK's location: ");
     }
