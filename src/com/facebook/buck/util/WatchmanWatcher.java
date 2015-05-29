@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -296,6 +297,14 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
                     jsonParser.nextTextValue());
                 LOG.error(e, "Error in Watchman output");
                 throw e;
+              case "warning":
+                String message = jsonParser.nextTextValue();
+                eventBus.post(ConsoleEvent.warning("Watchman has produced a warning: %s", message));
+
+                LOG.warn("Watchman has produced a warning! Assuming the worst and posting an " +
+                        "overflow event to flush the caches: %s", message);
+                postWatchEvent(createOverflowEvent());
+                break;
             }
             break;
           case END_OBJECT:

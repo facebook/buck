@@ -29,6 +29,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,6 +43,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import org.easymock.Capture;
+import org.easymock.CaptureType;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
@@ -466,6 +468,66 @@ public class WatchmanWatcherTest {
         "[\"match\",\"buck-out/*\",\"wholename\"]]]," +
         "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
         query);
+  }
+
+  @Test
+  public void whenWatchmanProducesAWarningThenOverflowEventGenerated()
+      throws IOException, InterruptedException {
+    String watchmanOutput = Joiner.on('\n').join(
+        "{\"files\": [",
+        "{",
+        "\"warning\": \"message\"",
+        "}",
+        "]}");
+    Capture<WatchEvent<Path>> eventCapture = newCapture();
+    EventBus eventBus = createStrictMock(EventBus.class);
+    eventBus.post(capture(newCapture(CaptureType.NONE)));
+    eventBus.post(capture(eventCapture));
+    Process process = createProcessMock(watchmanOutput);
+    expect(process.waitFor()).andReturn(0);
+    expectLastCall();
+    replay(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(
+        eventBus,
+        process,
+        new IncrementingFakeClock(),
+        new ObjectMapper(),
+        10000 /* overflow */,
+        10000 /* timeout */);
+    watcher.postEvents();
+    verify(eventBus, process);
+    assertEquals("Should be overflow event.",
+        StandardWatchEventKinds.OVERFLOW,
+        eventCapture.getValue().kind());
+  }
+  @Test
+  public void whenWatchmanProducesAWarningThenConsoleEventGenerated()
+      throws IOException, InterruptedException {
+    String message = "Find me!";
+    String watchmanOutput = Joiner.on('\n').join(
+        "{\"files\": [",
+        "{",
+        "\"warning\": \"" + message + "\"",
+        "}",
+        "]}");
+    Capture<ConsoleEvent> eventCapture = newCapture();
+    EventBus eventBus = createStrictMock(EventBus.class);
+    eventBus.post(capture(eventCapture));
+    eventBus.post(capture(newCapture(CaptureType.NONE)));
+    Process process = createProcessMock(watchmanOutput);
+    expect(process.waitFor()).andReturn(0);
+    expectLastCall();
+    replay(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(
+        eventBus,
+        process,
+        new IncrementingFakeClock(),
+        new ObjectMapper(),
+        10000 /* overflow */,
+        10000 /* timeout */);
+    watcher.postEvents();
+    verify(eventBus, process);
+    assertThat(eventCapture.getValue().getMessage(), Matchers.containsString(message));
   }
 
   private WatchmanWatcher createWatcher(

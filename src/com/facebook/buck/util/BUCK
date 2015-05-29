@@ -93,11 +93,36 @@ java_library(
   ],
 )
 
+WATCHMAN_WATCHER_SRCS = [
+  'WatchmanWatcher.java',
+]
+java_library(
+  name = 'watchman',
+  srcs = WATCHMAN_WATCHER_SRCS,
+  deps = [
+    ':exceptions',
+    ':util',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/timing:timing',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jackson:jackson-core',
+    '//third-party/java/jackson:jackson-databind',
+    '//third-party/java/jsr:jsr305',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/util:util',
+  ],
+)
+
 java_immutables_library(
   name = 'util',
   srcs = glob(
     includes = ['*.java'],
-    excludes = CONSTANT_SRCS + ESCAPER_SRCS + EXCEPTION_SRCS + IO_SRCS + NETWORK_SRCS),
+    excludes = CONSTANT_SRCS + ESCAPER_SRCS + EXCEPTION_SRCS + IO_SRCS + NETWORK_SRCS +
+               WATCHMAN_WATCHER_SRCS),
   deps = [
     ':constants',
     ':exceptions',
@@ -105,13 +130,9 @@ java_immutables_library(
     '//src/com/facebook/buck/hashing:hashing',
     '//src/com/facebook/buck/io:io',  # While we move classes
     '//src/com/facebook/buck/log:api',
-    '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/zip:stream',
     '//third-party/java/aosp:aosp',
-    '//third-party/java/guava:guava',
     '//third-party/java/ini4j:ini4j',
-    '//third-party/java/jackson:jackson-core',
-    '//third-party/java/jackson:jackson-databind',
     '//third-party/java/jsr:jsr305',
   ],
   visibility = [
