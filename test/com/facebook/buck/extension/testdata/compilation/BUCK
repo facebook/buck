@@ -1,4 +1,0 @@
-buck_extension(
-  name = 'extension',
-  srcs = [ 'ExampleExtension.java' ],
-)

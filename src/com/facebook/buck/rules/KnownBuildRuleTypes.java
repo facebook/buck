@@ -67,7 +67,6 @@ import com.facebook.buck.d.DBinaryDescription;
 import com.facebook.buck.d.DBuckConfig;
 import com.facebook.buck.d.DLibraryDescription;
 import com.facebook.buck.d.DTestDescription;
-import com.facebook.buck.extension.BuckExtensionDescription;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.HttpDownloader;
@@ -484,7 +483,6 @@ public class KnownBuildRuleTypes {
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform));
-    builder.register(new BuckExtensionDescription(defaultJavacOptions));
     builder.register(new CoreDataModelDescription());
     builder.register(cxxBinaryDescription);
     builder.register(cxxLibraryDescription);
