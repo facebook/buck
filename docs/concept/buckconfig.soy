@@ -37,6 +37,15 @@ version control because it contains user-specific overrides (such as personal al
 
 <p>
 
+If a configuration option is not found in the project's <code>.buckconfig</code>, it will fall
+back to a <code>.buckconfig</code> file and <code>.buckconfig.d</code> directory in your home
+directory. Each of those has the same format as a <code>.buckconfig</code> file but will have
+any settings overridden by project-specific configurations. If you have build issues, make sure
+that there is nothing in your <code>.buckconfig</code> or <code>.buckconfig.d</code> that could
+be conflicting with the project you're trying to build.
+
+<p>
+
 The following sections are recognized by Buck:
 
 <p>
