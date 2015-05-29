@@ -284,6 +284,7 @@
         <!-- //src/com/facebook/buck/log:log -->
         <include name="com/facebook/buck/log/CommandThreadAssociation.java" />
         <include name="com/facebook/buck/log/CommandThreadFactory.java" />
+        <include name="com/facebook/buck/log/CompressingFileHandler.java" />
         <include name="com/facebook/buck/log/ConsoleHandler.java" />
         <include name="com/facebook/buck/log/GlobalState.java" />
         <include name="com/facebook/buck/log/LogConfig.java" />

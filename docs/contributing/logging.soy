@@ -60,6 +60,35 @@ public class MyClass {
 <pre>com.facebook.buck.stuff.MyClass.level=FINER</pre>
 {/literal}
 
+<p>Extensive logging can help you get to the bottom of build issues, especially in circumstances where additional information is hard to get, for example in contiuous integration builds.</p>
+
+<p>If you notice the logs are getting too big to retain for long periods of time, or for all the builds, you can use the <code>CompressingFileHandler</code> to compress the logs, by configuring it in .bucklogging.properties, for example:</p>
+
+{literal}
+<pre>
+# Enable the console logging handler and the file handler to
+# write rotating log files under buck-out/log/buck-*.log in the
+# project(s) being used.
+handlers=com.facebook.buck.cli.bootstrapper.ConsoleHandler,com.facebook.buck.cli.bootstrapper.CompressingFileHandler
+
+# Log to buck-out/log/buck-*log.
+com.facebook.buck.log.CompressingFileHandler.pattern=buck-out/log/buck-%g.log.gz
+
+# Write to disk all log messages not otherwise filtered by the top-level ".level"
+# property.
+com.facebook.buck.log.CompressingFileHandler.level=ALL
+
+# Ignore the environment and always write UTF-8 to files.
+com.facebook.buck.log.CompressingFileHandler.encoding=UTF-8
+
+# Replace the default fugly multiline log formatter with a custom one.
+com.facebook.buck.log.CompressingFileHandler.formatter=com.facebook.buck.cli.bootstrapper.LogFormatter
+
+# Rotate up to this many log files, then start deleting the oldest one.
+com.facebook.buck.log.CompressingFileHandler.count=25
+</pre>
+{/literal}
+
     {/param}
   {/call}
 {/template}
