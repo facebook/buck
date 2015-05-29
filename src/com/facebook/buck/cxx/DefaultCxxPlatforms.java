@@ -76,7 +76,8 @@ public class DefaultCxxPlatforms {
         new HashedFileTool(DEFAULT_AR),
         DEFAULT_EXPECTED_GLOBAL_HEADER,
         Optional.<Tool>of(new HashedFileTool(DEFAULT_LEX)),
-        Optional.<Tool>of(new HashedFileTool(DEFAULT_YACC)));
+        Optional.<Tool>of(new HashedFileTool(DEFAULT_YACC)),
+        Optional.<DebugPathSanitizer>absent());
   }
 
 }

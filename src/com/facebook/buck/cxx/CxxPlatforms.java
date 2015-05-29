@@ -46,7 +46,7 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_LEX_FLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_YACC_FLAGS = ImmutableList.of("-y");
 
-  private static final Optional<DebugPathSanitizer> DEBUG_PATH_SANITIZER =
+  private static final Optional<DebugPathSanitizer> DEFAULT_DEBUG_PATH_SANITIZER =
       Optional.of(
           new DebugPathSanitizer(
               250,
@@ -74,7 +74,8 @@ public class CxxPlatforms {
       Tool ar,
       byte[] expectedGlobalHeader,
       Optional<Tool> lex,
-      Optional<Tool> yacc) {
+      Optional<Tool> yacc,
+      Optional<DebugPathSanitizer> debugPathSanitizer) {
     // TODO(user, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
     builder
@@ -92,7 +93,7 @@ public class CxxPlatforms {
         .setLex(getTool(flavor, "lex", config).or(lex))
         .setYacc(getTool(flavor, "yacc", config).or(yacc))
         .setSharedLibraryExtension(CxxPlatforms.getSharedLibraryExtension(platform))
-        .setDebugPathSanitizer(CxxPlatforms.DEBUG_PATH_SANITIZER);
+        .setDebugPathSanitizer(debugPathSanitizer.or(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER));
     CxxPlatforms.addToolFlagsFromConfig(config, builder);
     return builder.build();
   }

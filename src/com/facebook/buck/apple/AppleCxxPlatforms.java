@@ -20,6 +20,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
+import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
@@ -31,9 +32,11 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -147,6 +150,19 @@ public class AppleCxxPlatforms {
         ImmutableFlavor.replaceInvalidCharacters(
             targetSdk.getName() + "-" + targetArchitecture));
 
+    ImmutableBiMap.Builder<Path, Path> sanitizerPaths = ImmutableBiMap.builder();
+    sanitizerPaths.put(sdkPaths.getSdkPath(), Paths.get("APPLE_SDKROOT"));
+    sanitizerPaths.put(sdkPaths.getPlatformPath(), Paths.get("APPLE_PLATFORM_DIR"));
+    if (sdkPaths.getDeveloperPath().isPresent()) {
+      sanitizerPaths.put(sdkPaths.getDeveloperPath().get(), Paths.get("APPLE_DEVELOPER_DIR"));
+    }
+
+    DebugPathSanitizer debugPathSanitizer = new DebugPathSanitizer(
+        250,
+        File.separatorChar,
+        Paths.get("."),
+        sanitizerPaths.build());
+
     CxxPlatform cxxPlatform = CxxPlatforms.build(
         targetFlavor,
         Platform.MACOS,
@@ -163,7 +179,8 @@ public class AppleCxxPlatforms {
         ar,
         "!<arch>\n".getBytes(Charsets.US_ASCII),
         getOptionalTool("lex", toolSearchPaths, executableFinder, version),
-        getOptionalTool("yacc", toolSearchPaths, executableFinder, version));
+        getOptionalTool("yacc", toolSearchPaths, executableFinder, version),
+        Optional.of(debugPathSanitizer));
 
     return AppleCxxPlatform.builder()
         .setCxxPlatform(cxxPlatform)
