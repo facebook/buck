@@ -56,7 +56,6 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
   private final SourcePath input;
   private final ImmutableList<Path> includeRoots;
   private final ImmutableList<Path> systemIncludeRoots;
-  @AddToRuleKey(stringify = true)
   private final ImmutableList<Path> frameworkRoots;
   @AddToRuleKey
   private final CxxHeaders includes;
@@ -184,6 +183,11 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
         .transform(sanitizer.sanitize(Optional.<Path>absent(), /* expandPaths */ false))
         .toList();
     builder.setReflectively("flags", flags);
+    ImmutableList<String> frameworkRoots = FluentIterable.from(this.frameworkRoots)
+        .transform(Functions.toStringFunction())
+        .transform(sanitizer.sanitize(Optional.<Path>absent(), /* expandPaths */ false))
+        .toList();
+    builder.setReflectively("frameworkRoots", frameworkRoots);
 
     // If a sanitizer is being used for compilation, we need to record the working directory in
     // the rule key, as changing this changes the generated object file.
