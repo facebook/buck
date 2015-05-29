@@ -77,6 +77,6 @@ interface AbstractCxxPlatform {
 
   String getSharedLibraryExtension();
 
-  Optional<DebugPathSanitizer> getDebugPathSanitizer();
+  DebugPathSanitizer getDebugPathSanitizer();
 
 }

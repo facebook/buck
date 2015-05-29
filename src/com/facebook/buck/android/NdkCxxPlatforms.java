@@ -313,16 +313,15 @@ public class NdkCxxPlatforms {
         // NDK builds are cross compiled, so the header is the same regardless of the host platform.
         .setArExpectedGlobalHeader("!<arch>\n".getBytes(Charsets.US_ASCII))
         .setDebugPathSanitizer(
-            Optional.of(
-                new DebugPathSanitizer(
-                    250,
-                    File.separatorChar,
-                    Paths.get("."),
-                    ImmutableBiMap.of(
-                        getNdkToolRoot(ndkRoot, targetConfiguration, host),
-                        Paths.get("ANDROID_TOOLS_ROOT"),
-                        ndkRoot,
-                        Paths.get("ANDROID_NDK_ROOT")))))
+            new DebugPathSanitizer(
+                250,
+                File.separatorChar,
+                Paths.get("."),
+                ImmutableBiMap.of(
+                    getNdkToolRoot(ndkRoot, targetConfiguration, host),
+                    Paths.get("ANDROID_TOOLS_ROOT"),
+                    ndkRoot,
+                    Paths.get("ANDROID_NDK_ROOT"))))
         .setSharedLibraryExtension("so");
 
     if (cxxRuntime != CxxRuntime.SYSTEM) {

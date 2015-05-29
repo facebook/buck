@@ -51,6 +51,7 @@ public class CxxPlatformsTest {
           .setAr(new HashedFileTool(Paths.get("borland")))
           .setArExpectedGlobalHeader("something arbitrary".getBytes(Charsets.US_ASCII))
           .setSharedLibraryExtension(".so")
+          .setDebugPathSanitizer(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER)
           .build();
 
     FakeBuckConfig buckConfig = new FakeBuckConfig(sections);

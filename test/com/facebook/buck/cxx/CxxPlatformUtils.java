@@ -40,6 +40,7 @@ public class CxxPlatformUtils {
           .setArExpectedGlobalHeader(String.format("!<arch>%s", System.lineSeparator()).getBytes(
                   Charsets.US_ASCII))
           .setSharedLibraryExtension(".so")
+          .setDebugPathSanitizer(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER)
           .build();
 
 }

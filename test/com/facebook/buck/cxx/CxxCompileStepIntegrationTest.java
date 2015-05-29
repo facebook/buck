@@ -79,7 +79,7 @@ public class CxxCompileStepIntegrationTest {
         relativeInput,
         cmd.build(),
         ImmutableMap.<Path, Path>of(),
-        Optional.of(sanitizer));
+        sanitizer);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext =

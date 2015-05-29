@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -67,7 +66,7 @@ public class CxxPreprocessAndCompileStepTest {
             input,
             cmd.build(),
             replacementPaths,
-            Optional.of(sanitizer));
+            sanitizer);
 
     Function<String, String> processor =
         cxxPreprocessStep.createPreprocessOutputLineProcessor(compilationDirectory);
@@ -122,7 +121,7 @@ public class CxxPreprocessAndCompileStepTest {
             input,
             cmd.build(),
             replacementPaths,
-            Optional.of(sanitizer));
+            sanitizer);
 
     Function<String, String> processor =
         cxxPreprocessStep.createErrorLineProcessor(compilationDirectory);

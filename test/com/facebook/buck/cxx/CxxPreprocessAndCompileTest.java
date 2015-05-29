@@ -34,7 +34,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -64,7 +63,8 @@ public class CxxPreprocessAndCompileTest {
       Paths.get("/usr/include"),
       Paths.get("/include"));
   private static final ImmutableList<Path> DEFAULT_FRAMEWORK_ROOTS = ImmutableList.of();
-  private static final Optional<DebugPathSanitizer> DEFAULT_SANITIZER = Optional.absent();
+  private static final DebugPathSanitizer DEFAULT_SANITIZER =
+      CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER;
 
   private RuleKeyPair generateRuleKey(
       RuleKeyBuilderFactory factory,
@@ -287,7 +287,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
-            Optional.of(sanitizer1)));
+            sanitizer1));
 
     // Generate a rule key for the defaults.
     ImmutableList<String> flags2 = ImmutableList.of("-Idifferent/foo");
@@ -305,7 +305,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
-            Optional.of(sanitizer2)));
+            sanitizer2));
 
     assertEquals(ruleKey1, ruleKey2);
   }

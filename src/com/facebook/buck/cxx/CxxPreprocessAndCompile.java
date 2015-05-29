@@ -60,7 +60,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
   private final ImmutableList<Path> frameworkRoots;
   @AddToRuleKey
   private final CxxHeaders includes;
-  private final Optional<DebugPathSanitizer> sanitizer;
+  private final DebugPathSanitizer sanitizer;
 
   @VisibleForTesting
   CxxPreprocessAndCompile(
@@ -75,7 +75,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       ImmutableList<Path> systemIncludeRoots,
       ImmutableList<Path> frameworkRoots,
       CxxHeaders includes,
-      Optional<DebugPathSanitizer> sanitizer) {
+      DebugPathSanitizer sanitizer) {
     super(params, resolver);
     this.compiler = compiler;
     this.operation = operation;
@@ -99,7 +99,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       ImmutableList<String> flags,
       Path output,
       SourcePath input,
-      Optional<DebugPathSanitizer> sanitizer) {
+      DebugPathSanitizer sanitizer) {
     return new CxxPreprocessAndCompile(
         params,
         resolver,
@@ -129,7 +129,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       ImmutableList<Path> systemIncludeRoots,
       ImmutableList<Path> frameworkRoots,
       CxxHeaders includes,
-      Optional<DebugPathSanitizer> sanitizer) {
+      DebugPathSanitizer sanitizer) {
     return new CxxPreprocessAndCompile(
         params,
         resolver,
@@ -159,7 +159,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       ImmutableList<Path> systemIncludeRoots,
       ImmutableList<Path> frameworkRoots,
       CxxHeaders includes,
-      Optional<DebugPathSanitizer> sanitizer) {
+      DebugPathSanitizer sanitizer) {
     return new CxxPreprocessAndCompile(
         params,
         resolver,
@@ -180,17 +180,15 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
     // from contributing to the rule key.
     ImmutableList<String> flags = this.flags;
-    if (sanitizer.isPresent()) {
-      flags = FluentIterable.from(flags)
-          .transform(sanitizer.get().sanitize(Optional.<Path>absent(), /* expandPaths */ false))
-          .toList();
-    }
+    flags = FluentIterable.from(flags)
+        .transform(sanitizer.sanitize(Optional.<Path>absent(), /* expandPaths */ false))
+        .toList();
     builder.setReflectively("flags", flags);
 
     // If a sanitizer is being used for compilation, we need to record the working directory in
     // the rule key, as changing this changes the generated object file.
-    if (sanitizer.isPresent() && operation == CxxPreprocessAndCompileStep.Operation.COMPILE) {
-      builder.setReflectively("compilationDirectory", sanitizer.get().getCompilationDirectory());
+    if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE) {
+      builder.setReflectively("compilationDirectory", sanitizer.getCompilationDirectory());
     }
 
     return builder;

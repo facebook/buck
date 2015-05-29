@@ -21,6 +21,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
@@ -46,13 +47,13 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_LEX_FLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_YACC_FLAGS = ImmutableList.of("-y");
 
-  private static final Optional<DebugPathSanitizer> DEFAULT_DEBUG_PATH_SANITIZER =
-      Optional.of(
-          new DebugPathSanitizer(
-              250,
-              File.separatorChar,
-              Paths.get("."),
-              ImmutableBiMap.<Path, Path>of()));
+  @VisibleForTesting
+  static final DebugPathSanitizer DEFAULT_DEBUG_PATH_SANITIZER =
+      new DebugPathSanitizer(
+          250,
+          File.separatorChar,
+          Paths.get("."),
+          ImmutableBiMap.<Path, Path>of());
 
 
   // Utility class, do not instantiate.

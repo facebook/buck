@@ -53,7 +53,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final Path input;
   private final ImmutableList<String> command;
   private final ImmutableMap<Path, Path> replacementPaths;
-  private final Optional<DebugPathSanitizer> sanitizer;
+  private final DebugPathSanitizer sanitizer;
 
   // N.B. These include paths are special to GCC. They aren't real files and there is no remapping
   // needed, so we can just ignore them everywhere.
@@ -68,7 +68,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       Path input,
       ImmutableList<String> command,
       ImmutableMap<Path, Path> replacementPaths,
-      Optional<DebugPathSanitizer> sanitizer) {
+      DebugPathSanitizer sanitizer) {
     this.operation = operation;
     this.output = output;
     this.input = input;
@@ -111,9 +111,7 @@ public class CxxPreprocessAndCompileStep implements Step {
                 .transform(Escaper.PATH_FOR_C_INCLUDE_STRING_ESCAPER)
                 .or(replacementPath);
 
-            if (sanitizer.isPresent()) {
-              replacementPath = sanitizer.get().sanitize(Optional.of(workingDir), replacementPath);
-            }
+            replacementPath = sanitizer.sanitize(Optional.of(workingDir), replacementPath);
 
             if (!originalPath.equals(replacementPath)) {
               String num = m.group("num");
@@ -138,10 +136,7 @@ public class CxxPreprocessAndCompileStep implements Step {
             // If we're compiling, we also need to restore the original working directory in the
             // error output.
             if (operation == Operation.COMPILE) {
-              path =
-                  sanitizer.isPresent() ?
-                      Paths.get(sanitizer.get().restore(Optional.of(workingDir), original)) :
-                      path;
+              path = Paths.get(sanitizer.restore(Optional.of(workingDir), original));
             }
 
             // And, of course, we need to fixup any replacement paths.
@@ -173,10 +168,10 @@ public class CxxPreprocessAndCompileStep implements Step {
     // So we use this knob to expand the space used to store the compilation directory to the
     // size we need for the compilation directory we really want, then do an in-place
     // find-and-replace to update the compilation directory after the fact.
-    if (operation == Operation.COMPILE && sanitizer.isPresent()) {
+    if (operation == Operation.COMPILE) {
       builder.environment().put(
           "PWD",
-          sanitizer.get().getExpandedPath(context.getProjectDirectoryRoot().toAbsolutePath()));
+          sanitizer.getExpandedPath(context.getProjectDirectoryRoot().toAbsolutePath()));
     }
 
     try {
@@ -231,9 +226,9 @@ public class CxxPreprocessAndCompileStep implements Step {
       // If the compilation completed successfully, perform the in-place update of the compilation
       // as per above.  This locates the relevant debug section and swaps out the expanded actual
       // compilation directory with the one we really want.
-      if (exitCode == 0 && operation == Operation.COMPILE && sanitizer.isPresent()) {
+      if (exitCode == 0 && operation == Operation.COMPILE) {
         try {
-          sanitizer.get().restoreCompilationDirectory(
+          sanitizer.restoreCompilationDirectory(
               context.getProjectDirectoryRoot().toAbsolutePath().resolve(output),
               context.getProjectDirectoryRoot().toAbsolutePath());
         } catch (IOException e) {
