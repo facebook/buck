@@ -76,6 +76,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -820,7 +821,9 @@ public class BuckConfig {
     Path homeDirectory = Paths.get(System.getProperty("user.home"));
     File userConfigDir = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_DIRECTORY_NAME).toFile();
     if (userConfigDir.isDirectory()) {
-      for (File userConfigFile : userConfigDir.listFiles()) {
+      File userConfigFiles[] = userConfigDir.listFiles();
+      Arrays.sort(userConfigFiles);
+      for (File userConfigFile : userConfigFiles) {
         configFileBuilder.add(userConfigFile);
       }
     }
