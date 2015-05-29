@@ -76,7 +76,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   public Path findAndroidSdkDir() {
     Optional<Path> androidSdkDir = findAndroidSdkDirSafe();
     Preconditions.checkState(androidSdkDir.isPresent(),
-        "Android SDK could not be find.  Set the environment variable ANDROID_SDK to point to " +
+        "Android SDK could not be found.  Set the environment variable ANDROID_SDK to point to " +
             "your Android SDK.");
     return androidSdkDir.get();
   }
