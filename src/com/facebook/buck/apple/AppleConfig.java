@@ -146,6 +146,12 @@ public class AppleConfig {
     return delegate.getValue("apple", platform.getName() + "_target_sdk_version");
   }
 
+  public ImmutableList<String> getXctestPlatformNames() {
+    return delegate.getListWithoutComments(
+        "apple",
+        "xctest_platforms");
+  }
+
   public Optional<Path> getXctoolPath() {
     Optional<String> xctoolPath = delegate.getValue("apple", "xctool_path");
     if (xctoolPath.isPresent()) {

@@ -71,7 +71,9 @@ public class FakeAppleRuleDescriptions {
               Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
               Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),
               Paths.get("usr/bin/actool"),
-              Paths.get("usr/bin/ibtool"))));
+              Paths.get("usr/bin/ibtool"),
+              Paths.get("Tools/otest"),
+              Paths.get("usr/bin/xctest"))));
 
   private static final BuckConfig DEFAULT_BUCK_CONFIG = new FakeBuckConfig();
 

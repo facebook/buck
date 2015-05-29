@@ -1,0 +1,19 @@
+2015-05-26 20:29:01.698 ExampleTests[15320:2819] Test Suite 'Example/ExampleTests.xctest(Tests)' started at 2015-05-27 03:29:01 +0000
+
+2015-05-26 20:29:01.698 ExampleTests[15320:2819] Test Suite 'OtherTests' started at 2015-05-27 03:29:01 +0000
+2015-05-26 20:29:01.698 ExampleTests[15320:2819] Test Case '-[OtherTests testSomething]' started.
+2015-05-26 20:29:01.707 ExampleTests[15320:2819] Test Case '-[OtherTests testSomething]' passed (0.003 seconds).
+2015-05-26 20:29:01.713 ExampleTests[15320:2819] Test Suite 'OtherTests' finished at 2015-05-27 03:29:01 +0000.
+Passed 1 tests, with 0 failures (0 unexpected) in 0.012 (0.013) seconds
+
+2015-05-26 20:29:01.698 ExampleTests[15320:2819] Test Suite 'SomeTests' started at 2015-05-27 03:29:01 +0000
+2015-05-26 20:29:01.698 ExampleTests[15320:2819] Test Case '-[SomeTests testWillFail]' started.
+2015-05-26 20:29:01.707 ExampleTests[15320:2819] Test Case '-[SomeTests testWillFail]' failed (0.000 seconds).
+2015-05-26 20:29:01.707 ExampleTests[15320:2819] Test Case '-[SomeTests testWillPass]' started.
+2015-05-26 20:29:01.707 ExampleTests[15320:2819] Test Case '-[SomeTests testWillPass]' passed (0.000 seconds).
+2015-05-26 20:29:01.713 ExampleTests[15320:2819] Test Suite 'SomeTests' finished at 2015-05-27 03:29:01 +0000.
+Passed 1 tests, with 1 failures (1 unexpected) in 0.012 (0.013) seconds
+
+2015-05-26 20:29:01.716 ExampleTests[15320:2819] Test Suite '/Example/ExampleTests.xctest(Tests)' finished at 2015-05-27 03:29:01 +0000.
+Passed 10 tests, with 0 failures (0 unexpected) in 0.012 (0.051) seconds
+

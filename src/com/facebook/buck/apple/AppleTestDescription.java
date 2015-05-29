@@ -285,9 +285,13 @@ public class AppleTestDescription implements Description<AppleTestDescription.Ar
         mergedAssetCatalog,
         ImmutableSortedSet.<BuildTarget>of());
 
+    String platformName = appleCxxPlatform.getApplePlatform().getName();
     return new AppleTest(
         appleConfig.getXctoolPath(),
-        appleCxxPlatform.getApplePlatform().getName(),
+        appleCxxPlatform.getXctest(),
+        appleCxxPlatform.getOtest(),
+        appleConfig.getXctestPlatformNames().contains(platformName),
+        platformName,
         Optional.<String>absent(),
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)),

@@ -79,12 +79,14 @@ public class AppleCxxPlatforms {
     // Search for tools from most specific to least specific.
     toolSearchPathsBuilder
         .add(sdkPaths.getSdkPath().resolve(USR_BIN))
+        .add(sdkPaths.getSdkPath().resolve("Developer").resolve(USR_BIN))
         .add(sdkPaths.getPlatformPath().resolve("Developer").resolve(USR_BIN));
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
       toolSearchPathsBuilder.add(toolchainPath.resolve(USR_BIN));
     }
     if (sdkPaths.getDeveloperPath().isPresent()) {
       toolSearchPathsBuilder.add(sdkPaths.getDeveloperPath().get().resolve(USR_BIN));
+      toolSearchPathsBuilder.add(sdkPaths.getDeveloperPath().get().resolve("Tools"));
     }
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
@@ -144,6 +146,18 @@ public class AppleCxxPlatforms {
         "apple-ibtool",
         version);
 
+    Tool xctest = new VersionedTool(
+        getToolPath("xctest", toolSearchPaths, executableFinder),
+        ImmutableList.<String>of(),
+        "apple-xctest",
+        version);
+
+    Tool otest = new VersionedTool(
+        getToolPath("otest", toolSearchPaths, executableFinder),
+        ImmutableList.<String>of(),
+        "apple-otest",
+        version);
+
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 
     ImmutableFlavor targetFlavor = ImmutableFlavor.of(
@@ -188,6 +202,8 @@ public class AppleCxxPlatforms {
         .setAppleSdkPaths(sdkPaths)
         .setActool(actool)
         .setIbtool(ibtool)
+        .setXctest(xctest)
+        .setOtest(otest)
         .build();
   }
 

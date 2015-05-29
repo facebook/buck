@@ -80,6 +80,8 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
         .add(Paths.get("usr/bin/ibtool"))
+        .add(Paths.get("usr/bin/xctest"))
+        .add(Paths.get("Tools/otest"))
         .build();
 
     AppleCxxPlatform appleCxxPlatform =
@@ -101,6 +103,13 @@ public class AppleCxxPlatformsTest {
     assertEquals(
         ImmutableList.of("usr/bin/ibtool"),
         appleCxxPlatform.getIbtool().getCommandPrefix(resolver));
+
+    assertEquals(
+        ImmutableList.of("usr/bin/xctest"),
+        appleCxxPlatform.getXctest().getCommandPrefix(resolver));
+    assertEquals(
+        ImmutableList.of("Tools/otest"),
+        appleCxxPlatform.getOtest().getCommandPrefix(resolver));
 
     assertEquals(
         ImmutableFlavor.of("iphoneos8.0-armv7"),
@@ -146,6 +155,8 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
         .add(Paths.get("usr/bin/ibtool"))
+        .add(Paths.get("usr/bin/xctest"))
+        .add(Paths.get("Tools/otest"))
         .build();
 
     AppleToolchain toolchain = AppleToolchain.builder()
@@ -193,6 +204,8 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
         .add(Paths.get("usr/bin/ibtool"))
+        .add(Paths.get("usr/bin/xctest"))
+        .add(Paths.get("Tools/otest"))
         .build();
 
     AppleToolchain toolchain = AppleToolchain.builder()
@@ -291,6 +304,8 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
         .add(Paths.get("usr/bin/ibtool"))
+        .add(Paths.get("usr/bin/xctest"))
+        .add(Paths.get("Tools/otest"))
         .build();
 
     AppleToolchain toolchain = AppleToolchain.builder()

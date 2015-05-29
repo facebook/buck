@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -58,7 +59,16 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   private final Optional<Path> xctoolPath;
 
   @AddToRuleKey
-  private final String sdkName;
+  private final Tool xctest;
+
+  @AddToRuleKey
+  private final Tool otest;
+
+  @AddToRuleKey
+  private final boolean useXctest;
+
+  @AddToRuleKey
+  private final String platformName;
 
   @AddToRuleKey
   private final Optional<String> simulatorName;
@@ -76,9 +86,14 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   private final Path testHostAppDirectory;
   private final Path testOutputPath;
 
+  private final String testBundleExtension;
+
   AppleTest(
       Optional<Path> xctoolPath,
-      String sdkName,
+      Tool xctest,
+      Tool otest,
+      Boolean useXctest,
+      String platformName,
       Optional<String> simulatorName,
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -89,12 +104,16 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       ImmutableSet<Label> labels) {
     super(params, resolver);
     this.xctoolPath = xctoolPath;
-    this.sdkName = sdkName;
+    this.useXctest = useXctest;
+    this.xctest = xctest;
+    this.otest = otest;
+    this.platformName = platformName;
     this.simulatorName = simulatorName;
     this.testBundle = testBundle;
     this.testHostApp = testHostApp;
     this.contacts = contacts;
     this.labels = labels;
+    this.testBundleExtension = testBundleExtension;
     // xctool requires the extension to be present to determine whether the test is ocunit or xctest
     this.testBundleDirectory = BuildTargets.getScratchPath(
         params.getBuildTarget(),
@@ -141,11 +160,6 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       boolean isDryRun,
       boolean isShufflingTests,
       TestSelectorList testSelectorList) {
-    if (!xctoolPath.isPresent()) {
-      throw new HumanReadableException(
-          "Set xctool_path = /path/to/xctool in the [apple] section of .buckconfig " +
-          "to run this test");
-    }
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     Path resolvedTestBundleDirectory = executionContext.getProjectFilesystem().resolve(
         testBundleDirectory);
@@ -159,8 +173,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     Path resolvedTestOutputPath = executionContext.getProjectFilesystem().resolve(
         testOutputPath);
 
-    ImmutableSet.Builder<Path> logicTestPathsBuilder = ImmutableSet.builder();
-    ImmutableMap.Builder<Path, Path> appTestPathsToHostAppsBuilder = ImmutableMap.builder();
+    Optional<Path> testHostAppPath = Optional.absent();
     if (testHostApp.isPresent()) {
       Path resolvedTestHostAppDirectory = executionContext.getProjectFilesystem().resolve(
           testHostAppDirectory);
@@ -168,22 +181,45 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       steps.add(
           new UnzipStep(testHostApp.get().getPathToOutputFile(), resolvedTestHostAppDirectory));
 
-      appTestPathsToHostAppsBuilder.put(
-          resolvedTestBundleDirectory,
-          resolvedTestHostAppDirectory.resolve(
-              testHostApp.get().getUnzippedOutputFilePathToBinary()));
-    } else {
-      logicTestPathsBuilder.add(resolvedTestBundleDirectory);
+      testHostAppPath = Optional.of(resolvedTestHostAppDirectory.resolve(
+          testHostApp.get().getUnzippedOutputFilePathToBinary()));
     }
 
-    steps.add(
-        new XctoolRunTestsStep(
-            xctoolPath.get(),
-            sdkName,
-            simulatorName,
-            logicTestPathsBuilder.build(),
-            appTestPathsToHostAppsBuilder.build(),
-            resolvedTestOutputPath));
+    if (!useXctest) {
+      if (!xctoolPath.isPresent()) {
+        throw new HumanReadableException(
+            "Set xctool_path = /path/to/xctool in the [apple] section of .buckconfig " +
+            "to run this test");
+      }
+
+      ImmutableSet.Builder<Path> logicTestPathsBuilder = ImmutableSet.builder();
+      ImmutableMap.Builder<Path, Path> appTestPathsToHostAppsBuilder = ImmutableMap.builder();
+
+      if (testHostAppPath.isPresent()) {
+        appTestPathsToHostAppsBuilder.put(
+            resolvedTestBundleDirectory,
+            testHostAppPath.get());
+      } else {
+        logicTestPathsBuilder.add(resolvedTestBundleDirectory);
+      }
+
+      steps.add(
+          new XctoolRunTestsStep(
+              xctoolPath.get(),
+              platformName,
+              simulatorName,
+              logicTestPathsBuilder.build(),
+              appTestPathsToHostAppsBuilder.build(),
+              resolvedTestOutputPath));
+    } else {
+      steps.add(
+          new XctestRunTestsStep(
+              (testBundleExtension == "xctest" ? xctest : otest)
+                  .getCommandPrefix(getResolver()),
+              (testBundleExtension == "xctest" ? "-XCTest" : "-SenTest"),
+              resolvedTestBundleDirectory,
+              resolvedTestOutputPath));
+    }
 
     return steps.build();
   }
@@ -198,10 +234,12 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       public TestResults call() throws Exception {
         Path resolvedOutputPath = executionContext.getProjectFilesystem().resolve(testOutputPath);
         try (BufferedReader reader =
-               Files.newBufferedReader(resolvedOutputPath, StandardCharsets.UTF_8)) {
+            Files.newBufferedReader(resolvedOutputPath, StandardCharsets.UTF_8)) {
           return new TestResults(
             getBuildTarget(),
-            XctoolOutputParsing.parseOutputFromReader(reader),
+            useXctest ?
+                XctestOutputParsing.parseOutputFromReader(reader) :
+                XctoolOutputParsing.parseOutputFromReader(reader),
             contacts,
             FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
         }
